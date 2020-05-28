@@ -4,8 +4,8 @@
  * Entry file for common files
  */
 
-export const add = (a: number, b: number) => {
+export const add = (a: number, b: number): number => {
   return a + b;
 };
 
-console.log('Common js started');
+console.log('Common started');
