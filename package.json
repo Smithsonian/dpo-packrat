@@ -1,0 +1,36 @@
+{
+  "name": "dpo-packrat",
+  "version": "1.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Data Repository and Workflow Management for 3D data captures, models, and scenes",
+  "homepage": "https://github.com/Smithsonian/dpo-packrat#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Smithsonian/dpo-packrat.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Smithsonian/dpo-packrat/issues"
+  },
+  "contributors": [
+    {
+      "name": "Jon Tyson",
+      "url": "https://github.com/jahjedtieson"
+    },
+    {
+      "name": "Karan Pratap Singh",
+      "url": "https://github.com/karanpratapsingh"
+    }
+  ],
+  "scripts": {
+    "start:server": "yarn workspace @dpo-packrat/server start",
+    "start:common": "yarn workspace @dpo-packrat/common start",
+    "build": "lerna run build"
+  },
+  "devDependencies": {
+    "lerna": "3.22.0"
+  },
+  "workspaces": [
+    "*"
+  ]
+}
