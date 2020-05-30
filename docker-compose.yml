@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+    packrat-app:
+        container_name: packrat-app
+        image: packrat-app
+        restart: always
+        build: .
+        env_file:
+            - .env
+        ports:
+            - 4000:4000
+        depends_on:
+            - db
+        command: "tail -f /dev/null"
+
+    db:
+        container_name: packrat-db
+        image: mariadb:10.5
+        restart: always
+        env_file:
+            - .env

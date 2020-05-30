@@ -28,16 +28,12 @@
     "start": "yarn build && concurrently 'yarn build:watch' 'yarn server:start'",
     "server:start": "nodemon -e '*.ts, *.mwb, *.sql' --watch dist 'node dist/index.js'",
     "build": "tsc --build && copyfiles **/*.mwb **/*.sql dist/",
-    "build:watch": "tsc --watch"
-  },
-  "devDependencies": {
-    "@types/node": "^14.0.5",
-    "concurrently": "^5.2.0",
-    "copyfiles": "^2.3.0",
-    "nodemon": "^2.0.4",
-    "typescript": "^3.9.3"
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf node_modules/ dist/"
   },
   "dependencies": {
-    "@dpo-packrat/common": "1.0.0"
+    "@dpo-packrat/common": "1.0.0",
+    "@types/express": "^4.17.6",
+    "express": "^4.17.1"
   }
 }
