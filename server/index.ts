@@ -4,8 +4,12 @@
  * Entry file for server
  */
 
-import { add } from '@dpo-packrat/common';
+import * as express from 'express';
 
-console.log('In server');
-console.log('Using module from common');
-console.log(add(1, 2));
+const app = express();
+
+app.get('/', (_, res) => res.send('hello from the server'));
+
+app.listen(4000, () => {
+    console.log('server is running on port 4000');
+});
