@@ -5,7 +5,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "rootDir": ".",
-    "outDir": "dist",
+    "outDir": "build",
     "declaration": true,
   },
   "include": [

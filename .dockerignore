@@ -5,4 +5,4 @@ docker-compose.yml
 node_modules
 yarn.lock
 .vscode
-dist
+build
