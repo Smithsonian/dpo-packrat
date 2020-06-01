@@ -22,13 +22,13 @@
       "url": "https://github.com/karanpratapsingh"
     }
   ],
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "main": "build/index.js",
+  "typings": "build/index.d.ts",
   "scripts": {
     "start": "yarn build && concurrently 'yarn build:watch' 'yarn server:start'",
-    "server:start": "nodemon -e '*.ts' --watch dist 'node dist/index.js'",
-    "build": "tsc --build && copyfiles **/*.mwb **/*.sql dist/",
+    "server:start": "nodemon -e '*.ts' --watch build 'node build/index.js'",
+    "build": "tsc --build && copyfiles **/*.mwb **/*.sql build/",
     "build:watch": "tsc --watch",
-    "clean": "rm -rf node_modules/ dist/"
+    "clean": "rm -rf node_modules/ build/"
   }
 }
