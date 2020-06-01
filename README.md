@@ -25,7 +25,7 @@ yarn build
 yarn dev
 ```
 
-4. Now while in docker shell run these command to start whatever package you're developing (run each separate terminal if developing more than 1 packages):
+4. Now while in docker shell run these command to start whatever package you're developing (run each command in a separate terminal if developing more than 1 packages):
 
 **For client:**
 

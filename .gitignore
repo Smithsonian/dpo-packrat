@@ -105,3 +105,6 @@ dist
 
 ### VisualStudioCode ###
 .vscode/*
+
+### Builds ###
+build
