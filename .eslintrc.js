@@ -3,14 +3,18 @@ module.exports = {
     parserOptions: {
         ecmaVersion: 2020,
         sourceType: 'module',
+        ecmaFeatures: {
+            jsx: true,
+        },
     },
     env: {
         browser: true,
         node: true,
     },
-    plugins: ['@typescript-eslint'],
-    extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+    plugins: ['react', '@typescript-eslint'],
+    extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:react/recommended'],
     rules: {
+        quotes: ['error', 'single'],
         camelcase: 'error',
         'prefer-const': 'error',
         'no-var': 'error',
