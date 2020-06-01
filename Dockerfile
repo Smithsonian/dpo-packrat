@@ -12,6 +12,9 @@ COPY . /app
 # Install dependencies
 RUN yarn
 
+# Expose port(s)
+EXPOSE 3000 4000
+
 # Build
 RUN yarn build
 
