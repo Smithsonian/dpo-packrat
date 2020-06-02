@@ -10,7 +10,8 @@
     "declaration": true,
   },
   "include": [
-    "**/*"
+    "**/*",
+    "../declarations.d.ts"
   ],
   "exclude": [
     "**/node_modules",
