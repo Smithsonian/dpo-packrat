@@ -23,11 +23,10 @@
     }
   ],
   "scripts": {
-    "start": "concurrently 'yarn start:client' 'nodemon server/build/index.js'",
     "start:client": "yarn workspace @dpo-packrat/client start",
     "start:server": "yarn workspace @dpo-packrat/server start",
     "start:common": "yarn workspace @dpo-packrat/common start",
-    "dev": "docker-compose up -d && docker exec -it packrat-app bash",
+    "dev": "docker-compose up -d",
     "build": "lerna run build",
     "clean": "lerna run clean && rm -rf node_modules/",
     "clean:docker": "docker-compose down && docker system prune -f"
@@ -44,6 +43,9 @@
     "typescript": "^3.9.3"
   },
   "workspaces": {
+    "nohoist": [
+      "@dpo-packrat/client/react*"
+    ],
     "packages": [
       "client",
       "server",
