@@ -3,6 +3,7 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
+    "esModuleInterop": true,
     "moduleResolution": "node",
     "rootDir": ".",
     "outDir": "build",
@@ -11,4 +12,8 @@
   "include": [
     "**/*"
   ],
+  "exclude": [
+    "**/node_modules",
+    "**/build"
+  ]
 }
