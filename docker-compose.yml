@@ -15,8 +15,6 @@ services:
         volumes:
             - ./client:/app/client
             - ./common:/app/common
-        depends_on:
-            - db
 
     packrat-server:
         container_name: packrat-server
@@ -40,6 +38,6 @@ services:
         image: mariadb:10.5
         restart: always
         ports:
-            - 3306:3306
+            - $PACKRAT_DB_PORT:3306
         env_file:
             - .env
