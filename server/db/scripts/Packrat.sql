@@ -136,24 +136,6 @@ CREATE TABLE IF NOT EXISTS `capturedatagroupcapturedataxref` (
   KEY `CaptureDataGroupCaptureDataXref_idCaptureData` (`idCaptureData`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `datausageright` (
-  `idDataUsageRight` int(11) NOT NULL AUTO_INCREMENT,
-  `Name` varchar(255) NOT NULL,
-  `Description` varchar(8000) NOT NULL,
-  PRIMARY KEY (`idDataUsageRight`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `datausagerightassignment` (
-  `idDataUsageRightAssignment` int(11) NOT NULL AUTO_INCREMENT,
-  `idDataUsageRight` int(11) NOT NULL,
-  `idUserCreator` int(11) DEFAULT NULL,
-  `DateStart` datetime DEFAULT NULL,
-  `DateEnd` datetime DEFAULT NULL,
-  `idSystemObject` int(11) DEFAULT NULL,
-  PRIMARY KEY (`idDataUsageRightAssignment`),
-  KEY `DataUsageRightAssignment_idSystemObject` (`idSystemObject`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 CREATE TABLE IF NOT EXISTS `geolocation` (
   `idGeolocation` int(11) NOT NULL AUTO_INCREMENT,
   `Latitude` double DEFAULT NULL,
@@ -195,6 +177,24 @@ CREATE TABLE IF NOT EXISTS `item` (
   `Name` varchar(255) NOT NULL,
   `EntireSubject` bit(1) NOT NULL,
   PRIMARY KEY (`idItem`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `license` (
+  `idLicense` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `Description` varchar(8000) NOT NULL,
+  PRIMARY KEY (`idLicense`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `licenseassignment` (
+  `idLicenseAssignment` int(11) NOT NULL AUTO_INCREMENT,
+  `idLicense` int(11) NOT NULL,
+  `idUserCreator` int(11) DEFAULT NULL,
+  `DateStart` datetime DEFAULT NULL,
+  `DateEnd` datetime DEFAULT NULL,
+  `idSystemObject` int(11) DEFAULT NULL,
+  PRIMARY KEY (`idLicenseAssignment`),
+  KEY `LicenseAssignment_idSystemObject` (`idSystemObject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `metadata` (
@@ -366,6 +366,7 @@ CREATE TABLE IF NOT EXISTS `systemobject` (
   `idStakeholder` int(11) DEFAULT NULL,
   `idWorkflow` int(11) DEFAULT NULL,
   `idWorkflowStep` int(11) DEFAULT NULL,
+  `Retired` bit(1) NOT NULL,
   PRIMARY KEY (`idSystemObject`),
   KEY `SystemObject_idUnit` (`idUnit`),
   KEY `SystemObject_idProject` (`idProject`),
@@ -652,23 +653,6 @@ ADD CONSTRAINT `fk_capturedatagroupcapturedataxref_capturedata1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`datausagerightassignment` 
-ADD CONSTRAINT `fk_datausagerightassignment_datausageright1`
-  FOREIGN KEY (`idDataUsageRight`)
-  REFERENCES `packrat`.`datausageright` (`idDataUsageRight`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_datausagerightassignment_user1`
-  FOREIGN KEY (`idUserCreator`)
-  REFERENCES `packrat`.`user` (`idUser`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_datausagerightassignment_systemobject1`
-  FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
 ALTER TABLE `packrat`.`identifier` 
 ADD CONSTRAINT `fk_identifier_systemobject1`
   FOREIGN KEY (`idSystemObject`)
@@ -702,6 +686,23 @@ ADD CONSTRAINT `fk_item_asset1`
 ADD CONSTRAINT `fk_item_geolocation1`
   FOREIGN KEY (`idGeolocation`)
   REFERENCES `packrat`.`geolocation` (`idGeolocation`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `packrat`.`licenseassignment` 
+ADD CONSTRAINT `fk_licenseassignment_license1`
+  FOREIGN KEY (`idLicense`)
+  REFERENCES `packrat`.`license` (`idLicense`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_licenseassignment_user1`
+  FOREIGN KEY (`idUserCreator`)
+  REFERENCES `packrat`.`user` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_licenseassignment_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
