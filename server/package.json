@@ -1,0 +1,40 @@
+{
+  "name": "@dpo-packrat/server",
+  "version": "1.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Node server for Packrat",
+  "homepage": "https://github.com/Smithsonian/dpo-packrat#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Smithsonian/dpo-packrat.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Smithsonian/dpo-packrat/issues"
+  },
+  "contributors": [
+    {
+      "name": "Jon Tyson",
+      "url": "https://github.com/jahjedtieson"
+    },
+    {
+      "name": "Karan Pratap Singh",
+      "url": "https://github.com/karanpratapsingh"
+    }
+  ],
+  "main": "build/index.js",
+  "typings": "build/index.d.ts",
+  "scripts": {
+    "start": "yarn build && concurrently 'yarn build:watch' 'yarn server:start'",
+    "server:start": "nodemon -e '*.ts, *.mwb, *.sql' --watch build 'node build/index.js'",
+    "build": "tsc --build && copyfiles **/*.mwb **/*.sql build/",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf node_modules/ build/"
+  },
+  "dependencies": {
+    "@dpo-packrat/common": "1.0.0",
+    "@types/express": "^4.17.6",
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  }
+}
