@@ -136,33 +136,6 @@ CREATE TABLE IF NOT EXISTS `capturedatagroupcapturedataxref` (
   KEY `CaptureDataGroupCaptureDataXref_idCaptureData` (`idCaptureData`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `capturedatamodelxref` (
-  `idCaptureDataModelXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idCaptureData` int(11) NOT NULL,
-  `idModel` int(11) NOT NULL,
-  PRIMARY KEY (`idCaptureDataModelXref`),
-  KEY `CaptureDataModelXref_idCaptureData` (`idCaptureData`),
-  KEY `CaptureDataModelXref_idModel` (`idModel`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `capturedataresourceassetxref` (
-  `idCaptureDataResourceAssetXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idCaptureData` int(11) NOT NULL,
-  `idAsset` int(11) NOT NULL,
-  PRIMARY KEY (`idCaptureDataResourceAssetXref`),
-  KEY `CaptureDataResourceAssetXref_idCaptureData` (`idCaptureData`),
-  KEY `CaptureDataResourceAssetXref_idAsset` (`idAsset`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `capturedataresourcexref` (
-  `idCaptureDataResourceXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idCaptureDataMaster` int(11) NOT NULL,
-  `idCaptureDataResource` int(11) NOT NULL,
-  PRIMARY KEY (`idCaptureDataResourceXref`),
-  KEY `CaptureDataResourceXref_idCaptureDataMaster` (`idCaptureDataMaster`),
-  KEY `CaptureDataResourceXref_idCaptureDataResource` (`idCaptureDataResource`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 CREATE TABLE IF NOT EXISTS `datausageright` (
   `idDataUsageRight` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
@@ -224,15 +197,6 @@ CREATE TABLE IF NOT EXISTS `item` (
   PRIMARY KEY (`idItem`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `itemsystemobjectxref` (
-  `idItemSystemObjectXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idItem` int(11) NOT NULL,
-  `idSystemObject` int(11) NOT NULL,
-  PRIMARY KEY (`idItemSystemObjectXref`),
-  KEY `idItemsSystemObjectXref_idItem` (`idItem`),
-  KEY `idItemSystemObjectXref_idSystemObject` (`idSystemObject`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 CREATE TABLE IF NOT EXISTS `metadata` (
   `idMetadata` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
@@ -283,15 +247,6 @@ CREATE TABLE IF NOT EXISTS `modelgeometryfile` (
   PRIMARY KEY (`idModelGeometryFile`),
   KEY `ModelGeometryFile_idModel` (`idModel`),
   KEY `ModelGeometryFile_idAsset` (`idAsset`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `modelmodelxref` (
-  `idModelModelXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idModelMaster` int(11) NOT NULL,
-  `idModelDerived` int(11) NOT NULL,
-  PRIMARY KEY (`idModelModelXref`),
-  KEY `ModelModelXref_idModelMaster` (`idModelMaster`),
-  KEY `ModelModelXref_idModelDerived` (`idModelDerived`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `modelprocessingaction` (
@@ -365,24 +320,6 @@ CREATE TABLE IF NOT EXISTS `projectdocumentation` (
   PRIMARY KEY (`idProjectDocumentation`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `projectitemxref` (
-  `idProjectItemXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idProject` int(11) NOT NULL,
-  `idItem` int(11) NOT NULL,
-  PRIMARY KEY (`idProjectItemXref`),
-  KEY `ProjectItemXref_idItem` (`idItem`),
-  KEY `ProjectItemXref_idProject` (`idProject`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `projectstakeholderxref` (
-  `idProjectStakeholderXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idProject` int(11) NOT NULL,
-  `idStakeholder` int(11) NOT NULL,
-  PRIMARY KEY (`idProjectStakeholderXref`),
-  KEY `ProjectStakeholderXref_idProject` (`idProject`),
-  KEY `ProjectStakeholderXref_idStakeholder` (`idStakeholder`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 CREATE TABLE IF NOT EXISTS `scene` (
   `idScene` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
@@ -447,15 +384,6 @@ CREATE TABLE IF NOT EXISTS `systemobject` (
   KEY `SystemObject_idScene` (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE IF NOT EXISTS `systemobjectactorxref` (
-  `idSystemObjectActorXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idSystemObject` int(11) NOT NULL,
-  `idActor` int(11) NOT NULL,
-  PRIMARY KEY (`idSystemObjectActorXref`),
-  KEY `ObjectActorXref_idActor` (`idActor`),
-  KEY `ObjectActorXref_idSystemObject` (`idSystemObject`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 CREATE TABLE IF NOT EXISTS `systemobjectversion` (
   `idSystemObjectVersion` int(11) NOT NULL AUTO_INCREMENT,
   `idSystemObject` int(11) NOT NULL,
@@ -464,20 +392,20 @@ CREATE TABLE IF NOT EXISTS `systemobjectversion` (
   KEY `ObjectVersion_idSystemObject_idObjectVersion` (`idSystemObject`,`idSystemObjectVersion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `systemobjectxref` (
+  `idSystemObjectXref` int(11) NOT NULL AUTO_INCREMENT,
+  `idSystemObjectMaster` int(11) NOT NULL,
+  `idSystemObjectDerived` int(11) NOT NULL,
+  PRIMARY KEY (`idSystemObjectXref`),
+  KEY `SystemObjectXref_idSystemObjectMaster` (`idSystemObjectMaster`),
+  KEY `SystemObjectXref_idSystemObjectDerived` (`idSystemObjectDerived`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `unit` (
   `idUnit` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `Abbreviation` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`idUnit`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `unitprojectxref` (
-  `idUnitProjectXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idUnit` int(11) NOT NULL,
-  `idProject` int(11) NOT NULL,
-  PRIMARY KEY (`idUnitProjectXref`),
-  KEY `UnitProjectXref_idUnit` (`idUnit`),
-  KEY `UnitProjectXref_idProject` (`idProject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `user` (
@@ -572,15 +500,6 @@ CREATE TABLE IF NOT EXISTS `workflowstepworkflowstepxref` (
   PRIMARY KEY (`idWorkflowStepWorkflowStepXref`),
   KEY `WorkflowStepWorkflowStepXref_idWorkflowStep_idWorkflowStepNext` (`idWorkflowStep`,`idWorkflowStepNext`),
   KEY `WorkflowStepWorkflowStepXref_idWorkflowStepNext_idWorkflowStep` (`idWorkflowStepNext`,`idWorkflowStep`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `workflowsystemobjectxref` (
-  `idWorkflowSystemObjectXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idWorkflow` int(11) NOT NULL,
-  `idSystemObject` int(11) DEFAULT NULL,
-  PRIMARY KEY (`idWorkflowSystemObjectXref`),
-  KEY `WorkflowObjectXref_idWorkflow` (`idWorkflow`),
-  KEY `WorkflowObjectXref_idSystemObject` (`idSystemObject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `workflowtemplate` (
@@ -733,42 +652,6 @@ ADD CONSTRAINT `fk_capturedatagroupcapturedataxref_capturedata1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`capturedatamodelxref` 
-ADD CONSTRAINT `fk_capturedatamodelxref_capturedata1`
-  FOREIGN KEY (`idCaptureData`)
-  REFERENCES `packrat`.`capturedata` (`idCaptureData`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_capturedatamodelxref_model1`
-  FOREIGN KEY (`idModel`)
-  REFERENCES `packrat`.`model` (`idModel`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `packrat`.`capturedataresourceassetxref` 
-ADD CONSTRAINT `fk_capturedataresourceassetxref_capturedata1`
-  FOREIGN KEY (`idCaptureData`)
-  REFERENCES `packrat`.`capturedata` (`idCaptureData`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_capturedataresourceassetxref_asset1`
-  FOREIGN KEY (`idAsset`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `packrat`.`capturedataresourcexref` 
-ADD CONSTRAINT `fk_capturedataresourcexref_capturedata1`
-  FOREIGN KEY (`idCaptureDataMaster`)
-  REFERENCES `packrat`.`capturedata` (`idCaptureData`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_capturedataresourcexref_capturedata2`
-  FOREIGN KEY (`idCaptureDataResource`)
-  REFERENCES `packrat`.`capturedata` (`idCaptureData`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
 ALTER TABLE `packrat`.`datausagerightassignment` 
 ADD CONSTRAINT `fk_datausagerightassignment_datausageright1`
   FOREIGN KEY (`idDataUsageRight`)
@@ -819,18 +702,6 @@ ADD CONSTRAINT `fk_item_asset1`
 ADD CONSTRAINT `fk_item_geolocation1`
   FOREIGN KEY (`idGeolocation`)
   REFERENCES `packrat`.`geolocation` (`idGeolocation`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `packrat`.`itemsystemobjectxref` 
-ADD CONSTRAINT `fk_itemobjectxref_item1`
-  FOREIGN KEY (`idItem`)
-  REFERENCES `packrat`.`item` (`idItem`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_itemobjectxref_systemobject1`
-  FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
@@ -900,18 +771,6 @@ ADD CONSTRAINT `fk_modelgeometryfile_vocabulary1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`modelmodelxref` 
-ADD CONSTRAINT `fk_modelmodelxref_model1`
-  FOREIGN KEY (`idModelMaster`)
-  REFERENCES `packrat`.`model` (`idModel`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_modelmodelxref_model2`
-  FOREIGN KEY (`idModelDerived`)
-  REFERENCES `packrat`.`model` (`idModel`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
 ALTER TABLE `packrat`.`modelprocessingaction` 
 ADD CONSTRAINT `fk_modelprocessingaction_model1`
   FOREIGN KEY (`idModel`)
@@ -976,30 +835,6 @@ ALTER TABLE `packrat`.`projectdocumentation`
 ADD CONSTRAINT `fk_projectdocumentation_project1`
   FOREIGN KEY (`idProject`)
   REFERENCES `packrat`.`project` (`idProject`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `packrat`.`projectitemxref` 
-ADD CONSTRAINT `fk_projectitemxref_project1`
-  FOREIGN KEY (`idProject`)
-  REFERENCES `packrat`.`project` (`idProject`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_projectitemxref_item1`
-  FOREIGN KEY (`idItem`)
-  REFERENCES `packrat`.`item` (`idItem`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `packrat`.`projectstakeholderxref` 
-ADD CONSTRAINT `fk_projectstakeholderxref_project1`
-  FOREIGN KEY (`idProject`)
-  REFERENCES `packrat`.`project` (`idProject`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_projectstakeholderxref_stakeholder1`
-  FOREIGN KEY (`idStakeholder`)
-  REFERENCES `packrat`.`stakeholder` (`idStakeholder`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
@@ -1104,18 +939,6 @@ ADD CONSTRAINT `fk_systemobject_workflowstep1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`systemobjectactorxref` 
-ADD CONSTRAINT `fk_systemobjectactorxref_systemobject1`
-  FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_systemobjectactorxref_actor1`
-  FOREIGN KEY (`idActor`)
-  REFERENCES `packrat`.`actor` (`idActor`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
 ALTER TABLE `packrat`.`systemobjectversion` 
 ADD CONSTRAINT `fk_systemobjectversion_systemobject`
   FOREIGN KEY (`idSystemObject`)
@@ -1123,15 +946,15 @@ ADD CONSTRAINT `fk_systemobjectversion_systemobject`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`unitprojectxref` 
-ADD CONSTRAINT `fk_unitprojectxref_unit1`
-  FOREIGN KEY (`idUnit`)
-  REFERENCES `packrat`.`unit` (`idUnit`)
+ALTER TABLE `packrat`.`systemobjectxref` 
+ADD CONSTRAINT `fk_systemobjectxref_systemobject1`
+  FOREIGN KEY (`idSystemObjectMaster`)
+  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_unitprojectxref_project1`
-  FOREIGN KEY (`idProject`)
-  REFERENCES `packrat`.`project` (`idProject`)
+ADD CONSTRAINT `fk_systemobjectxref_systemobject2`
+  FOREIGN KEY (`idSystemObjectDerived`)
+  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
@@ -1216,17 +1039,5 @@ ADD CONSTRAINT `fk_workflowstepworkflowstepxref_workflowstep1`
 ADD CONSTRAINT `fk_workflowstepworkflowstepxref_workflowstep2`
   FOREIGN KEY (`idWorkflowStepNext`)
   REFERENCES `packrat`.`workflowstep` (`idWorkflowStep`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `packrat`.`workflowsystemobjectxref` 
-ADD CONSTRAINT `fk_workflowsystemobjectxref_workflow1`
-  FOREIGN KEY (`idWorkflow`)
-  REFERENCES `packrat`.`workflow` (`idWorkflow`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_workflowsystemobjectxref_systemobject1`
-  FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
