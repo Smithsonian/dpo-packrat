@@ -27,7 +27,7 @@
   "scripts": {
     "start": "yarn build && concurrently 'yarn build:watch' 'yarn server:start'",
     "server:start": "nodemon -e '*.ts, *.mwb, *.sql' --watch build 'node build/index.js'",
-    "build": "tsc --build && copyfiles **/*.mwb **/*.sql build/",
+    "build": "tsc --build && copyfiles db/**/*.* build/",
     "build:watch": "tsc --watch",
     "clean": "rm -rf node_modules/ build/"
   },
