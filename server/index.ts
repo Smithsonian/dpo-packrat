@@ -4,19 +4,20 @@
  * Entry file for server
  */
 
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
+import { ApolloServer } from 'apollo-server-express';
+
+import schema from './graphql/schema';
 
 const app = express();
 app.use(cors());
 
 const PORT = 4000;
 
-app.get('/', (request: Request, response: Response) => {
-    const { hostname } = request;
-    response.send(`Hello from Packrat server: ${hostname}`);
-});
+const server = new ApolloServer({ schema });
+server.applyMiddleware({ app });
 
 app.listen(PORT, () => {
-    console.log(`server is running on port ${PORT}`);
+    console.log(`GraphQl Server is running`);
 });
