@@ -19,5 +19,5 @@ const server = new ApolloServer({ schema });
 server.applyMiddleware({ app });
 
 app.listen(PORT, () => {
-    console.log(`GraphQl Server is running`);
+    console.log('GraphQL Server is running');
 });
