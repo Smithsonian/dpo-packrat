@@ -1,6 +1,7 @@
-import { mergeResolvers, mergeTypeDefs, makeExecutableSchema, } from 'graphql-tools';
+import { mergeResolvers, mergeTypeDefs, makeExecutableSchema } from 'graphql-tools';
 
 import { userTypes, userQueries, userResolvers } from './user';
+import { GraphQLSchema } from 'graphql';
 
 const resolvers = mergeResolvers([
     userResolvers,
@@ -11,6 +12,6 @@ const typeDefs = mergeTypeDefs([
     userQueries
 ]);
 
-const schema = makeExecutableSchema({ typeDefs, resolvers });
+const schema: GraphQLSchema = makeExecutableSchema({ typeDefs, resolvers });
 
-export default schema;
+export { schema as default, typeDefs };
