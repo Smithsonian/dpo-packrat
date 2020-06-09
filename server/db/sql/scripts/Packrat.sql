@@ -406,6 +406,7 @@ CREATE TABLE IF NOT EXISTS `unit` (
   `idUnit` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `Abbreviation` varchar(20) DEFAULT NULL,
+  `ARKPrefix` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`idUnit`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
