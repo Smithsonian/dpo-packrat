@@ -28,10 +28,15 @@
     "start:common": "yarn workspace @dpo-packrat/common start",
     "log:client": "docker logs -f packrat-client",
     "log:server": "docker logs -f packrat-server",
-    "dev": "docker-compose up -d",
+    "start:client:prod": "yarn workspace @dpo-packrat/client start:prod",
+    "start:server:prod": "yarn workspace @dpo-packrat/server start:prod",
+    "dev": "docker-compose -f docker-compose.dev.yml up -d",
+    "prod": "docker-compose -f docker-compose.prod.yml up -d",
+    "dev:rebuild": "docker-compose -f docker-compose.dev.yml up --build",
+    "prod:rebuild": "docker-compose -f docker-compose.prod.yml up --build",
     "build": "lerna run build",
     "clean": "lerna run clean && rm -rf node_modules/",
-    "clean:docker": "docker-compose down && docker system prune -f"
+    "clean:docker": "docker-compose -f docker-compose.dev.yml down && docker system prune -f"
   },
   "devDependencies": {
     "@types/node": "^14.0.6",
