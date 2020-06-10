@@ -1,1 +1,1 @@
-export * from './systemobject'
+export * from './systemobject';
