@@ -1,10 +1,10 @@
 FROM node:12-alpine AS base
-# Copy package.json for caching
-ADD package*.json ./
 # Add a work directory
 WORKDIR /app
+# Copy package.json for caching
+ADD package*.json .
 # Copy app files
-COPY . /app
+COPY . .
 # Install dependencies
 RUN yarn
 
