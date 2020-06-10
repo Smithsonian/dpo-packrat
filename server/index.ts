@@ -8,8 +8,8 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 
-import { unit} from '@prisma/client';
-import * as DBAPI from './db/api/';
+import { unit } from '@prisma/client';
+import * as DBAPI from './db/api';
 
 import schema from './graphql/schema';
 
@@ -25,15 +25,20 @@ app.listen(PORT, () => {
     console.log('GraphQL Server is running');
 });
 
-app.get('/dbtest', (request: Request, response: Response) => {
+app.get('/dbtest', async (request: Request, response: Response) => {
     const { hostname } = request;
-    let newUnit : unit = { Name: "DPO", Abbreviation: "DPO", ARKPrefix: "http://abbadabbadoo/", idUnit: 0 };
-    DBAPI.createSystemObject(newUnit)
-        .then((createdUnit) => { 
-            response.send(`Hello from Packrat server @ ${hostname}: Created Unit with ID ${createdUnit.idUnit}`);
-        })
-        .catch(err => {
-            console.log(err);
-            response.send(`Hello from Packrat server @ ${hostname}: ${err}`);
-        });
+    const newUnit: unit = {
+        Name: 'DPO',
+        Abbreviation: 'DPO',
+        ARKPrefix: 'http://abbadabbadoo/',
+        idUnit: 0
+    };
+
+    try {
+        const createdUnit = await DBAPI.createSystemObject(newUnit);
+        response.send(`Hello from Packrat server @ ${hostname}: Created Unit with ID ${createdUnit.idUnit}`);
+    } catch (error) {
+        console.log(error);
+        response.send(`Hello from Packrat server @ ${hostname}: ${error}`);
+    }
 });

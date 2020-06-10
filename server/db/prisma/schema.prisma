@@ -1,6 +1,7 @@
 generator client {
-  provider        = "prisma-client-js"
-  binaryTargets   = ["native", "linux-musl"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
+  output        = "../../../node_modules/@prisma/client"
 }
 
 datasource postgresql {
