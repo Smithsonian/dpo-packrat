@@ -1,0 +1,32 @@
+# import CaptureDataFile from "../capturedata/types.graphql"
+# import Scene from "../scene/types.graphql"
+# import IntermediaryFile from "../scene/types.graphql"
+# import User from "../user/types.graphql"
+
+scalar DateTime
+
+type Asset {
+  id: ID!
+  fileName: String!
+  filePath: String!
+  assetGroups: AssetGroup
+  captureDataFiles: [CaptureDataFile]
+  scenes: [Scene]
+  intermediaryFiles: [IntermediaryFile]
+}
+
+type AssetVersion {
+  id: ID!
+  asset: Asset
+  userCreator: User
+  creationDate: DateTime
+  storageLocation: String!
+  storageChecksum: String!
+  storageSize: Int!
+  assets: [Asset]
+}
+
+type AssetGroup {
+  id: ID!
+  assets: [Asset]
+}
