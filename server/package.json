@@ -26,6 +26,7 @@
   "typings": "build/index.d.ts",
   "scripts": {
     "start": "yarn build && concurrently 'yarn build:watch' 'yarn server:start'",
+    "start:prod": "nodemon 'node build/index.js'",
     "server:start": "nodemon --watch build/ 'node build/index.js'",
     "build": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
     "build:watch": "tsc --watch",
