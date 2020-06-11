@@ -1,13 +1,30 @@
-version: "3"
+version: "3.4"
 
 services:
+    packrat-proxy:
+        container_name: packrat-proxy
+        image: packrat-proxy
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker/dev.Dockerfile
+            target: proxy
+        depends_on:
+            - packrat-client
+            - packrat-server
+        volumes:
+            - ./nginx.conf:/etc/nginx/nginx.conf
+        ports:
+            - 80:80
+
     packrat-client:
         container_name: packrat-client
         image: packrat-client
         restart: always
         build:
             context: .
-            dockerfile: ./docker/client.Dockerfile
+            dockerfile: ./docker/dev.Dockerfile
+            target: client
         env_file:
             - .env
         ports:
@@ -23,7 +40,8 @@ services:
         restart: always
         build:
             context: .
-            dockerfile: ./docker/server.Dockerfile
+            dockerfile: ./docker/dev.Dockerfile
+            target: server
         env_file:
             - .env
         ports:
