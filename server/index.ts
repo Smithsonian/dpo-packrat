@@ -8,7 +8,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 
-import { unit } from '@prisma/client';
+import { Unit } from '@prisma/client';
 import * as DBAPI from './db/api';
 
 import schema from './graphql/schema';
@@ -27,7 +27,7 @@ app.listen(PORT, () => {
 
 app.get('/dbtest', async (request: Request, response: Response) => {
     const { hostname } = request;
-    const newUnit: unit = {
+    const newUnit: Unit = {
         Name: 'DPO',
         Abbreviation: 'DPO',
         ARKPrefix: 'http://abbadabbadoo/',

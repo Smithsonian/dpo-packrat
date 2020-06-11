@@ -1,7 +1,7 @@
-CREATE DATABASE IF NOT EXISTS `packrat` /*!40100 DEFAULT CHARACTER SET utf8 */;
-USE `packrat`;
+CREATE DATABASE IF NOT EXISTS `Packrat` /*!40100 DEFAULT CHARACTER SET utf8 */;
+USE `Packrat`;
 
-CREATE TABLE IF NOT EXISTS `accessaction` (
+CREATE TABLE IF NOT EXISTS `AccessAction` (
   `idAccessAction` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `SortOrder` int(11) NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `accessaction` (
   KEY `AccessAction_SortOrder` (`SortOrder`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `accesscontext` (
+CREATE TABLE IF NOT EXISTS `AccessContext` (
   `idAccessContext` int(11) NOT NULL AUTO_INCREMENT,
   `Global` bit(1) NOT NULL,
   `Authoritative` bit(1) NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `accesscontext` (
   PRIMARY KEY (`idAccessContext`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `accesscontextobject` (
+CREATE TABLE IF NOT EXISTS `AccessContextObject` (
   `idAccessContextObject` int(11) NOT NULL AUTO_INCREMENT,
   `idAccessContext` int(11) NOT NULL,
   `idSystemObject` int(11) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `accesscontextobject` (
   KEY `AccessContextObject_idSystemObject` (`idSystemObject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `accesspolicy` (
+CREATE TABLE IF NOT EXISTS `AccessPolicy` (
   `idAccessPolicy` int(11) NOT NULL AUTO_INCREMENT,
   `idUser` int(11) NOT NULL,
   `idAccessRole` int(11) NOT NULL,
@@ -40,13 +40,13 @@ CREATE TABLE IF NOT EXISTS `accesspolicy` (
   KEY `AccessPolicy_idAccessRole` (`idAccessRole`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `accessrole` (
+CREATE TABLE IF NOT EXISTS `AccessRole` (
   `idAccessRole` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   PRIMARY KEY (`idAccessRole`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `accessroleaccessactionxref` (
+CREATE TABLE IF NOT EXISTS `AccessRoleAccessActionXref` (
   `idAccessRoleAccessActionXref` int(11) NOT NULL AUTO_INCREMENT,
   `idAccessRole` int(11) NOT NULL,
   `idAccessAction` int(11) NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `accessroleaccessactionxref` (
   KEY `AccessRoleAccessActionXref_idAccessAction` (`idAccessAction`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `actor` (
+CREATE TABLE IF NOT EXISTS `Actor` (
   `idActor` int(11) NOT NULL AUTO_INCREMENT,
   `IndividualName` varchar(255) DEFAULT NULL,
   `OrganizationName` varchar(255) DEFAULT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS `actor` (
   PRIMARY KEY (`idActor`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `asset` (
+CREATE TABLE IF NOT EXISTS `Asset` (
   `idAsset` int(11) NOT NULL AUTO_INCREMENT,
   `FileName` varchar(512) NOT NULL,
   `FilePath` varchar(512) NOT NULL,
@@ -74,12 +74,12 @@ CREATE TABLE IF NOT EXISTS `asset` (
   KEY `Asset_idSystemObject` (`idSystemObject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `assetgroup` (
+CREATE TABLE IF NOT EXISTS `AssetGroup` (
   `idAssetGroup` int(11) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`idAssetGroup`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `assetversion` (
+CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `idAssetVersion` int(11) NOT NULL AUTO_INCREMENT,
   `idAsset` int(11) NOT NULL,
   `idUserCreator` int(11) NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `assetversion` (
   KEY `AssetVersion_idAsset_CreationDate` (`idAsset`,`CreationDate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `capturedata` (
+CREATE TABLE IF NOT EXISTS `CaptureData` (
   `idCaptureData` int(11) NOT NULL AUTO_INCREMENT,
   `idVCaptureMethod` int(11) NOT NULL,
   `idVCaptureDatasetType` int(11) NOT NULL,
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS `capturedata` (
   PRIMARY KEY (`idCaptureData`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `capturedatafile` (
+CREATE TABLE IF NOT EXISTS `CaptureDataFile` (
   `idCaptureDataFile` int(11) NOT NULL AUTO_INCREMENT,
   `idCaptureData` int(11) NOT NULL,
   `idAsset` int(11) NOT NULL,
@@ -122,12 +122,12 @@ CREATE TABLE IF NOT EXISTS `capturedatafile` (
   KEY `CaptureDataFile_idAsset` (`idAsset`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `capturedatagroup` (
+CREATE TABLE IF NOT EXISTS `CaptureDataGroup` (
   `idCaptureDataGroup` int(11) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`idCaptureDataGroup`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `capturedatagroupcapturedataxref` (
+CREATE TABLE IF NOT EXISTS `CaptureDataGroupCaptureDataXref` (
   `idCaptureDataGroupCaptureDataXref` int(11) NOT NULL AUTO_INCREMENT,
   `idCaptureDataGroup` int(11) NOT NULL,
   `idCaptureData` int(11) NOT NULL,
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS `capturedatagroupcapturedataxref` (
   KEY `CaptureDataGroupCaptureDataXref_idCaptureData` (`idCaptureData`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `geolocation` (
+CREATE TABLE IF NOT EXISTS `GeoLocation` (
   `idGeolocation` int(11) NOT NULL AUTO_INCREMENT,
   `Latitude` double DEFAULT NULL,
   `Longitude` double DEFAULT NULL,
@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS `geolocation` (
   PRIMARY KEY (`idGeolocation`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `identifier` (
+CREATE TABLE IF NOT EXISTS `Identifier` (
   `idIdentifier` int(11) NOT NULL AUTO_INCREMENT,
   `Identifier` varchar(255) NOT NULL,
   `idVIdentifierType` int(11) NOT NULL,
@@ -162,14 +162,14 @@ CREATE TABLE IF NOT EXISTS `identifier` (
   KEY `Identifier_idVIdentifierType_Identifier` (`idVIdentifierType`,`Identifier`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `intermediaryfile` (
+CREATE TABLE IF NOT EXISTS `IntermediaryFile` (
   `idIntermediaryFile` int(11) NOT NULL AUTO_INCREMENT,
   `idAsset` int(11) NOT NULL,
   `DateCreated` datetime NOT NULL,
   PRIMARY KEY (`idIntermediaryFile`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `item` (
+CREATE TABLE IF NOT EXISTS `Item` (
   `idItem` int(11) NOT NULL AUTO_INCREMENT,
   `idSubject` int(11) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
@@ -179,14 +179,14 @@ CREATE TABLE IF NOT EXISTS `item` (
   PRIMARY KEY (`idItem`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `license` (
+CREATE TABLE IF NOT EXISTS `License` (
   `idLicense` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `Description` varchar(8000) NOT NULL,
   PRIMARY KEY (`idLicense`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `licenseassignment` (
+CREATE TABLE IF NOT EXISTS `LicenseAssignment` (
   `idLicenseAssignment` int(11) NOT NULL AUTO_INCREMENT,
   `idLicense` int(11) NOT NULL,
   `idUserCreator` int(11) DEFAULT NULL,
@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS `licenseassignment` (
   KEY `LicenseAssignment_idSystemObject` (`idSystemObject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `metadata` (
+CREATE TABLE IF NOT EXISTS `Metadata` (
   `idMetadata` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `ValueShort` varchar(255) DEFAULT NULL,
@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS `metadata` (
   KEY `Metadata_idSystemObject` (`idSystemObject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `model` (
+CREATE TABLE IF NOT EXISTS `Model` (
   `idModel` int(11) NOT NULL AUTO_INCREMENT,
   `DateCreated` datetime NOT NULL,
   `idVCreationMethod` int(11) NOT NULL,
@@ -225,7 +225,7 @@ CREATE TABLE IF NOT EXISTS `model` (
   PRIMARY KEY (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `modelgeometryfile` (
+CREATE TABLE IF NOT EXISTS `ModelGeometryFile` (
   `idModelGeometryFile` int(11) NOT NULL AUTO_INCREMENT,
   `idModel` int(11) NOT NULL,
   `idAsset` int(11) NOT NULL,
@@ -249,7 +249,7 @@ CREATE TABLE IF NOT EXISTS `modelgeometryfile` (
   KEY `ModelGeometryFile_idAsset` (`idAsset`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `modelprocessingaction` (
+CREATE TABLE IF NOT EXISTS `ModelProcessingAction` (
   `idModelProcessingAction` int(11) NOT NULL AUTO_INCREMENT,
   `idModel` int(11) NOT NULL,
   `idActor` int(11) NOT NULL,
@@ -261,7 +261,7 @@ CREATE TABLE IF NOT EXISTS `modelprocessingaction` (
   KEY `ModelProcessingAction_idActor` (`idActor`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `modelprocessingactionstep` (
+CREATE TABLE IF NOT EXISTS `ModelProcessingActionStep` (
   `idModelProcessingActionStep` int(11) NOT NULL AUTO_INCREMENT,
   `idModelProcessingAction` int(11) NOT NULL,
   `idVActionMethod` int(11) NOT NULL,
@@ -269,7 +269,7 @@ CREATE TABLE IF NOT EXISTS `modelprocessingactionstep` (
   PRIMARY KEY (`idModelProcessingActionStep`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `modelscenexref` (
+CREATE TABLE IF NOT EXISTS `ModelSceneXref` (
   `idModelSceneXref` int(11) NOT NULL AUTO_INCREMENT,
   `idModel` int(11) NOT NULL,
   `idScene` int(11) NOT NULL,
@@ -285,7 +285,7 @@ CREATE TABLE IF NOT EXISTS `modelscenexref` (
   KEY `ModelSceneXref_idScene` (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `modeluvmapchannel` (
+CREATE TABLE IF NOT EXISTS `ModelUVMapChannel` (
   `idModelUVMapChannel` int(11) NOT NULL AUTO_INCREMENT,
   `idModelUVMapFile` int(11) NOT NULL,
   `ChannelPosition` int(11) NOT NULL,
@@ -295,7 +295,7 @@ CREATE TABLE IF NOT EXISTS `modeluvmapchannel` (
   KEY `ModelUVMapChannel_idModelUVMapFile` (`idModelUVMapFile`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `modeluvmapfile` (
+CREATE TABLE IF NOT EXISTS `ModelUVMapFile` (
   `idModelUVMapFile` int(11) NOT NULL AUTO_INCREMENT,
   `idModelGeometryFile` int(11) NOT NULL,
   `idAsset` int(11) NOT NULL,
@@ -305,14 +305,14 @@ CREATE TABLE IF NOT EXISTS `modeluvmapfile` (
   KEY `ModelUVMapFile_idAsset` (`idAsset`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `project` (
+CREATE TABLE IF NOT EXISTS `Project` (
   `idProject` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(128) NOT NULL,
   `Description` varchar(8000) DEFAULT NULL,
   PRIMARY KEY (`idProject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `projectdocumentation` (
+CREATE TABLE IF NOT EXISTS `ProjectDocumentation` (
   `idProjectDocumentation` int(11) NOT NULL AUTO_INCREMENT,
   `idProject` int(11) NOT NULL,
   `Name` varchar(255) NOT NULL,
@@ -320,7 +320,7 @@ CREATE TABLE IF NOT EXISTS `projectdocumentation` (
   PRIMARY KEY (`idProjectDocumentation`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `scene` (
+CREATE TABLE IF NOT EXISTS `Scene` (
   `idScene` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
@@ -329,7 +329,7 @@ CREATE TABLE IF NOT EXISTS `scene` (
   PRIMARY KEY (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `stakeholder` (
+CREATE TABLE IF NOT EXISTS `Stakeholder` (
   `idStakeholder` int(11) NOT NULL AUTO_INCREMENT,
   `IndividualName` varchar(255) NOT NULL,
   `OrganizationName` varchar(255) NOT NULL,
@@ -340,7 +340,7 @@ CREATE TABLE IF NOT EXISTS `stakeholder` (
   PRIMARY KEY (`idStakeholder`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `subject` (
+CREATE TABLE IF NOT EXISTS `Subject` (
   `idSubject` int(11) NOT NULL AUTO_INCREMENT,
   `idUnit` int(11) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
@@ -349,7 +349,7 @@ CREATE TABLE IF NOT EXISTS `subject` (
   PRIMARY KEY (`idSubject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `systemobject` (
+CREATE TABLE IF NOT EXISTS `SystemObject` (
   `idSystemObject` int(11) NOT NULL AUTO_INCREMENT,
   `idUnit` int(11) DEFAULT NULL,
   `idProject` int(11) DEFAULT NULL,
@@ -385,7 +385,7 @@ CREATE TABLE IF NOT EXISTS `systemobject` (
   KEY `SystemObject_idScene` (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE IF NOT EXISTS `systemobjectversion` (
+CREATE TABLE IF NOT EXISTS `SystemObjectVersion` (
   `idSystemObjectVersion` int(11) NOT NULL AUTO_INCREMENT,
   `idSystemObject` int(11) NOT NULL,
   `PublishedState` int(11) NOT NULL,
@@ -393,7 +393,7 @@ CREATE TABLE IF NOT EXISTS `systemobjectversion` (
   KEY `ObjectVersion_idSystemObject_idObjectVersion` (`idSystemObject`,`idSystemObjectVersion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `systemobjectxref` (
+CREATE TABLE IF NOT EXISTS `SystemObjectXref` (
   `idSystemObjectXref` int(11) NOT NULL AUTO_INCREMENT,
   `idSystemObjectMaster` int(11) NOT NULL,
   `idSystemObjectDerived` int(11) NOT NULL,
@@ -402,7 +402,7 @@ CREATE TABLE IF NOT EXISTS `systemobjectxref` (
   KEY `SystemObjectXref_idSystemObjectDerived` (`idSystemObjectDerived`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `unit` (
+CREATE TABLE IF NOT EXISTS `Unit` (
   `idUnit` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `Abbreviation` varchar(20) DEFAULT NULL,
@@ -410,7 +410,7 @@ CREATE TABLE IF NOT EXISTS `unit` (
   PRIMARY KEY (`idUnit`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `user` (
+CREATE TABLE IF NOT EXISTS `User` (
   `idUser` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `EmailAddress` varchar(255) NOT NULL,
@@ -423,7 +423,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`idUser`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `userpersonalizationsystemobject` (
+CREATE TABLE IF NOT EXISTS `UserPersonalizationSystemObject` (
   `idUserPersonalizationSystemObject` int(11) NOT NULL AUTO_INCREMENT,
   `idUser` int(11) NOT NULL,
   `idSystemObject` int(11) DEFAULT NULL,
@@ -433,7 +433,7 @@ CREATE TABLE IF NOT EXISTS `userpersonalizationsystemobject` (
   KEY `UserPersonalizationObject_idUser_idSystemObject` (`idUser`,`idSystemObject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `userpersonalizationurl` (
+CREATE TABLE IF NOT EXISTS `UserPersonalizationUrl` (
   `idUserPersonalizationURL` int(11) NOT NULL AUTO_INCREMENT,
   `idUser` int(11) NOT NULL,
   `URL` varchar(255) NOT NULL,
@@ -442,7 +442,7 @@ CREATE TABLE IF NOT EXISTS `userpersonalizationurl` (
   KEY `UserPersonalizationURL_idUser_URL` (`idUser`,`URL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `vocabulary` (
+CREATE TABLE IF NOT EXISTS `Vocabulary` (
   `idVocabulary` int(11) NOT NULL AUTO_INCREMENT,
   `idVocabularySet` int(11) NOT NULL,
   `SortOrder` int(11) NOT NULL,
@@ -450,14 +450,14 @@ CREATE TABLE IF NOT EXISTS `vocabulary` (
   KEY `Vocabulary_idVocabulySet_SortOrder` (`idVocabularySet`,`SortOrder`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `vocabularyset` (
+CREATE TABLE IF NOT EXISTS `VocabularySet` (
   `idVocabularySet` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `SystemMaintained` bit(1) NOT NULL,
   PRIMARY KEY (`idVocabularySet`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `workflow` (
+CREATE TABLE IF NOT EXISTS `Workflow` (
   `idWorkflow` int(11) NOT NULL AUTO_INCREMENT,
   `idWorkflowTemplate` int(11) NOT NULL,
   `idProject` int(11) DEFAULT NULL,
@@ -469,7 +469,7 @@ CREATE TABLE IF NOT EXISTS `workflow` (
   KEY `Workflow_idUserInitiator` (`idUserInitiator`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `workflowstep` (
+CREATE TABLE IF NOT EXISTS `WorkflowStep` (
   `idWorkflowStep` int(11) NOT NULL AUTO_INCREMENT,
   `idWorkflow` int(11) NOT NULL,
   `idUserOwner` int(11) NOT NULL,
@@ -484,7 +484,7 @@ CREATE TABLE IF NOT EXISTS `workflowstep` (
   KEY `WorkflowStep_State_idWorkflow` (`State`,`idWorkflow`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `workflowstepsystemobjectxref` (
+CREATE TABLE IF NOT EXISTS `WorkflowStepSystemObjectXref` (
   `idWorkflowStepSystemObjectXref` int(11) NOT NULL AUTO_INCREMENT,
   `idWorkflowStep` int(11) NOT NULL,
   `idSystemObject` int(11) NOT NULL,
@@ -494,552 +494,530 @@ CREATE TABLE IF NOT EXISTS `workflowstepsystemobjectxref` (
   KEY `WorkflowStepSystemObjectXref_idSystemObject_Input` (`idSystemObject`,`Input`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
-CREATE TABLE IF NOT EXISTS `workflowstepworkflowstepxref` (
-  `idWorkflowStepWorkflowStepXref` int(11) NOT NULL AUTO_INCREMENT,
-  `idWorkflowStep` int(11) NOT NULL,
-  `idWorkflowStepNext` int(11) NOT NULL,
-  PRIMARY KEY (`idWorkflowStepWorkflowStepXref`),
-  KEY `WorkflowStepWorkflowStepXref_idWorkflowStep_idWorkflowStepNext` (`idWorkflowStep`,`idWorkflowStepNext`),
-  KEY `WorkflowStepWorkflowStepXref_idWorkflowStepNext_idWorkflowStep` (`idWorkflowStepNext`,`idWorkflowStep`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `workflowtemplate` (
+CREATE TABLE IF NOT EXISTS `WorkflowTemplate` (
   `idWorkflowTemplate` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   PRIMARY KEY (`idWorkflowTemplate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Foreign Keys
-ALTER TABLE `packrat`.`accesscontextobject` 
+ALTER TABLE `Packrat`.`AccessContextObject` 
 ADD CONSTRAINT `fk_accesscontextobject_accesscontext1`
   FOREIGN KEY (`idAccessContext`)
-  REFERENCES `packrat`.`accesscontext` (`idAccessContext`)
+  REFERENCES `Packrat`.`AccessContext` (`idAccessContext`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_accesscontextobject_systemobject1`
   FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`accesspolicy` 
+ALTER TABLE `Packrat`.`AccessPolicy` 
 ADD CONSTRAINT `fk_accesspolicy_user1`
   FOREIGN KEY (`idUser`)
-  REFERENCES `packrat`.`user` (`idUser`)
+  REFERENCES `Packrat`.`User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_accesspolicy_accessrole1`
   FOREIGN KEY (`idAccessRole`)
-  REFERENCES `packrat`.`accessrole` (`idAccessRole`)
+  REFERENCES `Packrat`.`AccessRole` (`idAccessRole`)
   ON DELETE NO ACTION 
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_accesspolicy_accesscontext1`
   FOREIGN KEY (`idAccessContext`)
-  REFERENCES `packrat`.`accesscontext` (`idAccessContext`)
+  REFERENCES `Packrat`.`AccessContext` (`idAccessContext`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`accessroleaccessactionxref` 
+ALTER TABLE `Packrat`.`AccessRoleAccessActionXref` 
 ADD CONSTRAINT `fk_accessroleaccessactionxref_accessrole1`
   FOREIGN KEY (`idAccessRole`)
-  REFERENCES `packrat`.`accessrole` (`idAccessRole`)
+  REFERENCES `Packrat`.`AccessRole` (`idAccessRole`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_accessroleaccessactionxref_accessaction1`
   FOREIGN KEY (`idAccessAction`)
-  REFERENCES `packrat`.`accessaction` (`idAccessAction`)
+  REFERENCES `Packrat`.`AccessAction` (`idAccessAction`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`actor` 
+ALTER TABLE `Packrat`.`Actor` 
 ADD CONSTRAINT `fk_actor_unit_1`
   FOREIGN KEY (`idUnit`)
-  REFERENCES `packrat`.`unit` (`idUnit`)
+  REFERENCES `Packrat`.`Unit` (`idUnit`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`asset` 
+ALTER TABLE `Packrat`.`Asset` 
 ADD CONSTRAINT `fk_asset_assetgroup1`
   FOREIGN KEY (`idAssetGroup`)
-  REFERENCES `packrat`.`assetgroup` (`idAssetGroup`)
+  REFERENCES `Packrat`.`AssetGroup` (`idAssetGroup`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_asset_systemobject1`
   FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`assetversion` 
+ALTER TABLE `Packrat`.`AssetVersion` 
 ADD CONSTRAINT `fk_assetversion_asset1`
   FOREIGN KEY (`idAsset`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_assetversion_user1`
   FOREIGN KEY (`idUserCreator`)
-  REFERENCES `packrat`.`user` (`idUser`)
+  REFERENCES `Packrat`.`User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`capturedata` 
+ALTER TABLE `Packrat`.`CaptureData` 
 ADD CONSTRAINT `fk_capturedata_vocabulary1`
   FOREIGN KEY (`idVCaptureMethod`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedata_vocabulary2`
   FOREIGN KEY (`idVCaptureDatasetType`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedata_vocabulary3`
   FOREIGN KEY (`idVItemPositionType`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedata_vocabulary4`
   FOREIGN KEY (`idVFocusType`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedata_vocabulary5`
   FOREIGN KEY (`idVLightSourceType`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedata_vocabulary6`
   FOREIGN KEY (`idVBackgroundRemovalMethod`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedata_vocabulary7`
   FOREIGN KEY (`idVClusterType`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedata_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`capturedatafile` 
+ALTER TABLE `Packrat`.`CaptureDataFile` 
 ADD CONSTRAINT `fk_capturedatafile_capturedata1`
   FOREIGN KEY (`idCaptureData`)
-  REFERENCES `packrat`.`capturedata` (`idCaptureData`)
+  REFERENCES `Packrat`.`CaptureData` (`idCaptureData`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedatafile_asset1`
   FOREIGN KEY (`idAsset`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedatafile_vocabulary1`
   FOREIGN KEY (`idVVariantType`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`capturedatagroupcapturedataxref` 
+ALTER TABLE `Packrat`.`CaptureDataGroupCaptureDataXref` 
 ADD CONSTRAINT `fk_capturedatagroupcapturedataxref_capturedatagroup1`
   FOREIGN KEY (`idCaptureDataGroup`)
-  REFERENCES `packrat`.`capturedatagroup` (`idCaptureDataGroup`)
+  REFERENCES `Packrat`.`CaptureDataGroup` (`idCaptureDataGroup`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedatagroupcapturedataxref_capturedata1`
   FOREIGN KEY (`idCaptureData`)
-  REFERENCES `packrat`.`capturedata` (`idCaptureData`)
+  REFERENCES `Packrat`.`CaptureData` (`idCaptureData`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`identifier` 
+ALTER TABLE `Packrat`.`Identifier` 
 ADD CONSTRAINT `fk_identifier_systemobject1`
   FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_identifier_vocabulary1`
   FOREIGN KEY (`idVIdentifierType`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`intermediaryfile` 
+ALTER TABLE `Packrat`.`IntermediaryFile` 
 ADD CONSTRAINT `fk_intermediaryfile_asset1`
   FOREIGN KEY (`idAsset`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`item` 
+ALTER TABLE `Packrat`.`Item` 
 ADD CONSTRAINT `fk_item_subject1`
   FOREIGN KEY (`idSubject`)
-  REFERENCES `packrat`.`subject` (`idSubject`)
+  REFERENCES `Packrat`.`Subject` (`idSubject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_item_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_item_geolocation1`
   FOREIGN KEY (`idGeolocation`)
-  REFERENCES `packrat`.`geolocation` (`idGeolocation`)
+  REFERENCES `Packrat`.`GeoLocation` (`idGeolocation`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`licenseassignment` 
+ALTER TABLE `Packrat`.`LicenseAssignment` 
 ADD CONSTRAINT `fk_licenseassignment_license1`
   FOREIGN KEY (`idLicense`)
-  REFERENCES `packrat`.`license` (`idLicense`)
+  REFERENCES `Packrat`.`License` (`idLicense`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_licenseassignment_user1`
   FOREIGN KEY (`idUserCreator`)
-  REFERENCES `packrat`.`user` (`idUser`)
+  REFERENCES `Packrat`.`User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_licenseassignment_systemobject1`
   FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`metadata` 
+ALTER TABLE `Packrat`.`Metadata` 
 ADD CONSTRAINT `fk_metadata_asset1`
   FOREIGN KEY (`idAssetValue`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_metadata_user1`
   FOREIGN KEY (`idUser`)
-  REFERENCES `packrat`.`user` (`idUser`)
+  REFERENCES `Packrat`.`User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_metadata_vocabulary1`
   FOREIGN KEY (`idVMetadataSource`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_metadata_systemobject1`
   FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`model` 
+ALTER TABLE `Packrat`.`Model` 
 ADD CONSTRAINT `fk_model_vocabulary1`
   FOREIGN KEY (`idVCreationMethod`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_model_vocabulary2`
   FOREIGN KEY (`idVModality`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_model_vocabulary3`
   FOREIGN KEY (`idVUnits`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_model_vocabulary4`
   FOREIGN KEY (`idVPurpose`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_model_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`modelgeometryfile` 
+ALTER TABLE `Packrat`.`ModelGeometryFile` 
 ADD CONSTRAINT `fk_modelgeometryfile_model1`
   FOREIGN KEY (`idModel`)
-  REFERENCES `packrat`.`model` (`idModel`)
+  REFERENCES `Packrat`.`Model` (`idModel`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_modelgeometryfile_asset1`
   FOREIGN KEY (`idAsset`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_modelgeometryfile_vocabulary1`
   FOREIGN KEY (`idVModelFileType`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`modelprocessingaction` 
+ALTER TABLE `Packrat`.`ModelProcessingAction` 
 ADD CONSTRAINT `fk_modelprocessingaction_model1`
   FOREIGN KEY (`idModel`)
-  REFERENCES `packrat`.`model` (`idModel`)
+  REFERENCES `Packrat`.`Model` (`idModel`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_modelprocessingaction_actor1`
   FOREIGN KEY (`idActor`)
-  REFERENCES `packrat`.`actor` (`idActor`)
+  REFERENCES `Packrat`.`Actor` (`idActor`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`modelprocessingactionstep` 
+ALTER TABLE `Packrat`.`ModelProcessingActionStep` 
 ADD CONSTRAINT `fk_modelprocessingactionstep_modelprocessingaction1`
   FOREIGN KEY (`idModelProcessingAction`)
-  REFERENCES `packrat`.`modelprocessingaction` (`idModelProcessingAction`)
+  REFERENCES `Packrat`.`ModelProcessingAction` (`idModelProcessingAction`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_modelprocessingactionstep_vocabulary1`
   FOREIGN KEY (`idVActionMethod`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
-ALTER TABLE `packrat`.`modelscenexref` 
+ALTER TABLE `Packrat`.`ModelSceneXref` 
 ADD CONSTRAINT `fk_modelscenexref_model1`
   FOREIGN KEY (`idModel`)
-  REFERENCES `packrat`.`model` (`idModel`)
+  REFERENCES `Packrat`.`Model` (`idModel`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_modelscenexref_scene1`
   FOREIGN KEY (`idScene`)
-  REFERENCES `packrat`.`scene` (`idScene`)
+  REFERENCES `Packrat`.`Scene` (`idScene`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`modeluvmapchannel` 
+ALTER TABLE `Packrat`.`ModelUVMapChannel` 
 ADD CONSTRAINT `fk_modeluvmapchannel_modeluvmapfile1`
   FOREIGN KEY (`idModelUVMapFile`)
-  REFERENCES `packrat`.`modeluvmapfile` (`idModelUVMapFile`)
+  REFERENCES `Packrat`.`ModelUVMapFile` (`idModelUVMapFile`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_modeluvmapchannel_vocabulary1`
   FOREIGN KEY (`idVUVMapType`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
-ALTER TABLE `packrat`.`modeluvmapfile` 
+ALTER TABLE `Packrat`.`ModelUVMapFile` 
 ADD CONSTRAINT `fk_modeluvmapfile_modelgeometryfile1`
   FOREIGN KEY (`idModelGeometryFile`)
-  REFERENCES `packrat`.`modelgeometryfile` (`idModelGeometryFile`)
+  REFERENCES `Packrat`.`ModelGeometryFile` (`idModelGeometryFile`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_modeluvmapfile_asset1`
   FOREIGN KEY (`idAsset`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`projectdocumentation` 
+ALTER TABLE `Packrat`.`ProjectDocumentation` 
 ADD CONSTRAINT `fk_projectdocumentation_project1`
   FOREIGN KEY (`idProject`)
-  REFERENCES `packrat`.`project` (`idProject`)
+  REFERENCES `Packrat`.`Project` (`idProject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`scene` 
+ALTER TABLE `Packrat`.`Scene` 
 ADD CONSTRAINT `fk_scene_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`subject` 
+ALTER TABLE `Packrat`.`Subject` 
 ADD CONSTRAINT `fk_subject_unit1`
   FOREIGN KEY (`idUnit`)
-  REFERENCES `packrat`.`unit` (`idUnit`)
+  REFERENCES `Packrat`.`Unit` (`idUnit`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_subject_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_subject_geolocation1`
   FOREIGN KEY (`idGeolocation`)
-  REFERENCES `packrat`.`geolocation` (`idGeolocation`)
+  REFERENCES `Packrat`.`GeoLocation` (`idGeolocation`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`systemobject` 
+ALTER TABLE `Packrat`.`SystemObject` 
 ADD CONSTRAINT `fk_systemobject_unit1`
   FOREIGN KEY (`idUnit`)
-  REFERENCES `packrat`.`unit` (`idUnit`)
+  REFERENCES `Packrat`.`Unit` (`idUnit`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_project1`
   FOREIGN KEY (`idProject`)
-  REFERENCES `packrat`.`project` (`idProject`)
+  REFERENCES `Packrat`.`Project` (`idProject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_subject1`
   FOREIGN KEY (`idSubject`)
-  REFERENCES `packrat`.`subject` (`idSubject`)
+  REFERENCES `Packrat`.`Subject` (`idSubject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_item1`
   FOREIGN KEY (`idItem`)
-  REFERENCES `packrat`.`item` (`idItem`)
+  REFERENCES `Packrat`.`Item` (`idItem`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_capturedata1`
   FOREIGN KEY (`idCaptureData`)
-  REFERENCES `packrat`.`capturedata` (`idCaptureData`)
+  REFERENCES `Packrat`.`CaptureData` (`idCaptureData`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_model1`
   FOREIGN KEY (`idModel`)
-  REFERENCES `packrat`.`model` (`idModel`)
+  REFERENCES `Packrat`.`Model` (`idModel`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_scene1`
   FOREIGN KEY (`idScene`)
-  REFERENCES `packrat`.`scene` (`idScene`)
+  REFERENCES `Packrat`.`Scene` (`idScene`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_intermediaryfile1`
   FOREIGN KEY (`idIntermediaryFile`)
-  REFERENCES `packrat`.`intermediaryfile` (`idIntermediaryFile`)
+  REFERENCES `Packrat`.`IntermediaryFile` (`idIntermediaryFile`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_asset1`
   FOREIGN KEY (`idAsset`)
-  REFERENCES `packrat`.`asset` (`idAsset`)
+  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_assetversion1`
   FOREIGN KEY (`idAssetVersion`)
-  REFERENCES `packrat`.`assetversion` (`idAssetVersion`)
+  REFERENCES `Packrat`.`AssetVersion` (`idAssetVersion`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_projectdocumentation1`
   FOREIGN KEY (`idProjectDocumentation`)
-  REFERENCES `packrat`.`projectdocumentation` (`idProjectDocumentation`)
+  REFERENCES `Packrat`.`ProjectDocumentation` (`idProjectDocumentation`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_actor1`
   FOREIGN KEY (`idActor`)
-  REFERENCES `packrat`.`actor` (`idActor`)
+  REFERENCES `Packrat`.`Actor` (`idActor`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_stakeholder1`
   FOREIGN KEY (`idStakeholder`)
-  REFERENCES `packrat`.`stakeholder` (`idStakeholder`)
+  REFERENCES `Packrat`.`Stakeholder` (`idStakeholder`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_workflow1`
   FOREIGN KEY (`idWorkflow`)
-  REFERENCES `packrat`.`workflow` (`idWorkflow`)
+  REFERENCES `Packrat`.`Workflow` (`idWorkflow`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobject_workflowstep1`
   FOREIGN KEY (`idWorkflowStep`)
-  REFERENCES `packrat`.`workflowstep` (`idWorkflowStep`)
+  REFERENCES `Packrat`.`WorkflowStep` (`idWorkflowStep`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`systemobjectversion` 
+ALTER TABLE `Packrat`.`SystemObjectVersion` 
 ADD CONSTRAINT `fk_systemobjectversion_systemobject`
   FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`systemobjectxref` 
+ALTER TABLE `Packrat`.`SystemObjectXref` 
 ADD CONSTRAINT `fk_systemobjectxref_systemobject1`
   FOREIGN KEY (`idSystemObjectMaster`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_systemobjectxref_systemobject2`
   FOREIGN KEY (`idSystemObjectDerived`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`userpersonalizationsystemobject` 
+ALTER TABLE `Packrat`.`UserPersonalizationSystemObject` 
 ADD CONSTRAINT `fk_userpersonalizationsystemobject_user1`
   FOREIGN KEY (`idUser`)
-  REFERENCES `packrat`.`user` (`idUser`)
+  REFERENCES `Packrat`.`User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_userpersonalizationsystemobject_systemobject1`
   FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`userpersonalizationurl` 
+ALTER TABLE `Packrat`.`UserPersonalizationUrl` 
 ADD CONSTRAINT `fk_userpersonalizationurl_user1`
   FOREIGN KEY (`idUser`)
-  REFERENCES `packrat`.`user` (`idUser`)
+  REFERENCES `Packrat`.`User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`vocabulary` 
+ALTER TABLE `Packrat`.`Vocabulary` 
 ADD CONSTRAINT `fk_vocabulary_vocabularyset1`
   FOREIGN KEY (`idVocabularySet`)
-  REFERENCES `packrat`.`vocabularyset` (`idVocabularySet`)
+  REFERENCES `Packrat`.`VocabularySet` (`idVocabularySet`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `packrat`.`workflow` 
+ALTER TABLE `Packrat`.`Workflow` 
 ADD CONSTRAINT `fk_workflow_workflowtemplate1`
   FOREIGN KEY (`idWorkflowTemplate`)
-  REFERENCES `packrat`.`workflowtemplate` (`idWorkflowTemplate`)
+  REFERENCES `Packrat`.`WorkflowTemplate` (`idWorkflowTemplate`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_workflow_project1`
   FOREIGN KEY (`idProject`)
-  REFERENCES `packrat`.`project` (`idProject`)
+  REFERENCES `Packrat`.`Project` (`idProject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_workflow_user1`
   FOREIGN KEY (`idUserInitiator`)
-  REFERENCES `packrat`.`user` (`idUser`)
+  REFERENCES `Packrat`.`User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
-ALTER TABLE `packrat`.`workflowstep` 
+ALTER TABLE `Packrat`.`WorkflowStep` 
 ADD CONSTRAINT `fk_workflowstep_workflow1`
   FOREIGN KEY (`idWorkflow`)
-  REFERENCES `packrat`.`workflow` (`idWorkflow`)
+  REFERENCES `Packrat`.`Workflow` (`idWorkflow`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_workflowstep_user1`
   FOREIGN KEY (`idUserOwner`)
-  REFERENCES `packrat`.`user` (`idUser`)
+  REFERENCES `Packrat`.`User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_workflowstep_vocabulary1`
   FOREIGN KEY (`idVWorkflowStepType`)
-  REFERENCES `packrat`.`vocabulary` (`idVocabulary`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
-ALTER TABLE `packrat`.`workflowstepsystemobjectxref` 
+ALTER TABLE `Packrat`.`WorkflowStepSystemObjectXref` 
 ADD CONSTRAINT `fk_workflowstepsystemobjectxref_workflowstep1`
   FOREIGN KEY (`idWorkflowStep`)
-  REFERENCES `packrat`.`workflowstep` (`idWorkflowStep`)
+  REFERENCES `Packrat`.`WorkflowStep` (`idWorkflowStep`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_workflowstepsystemobjectxref_systemobject1`
   FOREIGN KEY (`idSystemObject`)
-  REFERENCES `packrat`.`systemobject` (`idSystemObject`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `packrat`.`workflowstepworkflowstepxref` 
-ADD CONSTRAINT `fk_workflowstepworkflowstepxref_workflowstep1`
-  FOREIGN KEY (`idWorkflowStep`)
-  REFERENCES `packrat`.`workflowstep` (`idWorkflowStep`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_workflowstepworkflowstepxref_workflowstep2`
-  FOREIGN KEY (`idWorkflowStepNext`)
-  REFERENCES `packrat`.`workflowstep` (`idWorkflowStep`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
