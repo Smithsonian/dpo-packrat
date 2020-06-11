@@ -2,8 +2,6 @@
  * Type resolver for User
  */
 
-const User = {
-
-};
+const User = {};
 
 export default User;

@@ -1,4 +1,31 @@
+# import LicenceAssignment from "../licence/types.graphql"
+
+scalar DateTime
+
 type User {
-    id: ID!
-    name: String!
+  id: ID!
+  name: String!
+  emailAddress: String!
+  securityId: String!
+  active: Boolean
+  dateActivated: DateTime
+  dateDisabled: DateTime
+  workflowNotificationTime: DateTime
+  emailSettings: Int
+  userPersonalizationSystemObjects: [UserPersonalizationSystemObject]
+  userPersonalizationUrls: [UserPersonalizationUrl]
+  licenceAssignments: [LicenceAssignment]
+}
+
+type UserPersonalizationSystemObject {
+  id: ID!
+  user: User
+  personalization: String
+}
+
+type UserPersonalizationUrl {
+  id: ID!
+  user: User
+  url: String
+  personalization: String
 }
