@@ -1,0 +1,27 @@
+# import Asset from "../asset/types.graphql"
+# import Model from "../model/types.graphql"
+# import Unit from "../unit/types.graphql"
+
+scalar DateTime
+
+type Scene {
+  id: ID!
+  name: String!
+  assetThumbnail: Asset
+  isOriented: Boolean
+  hasBeenQCd: Boolean
+  models: [Model]
+}
+
+type Actor {
+  id: ID!
+  individualName: String
+  organizationName: String
+  unit: Unit
+}
+
+type IntermediaryFile {
+  id: ID!
+  asset: Asset
+  dateCreated: DateTime
+}
