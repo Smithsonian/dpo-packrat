@@ -1,0 +1,66 @@
+# import Asset from "../asset/types.graphql"
+# import Actor from "../scene/types.graphql"
+
+type Unit {
+  id: ID!
+  name: String!
+  abbreviation: String!
+  subjects: [Subject]
+  actors: [Actor]
+}
+
+type Project {
+  id: ID!
+  name: String!
+  description: String!
+  documentations: [ProjectDocumentation]
+}
+
+type ProjectDocumentation {
+  id: ID!
+  project: Project
+  name: String!
+  description: String!
+}
+
+type Stakeholder {
+  id: ID!
+  individualName: String!
+  organizationName: String!
+  emailAddress: String!
+  phoneNumberMobile: String!
+  phoneNumberOffice: String!
+  mailingAddress: String!
+}
+
+type Geolocation {
+  id: ID!
+  latitude: Float!
+  longitude: Float!
+  altitude: Float!
+  ts0: Float!
+  ts1: Float!
+  ts2: Float!
+  r0: Float!
+  r1: Float!
+  r2: Float!
+  r3: Float!
+  items: [Item]
+  subjects: [Subject]
+}
+
+type Subject {
+  id: ID!
+  unit: Unit
+  assetThumbnail: Asset
+  name: String!
+}
+
+type Item {
+  id: ID!
+  subject: Subject
+  assetThumbnail: Asset
+  geolocation: Geolocation
+  name: String!
+  entireSubject: Boolean
+}
