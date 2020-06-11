@@ -1,15 +1,15 @@
-import { PrismaClient, unit } from '@prisma/client';
+import { PrismaClient, Unit } from '@prisma/client';
 const prisma = new PrismaClient();
 
-export async function createSystemObject(Unit: unit): Promise<unit> {
+export async function createSystemObject(Unit: Unit): Promise<Unit> {
     const { Name, Abbreviation, ARKPrefix } = Unit;
 
-    const createdUnit: unit = await prisma.unit.create({
+    const createdUnit: Unit = await prisma.unit.create({
         data: {
             Name,
             Abbreviation,
             ARKPrefix,
-            systemobject: {
+            SystemObject: {
                 create: { Retired: 0 },
             },
         },
