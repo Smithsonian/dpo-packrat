@@ -1,6 +1,283 @@
+scalar DateTime
+
+type Asset {
+  id: ID!
+  fileName: String!
+  filePath: String!
+  assetGroups: AssetGroup
+  captureDataFiles: [CaptureDataFile]
+  scenes: [Scene]
+  intermediaryFiles: [IntermediaryFile]
+}
+
+type AssetVersion {
+  id: ID!
+  asset: Asset!
+  userCreator: User!
+  creationDate: DateTime!
+  storageLocation: String!
+  storageChecksum: String!
+  storageSize: Int!
+  assets: [Asset]
+}
+
+type AssetGroup {
+  id: ID!
+  assets: [Asset]!
+}
+
+type CaptureData {
+  id: ID!
+  vCaptureMethod: Vocabulary!
+  vCaptureDatasetType: Vocabulary!
+  captureDate: DateTime!
+  description: String!
+  captureDatasetFieldId: Int
+  vItemPositionType: Vocabulary
+  itemPositionFieldId: Int
+  itemArrangementFieldId: Int
+  vFocusType: Vocabulary
+  vLightSourceType: Vocabulary
+  vBackgroundRemovalMethod: Vocabulary
+  vClusterType: Vocabulary
+  clusterGeometryFieldId: Int
+  cameraSettingsUniform: Boolean
+  assetThumbnail: Asset
+  captureDataGroups: [CaptureDataGroup]
+  captureDataFiles: [CaptureDataFile]
+}
+
+type CaptureDataFile {
+  id: ID!
+  captureData: CaptureData!
+  asset: Asset!
+  vVariantType: Vocabulary!
+  compressedMultipleFiles: Boolean!
+}
+
+type CaptureDataGroup {
+  id: ID!
+  captureDatas: [CaptureData]
+}
+
+type Licence {
+  id: ID!
+  name: String!
+  description: String!
+  licenceAssignments: [LicenceAssignment]
+}
+
+type LicenceAssignment {
+  id: ID!
+  licence: Licence!
+  userCreators: User
+  dateStart: DateTime
+  dateEnd: DateTime
+}
+
+type Model {
+  id: ID!
+  dateCreated: DateTime!
+  vCreationMethod: Vocabulary!
+  master: Boolean!
+  authoritative: Boolean!
+  vModality: Vocabulary!
+  vUnits: Vocabulary!
+  vPurpose: Vocabulary!
+  assetThumbnail: Asset
+  orientation: Orientation
+}
+
+type Orientation {
+  ts0: Float
+  ts1: Float
+  ts2: Float
+  r0: Float
+  r1: Float
+  r2: Float
+  r3: Float
+}
+
+type ModelGeometryFile {
+  id: ID!
+  model: Model!
+  asset: Asset!
+  vModelFileType: Vocabulary!
+  roughness: Float
+  metalness: Float
+  pointCount: Int
+  faceCount: Int
+  isWatertight: Boolean
+  hasNormals: Boolean
+  hasVertexColor: Boolean
+  hasUvSpace: Boolean
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+}
+
+type ModelProcessingAction {
+  id: ID!
+  model: Model!
+  actor: Actor!
+  processingDate: DateTime!
+  toolsUsed: String!
+  description: String!
+  modelProcessingActionSteps: [ModelProcessingActionStep]
+}
+
+type ModelProcessingActionStep {
+  id: ID!
+  modelProcessingAction: ModelProcessingAction!
+  vActionMethod: Vocabulary!
+  description: String!
+}
+
+type ModelUVMapFile {
+  id: ID!
+  modelGeometryFile: ModelGeometryFile!
+  asset: Asset!
+  uVMapEdgeLength: Int!
+  modelUVMapChannel: [ModelUVMapChannel]
+}
+
+type ModelUVMapChannel {
+  id: ID!
+  modelUvMapFile: ModelUVMapFile!
+  channelPosition: Int!
+  channelWidth: Int!
+  vUVMapType: Vocabulary!
+}
+
+type Scene {
+  id: ID!
+  name: String!
+  assetThumbnail: Asset
+  isOriented: Boolean!
+  hasBeenQCd: Boolean!
+  models: [Model]
+}
+
+type Actor {
+  id: ID!
+  individualName: String
+  organizationName: String
+  unit: Unit
+}
+
+type IntermediaryFile {
+  id: ID!
+  asset: Asset!
+  dateCreated: DateTime!
+}
+
+type Unit {
+  id: ID!
+  name: String!
+  abbreviation: String
+  subjects: [Subject]
+  actors: [Actor]
+}
+
+type Project {
+  id: ID!
+  name: String!
+  description: String
+  documentations: [ProjectDocumentation]
+}
+
+type ProjectDocumentation {
+  id: ID!
+  project: Project!
+  name: String!
+  description: String!
+}
+
+type Stakeholder {
+  id: ID!
+  individualName: String!
+  organizationName: String!
+  emailAddress: String
+  phoneNumberMobile: String
+  phoneNumberOffice: String
+  mailingAddress: String
+}
+
+type Geolocation {
+  id: ID!
+  latitude: Float!
+  longitude: Float!
+  altitude: Float!
+  ts0: Float!
+  ts1: Float!
+  ts2: Float!
+  r0: Float!
+  r1: Float!
+  r2: Float!
+  r3: Float!
+  items: [Item]
+  subjects: [Subject]
+}
+
+type Subject {
+  id: ID!
+  unit: Unit!
+  assetThumbnail: Asset
+  name: String!
+  geolocation: Geolocation
+  items: [Item]
+}
+
+type Item {
+  id: ID!
+  subject: Subject!
+  assetThumbnail: Asset
+  geolocation: Geolocation
+  name: String!
+  entireSubject: Boolean!
+}
+
 type User {
   id: ID!
   name: String!
+  emailAddress: String!
+  securityId: String!
+  active: Boolean!
+  dateActivated: DateTime!
+  dateDisabled: DateTime
+  workflowNotificationTime: DateTime
+  emailSettings: Int
+  userPersonalizationSystemObjects: [UserPersonalizationSystemObject]
+  userPersonalizationUrls: [UserPersonalizationUrl]
+  licenceAssignments: [LicenceAssignment]
+}
+
+type UserPersonalizationSystemObject {
+  id: ID!
+  user: User!
+  personalization: String
+}
+
+type UserPersonalizationUrl {
+  id: ID!
+  user: User!
+  url: String!
+  personalization: String!
+}
+
+type Vocabulary {
+  id: ID!
+  vocabularySet: VocabularySet!
+  sortOrder: Int!
+}
+
+type VocabularySet {
+  id: ID!
+  name: String!
+  systemMaintained: Boolean!
 }
 
 type Query {

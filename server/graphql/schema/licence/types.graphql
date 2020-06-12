@@ -1,0 +1,18 @@
+# import User from "../user/types.graphql"
+
+scalar DateTime
+
+type Licence {
+  id: ID!
+  name: String!
+  description: String!
+  licenceAssignments: [LicenceAssignment]
+}
+
+type LicenceAssignment {
+  id: ID!
+  licence: Licence!
+  userCreators: User
+  dateStart: DateTime
+  dateEnd: DateTime
+}

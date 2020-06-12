@@ -5,8 +5,6 @@ WORKDIR /app
 ADD package*.json .
 # Copy app files
 COPY . .
-# Install dependencies
-RUN yarn
 
 # Build client from common base
 FROM base AS client
@@ -14,8 +12,8 @@ FROM base AS client
 RUN rm -rf server
 # Expose port(s)
 EXPOSE 3000
-# Build
-RUN yarn build
+# Install dependencies and build
+RUN yarn && yarn build
 # Start on excecution
 CMD [ "yarn", "start:client" ]
 
@@ -25,10 +23,8 @@ FROM base AS server
 RUN rm -rf client
 # Expose port(s)
 EXPOSE 4000
-# Generate prisma client
-RUN cd server/ && yarn generate:prisma && cd ../..
-# Build
-RUN yarn build
+# Install dependencies and build
+RUN yarn && yarn build
 # Start on excecution
 CMD [ "yarn", "start:server" ]
 
