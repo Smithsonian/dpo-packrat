@@ -32,7 +32,7 @@
     "build:watch": "tsc --watch",
     "clean": "rm -rf node_modules/ build/",
     "generate": "graphql-codegen --config codegen.yml",
-    "generate:prisma": "yarn prisma generate --schema=./db/prisma/schema.prisma",
+    "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
     "postinstall": "yarn generate:prisma"
   },
   "dependencies": {
