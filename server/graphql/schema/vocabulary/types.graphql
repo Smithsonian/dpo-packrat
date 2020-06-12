@@ -1,11 +1,11 @@
 type Vocabulary {
   id: ID!
-  vocabularySet: VocabularySet
+  vocabularySet: VocabularySet!
   sortOrder: Int!
 }
 
 type VocabularySet {
   id: ID!
   name: String!
-  systemMaintained: Boolean
+  systemMaintained: Boolean!
 }

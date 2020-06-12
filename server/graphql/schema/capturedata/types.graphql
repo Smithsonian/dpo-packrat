@@ -5,8 +5,8 @@ scalar DateTime
 
 type CaptureData {
   id: ID!
-  vCaptureMethod: Vocabulary
-  vCaptureDatasetType: Vocabulary
+  vCaptureMethod: Vocabulary!
+  vCaptureDatasetType: Vocabulary!
   captureDate: DateTime!
   description: String!
   captureDatasetFieldId: Int
@@ -20,16 +20,16 @@ type CaptureData {
   clusterGeometryFieldId: Int
   cameraSettingsUniform: Boolean
   assetThumbnail: Asset
-  # captureDataGroups: [CaptureDataGroup]
+  captureDataGroups: [CaptureDataGroup]
   captureDataFiles: [CaptureDataFile]
 }
 
 type CaptureDataFile {
   id: ID!
-  captureData: CaptureData
-  asset: Asset
-  vVariantType: Vocabulary
-  compressedMultipleFiles: Boolean
+  captureData: CaptureData!
+  asset: Asset!
+  vVariantType: Vocabulary!
+  compressedMultipleFiles: Boolean!
 }
 
 type CaptureDataGroup {

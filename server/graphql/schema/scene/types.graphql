@@ -8,8 +8,8 @@ type Scene {
   id: ID!
   name: String!
   assetThumbnail: Asset
-  isOriented: Boolean
-  hasBeenQCd: Boolean
+  isOriented: Boolean!
+  hasBeenQCd: Boolean!
   models: [Model]
 }
 
@@ -22,6 +22,6 @@ type Actor {
 
 type IntermediaryFile {
   id: ID!
-  asset: Asset
-  dateCreated: DateTime
+  asset: Asset!
+  dateCreated: DateTime!
 }
