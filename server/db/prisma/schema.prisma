@@ -116,7 +116,7 @@ model AssetGroup {
 }
 
 model AssetVersion {
-  CreationDate    DateTime
+  DateCreated     DateTime
   idAsset         Int
   idAssetVersion  Int            @default(autoincrement()) @id
   idUserCreator   Int
@@ -127,15 +127,15 @@ model AssetVersion {
   User            User           @relation(fields: [idUserCreator], references: [idUser])
   SystemObject    SystemObject[]
 
-  @@index([idAsset, CreationDate], name: "AssetVersion_idAsset_CreationDate")
+  @@index([idAsset, DateCreated], name: "AssetVersion_idAsset_DateCreated")
   @@index([idUserCreator], name: "fk_assetversion_user1")
 }
 
 model CaptureData {
   CameraSettingsUniform                                         Int?
   CaptureDatasetFieldID                                         Int?
-  CaptureDate                                                   DateTime
   ClusterGeometryFieldID                                        Int?
+  DateCaptured                                                  DateTime
   Description                                                   String
   idAssetThumbnail                                              Int?
   idCaptureData                                                 Int                               @default(autoincrement()) @id
@@ -203,7 +203,7 @@ model CaptureDataGroupCaptureDataXref {
 
 model GeoLocation {
   Altitude      Float?
-  idGeolocation Int       @default(autoincrement()) @id
+  idGeoLocation Int       @default(autoincrement()) @id
   Latitude      Float?
   Longitude     Float?
   R0            Float?
@@ -243,17 +243,17 @@ model IntermediaryFile {
 model Item {
   EntireSubject    Int
   idAssetThumbnail Int?
-  idGeolocation    Int?
+  idGeoLocation    Int?
   idItem           Int            @default(autoincrement()) @id
   idSubject        Int
   Name             String
   Asset            Asset?         @relation(fields: [idAssetThumbnail], references: [idAsset])
-  GeoLocation      GeoLocation?   @relation(fields: [idGeolocation], references: [idGeolocation])
+  GeoLocation      GeoLocation?   @relation(fields: [idGeoLocation], references: [idGeoLocation])
   Subject          Subject        @relation(fields: [idSubject], references: [idSubject])
   SystemObject     SystemObject[]
 
   @@index([idAssetThumbnail], name: "fk_item_asset1")
-  @@index([idGeolocation], name: "fk_item_geolocation1")
+  @@index([idGeoLocation], name: "fk_item_geolocation1")
   @@index([idSubject], name: "fk_item_subject1")
 }
 
@@ -358,11 +358,11 @@ model ModelGeometryFile {
 }
 
 model ModelProcessingAction {
+  DateProcessed             DateTime
   Description               String
   idActor                   Int
   idModel                   Int
   idModelProcessingAction   Int                         @default(autoincrement()) @id
-  ProcessingDate            DateTime
   ToolsUsed                 String
   Actor                     Actor                       @relation(fields: [idActor], references: [idActor])
   Model                     Model                       @relation(fields: [idModel], references: [idModel])
@@ -474,18 +474,18 @@ model Stakeholder {
 
 model Subject {
   idAssetThumbnail Int?
-  idGeolocation    Int?
+  idGeoLocation    Int?
   idSubject        Int            @default(autoincrement()) @id
   idUnit           Int
   Name             String
   Asset            Asset?         @relation(fields: [idAssetThumbnail], references: [idAsset])
-  GeoLocation      GeoLocation?   @relation(fields: [idGeolocation], references: [idGeolocation])
+  GeoLocation      GeoLocation?   @relation(fields: [idGeoLocation], references: [idGeoLocation])
   Unit             Unit           @relation(fields: [idUnit], references: [idUnit])
   Item             Item[]
   SystemObject     SystemObject[]
 
   @@index([idAssetThumbnail], name: "fk_subject_asset1")
-  @@index([idGeolocation], name: "fk_subject_geolocation1")
+  @@index([idGeoLocation], name: "fk_subject_geolocation1")
   @@index([idUnit], name: "fk_subject_unit1")
 }
 

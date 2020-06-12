@@ -8,11 +8,12 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 
-import { Unit } from '@prisma/client';
-import * as DBAPI from './db/api';
+import { PrismaClient } from '@prisma/client';
+import * as TEST from './tests';
 
 import schema from './graphql/schema';
 
+const prisma = new PrismaClient();
 const app = express();
 app.use(cors());
 
@@ -27,18 +28,8 @@ app.listen(PORT, () => {
 
 app.get('/dbtest', async (request: Request, response: Response) => {
     const { hostname } = request;
-    const newUnit: Unit = {
-        Name: 'DPO',
-        Abbreviation: 'DPO',
-        ARKPrefix: 'http://abbadabbadoo/',
-        idUnit: 0
-    };
+    let responseMessage: string = `Hello from Packrat server @ ${hostname}:</br>`;
 
-    try {
-        const createdUnit = await DBAPI.createSystemObject(newUnit);
-        response.send(`Hello from Packrat server @ ${hostname}: Created Unit with ID ${createdUnit.idUnit}`);
-    } catch (error) {
-        console.log(error);
-        response.send(`Hello from Packrat server @ ${hostname}: ${error}`);
-    }
+    const TR: TEST.TestResult = await TEST.testCreate(prisma);
+    response.send(responseMessage + TR.Message);
 });
