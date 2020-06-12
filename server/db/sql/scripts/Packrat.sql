@@ -83,19 +83,19 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `idAssetVersion` int(11) NOT NULL AUTO_INCREMENT,
   `idAsset` int(11) NOT NULL,
   `idUserCreator` int(11) NOT NULL,
-  `CreationDate` datetime NOT NULL,
+  `DateCreated` datetime NOT NULL,
   `StorageLocation` varchar(512) NOT NULL,
   `StorageChecksum` varchar(32) NOT NULL,
   `StorageSize` bigint(20) NOT NULL DEFAULT 0,
   PRIMARY KEY (`idAssetVersion`),
-  KEY `AssetVersion_idAsset_CreationDate` (`idAsset`,`CreationDate`)
+  KEY `AssetVersion_idAsset_DateCreated` (`idAsset`,`DateCreated`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `CaptureData` (
   `idCaptureData` int(11) NOT NULL AUTO_INCREMENT,
   `idVCaptureMethod` int(11) NOT NULL,
   `idVCaptureDatasetType` int(11) NOT NULL,
-  `CaptureDate` datetime NOT NULL,
+  `DateCaptured` datetime NOT NULL,
   `Description` varchar(8000) NOT NULL,
   `CaptureDatasetFieldID` int(11) DEFAULT NULL,
   `idVItemPositionType` int(11) DEFAULT NULL,
@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS `CaptureDataGroupCaptureDataXref` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `GeoLocation` (
-  `idGeolocation` int(11) NOT NULL AUTO_INCREMENT,
+  `idGeoLocation` int(11) NOT NULL AUTO_INCREMENT,
   `Latitude` double DEFAULT NULL,
   `Longitude` double DEFAULT NULL,
   `Altitude` double DEFAULT NULL,
@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS `GeoLocation` (
   `R1` double DEFAULT NULL,
   `R2` double DEFAULT NULL,
   `R3` double DEFAULT NULL,
-  PRIMARY KEY (`idGeolocation`)
+  PRIMARY KEY (`idGeoLocation`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `Identifier` (
@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS `Item` (
   `idItem` int(11) NOT NULL AUTO_INCREMENT,
   `idSubject` int(11) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
-  `idGeolocation` int(11) DEFAULT NULL,
+  `idGeoLocation` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
   `EntireSubject` bit(1) NOT NULL,
   PRIMARY KEY (`idItem`)
@@ -253,7 +253,7 @@ CREATE TABLE IF NOT EXISTS `ModelProcessingAction` (
   `idModelProcessingAction` int(11) NOT NULL AUTO_INCREMENT,
   `idModel` int(11) NOT NULL,
   `idActor` int(11) NOT NULL,
-  `ProcessingDate` datetime NOT NULL,
+  `DateProcessed` datetime NOT NULL,
   `ToolsUsed` varchar(1000) NOT NULL,
   `Description` varchar(20000) NOT NULL,
   PRIMARY KEY (`idModelProcessingAction`),
@@ -344,7 +344,7 @@ CREATE TABLE IF NOT EXISTS `Subject` (
   `idSubject` int(11) NOT NULL AUTO_INCREMENT,
   `idUnit` int(11) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
-  `idGeolocation` int(11) DEFAULT NULL,
+  `idGeoLocation` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
   PRIMARY KEY (`idSubject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -675,8 +675,8 @@ ADD CONSTRAINT `fk_item_asset1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_item_geolocation1`
-  FOREIGN KEY (`idGeolocation`)
-  REFERENCES `Packrat`.`GeoLocation` (`idGeolocation`)
+  FOREIGN KEY (`idGeoLocation`)
+  REFERENCES `Packrat`.`GeoLocation` (`idGeoLocation`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
@@ -849,8 +849,8 @@ ADD CONSTRAINT `fk_subject_asset1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_subject_geolocation1`
-  FOREIGN KEY (`idGeolocation`)
-  REFERENCES `Packrat`.`GeoLocation` (`idGeolocation`)
+  FOREIGN KEY (`idGeoLocation`)
+  REFERENCES `Packrat`.`GeoLocation` (`idGeoLocation`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
