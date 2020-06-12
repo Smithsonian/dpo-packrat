@@ -37,7 +37,7 @@
     "build": "lerna run build",
     "clean": "lerna run clean && rm -rf node_modules/",
     "clean:docker": "docker-compose -f docker-compose.dev.yml down && docker system prune -f",
-    "postinstall": "yarn workspace @dpo-packrat/server generate:prisma"
+    "postinstall": "yarn workspaces run postinstall"
   },
   "devDependencies": {
     "@types/node": "^14.0.6",
