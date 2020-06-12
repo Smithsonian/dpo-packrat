@@ -17,9 +17,9 @@ type Asset {
 
 type AssetVersion {
   id: ID!
-  asset: Asset
-  userCreator: User
-  creationDate: DateTime
+  asset: Asset!
+  userCreator: User!
+  creationDate: DateTime!
   storageLocation: String!
   storageChecksum: String!
   storageSize: Int!
@@ -28,5 +28,5 @@ type AssetVersion {
 
 type AssetGroup {
   id: ID!
-  assets: [Asset]
+  assets: [Asset]!
 }

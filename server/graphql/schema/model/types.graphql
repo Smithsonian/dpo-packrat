@@ -6,13 +6,13 @@ scalar DateTime
 
 type Model {
   id: ID!
-  dateCreated: DateTime
-  vCreationMethod: Vocabulary
+  dateCreated: DateTime!
+  vCreationMethod: Vocabulary!
   master: Boolean!
   authoritative: Boolean!
-  vModality: Vocabulary
-  vUnits: Vocabulary
-  vPurpose: Vocabulary
+  vModality: Vocabulary!
+  vUnits: Vocabulary!
+  vPurpose: Vocabulary!
   assetThumbnail: Asset
   orientation: Orientation
 }
@@ -29,9 +29,9 @@ type Orientation {
 
 type ModelGeometryFile {
   id: ID!
-  model: Model
-  asset: Asset
-  vModelFileType: Vocabulary
+  model: Model!
+  asset: Asset!
+  vModelFileType: Vocabulary!
   roughness: Float
   metalness: Float
   pointCount: Int
@@ -50,33 +50,33 @@ type ModelGeometryFile {
 
 type ModelProcessingAction {
   id: ID!
-  model: Model
-  actor: Actor
-  processingDate: DateTime
-  toolsUsed: String
-  description: String
+  model: Model!
+  actor: Actor!
+  processingDate: DateTime!
+  toolsUsed: String!
+  description: String!
   modelProcessingActionSteps: [ModelProcessingActionStep]
 }
 
 type ModelProcessingActionStep {
   id: ID!
-  modelProcessingAction: ModelProcessingAction
-  vActionMethod: Vocabulary
+  modelProcessingAction: ModelProcessingAction!
+  vActionMethod: Vocabulary!
   description: String!
 }
 
 type ModelUVMapFile {
   id: ID!
-  modelGeometryFile: ModelGeometryFile
-  asset: Asset
+  modelGeometryFile: ModelGeometryFile!
+  asset: Asset!
   uVMapEdgeLength: Int!
   modelUVMapChannel: [ModelUVMapChannel]
 }
 
 type ModelUVMapChannel {
   id: ID!
-  modelUvMapFile: ModelUVMapFile
+  modelUvMapFile: ModelUVMapFile!
   channelPosition: Int!
   channelWidth: Int!
-  vUVMapType: Vocabulary
+  vUVMapType: Vocabulary!
 }

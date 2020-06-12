@@ -7,8 +7,8 @@ type User {
   name: String!
   emailAddress: String!
   securityId: String!
-  active: Boolean
-  dateActivated: DateTime
+  active: Boolean!
+  dateActivated: DateTime!
   dateDisabled: DateTime
   workflowNotificationTime: DateTime
   emailSettings: Int
@@ -19,13 +19,13 @@ type User {
 
 type UserPersonalizationSystemObject {
   id: ID!
-  user: User
+  user: User!
   personalization: String
 }
 
 type UserPersonalizationUrl {
   id: ID!
-  user: User
-  url: String
-  personalization: String
+  user: User!
+  url: String!
+  personalization: String!
 }
