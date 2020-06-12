@@ -25,8 +25,6 @@ FROM base AS server
 RUN rm -rf client
 # Expose port(s)
 EXPOSE 4000
-# Generate prisma client
-RUN cd server/ && yarn generate:prisma && cd ../..
 # Build
 RUN yarn build
 # Start on excecution
