@@ -37,10 +37,12 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:prod": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "clean": "rm -rf node_modules/ build/"
+    "clean": "rm -rf node_modules/ build/",
+    "postinstall": "echo \"postinstall client\""
   },
   "eslintConfig": {
     "extends": "react-app"
