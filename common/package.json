@@ -29,6 +29,7 @@
     "server:start": "nodemon -e '*.ts' --watch build 'node build/index.js'",
     "build": "tsc --build",
     "build:watch": "tsc --watch",
-    "clean": "rm -rf node_modules/ build/"
+    "clean": "rm -rf node_modules/ build/",
+    "postinstall": "echo \"postinstall common\""
   }
 }

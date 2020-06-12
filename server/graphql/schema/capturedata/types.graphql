@@ -1,0 +1,38 @@
+# import Vocabulary from "../vocabulary/types.graphql"
+# import Asset from "../asset/types.graphql"
+
+scalar DateTime
+
+type CaptureData {
+  id: ID!
+  vCaptureMethod: Vocabulary!
+  vCaptureDatasetType: Vocabulary!
+  captureDate: DateTime!
+  description: String!
+  captureDatasetFieldId: Int
+  vItemPositionType: Vocabulary
+  itemPositionFieldId: Int
+  itemArrangementFieldId: Int
+  vFocusType: Vocabulary
+  vLightSourceType: Vocabulary
+  vBackgroundRemovalMethod: Vocabulary
+  vClusterType: Vocabulary
+  clusterGeometryFieldId: Int
+  cameraSettingsUniform: Boolean
+  assetThumbnail: Asset
+  captureDataGroups: [CaptureDataGroup]
+  captureDataFiles: [CaptureDataFile]
+}
+
+type CaptureDataFile {
+  id: ID!
+  captureData: CaptureData!
+  asset: Asset!
+  vVariantType: Vocabulary!
+  compressedMultipleFiles: Boolean!
+}
+
+type CaptureDataGroup {
+  id: ID!
+  captureDatas: [CaptureData]
+}
