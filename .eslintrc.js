@@ -36,7 +36,6 @@ module.exports = {
         'no-multi-spaces': 'error',
         'key-spacing': ['error', { beforeColon: false }],
         'object-shorthand': ['error', 'always'],
-
         // JSX RULES
         'jsx-quotes': ['error', 'prefer-single'],
         'react/jsx-boolean-value': 'error',
