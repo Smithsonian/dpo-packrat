@@ -1,8 +1,9 @@
+/* eslint-disable no-multi-spaces */
 import { TestResult } from '..';
 import * as DBAPI from '../../db/api';
-import { PrismaClient, Actor, Asset, AssetGroup, AssetVersion, CaptureData, GeoLocation, 
-    IntermediaryFile, Item, Model, Project, ProjectDocumentation, Scene, Stakeholder, 
-    Subject, Unit, User, Vocabulary, VocabularySet, Workflow, WorkflowStep, WorkflowTemplate } from '@prisma/client'; 
+import { PrismaClient, Actor, Asset, AssetGroup, AssetVersion, CaptureData, GeoLocation,
+    IntermediaryFile, Item, Model, Project, ProjectDocumentation, Scene, Stakeholder,
+    Subject, Unit, User, Vocabulary, VocabularySet, Workflow, WorkflowStep, WorkflowTemplate } from '@prisma/client';
 
 export async function testCreate(prisma: PrismaClient): Promise<TestResult> {
     const TR: TestResult                                = { Success: true, Message: '' };
@@ -18,8 +19,8 @@ export async function testCreate(prisma: PrismaClient): Promise<TestResult> {
     const subject: Subject                              = await testCreateSubject(prisma, TR, unit, assetThumbnail, geoLocation, 'Test Subject');
     const vocabularySet: VocabularySet                  = await testCreateVocabularySet(prisma, TR, 'Test Vocabulary Set', 0);
     const vocabulary: Vocabulary                        = await testCreateVocabulary(prisma, TR, vocabularySet, 0);
-    const workflowTemplate: WorkflowTemplate            = await testCreateWorkflowTemplate(prisma, TR, 'Test Workflow Template')
-   
+    const workflowTemplate: WorkflowTemplate            = await testCreateWorkflowTemplate(prisma, TR, 'Test Workflow Template');
+
     TR.Message += '<br/>';
     TR.Message += '********************************************<br/>';
     TR.Message += 'Creating additional objects:<br/>';
@@ -28,9 +29,9 @@ export async function testCreate(prisma: PrismaClient): Promise<TestResult> {
     const actorWithOutUnit: Actor                       = await testCreateActor(prisma, TR, 'Test Actor Name', 'Test Actor Org', null);
     const assetWithoutAG: Asset                         = await testCreateAsset(prisma, TR, 'Test Asset 2', '/test/asset/path2', null);
     const assetVersion: AssetVersion                    = await testCreateAssetVersion(prisma, TR, assetThumbnail, user, new Date(), '/test/asset/path', 'Asset Checksum', 50);
-    const captureData: CaptureData                      = await testCreateCaptureData(prisma, TR, vocabulary, vocabulary, new Date(), 
+    const captureData: CaptureData                      = await testCreateCaptureData(prisma, TR, vocabulary, vocabulary, new Date(),
         'Test Capture Data', 0, vocabulary, 0, 0, vocabulary, vocabulary, vocabulary, vocabulary, 0, 0, assetThumbnail);
-    const captureDataNulls: CaptureData                 = await testCreateCaptureData(prisma, TR, vocabulary, vocabulary, new Date(), 
+    const captureDataNulls: CaptureData                 = await testCreateCaptureData(prisma, TR, vocabulary, vocabulary, new Date(),
         'Test Capture Data Nulls', 0, null, 0, 0, null, null, null, null, 0, 0, null);
     const intermediaryFile: IntermediaryFile            = await testCreateIntermediaryFile(prisma, TR, assetThumbnail, new Date());
     const item: Item                                    = await testCreateItem(prisma, TR, subject, assetThumbnail, geoLocation, 'Test Item', 1);
@@ -51,14 +52,14 @@ export async function testCreate(prisma: PrismaClient): Promise<TestResult> {
     return TR;
 }
 
-async function testCreateActor(prisma: PrismaClient, TR: TestResult, 
+async function testCreateActor(prisma: PrismaClient, TR: TestResult,
     IndividualName: string, OrganizationName: string, unit: Unit | null): Promise<Actor> {
     const actor: Actor = {
         IndividualName,
         OrganizationName,
         idUnit:  unit ? unit.idUnit : 0,
         idActor: 0
-    }
+    };
 
     try {
         const createdSystemObject = await DBAPI.createActor(prisma, actor);
@@ -71,7 +72,7 @@ async function testCreateActor(prisma: PrismaClient, TR: TestResult,
     }
 }
 
-async function testCreateAsset(prisma: PrismaClient, TR: TestResult, 
+async function testCreateAsset(prisma: PrismaClient, TR: TestResult,
     FileName: string, FilePath: string, assetGroup: AssetGroup | null ): Promise<Asset> {
     const asset: Asset = {
         FileName,
@@ -79,7 +80,7 @@ async function testCreateAsset(prisma: PrismaClient, TR: TestResult,
         idAssetGroup:  assetGroup ? assetGroup.idAssetGroup : null,
         idAsset: 0,
         idSystemObject: 0
-    }
+    };
 
     try {
         const createdSystemObject = await DBAPI.createAsset(prisma, asset);
@@ -95,7 +96,7 @@ async function testCreateAsset(prisma: PrismaClient, TR: TestResult,
 async function testCreateAssetGroup(prisma: PrismaClient, TR: TestResult): Promise<AssetGroup> {
     const assetGroup: AssetGroup = {
         idAssetGroup: 0
-    }
+    };
 
     try {
         const createdSystemObject = await DBAPI.createAssetGroup(prisma, assetGroup);
@@ -108,7 +109,7 @@ async function testCreateAssetGroup(prisma: PrismaClient, TR: TestResult): Promi
     }
 }
 
-async function testCreateAssetVersion(prisma: PrismaClient, TR: TestResult, 
+async function testCreateAssetVersion(prisma: PrismaClient, TR: TestResult,
     asset: Asset, user: User, DateCreated: Date, StorageLocation: string, StorageChecksum: string,
     StorageSize: number): Promise<AssetVersion> {
     const assetVersion: AssetVersion = {
@@ -119,7 +120,7 @@ async function testCreateAssetVersion(prisma: PrismaClient, TR: TestResult,
         StorageChecksum,
         StorageSize,
         idAssetVersion: 0
-    }
+    };
 
     try {
         const createdSystemObject = await DBAPI.createAssetVersion(prisma, assetVersion);
@@ -132,11 +133,11 @@ async function testCreateAssetVersion(prisma: PrismaClient, TR: TestResult,
     }
 }
 
-async function testCreateCaptureData(prisma: PrismaClient, TR: TestResult, 
-    CaptureMethod: Vocabulary, CaptureDatasetType: Vocabulary, DateCaptured: Date, Description: string, 
-    CaptureDatasetFieldID: number, ItemPositionType: Vocabulary | null, ItemPositionFieldID: number, 
-    ItemArrangementFieldID: number, FocusType: Vocabulary | null, LightSourceType: Vocabulary | null, 
-    BackgroundRemovalMethod: Vocabulary | null, ClusterType: Vocabulary | null, ClusterGeometryFieldID: number, 
+async function testCreateCaptureData(prisma: PrismaClient, TR: TestResult,
+    CaptureMethod: Vocabulary, CaptureDatasetType: Vocabulary, DateCaptured: Date, Description: string,
+    CaptureDatasetFieldID: number, ItemPositionType: Vocabulary | null, ItemPositionFieldID: number,
+    ItemArrangementFieldID: number, FocusType: Vocabulary | null, LightSourceType: Vocabulary | null,
+    BackgroundRemovalMethod: Vocabulary | null, ClusterType: Vocabulary | null, ClusterGeometryFieldID: number,
     CameraSettingsUniform: number, assetThumbnail: Asset | null): Promise<CaptureData> {
     const captureData: CaptureData = {
         idVCaptureMethod: CaptureMethod.idVocabulary,
@@ -155,7 +156,7 @@ async function testCreateCaptureData(prisma: PrismaClient, TR: TestResult,
         CameraSettingsUniform,
         idAssetThumbnail: assetThumbnail ? assetThumbnail.idAsset : null,
         idCaptureData: 0
-    }
+    };
 
     try {
         const createdSystemObject = await DBAPI.createCaptureData(prisma, captureData);
@@ -169,9 +170,9 @@ async function testCreateCaptureData(prisma: PrismaClient, TR: TestResult,
 }
 
 async function testCreateGeoLocation(prisma: PrismaClient, TR: TestResult, Latitude: number, Longitude: number,
-    Altitude: number, TS0: number, TS1: number, TS2: number, 
+    Altitude: number, TS0: number, TS1: number, TS2: number,
     R0: number, R1: number, R2: number, R3: number): Promise<GeoLocation> {
-    const geoLocation: GeoLocation = {        
+    const geoLocation: GeoLocation = {
         Latitude,
         Longitude,
         Altitude,
@@ -185,7 +186,7 @@ async function testCreateGeoLocation(prisma: PrismaClient, TR: TestResult, Latit
         idGeoLocation: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createGeoLocation(prisma, geoLocation);
         TR.Message += `GeoLocation creation succeeded with ID ${createdSystemObject.idGeoLocation}</br>`;
         return createdSystemObject;
@@ -197,13 +198,13 @@ async function testCreateGeoLocation(prisma: PrismaClient, TR: TestResult, Latit
 }
 
 async function testCreateIntermediaryFile(prisma: PrismaClient, TR: TestResult, asset: Asset, DateCreated: Date): Promise<IntermediaryFile> {
-    const intermediaryFile: IntermediaryFile = {        
+    const intermediaryFile: IntermediaryFile = {
         idAsset: asset.idAsset,
         DateCreated,
         idIntermediaryFile: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createIntermediaryFile(prisma, intermediaryFile);
         TR.Message += `IntermediaryFile creation succeeded with ID ${createdSystemObject.idIntermediaryFile}</br>`;
         return createdSystemObject;
@@ -212,11 +213,11 @@ async function testCreateIntermediaryFile(prisma: PrismaClient, TR: TestResult, 
         TR.Message  += `IntermediaryFile creation failed: ${error}</br>`;
         return intermediaryFile;
     }
-}  
+}
 
-async function testCreateItem(prisma: PrismaClient, TR: TestResult, subject: Subject, assetThumbnail: Asset | null, 
+async function testCreateItem(prisma: PrismaClient, TR: TestResult, subject: Subject, assetThumbnail: Asset | null,
     geoLocation: GeoLocation | null, Name: string, EntireSubject: number): Promise<Item> {
-    const item: Item = {        
+    const item: Item = {
         idSubject: subject.idSubject,
         idAssetThumbnail: assetThumbnail ? assetThumbnail.idAsset : null,
         idGeoLocation: geoLocation ? geoLocation.idGeoLocation : null,
@@ -225,7 +226,7 @@ async function testCreateItem(prisma: PrismaClient, TR: TestResult, subject: Sub
         idItem: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createItem(prisma, item);
         TR.Message += `Item creation succeeded with ID ${createdSystemObject.idItem}</br>`;
         return createdSystemObject;
@@ -234,12 +235,12 @@ async function testCreateItem(prisma: PrismaClient, TR: TestResult, subject: Sub
         TR.Message  += `Item creation failed: ${error}</br>`;
         return item;
     }
-}  
+}
 
 async function testCreateModel(prisma: PrismaClient, TR: TestResult, DateCreated: Date, CreationMethod: Vocabulary,
-    Master: number, Authoritative: number, Modality: Vocabulary, Units: Vocabulary, Purpose: Vocabulary, 
+    Master: number, Authoritative: number, Modality: Vocabulary, Units: Vocabulary, Purpose: Vocabulary,
     assetThumbnail: Asset | null): Promise<Model> {
-    const model: Model = {  
+    const model: Model = {
         DateCreated,
         idVCreationMethod: CreationMethod.idVocabulary,
         Master,
@@ -247,11 +248,11 @@ async function testCreateModel(prisma: PrismaClient, TR: TestResult, DateCreated
         idVModality: Modality.idVocabulary,
         idVUnits: Units.idVocabulary,
         idVPurpose: Purpose.idVocabulary,
-        idAssetThumbnail: assetThumbnail ? assetThumbnail.idAsset : null,      
+        idAssetThumbnail: assetThumbnail ? assetThumbnail.idAsset : null,
         idModel: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createModel(prisma, model);
         TR.Message += `Model creation succeeded with ID ${createdSystemObject.idModel}</br>`;
         return createdSystemObject;
@@ -260,14 +261,14 @@ async function testCreateModel(prisma: PrismaClient, TR: TestResult, DateCreated
         TR.Message  += `Model creation failed: ${error}</br>`;
         return model;
     }
-}  
+}
 
 async function testCreateProject(prisma: PrismaClient, TR: TestResult, Name: string, Description: string): Promise<Project> {
     const project: Project = {
         Name,
         Description,
         idProject: 0,
-    }
+    };
 
     try {
         const createdSystemObject = await DBAPI.createProject(prisma, project);
@@ -278,17 +279,17 @@ async function testCreateProject(prisma: PrismaClient, TR: TestResult, Name: str
         TR.Message += `Project creation failed: ${error}</br>`;
         return project;
     }
-}  
+}
 
 async function testCreateProjectDocumentation(prisma: PrismaClient, TR: TestResult, project: Project, Name: string, Description: string): Promise<ProjectDocumentation> {
-    const projectDocumentation: ProjectDocumentation = {        
+    const projectDocumentation: ProjectDocumentation = {
         idProject: project.idProject,
-        Name, 
+        Name,
         Description,
         idProjectDocumentation: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createProjectDocumentation(prisma, projectDocumentation);
         TR.Message += `ProjectDocumentation creation succeeded with ID ${createdSystemObject.idProjectDocumentation}</br>`;
         return createdSystemObject;
@@ -297,10 +298,10 @@ async function testCreateProjectDocumentation(prisma: PrismaClient, TR: TestResu
         TR.Message  += `ProjectDocumentation creation failed: ${error}</br>`;
         return projectDocumentation;
     }
-}  
+}
 
 async function testCreateScene(prisma: PrismaClient, TR: TestResult, Name: string, assetThumbnail: Asset | null, IsOriented: number, HasBeenQCd: number): Promise<Scene> {
-    const scene: Scene = {        
+    const scene: Scene = {
         Name,
         idAssetThumbnail: assetThumbnail ? assetThumbnail.idAsset : null,
         IsOriented,
@@ -308,7 +309,7 @@ async function testCreateScene(prisma: PrismaClient, TR: TestResult, Name: strin
         idScene: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createScene(prisma, scene);
         TR.Message += `Scene creation succeeded with ID ${createdSystemObject.idScene}</br>`;
         return createdSystemObject;
@@ -317,11 +318,11 @@ async function testCreateScene(prisma: PrismaClient, TR: TestResult, Name: strin
         TR.Message  += `Scene creation failed: ${error}</br>`;
         return scene;
     }
-}  
+}
 
 async function testCreateStakeholder(prisma: PrismaClient, TR: TestResult, IndividualName: string, OrganizationName: string,
     EmailAddress: string, PhoneNumberMobile: string, PhoneNumberOffice: string, MailingAddress: string): Promise<Stakeholder> {
-    const stakeholder: Stakeholder = {        
+    const stakeholder: Stakeholder = {
         IndividualName,
         OrganizationName,
         EmailAddress,
@@ -331,7 +332,7 @@ async function testCreateStakeholder(prisma: PrismaClient, TR: TestResult, Indiv
         idStakeholder: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createStakeholder(prisma, stakeholder);
         TR.Message += `Stakeholder creation succeeded with ID ${createdSystemObject.idStakeholder}</br>`;
         return createdSystemObject;
@@ -340,19 +341,19 @@ async function testCreateStakeholder(prisma: PrismaClient, TR: TestResult, Indiv
         TR.Message  += `Stakeholder creation failed: ${error}</br>`;
         return stakeholder;
     }
-}  
+}
 
-async function testCreateSubject(prisma: PrismaClient, TR: TestResult, 
+async function testCreateSubject(prisma: PrismaClient, TR: TestResult,
     unit: Unit, assetThumbnail: Asset | null, geoLocation: GeoLocation | null, Name: string): Promise<Subject> {
     const subject: Subject = {
-        idUnit: unit.idUnit, 
+        idUnit: unit.idUnit,
         idAssetThumbnail: assetThumbnail ? assetThumbnail.idAsset : null,
-        idGeoLocation: geoLocation ? geoLocation.idGeoLocation : null, 
+        idGeoLocation: geoLocation ? geoLocation.idGeoLocation : null,
         Name,
         idSubject: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createSubject(prisma, subject);
         TR.Message += `Subject creation succeeded with ID ${createdSystemObject.idSubject}</br>`;
         return createdSystemObject;
@@ -371,7 +372,7 @@ async function testCreateUnit(prisma: PrismaClient, TR: TestResult, Name: string
         idUnit: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createUnit(prisma, unit);
         TR.Message += `Unit creation succeeded with ID ${createdSystemObject.idUnit}</br>`;
         return createdSystemObject;
@@ -396,7 +397,7 @@ async function testCreateUser(prisma: PrismaClient, TR: TestResult, Name: string
         idUser: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createUser(prisma, user);
         TR.Message += `User creation succeeded with ID ${createdSystemObject.idUser}</br>`;
         return createdSystemObject;
@@ -408,13 +409,13 @@ async function testCreateUser(prisma: PrismaClient, TR: TestResult, Name: string
 }
 
 async function testCreateVocabulary(prisma: PrismaClient, TR: TestResult, vocabularySet: VocabularySet, SortOrder: number): Promise<Vocabulary> {
-    const vocabulary: Vocabulary = {        
+    const vocabulary: Vocabulary = {
         idVocabularySet: vocabularySet.idVocabularySet,
         SortOrder,
         idVocabulary: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createVocabulary(prisma, vocabulary);
         TR.Message += `Vocabulary creation succeeded with ID ${createdSystemObject.idVocabulary}</br>`;
         return createdSystemObject;
@@ -426,13 +427,13 @@ async function testCreateVocabulary(prisma: PrismaClient, TR: TestResult, vocabu
 }
 
 async function testCreateVocabularySet(prisma: PrismaClient, TR: TestResult, Name: string, SystemMaintained: number): Promise<VocabularySet> {
-    const vocabularySet: VocabularySet = {        
+    const vocabularySet: VocabularySet = {
         Name,
         SystemMaintained,
         idVocabularySet: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createVocabularySet(prisma, vocabularySet);
         TR.Message += `VocabularySet creation succeeded with ID ${createdSystemObject.idVocabularySet}</br>`;
         return createdSystemObject;
@@ -445,7 +446,7 @@ async function testCreateVocabularySet(prisma: PrismaClient, TR: TestResult, Nam
 
 async function testCreateWorkflow(prisma: PrismaClient, TR: TestResult, workflowTemplate: WorkflowTemplate, project: Project | null,
     userInitiator: User | null, DateInitiated: Date, DateUpdated: Date): Promise<Workflow> {
-    const workflow: Workflow = {        
+    const workflow: Workflow = {
         idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
         idProject: project ? project.idProject : null,
         idUserInitiator: userInitiator ? userInitiator.idUser : null,
@@ -454,7 +455,7 @@ async function testCreateWorkflow(prisma: PrismaClient, TR: TestResult, workflow
         idWorkflow: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createWorkflow(prisma, workflow);
         TR.Message += `Workflow creation succeeded with ID ${createdSystemObject.idWorkflow}</br>`;
         return createdSystemObject;
@@ -463,11 +464,11 @@ async function testCreateWorkflow(prisma: PrismaClient, TR: TestResult, workflow
         TR.Message  += `Workflow creation failed: ${error}</br>`;
         return workflow;
     }
-}  
+}
 
 async function testCreateWorkflowStep(prisma: PrismaClient, TR: TestResult, workflow: Workflow, userOwner: User,
     WorkflowStepType: Vocabulary, State: number, DateCreated: Date, DateCompleted: Date): Promise<WorkflowStep> {
-    const workflowStep: WorkflowStep = {        
+    const workflowStep: WorkflowStep = {
         idWorkflow: workflow.idWorkflow,
         idUserOwner: userOwner.idUser,
         idVWorkflowStepType: WorkflowStepType.idVocabulary,
@@ -477,7 +478,7 @@ async function testCreateWorkflowStep(prisma: PrismaClient, TR: TestResult, work
         idWorkflowStep: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createWorkflowStep(prisma, workflowStep);
         TR.Message += `WorkflowStep creation succeeded with ID ${createdSystemObject.idWorkflowStep}</br>`;
         return createdSystemObject;
@@ -486,15 +487,15 @@ async function testCreateWorkflowStep(prisma: PrismaClient, TR: TestResult, work
         TR.Message  += `WorkflowStep creation failed: ${error}</br>`;
         return workflowStep;
     }
-}  
+}
 
 async function testCreateWorkflowTemplate(prisma: PrismaClient, TR: TestResult, Name: string): Promise<WorkflowTemplate> {
-    const workflowTemplate: WorkflowTemplate = {        
+    const workflowTemplate: WorkflowTemplate = {
         Name,
         idWorkflowTemplate: 0
     };
 
-    try {    
+    try {
         const createdSystemObject = await DBAPI.createWorkflowTemplate(prisma, workflowTemplate);
         TR.Message += `WorkflowTemplate creation succeeded with ID ${createdSystemObject.idWorkflowTemplate}</br>`;
         return createdSystemObject;
@@ -503,4 +504,4 @@ async function testCreateWorkflowTemplate(prisma: PrismaClient, TR: TestResult, 
         TR.Message  += `WorkflowTemplate creation failed: ${error}</br>`;
         return workflowTemplate;
     }
-}  
+}
