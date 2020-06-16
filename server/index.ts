@@ -28,8 +28,6 @@ app.listen(PORT, () => {
 
 app.get('/dbtest', async (request: Request, response: Response) => {
     const { hostname } = request;
-    let responseMessage: string = `Hello from Packrat server @ ${hostname}:</br>`;
-
     const TR: TEST.TestResult = await TEST.testCreate(prisma);
-    response.send(responseMessage + TR.Message);
+    response.send(`Hello from Packrat server @ ${hostname}:</br>` + TR.Message);
 });

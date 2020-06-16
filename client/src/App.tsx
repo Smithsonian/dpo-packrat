@@ -3,8 +3,8 @@ import './App.css';
 
 function App(): React.ReactElement {
     return (
-        <div className="App">
-            <header className="App-header">
+        <div className='App'>
+            <header className='App-header'>
                 <p>
                     Welcome to packrat client
                 </p>

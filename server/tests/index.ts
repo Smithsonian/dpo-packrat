@@ -6,6 +6,6 @@
 export type TestResult = {
     Success: boolean,
     Message: string
-}
+};
 
 export * from './db/dbtest';
