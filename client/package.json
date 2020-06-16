@@ -44,9 +44,6 @@
     "clean": "rm -rf node_modules/ build/",
     "postinstall": "echo \"postinstall client\""
   },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
   "browserslist": {
     "production": [
       ">0.2%",
