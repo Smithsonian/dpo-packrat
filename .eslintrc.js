@@ -33,7 +33,6 @@ module.exports = {
         'no-trailing-spaces': 'error',
         '@typescript-eslint/type-annotation-spacing': ['error'],
         'object-curly-spacing': ['error', 'always'],
-        'no-multi-spaces': 'error',
         'key-spacing': ['error', { beforeColon: false, mode: "minimum" }],
         'object-shorthand': ['error', 'always'],
         // JSX RULES
