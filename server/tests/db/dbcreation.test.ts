@@ -3,8 +3,8 @@
  * @jest-environment node
  */
 import * as DBAPI from '../../db/api';
-import { PrismaClient, Actor, Asset, AssetGroup, AssetVersion, CaptureData, GeoLocation,
-    IntermediaryFile, Item, Model, Project, ProjectDocumentation, Scene, Stakeholder,
+import { PrismaClient, Actor, Asset, AssetGroup, AssetVersion, CaptureData, CaptureDataGroup, CaptureDataGroupCaptureDataXref,
+    GeoLocation, IntermediaryFile, Item, Model, Project, ProjectDocumentation, Scene, Stakeholder,
     Subject, Unit, User, Vocabulary, VocabularySet, Workflow, WorkflowStep, WorkflowTemplate } from '@prisma/client';
 
 // require('.env').config({path: P..path.resolve('../../../.env')});
@@ -68,6 +68,7 @@ function RunTests() {
         expect(workflowTemplate.idWorkflowTemplate).toBeGreaterThan(0);
     });
 
+    // Makes use of objects created above
     let actorWithUnit: Actor;
     it('DB Creation: Actor With Unit', async () => {
         actorWithUnit = await testCreateActor(prisma, 'Test Actor Name', 'Test Actor Org', unit);
@@ -104,6 +105,18 @@ function RunTests() {
         captureDataNulls = await testCreateCaptureData(prisma, vocabulary, vocabulary, new Date(),
             'Test Capture Data Nulls', 0, null, 0, 0, null, null, null, null, 0, 0, null);
         expect(captureDataNulls.idCaptureData).toBeGreaterThan(0);
+    });
+
+    let captureDataGroup: CaptureDataGroup;
+    it('DB Creation: CaptureDataGroup', async () => {
+        captureDataGroup = await testCreateCaptureDataGroup(prisma);
+        expect(captureDataGroup.idCaptureDataGroup).toBeGreaterThan(0);
+    });
+
+    let captureDataGroupCaptureDataXref: CaptureDataGroupCaptureDataXref;
+    it('DB Creation: CaptureDataGroupCaptureDataXref', async () => {
+        captureDataGroupCaptureDataXref = await testCreateCaptureDataGroupCaptureDataXref(prisma, captureDataGroup, captureData);
+        expect(captureDataGroupCaptureDataXref.idCaptureDataGroupCaptureDataXref).toBeGreaterThan(0);
     });
 
     let intermediaryFile: IntermediaryFile;
@@ -300,6 +313,33 @@ async function testCreateCaptureData(prisma: PrismaClient,
     } catch (error) {
         console.error(`CaptureData creation failed: ${error}`);
         return captureData;
+    }
+}
+
+async function testCreateCaptureDataGroup(prisma: PrismaClient): Promise<CaptureDataGroup> {
+    try {
+        const createdSystemObject = await DBAPI.createCaptureDataGroup(prisma);
+        return createdSystemObject;
+    } catch (error) {
+        console.error(`CaptureDataGroup creation failed: ${error}`);
+        return { idCaptureDataGroup: 0 };
+    }
+}
+
+async function testCreateCaptureDataGroupCaptureDataXref(prisma: PrismaClient,
+    captureDataGroup: CaptureDataGroup, captureData: CaptureData): Promise<CaptureDataGroupCaptureDataXref> {
+    const captureDataGroupCaptureDataXref: CaptureDataGroupCaptureDataXref = {
+        idCaptureDataGroup: captureDataGroup.idCaptureDataGroup,
+        idCaptureData: captureData.idCaptureData,
+        idCaptureDataGroupCaptureDataXref: 0
+    };
+
+    try {
+        const createdSystemObject = await DBAPI.createCaptureDataGroupCaptureDataXref(prisma, captureDataGroupCaptureDataXref);
+        return createdSystemObject;
+    } catch (error) {
+        console.error(`CaptureDataGroupCaptureDataXref creation failed: ${error}`);
+        return captureDataGroupCaptureDataXref;
     }
 }
 

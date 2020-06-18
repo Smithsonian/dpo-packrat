@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Actor, Asset, AssetGroup, AssetVersion, CaptureData, GeoLocation,
+import { PrismaClient, Actor, GeoLocation,
     IntermediaryFile, Item, Model, Project, ProjectDocumentation, Scene, Stakeholder,
     Subject, Unit, User, Vocabulary, VocabularySet, Workflow, WorkflowStep, WorkflowTemplate } from '@prisma/client';
 
@@ -11,75 +11,6 @@ export async function createActor(prisma: PrismaClient, actor: Actor): Promise<A
             OrganizationName,
             Unit:               idUnit ? { connect: { idUnit }, } : undefined,
             SystemObject:       { create: { Retired: 0 }, },
-        },
-    });
-
-    return createSystemObject;
-}
-
-export async function createAsset(prisma: PrismaClient, asset: Asset): Promise<Asset> {
-    const { FileName, FilePath, idAssetGroup } = asset;
-    const createSystemObject: Asset = await prisma.asset.create({
-        data: {
-            FileName,
-            FilePath,
-            AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : undefined,
-            SystemObject_Asset_idSystemObjectToSystemObject:   { create: { Retired: 0 }, },
-        },
-    });
-
-    return createSystemObject;
-}
-
-export async function createAssetGroup(prisma: PrismaClient, assetGroup: AssetGroup): Promise<AssetGroup> {
-    assetGroup;
-    const createSystemObject: AssetGroup = await prisma.assetGroup.create({
-        data: {
-        },
-    });
-
-    return createSystemObject;
-}
-
-export async function createAssetVersion(prisma: PrismaClient, assetVersion: AssetVersion): Promise<AssetVersion> {
-    const { idAsset, idUserCreator, DateCreated, StorageLocation, StorageChecksum, StorageSize } = assetVersion;
-    const createSystemObject: AssetVersion = await prisma.assetVersion.create({
-        data: {
-            Asset:              { connect: { idAsset }, },
-            User:               { connect: { idUser: idUserCreator }, },
-            DateCreated,
-            StorageLocation,
-            StorageChecksum,
-            StorageSize,
-            SystemObject:       { create: { Retired: 0 }, },
-        },
-    });
-
-    return createSystemObject;
-}
-
-export async function createCaptureData(prisma: PrismaClient, captureData: CaptureData): Promise<CaptureData> {
-    const { idVCaptureMethod, idVCaptureDatasetType, DateCaptured, Description, CaptureDatasetFieldID, idVItemPositionType,
-        ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
-        ClusterGeometryFieldID, CameraSettingsUniform, idAssetThumbnail } = captureData;
-    const createSystemObject: CaptureData = await prisma.captureData.create({
-        data: {
-            Vocabulary_CaptureData_idVCaptureMethodToVocabulary:            { connect: { idVocabulary: idVCaptureMethod }, },
-            Vocabulary_CaptureData_idVCaptureDatasetTypeToVocabulary:       { connect: { idVocabulary: idVCaptureDatasetType }, },
-            DateCaptured,
-            Description,
-            CaptureDatasetFieldID,
-            Vocabulary_CaptureData_idVItemPositionTypeToVocabulary:         idVItemPositionType ? { connect: { idVocabulary: idVItemPositionType }, } : undefined,
-            ItemPositionFieldID,
-            ItemArrangementFieldID,
-            Vocabulary_CaptureData_idVFocusTypeToVocabulary:                idVFocusType ? { connect: { idVocabulary: idVFocusType }, } : undefined,
-            Vocabulary_CaptureData_idVLightSourceTypeToVocabulary:          idVLightSourceType ? { connect: { idVocabulary: idVLightSourceType }, } : undefined,
-            Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary:  idVBackgroundRemovalMethod ? { connect: { idVocabulary: idVBackgroundRemovalMethod }, } : undefined,
-            Vocabulary_CaptureData_idVClusterTypeToVocabulary:              idVClusterType ? { connect: { idVocabulary: idVClusterType }, } : undefined,
-            ClusterGeometryFieldID,
-            CameraSettingsUniform,
-            Asset:                                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-            SystemObject:                                                   { create: { Retired: 0 }, },
         },
     });
 
