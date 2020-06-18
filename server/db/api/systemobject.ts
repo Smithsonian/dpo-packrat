@@ -1,6 +1,7 @@
-import { PrismaClient, Actor, Asset, AssetGroup, AssetVersion, CaptureData, GeoLocation, 
-    IntermediaryFile, Item, Model, Project, ProjectDocumentation, Scene, Stakeholder, 
-    Subject, Unit, User, Vocabulary, VocabularySet, Workflow, WorkflowStep, WorkflowTemplate } from '@prisma/client'; 
+/* eslint-disable camelcase */
+import { PrismaClient, Actor, Asset, AssetGroup, AssetVersion, CaptureData, GeoLocation,
+    IntermediaryFile, Item, Model, Project, ProjectDocumentation, Scene, Stakeholder,
+    Subject, Unit, User, Vocabulary, VocabularySet, Workflow, WorkflowStep, WorkflowTemplate } from '@prisma/client';
 
 export async function createActor(prisma: PrismaClient, actor: Actor): Promise<Actor> {
     const { IndividualName, OrganizationName, idUnit } = actor;
@@ -14,10 +15,10 @@ export async function createActor(prisma: PrismaClient, actor: Actor): Promise<A
     });
 
     return createSystemObject;
-}  
+}
 
 export async function createAsset(prisma: PrismaClient, asset: Asset): Promise<Asset> {
-    const { FileName, FilePath, idAssetGroup} = asset;
+    const { FileName, FilePath, idAssetGroup } = asset;
     const createSystemObject: Asset = await prisma.asset.create({
         data: {
             FileName,
@@ -28,7 +29,7 @@ export async function createAsset(prisma: PrismaClient, asset: Asset): Promise<A
     });
 
     return createSystemObject;
-}  
+}
 
 export async function createAssetGroup(prisma: PrismaClient, assetGroup: AssetGroup): Promise<AssetGroup> {
     assetGroup;
@@ -37,14 +38,14 @@ export async function createAssetGroup(prisma: PrismaClient, assetGroup: AssetGr
         },
     });
 
-    return createSystemObject;    
+    return createSystemObject;
 }
 
 export async function createAssetVersion(prisma: PrismaClient, assetVersion: AssetVersion): Promise<AssetVersion> {
     const { idAsset, idUserCreator, DateCreated, StorageLocation, StorageChecksum, StorageSize } = assetVersion;
     const createSystemObject: AssetVersion = await prisma.assetVersion.create({
         data: {
-            Asset:              { connect: { idAsset: idAsset }, },
+            Asset:              { connect: { idAsset }, },
             User:               { connect: { idUser: idUserCreator }, },
             DateCreated,
             StorageLocation,
@@ -55,7 +56,7 @@ export async function createAssetVersion(prisma: PrismaClient, assetVersion: Ass
     });
 
     return createSystemObject;
-}  
+}
 
 export async function createCaptureData(prisma: PrismaClient, captureData: CaptureData): Promise<CaptureData> {
     const { idVCaptureMethod, idVCaptureDatasetType, DateCaptured, Description, CaptureDatasetFieldID, idVItemPositionType,
@@ -63,21 +64,21 @@ export async function createCaptureData(prisma: PrismaClient, captureData: Captu
         ClusterGeometryFieldID, CameraSettingsUniform, idAssetThumbnail } = captureData;
     const createSystemObject: CaptureData = await prisma.captureData.create({
         data: {
-            Vocabulary_CaptureData_idVCaptureMethodToVocabulary:            { connect: { idVocabulary: idVCaptureMethod}, },
-            Vocabulary_CaptureData_idVCaptureDatasetTypeToVocabulary:       { connect: { idVocabulary: idVCaptureDatasetType}, },
+            Vocabulary_CaptureData_idVCaptureMethodToVocabulary:            { connect: { idVocabulary: idVCaptureMethod }, },
+            Vocabulary_CaptureData_idVCaptureDatasetTypeToVocabulary:       { connect: { idVocabulary: idVCaptureDatasetType }, },
             DateCaptured,
             Description,
             CaptureDatasetFieldID,
-            Vocabulary_CaptureData_idVItemPositionTypeToVocabulary:         idVItemPositionType ? { connect: { idVocabulary: idVItemPositionType}, } : undefined,
+            Vocabulary_CaptureData_idVItemPositionTypeToVocabulary:         idVItemPositionType ? { connect: { idVocabulary: idVItemPositionType }, } : undefined,
             ItemPositionFieldID,
             ItemArrangementFieldID,
-            Vocabulary_CaptureData_idVFocusTypeToVocabulary:                idVFocusType ? { connect: { idVocabulary: idVFocusType}, } : undefined,
-            Vocabulary_CaptureData_idVLightSourceTypeToVocabulary:          idVLightSourceType ? { connect: { idVocabulary: idVLightSourceType}, } : undefined,
-            Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary:  idVBackgroundRemovalMethod ? { connect: { idVocabulary: idVBackgroundRemovalMethod}, } : undefined,
-            Vocabulary_CaptureData_idVClusterTypeToVocabulary:              idVClusterType ? { connect: { idVocabulary: idVClusterType}, } : undefined,
+            Vocabulary_CaptureData_idVFocusTypeToVocabulary:                idVFocusType ? { connect: { idVocabulary: idVFocusType }, } : undefined,
+            Vocabulary_CaptureData_idVLightSourceTypeToVocabulary:          idVLightSourceType ? { connect: { idVocabulary: idVLightSourceType }, } : undefined,
+            Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary:  idVBackgroundRemovalMethod ? { connect: { idVocabulary: idVBackgroundRemovalMethod }, } : undefined,
+            Vocabulary_CaptureData_idVClusterTypeToVocabulary:              idVClusterType ? { connect: { idVocabulary: idVClusterType }, } : undefined,
             ClusterGeometryFieldID,
             CameraSettingsUniform,
-            Asset:                                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail}, } : undefined,
+            Asset:                                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
             SystemObject:                                                   { create: { Retired: 0 }, },
         },
     });
@@ -103,20 +104,20 @@ export async function createGeoLocation(prisma: PrismaClient, geoLocation: GeoLo
     });
 
     return createSystemObject;
-}  
+}
 
 export async function createIntermediaryFile(prisma: PrismaClient, intermediaryFile: IntermediaryFile): Promise<IntermediaryFile> {
     const { idAsset, DateCreated } = intermediaryFile;
     const createSystemObject: IntermediaryFile = await prisma.intermediaryFile.create({
         data: {
-            Asset:          { connect: { idAsset: idAsset }, },
+            Asset:          { connect: { idAsset }, },
             DateCreated,
             SystemObject:   { create: { Retired: 0 }, },
         },
     });
 
     return createSystemObject;
-}  
+}
 
 export async function createItem(prisma: PrismaClient, item: Item): Promise<Item> {
     const { idSubject, idAssetThumbnail, idGeoLocation, Name, EntireSubject } = item;
@@ -124,7 +125,7 @@ export async function createItem(prisma: PrismaClient, item: Item): Promise<Item
         data: {
             Subject:        { connect: { idSubject }, },
             Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-            GeoLocation:    idGeoLocation    ? { connect: { idGeoLocation }, } : undefined,
+            GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
             Name,
             EntireSubject,
             SystemObject:   { create: { Retired: 0 }, },
@@ -139,19 +140,19 @@ export async function createModel(prisma: PrismaClient, model: Model): Promise<M
     const createSystemObject: Model = await prisma.model.create({
         data: {
             DateCreated,
-            Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod}, },
+            Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
             Master,
             Authoritative,
-            Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality}, },
-            Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits}, },
-            Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose}, },
+            Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality }, },
+            Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
+            Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
             Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
             SystemObject:   { create: { Retired: 0 }, },
         },
     });
 
     return createSystemObject;
-}  
+}
 
 export async function createProject(prisma: PrismaClient, project: Project): Promise<Project> {
     const { Name, Description } = project;
@@ -170,7 +171,7 @@ export async function createProjectDocumentation(prisma: PrismaClient, projectDo
     const { idProject, Name, Description } = projectDocumentation;
     const createSystemObject: ProjectDocumentation = await prisma.projectDocumentation.create({
         data: {
-            Project:        { connect: { idProject: idProject }, },
+            Project:        { connect: { idProject }, },
             Name,
             Description,
             SystemObject:   { create: { Retired: 0 }, },
@@ -178,7 +179,7 @@ export async function createProjectDocumentation(prisma: PrismaClient, projectDo
     });
 
     return createSystemObject;
-}  
+}
 
 export async function createScene(prisma: PrismaClient, scene: Scene): Promise<Scene> {
     const { Name, idAssetThumbnail, IsOriented, HasBeenQCd } = scene;
@@ -216,9 +217,9 @@ export async function createSubject(prisma: PrismaClient, subject: Subject): Pro
     const { idUnit, idAssetThumbnail, idGeoLocation, Name } = subject;
     const createSystemObject: Subject = await prisma.subject.create({
         data: {
-            Unit:           { connect: { idUnit: idUnit }, },
+            Unit:           { connect: { idUnit }, },
             Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-            GeoLocation:    idGeoLocation    ? { connect: { idGeoLocation }, } : undefined,
+            GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
             Name,
             SystemObject:   { create: { Retired: 0 }, },
         },
@@ -263,7 +264,7 @@ export async function createVocabulary(prisma: PrismaClient, vocabulary: Vocabul
     const { idVocabularySet, SortOrder } = vocabulary;
     const createSystemObject: Vocabulary = await prisma.vocabulary.create({
         data: {
-            VocabularySet: { connect: { idVocabularySet}, },
+            VocabularySet: { connect: { idVocabularySet }, },
             SortOrder
         },
     });
@@ -287,8 +288,8 @@ export async function createWorkflow(prisma: PrismaClient, workflow: Workflow): 
     const { idWorkflowTemplate, idProject, idUserInitiator, DateInitiated, DateUpdated } = workflow;
     const createSystemObject: Workflow = await prisma.workflow.create({
         data: {
-            WorkflowTemplate:   { connect: { idWorkflowTemplate: idWorkflowTemplate}, },
-            Project:            idProject       ? { connect: { idProject }, } : undefined,
+            WorkflowTemplate:   { connect: { idWorkflowTemplate }, },
+            Project:            idProject ? { connect: { idProject }, } : undefined,
             User:               idUserInitiator ? { connect: { idUser: idUserInitiator }, } : undefined,
             DateInitiated,
             DateUpdated,
@@ -303,9 +304,9 @@ export async function createWorkflowStep(prisma: PrismaClient, workflowStep: Wor
     const { idWorkflow, idUserOwner, idVWorkflowStepType, State, DateCreated, DateCompleted } = workflowStep;
     const createSystemObject: WorkflowStep = await prisma.workflowStep.create({
         data: {
-            Workflow:           { connect: { idWorkflow: idWorkflow}, },
-            User:               { connect: { idUser: idUserOwner}, },
-            Vocabulary:         { connect: { idVocabulary: idVWorkflowStepType}, },
+            Workflow:           { connect: { idWorkflow }, },
+            User:               { connect: { idUser: idUserOwner }, },
+            Vocabulary:         { connect: { idVocabulary: idVWorkflowStepType }, },
             State,
             DateCreated,
             DateCompleted,
