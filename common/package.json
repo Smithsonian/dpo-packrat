@@ -30,6 +30,7 @@
     "build": "tsc --build",
     "build:watch": "tsc --watch",
     "clean": "rm -rf node_modules/ build/",
-    "postinstall": "echo \"postinstall common\""
+    "postinstall": "echo \"postinstall common\"",
+    "test": "jest --passWithNoTests"
   }
 }
