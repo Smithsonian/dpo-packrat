@@ -1,4 +1,3 @@
-/* eslint-disable no-multi-spaces */
 /**
  * @jest-environment node
  */
@@ -7,13 +6,13 @@ import { PrismaClient, Actor, Asset, AssetGroup, AssetVersion, CaptureData, GeoL
     IntermediaryFile, Item, Model, Project, ProjectDocumentation, Scene, Stakeholder,
     Subject, Unit, User, Vocabulary, VocabularySet, Workflow, WorkflowStep, WorkflowTemplate } from '@prisma/client';
 
-// require('.env').config({path: P..path.resolve('../../../.env')});
+let prisma;
 
-RunTests();
+beforeAll(() => {
+    prisma = new PrismaClient();
+});
 
-function RunTests() {
-    const prisma = new PrismaClient();
-
+describe('DB Creation Test Suite', () => {
     let assetGroup: AssetGroup;
     it('DB Creation: AssetGroup', async () => {
         assetGroup = await testCreateAssetGroup(prisma);
@@ -189,12 +188,12 @@ function RunTests() {
         workflowStep = await testCreateWorkflowStep(prisma, workflow, user, vocabulary, 0, new Date(), new Date());
         expect(workflowStep.idWorkflowStep).toBeGreaterThan(0);
     });
+});
 
-    afterAll(async(done) => {
-        await prisma.disconnect();
-        done();
-    });
-}
+afterAll(async done => {
+    await prisma.disconnect();
+    done();
+});
 
 async function testCreateActor(prisma: PrismaClient,
     IndividualName: string, OrganizationName: string, unit: Unit | null): Promise<Actor> {
