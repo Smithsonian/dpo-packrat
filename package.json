@@ -37,6 +37,7 @@
     "build": "lerna run build",
     "clean": "lerna run clean && rm -rf node_modules/",
     "clean:docker": "docker-compose -f docker-compose.dev.yml down && docker system prune -f",
+    "generate:server:prisma": "yarn workspace @dpo-packrat/server generate:prisma",
     "postinstall": "lerna run postinstall",
     "lint": "yarn eslint --ext .js,.jsx,.ts,.tsx .",
     "lint:fix": "yarn prettier --write . && yarn lint --fix",
