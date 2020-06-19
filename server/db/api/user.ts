@@ -24,7 +24,7 @@ export async function createUserPersonalizationSystemObject(prisma: PrismaClient
     const createSystemObject: UserPersonalizationSystemObject = await prisma.userPersonalizationSystemObject.create({
         data: {
             User:           { connect: { idUser }, },
-            SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : undefined,
+            SystemObject:   { connect: { idSystemObject }, },
             Personalization,
         },
     });

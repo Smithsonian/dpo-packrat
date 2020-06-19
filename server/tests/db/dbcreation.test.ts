@@ -146,8 +146,14 @@ describe('DB Creation Test Suite', () => {
 
     let identifier: Identifier;
     it('DB Creation: Identifier', async () => {
-        identifier = await testCreateIdentifier(prisma, 'Test Identifier', vocabulary, null);    // TODO: test with non-null SystemObject
+        identifier = await testCreateIdentifier(prisma, 'Test Identifier', vocabulary, systemObjectSubject);
         expect(identifier.idIdentifier).toBeGreaterThan(0);
+    });
+
+    let identifierNull: Identifier;
+    it('DB Creation: Identifier With Nulls', async () => {
+        identifierNull = await testCreateIdentifier(prisma, 'Test Identifier', vocabulary, null);
+        expect(identifierNull.idIdentifier).toBeGreaterThan(0);
     });
 
     let intermediaryFile: IntermediaryFile;
@@ -170,13 +176,13 @@ describe('DB Creation Test Suite', () => {
 
     let metadata: Metadata;
     it('DB Creation: Metadata', async () => {
-        metadata = await testCreateMetadata(prisma, 'Test Metadata', 'Test Value Short', 'Test Value Ext', assetThumbnail, user, vocabulary, null); // TODO: test with SystemObject
+        metadata = await testCreateMetadata(prisma, 'Test Metadata', 'Test Value Short', 'Test Value Ext', assetThumbnail, user, vocabulary, systemObjectScene);
         expect(metadata.idMetadata).toBeGreaterThan(0);
     });
 
     let metadataNull: Metadata;
     it('DB Creation: Metadata With Nulls', async () => {
-        metadataNull = await testCreateMetadata(prisma, 'Test Metadata', null, null, null, null, null, null); // TODO: test with SystemObject
+        metadataNull = await testCreateMetadata(prisma, 'Test Metadata', null, null, null, null, null, null);
         expect(metadataNull.idMetadata).toBeGreaterThan(0);
     });
 
@@ -309,7 +315,9 @@ describe('DB Creation Test Suite', () => {
 
     let userPersonalizationSystemObject: UserPersonalizationSystemObject;
     it('DB Creation: UserPersonalizationSystemObject', async () => {
-        userPersonalizationSystemObject = await testCreateUserPersonalizationSystemObject(prisma, user, systemObjectSubject, 'Test Personalization');
+        if (systemObjectSubject) {
+            userPersonalizationSystemObject = await testCreateUserPersonalizationSystemObject(prisma, user, systemObjectSubject, 'Test Personalization');
+        }
         expect(userPersonalizationSystemObject.idUserPersonalizationSystemObject).toBeGreaterThan(0);
     });
 
@@ -918,11 +926,11 @@ async function testCreateUser(prisma: PrismaClient, Name: string, EmailAddress: 
     }
 }
 
-async function testCreateUserPersonalizationSystemObject(prisma: PrismaClient, user: User, systemObject: SystemObject | null, //TODO: Update with non-nullable!
+async function testCreateUserPersonalizationSystemObject(prisma: PrismaClient, user: User, systemObject: SystemObject,
     Personalization: string | null): Promise<UserPersonalizationSystemObject> {
     const userPersonalizationSystemObject: UserPersonalizationSystemObject = {
         idUser: user.idUser,
-        idSystemObject: systemObject ? systemObject.idSystemObject : null,
+        idSystemObject: systemObject.idSystemObject,
         Personalization,
         idUserPersonalizationSystemObject: 0
     };
