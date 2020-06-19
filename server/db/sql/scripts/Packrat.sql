@@ -426,7 +426,7 @@ CREATE TABLE IF NOT EXISTS `User` (
 CREATE TABLE IF NOT EXISTS `UserPersonalizationSystemObject` (
   `idUserPersonalizationSystemObject` int(11) NOT NULL AUTO_INCREMENT,
   `idUser` int(11) NOT NULL,
-  `idSystemObject` int(11) DEFAULT NULL,
+  `idSystemObject` int(11) NOT NULL,
   `Personalization` varchar(8000) DEFAULT NULL,
   PRIMARY KEY (`idUserPersonalizationSystemObject`),
   KEY `UserPersonalizationObject_idUser` (`idUser`),
@@ -434,12 +434,12 @@ CREATE TABLE IF NOT EXISTS `UserPersonalizationSystemObject` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `UserPersonalizationUrl` (
-  `idUserPersonalizationURL` int(11) NOT NULL AUTO_INCREMENT,
+  `idUserPersonalizationUrl` int(11) NOT NULL AUTO_INCREMENT,
   `idUser` int(11) NOT NULL,
   `URL` varchar(255) NOT NULL,
   `Personalization` varchar(8000) NOT NULL,
-  PRIMARY KEY (`idUserPersonalizationURL`),
-  KEY `UserPersonalizationURL_idUser_URL` (`idUser`,`URL`)
+  PRIMARY KEY (`idUserPersonalizationUrl`),
+  KEY `UserPersonalizationUrl_idUser_URL` (`idUser`,`URL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `Vocabulary` (

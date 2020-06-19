@@ -10,7 +10,6 @@ export type Scalars = {
     DateTime: any;
 };
 
-
 export type Asset = {
     __typename?: 'Asset';
     id: Scalars['ID'];
@@ -77,18 +76,18 @@ export type CaptureDataGroup = {
     captureDatas?: Maybe<Array<Maybe<CaptureData>>>;
 };
 
-export type Licence = {
-    __typename?: 'Licence';
+export type License = {
+    __typename?: 'License';
     id: Scalars['ID'];
     name: Scalars['String'];
     description: Scalars['String'];
-    licenceAssignments?: Maybe<Array<Maybe<LicenceAssignment>>>;
+    licenseAssignments?: Maybe<Array<Maybe<LicenseAssignment>>>;
 };
 
-export type LicenceAssignment = {
-    __typename?: 'LicenceAssignment';
+export type LicenseAssignment = {
+    __typename?: 'LicenseAssignment';
     id: Scalars['ID'];
-    licence: Licence;
+    license: License;
     userCreators?: Maybe<User>;
     dateStart?: Maybe<Scalars['DateTime']>;
     dateEnd?: Maybe<Scalars['DateTime']>;
@@ -289,7 +288,7 @@ export type User = {
     emailSettings?: Maybe<Scalars['Int']>;
     userPersonalizationSystemObjects?: Maybe<Array<Maybe<UserPersonalizationSystemObject>>>;
     userPersonalizationUrls?: Maybe<Array<Maybe<UserPersonalizationUrl>>>;
-    licenceAssignments?: Maybe<Array<Maybe<LicenceAssignment>>>;
+    licenseAssignments?: Maybe<Array<Maybe<LicenseAssignment>>>;
 };
 
 export type UserPersonalizationSystemObject = {
@@ -325,7 +324,6 @@ export type Query = {
     __typename?: 'Query';
     getUser: GetUserResult;
 };
-
 
 export type QueryGetUserArgs = {
     input: GetUserInput;

@@ -615,7 +615,7 @@ model UserPersonalizationSystemObject {
 
 model UserPersonalizationUrl {
   idUser                   Int
-  idUserPersonalizationURL Int    @default(autoincrement()) @id
+  idUserPersonalizationUrl Int    @default(autoincrement()) @id
   Personalization          String
   URL                      String
   User                     User   @relation(fields: [idUser], references: [idUser])

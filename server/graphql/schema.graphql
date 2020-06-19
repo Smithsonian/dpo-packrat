@@ -60,16 +60,16 @@ type CaptureDataGroup {
   captureDatas: [CaptureData]
 }
 
-type Licence {
+type License {
   id: ID!
   name: String!
   description: String!
-  licenceAssignments: [LicenceAssignment]
+  licenseAssignments: [LicenseAssignment]
 }
 
-type LicenceAssignment {
+type LicenseAssignment {
   id: ID!
-  licence: Licence!
+  license: License!
   userCreators: User
   dateStart: DateTime
   dateEnd: DateTime
@@ -252,7 +252,7 @@ type User {
   emailSettings: Int
   userPersonalizationSystemObjects: [UserPersonalizationSystemObject]
   userPersonalizationUrls: [UserPersonalizationUrl]
-  licenceAssignments: [LicenceAssignment]
+  licenseAssignments: [LicenseAssignment]
 }
 
 type UserPersonalizationSystemObject {
