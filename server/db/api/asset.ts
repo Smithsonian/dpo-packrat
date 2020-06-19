@@ -8,7 +8,7 @@ export async function createAsset(prisma: PrismaClient, asset: Asset): Promise<A
             FileName,
             FilePath,
             AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : undefined,
-            SystemObject_Asset_idSystemObjectToSystemObject:   { create: { Retired: 0 }, },
+            SystemObject:   { create: { Retired: 0 }, },
         },
     });
 

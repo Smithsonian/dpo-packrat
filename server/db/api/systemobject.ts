@@ -72,7 +72,7 @@ export async function fetchSystemObject(prisma: PrismaClient, sysObj: SystemObje
 
 export type SystemObjectAndPairs = SystemObject
 & { Actor: Actor | null}
-& { Asset_AssetToSystemObject_idAsset: Asset | null}    //TODO: Update with Asset
+& { Asset: Asset | null}
 & { AssetVersion: AssetVersion | null}
 & { CaptureData: CaptureData | null}
 & { IntermediaryFile: IntermediaryFile | null}
@@ -93,7 +93,7 @@ export async function fetchSystemObject(prisma: PrismaClient, idSystemObject: nu
         where: { idSystemObject, },
         include: {
             Actor: true,
-            Asset_AssetToSystemObject_idAsset: true,    //TODO: Update with Asset
+            Asset: true,
             AssetVersion: true,
             CaptureData: true,
             IntermediaryFile: true,
@@ -127,9 +127,9 @@ export async function fetchSystemObjectForAsset(prisma: PrismaClient, sysObj: As
 export async function fetchSystemObjectForAssetID(prisma: PrismaClient, idAsset: number): Promise<SystemObject | null> {
     return await prisma.systemObject.findOne({ where: { idAsset, }, });
 }
-//TODO: Update with Asset
-export async function fetchSystemObjectAndAssetID(prisma: PrismaClient, idAsset: number): Promise<SystemObject & { Asset_AssetToSystemObject_idAsset: Asset | null} | null> {
-    return await prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset_AssetToSystemObject_idAsset: true, }, });
+
+export async function fetchSystemObjectAndAssetID(prisma: PrismaClient, idAsset: number): Promise<SystemObject & { Asset: Asset | null} | null> {
+    return await prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
 }
 
 export async function fetchSystemObjectForAssetVersion(prisma: PrismaClient, sysObj: AssetVersion): Promise<SystemObject | null> {
