@@ -153,13 +153,13 @@ CREATE TABLE IF NOT EXISTS `GeoLocation` (
 
 CREATE TABLE IF NOT EXISTS `Identifier` (
   `idIdentifier` int(11) NOT NULL AUTO_INCREMENT,
-  `Identifier` varchar(255) NOT NULL,
+  `IdentifierValue` varchar(255) NOT NULL,
   `idVIdentifierType` int(11) NOT NULL,
   `idSystemObject` int(11) DEFAULT NULL,
   PRIMARY KEY (`idIdentifier`),
   KEY `Identifier_idSystemObject_idVIdentifierType` (`idSystemObject`,`idVIdentifierType`),
-  KEY `Identifier_Identifier` (`Identifier`),
-  KEY `Identifier_idVIdentifierType_Identifier` (`idVIdentifierType`,`Identifier`)
+  KEY `Identifier_IdentifierValue` (`IdentifierValue`),
+  KEY `Identifier_idVIdentifierType_IdentifierValue` (`idVIdentifierType`,`IdentifierValue`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `IntermediaryFile` (

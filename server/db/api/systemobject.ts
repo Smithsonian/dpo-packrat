@@ -4,10 +4,10 @@ import { PrismaClient, Identifier, Metadata, SystemObject, SystemObjectVersion, 
     Scene, Stakeholder, Subject, Unit, Workflow, WorkflowStep } from '@prisma/client';
 
 export async function createIdentifier(prisma: PrismaClient, identifier: Identifier): Promise<Identifier> {
-    const { Identifier: IdentifierValue, idVIdentifierType, idSystemObject } = identifier;
+    const { IdentifierValue, idVIdentifierType, idSystemObject } = identifier;
     const createSystemObject: Identifier = await prisma.identifier.create({
         data: {
-            Identifier: IdentifierValue,
+            IdentifierValue,
             Vocabulary: { connect: { idVocabulary: idVIdentifierType }, },
             SystemObject: idSystemObject ? { connect: { idSystemObject }, } : undefined,
         },
