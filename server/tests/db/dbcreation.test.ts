@@ -514,7 +514,7 @@ async function testCreateGeoLocation(prisma: PrismaClient, Latitude: number, Lon
 async function testCreateIdentifier(prisma: PrismaClient, IdentifierValue: string,
     IdentifierType: Vocabulary, systemObject: SystemObject | null): Promise<Identifier> {
     const identifier: Identifier = {
-        Identifier: IdentifierValue,
+        IdentifierValue,
         idVIdentifierType: IdentifierType.idVocabulary,
         idSystemObject: systemObject ? systemObject.idSystemObject : null,
         idIdentifier: 0

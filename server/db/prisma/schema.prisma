@@ -218,16 +218,16 @@ model GeoLocation {
 }
 
 model Identifier {
-  Identifier        String
+  IdentifierValue   String
   idIdentifier      Int           @default(autoincrement()) @id
   idSystemObject    Int?
   idVIdentifierType Int
   SystemObject      SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
   Vocabulary        Vocabulary    @relation(fields: [idVIdentifierType], references: [idVocabulary])
 
-  @@index([Identifier], name: "Identifier_Identifier")
+  @@index([IdentifierValue], name: "Identifier_IdentifierValue")
   @@index([idSystemObject, idVIdentifierType], name: "Identifier_idSystemObject_idVIdentifierType")
-  @@index([idVIdentifierType, Identifier], name: "Identifier_idVIdentifierType_Identifier")
+  @@index([idVIdentifierType, IdentifierValue], name: "Identifier_idVIdentifierType_IdentifierValue")
 }
 
 model IntermediaryFile {
