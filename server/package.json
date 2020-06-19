@@ -33,7 +33,7 @@
     "clean": "rm -rf node_modules/ build/",
     "generate": "graphql-codegen --config codegen.yml",
     "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
-    "postinstall": "echo yarn generate:prisma",
+    "postinstall": "yarn generate:prisma",
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
