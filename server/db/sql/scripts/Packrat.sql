@@ -153,13 +153,13 @@ CREATE TABLE IF NOT EXISTS `GeoLocation` (
 
 CREATE TABLE IF NOT EXISTS `Identifier` (
   `idIdentifier` int(11) NOT NULL AUTO_INCREMENT,
-  `Identifier` varchar(255) NOT NULL,
+  `IdentifierValue` varchar(255) NOT NULL,
   `idVIdentifierType` int(11) NOT NULL,
   `idSystemObject` int(11) DEFAULT NULL,
   PRIMARY KEY (`idIdentifier`),
   KEY `Identifier_idSystemObject_idVIdentifierType` (`idSystemObject`,`idVIdentifierType`),
-  KEY `Identifier_Identifier` (`Identifier`),
-  KEY `Identifier_idVIdentifierType_Identifier` (`idVIdentifierType`,`Identifier`)
+  KEY `Identifier_IdentifierValue` (`IdentifierValue`),
+  KEY `Identifier_idVIdentifierType_IdentifierValue` (`idVIdentifierType`,`IdentifierValue`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `IntermediaryFile` (
@@ -351,21 +351,21 @@ CREATE TABLE IF NOT EXISTS `Subject` (
 
 CREATE TABLE IF NOT EXISTS `SystemObject` (
   `idSystemObject` int(11) NOT NULL AUTO_INCREMENT,
-  `idUnit` int(11) DEFAULT NULL,
-  `idProject` int(11) DEFAULT NULL,
-  `idSubject` int(11) DEFAULT NULL,
-  `idItem` int(11) DEFAULT NULL,
-  `idCaptureData` int(11) DEFAULT NULL,
-  `idModel` int(11) DEFAULT NULL,
-  `idScene` int(11) DEFAULT NULL,
-  `idIntermediaryFile` int(11) DEFAULT NULL,
-  `idAsset` int(11) DEFAULT NULL,
-  `idAssetVersion` int(11) DEFAULT NULL,
-  `idProjectDocumentation` int(11) DEFAULT NULL,
-  `idActor` int(11) DEFAULT NULL,
-  `idStakeholder` int(11) DEFAULT NULL,
-  `idWorkflow` int(11) DEFAULT NULL,
-  `idWorkflowStep` int(11) DEFAULT NULL,
+  `idUnit` int(11) UNIQUE DEFAULT NULL,
+  `idProject` int(11) UNIQUE DEFAULT NULL,
+  `idSubject` int(11) UNIQUE DEFAULT NULL,
+  `idItem` int(11) UNIQUE DEFAULT NULL,
+  `idCaptureData` int(11) UNIQUE DEFAULT NULL,
+  `idModel` int(11) UNIQUE DEFAULT NULL,
+  `idScene` int(11) UNIQUE DEFAULT NULL,
+  `idIntermediaryFile` int(11) UNIQUE DEFAULT NULL,
+  `idAsset` int(11) UNIQUE DEFAULT NULL,
+  `idAssetVersion` int(11) UNIQUE DEFAULT NULL,
+  `idProjectDocumentation` int(11) UNIQUE DEFAULT NULL,
+  `idActor` int(11) UNIQUE DEFAULT NULL,
+  `idStakeholder` int(11) UNIQUE DEFAULT NULL,
+  `idWorkflow` int(11) UNIQUE DEFAULT NULL,
+  `idWorkflowStep` int(11) UNIQUE DEFAULT NULL,
   `Retired` bit(1) NOT NULL,
   PRIMARY KEY (`idSystemObject`),
   KEY `SystemObject_idUnit` (`idUnit`),
@@ -426,7 +426,7 @@ CREATE TABLE IF NOT EXISTS `User` (
 CREATE TABLE IF NOT EXISTS `UserPersonalizationSystemObject` (
   `idUserPersonalizationSystemObject` int(11) NOT NULL AUTO_INCREMENT,
   `idUser` int(11) NOT NULL,
-  `idSystemObject` int(11) DEFAULT NULL,
+  `idSystemObject` int(11) NOT NULL,
   `Personalization` varchar(8000) DEFAULT NULL,
   PRIMARY KEY (`idUserPersonalizationSystemObject`),
   KEY `UserPersonalizationObject_idUser` (`idUser`),
@@ -434,12 +434,12 @@ CREATE TABLE IF NOT EXISTS `UserPersonalizationSystemObject` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `UserPersonalizationUrl` (
-  `idUserPersonalizationURL` int(11) NOT NULL AUTO_INCREMENT,
+  `idUserPersonalizationUrl` int(11) NOT NULL AUTO_INCREMENT,
   `idUser` int(11) NOT NULL,
   `URL` varchar(255) NOT NULL,
   `Personalization` varchar(8000) NOT NULL,
-  PRIMARY KEY (`idUserPersonalizationURL`),
-  KEY `UserPersonalizationURL_idUser_URL` (`idUser`,`URL`)
+  PRIMARY KEY (`idUserPersonalizationUrl`),
+  KEY `UserPersonalizationUrl_idUser_URL` (`idUser`,`URL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `Vocabulary` (
