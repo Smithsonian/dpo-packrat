@@ -1,3 +1,4 @@
+export * from './access';
 export * from './asset';
 export * from './capturedata';
 export * from './license';

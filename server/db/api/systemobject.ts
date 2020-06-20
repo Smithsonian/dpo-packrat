@@ -33,6 +33,9 @@ export async function createMetadata(prisma: PrismaClient, metadata: Metadata): 
     return createSystemObject;
 }
 
+// NO EXPLICIT METHOD FOR CREATING SYSTEMOBJECT DIRECTLY.
+// This is done via creation methods of the objects linked to SystemObject
+
 export async function createSystemObjectVersion(prisma: PrismaClient, systemObjectVersion: SystemObjectVersion): Promise<SystemObjectVersion> {
     const { idSystemObject, PublishedState } = systemObjectVersion;
     const createSystemObject: SystemObjectVersion = await prisma.systemObjectVersion.create({
@@ -56,19 +59,6 @@ export async function createSystemObjectXref(prisma: PrismaClient, systemObjectX
 
     return createSystemObject;
 }
-
-// typeguards
-/*
-export type SystemObjects = Actor | Asset | AssetVersion | CaptureData | IntermediaryFile | Item | Model | Project | ProjectDocumentation | Scene | Stakeholder | Subject | Unit | Workflow | WorkflowStep;
-export function systemObjectIsActor(sysObj: SystemObjects): sysObj is Actor { return ((sysObj as Actor).idActor) ? true : false; }
-export async function fetchSystemObject(prisma: PrismaClient, sysObj: SystemObjects): Promise<SystemObject | null> {
-    if ((sysObj as Actor).idActor) {
-        return await prisma.systemObject.findOne({ where: { idActor: sysObj.idActor, }, });
-    }
-    return null;
-}
-*/
-// export type SystemObjectAnd<T> = SystemObject & { T: T | null } | null;
 
 export type SystemObjectAndPairs = SystemObject
 & { Actor: Actor | null}

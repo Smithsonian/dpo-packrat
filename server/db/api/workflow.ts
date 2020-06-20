@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Workflow, WorkflowStep, WorkflowTemplate } from '@prisma/client';
+import { PrismaClient, Workflow, WorkflowStep, WorkflowStepSystemObjectXref, WorkflowTemplate } from '@prisma/client';
 
 export async function createWorkflow(prisma: PrismaClient, workflow: Workflow): Promise<Workflow> {
     const { idWorkflowTemplate, idProject, idUserInitiator, DateInitiated, DateUpdated } = workflow;
@@ -28,6 +28,19 @@ export async function createWorkflowStep(prisma: PrismaClient, workflowStep: Wor
             DateCreated,
             DateCompleted,
             SystemObject:       { create: { Retired: 0 }, },
+        },
+    });
+
+    return createSystemObject;
+}
+
+export async function createWorkflowStepSystemObjectXref(prisma: PrismaClient, workflowStepSystemObjectXref: WorkflowStepSystemObjectXref): Promise<WorkflowStepSystemObjectXref> {
+    const { idWorkflowStep, idSystemObject, Input } = workflowStepSystemObjectXref;
+    const createSystemObject: WorkflowStepSystemObjectXref = await prisma.workflowStepSystemObjectXref.create({
+        data: {
+            WorkflowStep: { connect: { idWorkflowStep }, },
+            SystemObject: { connect: { idSystemObject }, },
+            Input
         },
     });
 
