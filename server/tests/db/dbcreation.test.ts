@@ -2,13 +2,15 @@
  * @jest-environment node
  */
 import * as DBAPI from '../../db/api';
-import { PrismaClient, Actor, Asset, AssetGroup, AssetVersion, CaptureData, CaptureDataGroup, CaptureDataGroupCaptureDataXref,
+import { PrismaClient,
+    AccessAction, AccessContext, AccessContextObject, AccessPolicy, AccessRole, AccessRoleAccessActionXref,
+    Actor, Asset, AssetGroup, AssetVersion, CaptureData, CaptureDataGroup, CaptureDataGroupCaptureDataXref,
     GeoLocation, Identifier, IntermediaryFile, Item, License, LicenseAssignment, Metadata,
     Model, ModelGeometryFile, ModelProcessingAction, ModelProcessingActionStep,
     ModelSceneXref, ModelUVMapChannel, ModelUVMapFile, Project, ProjectDocumentation, Scene, Stakeholder,
     Subject, SystemObject, SystemObjectVersion, SystemObjectXref,
     Unit, User, UserPersonalizationSystemObject, UserPersonalizationUrl, Vocabulary, VocabularySet,
-    Workflow, WorkflowStep, WorkflowTemplate } from '@prisma/client';
+    Workflow, WorkflowStep, WorkflowStepSystemObjectXref, WorkflowTemplate } from '@prisma/client';
 
 let prisma;
 
@@ -94,6 +96,45 @@ describe('DB Creation Test Suite', () => {
     // *************************************************************************
     // Makes use of objects created above
     // *************************************************************************
+    // AccessAction, AccessContext, AccessContextObject, AccessPolicy, AccessRole, AccessRoleAccessActionXref,
+    // testCreateAccessAction, testCreateAccessContext, testCreateAccessContextObject, testCreateAccessPolicy, testCreateAccessRole, testCreateAccessRoletestCreateAccessActionXref,
+    let accessAction: AccessAction;
+    it('DB Creation: AccessAction', async () => {
+        accessAction = await testCreateAccessAction(prisma, 'Test AccessAction', 0);
+        expect(accessAction.idAccessAction).toBeGreaterThan(0);
+    });
+
+    let accessContext: AccessContext;
+    it('DB Creation: AccessContext', async () => {
+        accessContext = await testCreateAccessContext(prisma, 0, 0, 0, 0, 0, 0);
+        expect(accessContext.idAccessContext).toBeGreaterThan(0);
+    });
+
+    let accessRole: AccessRole;
+    it('DB Creation: AccessRole', async () => {
+        accessRole = await testCreateAccessRole(prisma, 'Test AccessRole');
+        expect(accessRole.idAccessRole).toBeGreaterThan(0);
+    });
+
+    let accessPolicy: AccessPolicy;
+    it('DB Creation: AccessPolicy', async () => {
+        accessPolicy = await testCreateAccessPolicy(prisma, user, accessRole, accessContext);
+        expect(accessPolicy.idAccessPolicy).toBeGreaterThan(0);
+    });
+
+    let accessContextObject: AccessContextObject;
+    it('DB Creation: AccessContextObject', async () => {
+        if (systemObjectScene)
+            accessContextObject = await testCreateAccessContextObject(prisma, accessContext, systemObjectScene);
+        expect(accessContextObject.idAccessContextObject).toBeGreaterThan(0);
+    });
+
+    let accessRoleAccessActionXref: AccessRoleAccessActionXref;
+    it('DB Creation: AccessRoleAccessActionXref', async () => {
+        accessRoleAccessActionXref = await testCreateAccessRoleAccessActionXref(prisma, accessRole, accessAction);
+        expect(accessRoleAccessActionXref.idAccessRoleAccessActionXref).toBeGreaterThan(0);
+    });
+
     let actorWithUnit: Actor;
     it('DB Creation: Actor With Unit', async () => {
         actorWithUnit = await testCreateActor(prisma, 'Test Actor Name', 'Test Actor Org', unit);
@@ -239,17 +280,15 @@ describe('DB Creation Test Suite', () => {
 
     let systemObjectVersion: SystemObjectVersion;
     it('DB Creation: SystemObjectVersion', async () => {
-        if (systemObjectScene) {
+        if (systemObjectScene)
             systemObjectVersion = await testCreateSystemObjectVersion(prisma, systemObjectScene, 0);
-        }
         expect(systemObjectVersion.idSystemObjectVersion).toBeGreaterThan(0);
     });
 
     let systemObjectXref: SystemObjectXref;
     it('DB Creation: SystemObjectXref', async () => {
-        if (systemObjectSubject && systemObjectScene) {
+        if (systemObjectSubject && systemObjectScene)
             systemObjectXref = await testCreateSystemObjectXref(prisma, systemObjectSubject, systemObjectScene);
-        }
         expect(systemObjectXref.idSystemObjectXref).toBeGreaterThan(0);
     });
 
@@ -315,9 +354,8 @@ describe('DB Creation Test Suite', () => {
 
     let userPersonalizationSystemObject: UserPersonalizationSystemObject;
     it('DB Creation: UserPersonalizationSystemObject', async () => {
-        if (systemObjectSubject) {
+        if (systemObjectSubject)
             userPersonalizationSystemObject = await testCreateUserPersonalizationSystemObject(prisma, user, systemObjectSubject, 'Test Personalization');
-        }
         expect(userPersonalizationSystemObject.idUserPersonalizationSystemObject).toBeGreaterThan(0);
     });
 
@@ -344,12 +382,115 @@ describe('DB Creation Test Suite', () => {
         workflowStep = await testCreateWorkflowStep(prisma, workflow, user, vocabulary, 0, new Date(), new Date());
         expect(workflowStep.idWorkflowStep).toBeGreaterThan(0);
     });
+
+    let workflowStepSystemObjectXref: WorkflowStepSystemObjectXref;
+    it('DB Creation: WorkflowStepSystemObjectXref', async () => {
+        if (systemObjectScene)
+            workflowStepSystemObjectXref = await testCreateWorkflowStepSystemObjectXref(prisma, workflowStep, systemObjectScene, 1);
+        expect(workflowStepSystemObjectXref.idWorkflowStepSystemObjectXref).toBeGreaterThan(0);
+    });
 });
 
 afterAll(async done => {
     await prisma.disconnect();
     done();
 });
+
+async function testCreateAccessAction(prisma: PrismaClient, Name: string, SortOrder: number): Promise<AccessAction> {
+    const accessAction: AccessAction = {
+        Name,
+        SortOrder,
+        idAccessAction: 0
+    };
+
+    try {
+        const createdSystemObject = await DBAPI.createAccessAction(prisma, accessAction);
+        return createdSystemObject;
+    } catch (error) {
+        console.error(`AccessAction creation failed: ${error}`);
+        return accessAction;
+    }
+}
+
+async function testCreateAccessContext(prisma: PrismaClient, Global: number, Authoritative: number, CaptureData: number,
+    Model: number, Scene: number, IntermediaryFile: number): Promise<AccessContext> {
+    const accessContext: AccessContext = {
+        Global, Authoritative, CaptureData, Model, Scene, IntermediaryFile,
+        idAccessContext: 0
+    };
+
+    try {
+        const createdSystemObject = await DBAPI.createAccessContext(prisma, accessContext);
+        return createdSystemObject;
+    } catch (error) {
+        console.error(`AccessContext creation failed: ${error}`);
+        return accessContext;
+    }
+}
+
+async function testCreateAccessContextObject(prisma: PrismaClient, accessContext: AccessContext, systemObject: SystemObject): Promise<AccessContextObject> {
+    const accessContextObject: AccessContextObject = {
+        idAccessContext: accessContext.idAccessContext,
+        idSystemObject: systemObject.idSystemObject,
+        idAccessContextObject: 0
+    };
+
+    try {
+        const createdSystemObject = await DBAPI.createAccessContextObject(prisma, accessContextObject);
+        return createdSystemObject;
+    } catch (error) {
+        console.error(`AccessContextObject creation failed: ${error}`);
+        return accessContextObject;
+    }
+}
+
+async function testCreateAccessPolicy(prisma: PrismaClient, user: User, accessRole: AccessRole, accessContext: AccessContext): Promise<AccessPolicy> {
+    const accessPolicy: AccessPolicy = {
+        idUser: user.idUser,
+        idAccessRole: accessRole.idAccessRole,
+        idAccessContext: accessContext.idAccessContext,
+        idAccessPolicy: 0
+    };
+
+    try {
+        const createdSystemObject = await DBAPI.createAccessPolicy(prisma, accessPolicy);
+        return createdSystemObject;
+    } catch (error) {
+        console.error(`AccessPolicy creation failed: ${error}`);
+        return accessPolicy;
+    }
+}
+
+async function testCreateAccessRole(prisma: PrismaClient, Name: string): Promise<AccessRole> {
+    const accessRole: AccessRole = {
+        Name,
+        idAccessRole: 0
+    };
+
+    try {
+        const createdSystemObject = await DBAPI.createAccessRole(prisma, accessRole);
+        return createdSystemObject;
+    } catch (error) {
+        console.error(`AccessRole creation failed: ${error}`);
+        return accessRole;
+    }
+}
+
+async function testCreateAccessRoleAccessActionXref(prisma: PrismaClient, accessRole: AccessRole, accessAction: AccessAction): Promise<AccessRoleAccessActionXref> {
+    const accessRoleAccessActionXref: AccessRoleAccessActionXref = {
+        idAccessRole: accessRole.idAccessRole,
+        idAccessAction: accessAction.idAccessAction,
+        idAccessRoleAccessActionXref: 0
+    };
+
+    try {
+        const createdSystemObject = await DBAPI.createAccessRoleAccessActionXref(prisma, accessRoleAccessActionXref);
+        return createdSystemObject;
+    } catch (error) {
+        console.error(`AccessRoleAccessActionXref creation failed: ${error}`);
+        return accessRoleAccessActionXref;
+    }
+}
 
 async function testCreateActor(prisma: PrismaClient,
     IndividualName: string, OrganizationName: string, unit: Unit | null): Promise<Actor> {
@@ -1031,6 +1172,24 @@ async function testCreateWorkflowStep(prisma: PrismaClient, workflow: Workflow, 
     } catch (error) {
         console.error(`WorkflowStep creation failed: ${error}`);
         return workflowStep;
+    }
+}
+
+async function testCreateWorkflowStepSystemObjectXref(prisma: PrismaClient, workflowStep: WorkflowStep,
+    systemObject: SystemObject, Input: number): Promise<WorkflowStepSystemObjectXref> {
+    const workflowStepSystemObjectXref: WorkflowStepSystemObjectXref = {
+        idWorkflowStep: workflowStep.idWorkflowStep,
+        idSystemObject: systemObject.idSystemObject,
+        Input,
+        idWorkflowStepSystemObjectXref: 0
+    };
+
+    try {
+        const createdSystemObject = await DBAPI.createWorkflowStepSystemObjectXref(prisma, workflowStepSystemObjectXref);
+        return createdSystemObject;
+    } catch (error) {
+        console.error(`WorkflowStepSystemObjectXref creation failed: ${error}`);
+        return workflowStepSystemObjectXref;
     }
 }
 
