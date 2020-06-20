@@ -4,17 +4,28 @@
  * Entry file for server
  */
 
-import express /*, { Request, Response } */ from 'express';
+import express from 'express';
 import cors from 'cors';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer, ApolloServerExpressConfig } from 'apollo-server-express';
 import schema from './graphql/schema';
+import { PrismaClient } from '@prisma/client';
 
 const app = express();
 app.use(cors());
 
 const PORT = 4000;
 
-const server = new ApolloServer({ schema });
+const prisma = new PrismaClient();
+
+const serverOptions: ApolloServerExpressConfig = {
+    schema,
+    context: (context) => ({
+        ...context,
+        prisma
+    })
+};
+
+const server = new ApolloServer(serverOptions);
 server.applyMiddleware({ app });
 
 app.listen(PORT, () => {
