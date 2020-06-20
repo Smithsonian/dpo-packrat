@@ -1,4 +1,4 @@
-import * as DBAPI from '../../../db/api';
+import * as DBAPI from '../../../db';
 import { PrismaClient, Scene, Subject, SystemObject } from '@prisma/client';
 
 export async function testFetchSystemObjectSubject(prisma: PrismaClient, subject: Subject): Promise<SystemObject | null> {
