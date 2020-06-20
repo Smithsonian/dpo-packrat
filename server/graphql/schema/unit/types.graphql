@@ -33,7 +33,7 @@ type Stakeholder {
   mailingAddress: String
 }
 
-type Geolocation {
+type GeoLocation {
   id: ID!
   latitude: Float!
   longitude: Float!
@@ -54,7 +54,7 @@ type Subject {
   unit: Unit!
   assetThumbnail: Asset
   name: String!
-  geolocation: Geolocation
+  geoLocation: GeoLocation
   items: [Item]
 }
 
@@ -62,7 +62,7 @@ type Item {
   id: ID!
   subject: Subject!
   assetThumbnail: Asset
-  geolocation: Geolocation
+  geoLocation: GeoLocation
   name: String!
   entireSubject: Boolean!
 }
