@@ -5,7 +5,7 @@ import { mergeResolvers, mergeTypeDefs, makeExecutableSchema, loadFilesSync } fr
 
 import { assetResolvers } from './asset';
 import { captureDataResolvers } from './capturedata';
-import { licenceResolvers } from './licence';
+import { licenseResolvers } from './license';
 import { unitResolvers } from './unit';
 import { modelResolvers } from './model';
 import { sceneResolvers } from './scene';
@@ -15,7 +15,7 @@ import { vocabularyResolvers } from './vocabulary';
 const resolvers = mergeResolvers([
     assetResolvers,
     captureDataResolvers,
-    licenceResolvers,
+    licenseResolvers,
     unitResolvers,
     modelResolvers,
     sceneResolvers,
