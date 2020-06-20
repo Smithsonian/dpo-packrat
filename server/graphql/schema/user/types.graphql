@@ -1,4 +1,4 @@
-# import LicenceAssignment from "../licence/types.graphql"
+# import LicenseAssignment from "../license/types.graphql"
 
 scalar DateTime
 
@@ -14,7 +14,7 @@ type User {
   emailSettings: Int
   userPersonalizationSystemObjects: [UserPersonalizationSystemObject]
   userPersonalizationUrls: [UserPersonalizationUrl]
-  licenceAssignments: [LicenceAssignment]
+  licenseAssignments: [LicenseAssignment]
 }
 
 type UserPersonalizationSystemObject {
