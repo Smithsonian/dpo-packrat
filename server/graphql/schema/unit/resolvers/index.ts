@@ -2,7 +2,7 @@ import Unit from './types/Unit';
 import Project from './types/Project';
 import ProjectDocumentation from './types/ProjectDocumentation';
 import Stakeholder from './types/Stakeholder';
-import Geolocation from './types/Geolocation';
+import GeoLocation from './types/GeoLocation';
 import Subject from './types/Subject';
 import Item from './types/Item';
 
@@ -11,7 +11,7 @@ const resolvers = {
     Project,
     ProjectDocumentation,
     Stakeholder,
-    Geolocation,
+    GeoLocation,
     Subject,
     Item,
 };
