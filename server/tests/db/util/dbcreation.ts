@@ -1,4 +1,4 @@
-import * as DBAPI from '../../../db/api';
+import * as DBAPI from '../../../db';
 import { PrismaClient,
     AccessAction, AccessContext, AccessContextObject, AccessPolicy, AccessRole, AccessRoleAccessActionXref,
     Actor, Asset, AssetGroup, AssetVersion, CaptureData, CaptureDataGroup, CaptureDataGroupCaptureDataXref,
