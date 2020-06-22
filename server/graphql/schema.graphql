@@ -281,7 +281,17 @@ type VocabularySet {
 }
 
 type Query {
+  getLicense(input: GetLicenseInput!): GetLicenseResult!
   getUser(input: GetUserInput!): GetUserResult!
+  getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
+}
+
+input GetLicenseInput {
+  id: ID!
+}
+
+type GetLicenseResult {
+  license: License
 }
 
 input GetUserInput {
@@ -290,4 +300,12 @@ input GetUserInput {
 
 type GetUserResult {
   user: User
+}
+
+input GetVocabularyInput {
+  id: ID!
+}
+
+type GetVocabularyResult {
+  vocabulary: Vocabulary
 }

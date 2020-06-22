@@ -1,0 +1,11 @@
+type Query {
+    getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
+}
+
+input GetVocabularyInput {
+    id: ID!
+}
+
+type GetVocabularyResult {
+    vocabulary: Vocabulary
+}
