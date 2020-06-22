@@ -29,7 +29,7 @@ export async function resolveUserPersonalizationSystemObjectsByUserID(prisma: Pr
     return parseUserPersonalizationSystemObjects(foundUserPersonalizationSystemObjects);
 }
 
-export async function parseUserPersonalizationSystemObjects(foundUserPersonalizationSystemObjects: DB.UserPersonalizationSystemObject[] | null): Promise<UserPersonalizationSystemObject[] | null> {
+export function parseUserPersonalizationSystemObjects(foundUserPersonalizationSystemObjects: DB.UserPersonalizationSystemObject[] | null): UserPersonalizationSystemObject[] | null {
     let userPersonalizationSystemObjects;
     if (foundUserPersonalizationSystemObjects) {
         userPersonalizationSystemObjects = foundUserPersonalizationSystemObjects.map(personalizationSystemObject => {

@@ -29,7 +29,7 @@ export async function resolveUserPersonalizationUrlsByUserID(prisma: PrismaClien
     return parseUserPersonalizationUrls(foundUserPersonalizationUrls);
 }
 
-export async function parseUserPersonalizationUrls(foundUserPersonalizationUrls: DB.UserPersonalizationUrl[] | null): Promise<UserPersonalizationUrl[] | null> {
+export function parseUserPersonalizationUrls(foundUserPersonalizationUrls: DB.UserPersonalizationUrl[] | null): UserPersonalizationUrl[] | null {
     let userPersonalizationUrls;
     if (foundUserPersonalizationUrls) {
         userPersonalizationUrls = foundUserPersonalizationUrls.map(userPersonalizationUrl => {
