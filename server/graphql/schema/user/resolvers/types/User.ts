@@ -7,6 +7,7 @@ import { resolveUserPersonalizationSystemObjectsByUserID } from './UserPersonali
 import { resolveUserPersonalizationUrlsByUserID } from './UserPersonalizationUrl';
 import { fetchUser } from '../../../../../db';
 import { PrismaClient } from '@prisma/client';
+import * as DB from '@prisma/client';
 
 const User = {
     userPersonalizationSystemObjects: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationSystemObject[] | null> => {
@@ -25,11 +26,16 @@ const User = {
 
 export async function resolveUserByID(prisma: PrismaClient, userId: number): Promise<User | null> {
     const foundUser = await fetchUser(prisma, userId);
+
+    return parseUser(foundUser);
+}
+
+export async function parseUser(foundUser: DB.User | null): Promise<User | null> {
     let user;
     if (foundUser) {
         const { idUser, Name, EmailAddress, SecurityID, Active, DateActivated, DateDisabled, WorkflowNotificationTime, EmailSettings } = foundUser;
         user = {
-            id: idUser,
+            id: String(idUser),
             name: Name,
             emailAddress: EmailAddress,
             securityId: SecurityID,
