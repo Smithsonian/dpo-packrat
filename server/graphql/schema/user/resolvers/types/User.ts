@@ -15,7 +15,7 @@ const User = {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveUserPersonalizationSystemObjectsByUserID(prisma, id);
+        return resolveUserPersonalizationSystemObjectsByUserID(prisma, Number.parseInt(id));
     },
     userPersonalizationUrls: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationUrl[] | null> => {
         const { id } = parent;
