@@ -88,7 +88,7 @@ export type LicenseAssignment = {
     __typename?: 'LicenseAssignment';
     id: Scalars['ID'];
     license: License;
-    userCreators?: Maybe<User>;
+    userCreator?: Maybe<User>;
     dateStart?: Maybe<Scalars['DateTime']>;
     dateEnd?: Maybe<Scalars['DateTime']>;
 };
@@ -238,8 +238,8 @@ export type Stakeholder = {
     mailingAddress?: Maybe<Scalars['String']>;
 };
 
-export type Geolocation = {
-    __typename?: 'Geolocation';
+export type GeoLocation = {
+    __typename?: 'GeoLocation';
     id: Scalars['ID'];
     latitude: Scalars['Float'];
     longitude: Scalars['Float'];
@@ -261,7 +261,7 @@ export type Subject = {
     unit: Unit;
     assetThumbnail?: Maybe<Asset>;
     name: Scalars['String'];
-    geolocation?: Maybe<Geolocation>;
+    geoLocation?: Maybe<GeoLocation>;
     items?: Maybe<Array<Maybe<Item>>>;
 };
 
@@ -270,7 +270,7 @@ export type Item = {
     id: Scalars['ID'];
     subject: Subject;
     assetThumbnail?: Maybe<Asset>;
-    geolocation?: Maybe<Geolocation>;
+    geoLocation?: Maybe<GeoLocation>;
     name: Scalars['String'];
     entireSubject: Scalars['Boolean'];
 };
@@ -322,11 +322,30 @@ export type VocabularySet = {
 
 export type Query = {
     __typename?: 'Query';
+    getLicense: GetLicenseResult;
     getUser: GetUserResult;
+    getVocabulary: GetVocabularyResult;
+};
+
+export type QueryGetLicenseArgs = {
+    input: GetLicenseInput;
 };
 
 export type QueryGetUserArgs = {
     input: GetUserInput;
+};
+
+export type QueryGetVocabularyArgs = {
+    input: GetVocabularyInput;
+};
+
+export type GetLicenseInput = {
+    id: Scalars['ID'];
+};
+
+export type GetLicenseResult = {
+    __typename?: 'GetLicenseResult';
+    license?: Maybe<License>;
 };
 
 export type GetUserInput = {
@@ -336,4 +355,13 @@ export type GetUserInput = {
 export type GetUserResult = {
     __typename?: 'GetUserResult';
     user?: Maybe<User>;
+};
+
+export type GetVocabularyInput = {
+    id: Scalars['ID'];
+};
+
+export type GetVocabularyResult = {
+    __typename?: 'GetVocabularyResult';
+    vocabulary?: Maybe<Vocabulary>;
 };
