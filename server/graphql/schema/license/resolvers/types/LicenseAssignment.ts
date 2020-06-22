@@ -24,14 +24,14 @@ const LicenseAssignment = {
     }
 };
 
-export async function resolveLicenseByLicenseAssignmentID(prisma: PrismaClient, idLicenseAssignment: number): Promise<License | null> {
-    const foundLicense = await fetchLicenseForLicenseAssignmentID(prisma, idLicenseAssignment);
+export async function resolveLicenseByLicenseAssignmentID(prisma: PrismaClient, licenseAssignmentId: number): Promise<License | null> {
+    const foundLicense = await fetchLicenseForLicenseAssignmentID(prisma, licenseAssignmentId);
 
     return parseLicense(foundLicense);
 }
 
-export async function resolveUserCreatorByLicenseAssignmentID(prisma: PrismaClient, idLicenseAssignment: number): Promise<User | null> {
-    const foundUser = await fetchUserForLicenseAssignmentID(prisma, idLicenseAssignment);
+export async function resolveUserCreatorByLicenseAssignmentID(prisma: PrismaClient, licenseAssignmentId: number): Promise<User | null> {
+    const foundUser = await fetchUserForLicenseAssignmentID(prisma, licenseAssignmentId);
 
     return parseUser(foundUser);
 }
