@@ -45,8 +45,6 @@ export async function parseUser(foundUser: DB.User | null): Promise<User | null>
             workflowNotificationTime: WorkflowNotificationTime,
             emailSettings: EmailSettings
         };
-
-        return user;
     }
 
     return user;
