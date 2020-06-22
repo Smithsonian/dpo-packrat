@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, User, UserPersonalizationSystemObject, UserPersonalizationUrl } from '@prisma/client';
+import { PrismaClient, User, UserPersonalizationSystemObject, UserPersonalizationUrl, LicenseAssignment } from '@prisma/client';
 
 export async function fetchUser(prisma: PrismaClient, idUser: number): Promise<User | null> {
     return prisma.user.findOne({ where: { idUser } });
@@ -19,6 +19,10 @@ export async function fetchUserForUserPersonalizationSystemObjectID(prisma: Pris
 
 export async function fetchUserForUserPersonalizationUrlID(prisma: PrismaClient, idUserPersonalizationUrl: number): Promise<User | null> {
     return prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl } }).User();
+}
+
+export async function fetchLicenseAssignmentsForUserID(prisma: PrismaClient, idUser: number): Promise<LicenseAssignment[] | null> {
+    return prisma.user.findOne({ where: { idUser } }).LicenseAssignment();
 }
 
 export async function createUser(prisma: PrismaClient, user: User): Promise<User> {

@@ -5,7 +5,7 @@ import { License, LicenseAssignment, User } from '../../../../../types/graphql';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import { PrismaClient } from '@prisma/client';
 import * as DB from '@prisma/client';
-import { fetchUserForLicenseAssignmentID, fetchLicenseForLicenseAssignmentID } from '../../../../../db';
+import { fetchUserForLicenseAssignmentID, fetchLicenseForLicenseAssignmentID, fetchLicenseAssignmentsForUserID } from '../../../../../db';
 import { parseLicense } from './License';
 import { parseUser } from '../../../user/resolvers/types/User';
 
@@ -34,6 +34,12 @@ export async function resolveUserCreatorByLicenseAssignmentID(prisma: PrismaClie
     const foundUser = await fetchUserForLicenseAssignmentID(prisma, idLicenseAssignment);
 
     return parseUser(foundUser);
+}
+
+export async function resolveLicenseAssignmentsByUserID(prisma: PrismaClient, idUser: number): Promise<LicenseAssignment[] | null> {
+    const foundLicenseAssignments = await fetchLicenseAssignmentsForUserID(prisma, idUser);
+
+    return parseLicenseAssignments(foundLicenseAssignments);
 }
 
 export function parseLicenseAssignments(foundLicenseAssignments: DB.LicenseAssignment[] | null): LicenseAssignment[] | null {
