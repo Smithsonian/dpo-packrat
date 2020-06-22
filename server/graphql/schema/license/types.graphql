@@ -12,7 +12,7 @@ type License {
 type LicenseAssignment {
   id: ID!
   license: License!
-  userCreators: User
+  userCreator: User
   dateStart: DateTime
   dateEnd: DateTime
 }
