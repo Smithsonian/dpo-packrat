@@ -5,7 +5,7 @@ import { License, LicenseAssignment } from '../../../../../types/graphql';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import { PrismaClient } from '@prisma/client';
 import * as DB from '@prisma/client';
-import { fetchLicenseAssignmentsForLicenseID } from '../../../../../db';
+import { fetchLicenseAssignmentsForLicenseID, fetchLicense } from '../../../../../db';
 import { parseLicenseAssignments } from './LicenseAssignment';
 
 const License = {
@@ -16,6 +16,12 @@ const License = {
         return resolveLicenseAssignmentsByLicenseID(prisma, Number.parseInt(id));
     }
 };
+
+export async function resolveLicenseByID(prisma: PrismaClient, licenseId: number): Promise<License | null> {
+    const foundLicense = await fetchLicense(prisma, licenseId);
+
+    return parseLicense(foundLicense);
+}
 
 export async function resolveLicenseAssignmentsByLicenseID(prisma: PrismaClient, licenseId: number): Promise<LicenseAssignment[] | null> {
     const foundLicenseAssignments = await fetchLicenseAssignmentsForLicenseID(prisma, licenseId);

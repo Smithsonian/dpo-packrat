@@ -1,0 +1,13 @@
+# import License from "types.graphql"
+
+type Query {
+    getLicense(input: GetLicenseInput!): GetLicenseResult!
+}
+
+input GetLicenseInput {
+    id: ID!
+}
+
+type GetLicenseResult {
+    license: License
+}
