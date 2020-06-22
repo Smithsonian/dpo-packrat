@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, License, LicenseAssignment } from '@prisma/client';
+import { PrismaClient, License } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createLicense(prisma: PrismaClient, license: License): Promise<License | null> {
@@ -19,22 +19,11 @@ export async function createLicense(prisma: PrismaClient, license: License): Pro
     return createSystemObject;
 }
 
-export async function createLicenseAssignment(prisma: PrismaClient, licenseAssignment: LicenseAssignment): Promise<LicenseAssignment | null> {
-    let createSystemObject: LicenseAssignment;
-    const { idLicense, idUserCreator, DateStart, DateEnd, idSystemObject } = licenseAssignment;
+export async function fetchLicense(prisma: PrismaClient, idLicense: number): Promise<License | null> {
     try {
-        createSystemObject = await prisma.licenseAssignment.create({
-            data: {
-                License:        { connect: { idLicense }, },
-                User:           idUserCreator ? { connect: { idUser: idUserCreator }, } : undefined,
-                DateStart,
-                DateEnd,
-                SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : undefined
-            },
-        });
+        return await prisma.license.findOne({ where: { idLicense, }, });
     } catch (error) {
-        LOG.logger.error('DBAPI.createLicenseAssignment', error);
+        LOG.logger.error('DBAPI.fetchLicense', error);
         return null;
     }
-    return createSystemObject;
 }

@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Workflow, WorkflowStep, WorkflowStepSystemObjectXref, WorkflowTemplate } from '@prisma/client';
+import { PrismaClient, Workflow, SystemObject } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createWorkflow(prisma: PrismaClient, workflow: Workflow): Promise<Workflow | null> {
@@ -23,58 +23,38 @@ export async function createWorkflow(prisma: PrismaClient, workflow: Workflow): 
     return createSystemObject;
 }
 
-export async function createWorkflowStep(prisma: PrismaClient, workflowStep: WorkflowStep): Promise<WorkflowStep | null> {
-    let createSystemObject: WorkflowStep;
-    const { idWorkflow, idUserOwner, idVWorkflowStepType, State, DateCreated, DateCompleted } = workflowStep;
+export async function fetchWorkflow(prisma: PrismaClient, idWorkflow: number): Promise<Workflow | null> {
     try {
-        createSystemObject = await prisma.workflowStep.create({
-            data: {
-                Workflow:           { connect: { idWorkflow }, },
-                User:               { connect: { idUser: idUserOwner }, },
-                Vocabulary:         { connect: { idVocabulary: idVWorkflowStepType }, },
-                State,
-                DateCreated,
-                DateCompleted,
-                SystemObject:       { create: { Retired: 0 }, },
-            },
-        });
+        return await prisma.workflow.findOne({ where: { idWorkflow, }, });
     } catch (error) {
-        LOG.logger.error('DBAPI.createWorkflowStep', error);
+        LOG.logger.error('DBAPI.fetchWorkflow', error);
         return null;
     }
-    return createSystemObject;
 }
 
-export async function createWorkflowStepSystemObjectXref(prisma: PrismaClient, workflowStepSystemObjectXref: WorkflowStepSystemObjectXref): Promise<WorkflowStepSystemObjectXref | null> {
-    let createSystemObject: WorkflowStepSystemObjectXref;
-    const { idWorkflowStep, idSystemObject, Input } = workflowStepSystemObjectXref;
+export async function fetchSystemObjectForWorkflow(prisma: PrismaClient, sysObj: Workflow): Promise<SystemObject | null> {
     try {
-        createSystemObject = await prisma.workflowStepSystemObjectXref.create({
-            data: {
-                WorkflowStep: { connect: { idWorkflowStep }, },
-                SystemObject: { connect: { idSystemObject }, },
-                Input
-            },
-        });
+        return await prisma.systemObject.findOne({ where: { idWorkflow: sysObj.idWorkflow, }, });
     } catch (error) {
-        LOG.logger.error('DBAPI.createWorkflowStepSystemObjectXref', error);
+        LOG.logger.error('DBAPI.fetchSystemObjectForWorkflow', error);
         return null;
     }
-    return createSystemObject;
 }
 
-export async function createWorkflowTemplate(prisma: PrismaClient, workflowTemplate: WorkflowTemplate): Promise<WorkflowTemplate | null> {
-    let createSystemObject: WorkflowTemplate;
-    const { Name } = workflowTemplate;
+export async function fetchSystemObjectForWorkflowID(prisma: PrismaClient, idWorkflow: number): Promise<SystemObject | null> {
     try {
-        createSystemObject = await prisma.workflowTemplate.create({
-            data: {
-                Name
-            },
-        });
+        return await prisma.systemObject.findOne({ where: { idWorkflow, }, });
     } catch (error) {
-        LOG.logger.error('DBAPI.createWorkflowTemplate', error);
+        LOG.logger.error('DBAPI.fetchSystemObjectForWorkflowID', error);
         return null;
     }
-    return createSystemObject;
+}
+
+export async function fetchSystemObjectAndWorkflow(prisma: PrismaClient, idWorkflow: number): Promise<SystemObject & { Workflow: Workflow | null} | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idWorkflow, }, include: { Workflow: true, }, });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectAndWorkflow', error);
+        return null;
+    }
 }

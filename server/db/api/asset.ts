@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Asset, AssetGroup, AssetVersion } from '@prisma/client';
+import { PrismaClient, Asset, SystemObject } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createAsset(prisma: PrismaClient, asset: Asset): Promise<Asset | null> {
@@ -21,40 +21,39 @@ export async function createAsset(prisma: PrismaClient, asset: Asset): Promise<A
     return createSystemObject;
 }
 
-export async function createAssetGroup(prisma: PrismaClient, assetGroup: AssetGroup): Promise<AssetGroup | null> {
-    let createSystemObject: AssetGroup;
-    assetGroup;
+export async function fetchAsset(prisma: PrismaClient, idAsset: number): Promise<Asset | null> {
     try {
-        createSystemObject = await prisma.assetGroup.create({
-            data: {
-            },
-        });
+        return await prisma.asset.findOne({ where: { idAsset, }, });
     } catch (error) {
-        LOG.logger.error('DBAPI.createAssetGroup', error);
+        LOG.logger.error('DBAPI.fetchAsset', error);
         return null;
     }
-
-    return createSystemObject;
 }
 
-export async function createAssetVersion(prisma: PrismaClient, assetVersion: AssetVersion): Promise<AssetVersion | null> {
-    let createSystemObject: AssetVersion;
-    const { idAsset, idUserCreator, DateCreated, StorageLocation, StorageChecksum, StorageSize } = assetVersion;
+export async function fetchSystemObjectForAsset(prisma: PrismaClient, sysObj: Asset): Promise<SystemObject | null> {
     try {
-        createSystemObject = await prisma.assetVersion.create({
-            data: {
-                Asset:              { connect: { idAsset }, },
-                User:               { connect: { idUser: idUserCreator }, },
-                DateCreated,
-                StorageLocation,
-                StorageChecksum,
-                StorageSize,
-                SystemObject:       { create: { Retired: 0 }, },
-            },
-        });
+        return await prisma.systemObject.findOne({ where: { idAsset: sysObj.idAsset, }, });
     } catch (error) {
-        LOG.logger.error('DBAPI.createAssetVersion', error);
+        LOG.logger.error('DBAPI.fetchSystemObjectForAsset', error);
         return null;
     }
-    return createSystemObject;
 }
+
+export async function fetchSystemObjectForAssetID(prisma: PrismaClient, idAsset: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idAsset, }, });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectForAssetID', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectAndAssetID(prisma: PrismaClient, idAsset: number): Promise<SystemObject & { Asset: Asset | null} | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectAndAssetID', error);
+        return null;
+    }
+}
+

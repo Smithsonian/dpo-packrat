@@ -458,7 +458,7 @@ describe('DB Fetch Test Suite', () => {
     let workflowStep: WorkflowStep;
     let workflowStepSystemObjectXref: WorkflowStepSystemObjectXref;
     */
-    let systemObjectAndPairs: DBAPI.SystemObjectAndPairs;
+    let systemObjectAndPairs: DBAPI.SystemObjectAndPairs | null;
     test('DB Fetch: Invalid SystemObject ID', async () => {
         systemObjectAndPairs = await DBF.testFetchSystemObject(prisma, 0);
         expect(systemObjectAndPairs).toBeNull();
