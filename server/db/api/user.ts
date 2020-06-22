@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, User, UserPersonalizationSystemObject, UserPersonalizationUrl } from '@prisma/client';
+import { PrismaClient, User } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createUser(prisma: PrismaClient, user: User): Promise<User | null> {
@@ -25,38 +25,11 @@ export async function createUser(prisma: PrismaClient, user: User): Promise<User
     return createSystemObject;
 }
 
-export async function createUserPersonalizationSystemObject(prisma: PrismaClient, userPersonalizationSystemObject: UserPersonalizationSystemObject): Promise<UserPersonalizationSystemObject | null> {
-    let createSystemObject: UserPersonalizationSystemObject;
-    const { idUser, idSystemObject, Personalization } = userPersonalizationSystemObject;
+export async function fetchUser(prisma: PrismaClient, idUser: number): Promise<User | null> {
     try {
-        createSystemObject = await prisma.userPersonalizationSystemObject.create({
-            data: {
-                User:           { connect: { idUser }, },
-                SystemObject:   { connect: { idSystemObject }, },
-                Personalization,
-            },
-        });
+        return await prisma.user.findOne({ where: { idUser, }, });
     } catch (error) {
-        LOG.logger.error('DBAPI.createUserPersonalizationSystemObject', error);
+        LOG.logger.error('DBAPI.fetchUser', error);
         return null;
     }
-    return createSystemObject;
-}
-
-export async function createUserPersonalizationUrl(prisma: PrismaClient, userPersonalizationUrl: UserPersonalizationUrl): Promise<UserPersonalizationUrl | null> {
-    let createSystemObject: UserPersonalizationUrl;
-    const { idUser, URL, Personalization } = userPersonalizationUrl;
-    try {
-        createSystemObject = await prisma.userPersonalizationUrl.create({
-            data: {
-                User:   { connect: { idUser }, },
-                URL,
-                Personalization,
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createUserPersonalizationUrl', error);
-        return null;
-    }
-    return createSystemObject;
 }

@@ -19,7 +19,7 @@ export async function testFetchSystemObjectScene(prisma: PrismaClient, scene: Sc
     }
 }
 
-export async function testFetchSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<DBAPI.SystemObjectAndPairs> {
+export async function testFetchSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<DBAPI.SystemObjectAndPairs | null> {
     try {
         return await DBAPI.fetchSystemObject(prisma, idSystemObject);
     } catch (error) {
@@ -29,7 +29,9 @@ export async function testFetchSystemObject(prisma: PrismaClient, idSystemObject
 }
 
 /*
-fetchSystemObject SystemObjectAndPairs
+fetchActor Actor | null
+fetchIntermediaryFile IntermediaryFile | null
+fetchScene Scene | null
 fetchSystemObjectForActor SystemObject | null
 fetchSystemObjectForActorID SystemObject | null
 fetchSystemObjectAndActor SystemObject & { Actor: Actor | null} | null

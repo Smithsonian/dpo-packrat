@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, CaptureData, CaptureDataFile, CaptureDataGroup, CaptureDataGroupCaptureDataXref } from '@prisma/client';
+import { PrismaClient, CaptureData, SystemObject } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createCaptureData(prisma: PrismaClient, captureData: CaptureData): Promise<CaptureData | null> {
@@ -35,53 +35,38 @@ export async function createCaptureData(prisma: PrismaClient, captureData: Captu
     return createSystemObject;
 }
 
-export async function createCaptureDataFile(prisma: PrismaClient, captureDataFile: CaptureDataFile): Promise<CaptureDataFile | null> {
-    let createSystemObject: CaptureDataFile;
-    const { idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = captureDataFile;
+export async function fetchCaptureData(prisma: PrismaClient, idCaptureData: number): Promise<CaptureData | null> {
     try {
-        createSystemObject = await prisma.captureDataFile.create({
-            data: {
-                CaptureData:    { connect: { idCaptureData }, },
-                Asset:          { connect: { idAsset }, },
-                Vocabulary:     { connect: { idVocabulary: idVVariantType }, },
-                CompressedMultipleFiles
-            },
-        });
+        return await prisma.captureData.findOne({ where: { idCaptureData, }, });
     } catch (error) {
-        LOG.logger.error('DBAPI.createCaptureDataFile', error);
+        LOG.logger.error('DBAPI.fetchCaptureData', error);
         return null;
     }
-    return createSystemObject;
 }
 
-export async function createCaptureDataGroup(prisma: PrismaClient): Promise<CaptureDataGroup | null> {
-    let createSystemObject: CaptureDataGroup;
+export async function fetchSystemObjectForCaptureData(prisma: PrismaClient, sysObj: CaptureData): Promise<SystemObject | null> {
     try {
-        createSystemObject = await prisma.captureDataGroup.create({
-            data: {
-            },
-        });
+        return await prisma.systemObject.findOne({ where: { idCaptureData: sysObj.idCaptureData, }, });
     } catch (error) {
-        LOG.logger.error('DBAPI.createCaptureDataGroup', error);
+        LOG.logger.error('DBAPI.fetchSystemObjectForCaptureData', error);
         return null;
     }
-    return createSystemObject;
 }
 
-export async function createCaptureDataGroupCaptureDataXref(prisma: PrismaClient, captureDataGroupCaptureDataXref: CaptureDataGroupCaptureDataXref): Promise<CaptureDataGroupCaptureDataXref | null> {
-    let createSystemObject: CaptureDataGroupCaptureDataXref;
-    const { idCaptureDataGroup, idCaptureData } = captureDataGroupCaptureDataXref;
+export async function fetchSystemObjectForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<SystemObject | null> {
     try {
-        createSystemObject = await prisma.captureDataGroupCaptureDataXref.create({
-            data: {
-                CaptureDataGroup:   { connect: { idCaptureDataGroup }, },
-                CaptureData:        { connect: { idCaptureData }, }
-            },
-        });
+        return await prisma.systemObject.findOne({ where: { idCaptureData, }, });
     } catch (error) {
-        LOG.logger.error('DBAPI.createCaptureDataGroupCaptureDataXref', error);
+        LOG.logger.error('DBAPI.fetchSystemObjectForCaptureDataID', error);
         return null;
     }
+}
 
-    return createSystemObject;
+export async function fetchSystemObjectAndCaptureData(prisma: PrismaClient, idCaptureData: number): Promise<SystemObject & { CaptureData: CaptureData | null} | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idCaptureData, }, include: { CaptureData: true, }, });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectAndCaptureData', error);
+        return null;
+    }
 }
