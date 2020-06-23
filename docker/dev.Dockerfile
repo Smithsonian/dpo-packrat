@@ -33,3 +33,6 @@ EXPOSE 80
 RUN rm /usr/share/nginx/html/*
 COPY nginx.conf /etc/nginx/nginx.conf
 CMD ["nginx", "-g", "daemon off;"]
+
+FROM mariadb:10.5 as db
+RUN mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.sql 
