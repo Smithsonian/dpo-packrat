@@ -14,7 +14,7 @@ export async function createWorkflowStep(prisma: PrismaClient, workflowStep: Wor
                 State,
                 DateCreated,
                 DateCompleted,
-                SystemObject:       { create: { Retired: 0 }, },
+                SystemObject:       { create: { Retired: false }, },
             },
         });
     } catch (error) {
