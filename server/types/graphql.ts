@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export type Maybe<T> = T | null;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -207,6 +206,7 @@ export type Unit = {
     id: Scalars['ID'];
     name: Scalars['String'];
     abbreviation?: Maybe<Scalars['String']>;
+    arkPrefix?: Maybe<Scalars['String']>;
     subjects?: Maybe<Array<Maybe<Subject>>>;
     actors?: Maybe<Array<Maybe<Actor>>>;
 };
@@ -241,16 +241,16 @@ export type Stakeholder = {
 export type GeoLocation = {
     __typename?: 'GeoLocation';
     id: Scalars['ID'];
-    latitude: Scalars['Float'];
-    longitude: Scalars['Float'];
-    altitude: Scalars['Float'];
-    ts0: Scalars['Float'];
-    ts1: Scalars['Float'];
-    ts2: Scalars['Float'];
-    r0: Scalars['Float'];
-    r1: Scalars['Float'];
-    r2: Scalars['Float'];
-    r3: Scalars['Float'];
+    latitude?: Maybe<Scalars['Float']>;
+    longitude?: Maybe<Scalars['Float']>;
+    altitude?: Maybe<Scalars['Float']>;
+    ts0?: Maybe<Scalars['Float']>;
+    ts1?: Maybe<Scalars['Float']>;
+    ts2?: Maybe<Scalars['Float']>;
+    r0?: Maybe<Scalars['Float']>;
+    r1?: Maybe<Scalars['Float']>;
+    r2?: Maybe<Scalars['Float']>;
+    r3?: Maybe<Scalars['Float']>;
     items?: Maybe<Array<Maybe<Item>>>;
     subjects?: Maybe<Array<Maybe<Subject>>>;
 };
@@ -258,7 +258,7 @@ export type GeoLocation = {
 export type Subject = {
     __typename?: 'Subject';
     id: Scalars['ID'];
-    unit: Unit;
+    unit?: Maybe<Unit>;
     assetThumbnail?: Maybe<Asset>;
     name: Scalars['String'];
     geoLocation?: Maybe<GeoLocation>;
@@ -268,7 +268,7 @@ export type Subject = {
 export type Item = {
     __typename?: 'Item';
     id: Scalars['ID'];
-    subject: Subject;
+    subject?: Maybe<Subject>;
     assetThumbnail?: Maybe<Asset>;
     geoLocation?: Maybe<GeoLocation>;
     name: Scalars['String'];
@@ -323,12 +323,17 @@ export type VocabularySet = {
 export type Query = {
     __typename?: 'Query';
     getLicense: GetLicenseResult;
+    getUnit: GetUnitResult;
     getUser: GetUserResult;
     getVocabulary: GetVocabularyResult;
 };
 
 export type QueryGetLicenseArgs = {
     input: GetLicenseInput;
+};
+
+export type QueryGetUnitArgs = {
+    input: GetUnitInput;
 };
 
 export type QueryGetUserArgs = {
@@ -346,6 +351,15 @@ export type GetLicenseInput = {
 export type GetLicenseResult = {
     __typename?: 'GetLicenseResult';
     license?: Maybe<License>;
+};
+
+export type GetUnitInput = {
+    id: Scalars['ID'];
+};
+
+export type GetUnitResult = {
+    __typename?: 'GetUnitResult';
+    unit?: Maybe<Unit>;
 };
 
 export type GetUserInput = {

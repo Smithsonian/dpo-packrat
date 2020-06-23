@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import { Subject, Actor, Unit } from '../../../../../types/graphql';
 import { parseSubjects } from './Subject';
+import { parseActors } from '../../../scene/resolvers/types/Actor';
 
 const Unit = {
     subjects: async (parent: Parent, _: Args, context: Context): Promise<Subject[] | null> => {
@@ -54,23 +55,6 @@ export async function resolveActorsByUnitID(prisma: PrismaClient, unitId: number
     const foundActors = await fetchActorsForUnitID(prisma, unitId);
 
     return parseActors(foundActors);
-}
-
-// to be moved
-export function parseActors(foundActors: DB.Actor[] | null): Actor[] | null {
-    let actors;
-    if (foundActors) {
-        actors = foundActors.map(actor => {
-            const { idActor, IndividualName, OrganizationName } = actor;
-            return {
-                id: String(idActor),
-                individualName: IndividualName,
-                organizationName: OrganizationName
-            };
-        });
-    }
-
-    return actors;
 }
 
 export default Unit;

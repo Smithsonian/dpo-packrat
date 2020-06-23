@@ -1,0 +1,13 @@
+# import Unit from "types.graphql"
+
+type Query {
+    getUnit(input: GetUnitInput!): GetUnitResult!
+}
+
+input GetUnitInput {
+    id: ID!
+}
+
+type GetUnitResult {
+    unit: Unit
+}
