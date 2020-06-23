@@ -14,7 +14,7 @@ export async function createStakeholder(prisma: PrismaClient, stakeholder: Stake
                 PhoneNumberMobile,
                 PhoneNumberOffice,
                 MailingAddress,
-                SystemObject:       { create: { Retired: 0 }, },
+                SystemObject:       { create: { Retired: false }, },
             },
         });
     } catch (error) {

@@ -11,7 +11,7 @@ export async function createActor(prisma: PrismaClient, actor: Actor): Promise<A
                 IndividualName,
                 OrganizationName,
                 Unit:               idUnit ? { connect: { idUnit }, } : undefined,
-                SystemObject:       { create: { Retired: 0 }, },
+                SystemObject:       { create: { Retired: false }, },
             },
         });
     } catch (error) {

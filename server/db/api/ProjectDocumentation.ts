@@ -11,7 +11,7 @@ export async function createProjectDocumentation(prisma: PrismaClient, projectDo
                 Project:        { connect: { idProject }, },
                 Name,
                 Description,
-                SystemObject:   { create: { Retired: 0 }, },
+                SystemObject:   { create: { Retired: false }, },
             },
         });
     } catch (error) {
