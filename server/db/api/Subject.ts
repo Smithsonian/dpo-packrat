@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Subject, SystemObject } from '@prisma/client';
+import { PrismaClient, Subject, SystemObject, Unit, Asset, GeoLocation, Item } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createSubject(prisma: PrismaClient, subject: Subject): Promise<Subject | null> {
@@ -27,6 +27,42 @@ export async function fetchSubject(prisma: PrismaClient, idSubject: number): Pro
         return await prisma.subject.findOne({ where: { idSubject, }, });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchSubject', error);
+        return null;
+    }
+}
+
+export async function fetchUnitForSubjectID(prisma: PrismaClient, idSubject: number): Promise<Unit | null> {
+    try {
+        return await prisma.subject.findOne({ where: { idSubject } }).Unit();
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchUnitForSubjectID', error);
+        return null;
+    }
+}
+
+export async function fetchAssetForSubjectID(prisma: PrismaClient, idSubject: number): Promise<Asset | null> {
+    try {
+        return await prisma.subject.findOne({ where: { idSubject } }).Asset();
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchAssetForSubjectID', error);
+        return null;
+    }
+}
+
+export async function fetchGeoLocationSubjectID(prisma: PrismaClient, idSubject: number): Promise<GeoLocation | null> {
+    try {
+        return await prisma.subject.findOne({ where: { idSubject } }).GeoLocation();
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchGeoLocationSubjectID', error);
+        return null;
+    }
+}
+
+export async function fetchItemsForSubjectID(prisma: PrismaClient, idSubject: number): Promise<Item[] | null> {
+    try {
+        return await prisma.subject.findOne({ where: { idSubject } }).Item();
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchItemsForSubjectID', error);
         return null;
     }
 }
