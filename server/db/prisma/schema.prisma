@@ -86,28 +86,25 @@ model Actor {
 }
 
 model Asset {
-  FileName                                        String
-  FilePath                                        String
-  idAsset                                         Int                 @default(autoincrement()) @id
-  idAssetGroup                                    Int?
-  idSystemObject                                  Int?
-  AssetGroup                                      AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
-  SystemObject                                    SystemObject?       @relation("Asset_idSystemObjectToSystemObject", fields: [idSystemObject], references: [idSystemObject]) // MANUALLY RENAMED
-  AssetVersion                                    AssetVersion[]
-  CaptureData                                     CaptureData[]
-  CaptureDataFile                                 CaptureDataFile[]
-  IntermediaryFile                                IntermediaryFile[]
-  Item                                            Item[]
-  Metadata                                        Metadata[]
-  Model                                           Model[]
-  ModelGeometryFile                               ModelGeometryFile[]
-  ModelUVMapFile                                  ModelUVMapFile[]
-  Scene                                           Scene[]
-  Subject                                         Subject[]
-  SystemObject_AssetToSystemObject_idAsset        SystemObject?       @relation("AssetToSystemObject_idAsset")
+  FileName          String
+  FilePath          String
+  idAsset           Int                 @default(autoincrement()) @id
+  idAssetGroup      Int?
+  AssetGroup        AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
+  AssetVersion      AssetVersion[]
+  CaptureData       CaptureData[]
+  CaptureDataFile   CaptureDataFile[]
+  IntermediaryFile  IntermediaryFile[]
+  Item              Item[]
+  Metadata          Metadata[]
+  Model             Model[]
+  ModelGeometryFile ModelGeometryFile[]
+  ModelUVMapFile    ModelUVMapFile[]
+  Scene             Scene[]
+  Subject           Subject[]
+  SystemObject      SystemObject?
 
   @@index([idAssetGroup], name: "Asset_idAssetGroup")
-  @@index([idSystemObject], name: "Asset_idSystemObject")
 }
 
 model AssetGroup {
@@ -508,7 +505,7 @@ model SystemObject {
   idWorkflowStep                                                        Int?                              @unique
   Retired                                                               Int
   Actor                                                                 Actor?                            @relation(fields: [idActor], references: [idActor])
-  Asset                                                                 Asset?                            @relation("AssetToSystemObject_idAsset", fields: [idAsset], references: [idAsset])  // MANUALLY RENAMED
+  Asset                                                                 Asset?                            @relation(fields: [idAsset], references: [idAsset])
   AssetVersion                                                          AssetVersion?                     @relation(fields: [idAssetVersion], references: [idAssetVersion])
   CaptureData                                                           CaptureData?                      @relation(fields: [idCaptureData], references: [idCaptureData])
   IntermediaryFile                                                      IntermediaryFile?                 @relation(fields: [idIntermediaryFile], references: [idIntermediaryFile])
@@ -523,7 +520,6 @@ model SystemObject {
   Workflow                                                              Workflow?                         @relation(fields: [idWorkflow], references: [idWorkflow])
   WorkflowStep                                                          WorkflowStep?                     @relation(fields: [idWorkflowStep], references: [idWorkflowStep])
   AccessContextObject                                                   AccessContextObject[]
-  Asset_Asset_idSystemObjectToSystemObject                              Asset[]                           @relation("Asset_idSystemObjectToSystemObject")
   Identifier                                                            Identifier[]
   LicenseAssignment                                                     LicenseAssignment[]
   Metadata                                                              Metadata[]
