@@ -5,6 +5,7 @@ type Unit {
   id: ID!
   name: String!
   abbreviation: String
+  arkPrefix: String
   subjects: [Subject]
   actors: [Actor]
 }
@@ -35,23 +36,23 @@ type Stakeholder {
 
 type GeoLocation {
   id: ID!
-  latitude: Float!
-  longitude: Float!
-  altitude: Float!
-  ts0: Float!
-  ts1: Float!
-  ts2: Float!
-  r0: Float!
-  r1: Float!
-  r2: Float!
-  r3: Float!
+  latitude: Float
+  longitude: Float
+  altitude: Float
+  ts0: Float
+  ts1: Float
+  ts2: Float
+  r0: Float
+  r1: Float
+  r2: Float
+  r3: Float
   items: [Item]
   subjects: [Subject]
 }
 
 type Subject {
   id: ID!
-  unit: Unit!
+  unit: Unit
   assetThumbnail: Asset
   name: String!
   geoLocation: GeoLocation
@@ -60,7 +61,7 @@ type Subject {
 
 type Item {
   id: ID!
-  subject: Subject!
+  subject: Subject
   assetThumbnail: Asset
   geoLocation: GeoLocation
   name: String!
