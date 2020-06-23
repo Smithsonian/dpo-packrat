@@ -48,7 +48,7 @@ export async function fetchSystemObjectForAssetID(prisma: PrismaClient, idAsset:
     }
 }
 
-export async function fetchSystemObjectAndAssetID(prisma: PrismaClient, idAsset: number): Promise<SystemObject & { Asset: Asset | null} | null> {
+export async function fetchSystemObjectAndAsset(prisma: PrismaClient, idAsset: number): Promise<SystemObject & { Asset: Asset | null} | null> {
     try {
         return await prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
     } catch (error) {
