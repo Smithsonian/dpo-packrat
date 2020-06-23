@@ -68,10 +68,8 @@ CREATE TABLE IF NOT EXISTS `Asset` (
   `FileName` varchar(512) NOT NULL,
   `FilePath` varchar(512) NOT NULL,
   `idAssetGroup` int(11) DEFAULT NULL,
-  `idSystemObject` int(11) DEFAULT NULL,
   PRIMARY KEY (`idAsset`),
-  KEY `Asset_idAssetGroup` (`idAssetGroup`),
-  KEY `Asset_idSystemObject` (`idSystemObject`)
+  KEY `Asset_idAssetGroup` (`idAssetGroup`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `AssetGroup` (
@@ -553,11 +551,6 @@ ALTER TABLE `Packrat`.`Asset`
 ADD CONSTRAINT `fk_asset_assetgroup1`
   FOREIGN KEY (`idAssetGroup`)
   REFERENCES `Packrat`.`AssetGroup` (`idAssetGroup`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_asset_systemobject1`
-  FOREIGN KEY (`idSystemObject`)
-  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
