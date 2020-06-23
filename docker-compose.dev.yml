@@ -55,9 +55,16 @@ services:
 
     db:
         container_name: packrat-db
-        image: mariadb:10.5
+        image: packrat-db
         restart: always
+        build:
+            context: .
+            dockerfile: ./docker/dev.Dockerfile
+            target: db
         ports:
             - $PACKRAT_DB_PORT:3306
         env_file:
             - .env
+        volumes:
+            - ./server/db/sql:/app/
+    
