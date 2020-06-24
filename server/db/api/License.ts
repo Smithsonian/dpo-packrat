@@ -28,7 +28,7 @@ export async function fetchLicense(prisma: PrismaClient, idLicense: number): Pro
     }
 }
 
-export async function fetchLicenseAssignmentsForLicenseID(prisma: PrismaClient, idLicense: number): Promise<LicenseAssignment[] | null> {
+export async function fetchLicenseAssignmentForLicenseID(prisma: PrismaClient, idLicense: number): Promise<LicenseAssignment[] | null> {
     return prisma.license.findOne({ where: { idLicense } }).LicenseAssignment();
 }
 

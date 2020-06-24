@@ -3,67 +3,67 @@
 
 type Unit {
   id: ID!
-  name: String!
-  abbreviation: String
-  arkPrefix: String
-  subjects: [Subject]
-  actors: [Actor]
+  Name: String!
+  Abbreviation: String
+  ARKPrefix: String
+  Subject: [Subject]
+  Actor: [Actor]
 }
 
 type Project {
-  id: ID!
-  name: String!
-  description: String
-  documentations: [ProjectDocumentation]
+  idProject: ID!
+  Name: String!
+  Description: String
+  ProjectDocumentation: [ProjectDocumentation]
 }
 
 type ProjectDocumentation {
-  id: ID!
-  project: Project!
-  name: String!
-  description: String!
+  idProjectDocumentation: ID!
+  Project: Project!
+  Name: String!
+  Description: String!
 }
 
 type Stakeholder {
-  id: ID!
-  individualName: String!
-  organizationName: String!
-  emailAddress: String
-  phoneNumberMobile: String
-  phoneNumberOffice: String
-  mailingAddress: String
+  idStakeholder: ID!
+  IndividualName: String!
+  OrganizationName: String!
+  EmailAddress: String
+  PhoneNumberMobile: String
+  PhoneNumberOffice: String
+  MailingAddress: String
 }
 
 type GeoLocation {
-  id: ID!
-  latitude: Float
-  longitude: Float
-  altitude: Float
-  ts0: Float
-  ts1: Float
-  ts2: Float
-  r0: Float
-  r1: Float
-  r2: Float
-  r3: Float
-  items: [Item]
-  subjects: [Subject]
+  idGeoLocation: ID!
+  Latitude: Float
+  Longitude: Float
+  Altitude: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
+  R0: Float
+  R1: Float
+  R2: Float
+  R3: Float
+  Item: [Item]
+  Subject: [Subject]
 }
 
 type Subject {
-  id: ID!
-  unit: Unit
-  assetThumbnail: Asset
-  name: String!
-  geoLocation: GeoLocation
-  items: [Item]
+  idSubject: ID!
+  Unit: Unit
+  AssetThumbnail: Asset
+  Name: String!
+  GeoLocation: GeoLocation
+  Item: [Item]
 }
 
 type Item {
-  id: ID!
-  subject: Subject
-  assetThumbnail: Asset
-  geoLocation: GeoLocation
-  name: String!
-  entireSubject: Boolean!
+  idItem: ID!
+  Subject: Subject
+  AssetThumbnail: Asset
+  GeoLocation: GeoLocation
+  Name: String!
+  EntireSubject: Boolean!
 }

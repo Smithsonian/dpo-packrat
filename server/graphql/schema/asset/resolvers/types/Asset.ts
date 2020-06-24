@@ -1,7 +1,7 @@
 /**
  * Type resolver for Asset
  */
-import { fetchAsset, fetchAssetGroupForAssetID, fetchCaptureDataFilesForAssetID, fetchScenesForAssetID, fetchIntermediaryFilesForAssetID } from '../../../../../db';
+import { fetchAsset, fetchAssetGroupForAssetID, fetchCaptureDataFileForAssetID, fetchSceneForAssetID, fetchIntermediaryFileForAssetID } from '../../../../../db';
 import * as DB from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 import { Asset, AssetGroup, CaptureDataFile, Scene, IntermediaryFile } from '../../../../../types/graphql';
@@ -12,29 +12,29 @@ import { parseScenes } from '../../../scene/resolvers/types/Scene';
 import { parseIntermediaryFiles } from '../../../scene/resolvers/types/IntermediaryFile';
 
 const Asset = {
-    assetGroup: async (parent: Parent, _: Args, context: Context): Promise<AssetGroup | null> => {
+    AssetGroup: async (parent: Parent, _: Args, context: Context): Promise<AssetGroup | null> => {
         const { id } = parent;
         const { prisma } = context;
 
         return resolveAssetGroupByAssetID(prisma, Number.parseInt(id));
     },
-    captureDataFiles: async (parent: Parent, _: Args, context: Context): Promise<CaptureDataFile[] | null> => {
+    CaptureDataFile: async (parent: Parent, _: Args, context: Context): Promise<CaptureDataFile[] | null> => {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveCaptureDataFilesByAssetID(prisma, Number.parseInt(id));
+        return resolveCaptureDataFileByAssetID(prisma, Number.parseInt(id));
     },
-    scenes: async (parent: Parent, _: Args, context: Context): Promise<Scene[] | null> => {
+    Scene: async (parent: Parent, _: Args, context: Context): Promise<Scene[] | null> => {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveScenesByAssetID(prisma, Number.parseInt(id));
+        return resolveSceneByAssetID(prisma, Number.parseInt(id));
     },
-    intermediaryFiles: async (parent: Parent, _: Args, context: Context): Promise<IntermediaryFile[] | null> => {
+    IntermediaryFile: async (parent: Parent, _: Args, context: Context): Promise<IntermediaryFile[] | null> => {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveIntermediaryFilesByAssetID(prisma, Number.parseInt(id));
+        return resolveIntermediaryFileByAssetID(prisma, Number.parseInt(id));
     }
 };
 
@@ -50,20 +50,20 @@ export async function resolveAssetGroupByAssetID(prisma: PrismaClient, assetId: 
     return parseAssetGroup(foundAssetGroup);
 }
 
-export async function resolveCaptureDataFilesByAssetID(prisma: PrismaClient, assetId: number): Promise<CaptureDataFile[] | null> {
-    const foundCaptureDataFiles = await fetchCaptureDataFilesForAssetID(prisma, assetId);
+export async function resolveCaptureDataFileByAssetID(prisma: PrismaClient, assetId: number): Promise<CaptureDataFile[] | null> {
+    const foundCaptureDataFiles = await fetchCaptureDataFileForAssetID(prisma, assetId);
 
     return parseCaptureDataFiles(foundCaptureDataFiles);
 }
 
-export async function resolveScenesByAssetID(prisma: PrismaClient, assetId: number): Promise<Scene[] | null> {
-    const foundScenes = await fetchScenesForAssetID(prisma, assetId);
+export async function resolveSceneByAssetID(prisma: PrismaClient, assetId: number): Promise<Scene[] | null> {
+    const foundScenes = await fetchSceneForAssetID(prisma, assetId);
 
     return parseScenes(foundScenes);
 }
 
-export async function resolveIntermediaryFilesByAssetID(prisma: PrismaClient, assetId: number): Promise<IntermediaryFile[] | null> {
-    const foundIntermediaryFiles = await fetchIntermediaryFilesForAssetID(prisma, assetId);
+export async function resolveIntermediaryFileByAssetID(prisma: PrismaClient, assetId: number): Promise<IntermediaryFile[] | null> {
+    const foundIntermediaryFiles = await fetchIntermediaryFileForAssetID(prisma, assetId);
 
     return parseIntermediaryFiles(foundIntermediaryFiles);
 }
@@ -83,9 +83,9 @@ export function parseAsset(foundAsset: DB.Asset | null): Asset | null {
         const { idAsset, FileName, FilePath } = foundAsset;
 
         return {
-            id: String(idAsset),
-            fileName: FileName,
-            filePath: FilePath
+            idAsset: String(idAsset),
+            FileName,
+            FilePath
         };
     }
 

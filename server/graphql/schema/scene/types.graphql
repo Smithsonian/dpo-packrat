@@ -5,23 +5,23 @@
 scalar DateTime
 
 type Scene {
-  id: ID!
-  name: String!
-  assetThumbnail: Asset
-  isOriented: Boolean!
-  hasBeenQCd: Boolean!
-  models: [Model]
+  idScene: ID!
+  Name: String!
+  AssetThumbnail: Asset
+  IsOriented: Boolean!
+  HasBeenQCd: Boolean!
+  Model: [Model]
 }
 
 type Actor {
-  id: ID!
-  individualName: String
-  organizationName: String
-  unit: Unit
+  idActor: ID!
+  IndividualName: String
+  OrganizationName: String
+  Unit: Unit
 }
 
 type IntermediaryFile {
-  id: ID!
-  asset: Asset!
-  dateCreated: DateTime!
+  idIntermediaryFile: ID!
+  Asset: Asset!
+  DateCreated: DateTime!
 }

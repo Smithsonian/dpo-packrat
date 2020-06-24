@@ -4,35 +4,35 @@
 scalar DateTime
 
 type CaptureData {
-  id: ID!
-  vCaptureMethod: Vocabulary!
-  vCaptureDatasetType: Vocabulary!
-  captureDate: DateTime!
-  description: String!
-  captureDatasetFieldId: Int
-  vItemPositionType: Vocabulary
-  itemPositionFieldId: Int
-  itemArrangementFieldId: Int
-  vFocusType: Vocabulary
-  vLightSourceType: Vocabulary
-  vBackgroundRemovalMethod: Vocabulary
-  vClusterType: Vocabulary
-  clusterGeometryFieldId: Int
-  cameraSettingsUniform: Boolean
-  assetThumbnail: Asset
-  captureDataGroups: [CaptureDataGroup]
-  captureDataFiles: [CaptureDataFile]
+  idCaptureData: ID!
+  VCaptureMethod: Vocabulary!
+  VCaptureDatasetType: Vocabulary!
+  CaptureDate: DateTime!
+  Description: String!
+  CaptureDatasetFieldId: Int
+  VItemPositionType: Vocabulary
+  ItemPositionFieldId: Int
+  ItemArrangementFieldId: Int
+  VFocusType: Vocabulary
+  VLightSourceType: Vocabulary
+  VBackgroundRemovalMethod: Vocabulary
+  VClusterType: Vocabulary
+  ClusterGeometryFieldId: Int
+  CameraSettingsUniform: Boolean
+  AssetThumbnail: Asset
+  CaptureDataGroup: [CaptureDataGroup]
+  CaptureDataFile: [CaptureDataFile]
 }
 
 type CaptureDataFile {
-  id: ID!
-  captureData: CaptureData!
-  asset: Asset!
-  vVariantType: Vocabulary!
-  compressedMultipleFiles: Boolean!
+  idCaptureDataFile: ID!
+  CaptureData: CaptureData!
+  Asset: Asset!
+  VVariantType: Vocabulary!
+  CompressedMultipleFiles: Boolean!
 }
 
 type CaptureDataGroup {
-  id: ID!
-  captureDatas: [CaptureData]
+  idCaptureDataGroup: ID!
+  CaptureData: [CaptureData]
 }

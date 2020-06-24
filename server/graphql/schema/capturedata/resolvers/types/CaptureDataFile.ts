@@ -20,8 +20,8 @@ export function parseCaptureDataFile(foundCaptureDataFile: DB.CaptureDataFile | 
     if (foundCaptureDataFile) {
         const { idCaptureDataFile, CompressedMultipleFiles } = foundCaptureDataFile;
         captureDataFile = {
-            id: String(idCaptureDataFile),
-            compressedMultipleFiles: CompressedMultipleFiles
+            idCaptureDataFile: String(idCaptureDataFile),
+            CompressedMultipleFiles: Boolean(CompressedMultipleFiles)
         };
     }
 

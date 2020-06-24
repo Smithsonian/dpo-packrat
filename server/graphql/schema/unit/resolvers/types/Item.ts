@@ -11,19 +11,19 @@ import { parseGeoLocation } from './GeoLocation';
 import { parseAsset } from '../../../asset/resolvers/types/Asset';
 
 const Item = {
-    subject: async (parent: Parent, _: Args, context: Context): Promise<Subject | null> => {
+    Subject: async (parent: Parent, _: Args, context: Context): Promise<Subject | null> => {
         const { id } = parent;
         const { prisma } = context;
 
         return resolveSubjectByItemID(prisma, Number.parseInt(id));
     },
-    assetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
+    AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
         const { id } = parent;
         const { prisma } = context;
 
         return resolveAssetByItemID(prisma, Number.parseInt(id));
     },
-    geoLocation: async (parent: Parent, _: Args, context: Context): Promise<GeoLocation | null> => {
+    GeoLocation: async (parent: Parent, _: Args, context: Context): Promise<GeoLocation | null> => {
         const { id } = parent;
         const { prisma } = context;
 
@@ -69,9 +69,9 @@ export function parseItem(foundItem: DB.Item | null): Item | null {
     if (foundItem) {
         const { idItem, Name, EntireSubject } = foundItem;
         return {
-            id: String(idItem),
-            name: Name,
-            entireSubject: Boolean(EntireSubject)
+            idItem: String(idItem),
+            Name,
+            EntireSubject: Boolean(EntireSubject)
         };
     }
 

@@ -6,26 +6,26 @@
 scalar DateTime
 
 type Asset {
-  id: ID!
-  fileName: String!
-  filePath: String!
-  assetGroup: AssetGroup
-  captureDataFiles: [CaptureDataFile]
-  scenes: [Scene]
-  intermediaryFiles: [IntermediaryFile]
+  idAsset: ID!
+  FileName: String!
+  FilePath: String!
+  AssetGroup: AssetGroup
+  CaptureDataFile: [CaptureDataFile]
+  Scene: [Scene]
+  IntermediaryFile: [IntermediaryFile]
 }
 
 type AssetVersion {
-  id: ID!
-  asset: Asset
-  userCreator: User
-  dateCreated: DateTime!
-  storageLocation: String!
-  storageChecksum: String!
-  storageSize: Int!
+  idAssetVersion: ID!
+  Asset: Asset
+  UserCreator: User
+  DateCreated: DateTime!
+  StorageLocation: String!
+  StorageChecksum: String!
+  StorageSize: Int!
 }
 
 type AssetGroup {
-  id: ID!
-  assets: [Asset]
+  idAssetGroup: ID!
+  Asset: [Asset]
 }

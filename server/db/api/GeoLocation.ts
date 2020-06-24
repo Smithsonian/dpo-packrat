@@ -36,20 +36,20 @@ export async function fetchGeoLocation(prisma: PrismaClient, idGeoLocation: numb
     }
 }
 
-export async function fetchItemsForGeoLocationID(prisma: PrismaClient, idGeoLocation: number): Promise<Item[] | null> {
+export async function fetchItemForGeoLocationID(prisma: PrismaClient, idGeoLocation: number): Promise<Item[] | null> {
     try {
         return await prisma.geoLocation.findOne({ where: { idGeoLocation } }).Item();
     } catch (error) {
-        LOG.logger.error('DBAPI.fetchItemsForGeoLocationID', error);
+        LOG.logger.error('DBAPI.fetchItemForGeoLocationID', error);
         return null;
     }
 }
 
-export async function fetchSubjectsForGeoLocationID(prisma: PrismaClient, idGeoLocation: number): Promise<Subject[] | null> {
+export async function fetchSubjectForGeoLocationID(prisma: PrismaClient, idGeoLocation: number): Promise<Subject[] | null> {
     try {
         return await prisma.geoLocation.findOne({ where: { idGeoLocation } }).Subject();
     } catch (error) {
-        LOG.logger.error('DBAPI.fetchSubjectsForGeoLocationID', error);
+        LOG.logger.error('DBAPI.fetchSubjectForGeoLocationID', error);
         return null;
     }
 }

@@ -3,13 +3,13 @@
  */
 import { User, UserPersonalizationUrl } from '../../../../../types/graphql';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
-import { fetchUserPersonalizationUrlsForUserID, fetchUserForUserPersonalizationUrlID } from '../../../../../db';
+import { fetchUserForUserPersonalizationUrlID } from '../../../../../db';
 import { PrismaClient } from '@prisma/client';
 import * as DB from '@prisma/client';
 import { parseUser } from './User';
 
 const UserPersonalizationUrl = {
-    user: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
+    User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { id } = parent;
         const { prisma } = context;
 
@@ -23,26 +23,27 @@ export async function resolveUserForUserPersonalizationUrlID(prisma: PrismaClien
     return parseUser(foundUser);
 }
 
-export async function resolveUserPersonalizationUrlsByUserID(prisma: PrismaClient, userId: number): Promise<UserPersonalizationUrl[] | null> {
-    const foundUserPersonalizationUrls = await fetchUserPersonalizationUrlsForUserID(prisma, userId);
-
-    return parseUserPersonalizationUrls(foundUserPersonalizationUrls);
-}
-
 export function parseUserPersonalizationUrls(foundUserPersonalizationUrls: DB.UserPersonalizationUrl[] | null): UserPersonalizationUrl[] | null {
     let userPersonalizationUrls;
     if (foundUserPersonalizationUrls) {
-        userPersonalizationUrls = foundUserPersonalizationUrls.map(userPersonalizationUrl => {
-            const { idUserPersonalizationUrl, URL, Personalization } = userPersonalizationUrl;
-            return {
-                id: idUserPersonalizationUrl,
-                url: URL,
-                personalization: Personalization
-            };
-        });
+        userPersonalizationUrls = foundUserPersonalizationUrls.map(userPersonalizationUrl => parseUserPersonalizationUrl(userPersonalizationUrl));
     }
 
     return userPersonalizationUrls;
+}
+
+export function parseUserPersonalizationUrl(foundUserPersonalizationUrl: DB.UserPersonalizationUrl | null): UserPersonalizationUrl | null {
+    let userPersonalizationUrl;
+    if (foundUserPersonalizationUrl) {
+        const { idUserPersonalizationUrl, URL, Personalization } = foundUserPersonalizationUrl;
+        return {
+            idUserPersonalizationUrl: String(idUserPersonalizationUrl),
+            URL,
+            Personalization
+        };
+    }
+
+    return userPersonalizationUrl;
 }
 
 export default UserPersonalizationUrl;

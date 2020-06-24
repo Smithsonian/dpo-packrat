@@ -30,20 +30,20 @@ export async function fetchUnit(prisma: PrismaClient, idUnit: number): Promise<U
     }
 }
 
-export async function fetchSubjectsForUnitID(prisma: PrismaClient, idUnit: number): Promise<Subject[] | null> {
+export async function fetchSubjectForUnitID(prisma: PrismaClient, idUnit: number): Promise<Subject[] | null> {
     try {
         return await prisma.unit.findOne({ where: { idUnit } }).Subject();
     } catch (error) {
-        LOG.logger.error('DBAPI.fetchSubjectsForUnitID', error);
+        LOG.logger.error('DBAPI.fetchSubjectForUnitID', error);
         return null;
     }
 }
 
-export async function fetchActorsForUnitID(prisma: PrismaClient, idUnit: number): Promise<Actor[] | null> {
+export async function fetchActorForUnitID(prisma: PrismaClient, idUnit: number): Promise<Actor[] | null> {
     try {
         return await prisma.unit.findOne({ where: { idUnit } }).Actor();
     } catch (error) {
-        LOG.logger.error('DBAPI.fetchActorsForUnitID', error);
+        LOG.logger.error('DBAPI.fetchActorForUnitID', error);
         return null;
     }
 }

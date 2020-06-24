@@ -3,13 +3,13 @@
  */
 import { User, UserPersonalizationSystemObject } from '../../../../../types/graphql';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
-import { fetchUserPersonalizationSystemObjectsForUserID, fetchUserForUserPersonalizationSystemObjectID } from '../../../../../db';
+import { fetchUserForUserPersonalizationSystemObjectID } from '../../../../../db';
 import * as DB from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 import { parseUser } from './User';
 
 const UserPersonalizationSystemObject = {
-    user: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
+    User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { id } = parent;
         const { prisma } = context;
 
@@ -23,27 +23,29 @@ export async function resolveUserForUserPersonalizationSystemObjectID(prisma: Pr
     return parseUser(foundUser);
 }
 
-export async function resolveUserPersonalizationSystemObjectsByUserID(prisma: PrismaClient, userId: number): Promise<UserPersonalizationSystemObject[] | null> {
-    const foundUserPersonalizationSystemObjects = await fetchUserPersonalizationSystemObjectsForUserID(prisma, userId);
-
-    return parseUserPersonalizationSystemObjects(foundUserPersonalizationSystemObjects);
-}
 
 export function parseUserPersonalizationSystemObjects(foundUserPersonalizationSystemObjects: DB.UserPersonalizationSystemObject[] | null): UserPersonalizationSystemObject[] | null {
     let userPersonalizationSystemObjects;
     if (foundUserPersonalizationSystemObjects) {
-        userPersonalizationSystemObjects = foundUserPersonalizationSystemObjects.map(personalizationSystemObject => {
-            const { idUser, idUserPersonalizationSystemObject, Personalization } = personalizationSystemObject;
-
-            return {
-                id: idUserPersonalizationSystemObject,
-                personalization: Personalization,
-                user: idUser
-            };
-        });
+        userPersonalizationSystemObjects = foundUserPersonalizationSystemObjects.map(personalizationSystemObject =>
+            parseUserPersonalizationSystemObject(personalizationSystemObject)
+        );
     }
 
     return userPersonalizationSystemObjects;
+}
+
+export function parseUserPersonalizationSystemObject(foundUserPersonalizationSystemObject: DB.UserPersonalizationSystemObject | null): UserPersonalizationSystemObject | null {
+    let userPersonalizationSystemObject;
+    if (foundUserPersonalizationSystemObject) {
+        const { idUserPersonalizationSystemObject, Personalization } = foundUserPersonalizationSystemObject;
+        userPersonalizationSystemObject = {
+            idUserPersonalizationSystemObject: String(idUserPersonalizationSystemObject),
+            Personalization,
+        };
+    }
+
+    return userPersonalizationSystemObject;
 }
 
 export default UserPersonalizationSystemObject;

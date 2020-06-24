@@ -29,11 +29,11 @@ export async function fetchProject(prisma: PrismaClient, idProject: number): Pro
     }
 }
 
-export async function fetchProjectDocumentationsForProjectID(prisma: PrismaClient, idProject: number): Promise<ProjectDocumentation[] | null> {
+export async function fetchProjectDocumentationForProjectID(prisma: PrismaClient, idProject: number): Promise<ProjectDocumentation[] | null> {
     try {
         return await prisma.project.findOne({ where: { idProject } }).ProjectDocumentation();
     } catch (error) {
-        LOG.logger.error('DBAPI.fetchProjectDocumentationsForProjectID', error);
+        LOG.logger.error('DBAPI.fetchProjectDocumentationForProjectID', error);
         return null;
     }
 }

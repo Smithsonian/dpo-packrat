@@ -5,78 +5,78 @@
 scalar DateTime
 
 type Model {
-  id: ID!
-  dateCreated: DateTime!
-  vCreationMethod: Vocabulary!
-  master: Boolean!
-  authoritative: Boolean!
-  vModality: Vocabulary!
-  vUnits: Vocabulary!
-  vPurpose: Vocabulary!
-  assetThumbnail: Asset
-  orientation: Orientation
+  idModel: ID!
+  DateCreated: DateTime!
+  VCreationMethod: Vocabulary!
+  Master: Boolean!
+  Authoritative: Boolean!
+  VModality: Vocabulary!
+  VUnits: Vocabulary!
+  VPurpose: Vocabulary!
+  AssetThumbnail: Asset
+  Orientation: Orientation
 }
 
 type Orientation {
-  ts0: Float
-  ts1: Float
-  ts2: Float
-  r0: Float
-  r1: Float
-  r2: Float
-  r3: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
+  R0: Float
+  R1: Float
+  R2: Float
+  R3: Float
 }
 
 type ModelGeometryFile {
-  id: ID!
-  model: Model!
-  asset: Asset!
-  vModelFileType: Vocabulary!
-  roughness: Float
-  metalness: Float
-  pointCount: Int
-  faceCount: Int
-  isWatertight: Boolean
-  hasNormals: Boolean
-  hasVertexColor: Boolean
-  hasUvSpace: Boolean
-  boundingBoxP1X: Float
-  boundingBoxP1Y: Float
-  boundingBoxP1Z: Float
-  boundingBoxP2X: Float
-  boundingBoxP2Y: Float
-  boundingBoxP2Z: Float
+  idModelGeometryFile: ID!
+  Model: Model!
+  Asset: Asset!
+  VModelFileType: Vocabulary!
+  Roughness: Float
+  Metalness: Float
+  PointCount: Int
+  FaceCount: Int
+  IsWatertight: Boolean
+  HasNormals: Boolean
+  HasVertexColor: Boolean
+  HasUvSpace: Boolean
+  BoundingBoxP1X: Float
+  BoundingBoxP1Y: Float
+  BoundingBoxP1Z: Float
+  BoundingBoxP2X: Float
+  BoundingBoxP2Y: Float
+  BoundingBoxP2Z: Float
 }
 
 type ModelProcessingAction {
-  id: ID!
-  model: Model!
-  actor: Actor!
-  processingDate: DateTime!
-  toolsUsed: String!
-  description: String!
-  modelProcessingActionSteps: [ModelProcessingActionStep]
+  idModelProcessingAction: ID!
+  Model: Model!
+  Actor: Actor!
+  DateProcessed: DateTime!
+  ToolsUsed: String!
+  Description: String!
+  ModelProcessingActionStep: [ModelProcessingActionStep]
 }
 
 type ModelProcessingActionStep {
-  id: ID!
-  modelProcessingAction: ModelProcessingAction!
-  vActionMethod: Vocabulary!
-  description: String!
+  idModelProcessingActionStep: ID!
+  ModelProcessingAction: ModelProcessingAction!
+  VActionMethod: Vocabulary!
+  Description: String!
 }
 
 type ModelUVMapFile {
-  id: ID!
-  modelGeometryFile: ModelGeometryFile!
-  asset: Asset!
-  uVMapEdgeLength: Int!
-  modelUVMapChannel: [ModelUVMapChannel]
+  idModelUVMapFile: ID!
+  ModelGeometryFile: ModelGeometryFile!
+  Asset: Asset!
+  UVMapEdgeLength: Int!
+  ModelUVMapChannel: [ModelUVMapChannel]
 }
 
 type ModelUVMapChannel {
-  id: ID!
-  modelUvMapFile: ModelUVMapFile!
-  channelPosition: Int!
-  channelWidth: Int!
-  vUVMapType: Vocabulary!
+  idModelUVMapChannel: ID!
+  ModelUvMapFile: ModelUVMapFile!
+  ChannelPosition: Int!
+  ChannelWidth: Int!
+  VUVMapType: Vocabulary!
 }

@@ -3,31 +3,31 @@
  */
 import { User, UserPersonalizationSystemObject, UserPersonalizationUrl, LicenseAssignment } from '../../../../../types/graphql';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
-import { resolveUserPersonalizationSystemObjectsByUserID } from './UserPersonalizationSystemObject';
-import { resolveUserPersonalizationUrlsByUserID } from './UserPersonalizationUrl';
-import { fetchUser } from '../../../../../db';
+import { parseUserPersonalizationSystemObjects } from './UserPersonalizationSystemObject';
+import { parseUserPersonalizationUrls } from './UserPersonalizationUrl';
+import { fetchUser, fetchUserPersonalizationSystemObjectForUserID, fetchUserPersonalizationUrlForUserID } from '../../../../../db';
 import { PrismaClient } from '@prisma/client';
 import * as DB from '@prisma/client';
-import { resolveLicenseAssignmentsByUserID } from '../../../license/resolvers/types/LicenseAssignment';
+import { resolveLicenseAssignmentByUserID } from '../../../license/resolvers/types/LicenseAssignment';
 
 const User = {
-    userPersonalizationSystemObjects: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationSystemObject[] | null> => {
+    UserPersonalizationSystemObject: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationSystemObject[] | null> => {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveUserPersonalizationSystemObjectsByUserID(prisma, Number.parseInt(id));
+        return resolveUserPersonalizationSystemObjectByUserID(prisma, Number.parseInt(id));
     },
-    userPersonalizationUrls: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationUrl[] | null> => {
+    UserPersonalizationUrl: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationUrl[] | null> => {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveUserPersonalizationUrlsByUserID(prisma, Number.parseInt(id));
+        return resolveUserPersonalizationUrlByUserID(prisma, Number.parseInt(id));
     },
-    licenseAssignments: async (parent: Parent, _: Args, context: Context): Promise<LicenseAssignment[] | null> => {
+    LicenseAssignment: async (parent: Parent, _: Args, context: Context): Promise<LicenseAssignment[] | null> => {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveLicenseAssignmentsByUserID(prisma, Number.parseInt(id));
+        return resolveLicenseAssignmentByUserID(prisma, Number.parseInt(id));
     }
 };
 
@@ -37,20 +37,32 @@ export async function resolveUserByID(prisma: PrismaClient, userId: number): Pro
     return parseUser(foundUser);
 }
 
+export async function resolveUserPersonalizationSystemObjectByUserID(prisma: PrismaClient, userId: number): Promise<UserPersonalizationSystemObject[] | null> {
+    const foundUserPersonalizationSystemObjects = await fetchUserPersonalizationSystemObjectForUserID(prisma, userId);
+
+    return parseUserPersonalizationSystemObjects(foundUserPersonalizationSystemObjects);
+}
+
+export async function resolveUserPersonalizationUrlByUserID(prisma: PrismaClient, userId: number): Promise<UserPersonalizationUrl[] | null> {
+    const foundUserPersonalizationUrls = await fetchUserPersonalizationUrlForUserID(prisma, userId);
+
+    return parseUserPersonalizationUrls(foundUserPersonalizationUrls);
+}
+
 export async function parseUser(foundUser: DB.User | null): Promise<User | null> {
     let user;
     if (foundUser) {
         const { idUser, Name, EmailAddress, SecurityID, Active, DateActivated, DateDisabled, WorkflowNotificationTime, EmailSettings } = foundUser;
         user = {
-            id: String(idUser),
-            name: Name,
-            emailAddress: EmailAddress,
-            securityId: SecurityID,
-            active: Boolean(Active),
-            dateActivated: DateActivated,
-            dateDisabled: DateDisabled,
-            workflowNotificationTime: WorkflowNotificationTime,
-            emailSettings: EmailSettings
+            idUser: String(idUser),
+            Name,
+            EmailAddress,
+            SecurityID,
+            Active: Boolean(Active),
+            DateActivated,
+            DateDisabled,
+            WorkflowNotificationTime,
+            EmailSettings
         };
     }
 

@@ -9,7 +9,7 @@ import { ProjectDocumentation, Project } from '../../../../../types/graphql';
 import { parseProject } from './Project';
 
 const ProjectDocumentation = {
-    project: async (parent: Parent, _: Args, context: Context): Promise<Project | null> => {
+    Project: async (parent: Parent, _: Args, context: Context): Promise<Project | null> => {
         const { id } = parent;
         const { prisma } = context;
 
@@ -43,9 +43,9 @@ export function parseProjectDocumentation(foundProjectDocumentation: DB.ProjectD
     if (foundProjectDocumentation) {
         const { idProjectDocumentation, Name, Description } = foundProjectDocumentation;
         projectDocumentation = {
-            id: String(idProjectDocumentation),
-            name: Name,
-            description: Description
+            idProjectDocumentation: String(idProjectDocumentation),
+            Name,
+            Description
         };
     }
 

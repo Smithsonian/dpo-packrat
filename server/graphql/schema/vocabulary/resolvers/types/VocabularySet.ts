@@ -19,9 +19,9 @@ export function parseVocabularySet(foundVocabularySet: DB.VocabularySet | null):
     if (foundVocabularySet) {
         const { idVocabularySet, Name, SystemMaintained } = foundVocabularySet;
         vocabularySet = {
-            id: String(idVocabularySet),
-            name: Name,
-            systemMaintained: Boolean(SystemMaintained)
+            idVocabularySet: String(idVocabularySet),
+            Name,
+            SystemMaintained: Boolean(SystemMaintained)
         };
     }
 

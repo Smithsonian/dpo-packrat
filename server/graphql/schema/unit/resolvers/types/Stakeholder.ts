@@ -19,13 +19,13 @@ export function parseStakeholder(foundStakeholder: DB.Stakeholder | null): Stake
     if (foundStakeholder) {
         const { idStakeholder, EmailAddress, IndividualName, MailingAddress, OrganizationName, PhoneNumberMobile, PhoneNumberOffice } = foundStakeholder;
         stakeholder = {
-            id: String(idStakeholder),
-            emailAddress: EmailAddress,
-            individualName: IndividualName,
-            mailingAddress: MailingAddress,
-            organizationName: OrganizationName,
-            phoneNumberMobile: PhoneNumberMobile,
-            phoneNumberOffice: PhoneNumberOffice
+            idStakeholder: String(idStakeholder),
+            EmailAddress,
+            IndividualName,
+            MailingAddress,
+            OrganizationName,
+            PhoneNumberMobile,
+            PhoneNumberOffice
         };
     }
 
