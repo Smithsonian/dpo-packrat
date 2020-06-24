@@ -7,14 +7,14 @@ type Args = { input: GetAssetInput };
 
 export default async function getAsset(_: Parent, args: Args, context: Context): Promise<GetAssetResult> {
     const { input } = args;
-    const { id } = input;
+    const { idAsset } = input;
     const { prisma } = context;
 
-    const asset = await resolveAssetByID(prisma, Number.parseInt(id));
+    const Asset = await resolveAssetByID(prisma, Number.parseInt(idAsset));
 
-    if (asset) {
-        return { asset };
+    if (Asset) {
+        return { Asset };
     }
 
-    return { asset: null };
+    return { Asset: null };
 }

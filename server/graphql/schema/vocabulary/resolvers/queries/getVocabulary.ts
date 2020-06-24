@@ -7,14 +7,14 @@ type Args = { input: GetVocabularyInput };
 
 export default async function getVocabulary(_: Parent, args: Args, context: Context): Promise<GetVocabularyResult> {
     const { input } = args;
-    const { id } = input;
+    const { idVocabulary } = input;
     const { prisma } = context;
 
-    const vocabulary = await resolveVocabularyByID(prisma, Number.parseInt(id));
+    const Vocabulary = await resolveVocabularyByID(prisma, Number.parseInt(idVocabulary));
 
-    if (vocabulary) {
-        return { vocabulary };
+    if (Vocabulary) {
+        return { Vocabulary };
     }
 
-    return { vocabulary: null };
+    return { Vocabulary: null };
 }

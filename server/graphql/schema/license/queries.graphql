@@ -5,9 +5,9 @@ type Query {
 }
 
 input GetLicenseInput {
-    id: ID!
+    idLicense: ID!
 }
 
 type GetLicenseResult {
-    license: License
+    License: License
 }

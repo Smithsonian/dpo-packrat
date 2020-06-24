@@ -7,14 +7,14 @@ type Args = { input: GetUserInput };
 
 export default async function getUser(_: Parent, args: Args, context: Context): Promise<GetUserResult> {
     const { input } = args;
-    const { id } = input;
+    const { idUser } = input;
     const { prisma } = context;
 
-    const user = await resolveUserByID(prisma, Number.parseInt(id));
+    const User = await resolveUserByID(prisma, Number.parseInt(idUser));
 
-    if (user) {
-        return { user };
+    if (User) {
+        return { User };
     }
 
-    return { user: null };
+    return { User: null };
 }

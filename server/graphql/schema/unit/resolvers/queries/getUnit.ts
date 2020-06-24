@@ -7,14 +7,14 @@ type Args = { input: GetUnitInput };
 
 export default async function getUnit(_: Parent, args: Args, context: Context): Promise<GetUnitResult> {
     const { input } = args;
-    const { id } = input;
+    const { idUnit } = input;
     const { prisma } = context;
 
-    const unit = await resolveUnitByID(prisma, Number.parseInt(id));
+    const Unit = await resolveUnitByID(prisma, Number.parseInt(idUnit));
 
-    if (unit) {
-        return { unit };
+    if (Unit) {
+        return { Unit };
     }
 
-    return { unit: null };
+    return { Unit: null };
 }

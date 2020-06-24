@@ -5,9 +5,9 @@ type Query {
 }
 
 input GetUnitInput {
-    id: ID!
+    idUnit: ID!
 }
 
 type GetUnitResult {
-    unit: Unit
+    Unit: Unit
 }

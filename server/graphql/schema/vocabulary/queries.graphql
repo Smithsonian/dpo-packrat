@@ -1,11 +1,13 @@
+# import Vocabulary from "types.graphql"
+
 type Query {
     getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
 }
 
 input GetVocabularyInput {
-    id: ID!
+    idVocabulary: ID!
 }
 
 type GetVocabularyResult {
-    vocabulary: Vocabulary
+    Vocabulary: Vocabulary
 }

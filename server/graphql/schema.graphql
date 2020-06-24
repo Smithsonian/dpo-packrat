@@ -289,41 +289,41 @@ type Query {
 }
 
 input GetAssetInput {
-  id: ID!
+  idAsset: ID!
 }
 
 type GetAssetResult {
-  asset: Asset
+  Asset: Asset
 }
 
 input GetLicenseInput {
-  id: ID!
+  idLicense: ID!
 }
 
 type GetLicenseResult {
-  license: License
+  License: License
 }
 
 input GetUnitInput {
-  id: ID!
+  idUnit: ID!
 }
 
 type GetUnitResult {
-  unit: Unit
+  Unit: Unit
 }
 
 input GetUserInput {
-  id: ID!
+  idUser: ID!
 }
 
 type GetUserResult {
-  user: User
+  User: User
 }
 
 input GetVocabularyInput {
-  id: ID!
+  idVocabulary: ID!
 }
 
 type GetVocabularyResult {
-  vocabulary: Vocabulary
+  Vocabulary: Vocabulary
 }
