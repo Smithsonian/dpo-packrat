@@ -11,33 +11,33 @@ import { parseUser } from '../../../user/resolvers/types/User';
 
 const AssetVersion = {
     Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { id } = parent;
+        const { idAssetVersion } = parent;
         const { prisma } = context;
 
-        return resolveAssetByAssetVersionID(prisma, Number.parseInt(id));
+        return resolveAssetByAssetVersionID(prisma, Number.parseInt(idAssetVersion));
     },
     UserCreator: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { id } = parent;
+        const { idAssetVersion } = parent;
         const { prisma } = context;
 
-        return resolveUserByAssetVersionID(prisma, Number.parseInt(id));
+        return resolveUserByAssetVersionID(prisma, Number.parseInt(idAssetVersion));
     }
 };
 
-export async function resolveAssetVersionByID(prisma: PrismaClient, assetVersionId: number): Promise<AssetVersion | null> {
-    const foundAssetVersion = await fetchAssetVersion(prisma, assetVersionId);
+export async function resolveAssetVersionByID(prisma: PrismaClient, idAssetVersion: number): Promise<AssetVersion | null> {
+    const foundAssetVersion = await fetchAssetVersion(prisma, idAssetVersion);
 
     return parseAssetVersion(foundAssetVersion);
 }
 
-export async function resolveAssetByAssetVersionID(prisma: PrismaClient, assetVersionId: number): Promise<Asset | null> {
-    const foundAsset = await fetchAssetForAssetVersionID(prisma, assetVersionId);
+export async function resolveAssetByAssetVersionID(prisma: PrismaClient, idAssetVersion: number): Promise<Asset | null> {
+    const foundAsset = await fetchAssetForAssetVersionID(prisma, idAssetVersion);
 
     return parseAsset(foundAsset);
 }
 
-export async function resolveUserByAssetVersionID(prisma: PrismaClient, assetVersionId: number): Promise<User | null> {
-    const foundUser = await fetchUserForAssetVersionID(prisma, assetVersionId);
+export async function resolveUserByAssetVersionID(prisma: PrismaClient, idAssetVersion: number): Promise<User | null> {
+    const foundUser = await fetchUserForAssetVersionID(prisma, idAssetVersion);
 
     return parseUser(foundUser);
 }

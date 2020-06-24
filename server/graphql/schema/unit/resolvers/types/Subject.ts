@@ -13,51 +13,51 @@ import { parseAsset } from '../../../asset/resolvers/types/Asset';
 
 const Subject = {
     Unit: async (parent: Parent, _: Args, context: Context): Promise<Unit | null> => {
-        const { id } = parent;
+        const { idSubject } = parent;
         const { prisma } = context;
 
-        return resolveUnitBySubjectID(prisma, Number.parseInt(id));
+        return resolveUnitBySubjectID(prisma, Number.parseInt(idSubject));
     },
     AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { id } = parent;
+        const { idSubject } = parent;
         const { prisma } = context;
 
-        return resolveAssetBySubjectID(prisma, Number.parseInt(id));
+        return resolveAssetBySubjectID(prisma, Number.parseInt(idSubject));
     },
     GeoLocation: async (parent: Parent, _: Args, context: Context): Promise<GeoLocation | null> => {
-        const { id } = parent;
+        const { idSubject } = parent;
         const { prisma } = context;
 
-        return resolveGeoLocationBySubjectID(prisma, Number.parseInt(id));
+        return resolveGeoLocationBySubjectID(prisma, Number.parseInt(idSubject));
     },
     Item: async (parent: Parent, _: Args, context: Context): Promise<Item[] | null> => {
-        const { id } = parent;
+        const { idSubject } = parent;
         const { prisma } = context;
 
-        return resolveItemBySubjectID(prisma, Number.parseInt(id));
+        return resolveItemBySubjectID(prisma, Number.parseInt(idSubject));
     }
 };
 
-export async function resolveUnitBySubjectID(prisma: PrismaClient, subjectId: number): Promise<Unit | null> {
-    const foundUnit = await fetchUnitForSubjectID(prisma, subjectId);
+export async function resolveUnitBySubjectID(prisma: PrismaClient, idSubject: number): Promise<Unit | null> {
+    const foundUnit = await fetchUnitForSubjectID(prisma, idSubject);
 
     return parseUnit(foundUnit);
 }
 
-export async function resolveAssetBySubjectID(prisma: PrismaClient, subjectId: number): Promise<Asset | null> {
-    const foundAsset = await fetchAssetForSubjectID(prisma, subjectId);
+export async function resolveAssetBySubjectID(prisma: PrismaClient, idSubject: number): Promise<Asset | null> {
+    const foundAsset = await fetchAssetForSubjectID(prisma, idSubject);
 
     return parseAsset(foundAsset);
 }
 
-export async function resolveGeoLocationBySubjectID(prisma: PrismaClient, subjectId: number): Promise<GeoLocation | null> {
-    const foundGeoLocation = await fetchGeoLocationSubjectID(prisma, subjectId);
+export async function resolveGeoLocationBySubjectID(prisma: PrismaClient, idSubject: number): Promise<GeoLocation | null> {
+    const foundGeoLocation = await fetchGeoLocationSubjectID(prisma, idSubject);
 
     return parseGeoLocation(foundGeoLocation);
 }
 
-export async function resolveItemBySubjectID(prisma: PrismaClient, subjectId: number): Promise<Item[] | null> {
-    const foundItems = await fetchItemForSubjectID(prisma, subjectId);
+export async function resolveItemBySubjectID(prisma: PrismaClient, idSubject: number): Promise<Item[] | null> {
+    const foundItems = await fetchItemForSubjectID(prisma, idSubject);
 
     return parseItems(foundItems);
 }

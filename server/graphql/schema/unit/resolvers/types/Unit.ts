@@ -11,21 +11,21 @@ import { parseActors } from '../../../scene/resolvers/types/Actor';
 
 const Unit = {
     Subject: async (parent: Parent, _: Args, context: Context): Promise<Subject[] | null> => {
-        const { id } = parent;
+        const { idUnit } = parent;
         const { prisma } = context;
 
-        return resolveSubjectByUnitID(prisma, Number.parseInt(id));
+        return resolveSubjectByUnitID(prisma, Number.parseInt(idUnit));
     },
     Actor: async (parent: Parent, _: Args, context: Context): Promise<Actor[] | null> => {
-        const { id } = parent;
+        const { idUnit } = parent;
         const { prisma } = context;
 
-        return resolveActorByUnitID(prisma, Number.parseInt(id));
+        return resolveActorByUnitID(prisma, Number.parseInt(idUnit));
     }
 };
 
-export async function resolveUnitByID(prisma: PrismaClient, unitId: number): Promise<Unit | null> {
-    const foundUnit = await fetchUnit(prisma, unitId);
+export async function resolveUnitByID(prisma: PrismaClient, idUnit: number): Promise<Unit | null> {
+    const foundUnit = await fetchUnit(prisma, idUnit);
 
     return parseUnit(foundUnit);
 }

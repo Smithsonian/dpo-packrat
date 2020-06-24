@@ -12,33 +12,33 @@ import { parseSubjects } from './Subject';
 
 const GeoLocation = {
     Item: async (parent: Parent, _: Args, context: Context): Promise<Item[] | null> => {
-        const { id } = parent;
+        const { idGeoLocation } = parent;
         const { prisma } = context;
 
-        return resolveItemByGeoLocationID(prisma, Number.parseInt(id));
+        return resolveItemByGeoLocationID(prisma, Number.parseInt(idGeoLocation));
     },
     Subject: async (parent: Parent, _: Args, context: Context): Promise<Subject[] | null> => {
-        const { id } = parent;
+        const { idGeoLocation } = parent;
         const { prisma } = context;
 
-        return resolveSubjectByGeoLocationID(prisma, Number.parseInt(id));
+        return resolveSubjectByGeoLocationID(prisma, Number.parseInt(idGeoLocation));
     }
 };
 
-export async function resolveGeoLocationByID(prisma: PrismaClient, geoLocationId: number): Promise<GeoLocation | null> {
-    const foundGeoLocation = await fetchGeoLocation(prisma, geoLocationId);
+export async function resolveGeoLocationByID(prisma: PrismaClient, idGeoLocation: number): Promise<GeoLocation | null> {
+    const foundGeoLocation = await fetchGeoLocation(prisma, idGeoLocation);
 
     return parseGeoLocation(foundGeoLocation);
 }
 
-export async function resolveItemByGeoLocationID(prisma: PrismaClient, geoLocationId: number): Promise<Item[] | null> {
-    const foundItems = await fetchItemForGeoLocationID(prisma, geoLocationId);
+export async function resolveItemByGeoLocationID(prisma: PrismaClient, idGeoLocation: number): Promise<Item[] | null> {
+    const foundItems = await fetchItemForGeoLocationID(prisma, idGeoLocation);
 
     return parseItems(foundItems);
 }
 
-export async function resolveSubjectByGeoLocationID(prisma: PrismaClient, geoLocationId: number): Promise<Subject[] | null> {
-    const foundSubjects = await fetchSubjectForGeoLocationID(prisma, geoLocationId);
+export async function resolveSubjectByGeoLocationID(prisma: PrismaClient, idGeoLocation: number): Promise<Subject[] | null> {
+    const foundSubjects = await fetchSubjectForGeoLocationID(prisma, idGeoLocation);
 
     return parseSubjects(foundSubjects);
 }

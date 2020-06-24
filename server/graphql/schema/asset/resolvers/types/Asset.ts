@@ -13,57 +13,57 @@ import { parseIntermediaryFiles } from '../../../scene/resolvers/types/Intermedi
 
 const Asset = {
     AssetGroup: async (parent: Parent, _: Args, context: Context): Promise<AssetGroup | null> => {
-        const { id } = parent;
+        const { idAsset } = parent;
         const { prisma } = context;
 
-        return resolveAssetGroupByAssetID(prisma, Number.parseInt(id));
+        return resolveAssetGroupByAssetID(prisma, Number.parseInt(idAsset));
     },
     CaptureDataFile: async (parent: Parent, _: Args, context: Context): Promise<CaptureDataFile[] | null> => {
-        const { id } = parent;
+        const { idAsset } = parent;
         const { prisma } = context;
 
-        return resolveCaptureDataFileByAssetID(prisma, Number.parseInt(id));
+        return resolveCaptureDataFileByAssetID(prisma, Number.parseInt(idAsset));
     },
     Scene: async (parent: Parent, _: Args, context: Context): Promise<Scene[] | null> => {
-        const { id } = parent;
+        const { idAsset } = parent;
         const { prisma } = context;
 
-        return resolveSceneByAssetID(prisma, Number.parseInt(id));
+        return resolveSceneByAssetID(prisma, Number.parseInt(idAsset));
     },
     IntermediaryFile: async (parent: Parent, _: Args, context: Context): Promise<IntermediaryFile[] | null> => {
-        const { id } = parent;
+        const { idAsset } = parent;
         const { prisma } = context;
 
-        return resolveIntermediaryFileByAssetID(prisma, Number.parseInt(id));
+        return resolveIntermediaryFileByAssetID(prisma, Number.parseInt(idAsset));
     }
 };
 
-export async function resolveAssetByID(prisma: PrismaClient, assetId: number): Promise<Asset | null> {
-    const foundAsset = await fetchAsset(prisma, assetId);
+export async function resolveAssetByID(prisma: PrismaClient, idAssetGroup: number): Promise<Asset | null> {
+    const foundAsset = await fetchAsset(prisma, idAssetGroup);
 
     return parseAsset(foundAsset);
 }
 
-export async function resolveAssetGroupByAssetID(prisma: PrismaClient, assetId: number): Promise<AssetGroup | null> {
-    const foundAssetGroup = await fetchAssetGroupForAssetID(prisma, assetId);
+export async function resolveAssetGroupByAssetID(prisma: PrismaClient, idAssetGroup: number): Promise<AssetGroup | null> {
+    const foundAssetGroup = await fetchAssetGroupForAssetID(prisma, idAssetGroup);
 
     return parseAssetGroup(foundAssetGroup);
 }
 
-export async function resolveCaptureDataFileByAssetID(prisma: PrismaClient, assetId: number): Promise<CaptureDataFile[] | null> {
-    const foundCaptureDataFiles = await fetchCaptureDataFileForAssetID(prisma, assetId);
+export async function resolveCaptureDataFileByAssetID(prisma: PrismaClient, idAssetGroup: number): Promise<CaptureDataFile[] | null> {
+    const foundCaptureDataFiles = await fetchCaptureDataFileForAssetID(prisma, idAssetGroup);
 
     return parseCaptureDataFiles(foundCaptureDataFiles);
 }
 
-export async function resolveSceneByAssetID(prisma: PrismaClient, assetId: number): Promise<Scene[] | null> {
-    const foundScenes = await fetchSceneForAssetID(prisma, assetId);
+export async function resolveSceneByAssetID(prisma: PrismaClient, idAssetGroup: number): Promise<Scene[] | null> {
+    const foundScenes = await fetchSceneForAssetID(prisma, idAssetGroup);
 
     return parseScenes(foundScenes);
 }
 
-export async function resolveIntermediaryFileByAssetID(prisma: PrismaClient, assetId: number): Promise<IntermediaryFile[] | null> {
-    const foundIntermediaryFiles = await fetchIntermediaryFileForAssetID(prisma, assetId);
+export async function resolveIntermediaryFileByAssetID(prisma: PrismaClient, idAssetGroup: number): Promise<IntermediaryFile[] | null> {
+    const foundIntermediaryFiles = await fetchIntermediaryFileForAssetID(prisma, idAssetGroup);
 
     return parseIntermediaryFiles(foundIntermediaryFiles);
 }

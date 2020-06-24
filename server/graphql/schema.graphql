@@ -174,7 +174,7 @@ type IntermediaryFile {
 }
 
 type Unit {
-  id: ID!
+  idUnit: ID!
   Name: String!
   Abbreviation: String
   ARKPrefix: String

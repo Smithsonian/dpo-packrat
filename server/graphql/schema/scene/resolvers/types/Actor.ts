@@ -20,9 +20,9 @@ export function parseActor(foundActor: DB.Actor | null): Actor | null {
     if (foundActor) {
         const { idActor, IndividualName, OrganizationName } = foundActor;
         actor = {
-            id: String(idActor),
-            individualName: IndividualName,
-            organizationName: OrganizationName
+            idActor: String(idActor),
+            IndividualName,
+            OrganizationName
         };
     }
 

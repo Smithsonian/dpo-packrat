@@ -20,10 +20,10 @@ export function parseScene(foundScene: DB.Scene | null): Scene | null {
     if (foundScene) {
         const { idScene, Name, IsOriented, HasBeenQCd } = foundScene;
         scene = {
-            id: String(idScene),
-            name: Name,
-            isOriented: Boolean(IsOriented),
-            hasBeenQCd: Boolean(HasBeenQCd)
+            idScene: String(idScene),
+            Name,
+            IsOriented: Boolean(IsOriented),
+            HasBeenQCd: Boolean(HasBeenQCd)
         };
     }
 

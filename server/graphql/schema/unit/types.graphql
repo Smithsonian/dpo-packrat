@@ -2,7 +2,7 @@
 # import Actor from "../scene/types.graphql"
 
 type Unit {
-  id: ID!
+  idUnit: ID!
   Name: String!
   Abbreviation: String
   ARKPrefix: String

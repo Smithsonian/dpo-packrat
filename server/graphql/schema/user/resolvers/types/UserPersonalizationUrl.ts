@@ -10,15 +10,15 @@ import { parseUser } from './User';
 
 const UserPersonalizationUrl = {
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { id } = parent;
+        const { idUserPersonalizationUrl } = parent;
         const { prisma } = context;
 
-        return resolveUserForUserPersonalizationUrlID(prisma, Number.parseInt(id));
+        return resolveUserForUserPersonalizationUrlID(prisma, Number.parseInt(idUserPersonalizationUrl));
     }
 };
 
-export async function resolveUserForUserPersonalizationUrlID(prisma: PrismaClient, userPersonalizationUrlId: number): Promise<User | null> {
-    const foundUser = await fetchUserForUserPersonalizationUrlID(prisma, userPersonalizationUrlId);
+export async function resolveUserForUserPersonalizationUrlID(prisma: PrismaClient, idUserPersonalizationUrl: number): Promise<User | null> {
+    const foundUser = await fetchUserForUserPersonalizationUrlID(prisma, idUserPersonalizationUrl);
 
     return parseUser(foundUser);
 }
