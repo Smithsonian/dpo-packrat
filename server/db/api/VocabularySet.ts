@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, VocabularySet  } from '@prisma/client';
+import { PrismaClient, VocabularySet } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createVocabularySet(prisma: PrismaClient, vocabularySet: VocabularySet): Promise<VocabularySet | null> {
@@ -29,5 +29,10 @@ export async function fetchVocabularySet(prisma: PrismaClient, idVocabularySet: 
 }
 
 export async function fetchVocabularySetForVocabularyID(prisma: PrismaClient, idVocabulary: number): Promise<VocabularySet | null> {
-    return prisma.vocabulary.findOne({ where: { idVocabulary } }).VocabularySet();
+    try {
+        return await prisma.vocabulary.findOne({ where: { idVocabulary } }).VocabularySet();
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchVocabularySetForVocabularyID', error);
+        return null;
+    }
 }
