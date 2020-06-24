@@ -39,20 +39,24 @@ export async function resolveUserCreatorByLicenseAssignmentID(prisma: PrismaClie
 export function parseLicenseAssignments(foundLicenseAssignments: DB.LicenseAssignment[] | null): LicenseAssignment[] | null {
     let licenseAssignments;
     if (foundLicenseAssignments) {
-        licenseAssignments = foundLicenseAssignments.map(licenseAssignment => {
-            const { idLicenseAssignment, DateStart, DateEnd } = licenseAssignment;
-
-            return {
-                idLicenseAssignment: String(idLicenseAssignment),
-                DateStart,
-                DateEnd
-            };
-        });
-
-        return licenseAssignments;
+        licenseAssignments = foundLicenseAssignments.map(licenseAssignment => parseLicenseAssignment(licenseAssignment));
     }
 
     return licenseAssignments;
+}
+
+export function parseLicenseAssignment(foundLicenseAssignment: DB.LicenseAssignment | null): LicenseAssignment | null {
+    let licenseAssignment;
+    if (foundLicenseAssignment) {
+        const { idLicenseAssignment, DateStart, DateEnd } = foundLicenseAssignment;
+        licenseAssignment = {
+            idLicenseAssignment: String(idLicenseAssignment),
+            DateStart,
+            DateEnd
+        };
+    }
+
+    return licenseAssignment;
 }
 
 export default LicenseAssignment;
