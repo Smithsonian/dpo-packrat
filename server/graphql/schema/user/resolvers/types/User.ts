@@ -64,7 +64,7 @@ export async function parseUser(foundUser: DB.User | null): Promise<User | null>
             Name,
             EmailAddress,
             SecurityID,
-            Active: Boolean(Active),
+            Active,
             DateActivated,
             DateDisabled,
             WorkflowNotificationTime,

@@ -21,7 +21,7 @@ export function parseCaptureDataFile(foundCaptureDataFile: DB.CaptureDataFile | 
         const { idCaptureDataFile, CompressedMultipleFiles } = foundCaptureDataFile;
         captureDataFile = {
             idCaptureDataFile: String(idCaptureDataFile),
-            CompressedMultipleFiles: Boolean(CompressedMultipleFiles)
+            CompressedMultipleFiles
         };
     }
 

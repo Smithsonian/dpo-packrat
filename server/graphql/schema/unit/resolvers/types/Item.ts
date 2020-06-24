@@ -71,7 +71,7 @@ export function parseItem(foundItem: DB.Item | null): Item | null {
         return {
             idItem: String(idItem),
             Name,
-            EntireSubject: Boolean(EntireSubject)
+            EntireSubject,
         };
     }
 
