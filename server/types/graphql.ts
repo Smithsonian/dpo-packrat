@@ -14,7 +14,7 @@ export type Asset = {
     id: Scalars['ID'];
     fileName: Scalars['String'];
     filePath: Scalars['String'];
-    assetGroups?: Maybe<AssetGroup>;
+    assetGroup?: Maybe<AssetGroup>;
     captureDataFiles?: Maybe<Array<Maybe<CaptureDataFile>>>;
     scenes?: Maybe<Array<Maybe<Scene>>>;
     intermediaryFiles?: Maybe<Array<Maybe<IntermediaryFile>>>;
@@ -23,19 +23,18 @@ export type Asset = {
 export type AssetVersion = {
     __typename?: 'AssetVersion';
     id: Scalars['ID'];
-    asset: Asset;
-    userCreator: User;
-    creationDate: Scalars['DateTime'];
+    asset?: Maybe<Asset>;
+    userCreator?: Maybe<User>;
+    dateCreated: Scalars['DateTime'];
     storageLocation: Scalars['String'];
     storageChecksum: Scalars['String'];
     storageSize: Scalars['Int'];
-    assets?: Maybe<Array<Maybe<Asset>>>;
 };
 
 export type AssetGroup = {
     __typename?: 'AssetGroup';
     id: Scalars['ID'];
-    assets: Array<Maybe<Asset>>;
+    assets?: Maybe<Array<Maybe<Asset>>>;
 };
 
 export type CaptureData = {
@@ -322,10 +321,15 @@ export type VocabularySet = {
 
 export type Query = {
     __typename?: 'Query';
+    getAsset: GetAssetResult;
     getLicense: GetLicenseResult;
     getUnit: GetUnitResult;
     getUser: GetUserResult;
     getVocabulary: GetVocabularyResult;
+};
+
+export type QueryGetAssetArgs = {
+    input: GetAssetInput;
 };
 
 export type QueryGetLicenseArgs = {
@@ -342,6 +346,15 @@ export type QueryGetUserArgs = {
 
 export type QueryGetVocabularyArgs = {
     input: GetVocabularyInput;
+};
+
+export type GetAssetInput = {
+    id: Scalars['ID'];
+};
+
+export type GetAssetResult = {
+    __typename?: 'GetAssetResult';
+    asset?: Maybe<Asset>;
 };
 
 export type GetLicenseInput = {

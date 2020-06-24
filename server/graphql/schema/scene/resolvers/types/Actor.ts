@@ -18,7 +18,7 @@ export function parseActors(foundActors: DB.Actor[] | null): Actor[] | null {
 export function parseActor(foundActor: DB.Actor | null): Actor | null {
     let actor;
     if (foundActor) {
-        const { idActor, IndividualName, OrganizationName } = actor;
+        const { idActor, IndividualName, OrganizationName } = foundActor;
         actor = {
             id: String(idActor),
             individualName: IndividualName,

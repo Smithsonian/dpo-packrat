@@ -1,0 +1,13 @@
+# import Asset from "types.graphql"
+
+type Query {
+    getAsset(input: GetAssetInput!): GetAssetResult!
+}
+
+input GetAssetInput {
+    id: ID!
+}
+
+type GetAssetResult {
+    asset: Asset
+}
