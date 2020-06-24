@@ -349,46 +349,46 @@ export type QueryGetVocabularyArgs = {
 };
 
 export type GetAssetInput = {
-    id: Scalars['ID'];
+    idAsset: Scalars['ID'];
 };
 
 export type GetAssetResult = {
     __typename?: 'GetAssetResult';
-    asset?: Maybe<Asset>;
+    Asset?: Maybe<Asset>;
 };
 
 export type GetLicenseInput = {
-    id: Scalars['ID'];
+    idLicense: Scalars['ID'];
 };
 
 export type GetLicenseResult = {
     __typename?: 'GetLicenseResult';
-    license?: Maybe<License>;
+    License?: Maybe<License>;
 };
 
 export type GetUnitInput = {
-    id: Scalars['ID'];
+    idUnit: Scalars['ID'];
 };
 
 export type GetUnitResult = {
     __typename?: 'GetUnitResult';
-    unit?: Maybe<Unit>;
+    Unit?: Maybe<Unit>;
 };
 
 export type GetUserInput = {
-    id: Scalars['ID'];
+    idUser: Scalars['ID'];
 };
 
 export type GetUserResult = {
     __typename?: 'GetUserResult';
-    user?: Maybe<User>;
+    User?: Maybe<User>;
 };
 
 export type GetVocabularyInput = {
-    id: Scalars['ID'];
+    idVocabulary: Scalars['ID'];
 };
 
 export type GetVocabularyResult = {
     __typename?: 'GetVocabularyResult';
-    vocabulary?: Maybe<Vocabulary>;
+    Vocabulary?: Maybe<Vocabulary>;
 };

@@ -5,9 +5,9 @@ type Query {
 }
 
 input GetUserInput {
-    id: ID!
+    idUser: ID!
 }
 
 type GetUserResult {
-    user: User    
+    User: User    
 }

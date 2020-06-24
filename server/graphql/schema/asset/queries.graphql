@@ -5,9 +5,9 @@ type Query {
 }
 
 input GetAssetInput {
-    id: ID!
+    idAsset: ID!
 }
 
 type GetAssetResult {
-    asset: Asset
+    Asset: Asset
 }

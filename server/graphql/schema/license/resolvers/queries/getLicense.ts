@@ -6,14 +6,14 @@ type Args = { input: GetLicenseInput };
 
 export default async function getLicense(_: Parent, args: Args, context: Context): Promise<GetLicenseResult> {
     const { input } = args;
-    const { id } = input;
+    const { idLicense } = input;
     const { prisma } = context;
 
-    const license = await resolveLicenseByID(prisma, Number.parseInt(id));
+    const License = await resolveLicenseByID(prisma, Number.parseInt(idLicense));
 
-    if (license) {
-        return { license };
+    if (License) {
+        return { License };
     }
 
-    return { license: null };
+    return { License: null };
 }
