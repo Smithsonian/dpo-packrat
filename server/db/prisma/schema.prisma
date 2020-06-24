@@ -19,13 +19,13 @@ model AccessAction {
 }
 
 model AccessContext {
-  Authoritative       Int
-  CaptureData         Int
-  Global              Int
+  Authoritative       Boolean
+  CaptureData         Boolean
+  Global              Boolean
   idAccessContext     Int                   @default(autoincrement()) @id
-  IntermediaryFile    Int
-  Model               Int
-  Scene               Int
+  IntermediaryFile    Boolean
+  Model               Boolean
+  Scene               Boolean
   AccessContextObject AccessContextObject[]
   AccessPolicy        AccessPolicy[]
 }
@@ -129,7 +129,7 @@ model AssetVersion {
 }
 
 model CaptureData {
-  CameraSettingsUniform                                         Int?
+  CameraSettingsUniform                                         Boolean?
   CaptureDatasetFieldID                                         Int?
   ClusterGeometryFieldID                                        Int?
   DateCaptured                                                  DateTime
@@ -168,7 +168,7 @@ model CaptureData {
 }
 
 model CaptureDataFile {
-  CompressedMultipleFiles Int
+  CompressedMultipleFiles Boolean
   idAsset                 Int
   idCaptureData           Int
   idCaptureDataFile       Int         @default(autoincrement()) @id
@@ -238,7 +238,7 @@ model IntermediaryFile {
 }
 
 model Item {
-  EntireSubject    Int
+  EntireSubject    Boolean
   idAssetThumbnail Int?
   idGeoLocation    Int?
   idItem           Int           @default(autoincrement()) @id
@@ -299,7 +299,7 @@ model Metadata {
 }
 
 model Model {
-  Authoritative                                  Int
+  Authoritative                                  Boolean
   DateCreated                                    DateTime
   idAssetThumbnail                               Int?
   idModel                                        Int                     @default(autoincrement()) @id
@@ -307,7 +307,7 @@ model Model {
   idVModality                                    Int
   idVPurpose                                     Int
   idVUnits                                       Int
-  Master                                         Int
+  Master                                         Boolean
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset])
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary              @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary])
   Vocabulary_Model_idVModalityToVocabulary       Vocabulary              @relation("Model_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary])
@@ -333,14 +333,14 @@ model ModelGeometryFile {
   BoundingBoxP2Y      Float?
   BoundingBoxP2Z      Float?
   FaceCount           Int?
-  HasNormals          Int?
-  HasUVSpace          Int?
-  HasVertexColor      Int?
+  HasNormals          Boolean?
+  HasUVSpace          Boolean?
+  HasVertexColor      Boolean?
   idAsset             Int
   idModel             Int
   idModelGeometryFile Int              @default(autoincrement()) @id
   idVModelFileType    Int
-  IsWatertight        Int?
+  IsWatertight        Boolean?
   Metalness           Float?
   PointCount          Int?
   Roughness           Float?
@@ -446,10 +446,10 @@ model ProjectDocumentation {
 }
 
 model Scene {
-  HasBeenQCd       Int
+  HasBeenQCd       Boolean
   idAssetThumbnail Int?
   idScene          Int              @default(autoincrement()) @id
-  IsOriented       Int
+  IsOriented       Boolean
   Name             String
   Asset            Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
   ModelSceneXref   ModelSceneXref[]
@@ -503,7 +503,7 @@ model SystemObject {
   idUnit                                                                Int?                              @unique
   idWorkflow                                                            Int?                              @unique
   idWorkflowStep                                                        Int?                              @unique
-  Retired                                                               Int
+  Retired                                                               Boolean
   Actor                                                                 Actor?                            @relation(fields: [idActor], references: [idActor])
   Asset                                                                 Asset?                            @relation(fields: [idAsset], references: [idAsset])
   AssetVersion                                                          AssetVersion?                     @relation(fields: [idAssetVersion], references: [idAssetVersion])
@@ -577,7 +577,7 @@ model Unit {
 }
 
 model User {
-  Active                          Int
+  Active                          Boolean
   DateActivated                   DateTime
   DateDisabled                    DateTime?
   EmailAddress                    String
@@ -649,7 +649,7 @@ model Vocabulary {
 model VocabularySet {
   idVocabularySet  Int          @default(autoincrement()) @id
   Name             String
-  SystemMaintained Int
+  SystemMaintained Boolean
   Vocabulary       Vocabulary[]
 }
 
@@ -696,7 +696,7 @@ model WorkflowStepSystemObjectXref {
   idSystemObject                 Int
   idWorkflowStep                 Int
   idWorkflowStepSystemObjectXref Int          @default(autoincrement()) @id
-  Input                          Int
+  Input                          Boolean
   SystemObject                   SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
   WorkflowStep                   WorkflowStep @relation(fields: [idWorkflowStep], references: [idWorkflowStep])
 

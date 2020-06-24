@@ -10,7 +10,7 @@ export async function createProject(prisma: PrismaClient, project: Project): Pro
             data: {
                 Name,
                 Description,
-                SystemObject:   { create: { Retired: 0 }, },
+                SystemObject:   { create: { Retired: false }, },
             },
         });
     } catch (error) {

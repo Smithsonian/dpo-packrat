@@ -25,7 +25,7 @@ export async function createCaptureData(prisma: PrismaClient, captureData: Captu
                 ClusterGeometryFieldID,
                 CameraSettingsUniform,
                 Asset:                                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                SystemObject:                                                   { create: { Retired: 0 }, },
+                SystemObject:                                                   { create: { Retired: false }, },
             },
         });
     } catch (error) {

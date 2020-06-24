@@ -10,7 +10,7 @@ export async function createIntermediaryFile(prisma: PrismaClient, intermediaryF
             data: {
                 Asset:          { connect: { idAsset }, },
                 DateCreated,
-                SystemObject:   { create: { Retired: 0 }, },
+                SystemObject:   { create: { Retired: false }, },
             },
         });
     } catch (error) {
