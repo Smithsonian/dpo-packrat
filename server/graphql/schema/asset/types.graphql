@@ -9,7 +9,7 @@ type Asset {
   id: ID!
   fileName: String!
   filePath: String!
-  assetGroups: AssetGroup
+  assetGroup: AssetGroup
   captureDataFiles: [CaptureDataFile]
   scenes: [Scene]
   intermediaryFiles: [IntermediaryFile]
@@ -17,16 +17,15 @@ type Asset {
 
 type AssetVersion {
   id: ID!
-  asset: Asset!
-  userCreator: User!
-  creationDate: DateTime!
+  asset: Asset
+  userCreator: User
+  dateCreated: DateTime!
   storageLocation: String!
   storageChecksum: String!
   storageSize: Int!
-  assets: [Asset]
 }
 
 type AssetGroup {
   id: ID!
-  assets: [Asset]!
+  assets: [Asset]
 }

@@ -11,6 +11,7 @@ export async function fetchUser(prisma: PrismaClient, idUser: number): Promise<U
     }
 }
 
+// TODO: KARAN: handle exception here
 export async function fetchUserPersonalizationSystemObjectsForUserID(prisma: PrismaClient, idUser: number): Promise<UserPersonalizationSystemObject[] | null> {
     return prisma.user.findOne({ where: { idUser } }).UserPersonalizationSystemObject();
 }
