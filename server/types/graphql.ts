@@ -42,17 +42,17 @@ export type CaptureData = {
     idCaptureData: Scalars['ID'];
     VCaptureMethod: Vocabulary;
     VCaptureDatasetType: Vocabulary;
-    CaptureDate: Scalars['DateTime'];
+    DateCaptured: Scalars['DateTime'];
     Description: Scalars['String'];
-    CaptureDatasetFieldId?: Maybe<Scalars['Int']>;
+    CaptureDatasetFieldID?: Maybe<Scalars['Int']>;
     VItemPositionType?: Maybe<Vocabulary>;
-    ItemPositionFieldId?: Maybe<Scalars['Int']>;
-    ItemArrangementFieldId?: Maybe<Scalars['Int']>;
+    ItemPositionFieldID?: Maybe<Scalars['Int']>;
+    ItemArrangementFieldID?: Maybe<Scalars['Int']>;
     VFocusType?: Maybe<Vocabulary>;
     VLightSourceType?: Maybe<Vocabulary>;
     VBackgroundRemovalMethod?: Maybe<Vocabulary>;
     VClusterType?: Maybe<Vocabulary>;
-    ClusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    ClusterGeometryFieldID?: Maybe<Scalars['Int']>;
     CameraSettingsUniform?: Maybe<Scalars['Boolean']>;
     AssetThumbnail?: Maybe<Asset>;
     CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
@@ -322,6 +322,7 @@ export type VocabularySet = {
 export type Query = {
     __typename?: 'Query';
     getAsset: GetAssetResult;
+    getCaptureData: GetCaptureDataResult;
     getLicense: GetLicenseResult;
     getUnit: GetUnitResult;
     getUser: GetUserResult;
@@ -330,6 +331,10 @@ export type Query = {
 
 export type QueryGetAssetArgs = {
     input: GetAssetInput;
+};
+
+export type QueryGetCaptureDataArgs = {
+    input: GetCaptureDataInput;
 };
 
 export type QueryGetLicenseArgs = {
@@ -355,6 +360,15 @@ export type GetAssetInput = {
 export type GetAssetResult = {
     __typename?: 'GetAssetResult';
     Asset?: Maybe<Asset>;
+};
+
+export type GetCaptureDataInput = {
+    idCaptureData: Scalars['ID'];
+};
+
+export type GetCaptureDataResult = {
+    __typename?: 'GetCaptureDataResult';
+    CaptureData?: Maybe<CaptureData>;
 };
 
 export type GetLicenseInput = {
