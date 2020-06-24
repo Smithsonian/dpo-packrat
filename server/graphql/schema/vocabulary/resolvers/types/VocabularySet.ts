@@ -21,7 +21,7 @@ export function parseVocabularySet(foundVocabularySet: DB.VocabularySet | null):
         vocabularySet = {
             idVocabularySet: String(idVocabularySet),
             Name,
-            SystemMaintained: Boolean(SystemMaintained)
+            SystemMaintained
         };
     }
 

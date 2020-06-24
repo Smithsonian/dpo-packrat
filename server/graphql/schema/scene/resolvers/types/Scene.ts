@@ -22,8 +22,8 @@ export function parseScene(foundScene: DB.Scene | null): Scene | null {
         scene = {
             idScene: String(idScene),
             Name,
-            IsOriented: Boolean(IsOriented),
-            HasBeenQCd: Boolean(HasBeenQCd)
+            IsOriented,
+            HasBeenQCd
         };
     }
 
