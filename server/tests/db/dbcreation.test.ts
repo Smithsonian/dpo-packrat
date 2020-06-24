@@ -147,7 +147,7 @@ describe('DB Creation Test Suite', () => {
             Name: 'Test User',
             EmailAddress: 'test@si.edu',
             SecurityID: 'SECURITY_ID',
-            Active: 1,
+            Active: true,
             DateActivated: new Date(),
             DateDisabled: null,
             WorkflowNotificationTime: new Date(),
@@ -176,7 +176,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: VocabularySet', async () => {
         vocabularySet = await DBAPI.createVocabularySet(prisma, {
             Name: 'Test Vocabulary Set',
-            SystemMaintained: 0,
+            SystemMaintained: false,
             idVocabularySet: 0
         });
         expect(vocabularySet).toBeTruthy();
@@ -211,8 +211,8 @@ describe('DB Creation Test Suite', () => {
             scene = await DBAPI.createScene(prisma, {
                 Name: 'Test Scene',
                 idAssetThumbnail: assetThumbnail.idAsset,
-                IsOriented: 1,
-                HasBeenQCd: 1,
+                IsOriented: true,
+                HasBeenQCd: true,
                 idScene: 0
             });
         expect(scene).toBeTruthy();
@@ -248,7 +248,7 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: AccessContext', async () => {
         accessContext = await DBAPI.createAccessContext(prisma,
-            { Global: 0, Authoritative: 0, CaptureData: 0, Model: 0, Scene: 0, IntermediaryFile: 0, idAccessContext: 0 });
+            { Global: false, Authoritative: false, CaptureData: false, Model: false, Scene: false, IntermediaryFile: false, idAccessContext: 0 });
         expect(accessContext).toBeTruthy();
         if (accessContext)
             expect(accessContext.idAccessContext).toBeGreaterThan(0);
@@ -370,7 +370,7 @@ describe('DB Creation Test Suite', () => {
                 idVBackgroundRemovalMethod: vocabulary.idVocabulary,
                 idVClusterType: vocabulary.idVocabulary,
                 ClusterGeometryFieldID: 0,
-                CameraSettingsUniform: 0,
+                CameraSettingsUniform: false,
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idCaptureData: 0
             });
@@ -395,7 +395,7 @@ describe('DB Creation Test Suite', () => {
                 idVBackgroundRemovalMethod: null,
                 idVClusterType: null,
                 ClusterGeometryFieldID: 0,
-                CameraSettingsUniform: 0,
+                CameraSettingsUniform: false,
                 idAssetThumbnail: null,
                 idCaptureData: 0
             });
@@ -468,7 +468,7 @@ describe('DB Creation Test Suite', () => {
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idGeoLocation: geoLocation.idGeoLocation,
                 Name: 'Test Item',
-                EntireSubject: 1,
+                EntireSubject: true,
                 idItem: 0
             });
         expect(item).toBeTruthy();
@@ -483,7 +483,7 @@ describe('DB Creation Test Suite', () => {
                 idAssetThumbnail: null,
                 idGeoLocation: null,
                 Name: 'Test Item Nulls',
-                EntireSubject: 1,
+                EntireSubject: true,
                 idItem: 0
             });
         expect(itemNulls).toBeTruthy();
@@ -529,8 +529,8 @@ describe('DB Creation Test Suite', () => {
             model = await DBAPI.createModel(prisma, {
                 DateCreated: new Date(),
                 idVCreationMethod: vocabulary.idVocabulary,
-                Master: 1,
-                Authoritative: 1,
+                Master: true,
+                Authoritative: true,
                 idVModality: vocabulary.idVocabulary,
                 idVUnits: vocabulary.idVocabulary,
                 idVPurpose: vocabulary.idVocabulary,
@@ -547,8 +547,8 @@ describe('DB Creation Test Suite', () => {
             modelNulls = await DBAPI.createModel(prisma, {
                 DateCreated: new Date(),
                 idVCreationMethod: vocabulary.idVocabulary,
-                Master: 1,
-                Authoritative: 1,
+                Master: true,
+                Authoritative: true,
                 idVModality: vocabulary.idVocabulary,
                 idVUnits: vocabulary.idVocabulary,
                 idVPurpose: vocabulary.idVocabulary,
@@ -566,7 +566,7 @@ describe('DB Creation Test Suite', () => {
                 idModel: model.idModel,
                 idAsset: assetThumbnail.idAsset,
                 idVModelFileType: vocabulary.idVocabulary,
-                Roughness: 0, Metalness: 0, PointCount: 0, FaceCount: 0, IsWatertight: 0, HasNormals: 0, HasVertexColor: 0, HasUVSpace: 0,
+                Roughness: 0, Metalness: 0, PointCount: 0, FaceCount: 0, IsWatertight: false, HasNormals: false, HasVertexColor: false, HasUVSpace: false,
                 BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 0, BoundingBoxP2Y: 0, BoundingBoxP2Z: 0,
                 idModelGeometryFile: 0
             });
@@ -765,8 +765,8 @@ describe('DB Creation Test Suite', () => {
         sceneNulls = await DBAPI.createScene(prisma, {
             Name: 'Test Scene',
             idAssetThumbnail: null,
-            IsOriented: 1,
-            HasBeenQCd: 1,
+            IsOriented: true,
+            HasBeenQCd: true,
             idScene: 0
         });
         expect(sceneNulls).toBeTruthy();
@@ -880,7 +880,7 @@ describe('DB Creation Test Suite', () => {
             workflowStepSystemObjectXref = await DBAPI.createWorkflowStepSystemObjectXref(prisma, {
                 idWorkflowStep: workflowStep.idWorkflowStep,
                 idSystemObject: systemObjectScene.idSystemObject,
-                Input: 0,
+                Input: false,
                 idWorkflowStepSystemObjectXref: 0
             });
         expect(workflowStepSystemObjectXref).toBeTruthy();

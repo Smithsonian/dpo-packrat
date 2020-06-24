@@ -14,7 +14,7 @@ export async function createAssetVersion(prisma: PrismaClient, assetVersion: Ass
                 StorageLocation,
                 StorageChecksum,
                 StorageSize,
-                SystemObject:       { create: { Retired: 0 }, },
+                SystemObject:       { create: { Retired: false }, },
             },
         });
     } catch (error) {

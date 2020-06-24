@@ -11,12 +11,12 @@ CREATE TABLE IF NOT EXISTS `AccessAction` (
 
 CREATE TABLE IF NOT EXISTS `AccessContext` (
   `idAccessContext` int(11) NOT NULL AUTO_INCREMENT,
-  `Global` bit(1) NOT NULL,
-  `Authoritative` bit(1) NOT NULL,
-  `CaptureData` bit(1) NOT NULL,
-  `Model` bit(1) NOT NULL,
-  `Scene` bit(1) NOT NULL,
-  `IntermediaryFile` bit(1) NOT NULL,
+  `Global` boolean NOT NULL,
+  `Authoritative` boolean NOT NULL,
+  `CaptureData` boolean NOT NULL,
+  `Model` boolean NOT NULL,
+  `Scene` boolean NOT NULL,
+  `IntermediaryFile` boolean NOT NULL,
   PRIMARY KEY (`idAccessContext`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `CaptureData` (
   `idVBackgroundRemovalMethod` int(11) DEFAULT NULL,
   `idVClusterType` int(11) DEFAULT NULL,
   `ClusterGeometryFieldID` int(11) DEFAULT NULL,
-  `CameraSettingsUniform` bit(1) DEFAULT NULL,
+  `CameraSettingsUniform` boolean DEFAULT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
   PRIMARY KEY (`idCaptureData`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS `CaptureDataFile` (
   `idCaptureData` int(11) NOT NULL,
   `idAsset` int(11) NOT NULL,
   `idVVariantType` int(11) NOT NULL,
-  `CompressedMultipleFiles` bit(1) NOT NULL,
+  `CompressedMultipleFiles` boolean NOT NULL,
   PRIMARY KEY (`idCaptureDataFile`),
   KEY `CaptureDataFile_idCaptureData` (`idCaptureData`),
   KEY `CaptureDataFile_idAsset` (`idAsset`)
@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS `Item` (
   `idAssetThumbnail` int(11) DEFAULT NULL,
   `idGeoLocation` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
-  `EntireSubject` bit(1) NOT NULL,
+  `EntireSubject` boolean NOT NULL,
   PRIMARY KEY (`idItem`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -214,8 +214,8 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `idModel` int(11) NOT NULL AUTO_INCREMENT,
   `DateCreated` datetime NOT NULL,
   `idVCreationMethod` int(11) NOT NULL,
-  `Master` bit(1) NOT NULL,
-  `Authoritative` bit(1) NOT NULL,
+  `Master` boolean NOT NULL,
+  `Authoritative` boolean NOT NULL,
   `idVModality` int(11) NOT NULL,
   `idVUnits` int(11) NOT NULL,
   `idVPurpose` int(11) NOT NULL,
@@ -232,10 +232,10 @@ CREATE TABLE IF NOT EXISTS `ModelGeometryFile` (
   `Metalness` double DEFAULT NULL,
   `PointCount` int(11) DEFAULT NULL,
   `FaceCount` int(11) DEFAULT NULL,
-  `IsWatertight` bit(1) DEFAULT NULL,
-  `HasNormals` bit(1) DEFAULT NULL,
-  `HasVertexColor` bit(1) DEFAULT NULL,
-  `HasUVSpace` bit(1) DEFAULT NULL,
+  `IsWatertight` boolean DEFAULT NULL,
+  `HasNormals` boolean DEFAULT NULL,
+  `HasVertexColor` boolean DEFAULT NULL,
+  `HasUVSpace` boolean DEFAULT NULL,
   `BoundingBoxP1X` double DEFAULT NULL,
   `BoundingBoxP1Y` double DEFAULT NULL,
   `BoundingBoxP1Z` double DEFAULT NULL,
@@ -322,8 +322,8 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `idScene` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
-  `IsOriented` bit(1) NOT NULL,
-  `HasBeenQCd` bit(1) NOT NULL,
+  `IsOriented` boolean NOT NULL,
+  `HasBeenQCd` boolean NOT NULL,
   PRIMARY KEY (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -364,7 +364,7 @@ CREATE TABLE IF NOT EXISTS `SystemObject` (
   `idStakeholder` int(11) UNIQUE DEFAULT NULL,
   `idWorkflow` int(11) UNIQUE DEFAULT NULL,
   `idWorkflowStep` int(11) UNIQUE DEFAULT NULL,
-  `Retired` bit(1) NOT NULL,
+  `Retired` boolean NOT NULL,
   PRIMARY KEY (`idSystemObject`),
   KEY `SystemObject_idUnit` (`idUnit`),
   KEY `SystemObject_idProject` (`idProject`),
@@ -413,7 +413,7 @@ CREATE TABLE IF NOT EXISTS `User` (
   `Name` varchar(255) NOT NULL,
   `EmailAddress` varchar(255) NOT NULL,
   `SecurityID` varchar(255) NOT NULL,
-  `Active` bit(1) NOT NULL,
+  `Active` boolean NOT NULL,
   `DateActivated` datetime NOT NULL,
   `DateDisabled` datetime DEFAULT NULL,
   `WorkflowNotificationTime` time DEFAULT NULL,
@@ -451,7 +451,7 @@ CREATE TABLE IF NOT EXISTS `Vocabulary` (
 CREATE TABLE IF NOT EXISTS `VocabularySet` (
   `idVocabularySet` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
-  `SystemMaintained` bit(1) NOT NULL,
+  `SystemMaintained` boolean NOT NULL,
   PRIMARY KEY (`idVocabularySet`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -486,7 +486,7 @@ CREATE TABLE IF NOT EXISTS `WorkflowStepSystemObjectXref` (
   `idWorkflowStepSystemObjectXref` int(11) NOT NULL AUTO_INCREMENT,
   `idWorkflowStep` int(11) NOT NULL,
   `idSystemObject` int(11) NOT NULL,
-  `Input` bit(1) NOT NULL,
+  `Input` boolean NOT NULL,
   PRIMARY KEY (`idWorkflowStepSystemObjectXref`),
   KEY `WorkflowStepSystemObjectXref_idWorkflowStep_Input` (`idWorkflowStep`,`Input`),
   KEY `WorkflowStepSystemObjectXref_idSystemObject_Input` (`idSystemObject`,`Input`)

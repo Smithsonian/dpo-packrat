@@ -12,7 +12,7 @@ export async function createScene(prisma: PrismaClient, scene: Scene): Promise<S
                 Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
                 IsOriented,
                 HasBeenQCd,
-                SystemObject:       { create: { Retired: 0 }, },
+                SystemObject:       { create: { Retired: false }, },
             },
         });
     } catch (error) {
