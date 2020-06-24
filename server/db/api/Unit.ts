@@ -11,7 +11,7 @@ export async function createUnit(prisma: PrismaClient, unit: Unit): Promise<Unit
                 Name,
                 Abbreviation,
                 ARKPrefix,
-                SystemObject:   { create: { Retired: 0 }, },
+                SystemObject:   { create: { Retired: false }, },
             },
         });
     } catch (error) {

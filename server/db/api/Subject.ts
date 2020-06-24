@@ -12,7 +12,7 @@ export async function createSubject(prisma: PrismaClient, subject: Subject): Pro
                 Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
                 GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
                 Name,
-                SystemObject:   { create: { Retired: 0 }, },
+                SystemObject:   { create: { Retired: false }, },
             },
         });
     } catch (error) {
