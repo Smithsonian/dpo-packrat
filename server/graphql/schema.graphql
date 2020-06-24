@@ -29,17 +29,17 @@ type CaptureData {
   idCaptureData: ID!
   VCaptureMethod: Vocabulary!
   VCaptureDatasetType: Vocabulary!
-  CaptureDate: DateTime!
+  DateCaptured: DateTime!
   Description: String!
-  CaptureDatasetFieldId: Int
+  CaptureDatasetFieldID: Int
   VItemPositionType: Vocabulary
-  ItemPositionFieldId: Int
-  ItemArrangementFieldId: Int
+  ItemPositionFieldID: Int
+  ItemArrangementFieldID: Int
   VFocusType: Vocabulary
   VLightSourceType: Vocabulary
   VBackgroundRemovalMethod: Vocabulary
   VClusterType: Vocabulary
-  ClusterGeometryFieldId: Int
+  ClusterGeometryFieldID: Int
   CameraSettingsUniform: Boolean
   AssetThumbnail: Asset
   CaptureDataGroup: [CaptureDataGroup]
@@ -282,6 +282,7 @@ type VocabularySet {
 
 type Query {
   getAsset(input: GetAssetInput!): GetAssetResult!
+  getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getUser(input: GetUserInput!): GetUserResult!
@@ -294,6 +295,14 @@ input GetAssetInput {
 
 type GetAssetResult {
   Asset: Asset
+}
+
+input GetCaptureDataInput {
+  idCaptureData: ID!
+}
+
+type GetCaptureDataResult {
+  CaptureData: CaptureData
 }
 
 input GetLicenseInput {

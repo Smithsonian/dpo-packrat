@@ -1,0 +1,13 @@
+# import CaptureData from "types.graphql"
+
+type Query {
+    getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
+}
+
+input GetCaptureDataInput {
+    idCaptureData: ID!
+}
+
+type GetCaptureDataResult {
+    CaptureData: CaptureData
+}
