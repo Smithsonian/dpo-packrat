@@ -13,7 +13,7 @@ export async function createWorkflow(prisma: PrismaClient, workflow: Workflow): 
                 User:               idUserInitiator ? { connect: { idUser: idUserInitiator }, } : undefined,
                 DateInitiated,
                 DateUpdated,
-                SystemObject:       { create: { Retired: 0 }, },
+                SystemObject:       { create: { Retired: false }, },
             },
         });
     } catch (error) {

@@ -13,7 +13,7 @@ export async function createItem(prisma: PrismaClient, item: Item): Promise<Item
                 GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
                 Name,
                 EntireSubject,
-                SystemObject:   { create: { Retired: 0 }, },
+                SystemObject:   { create: { Retired: false }, },
             },
         });
     } catch (error) {
