@@ -10,15 +10,15 @@ import { fetchVocabulary } from '../../../../../db';
 
 const Vocabulary = {
     VocabularySet: async (parent: Parent, _: Args, context: Context): Promise<VocabularySet | null> => {
-        const { id } = parent;
+        const { idVocabulary } = parent;
         const { prisma } = context;
 
-        return resolveVocabularySetByVocabularyID(prisma, Number.parseInt(id));
+        return resolveVocabularySetByVocabularyID(prisma, Number.parseInt(idVocabulary));
     }
 };
 
-export async function resolveVocabularyByID(prisma: PrismaClient, vocabularyId: number): Promise<Vocabulary | null> {
-    const foundVocabulary = await fetchVocabulary(prisma, vocabularyId);
+export async function resolveVocabularyByID(prisma: PrismaClient, idVocabulary: number): Promise<Vocabulary | null> {
+    const foundVocabulary = await fetchVocabulary(prisma, idVocabulary);
 
     return parseVocabulary(foundVocabulary);
 }

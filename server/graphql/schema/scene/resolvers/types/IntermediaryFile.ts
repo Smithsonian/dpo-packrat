@@ -20,8 +20,8 @@ export function parseIntermediaryFile(foundIntermediaryFile: DB.IntermediaryFile
     if (foundIntermediaryFile) {
         const { idIntermediaryFile, DateCreated } = foundIntermediaryFile;
         intermediaryFile = {
-            id: String(idIntermediaryFile),
-            dateCreated: DateCreated
+            idIntermediaryFile: String(idIntermediaryFile),
+            DateCreated
         };
     }
 

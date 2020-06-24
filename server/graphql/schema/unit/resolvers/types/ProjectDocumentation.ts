@@ -10,10 +10,10 @@ import { parseProject } from './Project';
 
 const ProjectDocumentation = {
     Project: async (parent: Parent, _: Args, context: Context): Promise<Project | null> => {
-        const { id } = parent;
+        const { idProjectDocumentation } = parent;
         const { prisma } = context;
 
-        return resolveProjectByProjectDocumentationID(prisma, Number.parseInt(id));
+        return resolveProjectByProjectDocumentationID(prisma, Number.parseInt(idProjectDocumentation));
     }
 };
 
@@ -23,8 +23,8 @@ export async function resolveProjectDocumentationByID(prisma: PrismaClient, proj
     return parseProjectDocumentation(foundProjectDocumentation);
 }
 
-export async function resolveProjectByProjectDocumentationID(prisma: PrismaClient, projectDocumentationId: number): Promise<Project | null> {
-    const foundProject = await fetchProjectForProjectDocumentationID(prisma, projectDocumentationId);
+export async function resolveProjectByProjectDocumentationID(prisma: PrismaClient, idProjectDocumentation: number): Promise<Project | null> {
+    const foundProject = await fetchProjectForProjectDocumentationID(prisma, idProjectDocumentation);
 
     return parseProject(foundProject);
 }

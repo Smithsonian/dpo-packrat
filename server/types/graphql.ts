@@ -202,7 +202,7 @@ export type IntermediaryFile = {
 
 export type Unit = {
     __typename?: 'Unit';
-    id: Scalars['ID'];
+    idUnit: Scalars['ID'];
     Name: Scalars['String'];
     Abbreviation?: Maybe<Scalars['String']>;
     ARKPrefix?: Maybe<Scalars['String']>;

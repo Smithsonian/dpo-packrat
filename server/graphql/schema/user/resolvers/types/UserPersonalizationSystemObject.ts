@@ -10,15 +10,15 @@ import { parseUser } from './User';
 
 const UserPersonalizationSystemObject = {
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { id } = parent;
+        const { idUserPersonalizationSystemObject } = parent;
         const { prisma } = context;
 
-        return resolveUserForUserPersonalizationSystemObjectID(prisma, Number.parseInt(id));
+        return resolveUserForUserPersonalizationSystemObjectID(prisma, Number.parseInt(idUserPersonalizationSystemObject));
     }
 };
 
-export async function resolveUserForUserPersonalizationSystemObjectID(prisma: PrismaClient, userPersonalizationSystemObjectId: number): Promise<User | null> {
-    const foundUser = await fetchUserForUserPersonalizationSystemObjectID(prisma, userPersonalizationSystemObjectId);
+export async function resolveUserForUserPersonalizationSystemObjectID(prisma: PrismaClient, idUserPersonalizationSystemObject: number): Promise<User | null> {
+    const foundUser = await fetchUserForUserPersonalizationSystemObjectID(prisma, idUserPersonalizationSystemObject);
 
     return parseUser(foundUser);
 }

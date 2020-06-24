@@ -10,21 +10,21 @@ import { parseLicenseAssignments } from './LicenseAssignment';
 
 const License = {
     LicenseAssignment: async (parent: Parent, _: Args, context: Context): Promise<LicenseAssignment[] | null> => {
-        const { id } = parent;
+        const { idLicense } = parent;
         const { prisma } = context;
 
-        return resolveLicenseAssignmentByLicenseID(prisma, Number.parseInt(id));
+        return resolveLicenseAssignmentByLicenseID(prisma, Number.parseInt(idLicense));
     }
 };
 
-export async function resolveLicenseByID(prisma: PrismaClient, licenseId: number): Promise<License | null> {
-    const foundLicense = await fetchLicense(prisma, licenseId);
+export async function resolveLicenseByID(prisma: PrismaClient, idLicense: number): Promise<License | null> {
+    const foundLicense = await fetchLicense(prisma, idLicense);
 
     return parseLicense(foundLicense);
 }
 
-export async function resolveLicenseAssignmentByLicenseID(prisma: PrismaClient, licenseId: number): Promise<LicenseAssignment[] | null> {
-    const foundLicenseAssignments = await fetchLicenseAssignmentForLicenseID(prisma, licenseId);
+export async function resolveLicenseAssignmentByLicenseID(prisma: PrismaClient, idLicense: number): Promise<LicenseAssignment[] | null> {
+    const foundLicenseAssignments = await fetchLicenseAssignmentForLicenseID(prisma, idLicense);
 
     return parseLicenseAssignments(foundLicenseAssignments);
 }

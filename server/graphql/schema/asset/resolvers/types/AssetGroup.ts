@@ -10,21 +10,21 @@ import { parseAssets } from './Asset';
 
 const AssetGroup = {
     Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset[] | null> => {
-        const { id } = parent;
+        const { idAssetGroup } = parent;
         const { prisma } = context;
 
-        return resolveAssetByAssetGroupID(prisma, Number.parseInt(id));
+        return resolveAssetByAssetGroupID(prisma, Number.parseInt(idAssetGroup));
     }
 };
 
-export async function resolveAssetGroupByID(prisma: PrismaClient, assetGroupId: number): Promise<AssetGroup | null> {
-    const foundAssetGroup = await fetchAssetGroup(prisma, assetGroupId);
+export async function resolveAssetGroupByID(prisma: PrismaClient, idAssetGroup: number): Promise<AssetGroup | null> {
+    const foundAssetGroup = await fetchAssetGroup(prisma, idAssetGroup);
 
     return parseAssetGroup(foundAssetGroup);
 }
 
-export async function resolveAssetByAssetGroupID(prisma: PrismaClient, assetGroupId: number): Promise<Asset[] | null> {
-    const foundAssets = await fetchAssetForAssetGroupID(prisma, assetGroupId);
+export async function resolveAssetByAssetGroupID(prisma: PrismaClient, idAssetGroup: number): Promise<Asset[] | null> {
+    const foundAssets = await fetchAssetForAssetGroupID(prisma, idAssetGroup);
 
     return parseAssets(foundAssets);
 }
