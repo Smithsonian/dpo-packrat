@@ -3,29 +3,29 @@
 scalar DateTime
 
 type User {
-  id: ID!
-  name: String!
-  emailAddress: String!
-  securityId: String!
-  active: Boolean!
-  dateActivated: DateTime!
-  dateDisabled: DateTime
-  workflowNotificationTime: DateTime
-  emailSettings: Int
-  userPersonalizationSystemObjects: [UserPersonalizationSystemObject]
-  userPersonalizationUrls: [UserPersonalizationUrl]
-  licenseAssignments: [LicenseAssignment]
+  idUser: ID!
+  Name: String!
+  EmailAddress: String!
+  SecurityID: String!
+  Active: Boolean!
+  DateActivated: DateTime!
+  DateDisabled: DateTime
+  WorkflowNotificationTime: DateTime
+  EmailSettings: Int
+  UserPersonalizationSystemObject: [UserPersonalizationSystemObject]
+  UserPersonalizationUrl: [UserPersonalizationUrl]
+  LicenseAssignment: [LicenseAssignment]
 }
 
 type UserPersonalizationSystemObject {
-  id: ID!
-  user: User!
-  personalization: String
+  idUserPersonalizationSystemObject: ID!
+  User: User
+  Personalization: String
 }
 
 type UserPersonalizationUrl {
-  id: ID!
-  user: User!
-  url: String!
-  personalization: String!
+  idUserPersonalizationUrl: ID!
+  User: User
+  URL: String!
+  Personalization: String!
 }

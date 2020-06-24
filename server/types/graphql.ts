@@ -11,312 +11,312 @@ export type Scalars = {
 
 export type Asset = {
     __typename?: 'Asset';
-    id: Scalars['ID'];
-    fileName: Scalars['String'];
-    filePath: Scalars['String'];
-    assetGroup?: Maybe<AssetGroup>;
-    captureDataFiles?: Maybe<Array<Maybe<CaptureDataFile>>>;
-    scenes?: Maybe<Array<Maybe<Scene>>>;
-    intermediaryFiles?: Maybe<Array<Maybe<IntermediaryFile>>>;
+    idAsset: Scalars['ID'];
+    FileName: Scalars['String'];
+    FilePath: Scalars['String'];
+    AssetGroup?: Maybe<AssetGroup>;
+    CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
+    Scene?: Maybe<Array<Maybe<Scene>>>;
+    IntermediaryFile?: Maybe<Array<Maybe<IntermediaryFile>>>;
 };
 
 export type AssetVersion = {
     __typename?: 'AssetVersion';
-    id: Scalars['ID'];
-    asset?: Maybe<Asset>;
-    userCreator?: Maybe<User>;
-    dateCreated: Scalars['DateTime'];
-    storageLocation: Scalars['String'];
-    storageChecksum: Scalars['String'];
-    storageSize: Scalars['Int'];
+    idAssetVersion: Scalars['ID'];
+    Asset?: Maybe<Asset>;
+    UserCreator?: Maybe<User>;
+    DateCreated: Scalars['DateTime'];
+    StorageLocation: Scalars['String'];
+    StorageChecksum: Scalars['String'];
+    StorageSize: Scalars['Int'];
 };
 
 export type AssetGroup = {
     __typename?: 'AssetGroup';
-    id: Scalars['ID'];
-    assets?: Maybe<Array<Maybe<Asset>>>;
+    idAssetGroup: Scalars['ID'];
+    Asset?: Maybe<Array<Maybe<Asset>>>;
 };
 
 export type CaptureData = {
     __typename?: 'CaptureData';
-    id: Scalars['ID'];
-    vCaptureMethod: Vocabulary;
-    vCaptureDatasetType: Vocabulary;
-    captureDate: Scalars['DateTime'];
-    description: Scalars['String'];
-    captureDatasetFieldId?: Maybe<Scalars['Int']>;
-    vItemPositionType?: Maybe<Vocabulary>;
-    itemPositionFieldId?: Maybe<Scalars['Int']>;
-    itemArrangementFieldId?: Maybe<Scalars['Int']>;
-    vFocusType?: Maybe<Vocabulary>;
-    vLightSourceType?: Maybe<Vocabulary>;
-    vBackgroundRemovalMethod?: Maybe<Vocabulary>;
-    vClusterType?: Maybe<Vocabulary>;
-    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
-    cameraSettingsUniform?: Maybe<Scalars['Boolean']>;
-    assetThumbnail?: Maybe<Asset>;
-    captureDataGroups?: Maybe<Array<Maybe<CaptureDataGroup>>>;
-    captureDataFiles?: Maybe<Array<Maybe<CaptureDataFile>>>;
+    idCaptureData: Scalars['ID'];
+    VCaptureMethod: Vocabulary;
+    VCaptureDatasetType: Vocabulary;
+    CaptureDate: Scalars['DateTime'];
+    Description: Scalars['String'];
+    CaptureDatasetFieldId?: Maybe<Scalars['Int']>;
+    VItemPositionType?: Maybe<Vocabulary>;
+    ItemPositionFieldId?: Maybe<Scalars['Int']>;
+    ItemArrangementFieldId?: Maybe<Scalars['Int']>;
+    VFocusType?: Maybe<Vocabulary>;
+    VLightSourceType?: Maybe<Vocabulary>;
+    VBackgroundRemovalMethod?: Maybe<Vocabulary>;
+    VClusterType?: Maybe<Vocabulary>;
+    ClusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    CameraSettingsUniform?: Maybe<Scalars['Boolean']>;
+    AssetThumbnail?: Maybe<Asset>;
+    CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
+    CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
 };
 
 export type CaptureDataFile = {
     __typename?: 'CaptureDataFile';
-    id: Scalars['ID'];
-    captureData: CaptureData;
-    asset: Asset;
-    vVariantType: Vocabulary;
-    compressedMultipleFiles: Scalars['Boolean'];
+    idCaptureDataFile: Scalars['ID'];
+    CaptureData: CaptureData;
+    Asset: Asset;
+    VVariantType: Vocabulary;
+    CompressedMultipleFiles: Scalars['Boolean'];
 };
 
 export type CaptureDataGroup = {
     __typename?: 'CaptureDataGroup';
-    id: Scalars['ID'];
-    captureDatas?: Maybe<Array<Maybe<CaptureData>>>;
+    idCaptureDataGroup: Scalars['ID'];
+    CaptureData?: Maybe<Array<Maybe<CaptureData>>>;
 };
 
 export type License = {
     __typename?: 'License';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    description: Scalars['String'];
-    licenseAssignments?: Maybe<Array<Maybe<LicenseAssignment>>>;
+    idLicense: Scalars['ID'];
+    Name: Scalars['String'];
+    Description: Scalars['String'];
+    LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
 };
 
 export type LicenseAssignment = {
     __typename?: 'LicenseAssignment';
-    id: Scalars['ID'];
-    license: License;
-    userCreator?: Maybe<User>;
-    dateStart?: Maybe<Scalars['DateTime']>;
-    dateEnd?: Maybe<Scalars['DateTime']>;
+    idLicenseAssignment: Scalars['ID'];
+    License: License;
+    UserCreator?: Maybe<User>;
+    DateStart?: Maybe<Scalars['DateTime']>;
+    DateEnd?: Maybe<Scalars['DateTime']>;
 };
 
 export type Model = {
     __typename?: 'Model';
-    id: Scalars['ID'];
-    dateCreated: Scalars['DateTime'];
-    vCreationMethod: Vocabulary;
-    master: Scalars['Boolean'];
-    authoritative: Scalars['Boolean'];
-    vModality: Vocabulary;
-    vUnits: Vocabulary;
-    vPurpose: Vocabulary;
-    assetThumbnail?: Maybe<Asset>;
-    orientation?: Maybe<Orientation>;
+    idModel: Scalars['ID'];
+    DateCreated: Scalars['DateTime'];
+    VCreationMethod: Vocabulary;
+    Master: Scalars['Boolean'];
+    Authoritative: Scalars['Boolean'];
+    VModality: Vocabulary;
+    VUnits: Vocabulary;
+    VPurpose: Vocabulary;
+    AssetThumbnail?: Maybe<Asset>;
+    Orientation?: Maybe<Orientation>;
 };
 
 export type Orientation = {
     __typename?: 'Orientation';
-    ts0?: Maybe<Scalars['Float']>;
-    ts1?: Maybe<Scalars['Float']>;
-    ts2?: Maybe<Scalars['Float']>;
-    r0?: Maybe<Scalars['Float']>;
-    r1?: Maybe<Scalars['Float']>;
-    r2?: Maybe<Scalars['Float']>;
-    r3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
 };
 
 export type ModelGeometryFile = {
     __typename?: 'ModelGeometryFile';
-    id: Scalars['ID'];
-    model: Model;
-    asset: Asset;
-    vModelFileType: Vocabulary;
-    roughness?: Maybe<Scalars['Float']>;
-    metalness?: Maybe<Scalars['Float']>;
-    pointCount?: Maybe<Scalars['Int']>;
-    faceCount?: Maybe<Scalars['Int']>;
-    isWatertight?: Maybe<Scalars['Boolean']>;
-    hasNormals?: Maybe<Scalars['Boolean']>;
-    hasVertexColor?: Maybe<Scalars['Boolean']>;
-    hasUvSpace?: Maybe<Scalars['Boolean']>;
-    boundingBoxP1X?: Maybe<Scalars['Float']>;
-    boundingBoxP1Y?: Maybe<Scalars['Float']>;
-    boundingBoxP1Z?: Maybe<Scalars['Float']>;
-    boundingBoxP2X?: Maybe<Scalars['Float']>;
-    boundingBoxP2Y?: Maybe<Scalars['Float']>;
-    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    idModelGeometryFile: Scalars['ID'];
+    Model: Model;
+    Asset: Asset;
+    VModelFileType: Vocabulary;
+    Roughness?: Maybe<Scalars['Float']>;
+    Metalness?: Maybe<Scalars['Float']>;
+    PointCount?: Maybe<Scalars['Int']>;
+    FaceCount?: Maybe<Scalars['Int']>;
+    IsWatertight?: Maybe<Scalars['Boolean']>;
+    HasNormals?: Maybe<Scalars['Boolean']>;
+    HasVertexColor?: Maybe<Scalars['Boolean']>;
+    HasUvSpace?: Maybe<Scalars['Boolean']>;
+    BoundingBoxP1X?: Maybe<Scalars['Float']>;
+    BoundingBoxP1Y?: Maybe<Scalars['Float']>;
+    BoundingBoxP1Z?: Maybe<Scalars['Float']>;
+    BoundingBoxP2X?: Maybe<Scalars['Float']>;
+    BoundingBoxP2Y?: Maybe<Scalars['Float']>;
+    BoundingBoxP2Z?: Maybe<Scalars['Float']>;
 };
 
 export type ModelProcessingAction = {
     __typename?: 'ModelProcessingAction';
-    id: Scalars['ID'];
-    model: Model;
-    actor: Actor;
-    processingDate: Scalars['DateTime'];
-    toolsUsed: Scalars['String'];
-    description: Scalars['String'];
-    modelProcessingActionSteps?: Maybe<Array<Maybe<ModelProcessingActionStep>>>;
+    idModelProcessingAction: Scalars['ID'];
+    Model: Model;
+    Actor: Actor;
+    DateProcessed: Scalars['DateTime'];
+    ToolsUsed: Scalars['String'];
+    Description: Scalars['String'];
+    ModelProcessingActionStep?: Maybe<Array<Maybe<ModelProcessingActionStep>>>;
 };
 
 export type ModelProcessingActionStep = {
     __typename?: 'ModelProcessingActionStep';
-    id: Scalars['ID'];
-    modelProcessingAction: ModelProcessingAction;
-    vActionMethod: Vocabulary;
-    description: Scalars['String'];
+    idModelProcessingActionStep: Scalars['ID'];
+    ModelProcessingAction: ModelProcessingAction;
+    VActionMethod: Vocabulary;
+    Description: Scalars['String'];
 };
 
 export type ModelUvMapFile = {
     __typename?: 'ModelUVMapFile';
-    id: Scalars['ID'];
-    modelGeometryFile: ModelGeometryFile;
-    asset: Asset;
-    uVMapEdgeLength: Scalars['Int'];
-    modelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
+    idModelUVMapFile: Scalars['ID'];
+    ModelGeometryFile: ModelGeometryFile;
+    Asset: Asset;
+    UVMapEdgeLength: Scalars['Int'];
+    ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
 };
 
 export type ModelUvMapChannel = {
     __typename?: 'ModelUVMapChannel';
-    id: Scalars['ID'];
-    modelUvMapFile: ModelUvMapFile;
-    channelPosition: Scalars['Int'];
-    channelWidth: Scalars['Int'];
-    vUVMapType: Vocabulary;
+    idModelUVMapChannel: Scalars['ID'];
+    ModelUvMapFile: ModelUvMapFile;
+    ChannelPosition: Scalars['Int'];
+    ChannelWidth: Scalars['Int'];
+    VUVMapType: Vocabulary;
 };
 
 export type Scene = {
     __typename?: 'Scene';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    assetThumbnail?: Maybe<Asset>;
-    isOriented: Scalars['Boolean'];
-    hasBeenQCd: Scalars['Boolean'];
-    models?: Maybe<Array<Maybe<Model>>>;
+    idScene: Scalars['ID'];
+    Name: Scalars['String'];
+    AssetThumbnail?: Maybe<Asset>;
+    IsOriented: Scalars['Boolean'];
+    HasBeenQCd: Scalars['Boolean'];
+    Model?: Maybe<Array<Maybe<Model>>>;
 };
 
 export type Actor = {
     __typename?: 'Actor';
-    id: Scalars['ID'];
-    individualName?: Maybe<Scalars['String']>;
-    organizationName?: Maybe<Scalars['String']>;
-    unit?: Maybe<Unit>;
+    idActor: Scalars['ID'];
+    IndividualName?: Maybe<Scalars['String']>;
+    OrganizationName?: Maybe<Scalars['String']>;
+    Unit?: Maybe<Unit>;
 };
 
 export type IntermediaryFile = {
     __typename?: 'IntermediaryFile';
-    id: Scalars['ID'];
-    asset: Asset;
-    dateCreated: Scalars['DateTime'];
+    idIntermediaryFile: Scalars['ID'];
+    Asset: Asset;
+    DateCreated: Scalars['DateTime'];
 };
 
 export type Unit = {
     __typename?: 'Unit';
     id: Scalars['ID'];
-    name: Scalars['String'];
-    abbreviation?: Maybe<Scalars['String']>;
-    arkPrefix?: Maybe<Scalars['String']>;
-    subjects?: Maybe<Array<Maybe<Subject>>>;
-    actors?: Maybe<Array<Maybe<Actor>>>;
+    Name: Scalars['String'];
+    Abbreviation?: Maybe<Scalars['String']>;
+    ARKPrefix?: Maybe<Scalars['String']>;
+    Subject?: Maybe<Array<Maybe<Subject>>>;
+    Actor?: Maybe<Array<Maybe<Actor>>>;
 };
 
 export type Project = {
     __typename?: 'Project';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    description?: Maybe<Scalars['String']>;
-    documentations?: Maybe<Array<Maybe<ProjectDocumentation>>>;
+    idProject: Scalars['ID'];
+    Name: Scalars['String'];
+    Description?: Maybe<Scalars['String']>;
+    ProjectDocumentation?: Maybe<Array<Maybe<ProjectDocumentation>>>;
 };
 
 export type ProjectDocumentation = {
     __typename?: 'ProjectDocumentation';
-    id: Scalars['ID'];
-    project: Project;
-    name: Scalars['String'];
-    description: Scalars['String'];
+    idProjectDocumentation: Scalars['ID'];
+    Project: Project;
+    Name: Scalars['String'];
+    Description: Scalars['String'];
 };
 
 export type Stakeholder = {
     __typename?: 'Stakeholder';
-    id: Scalars['ID'];
-    individualName: Scalars['String'];
-    organizationName: Scalars['String'];
-    emailAddress?: Maybe<Scalars['String']>;
-    phoneNumberMobile?: Maybe<Scalars['String']>;
-    phoneNumberOffice?: Maybe<Scalars['String']>;
-    mailingAddress?: Maybe<Scalars['String']>;
+    idStakeholder: Scalars['ID'];
+    IndividualName: Scalars['String'];
+    OrganizationName: Scalars['String'];
+    EmailAddress?: Maybe<Scalars['String']>;
+    PhoneNumberMobile?: Maybe<Scalars['String']>;
+    PhoneNumberOffice?: Maybe<Scalars['String']>;
+    MailingAddress?: Maybe<Scalars['String']>;
 };
 
 export type GeoLocation = {
     __typename?: 'GeoLocation';
-    id: Scalars['ID'];
-    latitude?: Maybe<Scalars['Float']>;
-    longitude?: Maybe<Scalars['Float']>;
-    altitude?: Maybe<Scalars['Float']>;
-    ts0?: Maybe<Scalars['Float']>;
-    ts1?: Maybe<Scalars['Float']>;
-    ts2?: Maybe<Scalars['Float']>;
-    r0?: Maybe<Scalars['Float']>;
-    r1?: Maybe<Scalars['Float']>;
-    r2?: Maybe<Scalars['Float']>;
-    r3?: Maybe<Scalars['Float']>;
-    items?: Maybe<Array<Maybe<Item>>>;
-    subjects?: Maybe<Array<Maybe<Subject>>>;
+    idGeoLocation: Scalars['ID'];
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    Altitude?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    Item?: Maybe<Array<Maybe<Item>>>;
+    Subject?: Maybe<Array<Maybe<Subject>>>;
 };
 
 export type Subject = {
     __typename?: 'Subject';
-    id: Scalars['ID'];
-    unit?: Maybe<Unit>;
-    assetThumbnail?: Maybe<Asset>;
-    name: Scalars['String'];
-    geoLocation?: Maybe<GeoLocation>;
-    items?: Maybe<Array<Maybe<Item>>>;
+    idSubject: Scalars['ID'];
+    Unit?: Maybe<Unit>;
+    AssetThumbnail?: Maybe<Asset>;
+    Name: Scalars['String'];
+    GeoLocation?: Maybe<GeoLocation>;
+    Item?: Maybe<Array<Maybe<Item>>>;
 };
 
 export type Item = {
     __typename?: 'Item';
-    id: Scalars['ID'];
-    subject?: Maybe<Subject>;
-    assetThumbnail?: Maybe<Asset>;
-    geoLocation?: Maybe<GeoLocation>;
-    name: Scalars['String'];
-    entireSubject: Scalars['Boolean'];
+    idItem: Scalars['ID'];
+    Subject?: Maybe<Subject>;
+    AssetThumbnail?: Maybe<Asset>;
+    GeoLocation?: Maybe<GeoLocation>;
+    Name: Scalars['String'];
+    EntireSubject: Scalars['Boolean'];
 };
 
 export type User = {
     __typename?: 'User';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    emailAddress: Scalars['String'];
-    securityId: Scalars['String'];
-    active: Scalars['Boolean'];
-    dateActivated: Scalars['DateTime'];
-    dateDisabled?: Maybe<Scalars['DateTime']>;
-    workflowNotificationTime?: Maybe<Scalars['DateTime']>;
-    emailSettings?: Maybe<Scalars['Int']>;
-    userPersonalizationSystemObjects?: Maybe<Array<Maybe<UserPersonalizationSystemObject>>>;
-    userPersonalizationUrls?: Maybe<Array<Maybe<UserPersonalizationUrl>>>;
-    licenseAssignments?: Maybe<Array<Maybe<LicenseAssignment>>>;
+    idUser: Scalars['ID'];
+    Name: Scalars['String'];
+    EmailAddress: Scalars['String'];
+    SecurityID: Scalars['String'];
+    Active: Scalars['Boolean'];
+    DateActivated: Scalars['DateTime'];
+    DateDisabled?: Maybe<Scalars['DateTime']>;
+    WorkflowNotificationTime?: Maybe<Scalars['DateTime']>;
+    EmailSettings?: Maybe<Scalars['Int']>;
+    UserPersonalizationSystemObject?: Maybe<Array<Maybe<UserPersonalizationSystemObject>>>;
+    UserPersonalizationUrl?: Maybe<Array<Maybe<UserPersonalizationUrl>>>;
+    LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
 };
 
 export type UserPersonalizationSystemObject = {
     __typename?: 'UserPersonalizationSystemObject';
-    id: Scalars['ID'];
-    user: User;
-    personalization?: Maybe<Scalars['String']>;
+    idUserPersonalizationSystemObject: Scalars['ID'];
+    User?: Maybe<User>;
+    Personalization?: Maybe<Scalars['String']>;
 };
 
 export type UserPersonalizationUrl = {
     __typename?: 'UserPersonalizationUrl';
-    id: Scalars['ID'];
-    user: User;
-    url: Scalars['String'];
-    personalization: Scalars['String'];
+    idUserPersonalizationUrl: Scalars['ID'];
+    User?: Maybe<User>;
+    URL: Scalars['String'];
+    Personalization: Scalars['String'];
 };
 
 export type Vocabulary = {
     __typename?: 'Vocabulary';
-    id: Scalars['ID'];
-    vocabularySet: VocabularySet;
-    sortOrder: Scalars['Int'];
+    idVocabulary: Scalars['ID'];
+    VocabularySet: VocabularySet;
+    SortOrder: Scalars['Int'];
 };
 
 export type VocabularySet = {
     __typename?: 'VocabularySet';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    systemMaintained: Scalars['Boolean'];
+    idVocabularySet: Scalars['ID'];
+    Name: Scalars['String'];
+    SystemMaintained: Scalars['Boolean'];
 };
 
 export type Query = {

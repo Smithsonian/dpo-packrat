@@ -1,7 +1,7 @@
 /**
  * Type resolver for Project
  */
-import { fetchProject, fetchProjectDocumentationsForProjectID } from '../../../../../db';
+import { fetchProject, fetchProjectDocumentationForProjectID } from '../../../../../db';
 import * as DB from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
@@ -9,11 +9,11 @@ import { ProjectDocumentation, Project } from '../../../../../types/graphql';
 import { parseProjectDocumentations } from './ProjectDocumentation';
 
 const Project = {
-    documentations: async (parent: Parent, _: Args, context: Context): Promise<ProjectDocumentation[] | null> => {
+    ProjectDocumentation: async (parent: Parent, _: Args, context: Context): Promise<ProjectDocumentation[] | null> => {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveProjectDocumentationsByProjectID(prisma, Number.parseInt(id));
+        return resolveProjectDocumentationByProjectID(prisma, Number.parseInt(id));
     }
 };
 
@@ -28,17 +28,17 @@ export function parseProject(foundProject: DB.Project | null): Project | null {
     if (foundProject) {
         const { idProject, Name, Description } = foundProject;
         project = {
-            id: String(idProject),
-            name: Name,
-            description: Description
+            idProject: String(idProject),
+            Name,
+            Description
         };
     }
 
     return project;
 }
 
-export async function resolveProjectDocumentationsByProjectID(prisma: PrismaClient, projectId: number): Promise<ProjectDocumentation[] | null> {
-    const foundProjectDocumentations = await fetchProjectDocumentationsForProjectID(prisma, projectId);
+export async function resolveProjectDocumentationByProjectID(prisma: PrismaClient, projectId: number): Promise<ProjectDocumentation[] | null> {
+    const foundProjectDocumentations = await fetchProjectDocumentationForProjectID(prisma, projectId);
 
     return parseProjectDocumentations(foundProjectDocumentations);
 }

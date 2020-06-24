@@ -11,25 +11,31 @@ export async function fetchUser(prisma: PrismaClient, idUser: number): Promise<U
     }
 }
 
-// TODO: KARAN: handle exception here
-export async function fetchUserPersonalizationSystemObjectsForUserID(prisma: PrismaClient, idUser: number): Promise<UserPersonalizationSystemObject[] | null> {
-    return prisma.user.findOne({ where: { idUser } }).UserPersonalizationSystemObject();
+export async function fetchUserPersonalizationSystemObjectForUserID(prisma: PrismaClient, idUser: number): Promise<UserPersonalizationSystemObject[] | null> {
+    try {
+        return await prisma.user.findOne({ where: { idUser } }).UserPersonalizationSystemObject();
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchUserPersonalizationSystemObjectForUserID', error);
+        return null;
+    }
 }
 
-export async function fetchUserPersonalizationUrlsForUserID(prisma: PrismaClient, idUser: number): Promise<UserPersonalizationUrl[] | null> {
-    return prisma.user.findOne({ where: { idUser } }).UserPersonalizationUrl();
+export async function fetchUserPersonalizationUrlForUserID(prisma: PrismaClient, idUser: number): Promise<UserPersonalizationUrl[] | null> {
+    try {
+        return await prisma.user.findOne({ where: { idUser } }).UserPersonalizationUrl();
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchUserPersonalizationUrlForUserID', error);
+        return null;
+    }
 }
 
-export async function fetchUserForUserPersonalizationSystemObjectID(prisma: PrismaClient, idUserPersonalizationSystemObject: number): Promise<User | null> {
-    return prisma.userPersonalizationSystemObject.findOne({ where: { idUserPersonalizationSystemObject } }).User();
-}
-
-export async function fetchUserForUserPersonalizationUrlID(prisma: PrismaClient, idUserPersonalizationUrl: number): Promise<User | null> {
-    return prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl } }).User();
-}
-
-export async function fetchLicenseAssignmentsForUserID(prisma: PrismaClient, idUser: number): Promise<LicenseAssignment[] | null> {
-    return prisma.user.findOne({ where: { idUser } }).LicenseAssignment();
+export async function fetchLicenseAssignmentForUserID(prisma: PrismaClient, idUser: number): Promise<LicenseAssignment[] | null> {
+    try {
+        return await prisma.user.findOne({ where: { idUser } }).LicenseAssignment();
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchLicenseAssignmentForUserID', error);
+        return null;
+    }
 }
 
 export async function createUser(prisma: PrismaClient, user: User): Promise<User | null> {

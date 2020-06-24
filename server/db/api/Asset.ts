@@ -39,29 +39,29 @@ export async function fetchAssetGroupForAssetID(prisma: PrismaClient, idAsset: n
     }
 }
 
-export async function fetchCaptureDataFilesForAssetID(prisma: PrismaClient, idAsset: number): Promise<CaptureDataFile[] | null> {
+export async function fetchCaptureDataFileForAssetID(prisma: PrismaClient, idAsset: number): Promise<CaptureDataFile[] | null> {
     try {
         return await prisma.asset.findOne({ where: { idAsset } }).CaptureDataFile();
     } catch (error) {
-        LOG.logger.error('DBAPI.fetchCaptureDataFilesForAssetID', error);
+        LOG.logger.error('DBAPI.fetchCaptureDataFileForAssetID', error);
         return null;
     }
 }
 
-export async function fetchScenesForAssetID(prisma: PrismaClient, idAsset: number): Promise<Scene[] | null> {
+export async function fetchSceneForAssetID(prisma: PrismaClient, idAsset: number): Promise<Scene[] | null> {
     try {
         return await prisma.asset.findOne({ where: { idAsset } }).Scene();
     } catch (error) {
-        LOG.logger.error('DBAPI.fetchScenesForAssetID', error);
+        LOG.logger.error('DBAPI.fetchSceneForAssetID', error);
         return null;
     }
 }
 
-export async function fetchIntermediaryFilesForAssetID(prisma: PrismaClient, idAsset: number): Promise<IntermediaryFile[] | null> {
+export async function fetchIntermediaryFileForAssetID(prisma: PrismaClient, idAsset: number): Promise<IntermediaryFile[] | null> {
     try {
         return await prisma.asset.findOne({ where: { idAsset } }).IntermediaryFile();
     } catch (error) {
-        LOG.logger.error('DBAPI.fetchIntermediaryFilesForAssetID', error);
+        LOG.logger.error('DBAPI.fetchIntermediaryFileForAssetID', error);
         return null;
     }
 }

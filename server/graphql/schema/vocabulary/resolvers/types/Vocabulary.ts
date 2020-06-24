@@ -9,7 +9,7 @@ import { resolveVocabularySetByVocabularyID } from './VocabularySet';
 import { fetchVocabulary } from '../../../../../db';
 
 const Vocabulary = {
-    vocabularySet: async (parent: Parent, _: Args, context: Context): Promise<VocabularySet | null> => {
+    VocabularySet: async (parent: Parent, _: Args, context: Context): Promise<VocabularySet | null> => {
         const { id } = parent;
         const { prisma } = context;
 
@@ -25,12 +25,11 @@ export async function resolveVocabularyByID(prisma: PrismaClient, vocabularyId: 
 
 export function parseVocabulary(foundVocabulary: DB.Vocabulary | null): Vocabulary | null {
     let vocabulary;
-
     if (foundVocabulary) {
         const { idVocabulary, SortOrder } = foundVocabulary;
         vocabulary = {
-            id: String(idVocabulary),
-            sortOrder: SortOrder
+            idVocabulary: String(idVocabulary),
+            SortOrder
         };
     }
 

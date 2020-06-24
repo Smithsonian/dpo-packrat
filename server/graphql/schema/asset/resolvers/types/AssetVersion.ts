@@ -10,13 +10,13 @@ import { parseAsset } from './Asset';
 import { parseUser } from '../../../user/resolvers/types/User';
 
 const AssetVersion = {
-    asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
+    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
         const { id } = parent;
         const { prisma } = context;
 
         return resolveAssetByAssetVersionID(prisma, Number.parseInt(id));
     },
-    userCreator: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
+    UserCreator: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { id } = parent;
         const { prisma } = context;
 
@@ -45,13 +45,13 @@ export async function resolveUserByAssetVersionID(prisma: PrismaClient, assetVer
 export function parseAssetVersion(foundAssetVersion: DB.AssetVersion | null): AssetVersion | null {
     let assetVersion;
     if (foundAssetVersion) {
-        const { idAsset, DateCreated, StorageChecksum, StorageLocation, StorageSize } = foundAssetVersion;
+        const { idAssetVersion, DateCreated, StorageChecksum, StorageLocation, StorageSize } = foundAssetVersion;
         return {
-            id: String(idAsset),
-            dateCreated: DateCreated,
-            storageLocation: StorageLocation,
-            storageChecksum: StorageChecksum,
-            storageSize: StorageSize
+            idAssetVersion: String(idAssetVersion),
+            DateCreated,
+            StorageLocation,
+            StorageChecksum,
+            StorageSize
         };
     }
 

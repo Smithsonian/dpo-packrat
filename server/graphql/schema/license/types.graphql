@@ -3,16 +3,16 @@
 scalar DateTime
 
 type License {
-  id: ID!
-  name: String!
-  description: String!
-  licenseAssignments: [LicenseAssignment]
+  idLicense: ID!
+  Name: String!
+  Description: String!
+  LicenseAssignment: [LicenseAssignment]
 }
 
 type LicenseAssignment {
-  id: ID!
-  license: License!
-  userCreator: User
-  dateStart: DateTime
-  dateEnd: DateTime
+  idLicenseAssignment: ID!
+  License: License!
+  UserCreator: User
+  DateStart: DateTime
+  DateEnd: DateTime
 }

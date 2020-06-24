@@ -1,7 +1,7 @@
 /**
  * Type resolver for Unit
  */
-import { fetchSubjectsForUnitID, fetchActorsForUnitID, fetchUnit } from '../../../../../db';
+import { fetchSubjectForUnitID, fetchActorForUnitID, fetchUnit } from '../../../../../db';
 import * as DB from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
@@ -10,17 +10,17 @@ import { parseSubjects } from './Subject';
 import { parseActors } from '../../../scene/resolvers/types/Actor';
 
 const Unit = {
-    subjects: async (parent: Parent, _: Args, context: Context): Promise<Subject[] | null> => {
+    Subject: async (parent: Parent, _: Args, context: Context): Promise<Subject[] | null> => {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveSubjectsByUnitID(prisma, Number.parseInt(id));
+        return resolveSubjectByUnitID(prisma, Number.parseInt(id));
     },
-    actors: async (parent: Parent, _: Args, context: Context): Promise<Actor[] | null> => {
+    Actor: async (parent: Parent, _: Args, context: Context): Promise<Actor[] | null> => {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveActorsByUnitID(prisma, Number.parseInt(id));
+        return resolveActorByUnitID(prisma, Number.parseInt(id));
     }
 };
 
@@ -35,24 +35,24 @@ export function parseUnit(foundUnit: DB.Unit | null): Unit | null {
     if (foundUnit) {
         const { idUnit, Name, Abbreviation, ARKPrefix } = foundUnit;
         unit = {
-            id: String(idUnit),
-            name: Name,
-            abbreviation: Abbreviation,
-            aRKPrefix: ARKPrefix
+            idUnit: String(idUnit),
+            Name,
+            Abbreviation,
+            ARKPrefix
         };
     }
 
     return unit;
 }
 
-export async function resolveSubjectsByUnitID(prisma: PrismaClient, unitId: number): Promise<Subject[] | null> {
-    const foundSubjects = await fetchSubjectsForUnitID(prisma, unitId);
+export async function resolveSubjectByUnitID(prisma: PrismaClient, unitId: number): Promise<Subject[] | null> {
+    const foundSubjects = await fetchSubjectForUnitID(prisma, unitId);
 
     return parseSubjects(foundSubjects);
 }
 
-export async function resolveActorsByUnitID(prisma: PrismaClient, unitId: number): Promise<Actor[] | null> {
-    const foundActors = await fetchActorsForUnitID(prisma, unitId);
+export async function resolveActorByUnitID(prisma: PrismaClient, unitId: number): Promise<Actor[] | null> {
+    const foundActors = await fetchActorForUnitID(prisma, unitId);
 
     return parseActors(foundActors);
 }

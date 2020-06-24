@@ -58,11 +58,11 @@ export async function fetchGeoLocationSubjectID(prisma: PrismaClient, idSubject:
     }
 }
 
-export async function fetchItemsForSubjectID(prisma: PrismaClient, idSubject: number): Promise<Item[] | null> {
+export async function fetchItemForSubjectID(prisma: PrismaClient, idSubject: number): Promise<Item[] | null> {
     try {
         return await prisma.subject.findOne({ where: { idSubject } }).Item();
     } catch (error) {
-        LOG.logger.error('DBAPI.fetchItemsForSubjectID', error);
+        LOG.logger.error('DBAPI.fetchItemForSubjectID', error);
         return null;
     }
 }

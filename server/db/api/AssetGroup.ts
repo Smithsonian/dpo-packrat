@@ -27,11 +27,11 @@ export async function fetchAssetGroup(prisma: PrismaClient, idAssetGroup: number
     }
 }
 
-export async function fetchAssetsForAssetGroupID(prisma: PrismaClient, idAssetGroup: number): Promise<Asset[] | null> {
+export async function fetchAssetForAssetGroupID(prisma: PrismaClient, idAssetGroup: number): Promise<Asset[] | null> {
     try {
         return await prisma.assetGroup.findOne({ where: { idAssetGroup } }).Asset();
     } catch (error) {
-        LOG.logger.error('DBAPI.fetchAssetsForAssetGroupID', error);
+        LOG.logger.error('DBAPI.fetchAssetForAssetGroupID', error);
         return null;
     }
 }

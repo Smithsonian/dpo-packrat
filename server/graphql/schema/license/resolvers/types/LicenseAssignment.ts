@@ -5,18 +5,18 @@ import { License, LicenseAssignment, User } from '../../../../../types/graphql';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import { PrismaClient } from '@prisma/client';
 import * as DB from '@prisma/client';
-import { fetchUserForLicenseAssignmentID, fetchLicenseForLicenseAssignmentID, fetchLicenseAssignmentsForUserID } from '../../../../../db';
+import { fetchUserForLicenseAssignmentID, fetchLicenseForLicenseAssignmentID, fetchLicenseAssignmentForUserID } from '../../../../../db';
 import { parseLicense } from './License';
 import { parseUser } from '../../../user/resolvers/types/User';
 
 const LicenseAssignment = {
-    license: async (parent: Parent, _: Args, context: Context): Promise<License | null> => {
+    License: async (parent: Parent, _: Args, context: Context): Promise<License | null> => {
         const { id } = parent;
         const { prisma } = context;
 
         return resolveLicenseByLicenseAssignmentID(prisma, Number.parseInt(id));
     },
-    userCreator: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
+    UserCreator: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { id } = parent;
         const { prisma } = context;
 
@@ -36,8 +36,8 @@ export async function resolveUserCreatorByLicenseAssignmentID(prisma: PrismaClie
     return parseUser(foundUser);
 }
 
-export async function resolveLicenseAssignmentsByUserID(prisma: PrismaClient, idUser: number): Promise<LicenseAssignment[] | null> {
-    const foundLicenseAssignments = await fetchLicenseAssignmentsForUserID(prisma, idUser);
+export async function resolveLicenseAssignmentByUserID(prisma: PrismaClient, idUser: number): Promise<LicenseAssignment[] | null> {
+    const foundLicenseAssignments = await fetchLicenseAssignmentForUserID(prisma, idUser);
 
     return parseLicenseAssignments(foundLicenseAssignments);
 }
@@ -49,9 +49,9 @@ export function parseLicenseAssignments(foundLicenseAssignments: DB.LicenseAssig
             const { idLicense, DateStart, DateEnd } = licenseAssignment;
 
             return {
-                id: idLicense,
-                dateStart: DateStart,
-                dateEnd: DateEnd
+                idLicense: String(idLicense),
+                DateStart,
+                DateEnd
             };
         });
 

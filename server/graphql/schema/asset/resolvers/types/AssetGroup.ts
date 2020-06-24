@@ -4,16 +4,16 @@
 import * as DB from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 import { AssetGroup, Asset } from '../../../../../types/graphql';
-import { fetchAssetGroup, fetchAssetsForAssetGroupID } from '../../../../../db';
+import { fetchAssetGroup, fetchAssetForAssetGroupID } from '../../../../../db';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import { parseAssets } from './Asset';
 
 const AssetGroup = {
-    assets: async (parent: Parent, _: Args, context: Context): Promise<Asset[] | null> => {
+    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset[] | null> => {
         const { id } = parent;
         const { prisma } = context;
 
-        return resolveAssetsByAssetGroupID(prisma, Number.parseInt(id));
+        return resolveAssetByAssetGroupID(prisma, Number.parseInt(id));
     }
 };
 
@@ -23,8 +23,8 @@ export async function resolveAssetGroupByID(prisma: PrismaClient, assetGroupId: 
     return parseAssetGroup(foundAssetGroup);
 }
 
-export async function resolveAssetsByAssetGroupID(prisma: PrismaClient, assetGroupId: number): Promise<Asset[] | null> {
-    const foundAssets = await fetchAssetsForAssetGroupID(prisma, assetGroupId);
+export async function resolveAssetByAssetGroupID(prisma: PrismaClient, assetGroupId: number): Promise<Asset[] | null> {
+    const foundAssets = await fetchAssetForAssetGroupID(prisma, assetGroupId);
 
     return parseAssets(foundAssets);
 }
@@ -34,7 +34,7 @@ export function parseAssetGroup(foundAssetGroup: DB.AssetGroup | null): AssetGro
     if (foundAssetGroup) {
         const { idAssetGroup } = foundAssetGroup;
         return {
-            id: String(idAssetGroup)
+            idAssetGroup: String(idAssetGroup)
         };
     }
 
