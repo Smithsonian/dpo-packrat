@@ -7,9 +7,9 @@ export async function createCaptureDataFile(prisma: PrismaClient, captureDataFil
     try {
         createSystemObject = await prisma.captureDataFile.create({
             data: {
-                CaptureData:    { connect: { idCaptureData } },
-                Asset:          { connect: { idAsset } },
-                Vocabulary:     { connect: { idVocabulary: idVVariantType } },
+                CaptureData:    { connect: { idCaptureData }, },
+                Asset:          { connect: { idAsset }, },
+                Vocabulary:     { connect: { idVocabulary: idVVariantType }, },
                 CompressedMultipleFiles
             },
         });
