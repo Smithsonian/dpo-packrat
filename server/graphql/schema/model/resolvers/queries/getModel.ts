@@ -12,9 +12,5 @@ export default async function getModel(_: Parent, args: Args, context: Context):
 
     const Model = await fetchModel(prisma, Number.parseInt(idModel));
 
-    if (Model) {
-        return { Model };
-    }
-
-    return { Model: null };
+    return { Model };
 }

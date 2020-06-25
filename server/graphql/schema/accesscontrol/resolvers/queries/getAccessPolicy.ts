@@ -12,9 +12,5 @@ export default async function getAccessPolicy(_: Parent, args: Args, context: Co
 
     const AccessPolicy = await fetchAccessPolicy(prisma, Number.parseInt(idAccessPolicy));
 
-    if (AccessPolicy) {
-        return { AccessPolicy };
-    }
-
-    return { AccessPolicy: null };
+    return { AccessPolicy };
 }

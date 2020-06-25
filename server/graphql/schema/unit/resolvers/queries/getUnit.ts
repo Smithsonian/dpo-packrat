@@ -12,9 +12,5 @@ export default async function getUnit(_: Parent, args: Args, context: Context): 
 
     const Unit = await fetchUnit(prisma, Number.parseInt(idUnit));
 
-    if (Unit) {
-        return { Unit };
-    }
-
-    return { Unit: null };
+    return { Unit };
 }
