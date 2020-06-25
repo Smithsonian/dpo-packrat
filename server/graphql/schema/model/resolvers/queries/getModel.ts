@@ -10,7 +10,7 @@ export default async function getModel(_: Parent, args: Args, context: Context):
     const { idModel } = input;
     const { prisma } = context;
 
-    const Model = await fetchModel(prisma, Number.parseInt(idModel));
+    const Model = await fetchModel(prisma, idModel);
 
     return { Model };
 }

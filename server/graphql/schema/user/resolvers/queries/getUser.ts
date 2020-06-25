@@ -9,7 +9,7 @@ export default async function getUser(_: Parent, args: Args, context: Context): 
     const { idUser } = input;
     const { prisma } = context;
 
-    const User = await fetchUser(prisma, Number.parseInt(idUser));
+    const User = await fetchUser(prisma, idUser);
 
     return { User };
 }

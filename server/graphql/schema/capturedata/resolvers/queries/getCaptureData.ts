@@ -9,7 +9,7 @@ export default async function getCaptureData(_: Parent, args: Args, context: Con
     const { idCaptureData } = input;
     const { prisma } = context;
 
-    const CaptureData = await fetchCaptureData(prisma, Number.parseInt(idCaptureData));
+    const CaptureData = await fetchCaptureData(prisma, idCaptureData);
 
     return { CaptureData };
 }

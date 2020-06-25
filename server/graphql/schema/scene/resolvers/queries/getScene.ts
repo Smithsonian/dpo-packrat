@@ -10,7 +10,7 @@ export default async function getScene(_: Parent, args: Args, context: Context):
     const { idScene } = input;
     const { prisma } = context;
 
-    const Scene = await fetchScene(prisma, Number.parseInt(idScene));
+    const Scene = await fetchScene(prisma, idScene);
 
     return { Scene };
 }

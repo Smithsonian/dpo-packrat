@@ -10,7 +10,7 @@ export default async function getWorkflow(_: Parent, args: Args, context: Contex
     const { idWorkflow } = input;
     const { prisma } = context;
 
-    const Workflow = await fetchWorkflow(prisma, Number.parseInt(idWorkflow));
+    const Workflow = await fetchWorkflow(prisma, idWorkflow);
 
     return { Workflow };
 }

@@ -10,7 +10,7 @@ export default async function getVocabulary(_: Parent, args: Args, context: Cont
     const { idVocabulary } = input;
     const { prisma } = context;
 
-    const Vocabulary = await fetchVocabulary(prisma, Number.parseInt(idVocabulary));
+    const Vocabulary = await fetchVocabulary(prisma, idVocabulary);
 
     return { Vocabulary };
 }
