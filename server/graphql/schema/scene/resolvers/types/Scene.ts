@@ -1,33 +1,28 @@
 /**
  * Type resolver for Scene
  */
-import * as DB from '@prisma/client';
-import { Scene } from '../../../../../types/graphql';
+import { Asset, ModelSceneXref, SystemObject } from '@prisma/client';
+import { Parent, Args, Context } from '../../../../../types/resolvers';
 
-const Scene = {};
+const Scene = {
+    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
+        const { idScene } = parent;
+        const { prisma } = context;
 
-export function parseScenes(foundScenes: DB.Scene[] | null): Scene[] | null {
-    let scenes;
-    if (foundScenes) {
-        scenes = foundScenes.map(scene => parseScene(scene));
+        return prisma.scene.findOne({ where: { idScene: Number.parseInt(idScene) } }).Asset();
+    },
+    ModelSceneXref: async (parent: Parent, _: Args, context: Context): Promise<ModelSceneXref[] | null> => {
+        const { idScene } = parent;
+        const { prisma } = context;
+
+        return prisma.scene.findOne({ where: { idScene: Number.parseInt(idScene) } }).ModelSceneXref();
+    },
+    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
+        const { idScene } = parent;
+        const { prisma } = context;
+
+        return prisma.scene.findOne({ where: { idScene: Number.parseInt(idScene) } }).SystemObject();
     }
-
-    return scenes;
-}
-
-export function parseScene(foundScene: DB.Scene | null): Scene | null {
-    let scene;
-    if (foundScene) {
-        const { idScene, Name, IsOriented, HasBeenQCd } = foundScene;
-        scene = {
-            idScene: String(idScene),
-            Name,
-            IsOriented,
-            HasBeenQCd
-        };
-    }
-
-    return scene;
-}
+};
 
 export default Scene;

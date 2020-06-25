@@ -1,7 +1,7 @@
 /**
  * Type resolver for UserPersonalizationUrl
  */
-import { User, UserPersonalizationUrl } from '@prisma/client';
+import { User } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 
 const UserPersonalizationUrl = {

@@ -1,7 +1,7 @@
 /**
  * Type resolver for Subject
  */
-import { Subject, Unit, Item, GeoLocation, Asset } from '@prisma/client';
+import { Subject, Unit, Item, GeoLocation, Asset, SystemObject } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 
 const Subject = {
@@ -28,6 +28,12 @@ const Subject = {
         const { prisma } = context;
 
         return prisma.subject.findOne({ where: { idSubject: Number.parseInt(idSubject) } }).Item();
+    },
+    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
+        const { idSubject } = parent;
+        const { prisma } = context;
+
+        return prisma.subject.findOne({ where: { idSubject: Number.parseInt(idSubject) } }).SystemObject();
     }
 };
 

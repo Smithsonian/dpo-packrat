@@ -1,7 +1,7 @@
 /**
  * Type resolver for Unit
  */
-import { Subject, Actor, Unit } from '@prisma/client';
+import { Subject, Actor, Unit, SystemObject } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 
 const Unit = {
@@ -16,6 +16,12 @@ const Unit = {
         const { prisma } = context;
 
         return prisma.unit.findOne({ where: { idUnit: Number.parseInt(idUnit) } }).Actor();
+    },
+    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
+        const { idUnit } = parent;
+        const { prisma } = context;
+
+        return prisma.unit.findOne({ where: { idUnit: Number.parseInt(idUnit) } }).SystemObject();
     }
 };
 

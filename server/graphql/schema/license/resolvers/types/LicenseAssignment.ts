@@ -2,7 +2,7 @@
  * Type resolver for LicenseAssignment
  */
 
-import { License, LicenseAssignment, User } from '@prisma/client';
+import { License, LicenseAssignment, SystemObject, User } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 
 const LicenseAssignment = {
@@ -11,6 +11,12 @@ const LicenseAssignment = {
         const { prisma } = context;
 
         return prisma.licenseAssignment.findOne({ where: { idLicenseAssignment: Number.parseInt(idLicenseAssignment) } }).License();
+    },
+    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
+        const { idLicenseAssignment } = parent;
+        const { prisma } = context;
+
+        return prisma.licenseAssignment.findOne({ where: { idLicenseAssignment: Number.parseInt(idLicenseAssignment) } }).SystemObject();
     },
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { idLicenseAssignment } = parent;

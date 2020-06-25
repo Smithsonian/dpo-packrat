@@ -1,32 +1,28 @@
 /**
  * Type resolver for Actor
  */
-import * as DB from '@prisma/client';
-import { Actor } from '../../../../../types/graphql';
+import { Unit, ModelProcessingAction, SystemObject } from '@prisma/client';
+import { Parent, Args, Context } from '../../../../../types/resolvers';
 
-const Actor = {};
+const Actor = {
+    Unit: async (parent: Parent, _: Args, context: Context): Promise<Unit | null> => {
+        const { idActor } = parent;
+        const { prisma } = context;
 
-export function parseActors(foundActors: DB.Actor[] | null): Actor[] | null {
-    let actors;
-    if (foundActors) {
-        actors = foundActors.map(actor => parseActor(actor));
+        return prisma.actor.findOne({ where: { idActor: Number.parseInt(idActor) } }).Unit();
+    },
+    ModelProcessingAction: async (parent: Parent, _: Args, context: Context): Promise<ModelProcessingAction[] | null> => {
+        const { idActor } = parent;
+        const { prisma } = context;
+
+        return prisma.actor.findOne({ where: { idActor: Number.parseInt(idActor) } }).ModelProcessingAction();
+    },
+    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
+        const { idActor } = parent;
+        const { prisma } = context;
+
+        return prisma.actor.findOne({ where: { idActor: Number.parseInt(idActor) } }).SystemObject();
     }
-
-    return actors;
-}
-
-export function parseActor(foundActor: DB.Actor | null): Actor | null {
-    let actor;
-    if (foundActor) {
-        const { idActor, IndividualName, OrganizationName } = foundActor;
-        actor = {
-            idActor: String(idActor),
-            IndividualName,
-            OrganizationName
-        };
-    }
-
-    return actor;
-}
+};
 
 export default Actor;
