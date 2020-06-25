@@ -1,31 +1,22 @@
 /**
  * Type resolver for IntermediaryFile
  */
-import * as DB from '@prisma/client';
-import { IntermediaryFile } from '../../../../../types/graphql';
+import { Asset, SystemObject } from '@prisma/client';
+import { Parent, Args, Context } from '../../../../../types/resolvers';
 
-const IntermediaryFile = {};
+const IntermediaryFile = {
+    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
+        const { idIntermediaryFile } = parent;
+        const { prisma } = context;
 
-export function parseIntermediaryFiles(foundIntermediaryFiles: DB.IntermediaryFile[] | null): IntermediaryFile[] | null {
-    let intermediaryFiles;
-    if (foundIntermediaryFiles) {
-        intermediaryFiles = foundIntermediaryFiles.map(intermediaryFile => parseIntermediaryFile(intermediaryFile));
+        return prisma.intermediaryFile.findOne({ where: { idIntermediaryFile: Number.parseInt(idIntermediaryFile) } }).Asset();
+    },
+    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
+        const { idIntermediaryFile } = parent;
+        const { prisma } = context;
+
+        return prisma.intermediaryFile.findOne({ where: { idIntermediaryFile: Number.parseInt(idIntermediaryFile) } }).SystemObject();
     }
-
-    return intermediaryFiles;
-}
-
-export function parseIntermediaryFile(foundIntermediaryFile: DB.IntermediaryFile | null): IntermediaryFile | null {
-    let intermediaryFile;
-    if (foundIntermediaryFile) {
-        const { idIntermediaryFile, DateCreated } = foundIntermediaryFile;
-        intermediaryFile = {
-            idIntermediaryFile: String(idIntermediaryFile),
-            DateCreated
-        };
-    }
-
-    return intermediaryFile;
-}
+};
 
 export default IntermediaryFile;

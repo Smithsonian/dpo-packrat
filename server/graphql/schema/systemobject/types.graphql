@@ -82,4 +82,3 @@ type Metadata {
     User: User
     Vocabulary: Vocabulary
 }
-
