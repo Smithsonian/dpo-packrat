@@ -1,5 +1,3 @@
-# import Asset from "types.graphql"
-
 type Query {
     getAsset(input: GetAssetInput!): GetAssetResult!
 }

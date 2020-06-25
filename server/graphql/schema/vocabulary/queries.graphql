@@ -1,5 +1,3 @@
-# import Vocabulary from "types.graphql"
-
 type Query {
     getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
 }

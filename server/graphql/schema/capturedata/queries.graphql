@@ -1,5 +1,3 @@
-# import CaptureData from "types.graphql"
-
 type Query {
     getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
 }

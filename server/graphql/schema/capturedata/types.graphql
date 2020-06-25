@@ -1,6 +1,3 @@
-# import Vocabulary from "../vocabulary/types.graphql"
-# import Asset from "../asset/types.graphql"
-
 scalar DateTime
 
 type CaptureData {
