@@ -52,16 +52,6 @@ type AccessRoleAccessActionXref {
   AccessRole: AccessRole
 }
 
-type Actor {
-  idActor: Int!
-  idUnit: Int
-  IndividualName: String
-  OrganizationName: String
-  Unit: Unit
-  ModelProcessingAction: [ModelProcessingAction]
-  SystemObject: SystemObject
-}
-
 type Asset {
   idAsset: Int!
   FileName: String!
@@ -82,11 +72,6 @@ type Asset {
   SystemObject: SystemObject
 }
 
-type AssetGroup {
-  idAssetGroup: Int!
-  Asset: [Asset]
-}
-
 type AssetVersion {
   idAssetVersion: Int!
   DateCreated: DateTime!
@@ -98,6 +83,11 @@ type AssetVersion {
   Asset: Asset
   User: User
   SystemObject: SystemObject
+}
+
+type AssetGroup {
+  idAssetGroup: Int!
+  Asset: [Asset]
 }
 
 type CaptureData {
@@ -154,52 +144,6 @@ type CaptureDataGroupCaptureDataXref {
   CaptureDataGroup: CaptureDataGroup
 }
 
-type GeoLocation {
-  idGeoLocation: Int!
-  Altitude: Float
-  Latitude: Float
-  Longitude: Float
-  R0: Float
-  R1: Float
-  R2: Float
-  R3: Float
-  TS0: Float
-  TS1: Float
-  TS2: Float
-  Item: [Item]
-  Subject: [Subject]
-}
-
-type Identifier {
-  idIdentifier: Int!
-  IdentifierValue: String!
-  idSystemObject: Int
-  idVIdentifierType: Int
-  SystemObject: SystemObject
-  Vocabulary: Vocabulary
-}
-
-type IntermediaryFile {
-  idIntermediaryFile: Int!
-  DateCreated: DateTime!
-  idAsset: Int!
-  Asset: Asset
-  SystemObject: SystemObject
-}
-
-type Item {
-  idItem: Int!
-  EntireSubject: Boolean!
-  idSubject: Int!
-  Name: String!
-  idAssetThumbnail: Int
-  idGeoLocation: Int
-  Asset: Asset
-  GeoLocation: GeoLocation
-  Subject: Subject
-  SystemObject: SystemObject
-}
-
 type License {
   idLicense: Int!
   Description: String!
@@ -217,21 +161,6 @@ type LicenseAssignment {
   License: License
   SystemObject: SystemObject
   User: User
-}
-
-type Metadata {
-  idMetadata: Int!
-  Name: String!
-  idAssetValue: Int
-  idSystemObject: Int
-  idUser: Int
-  idVMetadataSource: Int
-  ValueExtended: String
-  ValueShort: String
-  Asset: Asset
-  SystemObject: SystemObject
-  User: User
-  Vocabulary: Vocabulary
 }
 
 type Model {
@@ -336,24 +265,6 @@ type ModelUVMapFile {
   ModelUVMapChannel: [ModelUVMapChannel]
 }
 
-type Project {
-  idProject: Int!
-  Name: String!
-  Description: String
-  ProjectDocumentation: [ProjectDocumentation]
-  SystemObject: SystemObject
-  Workflow: [Workflow]
-}
-
-type ProjectDocumentation {
-  idProjectDocumentation: Int!
-  Description: String!
-  idProject: Int!
-  Name: String!
-  Project: Project!
-  SystemObject: SystemObject
-}
-
 type Scene {
   idScene: Int!
   HasBeenQCd: Boolean!
@@ -365,27 +276,21 @@ type Scene {
   SystemObject: SystemObject
 }
 
-type Stakeholder {
-  idStakeholder: Int!
-  IndividualName: String!
-  OrganizationName: String!
-  MailingAddress: String
-  EmailAddress: String
-  PhoneNumberMobile: String
-  PhoneNumberOffice: String
+type Actor {
+  idActor: Int!
+  idUnit: Int
+  IndividualName: String
+  OrganizationName: String
+  Unit: Unit
+  ModelProcessingAction: [ModelProcessingAction]
   SystemObject: SystemObject
 }
 
-type Subject {
-  idSubject: Int!
-  idUnit: Int!
-  Name: String!
+type IntermediaryFile {
+  idIntermediaryFile: Int!
+  DateCreated: DateTime!
+  idAsset: Int!
   Asset: Asset
-  idAssetThumbnail: Int
-  idGeoLocation: Int
-  GeoLocation: GeoLocation
-  Unit: Unit
-  Item: [Item]
   SystemObject: SystemObject
 }
 
@@ -448,6 +353,30 @@ type SystemObjectXref {
   SystemObjectMaster: SystemObject
 }
 
+type Identifier {
+  idIdentifier: Int!
+  IdentifierValue: String!
+  idSystemObject: Int
+  idVIdentifierType: Int
+  SystemObject: SystemObject
+  Vocabulary: Vocabulary
+}
+
+type Metadata {
+  idMetadata: Int!
+  Name: String!
+  idAssetValue: Int
+  idSystemObject: Int
+  idUser: Int
+  idVMetadataSource: Int
+  ValueExtended: String
+  ValueShort: String
+  Asset: Asset
+  SystemObject: SystemObject
+  User: User
+  Vocabulary: Vocabulary
+}
+
 type Unit {
   idUnit: Int!
   Abbreviation: String
@@ -455,6 +384,77 @@ type Unit {
   Name: String!
   Actor: [Actor]
   Subject: [Subject]
+  SystemObject: SystemObject
+}
+
+type Project {
+  idProject: Int!
+  Name: String!
+  Description: String
+  ProjectDocumentation: [ProjectDocumentation]
+  SystemObject: SystemObject
+  Workflow: [Workflow]
+}
+
+type ProjectDocumentation {
+  idProjectDocumentation: Int!
+  Description: String!
+  idProject: Int!
+  Name: String!
+  Project: Project!
+  SystemObject: SystemObject
+}
+
+type Stakeholder {
+  idStakeholder: Int!
+  IndividualName: String!
+  OrganizationName: String!
+  MailingAddress: String
+  EmailAddress: String
+  PhoneNumberMobile: String
+  PhoneNumberOffice: String
+  SystemObject: SystemObject
+}
+
+type GeoLocation {
+  idGeoLocation: Int!
+  Altitude: Float
+  Latitude: Float
+  Longitude: Float
+  R0: Float
+  R1: Float
+  R2: Float
+  R3: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
+  Item: [Item]
+  Subject: [Subject]
+}
+
+type Subject {
+  idSubject: Int!
+  idUnit: Int!
+  Name: String!
+  Asset: Asset
+  idAssetThumbnail: Int
+  idGeoLocation: Int
+  GeoLocation: GeoLocation
+  Unit: Unit
+  Item: [Item]
+  SystemObject: SystemObject
+}
+
+type Item {
+  idItem: Int!
+  EntireSubject: Boolean!
+  idSubject: Int!
+  Name: String!
+  idAssetThumbnail: Int
+  idGeoLocation: Int
+  Asset: Asset
+  GeoLocation: GeoLocation
+  Subject: Subject
   SystemObject: SystemObject
 }
 
