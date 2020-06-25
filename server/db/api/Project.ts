@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Project, SystemObject, ProjectDocumentation } from '@prisma/client';
+import { PrismaClient, Project, SystemObject } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createProject(prisma: PrismaClient, project: Project): Promise<Project | null> {
@@ -25,15 +25,6 @@ export async function fetchProject(prisma: PrismaClient, idProject: number): Pro
         return await prisma.project.findOne({ where: { idProject, }, });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchProject', error);
-        return null;
-    }
-}
-
-export async function fetchProjectDocumentationForProjectID(prisma: PrismaClient, idProject: number): Promise<ProjectDocumentation[] | null> {
-    try {
-        return await prisma.project.findOne({ where: { idProject } }).ProjectDocumentation();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchProjectDocumentationForProjectID', error);
         return null;
     }
 }

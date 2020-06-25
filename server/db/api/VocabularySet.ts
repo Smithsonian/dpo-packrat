@@ -27,12 +27,3 @@ export async function fetchVocabularySet(prisma: PrismaClient, idVocabularySet: 
         return null;
     }
 }
-
-export async function fetchVocabularySetForVocabularyID(prisma: PrismaClient, idVocabulary: number): Promise<VocabularySet | null> {
-    try {
-        return await prisma.vocabulary.findOne({ where: { idVocabulary } }).VocabularySet();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchVocabularySetForVocabularyID', error);
-        return null;
-    }
-}
