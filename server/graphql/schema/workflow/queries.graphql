@@ -3,7 +3,7 @@ type Query {
 }
 
 input GetWorkflowInput {
-    idWorkflow: ID!
+    idWorkflow: Int!
 }
 
 type GetWorkflowResult {

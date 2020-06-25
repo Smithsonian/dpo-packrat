@@ -3,7 +3,7 @@ type Query {
 }
 
 input GetUnitInput {
-    idUnit: ID!
+    idUnit: Int!
 }
 
 type GetUnitResult {
