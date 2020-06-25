@@ -12,9 +12,5 @@ export default async function getAsset(_: Parent, args: Args, context: Context):
 
     const Asset = await fetchAsset(prisma, Number.parseInt(idAsset));
 
-    if (Asset) {
-        return { Asset };
-    }
-
-    return { Asset: null };
+    return { Asset };
 }

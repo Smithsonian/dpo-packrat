@@ -11,9 +11,5 @@ export default async function getLicense(_: Parent, args: Args, context: Context
 
     const License = await fetchLicense(prisma, Number.parseInt(idLicense));
 
-    if (License) {
-        return { License };
-    }
-
-    return { License: null };
+    return { License };
 }

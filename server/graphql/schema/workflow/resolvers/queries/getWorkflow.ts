@@ -12,9 +12,5 @@ export default async function getWorkflow(_: Parent, args: Args, context: Contex
 
     const Workflow = await fetchWorkflow(prisma, Number.parseInt(idWorkflow));
 
-    if (Workflow) {
-        return { Workflow };
-    }
-
-    return { Workflow: null };
+    return { Workflow };
 }

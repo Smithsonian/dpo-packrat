@@ -11,9 +11,5 @@ export default async function getUser(_: Parent, args: Args, context: Context): 
 
     const User = await fetchUser(prisma, Number.parseInt(idUser));
 
-    if (User) {
-        return { User };
-    }
-
-    return { User: null };
+    return { User };
 }

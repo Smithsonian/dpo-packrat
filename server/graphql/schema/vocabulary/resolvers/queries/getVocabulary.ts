@@ -12,9 +12,5 @@ export default async function getVocabulary(_: Parent, args: Args, context: Cont
 
     const Vocabulary = await fetchVocabulary(prisma, Number.parseInt(idVocabulary));
 
-    if (Vocabulary) {
-        return { Vocabulary };
-    }
-
-    return { Vocabulary: null };
+    return { Vocabulary };
 }

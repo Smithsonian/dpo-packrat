@@ -12,9 +12,5 @@ export default async function getScene(_: Parent, args: Args, context: Context):
 
     const Scene = await fetchScene(prisma, Number.parseInt(idScene));
 
-    if (Scene) {
-        return { Scene };
-    }
-
-    return { Scene: null };
+    return { Scene };
 }

@@ -11,9 +11,5 @@ export default async function getCaptureData(_: Parent, args: Args, context: Con
 
     const CaptureData = await fetchCaptureData(prisma, Number.parseInt(idCaptureData));
 
-    if (CaptureData) {
-        return { CaptureData };
-    }
-
-    return { CaptureData: null };
+    return { CaptureData };
 }
