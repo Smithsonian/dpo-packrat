@@ -26,13 +26,12 @@ export async function createAssetVersion(prisma: PrismaClient, assetVersion: Ass
 
 export async function fetchAssetVersion(prisma: PrismaClient, idAssetVersion: number): Promise<AssetVersion | null> {
     try {
-        return await prisma.assetVersion.findOne({ where: { idAssetVersion, } });
+        return await prisma.assetVersion.findOne({ where: { idAssetVersion, }, });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchAssetVersion', error);
         return null;
     }
 }
-
 
 export async function fetchSystemObjectForAssetVersion(prisma: PrismaClient, sysObj: AssetVersion): Promise<SystemObject | null> {
     try {

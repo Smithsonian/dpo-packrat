@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, UserPersonalizationSystemObject, User } from '@prisma/client';
+import { PrismaClient, UserPersonalizationSystemObject } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createUserPersonalizationSystemObject(prisma: PrismaClient, userPersonalizationSystemObject: UserPersonalizationSystemObject): Promise<UserPersonalizationSystemObject | null> {
@@ -25,15 +25,6 @@ export async function fetchUserPersonalizationSystemObject(prisma: PrismaClient,
         return await prisma.userPersonalizationSystemObject.findOne({ where: { idUserPersonalizationSystemObject, }, });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchUserPersonalizationSystemObject', error);
-        return null;
-    }
-}
-
-export async function fetchUserForUserPersonalizationSystemObjectID(prisma: PrismaClient, idUserPersonalizationSystemObject: number): Promise<User | null> {
-    try {
-        return await prisma.userPersonalizationSystemObject.findOne({ where: { idUserPersonalizationSystemObject } }).User();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchUserForUserPersonalizationSystemObjectID', error);
         return null;
     }
 }
