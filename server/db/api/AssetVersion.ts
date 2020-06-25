@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, AssetVersion, SystemObject, Asset, User } from '@prisma/client';
+import { PrismaClient, AssetVersion, SystemObject } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createAssetVersion(prisma: PrismaClient, assetVersion: AssetVersion): Promise<AssetVersion | null> {
@@ -33,24 +33,6 @@ export async function fetchAssetVersion(prisma: PrismaClient, idAssetVersion: nu
     }
 }
 
-
-export async function fetchAssetForAssetVersionID(prisma: PrismaClient, idAssetVersion: number): Promise<Asset | null> {
-    try {
-        return await prisma.assetVersion.findOne({ where: { idAssetVersion } }).Asset();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAssetForAssetVersionID', error);
-        return null;
-    }
-}
-
-export async function fetchUserForAssetVersionID(prisma: PrismaClient, idAssetVersion: number): Promise<User | null> {
-    try {
-        return await prisma.assetVersion.findOne({ where: { idAssetVersion } }).User();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchUserForAssetVersionID', error);
-        return null;
-    }
-}
 
 export async function fetchSystemObjectForAssetVersion(prisma: PrismaClient, sysObj: AssetVersion): Promise<SystemObject | null> {
     try {

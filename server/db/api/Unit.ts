@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Unit, SystemObject, Subject, Actor } from '@prisma/client';
+import { PrismaClient, Unit, SystemObject } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createUnit(prisma: PrismaClient, unit: Unit): Promise<Unit | null> {
@@ -26,24 +26,6 @@ export async function fetchUnit(prisma: PrismaClient, idUnit: number): Promise<U
         return await prisma.unit.findOne({ where: { idUnit, }, });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchUnit', error);
-        return null;
-    }
-}
-
-export async function fetchSubjectForUnitID(prisma: PrismaClient, idUnit: number): Promise<Subject[] | null> {
-    try {
-        return await prisma.unit.findOne({ where: { idUnit } }).Subject();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSubjectForUnitID', error);
-        return null;
-    }
-}
-
-export async function fetchActorForUnitID(prisma: PrismaClient, idUnit: number): Promise<Actor[] | null> {
-    try {
-        return await prisma.unit.findOne({ where: { idUnit } }).Actor();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchActorForUnitID', error);
         return null;
     }
 }

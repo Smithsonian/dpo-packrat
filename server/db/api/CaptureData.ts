@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, CaptureData, SystemObject, Vocabulary, Asset, CaptureDataGroup, CaptureDataFile } from '@prisma/client';
+import { PrismaClient, CaptureData, SystemObject } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createCaptureData(prisma: PrismaClient, captureData: CaptureData): Promise<CaptureData | null> {
@@ -40,97 +40,6 @@ export async function fetchCaptureData(prisma: PrismaClient, idCaptureData: numb
         return await prisma.captureData.findOne({ where: { idCaptureData, }, });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchCaptureData', error);
-        return null;
-    }
-}
-
-export async function fetchVCaptureMethodForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<Vocabulary | null> {
-    try {
-        return await prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVCaptureMethodToVocabulary();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchVCaptureMethodForCaptureDataID', error);
-        return null;
-    }
-}
-
-export async function fetchVCaptureDatasetTypeForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<Vocabulary | null> {
-    try {
-        return await prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVCaptureDatasetTypeToVocabulary();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchVCaptureDatasetTypeForCaptureDataID', error);
-        return null;
-    }
-}
-
-export async function fetchVItemPositionTypeForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<Vocabulary | null> {
-    try {
-        return await prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVItemPositionTypeToVocabulary();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchVItemPositionTypeForCaptureDataID', error);
-        return null;
-    }
-}
-
-export async function fetchVFocusTypeForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<Vocabulary | null> {
-    try {
-        return await prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVFocusTypeToVocabulary();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchVFocusTypeForCaptureDataID', error);
-        return null;
-    }
-}
-
-export async function fetchVLightSourceTypeForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<Vocabulary | null> {
-    try {
-        return await prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVLightSourceTypeToVocabulary();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchVLightSourceTypeForCaptureDataID', error);
-        return null;
-    }
-}
-
-export async function fetchVBackgroundRemovalMethodForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<Vocabulary | null> {
-    try {
-        return await prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchVBackgroundRemovalMethodForCaptureDataID', error);
-        return null;
-    }
-}
-
-export async function fetchVClusterTypeForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<Vocabulary | null> {
-    try {
-        return await prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVClusterTypeToVocabulary();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchVClusterTypeForCaptureDataID', error);
-        return null;
-    }
-}
-
-export async function fetchAssetForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<Asset | null> {
-    try {
-        return await prisma.captureData.findOne({ where: { idCaptureData } }).Asset();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAssetThumbnailForCaptureDataID', error);
-        return null;
-    }
-}
-
-export async function fetchCaptureDataGroupForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<CaptureDataGroup[] | null> {
-    try {
-        // TODO: FIXME: discuss xref many-many with Jon
-        return await prisma.captureDataGroupCaptureDataXref.findOne({ where: { idCaptureData } }).CaptureDataGroup()[0];
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchCaptureDataGroupForCaptureDataID', error);
-        return null;
-    }
-}
-
-export async function fetchCaptureDataFileForCaptureDataID(prisma: PrismaClient, idCaptureData: number): Promise<CaptureDataFile[] | null> {
-    try {
-        return await prisma.captureData.findOne({ where: { idCaptureData } }).CaptureDataFile();
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchCaptureDataFileForCaptureDataID', error);
         return null;
     }
 }
