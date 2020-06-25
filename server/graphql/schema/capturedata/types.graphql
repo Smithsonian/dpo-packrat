@@ -4,35 +4,55 @@
 scalar DateTime
 
 type CaptureData {
-  idCaptureData: ID!
-  VCaptureMethod: Vocabulary!
-  VCaptureDatasetType: Vocabulary!
-  DateCaptured: DateTime!
-  Description: String!
-  CaptureDatasetFieldID: Int
-  VItemPositionType: Vocabulary
-  ItemPositionFieldID: Int
-  ItemArrangementFieldID: Int
-  VFocusType: Vocabulary
-  VLightSourceType: Vocabulary
-  VBackgroundRemovalMethod: Vocabulary
-  VClusterType: Vocabulary
-  ClusterGeometryFieldID: Int
-  CameraSettingsUniform: Boolean
-  AssetThumbnail: Asset
-  CaptureDataGroup: [CaptureDataGroup]
-  CaptureDataFile: [CaptureDataFile]
+    idCaptureData: Int!
+    DateCaptured: DateTime!
+    Description: String!
+    idVCaptureDatasetType: Int!
+    idVCaptureMethod: Int!
+    CameraSettingsUniform: Boolean
+    CaptureDatasetFieldID: Int
+    ClusterGeometryFieldID: Int
+    idAssetThumbnail: Int
+    idVBackgroundRemovalMethod: Int
+    idVClusterType: Int
+    idVFocusType: Int
+    idVItemPositionType: Int
+    idVLightSourceType: Int
+    ItemArrangementFieldID: Int
+    ItemPositionFieldID: Int
+    Asset: Asset
+    VBackgroundRemovalMethod: Vocabulary
+    VCaptureDatasetType: Vocabulary
+    VCaptureMethod: Vocabulary
+    VClusterType: Vocabulary
+    VFocusType: Vocabulary
+    VItemPositionType: Vocabulary
+    VLightSourceType: Vocabulary
+    CaptureDataFile: [CaptureDataFile]
+    CaptureDataGroupCaptureDataXref: [CaptureDataGroupCaptureDataXref]
+    SystemObject: SystemObject
 }
 
 type CaptureDataFile {
-  idCaptureDataFile: ID!
-  CaptureData: CaptureData!
-  Asset: Asset!
-  VVariantType: Vocabulary!
-  CompressedMultipleFiles: Boolean!
+    idCaptureDataFile: Int!
+    CompressedMultipleFiles: Boolean!
+    idAsset: Int!
+    idCaptureData: Int!
+    idVVariantType: Int!
+    Asset: Asset
+    CaptureData: CaptureData
+    Vocabulary: Vocabulary
 }
 
 type CaptureDataGroup {
-  idCaptureDataGroup: ID!
-  CaptureData: [CaptureData]
+    idCaptureDataGroup: Int!
+    CaptureDataGroupCaptureDataXref: [CaptureDataGroupCaptureDataXref]
+}
+
+type CaptureDataGroupCaptureDataXref {
+    idCaptureData: Int!
+    idCaptureDataGroup: Int!
+    idCaptureDataGroupCaptureDataXref: Int!
+    CaptureData: CaptureData
+    CaptureDataGroup: CaptureDataGroup
 }

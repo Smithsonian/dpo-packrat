@@ -1,7 +1,7 @@
 import { GetUnitResult, GetUnitInput } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 
-import { resolveUnitByID } from '../types/Unit';
+import { fetchUnit } from '../../../../../db';
 
 type Args = { input: GetUnitInput };
 
@@ -10,7 +10,7 @@ export default async function getUnit(_: Parent, args: Args, context: Context): 
     const { idUnit } = input;
     const { prisma } = context;
 
-    const Unit = await resolveUnitByID(prisma, Number.parseInt(idUnit));
+    const Unit = await fetchUnit(prisma, Number.parseInt(idUnit));
 
     if (Unit) {
         return { Unit };

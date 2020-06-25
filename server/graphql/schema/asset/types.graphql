@@ -6,26 +6,39 @@
 scalar DateTime
 
 type Asset {
-  idAsset: ID!
-  FileName: String!
-  FilePath: String!
-  AssetGroup: AssetGroup
-  CaptureDataFile: [CaptureDataFile]
-  Scene: [Scene]
-  IntermediaryFile: [IntermediaryFile]
+    idAsset: Int!
+    FileName: String!
+    FilePath: String!
+    idAssetGroup: Int
+    AssetGroup: AssetGroup
+    AssetVersion: [AssetVersion]
+    CaptureData: [CaptureData]
+    CaptureDataFile: [CaptureDataFile]
+    IntermediaryFile: [IntermediaryFile]
+    Item: [Item]
+    Metadata: [Metadata]
+    Model: [Model]
+    ModelGeometryFile: [ModelGeometryFile]
+    ModelUVMapFile: [ModelUVMapFile]
+    Scene: [Scene]
+    Subject: [Subject]
+    SystemObject: SystemObject
 }
 
 type AssetVersion {
-  idAssetVersion: ID!
-  Asset: Asset
-  UserCreator: User
-  DateCreated: DateTime!
-  StorageLocation: String!
-  StorageChecksum: String!
-  StorageSize: Int!
+    idAssetVersion: Int!
+    DateCreated: DateTime!
+    idAsset: Int!
+    idUserCreator: Int!
+    StorageChecksum: String!
+    StorageLocation: String!
+    StorageSize: Int!
+    Asset: Asset
+    User: User
+    SystemObject: SystemObject
 }
 
 type AssetGroup {
-  idAssetGroup: ID!
-  Asset: [Asset]
+    idAssetGroup: Int!
+    Asset: [Asset]
 }
