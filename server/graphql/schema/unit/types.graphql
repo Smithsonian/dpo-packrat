@@ -1,6 +1,3 @@
-# import Asset from "../asset/types.graphql"
-# import Actor from "../scene/types.graphql"
-
 type Unit {
     idUnit: Int!
     Abbreviation: String

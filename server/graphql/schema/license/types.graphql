@@ -1,5 +1,3 @@
-# import User from "../user/types.graphql"
-
 scalar DateTime
 
 type License {

@@ -1,5 +1,3 @@
-# import License from "types.graphql"
-
 type Query {
     getLicense(input: GetLicenseInput!): GetLicenseResult!
 }

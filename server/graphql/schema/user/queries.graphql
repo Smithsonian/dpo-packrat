@@ -1,5 +1,3 @@
-# import User from "types.graphql"
-
 type Query {
     getUser(input: GetUserInput!): GetUserResult!
 }

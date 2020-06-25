@@ -1,7 +1,3 @@
-# import Asset from "../asset/types.graphql"
-# import Model from "../model/types.graphql"
-# import Unit from "../unit/types.graphql"
-
 scalar DateTime
 
 type Scene {

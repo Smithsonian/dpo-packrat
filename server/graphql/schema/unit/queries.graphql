@@ -1,5 +1,3 @@
-# import Unit from "types.graphql"
-
 type Query {
     getUnit(input: GetUnitInput!): GetUnitResult!
 }
