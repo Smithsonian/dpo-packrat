@@ -7,11 +7,11 @@ export async function createCaptureDataFile(prisma: PrismaClient, captureDataFil
     try {
         createSystemObject = await prisma.captureDataFile.create({
             data: {
-                CaptureData: { connect: { idCaptureData } },
-                Asset: { connect: { idAsset } },
-                Vocabulary: { connect: { idVocabulary: idVVariantType } },
+                CaptureData:    { connect: { idCaptureData } },
+                Asset:          { connect: { idAsset } },
+                Vocabulary:     { connect: { idVocabulary: idVVariantType } },
                 CompressedMultipleFiles
-            }
+            },
         });
     } catch (error) {
         LOG.logger.error('DBAPI.createCaptureDataFile', error);
@@ -22,7 +22,7 @@ export async function createCaptureDataFile(prisma: PrismaClient, captureDataFil
 
 export async function fetchCaptureDataFile(prisma: PrismaClient, idCaptureDataFile: number): Promise<CaptureDataFile | null> {
     try {
-        return await prisma.captureDataFile.findOne({ where: { idCaptureDataFile } });
+        return await prisma.captureDataFile.findOne({ where: { idCaptureDataFile, }, });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchCaptureDataFile', error);
         return null;
