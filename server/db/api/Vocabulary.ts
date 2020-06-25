@@ -1,29 +1,32 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Vocabulary  } from '@prisma/client';
+import * as PRISMA from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
-export async function createVocabulary(prisma: PrismaClient, vocabulary: Vocabulary): Promise<Vocabulary | null> {
-    let createSystemObject: Vocabulary;
-    const { idVocabularySet, SortOrder } = vocabulary;
-    try {
-        createSystemObject = await prisma.vocabulary.create({
-            data: {
-                VocabularySet: { connect: { idVocabularySet }, },
-                SortOrder
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createVocabulary', error);
-        return null;
+// declare module 'PRISMA' {
+export class Vocabulary {
+    static async create(prisma: PRISMA.PrismaClient, vocabulary: PRISMA.Vocabulary): Promise<PRISMA.Vocabulary | null> {
+        let createSystemObject: PRISMA.Vocabulary;
+        const { idVocabularySet, SortOrder } = vocabulary;
+        try {
+            createSystemObject = await prisma.vocabulary.create({
+                data: {
+                    VocabularySet: { connect: { idVocabularySet }, },
+                    SortOrder
+                },
+            });
+        } catch (error) {
+            LOG.logger.error('DBAPI.Vocabulary.create', error);
+            return null;
+        }
+        return createSystemObject;
     }
-    return createSystemObject;
-}
 
-export async function fetchVocabulary(prisma: PrismaClient, idVocabulary: number): Promise<Vocabulary | null> {
-    try {
-        return await prisma.vocabulary.findOne({ where: { idVocabulary, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchVocabulary', error);
-        return null;
+    static async fetch(prisma: PRISMA.PrismaClient, idVocabulary: number): Promise<PRISMA.Vocabulary | null> {
+        try {
+            return await prisma.vocabulary.findOne({ where: { idVocabulary, }, });
+        } catch (error) {
+            LOG.logger.error('DBAPI.Vocabulary.fetch', error);
+            return null;
+        }
     }
 }
