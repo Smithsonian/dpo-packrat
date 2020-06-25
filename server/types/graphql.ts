@@ -617,12 +617,20 @@ export type WorkflowTemplate = {
 
 export type Query = {
     __typename?: 'Query';
+    getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
     getCaptureData: GetCaptureDataResult;
     getLicense: GetLicenseResult;
+    getModel: GetModelResult;
+    getScene: GetSceneResult;
     getUnit: GetUnitResult;
     getUser: GetUserResult;
     getVocabulary: GetVocabularyResult;
+    getWorkflow: GetWorkflowResult;
+};
+
+export type QueryGetAccessPolicyArgs = {
+    input: GetAccessPolicyInput;
 };
 
 export type QueryGetAssetArgs = {
@@ -637,6 +645,14 @@ export type QueryGetLicenseArgs = {
     input: GetLicenseInput;
 };
 
+export type QueryGetModelArgs = {
+    input: GetModelInput;
+};
+
+export type QueryGetSceneArgs = {
+    input: GetSceneInput;
+};
+
 export type QueryGetUnitArgs = {
     input: GetUnitInput;
 };
@@ -647,6 +663,19 @@ export type QueryGetUserArgs = {
 
 export type QueryGetVocabularyArgs = {
     input: GetVocabularyInput;
+};
+
+export type QueryGetWorkflowArgs = {
+    input: GetWorkflowInput;
+};
+
+export type GetAccessPolicyInput = {
+    idAccessPolicy: Scalars['ID'];
+};
+
+export type GetAccessPolicyResult = {
+    __typename?: 'GetAccessPolicyResult';
+    AccessPolicy?: Maybe<AccessPolicy>;
 };
 
 export type GetAssetInput = {
@@ -676,6 +705,24 @@ export type GetLicenseResult = {
     License?: Maybe<License>;
 };
 
+export type GetModelInput = {
+    idModel: Scalars['ID'];
+};
+
+export type GetModelResult = {
+    __typename?: 'GetModelResult';
+    Model?: Maybe<Model>;
+};
+
+export type GetSceneInput = {
+    idScene: Scalars['ID'];
+};
+
+export type GetSceneResult = {
+    __typename?: 'GetSceneResult';
+    Scene?: Maybe<Scene>;
+};
+
 export type GetUnitInput = {
     idUnit: Scalars['ID'];
 };
@@ -701,4 +748,13 @@ export type GetVocabularyInput = {
 export type GetVocabularyResult = {
     __typename?: 'GetVocabularyResult';
     Vocabulary?: Maybe<Vocabulary>;
+};
+
+export type GetWorkflowInput = {
+    idWorkflow: Scalars['ID'];
+};
+
+export type GetWorkflowResult = {
+    __typename?: 'GetWorkflowResult';
+    Workflow?: Maybe<Workflow>;
 };

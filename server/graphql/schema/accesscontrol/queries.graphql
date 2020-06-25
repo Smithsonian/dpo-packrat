@@ -1,0 +1,11 @@
+type Query {
+    getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
+}
+
+input GetAccessPolicyInput {
+    idAccessPolicy: ID!
+}
+
+type GetAccessPolicyResult {
+    AccessPolicy: AccessPolicy    
+}
