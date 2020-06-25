@@ -9,13 +9,13 @@ const AccessContext = {
         const { idAccessContext } = parent;
         const { prisma } = context;
 
-        return prisma.accessContext.findOne({ where: { idAccessContext: Number.parseInt(idAccessContext) } }).AccessContextObject();
+        return prisma.accessContext.findOne({ where: { idAccessContext } }).AccessContextObject();
     },
     AccessPolicy: async (parent: Parent, _: Args, context: Context): Promise<AccessPolicy[] | null> => {
         const { idAccessContext } = parent;
         const { prisma } = context;
 
-        return prisma.accessContext.findOne({ where: { idAccessContext: Number.parseInt(idAccessContext) } }).AccessPolicy();
+        return prisma.accessContext.findOne({ where: { idAccessContext } }).AccessPolicy();
     }
 };
 

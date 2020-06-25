@@ -9,19 +9,19 @@ const CaptureDataFile = {
         const { idCaptureDataFile } = parent;
         const { prisma } = context;
 
-        return prisma.captureDataFile.findOne({ where: { idCaptureDataFile: Number.parseInt(idCaptureDataFile) } }).Asset();
+        return prisma.captureDataFile.findOne({ where: { idCaptureDataFile } }).Asset();
     },
     CaptureData: async (parent: Parent, _: Args, context: Context): Promise<CaptureData | null> => {
         const { idCaptureDataFile } = parent;
         const { prisma } = context;
 
-        return prisma.captureDataFile.findOne({ where: { idCaptureDataFile: Number.parseInt(idCaptureDataFile) } }).CaptureData();
+        return prisma.captureDataFile.findOne({ where: { idCaptureDataFile } }).CaptureData();
     },
     Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idCaptureDataFile } = parent;
         const { prisma } = context;
 
-        return prisma.captureDataFile.findOne({ where: { idCaptureDataFile: Number.parseInt(idCaptureDataFile) } }).Vocabulary();
+        return prisma.captureDataFile.findOne({ where: { idCaptureDataFile } }).Vocabulary();
     }
 };
 

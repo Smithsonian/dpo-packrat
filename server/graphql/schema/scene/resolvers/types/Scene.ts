@@ -9,19 +9,19 @@ const Scene = {
         const { idScene } = parent;
         const { prisma } = context;
 
-        return prisma.scene.findOne({ where: { idScene: Number.parseInt(idScene) } }).Asset();
+        return prisma.scene.findOne({ where: { idScene } }).Asset();
     },
     ModelSceneXref: async (parent: Parent, _: Args, context: Context): Promise<ModelSceneXref[] | null> => {
         const { idScene } = parent;
         const { prisma } = context;
 
-        return prisma.scene.findOne({ where: { idScene: Number.parseInt(idScene) } }).ModelSceneXref();
+        return prisma.scene.findOne({ where: { idScene } }).ModelSceneXref();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idScene } = parent;
         const { prisma } = context;
 
-        return prisma.scene.findOne({ where: { idScene: Number.parseInt(idScene) } }).SystemObject();
+        return prisma.scene.findOne({ where: { idScene } }).SystemObject();
     }
 };
 

@@ -9,7 +9,7 @@ const VocabularySet = {
         const { idVocabularySet } = parent;
         const { prisma } = context;
 
-        return prisma.vocabularySet.findOne({ where: { idVocabularySet: Number.parseInt(idVocabularySet) } }).Vocabulary();
+        return prisma.vocabularySet.findOne({ where: { idVocabularySet } }).Vocabulary();
     }
 };
 

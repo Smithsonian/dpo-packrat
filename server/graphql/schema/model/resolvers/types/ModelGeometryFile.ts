@@ -9,25 +9,25 @@ const ModelGeometryFile = {
         const { idModelGeometryFile } = parent;
         const { prisma } = context;
 
-        return prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile: Number.parseInt(idModelGeometryFile) } }).Asset();
+        return prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile } }).Asset();
     },
     Model: async (parent: Parent, _: Args, context: Context): Promise<Model | null> => {
         const { idModelGeometryFile } = parent;
         const { prisma } = context;
 
-        return prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile: Number.parseInt(idModelGeometryFile) } }).Model();
+        return prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile } }).Model();
     },
     Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idModelGeometryFile } = parent;
         const { prisma } = context;
 
-        return prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile: Number.parseInt(idModelGeometryFile) } }).Vocabulary();
+        return prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile } }).Vocabulary();
     },
     ModelUVMapFile: async (parent: Parent, _: Args, context: Context): Promise<ModelUVMapFile[] | null> => {
         const { idModelGeometryFile } = parent;
         const { prisma } = context;
 
-        return prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile: Number.parseInt(idModelGeometryFile) } }).ModelUVMapFile();
+        return prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile } }).ModelUVMapFile();
     }
 };
 

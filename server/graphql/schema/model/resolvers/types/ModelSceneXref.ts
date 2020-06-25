@@ -9,13 +9,13 @@ const ModelSceneXref = {
         const { idModelSceneXref } = parent;
         const { prisma } = context;
 
-        return prisma.modelSceneXref.findOne({ where: { idModelSceneXref: Number.parseInt(idModelSceneXref) } }).Model();
+        return prisma.modelSceneXref.findOne({ where: { idModelSceneXref } }).Model();
     },
     Scene: async (parent: Parent, _: Args, context: Context): Promise<Scene | null> => {
         const { idModelSceneXref } = parent;
         const { prisma } = context;
 
-        return prisma.modelSceneXref.findOne({ where: { idModelSceneXref: Number.parseInt(idModelSceneXref) } }).Scene();
+        return prisma.modelSceneXref.findOne({ where: { idModelSceneXref } }).Scene();
     }
 };
 

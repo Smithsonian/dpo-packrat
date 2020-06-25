@@ -10,25 +10,25 @@ const Metadata = {
         const { idMetadata } = parent;
         const { prisma } = context;
 
-        return prisma.metadata.findOne({ where: { idMetadata: Number.parseInt(idMetadata) } }).Asset();
+        return prisma.metadata.findOne({ where: { idMetadata } }).Asset();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idMetadata } = parent;
         const { prisma } = context;
 
-        return prisma.metadata.findOne({ where: { idMetadata: Number.parseInt(idMetadata) } }).SystemObject();
+        return prisma.metadata.findOne({ where: { idMetadata } }).SystemObject();
     },
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { idMetadata } = parent;
         const { prisma } = context;
 
-        return prisma.metadata.findOne({ where: { idMetadata: Number.parseInt(idMetadata) } }).User();
+        return prisma.metadata.findOne({ where: { idMetadata } }).User();
     },
     Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idMetadata } = parent;
         const { prisma } = context;
 
-        return prisma.metadata.findOne({ where: { idMetadata: Number.parseInt(idMetadata) } }).Vocabulary();
+        return prisma.metadata.findOne({ where: { idMetadata } }).Vocabulary();
     }
 };
 

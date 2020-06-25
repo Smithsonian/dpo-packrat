@@ -9,7 +9,7 @@ const SystemObjectVersion = {
         const { idSystemObjectVersion } = parent;
         const { prisma } = context;
 
-        return prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion: Number.parseInt(idSystemObjectVersion) } }).SystemObject();
+        return prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion } }).SystemObject();
     }
 };
 

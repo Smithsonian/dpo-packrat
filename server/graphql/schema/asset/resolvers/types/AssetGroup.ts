@@ -9,7 +9,7 @@ const AssetGroup = {
         const { idAssetGroup } = parent;
         const { prisma } = context;
 
-        return prisma.assetGroup.findOne({ where: { idAssetGroup: Number.parseInt(idAssetGroup) } }).Asset();
+        return prisma.assetGroup.findOne({ where: { idAssetGroup } }).Asset();
     }
 };
 

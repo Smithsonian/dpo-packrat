@@ -10,19 +10,19 @@ const LicenseAssignment = {
         const { idLicenseAssignment } = parent;
         const { prisma } = context;
 
-        return prisma.licenseAssignment.findOne({ where: { idLicenseAssignment: Number.parseInt(idLicenseAssignment) } }).License();
+        return prisma.licenseAssignment.findOne({ where: { idLicenseAssignment } }).License();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idLicenseAssignment } = parent;
         const { prisma } = context;
 
-        return prisma.licenseAssignment.findOne({ where: { idLicenseAssignment: Number.parseInt(idLicenseAssignment) } }).SystemObject();
+        return prisma.licenseAssignment.findOne({ where: { idLicenseAssignment } }).SystemObject();
     },
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { idLicenseAssignment } = parent;
         const { prisma } = context;
 
-        return prisma.licenseAssignment.findOne({ where: { idLicenseAssignment: Number.parseInt(idLicenseAssignment) } }).User();
+        return prisma.licenseAssignment.findOne({ where: { idLicenseAssignment } }).User();
     }
 };
 

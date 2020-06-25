@@ -9,7 +9,7 @@ const WorkflowTemplate = {
         const { idWorkflowTemplate } = parent;
         const { prisma } = context;
 
-        return prisma.workflowTemplate.findOne({ where: { idWorkflowTemplate: Number.parseInt(idWorkflowTemplate) } }).Workflow();
+        return prisma.workflowTemplate.findOne({ where: { idWorkflowTemplate } }).Workflow();
     }
 };
 

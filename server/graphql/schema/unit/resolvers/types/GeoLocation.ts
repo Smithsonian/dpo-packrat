@@ -10,13 +10,13 @@ const GeoLocation = {
         const { idGeoLocation } = parent;
         const { prisma } = context;
 
-        return prisma.geoLocation.findOne({ where: { idGeoLocation: Number.parseInt(idGeoLocation) } }).Item();
+        return prisma.geoLocation.findOne({ where: { idGeoLocation } }).Item();
     },
     Subject: async (parent: Parent, _: Args, context: Context): Promise<Subject[] | null> => {
         const { idGeoLocation } = parent;
         const { prisma } = context;
 
-        return prisma.geoLocation.findOne({ where: { idGeoLocation: Number.parseInt(idGeoLocation) } }).Subject();
+        return prisma.geoLocation.findOne({ where: { idGeoLocation } }).Subject();
     }
 };
 

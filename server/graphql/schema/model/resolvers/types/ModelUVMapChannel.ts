@@ -9,13 +9,13 @@ const ModelUVMapChannel = {
         const { idModelUVMapChannel } = parent;
         const { prisma } = context;
 
-        return prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel: Number.parseInt(idModelUVMapChannel) } }).ModelUVMapFile();
+        return prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel } }).ModelUVMapFile();
     },
     Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idModelUVMapChannel } = parent;
         const { prisma } = context;
 
-        return prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel: Number.parseInt(idModelUVMapChannel) } }).Vocabulary();
+        return prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel } }).Vocabulary();
     }
 };
 

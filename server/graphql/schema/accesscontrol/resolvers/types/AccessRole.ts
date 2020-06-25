@@ -9,13 +9,13 @@ const AccessRole = {
         const { idAccessRole } = parent;
         const { prisma } = context;
 
-        return prisma.accessRole.findOne({ where: { idAccessRole: Number.parseInt(idAccessRole) } }).AccessPolicy();
+        return prisma.accessRole.findOne({ where: { idAccessRole } }).AccessPolicy();
     },
     AccessRoleAccessActionXref: async (parent: Parent, _: Args, context: Context): Promise<AccessRoleAccessActionXref[] | null> => {
         const { idAccessRole } = parent;
         const { prisma } = context;
 
-        return prisma.accessRole.findOne({ where: { idAccessRole: Number.parseInt(idAccessRole) } }).AccessRoleAccessActionXref();
+        return prisma.accessRole.findOne({ where: { idAccessRole } }).AccessRoleAccessActionXref();
     }
 };
 

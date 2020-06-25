@@ -9,19 +9,19 @@ const AccessPolicy = {
         const { idAccessPolicy } = parent;
         const { prisma } = context;
 
-        return prisma.accessPolicy.findOne({ where: { idAccessPolicy: Number.parseInt(idAccessPolicy) } }).AccessContext();
+        return prisma.accessPolicy.findOne({ where: { idAccessPolicy } }).AccessContext();
     },
     AccessRole: async (parent: Parent, _: Args, context: Context): Promise<AccessRole | null> => {
         const { idAccessPolicy } = parent;
         const { prisma } = context;
 
-        return prisma.accessPolicy.findOne({ where: { idAccessPolicy: Number.parseInt(idAccessPolicy) } }).AccessRole();
+        return prisma.accessPolicy.findOne({ where: { idAccessPolicy } }).AccessRole();
     },
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { idAccessPolicy } = parent;
         const { prisma } = context;
 
-        return prisma.accessPolicy.findOne({ where: { idAccessPolicy: Number.parseInt(idAccessPolicy) } }).User();
+        return prisma.accessPolicy.findOne({ where: { idAccessPolicy } }).User();
     }
 };
 

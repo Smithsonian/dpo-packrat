@@ -9,25 +9,25 @@ const WorkflowStep = {
         const { idWorkflowStep } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStep.findOne({ where: { idWorkflowStep: Number.parseInt(idWorkflowStep) } }).Vocabulary();
+        return prisma.workflowStep.findOne({ where: { idWorkflowStep } }).Vocabulary();
     },
     Workflow: async (parent: Parent, _: Args, context: Context): Promise<Workflow | null> => {
         const { idWorkflowStep } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStep.findOne({ where: { idWorkflowStep: Number.parseInt(idWorkflowStep) } }).Workflow();
+        return prisma.workflowStep.findOne({ where: { idWorkflowStep } }).Workflow();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idWorkflowStep } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStep.findOne({ where: { idWorkflowStep: Number.parseInt(idWorkflowStep) } }).SystemObject();
+        return prisma.workflowStep.findOne({ where: { idWorkflowStep } }).SystemObject();
     },
     WorkflowStepSystemObjectXref: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStepSystemObjectXref[] | null> => {
         const { idWorkflowStep } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStep.findOne({ where: { idWorkflowStep: Number.parseInt(idWorkflowStep) } }).WorkflowStepSystemObjectXref();
+        return prisma.workflowStep.findOne({ where: { idWorkflowStep } }).WorkflowStepSystemObjectXref();
     }
 };
 

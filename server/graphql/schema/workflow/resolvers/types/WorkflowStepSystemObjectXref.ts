@@ -9,13 +9,13 @@ const WorkflowStepSystemObjectXref = {
         const { idWorkflowStepSystemObjectXref } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref: Number.parseInt(idWorkflowStepSystemObjectXref) } }).SystemObject();
+        return prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref } }).SystemObject();
     },
     WorkflowStep: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep | null> => {
         const { idWorkflowStepSystemObjectXref } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref: Number.parseInt(idWorkflowStepSystemObjectXref) } }).WorkflowStep();
+        return prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref } }).WorkflowStep();
     }
 };
 

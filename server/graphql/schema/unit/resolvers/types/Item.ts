@@ -9,25 +9,25 @@ const Item = {
         const { idItem } = parent;
         const { prisma } = context;
 
-        return prisma.item.findOne({ where: { idItem: Number.parseInt(idItem) } }).Subject();
+        return prisma.item.findOne({ where: { idItem } }).Subject();
     },
     Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
         const { idItem } = parent;
         const { prisma } = context;
 
-        return prisma.item.findOne({ where: { idItem: Number.parseInt(idItem) } }).Asset();
+        return prisma.item.findOne({ where: { idItem } }).Asset();
     },
     GeoLocation: async (parent: Parent, _: Args, context: Context): Promise<GeoLocation | null> => {
         const { idItem } = parent;
         const { prisma } = context;
 
-        return prisma.item.findOne({ where: { idItem: Number.parseInt(idItem) } }).GeoLocation();
+        return prisma.item.findOne({ where: { idItem } }).GeoLocation();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idItem } = parent;
         const { prisma } = context;
 
-        return prisma.item.findOne({ where: { idItem: Number.parseInt(idItem) } }).SystemObject();
+        return prisma.item.findOne({ where: { idItem } }).SystemObject();
     }
 };
 
