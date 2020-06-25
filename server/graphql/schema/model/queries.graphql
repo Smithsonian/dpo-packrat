@@ -1,0 +1,11 @@
+type Query {
+    getModel(input: GetModelInput!): GetModelResult!
+}
+
+input GetModelInput {
+    idModel: ID!
+}
+
+type GetModelResult {
+    Model: Model    
+}

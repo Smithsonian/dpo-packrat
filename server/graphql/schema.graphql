@@ -561,12 +561,24 @@ type WorkflowTemplate {
 }
 
 type Query {
+  getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
+  getModel(input: GetModelInput!): GetModelResult!
+  getScene(input: GetSceneInput!): GetSceneResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getUser(input: GetUserInput!): GetUserResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
+  getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
+}
+
+input GetAccessPolicyInput {
+  idAccessPolicy: ID!
+}
+
+type GetAccessPolicyResult {
+  AccessPolicy: AccessPolicy
 }
 
 input GetAssetInput {
@@ -593,6 +605,22 @@ type GetLicenseResult {
   License: License
 }
 
+input GetModelInput {
+  idModel: ID!
+}
+
+type GetModelResult {
+  Model: Model
+}
+
+input GetSceneInput {
+  idScene: ID!
+}
+
+type GetSceneResult {
+  Scene: Scene
+}
+
 input GetUnitInput {
   idUnit: ID!
 }
@@ -615,4 +643,12 @@ input GetVocabularyInput {
 
 type GetVocabularyResult {
   Vocabulary: Vocabulary
+}
+
+input GetWorkflowInput {
+  idWorkflow: ID!
+}
+
+type GetWorkflowResult {
+  Workflow: Workflow
 }
