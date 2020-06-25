@@ -192,7 +192,7 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Vocabulary', async () => {
         if (vocabularySet)
-            vocabulary = await DBAPI.createVocabulary(prisma, {
+            vocabulary = await DBAPI.Vocabulary.create(prisma, {
                 idVocabularySet: vocabularySet.idVocabularySet,
                 SortOrder: 0,
                 idVocabulary: 0
@@ -1426,7 +1426,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch By ID: Vocabulary', async () => {
         let vocabularyFetch: Vocabulary | null = null;
         if (vocabulary) {
-            vocabularyFetch = await DBAPI.fetchVocabulary(prisma, vocabulary.idVocabulary);
+            vocabularyFetch = await DBAPI.Vocabulary.fetch(prisma, vocabulary.idVocabulary);
             if (vocabularyFetch) {
                 expect(vocabularyFetch).toMatchObject(vocabulary);
                 expect(vocabulary).toMatchObject(vocabularyFetch);
