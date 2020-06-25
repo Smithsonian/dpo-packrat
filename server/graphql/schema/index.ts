@@ -11,6 +11,9 @@ import { modelResolvers } from './model';
 import { sceneResolvers } from './scene';
 import { userResolvers } from './user';
 import { vocabularyResolvers } from './vocabulary';
+import { workflowResolvers } from './workflow';
+import { systemObjectResolvers } from './systemobject';
+import { accessControlResolvers } from './accesscontrol';
 
 const resolvers = mergeResolvers([
     assetResolvers,
@@ -21,6 +24,9 @@ const resolvers = mergeResolvers([
     sceneResolvers,
     userResolvers,
     vocabularyResolvers,
+    workflowResolvers,
+    systemObjectResolvers,
+    accessControlResolvers
 ]);
 
 const types = loadFilesSync(join(__dirname, './**/types.graphql'));

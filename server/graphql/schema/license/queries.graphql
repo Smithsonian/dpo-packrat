@@ -1,0 +1,11 @@
+type Query {
+    getLicense(input: GetLicenseInput!): GetLicenseResult!
+}
+
+input GetLicenseInput {
+    idLicense: Int!
+}
+
+type GetLicenseResult {
+    License: License
+}

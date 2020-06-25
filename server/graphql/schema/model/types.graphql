@@ -1,82 +1,103 @@
-# import Vocabulary from "../vocabulary/types.graphql"
-# import Asset from "../asset/types.graphql"
-# import Actor from "../scene/types.graphql"
-
 scalar DateTime
 
 type Model {
-  id: ID!
-  dateCreated: DateTime!
-  vCreationMethod: Vocabulary!
-  master: Boolean!
-  authoritative: Boolean!
-  vModality: Vocabulary!
-  vUnits: Vocabulary!
-  vPurpose: Vocabulary!
-  assetThumbnail: Asset
-  orientation: Orientation
-}
-
-type Orientation {
-  ts0: Float
-  ts1: Float
-  ts2: Float
-  r0: Float
-  r1: Float
-  r2: Float
-  r3: Float
+    idModel: Int!
+    Authoritative: Boolean!
+    DateCreated: DateTime!
+    idAssetThumbnail: Int
+    idVCreationMethod: Int!
+    idVModality: Int!
+    idVPurpose: Int!
+    idVUnits: Int!
+    Master: Boolean!
+    Asset: Asset
+    VCreationMethod: Vocabulary
+    VModality: Vocabulary
+    VPurpose: Vocabulary
+    VUnits: Vocabulary
+    ModelGeometryFile: [ModelGeometryFile]
+    ModelProcessingAction: [ModelProcessingAction]
+    ModelSceneXref: [ModelSceneXref]
+    SystemObject: SystemObject
 }
 
 type ModelGeometryFile {
-  id: ID!
-  model: Model!
-  asset: Asset!
-  vModelFileType: Vocabulary!
-  roughness: Float
-  metalness: Float
-  pointCount: Int
-  faceCount: Int
-  isWatertight: Boolean
-  hasNormals: Boolean
-  hasVertexColor: Boolean
-  hasUvSpace: Boolean
-  boundingBoxP1X: Float
-  boundingBoxP1Y: Float
-  boundingBoxP1Z: Float
-  boundingBoxP2X: Float
-  boundingBoxP2Y: Float
-  boundingBoxP2Z: Float
+    idModelGeometryFile: Int!
+    idAsset: Int!
+    idModel: Int!
+    idVModelFileType: Int!
+    BoundingBoxP1X: Float
+    BoundingBoxP1Y: Float
+    BoundingBoxP1Z: Float
+    BoundingBoxP2X: Float
+    BoundingBoxP2Y: Float
+    BoundingBoxP2Z: Float
+    FaceCount: Int
+    HasNormals: Boolean
+    HasUVSpace: Boolean
+    HasVertexColor: Boolean
+    IsWatertight: Boolean
+    Metalness: Float
+    PointCount: Int
+    Roughness: Float
+    Asset: Asset
+    Model: Model
+    Vocabulary: Vocabulary
+    ModelUVMapFile: [ModelUVMapFile]
 }
 
 type ModelProcessingAction {
-  id: ID!
-  model: Model!
-  actor: Actor!
-  processingDate: DateTime!
-  toolsUsed: String!
-  description: String!
-  modelProcessingActionSteps: [ModelProcessingActionStep]
+    idModelProcessingAction: Int!
+    DateProcessed: DateTime!
+    Description: String!
+    idActor: Int!
+    idModel: Int!
+    ToolsUsed: String!
+    Actor: Actor
+    Model: Model
+    ModelProcessingActionStep: [ModelProcessingActionStep]!
 }
 
 type ModelProcessingActionStep {
-  id: ID!
-  modelProcessingAction: ModelProcessingAction!
-  vActionMethod: Vocabulary!
-  description: String!
+    idModelProcessingActionStep: Int!
+    Description: String!
+    idModelProcessingAction: Int!
+    idVActionMethod: Int!
+    ModelProcessingAction: ModelProcessingAction
+    Vocabulary: Vocabulary
 }
 
-type ModelUVMapFile {
-  id: ID!
-  modelGeometryFile: ModelGeometryFile!
-  asset: Asset!
-  uVMapEdgeLength: Int!
-  modelUVMapChannel: [ModelUVMapChannel]
+type ModelSceneXref {
+    idModelSceneXref: Int!
+    idModel: Int!
+    idScene: Int!
+    R0: Float
+    R1: Float
+    R2: Float
+    R3: Float
+    TS0: Float
+    TS1: Float
+    TS2: Float
+    Model: Model
+    Scene: Scene
 }
 
 type ModelUVMapChannel {
-  id: ID!
-  modelUvMapFile: ModelUVMapFile!
-  channelPosition: Int!
-  channelWidth: Int!
-  vUVMapType: Vocabulary!
+    idModelUVMapChannel: Int!
+    ChannelPosition: Int!
+    ChannelWidth: Int!
+    idModelUVMapFile: Int!
+    idVUVMapType: Int!
+    ModelUVMapFile: ModelUVMapFile
+    Vocabulary: Vocabulary
+}
+
+type ModelUVMapFile {
+    idModelUVMapFile: Int!
+    idAsset: Int!
+    idModelGeometryFile: Int!
+    UVMapEdgeLength: Int!
+    Asset: Asset
+    ModelGeometryFile: ModelGeometryFile
+    ModelUVMapChannel: [ModelUVMapChannel]
 }

@@ -1,11 +1,20 @@
 type Vocabulary {
-  id: ID!
-  vocabularySet: VocabularySet!
-  sortOrder: Int!
+    idVocabulary: Int!
+    idVocabularySet: Int!
+    SortOrder: Int!
+    VocabularySet: VocabularySet
+    CaptureDataFile: [CaptureDataFile]
+    Identifier: [Identifier]
+    Metadata: [Metadata]
+    ModelGeometryFile: [ModelGeometryFile]
+    ModelProcessingActionStep: [ModelProcessingActionStep]
+    ModelUVMapChannel: [ModelUVMapChannel]
+    WorkflowStep: [WorkflowStep]
 }
 
 type VocabularySet {
-  id: ID!
-  name: String!
-  systemMaintained: Boolean!
+    idVocabularySet: Int!
+    Name: String!
+    SystemMaintained: Boolean!
+    Vocabulary: [Vocabulary]
 }

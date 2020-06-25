@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, VocabularySet  } from '@prisma/client';
+import { PrismaClient, VocabularySet } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createVocabularySet(prisma: PrismaClient, vocabularySet: VocabularySet): Promise<VocabularySet | null> {
