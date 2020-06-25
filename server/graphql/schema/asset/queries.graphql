@@ -3,7 +3,7 @@ type Query {
 }
 
 input GetAssetInput {
-    idAsset: ID!
+    idAsset: Int!
 }
 
 type GetAssetResult {

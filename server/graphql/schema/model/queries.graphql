@@ -3,7 +3,7 @@ type Query {
 }
 
 input GetModelInput {
-    idModel: ID!
+    idModel: Int!
 }
 
 type GetModelResult {

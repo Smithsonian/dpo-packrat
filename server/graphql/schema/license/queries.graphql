@@ -3,7 +3,7 @@ type Query {
 }
 
 input GetLicenseInput {
-    idLicense: ID!
+    idLicense: Int!
 }
 
 type GetLicenseResult {
