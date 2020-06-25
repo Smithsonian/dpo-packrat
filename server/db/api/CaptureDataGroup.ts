@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, CaptureDataGroup } from '@prisma/client';
+import { PrismaClient, CaptureData, CaptureDataGroup } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createCaptureDataGroup(prisma: PrismaClient): Promise<CaptureDataGroup | null> {
@@ -21,6 +21,21 @@ export async function fetchCaptureDataGroup(prisma: PrismaClient, idCaptureDataG
         return await prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchCaptureDataGroup', error);
+        return null;
+    }
+}
+
+export async function fetchCaptureDataFromXref(prisma: PrismaClient, idCaptureDataGroup: number): Promise<CaptureData[] | null> {
+    try {
+        return await prisma.captureData.findMany({
+            where: {
+                CaptureDataGroupCaptureDataXref: {
+                    some: { idCaptureDataGroup },
+                },
+            },
+        });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchCaptureDataFromXref', error);
         return null;
     }
 }

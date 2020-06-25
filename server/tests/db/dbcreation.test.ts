@@ -37,14 +37,18 @@ let vocabularySet: VocabularySet | null;
 let vocabulary: Vocabulary | null;
 let workflowTemplate: WorkflowTemplate | null;
 let scene: Scene | null;
+let sceneNulls: Scene | null;
+let systemObjectAsset: SystemObject | null;
 let systemObjectSubject: SystemObject | null;
 let systemObjectScene: SystemObject | null;
 let accessAction: AccessAction | null;
+let accessAction2: AccessAction | null;
 let accessContext: AccessContext | null;
 let accessRole: AccessRole | null;
 let accessPolicy: AccessPolicy | null;
 let accessContextObject: AccessContextObject | null;
 let accessRoleAccessActionXref: AccessRoleAccessActionXref | null;
+let accessRoleAccessActionXref2: AccessRoleAccessActionXref | null;
 let actorWithUnit: Actor | null;
 let actorWithOutUnit: Actor | null;
 let assetWithoutAG: Asset | null;
@@ -53,6 +57,7 @@ let captureData: CaptureData | null;
 let captureDataNulls: CaptureData | null;
 let captureDataGroup: CaptureDataGroup | null;
 let captureDataGroupCaptureDataXref: CaptureDataGroupCaptureDataXref | null;
+let captureDataGroupCaptureDataXref2: CaptureDataGroupCaptureDataXref | null;
 let identifier: Identifier | null;
 let identifierNull: Identifier | null;
 let intermediaryFile: IntermediaryFile | null;
@@ -70,6 +75,7 @@ let modelSceneXref: ModelSceneXref | null;
 let modelSceneXrefNull: ModelSceneXref | null;
 let systemObjectVersion: SystemObjectVersion | null;
 let systemObjectXref: SystemObjectXref | null;
+let systemObjectXref2: SystemObjectXref | null;
 let modelUVMapFile: ModelUVMapFile | null;
 let modelUVMapChannel: ModelUVMapChannel | null;
 let license: License | null;
@@ -77,7 +83,6 @@ let licenseAssignment: LicenseAssignment | null;
 let licenseAssignmentNull: LicenseAssignment | null;
 let project: Project | null;
 let projectDocumentation: ProjectDocumentation | null;
-let sceneNulls: Scene | null;
 let subjectNulls: Subject | null;
 let stakeholder: Stakeholder | null;
 let userPersonalizationSystemObject: UserPersonalizationSystemObject | null;
@@ -86,6 +91,7 @@ let workflow: Workflow | null;
 let workflowNulls: Workflow | null;
 let workflowStep: WorkflowStep | null;
 let workflowStepSystemObjectXref: WorkflowStepSystemObjectXref | null;
+let workflowStepSystemObjectXref2: WorkflowStepSystemObjectXref | null;
 
 // *******************************************************************
 // DB Creation Test Suite
@@ -220,6 +226,19 @@ describe('DB Creation Test Suite', () => {
             expect(scene.idScene).toBeGreaterThan(0);
     });
 
+    test('DB Creation: Scene With Nulls', async () => {
+        sceneNulls = await DBAPI.createScene(prisma, {
+            Name: 'Test Scene',
+            idAssetThumbnail: null,
+            IsOriented: true,
+            HasBeenQCd: true,
+            idScene: 0
+        });
+        expect(sceneNulls).toBeTruthy();
+        if (sceneNulls)
+            expect(sceneNulls.idScene).toBeGreaterThan(0);
+    });
+
     test('DB Creation: Fetch System Object Subject', async() => {
         systemObjectSubject = subject ? await DBAPI.fetchSystemObjectForSubject(prisma, subject) : null;
         expect(systemObjectSubject).toBeTruthy();
@@ -230,6 +249,13 @@ describe('DB Creation Test Suite', () => {
         systemObjectScene = scene ? await DBAPI.fetchSystemObjectForScene(prisma, scene) : null;
         expect(systemObjectScene).toBeTruthy();
         expect(systemObjectScene ? systemObjectScene.idScene : -1).toBe(scene ? scene.idScene : -2);
+    });
+
+    test('DB Creation: Fetch System Object Asset', async() => {
+        if (assetThumbnail)
+            systemObjectAsset = scene ? await DBAPI.fetchSystemObjectForAsset(prisma, assetThumbnail) : null;
+        expect(systemObjectAsset).toBeTruthy();
+        expect(systemObjectAsset ? systemObjectAsset.idAsset : -1).toBe(assetThumbnail ? assetThumbnail.idAsset : -2);
     });
 
     // *************************************************************************
@@ -244,6 +270,17 @@ describe('DB Creation Test Suite', () => {
         expect(accessAction).toBeTruthy();
         if (accessAction)
             expect(accessAction.idAccessAction).toBeGreaterThan(0);
+    });
+
+    test('DB Creation: AccessAction 2', async () => {
+        accessAction2 = await DBAPI.createAccessAction(prisma, {
+            Name: 'Test AccessAction 2',
+            SortOrder: 0,
+            idAccessAction: 0
+        });
+        expect(accessAction2).toBeTruthy();
+        if (accessAction2)
+            expect(accessAction2.idAccessAction).toBeGreaterThan(0);
     });
 
     test('DB Creation: AccessContext', async () => {
@@ -299,6 +336,18 @@ describe('DB Creation Test Suite', () => {
         expect(accessRoleAccessActionXref).toBeTruthy();
         if (accessRoleAccessActionXref)
             expect(accessRoleAccessActionXref.idAccessRoleAccessActionXref).toBeGreaterThan(0);
+    });
+
+    test('DB Creation: AccessRoleAccessActionXref 2', async () => {
+        if (accessRole && accessAction2)
+            accessRoleAccessActionXref2 = await DBAPI.createAccessRoleAccessActionXref(prisma, {
+                idAccessRole: accessRole.idAccessRole,
+                idAccessAction: accessAction2.idAccessAction,
+                idAccessRoleAccessActionXref: 0
+            });
+        expect(accessRoleAccessActionXref2).toBeTruthy();
+        if (accessRoleAccessActionXref2)
+            expect(accessRoleAccessActionXref2.idAccessRoleAccessActionXref).toBeGreaterThan(0);
     });
 
     test('DB Creation: Actor With Unit', async () => {
@@ -421,6 +470,18 @@ describe('DB Creation Test Suite', () => {
         expect(captureDataGroupCaptureDataXref).toBeTruthy();
         if (captureDataGroupCaptureDataXref)
             expect(captureDataGroupCaptureDataXref.idCaptureDataGroupCaptureDataXref).toBeGreaterThan(0);
+    });
+
+    test('DB Creation: CaptureDataGroupCaptureDataXref 2', async () => {
+        if (captureDataGroup && captureDataNulls)
+            captureDataGroupCaptureDataXref2 = await DBAPI.createCaptureDataGroupCaptureDataXref(prisma, {
+                idCaptureDataGroup: captureDataGroup.idCaptureDataGroup,
+                idCaptureData: captureDataNulls.idCaptureData,
+                idCaptureDataGroupCaptureDataXref: 0
+            });
+        expect(captureDataGroupCaptureDataXref2).toBeTruthy();
+        if (captureDataGroupCaptureDataXref2)
+            expect(captureDataGroupCaptureDataXref2.idCaptureDataGroupCaptureDataXref).toBeGreaterThan(0);
     });
 
     test('DB Creation: Identifier', async () => {
@@ -632,10 +693,10 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: ModelSceneXref With Nulls', async () => {
-        if (model && scene)
+        if (model && sceneNulls)
             modelSceneXrefNull = await DBAPI.createModelSceneXref(prisma, {
                 idModel: model.idModel,
-                idScene: scene.idScene,
+                idScene: sceneNulls.idScene,
                 TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null,
                 idModelSceneXref: 0
             });
@@ -668,6 +729,19 @@ describe('DB Creation Test Suite', () => {
         expect(systemObjectXref).toBeTruthy();
         if (systemObjectXref)
             expect(systemObjectXref.idSystemObjectXref).toBeGreaterThan(0);
+    });
+
+    test('DB Creation: SystemObjectXref 2', async () => {
+        if (systemObjectSubject && systemObjectAsset) {
+            systemObjectXref2 = await DBAPI.createSystemObjectXref(prisma, {
+                idSystemObjectMaster: systemObjectSubject.idSystemObject,
+                idSystemObjectDerived: systemObjectAsset.idSystemObject,
+                idSystemObjectXref: 0
+            });
+        }
+        expect(systemObjectXref2).toBeTruthy();
+        if (systemObjectXref2)
+            expect(systemObjectXref2.idSystemObjectXref).toBeGreaterThan(0);
     });
 
     test('DB Creation: ModelUVMapFile', async () => {
@@ -759,19 +833,6 @@ describe('DB Creation Test Suite', () => {
         expect(projectDocumentation).toBeTruthy();
         if (projectDocumentation)
             expect(projectDocumentation.idProjectDocumentation).toBeGreaterThan(0);
-    });
-
-    test('DB Creation: Scene With Nulls', async () => {
-        sceneNulls = await DBAPI.createScene(prisma, {
-            Name: 'Test Scene',
-            idAssetThumbnail: null,
-            IsOriented: true,
-            HasBeenQCd: true,
-            idScene: 0
-        });
-        expect(sceneNulls).toBeTruthy();
-        if (sceneNulls)
-            expect(sceneNulls.idScene).toBeGreaterThan(0);
     });
 
     test('DB Creation: Subject With Nulls', async () => {
@@ -875,7 +936,7 @@ describe('DB Creation Test Suite', () => {
             expect(workflowStep.idWorkflowStep).toBeGreaterThan(0);
     });
 
-    test('DB Creation: WorkflowStepSystemObjectXref', async () => {
+    test('DB Creation: WorkflowStepSystemObjectXref 1', async () => {
         if (systemObjectScene && workflowStep)
             workflowStepSystemObjectXref = await DBAPI.createWorkflowStepSystemObjectXref(prisma, {
                 idWorkflowStep: workflowStep.idWorkflowStep,
@@ -886,6 +947,19 @@ describe('DB Creation Test Suite', () => {
         expect(workflowStepSystemObjectXref).toBeTruthy();
         if (workflowStepSystemObjectXref)
             expect(workflowStepSystemObjectXref.idWorkflowStepSystemObjectXref).toBeGreaterThan(0);
+    });
+
+    test('DB Creation: WorkflowStepSystemObjectXref 2', async () => {
+        if (systemObjectSubject && workflowStep)
+            workflowStepSystemObjectXref2 = await DBAPI.createWorkflowStepSystemObjectXref(prisma, {
+                idWorkflowStep: workflowStep.idWorkflowStep,
+                idSystemObject: systemObjectSubject.idSystemObject,
+                Input: false,
+                idWorkflowStepSystemObjectXref: 0
+            });
+        expect(workflowStepSystemObjectXref2).toBeTruthy();
+        if (workflowStepSystemObjectXref2)
+            expect(workflowStepSystemObjectXref2.idWorkflowStepSystemObjectXref).toBeGreaterThan(0);
     });
 });
 
@@ -2249,5 +2323,176 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
             }
         }
         expect(SYOP).toBeTruthy();
+    });
+});
+
+describe('DB Fetch Xref Test Suite', () => {
+    test('DB Fetch Xref: fetchAccessRoleFromXref', async () => {
+        let AR: AccessRole[] | null = null;
+        if (accessAction && accessRole) {
+            AR = await DBAPI.fetchAccessRoleFromXref(prisma, accessAction.idAccessAction);
+            if (AR) {
+                expect(AR.length).toBe(1);
+                if (AR.length == 1)
+                    expect(AR[0].idAccessRole).toBe(accessRole.idAccessRole);
+            }
+        }
+        expect(AR).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchAccessActionFromXref', async () => {
+        let AA: AccessAction[] | null = null;
+        if (accessAction && accessAction2 && accessRole) {
+            AA = await DBAPI.fetchAccessActionFromXref(prisma, accessRole.idAccessRole);
+            if (AA) {
+                expect(AA.length).toBe(2);
+                if (AA.length == 2)
+                    expect(AA[0].idAccessAction + AA[1].idAccessAction).toBe(accessAction.idAccessAction + accessAction2?.idAccessAction);
+            }
+        }
+        expect(AA).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchCaptureDataGroupFromXref', async () => {
+        let CDG: CaptureDataGroup[] | null = null;
+        if (captureData && captureDataGroup) {
+            CDG = await DBAPI.fetchCaptureDataGroupFromXref(prisma, captureData.idCaptureData);
+            if (CDG) {
+                expect(CDG.length).toBe(1);
+                if (CDG.length == 1)
+                    expect(CDG[0].idCaptureDataGroup).toBe(captureDataGroup.idCaptureDataGroup);
+            }
+        }
+        expect(CDG).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchCaptureDataFromXref', async () => {
+        let CD: CaptureData[] | null = null;
+        if (captureData && captureDataNulls && captureDataGroup) {
+            CD = await DBAPI.fetchCaptureDataFromXref(prisma, captureDataGroup.idCaptureDataGroup);
+            if (CD) {
+                expect(CD.length).toBe(2);
+                if (CD.length == 2) {
+                    expect(CD[0].idCaptureData + CD[1].idCaptureData).toBe(captureData.idCaptureData + captureDataNulls.idCaptureData);
+                }
+            }
+        }
+        expect(CD).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchModelFromXref', async () => {
+        let MO: Model[] | null = null;
+        if (scene && model) {
+            MO = await DBAPI.fetchModelFromXref(prisma, scene.idScene);
+            if (MO) {
+                expect(MO.length).toBe(1);
+                if (MO.length == 1)
+                    expect(MO[0].idModel).toBe(model.idModel);
+            }
+        }
+        expect(MO).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchSceneFromXref', async () => {
+        let SC: Scene[] | null = null;
+        if (scene && sceneNulls && model) {
+            SC = await DBAPI.fetchSceneFromXref(prisma, model.idModel);
+            if (SC) {
+                expect(SC.length).toBe(2);
+                if (SC.length == 2)
+                    expect(SC[0].idScene + SC[1].idScene).toBe(scene.idScene + sceneNulls.idScene);
+            }
+        }
+        expect(SC).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchWorkflowStepFromXref', async () => {
+        let WFS: WorkflowStep[] | null = null;
+        if (systemObjectScene && workflowStep) {
+            WFS = await DBAPI.fetchWorkflowStepFromXref(prisma, systemObjectScene.idSystemObject);
+            if (WFS) {
+                expect(WFS.length).toBe(1);
+                if (WFS.length == 1)
+                    expect(WFS[0].idWorkflowStep).toBe(workflowStep.idWorkflowStep);
+            }
+        }
+        expect(WFS).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchSystemObjectFromXref', async () => {
+        let SO: SystemObject[] | null = null;
+        if (workflowStep && systemObjectScene && systemObjectSubject) {
+            SO = await DBAPI.fetchSystemObjectFromXref(prisma, workflowStep.idWorkflowStep);
+            if (SO) {
+                expect(SO.length).toBe(2);
+                if (SO.length == 2)
+                    expect(SO[0].idSystemObject + SO[1].idSystemObject).toBe(systemObjectScene.idSystemObject + systemObjectSubject.idSystemObject);
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchMasterSystemObjectFromXref', async () => {
+        let SO: SystemObject[] | null = null;
+        if (systemObjectSubject && systemObjectScene) {
+            SO = await DBAPI.fetchMasterSystemObjectFromXref(prisma, systemObjectScene.idSystemObject);
+            if (SO) {
+                expect(SO.length).toBe(1);
+                if (SO.length == 1)
+                    expect(SO[0].idSystemObject).toBe(systemObjectSubject.idSystemObject);
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchDerivedSystemObjectFromXref', async () => {
+        let SO: SystemObject[] | null = null;
+        if (systemObjectAsset && systemObjectScene && systemObjectSubject) {
+            SO = await DBAPI.fetchDerivedSystemObjectFromXref(prisma, systemObjectSubject.idSystemObject);
+            if (SO) {
+                expect(SO.length).toBe(2);
+                if (SO.length == 2)
+                    expect(SO[0].idSystemObject + SO[1].idSystemObject).toBe(systemObjectScene.idSystemObject + systemObjectAsset.idSystemObject);
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchMasterSystemObjectAndPairFromXref', async () => {
+        let SO: DBAPI.SystemObjectAndPairs[] | null = null;
+        if (systemObjectSubject && systemObjectScene) {
+            SO = await DBAPI.fetchMasterSystemObjectAndPairFromXref(prisma, systemObjectScene.idSystemObject);
+            if (SO) {
+                expect(SO.length).toBe(1);
+                if (SO.length == 1) {
+                    expect(SO[0].Subject).toBeTruthy();
+                    if (SO[0].Subject)
+                        expect(SO[0].Subject.idSubject).toBe(systemObjectSubject.idSubject);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Xref: fetchDerivedSystemObjectAndPairFromXref', async () => {
+        let SO: DBAPI.SystemObjectAndPairs[] | null = null;
+        if (systemObjectAsset && systemObjectScene && systemObjectSubject) {
+            SO = await DBAPI.fetchDerivedSystemObjectAndPairFromXref(prisma, systemObjectSubject.idSystemObject);
+            if (SO) {
+                expect(SO.length).toBe(2);
+                if (SO.length == 2) {
+                    expect((SO[0].Scene && SO[1].Asset) || (SO[1].Scene && SO[0].Asset)).toBeTruthy();
+                    if (SO[0].Scene)
+                        expect(SO[0].Scene.idScene).toBe(systemObjectScene.idScene);
+                    if (SO[0].Asset)
+                        expect(SO[0].Asset.idAsset).toBe(systemObjectAsset.idAsset);
+                    if (SO[1].Scene)
+                        expect(SO[1].Scene.idScene).toBe(systemObjectScene.idScene);
+                    if (SO[1].Asset)
+                        expect(SO[1].Asset.idAsset).toBe(systemObjectAsset.idAsset);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
     });
 });
