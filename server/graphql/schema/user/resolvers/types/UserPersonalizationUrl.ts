@@ -9,7 +9,7 @@ const UserPersonalizationUrl = {
         const { idUserPersonalizationUrl } = parent;
         const { prisma } = context;
 
-        return prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl: Number.parseInt(idUserPersonalizationUrl) } }).User();
+        return prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl } }).User();
     }
 };
 

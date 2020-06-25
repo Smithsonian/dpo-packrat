@@ -9,13 +9,13 @@ const UserPersonalizationSystemObject = {
         const { idUserPersonalizationSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.userPersonalizationSystemObject.findOne({ where: { idUser: Number.parseInt(idUserPersonalizationSystemObject) } }).User();
+        return prisma.userPersonalizationSystemObject.findOne({ where: { idUserPersonalizationSystemObject } }).User();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idUserPersonalizationSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.userPersonalizationSystemObject.findOne({ where: { idUser: Number.parseInt(idUserPersonalizationSystemObject) } }).SystemObject();
+        return prisma.userPersonalizationSystemObject.findOne({ where: { idUserPersonalizationSystemObject } }).SystemObject();
     }
 };
 

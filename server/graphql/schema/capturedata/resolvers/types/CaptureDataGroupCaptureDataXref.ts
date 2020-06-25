@@ -9,14 +9,14 @@ const CaptureDataGroupCaptureDataXref = {
         const { idCaptureDataGroupCaptureDataXref } = parent;
         const { prisma } = context;
 
-        return prisma.captureDataGroupCaptureDataXref.findOne({ where: { idCaptureDataGroupCaptureDataXref: Number.parseInt(idCaptureDataGroupCaptureDataXref) } }).CaptureData();
+        return prisma.captureDataGroupCaptureDataXref.findOne({ where: { idCaptureDataGroupCaptureDataXref } }).CaptureData();
     },
     CaptureDataGroup: async (parent: Parent, _: Args, context: Context): Promise<CaptureDataGroup | null> => {
         const { idCaptureDataGroupCaptureDataXref } = parent;
         const { prisma } = context;
 
         return prisma.captureDataGroupCaptureDataXref
-            .findOne({ where: { idCaptureDataGroupCaptureDataXref: Number.parseInt(idCaptureDataGroupCaptureDataXref) } })
+            .findOne({ where: { idCaptureDataGroupCaptureDataXref } })
             .CaptureDataGroup();
     }
 };

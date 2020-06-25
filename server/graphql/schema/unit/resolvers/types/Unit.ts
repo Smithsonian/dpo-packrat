@@ -9,19 +9,19 @@ const Unit = {
         const { idUnit } = parent;
         const { prisma } = context;
 
-        return prisma.unit.findOne({ where: { idUnit: Number.parseInt(idUnit) } }).Subject();
+        return prisma.unit.findOne({ where: { idUnit } }).Subject();
     },
     Actor: async (parent: Parent, _: Args, context: Context): Promise<Actor[] | null> => {
         const { idUnit } = parent;
         const { prisma } = context;
 
-        return prisma.unit.findOne({ where: { idUnit: Number.parseInt(idUnit) } }).Actor();
+        return prisma.unit.findOne({ where: { idUnit } }).Actor();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idUnit } = parent;
         const { prisma } = context;
 
-        return prisma.unit.findOne({ where: { idUnit: Number.parseInt(idUnit) } }).SystemObject();
+        return prisma.unit.findOne({ where: { idUnit } }).SystemObject();
     }
 };
 

@@ -9,13 +9,13 @@ const ProjectDocumentation = {
         const { idProjectDocumentation } = parent;
         const { prisma } = context;
 
-        return prisma.projectDocumentation.findOne({ where: { idProjectDocumentation: Number.parseInt(idProjectDocumentation) } }).Project();
+        return prisma.projectDocumentation.findOne({ where: { idProjectDocumentation } }).Project();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idProjectDocumentation } = parent;
         const { prisma } = context;
 
-        return prisma.projectDocumentation.findOne({ where: { idProjectDocumentation: Number.parseInt(idProjectDocumentation) } }).SystemObject();
+        return prisma.projectDocumentation.findOne({ where: { idProjectDocumentation } }).SystemObject();
     }
 };
 

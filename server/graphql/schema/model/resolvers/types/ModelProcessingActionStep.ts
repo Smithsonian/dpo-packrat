@@ -9,13 +9,13 @@ const ModelProcessingActionStep = {
         const { idModelProcessingActionStep } = parent;
         const { prisma } = context;
 
-        return prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep: Number.parseInt(idModelProcessingActionStep) } }).ModelProcessingAction();
+        return prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep } }).ModelProcessingAction();
     },
     Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idModelProcessingActionStep } = parent;
         const { prisma } = context;
 
-        return prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep: Number.parseInt(idModelProcessingActionStep) } }).Vocabulary();
+        return prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep } }).Vocabulary();
     }
 };
 

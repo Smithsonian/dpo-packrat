@@ -9,19 +9,19 @@ const ModelProcessingAction = {
         const { idModelProcessingAction } = parent;
         const { prisma } = context;
 
-        return prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction: Number.parseInt(idModelProcessingAction) } }).Actor();
+        return prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction } }).Actor();
     },
     Model: async (parent: Parent, _: Args, context: Context): Promise<Model | null> => {
         const { idModelProcessingAction } = parent;
         const { prisma } = context;
 
-        return prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction: Number.parseInt(idModelProcessingAction) } }).Model();
+        return prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction } }).Model();
     },
     ModelProcessingActionStep: async (parent: Parent, _: Args, context: Context): Promise<ModelProcessingActionStep[] | null> => {
         const { idModelProcessingAction } = parent;
         const { prisma } = context;
 
-        return prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction: Number.parseInt(idModelProcessingAction) } }).ModelProcessingActionStep();
+        return prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction } }).ModelProcessingActionStep();
     }
 };
 

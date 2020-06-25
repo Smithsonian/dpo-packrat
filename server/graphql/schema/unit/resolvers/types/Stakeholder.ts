@@ -9,7 +9,7 @@ const Stakeholder = {
         const { idStakeholder } = parent;
         const { prisma } = context;
 
-        return prisma.stakeholder.findOne({ where: { idStakeholder: Number.parseInt(idStakeholder) } }).SystemObject();
+        return prisma.stakeholder.findOne({ where: { idStakeholder } }).SystemObject();
     }
 };
 

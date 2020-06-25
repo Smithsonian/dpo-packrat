@@ -9,7 +9,7 @@ const CaptureDataGroup = {
         const { idCaptureDataGroup } = parent;
         const { prisma } = context;
 
-        return prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup: Number.parseInt(idCaptureDataGroup) } }).CaptureDataGroupCaptureDataXref();
+        return prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup } }).CaptureDataGroupCaptureDataXref();
     }
 };
 

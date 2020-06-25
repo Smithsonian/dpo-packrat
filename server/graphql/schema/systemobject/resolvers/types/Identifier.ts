@@ -9,13 +9,13 @@ const Identifier = {
         const { idIdentifier } = parent;
         const { prisma } = context;
 
-        return prisma.identifier.findOne({ where: { idIdentifier: Number.parseInt(idIdentifier) } }).SystemObject();
+        return prisma.identifier.findOne({ where: { idIdentifier } }).SystemObject();
     },
     Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idIdentifier } = parent;
         const { prisma } = context;
 
-        return prisma.identifier.findOne({ where: { idIdentifier: Number.parseInt(idIdentifier) } }).Vocabulary();
+        return prisma.identifier.findOne({ where: { idIdentifier } }).Vocabulary();
     }
 };
 

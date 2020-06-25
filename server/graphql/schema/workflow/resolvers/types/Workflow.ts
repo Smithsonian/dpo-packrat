@@ -9,31 +9,31 @@ const Workflow = {
         const { idWorkflow } = parent;
         const { prisma } = context;
 
-        return prisma.workflow.findOne({ where: { idWorkflow: Number.parseInt(idWorkflow) } }).Project();
+        return prisma.workflow.findOne({ where: { idWorkflow } }).Project();
     },
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { idWorkflow } = parent;
         const { prisma } = context;
 
-        return prisma.workflow.findOne({ where: { idWorkflow: Number.parseInt(idWorkflow) } }).User();
+        return prisma.workflow.findOne({ where: { idWorkflow } }).User();
     },
     WorkflowTemplate: async (parent: Parent, _: Args, context: Context): Promise<WorkflowTemplate | null> => {
         const { idWorkflow } = parent;
         const { prisma } = context;
 
-        return prisma.workflow.findOne({ where: { idWorkflow: Number.parseInt(idWorkflow) } }).WorkflowTemplate();
+        return prisma.workflow.findOne({ where: { idWorkflow } }).WorkflowTemplate();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idWorkflow } = parent;
         const { prisma } = context;
 
-        return prisma.workflow.findOne({ where: { idWorkflow: Number.parseInt(idWorkflow) } }).SystemObject();
+        return prisma.workflow.findOne({ where: { idWorkflow } }).SystemObject();
     },
     WorkflowStep: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep[] | null> => {
         const { idWorkflow } = parent;
         const { prisma } = context;
 
-        return prisma.workflow.findOne({ where: { idWorkflow: Number.parseInt(idWorkflow) } }).WorkflowStep();
+        return prisma.workflow.findOne({ where: { idWorkflow } }).WorkflowStep();
     }
 };
 

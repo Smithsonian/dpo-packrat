@@ -9,31 +9,31 @@ const Subject = {
         const { idSubject } = parent;
         const { prisma } = context;
 
-        return prisma.subject.findOne({ where: { idSubject: Number.parseInt(idSubject) } }).Unit();
+        return prisma.subject.findOne({ where: { idSubject } }).Unit();
     },
     Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
         const { idSubject } = parent;
         const { prisma } = context;
 
-        return prisma.subject.findOne({ where: { idSubject: Number.parseInt(idSubject) } }).Asset();
+        return prisma.subject.findOne({ where: { idSubject } }).Asset();
     },
     GeoLocation: async (parent: Parent, _: Args, context: Context): Promise<GeoLocation | null> => {
         const { idSubject } = parent;
         const { prisma } = context;
 
-        return prisma.subject.findOne({ where: { idSubject: Number.parseInt(idSubject) } }).GeoLocation();
+        return prisma.subject.findOne({ where: { idSubject } }).GeoLocation();
     },
     Item: async (parent: Parent, _: Args, context: Context): Promise<Item[] | null> => {
         const { idSubject } = parent;
         const { prisma } = context;
 
-        return prisma.subject.findOne({ where: { idSubject: Number.parseInt(idSubject) } }).Item();
+        return prisma.subject.findOne({ where: { idSubject } }).Item();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idSubject } = parent;
         const { prisma } = context;
 
-        return prisma.subject.findOne({ where: { idSubject: Number.parseInt(idSubject) } }).SystemObject();
+        return prisma.subject.findOne({ where: { idSubject } }).SystemObject();
     }
 };
 

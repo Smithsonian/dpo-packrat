@@ -9,7 +9,7 @@ const AccessAction = {
         const { idAccessAction } = parent;
         const { prisma } = context;
 
-        return prisma.accessAction.findOne({ where: { idAccessAction: Number.parseInt(idAccessAction) } }).AccessRoleAccessActionXref();
+        return prisma.accessAction.findOne({ where: { idAccessAction } }).AccessRoleAccessActionXref();
     }
 };
 

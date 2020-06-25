@@ -9,13 +9,13 @@ const IntermediaryFile = {
         const { idIntermediaryFile } = parent;
         const { prisma } = context;
 
-        return prisma.intermediaryFile.findOne({ where: { idIntermediaryFile: Number.parseInt(idIntermediaryFile) } }).Asset();
+        return prisma.intermediaryFile.findOne({ where: { idIntermediaryFile } }).Asset();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idIntermediaryFile } = parent;
         const { prisma } = context;
 
-        return prisma.intermediaryFile.findOne({ where: { idIntermediaryFile: Number.parseInt(idIntermediaryFile) } }).SystemObject();
+        return prisma.intermediaryFile.findOne({ where: { idIntermediaryFile } }).SystemObject();
     }
 };
 

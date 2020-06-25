@@ -10,7 +10,7 @@ const License = {
         const { idLicense } = parent;
         const { prisma } = context;
 
-        return prisma.license.findOne({ where: { idLicense: Number.parseInt(idLicense) } }).LicenseAssignment();
+        return prisma.license.findOne({ where: { idLicense } }).LicenseAssignment();
     }
 };
 

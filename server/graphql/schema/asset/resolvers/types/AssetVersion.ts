@@ -9,19 +9,19 @@ const AssetVersion = {
         const { idAssetVersion } = parent;
         const { prisma } = context;
 
-        return prisma.assetVersion.findOne({ where: { idAssetVersion: Number.parseInt(idAssetVersion) } }).Asset();
+        return prisma.assetVersion.findOne({ where: { idAssetVersion } }).Asset();
     },
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { idAssetVersion } = parent;
         const { prisma } = context;
 
-        return prisma.assetVersion.findOne({ where: { idAssetVersion: Number.parseInt(idAssetVersion) } }).User();
+        return prisma.assetVersion.findOne({ where: { idAssetVersion } }).User();
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idAssetVersion } = parent;
         const { prisma } = context;
 
-        return prisma.assetVersion.findOne({ where: { idAssetVersion: Number.parseInt(idAssetVersion) } }).SystemObject();
+        return prisma.assetVersion.findOne({ where: { idAssetVersion } }).SystemObject();
     }
 };
 

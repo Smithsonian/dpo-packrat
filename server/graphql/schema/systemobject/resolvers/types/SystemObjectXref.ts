@@ -9,17 +9,13 @@ const SystemObjectXref = {
         const { idSystemObjectXref } = parent;
         const { prisma } = context;
 
-        return prisma.systemObjectXref
-            .findOne({ where: { idSystemObjectXref: Number.parseInt(idSystemObjectXref) } })
-            .SystemObject_SystemObjectToSystemObjectXref_idSystemObjectDerived();
+        return prisma.systemObjectXref.findOne({ where: { idSystemObjectXref } }).SystemObject_SystemObjectToSystemObjectXref_idSystemObjectDerived();
     },
     SystemObjectMaster: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idSystemObjectXref } = parent;
         const { prisma } = context;
 
-        return prisma.systemObjectXref
-            .findOne({ where: { idSystemObjectXref: Number.parseInt(idSystemObjectXref) } })
-            .SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster();
+        return prisma.systemObjectXref.findOne({ where: { idSystemObjectXref } }).SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster();
     }
 };
 
