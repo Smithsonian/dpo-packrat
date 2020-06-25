@@ -27,7 +27,7 @@ export async function createUser(prisma: PrismaClient, user: User): Promise<User
 
 export async function fetchUser(prisma: PrismaClient, idUser: number): Promise<User | null> {
     try {
-        return await prisma.user.findOne({ where: { idUser } });
+        return await prisma.user.findOne({ where: { idUser, }, });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchUser', error);
         return null;
