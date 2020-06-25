@@ -1,68 +1,80 @@
-# import Asset from "../asset/types.graphql"
-# import Actor from "../scene/types.graphql"
-
 type Unit {
-  id: ID!
-  name: String!
-  abbreviation: String
-  subjects: [Subject]
-  actors: [Actor]
+    idUnit: Int!
+    Abbreviation: String
+    ARKPrefix: String
+    Name: String!
+    Actor: [Actor]
+    Subject: [Subject]
+    SystemObject: SystemObject
 }
 
 type Project {
-  id: ID!
-  name: String!
-  description: String
-  documentations: [ProjectDocumentation]
+    idProject: Int!
+    Name: String!
+    Description: String
+    ProjectDocumentation: [ProjectDocumentation]
+    SystemObject: SystemObject
+    Workflow: [Workflow]
 }
 
 type ProjectDocumentation {
-  id: ID!
-  project: Project!
-  name: String!
-  description: String!
+    idProjectDocumentation: Int!
+    Description: String!
+    idProject: Int!
+    Name: String!
+    Project: Project!
+    SystemObject: SystemObject
 }
 
 type Stakeholder {
-  id: ID!
-  individualName: String!
-  organizationName: String!
-  emailAddress: String
-  phoneNumberMobile: String
-  phoneNumberOffice: String
-  mailingAddress: String
+    idStakeholder: Int!
+    IndividualName: String!
+    OrganizationName: String!
+    MailingAddress: String
+    EmailAddress: String
+    PhoneNumberMobile: String
+    PhoneNumberOffice: String
+    SystemObject: SystemObject
 }
 
-type Geolocation {
-  id: ID!
-  latitude: Float!
-  longitude: Float!
-  altitude: Float!
-  ts0: Float!
-  ts1: Float!
-  ts2: Float!
-  r0: Float!
-  r1: Float!
-  r2: Float!
-  r3: Float!
-  items: [Item]
-  subjects: [Subject]
+type GeoLocation {
+    idGeoLocation: Int!
+    Altitude: Float
+    Latitude: Float
+    Longitude: Float
+    R0: Float
+    R1: Float
+    R2: Float
+    R3: Float
+    TS0: Float
+    TS1: Float
+    TS2: Float
+    Item: [Item]
+    Subject: [Subject]
 }
 
 type Subject {
-  id: ID!
-  unit: Unit!
-  assetThumbnail: Asset
-  name: String!
-  geolocation: Geolocation
-  items: [Item]
+    idSubject: Int!
+    idUnit: Int!
+    Name: String!
+    Asset: Asset
+    idAssetThumbnail: Int
+    idGeoLocation: Int
+    GeoLocation: GeoLocation
+    Unit: Unit
+    Item: [Item]
+    SystemObject: SystemObject
 }
 
 type Item {
-  id: ID!
-  subject: Subject!
-  assetThumbnail: Asset
-  geolocation: Geolocation
-  name: String!
-  entireSubject: Boolean!
+    idItem: Int!
+    EntireSubject: Boolean!
+    idSubject: Int!
+    Name: String!
+    idAssetThumbnail: Int
+    idGeoLocation: Int
+    Asset: Asset
+    GeoLocation: GeoLocation
+    Subject: Subject
+    SystemObject: SystemObject
 }

@@ -51,7 +51,7 @@ export async function fetchSystemObjectForAssetVersionID(prisma: PrismaClient, i
     }
 }
 
-export async function fetchSystemObjectAndAssetVersion(prisma: PrismaClient, idAssetVersion: number): Promise<SystemObject & { AssetVersion: AssetVersion | null} | null> {
+export async function fetchSystemObjectAndAssetVersion(prisma: PrismaClient, idAssetVersion: number): Promise<SystemObject & { AssetVersion: AssetVersion | null } | null> {
     try {
         return await prisma.systemObject.findOne({ where: { idAssetVersion, }, include: { AssetVersion: true, }, });
     } catch (error) {

@@ -1,8 +1,7 @@
 .git
 .gitignore
 README.md
-docker-compose.yml
+docker-compose*.yml
 node_modules
-yarn.lock
 .vscode
 build
