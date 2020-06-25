@@ -574,7 +574,7 @@ type Query {
 }
 
 input GetAccessPolicyInput {
-  idAccessPolicy: ID!
+  idAccessPolicy: Int!
 }
 
 type GetAccessPolicyResult {
@@ -582,7 +582,7 @@ type GetAccessPolicyResult {
 }
 
 input GetAssetInput {
-  idAsset: ID!
+  idAsset: Int!
 }
 
 type GetAssetResult {
@@ -590,7 +590,7 @@ type GetAssetResult {
 }
 
 input GetCaptureDataInput {
-  idCaptureData: ID!
+  idCaptureData: Int!
 }
 
 type GetCaptureDataResult {
@@ -598,7 +598,7 @@ type GetCaptureDataResult {
 }
 
 input GetLicenseInput {
-  idLicense: ID!
+  idLicense: Int!
 }
 
 type GetLicenseResult {
@@ -606,7 +606,7 @@ type GetLicenseResult {
 }
 
 input GetModelInput {
-  idModel: ID!
+  idModel: Int!
 }
 
 type GetModelResult {
@@ -614,7 +614,7 @@ type GetModelResult {
 }
 
 input GetSceneInput {
-  idScene: ID!
+  idScene: Int!
 }
 
 type GetSceneResult {
@@ -622,7 +622,7 @@ type GetSceneResult {
 }
 
 input GetUnitInput {
-  idUnit: ID!
+  idUnit: Int!
 }
 
 type GetUnitResult {
@@ -630,7 +630,7 @@ type GetUnitResult {
 }
 
 input GetUserInput {
-  idUser: ID!
+  idUser: Int!
 }
 
 type GetUserResult {
@@ -638,7 +638,7 @@ type GetUserResult {
 }
 
 input GetVocabularyInput {
-  idVocabulary: ID!
+  idVocabulary: Int!
 }
 
 type GetVocabularyResult {
@@ -646,7 +646,7 @@ type GetVocabularyResult {
 }
 
 input GetWorkflowInput {
-  idWorkflow: ID!
+  idWorkflow: Int!
 }
 
 type GetWorkflowResult {

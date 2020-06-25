@@ -9,7 +9,7 @@ export default async function getLicense(_: Parent, args: Args, context: Context
     const { idLicense } = input;
     const { prisma } = context;
 
-    const License = await fetchLicense(prisma, Number.parseInt(idLicense));
+    const License = await fetchLicense(prisma, idLicense);
 
     return { License };
 }

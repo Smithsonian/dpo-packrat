@@ -10,7 +10,7 @@ export default async function getUnit(_: Parent, args: Args, context: Context): 
     const { idUnit } = input;
     const { prisma } = context;
 
-    const Unit = await fetchUnit(prisma, Number.parseInt(idUnit));
+    const Unit = await fetchUnit(prisma, idUnit);
 
     return { Unit };
 }

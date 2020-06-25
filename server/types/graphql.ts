@@ -670,7 +670,7 @@ export type QueryGetWorkflowArgs = {
 };
 
 export type GetAccessPolicyInput = {
-    idAccessPolicy: Scalars['ID'];
+    idAccessPolicy: Scalars['Int'];
 };
 
 export type GetAccessPolicyResult = {
@@ -679,7 +679,7 @@ export type GetAccessPolicyResult = {
 };
 
 export type GetAssetInput = {
-    idAsset: Scalars['ID'];
+    idAsset: Scalars['Int'];
 };
 
 export type GetAssetResult = {
@@ -688,7 +688,7 @@ export type GetAssetResult = {
 };
 
 export type GetCaptureDataInput = {
-    idCaptureData: Scalars['ID'];
+    idCaptureData: Scalars['Int'];
 };
 
 export type GetCaptureDataResult = {
@@ -697,7 +697,7 @@ export type GetCaptureDataResult = {
 };
 
 export type GetLicenseInput = {
-    idLicense: Scalars['ID'];
+    idLicense: Scalars['Int'];
 };
 
 export type GetLicenseResult = {
@@ -706,7 +706,7 @@ export type GetLicenseResult = {
 };
 
 export type GetModelInput = {
-    idModel: Scalars['ID'];
+    idModel: Scalars['Int'];
 };
 
 export type GetModelResult = {
@@ -715,7 +715,7 @@ export type GetModelResult = {
 };
 
 export type GetSceneInput = {
-    idScene: Scalars['ID'];
+    idScene: Scalars['Int'];
 };
 
 export type GetSceneResult = {
@@ -724,7 +724,7 @@ export type GetSceneResult = {
 };
 
 export type GetUnitInput = {
-    idUnit: Scalars['ID'];
+    idUnit: Scalars['Int'];
 };
 
 export type GetUnitResult = {
@@ -733,7 +733,7 @@ export type GetUnitResult = {
 };
 
 export type GetUserInput = {
-    idUser: Scalars['ID'];
+    idUser: Scalars['Int'];
 };
 
 export type GetUserResult = {
@@ -742,7 +742,7 @@ export type GetUserResult = {
 };
 
 export type GetVocabularyInput = {
-    idVocabulary: Scalars['ID'];
+    idVocabulary: Scalars['Int'];
 };
 
 export type GetVocabularyResult = {
@@ -751,7 +751,7 @@ export type GetVocabularyResult = {
 };
 
 export type GetWorkflowInput = {
-    idWorkflow: Scalars['ID'];
+    idWorkflow: Scalars['Int'];
 };
 
 export type GetWorkflowResult = {

@@ -10,7 +10,7 @@ export default async function getAsset(_: Parent, args: Args, context: Context):
     const { idAsset } = input;
     const { prisma } = context;
 
-    const Asset = await fetchAsset(prisma, Number.parseInt(idAsset));
+    const Asset = await fetchAsset(prisma, idAsset);
 
     return { Asset };
 }
