@@ -1,6 +1,6 @@
 import { GetCaptureDataResult, GetCaptureDataInput } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
-import { resolveCaptureDataByID } from '../types/CaptureData';
+import { fetchCaptureData } from '../../../../../db';
 
 type Args = { input: GetCaptureDataInput };
 
@@ -9,7 +9,7 @@ export default async function getCaptureData(_: Parent, args: Args, context: Con
     const { idCaptureData } = input;
     const { prisma } = context;
 
-    const CaptureData = await resolveCaptureDataByID(prisma, Number.parseInt(idCaptureData));
+    const CaptureData = await fetchCaptureData(prisma, Number.parseInt(idCaptureData));
 
     if (CaptureData) {
         return { CaptureData };

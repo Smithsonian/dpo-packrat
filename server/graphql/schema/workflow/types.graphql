@@ -1,0 +1,45 @@
+scalar DateTime
+
+type Workflow {
+    idWorkflow: Int!
+    DateInitiated: DateTime!
+    DateUpdated: DateTime!
+    idWorkflowTemplate: Int!
+    idProject: Int
+    idUserInitiator: Int
+    Project: Project
+    User: User
+    WorkflowTemplate: WorkflowTemplate
+    SystemObject: SystemObject
+    WorkflowStep: [WorkflowStep]
+}
+
+type WorkflowStep {
+    idWorkflowStep: Int!
+    DateCreated: DateTime!
+    idUserOwner: Int!
+    idVWorkflowStepType: Int!
+    idWorkflow: Int!
+    State: Int!
+    DateCompleted: DateTime
+    User: User
+    Vocabulary: Vocabulary
+    Workflow: Workflow
+    SystemObject: SystemObject
+    WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]
+}
+
+type WorkflowStepSystemObjectXref {
+    idSystemObject: Int!
+    idWorkflowStep: Int!
+    idWorkflowStepSystemObjectXref: Int!
+    Input: Boolean!
+    SystemObject: SystemObject
+    WorkflowStep: WorkflowStep
+}
+
+type WorkflowTemplate {
+    idWorkflowTemplate: Int!
+    Name: String!
+    Workflow: [Workflow]
+}

@@ -5,23 +5,30 @@
 scalar DateTime
 
 type Scene {
-  idScene: ID!
-  Name: String!
-  AssetThumbnail: Asset
-  IsOriented: Boolean!
-  HasBeenQCd: Boolean!
-  Model: [Model]
+    idScene: Int!
+    HasBeenQCd: Boolean!
+    idAssetThumbnail: Int
+    IsOriented: Boolean!
+    Name: String!
+    Asset: Asset
+    ModelSceneXref: [ModelSceneXref]
+    SystemObject: SystemObject
 }
 
 type Actor {
-  idActor: ID!
-  IndividualName: String
-  OrganizationName: String
-  Unit: Unit
+    idActor: Int!
+    idUnit: Int
+    IndividualName: String
+    OrganizationName: String
+    Unit: Unit
+    ModelProcessingAction: [ModelProcessingAction]
+    SystemObject: SystemObject
 }
 
 type IntermediaryFile {
-  idIntermediaryFile: ID!
-  Asset: Asset!
-  DateCreated: DateTime!
+    idIntermediaryFile: Int!
+    DateCreated: DateTime!
+    idAsset: Int!
+    Asset: Asset
+    SystemObject: SystemObject
 }

@@ -9,314 +9,610 @@ export type Scalars = {
     DateTime: any;
 };
 
-export type Asset = {
-    __typename?: 'Asset';
-    idAsset: Scalars['ID'];
-    FileName: Scalars['String'];
-    FilePath: Scalars['String'];
-    AssetGroup?: Maybe<AssetGroup>;
-    CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
-    Scene?: Maybe<Array<Maybe<Scene>>>;
-    IntermediaryFile?: Maybe<Array<Maybe<IntermediaryFile>>>;
+export type AccessAction = {
+    __typename?: 'AccessAction';
+    idAccessAction: Scalars['Int'];
+    Name: Scalars['String'];
+    SortOrder: Scalars['Int'];
+    AccessRoleAccessActionXref?: Maybe<Array<Maybe<AccessRoleAccessActionXref>>>;
 };
 
-export type AssetVersion = {
-    __typename?: 'AssetVersion';
-    idAssetVersion: Scalars['ID'];
-    Asset?: Maybe<Asset>;
-    UserCreator?: Maybe<User>;
-    DateCreated: Scalars['DateTime'];
-    StorageLocation: Scalars['String'];
-    StorageChecksum: Scalars['String'];
-    StorageSize: Scalars['Int'];
+export type AccessContext = {
+    __typename?: 'AccessContext';
+    idAccessContext: Scalars['Int'];
+    Authoritative: Scalars['Boolean'];
+    CaptureData: Scalars['Boolean'];
+    Global: Scalars['Boolean'];
+    IntermediaryFile: Scalars['Boolean'];
+    Model: Scalars['Boolean'];
+    Scene: Scalars['Boolean'];
+    AccessContextObject?: Maybe<Array<Maybe<AccessContextObject>>>;
+    AccessPolicy?: Maybe<Array<Maybe<AccessPolicy>>>;
+};
+
+export type AccessContextObject = {
+    __typename?: 'AccessContextObject';
+    idAccessContextObject: Scalars['Int'];
+    idAccessContext: Scalars['Int'];
+    idSystemObject: Scalars['Int'];
+    AccessContext?: Maybe<AccessContext>;
+    SystemObject?: Maybe<SystemObject>;
+};
+
+export type AccessPolicy = {
+    __typename?: 'AccessPolicy';
+    idAccessPolicy: Scalars['Int'];
+    idAccessContext: Scalars['Int'];
+    idAccessRole: Scalars['Int'];
+    idUser: Scalars['Int'];
+    AccessContext?: Maybe<AccessContext>;
+    AccessRole?: Maybe<AccessRole>;
+    User?: Maybe<User>;
+};
+
+export type AccessRole = {
+    __typename?: 'AccessRole';
+    idAccessRole: Scalars['Int'];
+    Name: Scalars['String'];
+    AccessPolicy?: Maybe<Array<Maybe<AccessPolicy>>>;
+    AccessRoleAccessActionXref?: Maybe<Array<Maybe<AccessRoleAccessActionXref>>>;
+};
+
+export type AccessRoleAccessActionXref = {
+    __typename?: 'AccessRoleAccessActionXref';
+    idAccessRoleAccessActionXref: Scalars['Int'];
+    idAccessAction: Scalars['Int'];
+    idAccessRole: Scalars['Int'];
+    AccessAction?: Maybe<AccessAction>;
+    AccessRole?: Maybe<AccessRole>;
+};
+
+export type Actor = {
+    __typename?: 'Actor';
+    idActor: Scalars['Int'];
+    idUnit?: Maybe<Scalars['Int']>;
+    IndividualName?: Maybe<Scalars['String']>;
+    OrganizationName?: Maybe<Scalars['String']>;
+    Unit?: Maybe<Unit>;
+    ModelProcessingAction?: Maybe<Array<Maybe<ModelProcessingAction>>>;
+    SystemObject?: Maybe<SystemObject>;
+};
+
+export type Asset = {
+    __typename?: 'Asset';
+    idAsset: Scalars['Int'];
+    FileName: Scalars['String'];
+    FilePath: Scalars['String'];
+    idAssetGroup?: Maybe<Scalars['Int']>;
+    AssetGroup?: Maybe<AssetGroup>;
+    AssetVersion?: Maybe<Array<Maybe<AssetVersion>>>;
+    CaptureData?: Maybe<Array<Maybe<CaptureData>>>;
+    CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
+    IntermediaryFile?: Maybe<Array<Maybe<IntermediaryFile>>>;
+    Item?: Maybe<Array<Maybe<Item>>>;
+    Metadata?: Maybe<Array<Maybe<Metadata>>>;
+    Model?: Maybe<Array<Maybe<Model>>>;
+    ModelGeometryFile?: Maybe<Array<Maybe<ModelGeometryFile>>>;
+    ModelUVMapFile?: Maybe<Array<Maybe<ModelUvMapFile>>>;
+    Scene?: Maybe<Array<Maybe<Scene>>>;
+    Subject?: Maybe<Array<Maybe<Subject>>>;
+    SystemObject?: Maybe<SystemObject>;
 };
 
 export type AssetGroup = {
     __typename?: 'AssetGroup';
-    idAssetGroup: Scalars['ID'];
+    idAssetGroup: Scalars['Int'];
     Asset?: Maybe<Array<Maybe<Asset>>>;
+};
+
+export type AssetVersion = {
+    __typename?: 'AssetVersion';
+    idAssetVersion: Scalars['Int'];
+    DateCreated: Scalars['DateTime'];
+    idAsset: Scalars['Int'];
+    idUserCreator: Scalars['Int'];
+    StorageChecksum: Scalars['String'];
+    StorageLocation: Scalars['String'];
+    StorageSize: Scalars['Int'];
+    Asset?: Maybe<Asset>;
+    User?: Maybe<User>;
+    SystemObject?: Maybe<SystemObject>;
 };
 
 export type CaptureData = {
     __typename?: 'CaptureData';
-    idCaptureData: Scalars['ID'];
-    VCaptureMethod: Vocabulary;
-    VCaptureDatasetType: Vocabulary;
+    idCaptureData: Scalars['Int'];
     DateCaptured: Scalars['DateTime'];
     Description: Scalars['String'];
-    CaptureDatasetFieldID?: Maybe<Scalars['Int']>;
-    VItemPositionType?: Maybe<Vocabulary>;
-    ItemPositionFieldID?: Maybe<Scalars['Int']>;
-    ItemArrangementFieldID?: Maybe<Scalars['Int']>;
-    VFocusType?: Maybe<Vocabulary>;
-    VLightSourceType?: Maybe<Vocabulary>;
-    VBackgroundRemovalMethod?: Maybe<Vocabulary>;
-    VClusterType?: Maybe<Vocabulary>;
-    ClusterGeometryFieldID?: Maybe<Scalars['Int']>;
+    idVCaptureDatasetType: Scalars['Int'];
+    idVCaptureMethod: Scalars['Int'];
     CameraSettingsUniform?: Maybe<Scalars['Boolean']>;
-    AssetThumbnail?: Maybe<Asset>;
-    CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
+    CaptureDatasetFieldID?: Maybe<Scalars['Int']>;
+    ClusterGeometryFieldID?: Maybe<Scalars['Int']>;
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idVBackgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    idVClusterType?: Maybe<Scalars['Int']>;
+    idVFocusType?: Maybe<Scalars['Int']>;
+    idVItemPositionType?: Maybe<Scalars['Int']>;
+    idVLightSourceType?: Maybe<Scalars['Int']>;
+    ItemArrangementFieldID?: Maybe<Scalars['Int']>;
+    ItemPositionFieldID?: Maybe<Scalars['Int']>;
+    Asset?: Maybe<Asset>;
+    VBackgroundRemovalMethod?: Maybe<Vocabulary>;
+    VCaptureDatasetType?: Maybe<Vocabulary>;
+    VCaptureMethod?: Maybe<Vocabulary>;
+    VClusterType?: Maybe<Vocabulary>;
+    VFocusType?: Maybe<Vocabulary>;
+    VItemPositionType?: Maybe<Vocabulary>;
+    VLightSourceType?: Maybe<Vocabulary>;
     CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
+    CaptureDataGroupCaptureDataXref?: Maybe<Array<Maybe<CaptureDataGroupCaptureDataXref>>>;
+    SystemObject?: Maybe<SystemObject>;
 };
 
 export type CaptureDataFile = {
     __typename?: 'CaptureDataFile';
-    idCaptureDataFile: Scalars['ID'];
-    CaptureData: CaptureData;
-    Asset: Asset;
-    VVariantType: Vocabulary;
+    idCaptureDataFile: Scalars['Int'];
     CompressedMultipleFiles: Scalars['Boolean'];
+    idAsset: Scalars['Int'];
+    idCaptureData: Scalars['Int'];
+    idVVariantType: Scalars['Int'];
+    Asset?: Maybe<Asset>;
+    CaptureData?: Maybe<CaptureData>;
+    Vocabulary?: Maybe<Vocabulary>;
 };
 
 export type CaptureDataGroup = {
     __typename?: 'CaptureDataGroup';
-    idCaptureDataGroup: Scalars['ID'];
-    CaptureData?: Maybe<Array<Maybe<CaptureData>>>;
+    idCaptureDataGroup: Scalars['Int'];
+    CaptureDataGroupCaptureDataXref?: Maybe<Array<Maybe<CaptureDataGroupCaptureDataXref>>>;
+};
+
+export type CaptureDataGroupCaptureDataXref = {
+    __typename?: 'CaptureDataGroupCaptureDataXref';
+    idCaptureData: Scalars['Int'];
+    idCaptureDataGroup: Scalars['Int'];
+    idCaptureDataGroupCaptureDataXref: Scalars['Int'];
+    CaptureData?: Maybe<CaptureData>;
+    CaptureDataGroup?: Maybe<CaptureDataGroup>;
+};
+
+export type GeoLocation = {
+    __typename?: 'GeoLocation';
+    idGeoLocation: Scalars['Int'];
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+    Item?: Maybe<Array<Maybe<Item>>>;
+    Subject?: Maybe<Array<Maybe<Subject>>>;
+};
+
+export type Identifier = {
+    __typename?: 'Identifier';
+    idIdentifier: Scalars['Int'];
+    IdentifierValue: Scalars['String'];
+    idSystemObject?: Maybe<Scalars['Int']>;
+    idVIdentifierType?: Maybe<Scalars['Int']>;
+    SystemObject?: Maybe<SystemObject>;
+    Vocabulary?: Maybe<Vocabulary>;
+};
+
+export type IntermediaryFile = {
+    __typename?: 'IntermediaryFile';
+    idIntermediaryFile: Scalars['Int'];
+    DateCreated: Scalars['DateTime'];
+    idAsset: Scalars['Int'];
+    Asset?: Maybe<Asset>;
+    SystemObject?: Maybe<SystemObject>;
+};
+
+export type Item = {
+    __typename?: 'Item';
+    idItem: Scalars['Int'];
+    EntireSubject: Scalars['Boolean'];
+    idSubject: Scalars['Int'];
+    Name: Scalars['String'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idGeoLocation?: Maybe<Scalars['Int']>;
+    Asset?: Maybe<Asset>;
+    GeoLocation?: Maybe<GeoLocation>;
+    Subject?: Maybe<Subject>;
+    SystemObject?: Maybe<SystemObject>;
 };
 
 export type License = {
     __typename?: 'License';
-    idLicense: Scalars['ID'];
-    Name: Scalars['String'];
+    idLicense: Scalars['Int'];
     Description: Scalars['String'];
+    Name: Scalars['String'];
     LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
 };
 
 export type LicenseAssignment = {
     __typename?: 'LicenseAssignment';
-    idLicenseAssignment: Scalars['ID'];
-    License: License;
-    UserCreator?: Maybe<User>;
-    DateStart?: Maybe<Scalars['DateTime']>;
+    idLicenseAssignment: Scalars['Int'];
+    idLicense: Scalars['Int'];
     DateEnd?: Maybe<Scalars['DateTime']>;
+    DateStart?: Maybe<Scalars['DateTime']>;
+    idSystemObject?: Maybe<Scalars['Int']>;
+    idUserCreator?: Maybe<Scalars['Int']>;
+    License?: Maybe<License>;
+    SystemObject?: Maybe<SystemObject>;
+    User?: Maybe<User>;
+};
+
+export type Metadata = {
+    __typename?: 'Metadata';
+    idMetadata: Scalars['Int'];
+    Name: Scalars['String'];
+    idAssetValue?: Maybe<Scalars['Int']>;
+    idSystemObject?: Maybe<Scalars['Int']>;
+    idUser?: Maybe<Scalars['Int']>;
+    idVMetadataSource?: Maybe<Scalars['Int']>;
+    ValueExtended?: Maybe<Scalars['String']>;
+    ValueShort?: Maybe<Scalars['String']>;
+    Asset?: Maybe<Asset>;
+    SystemObject?: Maybe<SystemObject>;
+    User?: Maybe<User>;
+    Vocabulary?: Maybe<Vocabulary>;
 };
 
 export type Model = {
     __typename?: 'Model';
-    idModel: Scalars['ID'];
-    DateCreated: Scalars['DateTime'];
-    VCreationMethod: Vocabulary;
-    Master: Scalars['Boolean'];
+    idModel: Scalars['Int'];
     Authoritative: Scalars['Boolean'];
-    VModality: Vocabulary;
-    VUnits: Vocabulary;
-    VPurpose: Vocabulary;
-    AssetThumbnail?: Maybe<Asset>;
-    Orientation?: Maybe<Orientation>;
-};
-
-export type Orientation = {
-    __typename?: 'Orientation';
-    TS0?: Maybe<Scalars['Float']>;
-    TS1?: Maybe<Scalars['Float']>;
-    TS2?: Maybe<Scalars['Float']>;
-    R0?: Maybe<Scalars['Float']>;
-    R1?: Maybe<Scalars['Float']>;
-    R2?: Maybe<Scalars['Float']>;
-    R3?: Maybe<Scalars['Float']>;
+    DateCreated: Scalars['DateTime'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idVCreationMethod: Scalars['Int'];
+    idVModality: Scalars['Int'];
+    idVPurpose: Scalars['Int'];
+    idVUnits: Scalars['Int'];
+    Master: Scalars['Boolean'];
+    Asset?: Maybe<Asset>;
+    VCreationMethod?: Maybe<Vocabulary>;
+    VModality?: Maybe<Vocabulary>;
+    VPurpose?: Maybe<Vocabulary>;
+    VUnits?: Maybe<Vocabulary>;
+    ModelGeometryFile?: Maybe<Array<Maybe<ModelGeometryFile>>>;
+    ModelProcessingAction?: Maybe<Array<Maybe<ModelProcessingAction>>>;
+    ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
+    SystemObject?: Maybe<SystemObject>;
 };
 
 export type ModelGeometryFile = {
     __typename?: 'ModelGeometryFile';
-    idModelGeometryFile: Scalars['ID'];
-    Model: Model;
-    Asset: Asset;
-    VModelFileType: Vocabulary;
-    Roughness?: Maybe<Scalars['Float']>;
-    Metalness?: Maybe<Scalars['Float']>;
-    PointCount?: Maybe<Scalars['Int']>;
-    FaceCount?: Maybe<Scalars['Int']>;
-    IsWatertight?: Maybe<Scalars['Boolean']>;
-    HasNormals?: Maybe<Scalars['Boolean']>;
-    HasVertexColor?: Maybe<Scalars['Boolean']>;
-    HasUvSpace?: Maybe<Scalars['Boolean']>;
+    idModelGeometryFile: Scalars['Int'];
+    idAsset: Scalars['Int'];
+    idModel: Scalars['Int'];
+    idVModelFileType: Scalars['Int'];
     BoundingBoxP1X?: Maybe<Scalars['Float']>;
     BoundingBoxP1Y?: Maybe<Scalars['Float']>;
     BoundingBoxP1Z?: Maybe<Scalars['Float']>;
     BoundingBoxP2X?: Maybe<Scalars['Float']>;
     BoundingBoxP2Y?: Maybe<Scalars['Float']>;
     BoundingBoxP2Z?: Maybe<Scalars['Float']>;
+    FaceCount?: Maybe<Scalars['Int']>;
+    HasNormals?: Maybe<Scalars['Boolean']>;
+    HasUVSpace?: Maybe<Scalars['Boolean']>;
+    HasVertexColor?: Maybe<Scalars['Boolean']>;
+    IsWatertight?: Maybe<Scalars['Boolean']>;
+    Metalness?: Maybe<Scalars['Float']>;
+    PointCount?: Maybe<Scalars['Int']>;
+    Roughness?: Maybe<Scalars['Float']>;
+    Asset?: Maybe<Asset>;
+    Model?: Maybe<Model>;
+    Vocabulary?: Maybe<Vocabulary>;
+    ModelUVMapFile?: Maybe<Array<Maybe<ModelUvMapFile>>>;
 };
 
 export type ModelProcessingAction = {
     __typename?: 'ModelProcessingAction';
-    idModelProcessingAction: Scalars['ID'];
-    Model: Model;
-    Actor: Actor;
+    idModelProcessingAction: Scalars['Int'];
     DateProcessed: Scalars['DateTime'];
-    ToolsUsed: Scalars['String'];
     Description: Scalars['String'];
-    ModelProcessingActionStep?: Maybe<Array<Maybe<ModelProcessingActionStep>>>;
+    idActor: Scalars['Int'];
+    idModel: Scalars['Int'];
+    ToolsUsed: Scalars['String'];
+    Actor?: Maybe<Actor>;
+    Model?: Maybe<Model>;
+    ModelProcessingActionStep: Array<Maybe<ModelProcessingActionStep>>;
 };
 
 export type ModelProcessingActionStep = {
     __typename?: 'ModelProcessingActionStep';
-    idModelProcessingActionStep: Scalars['ID'];
-    ModelProcessingAction: ModelProcessingAction;
-    VActionMethod: Vocabulary;
+    idModelProcessingActionStep: Scalars['Int'];
     Description: Scalars['String'];
+    idModelProcessingAction: Scalars['Int'];
+    idVActionMethod: Scalars['Int'];
+    ModelProcessingAction?: Maybe<ModelProcessingAction>;
+    Vocabulary?: Maybe<Vocabulary>;
 };
 
-export type ModelUvMapFile = {
-    __typename?: 'ModelUVMapFile';
-    idModelUVMapFile: Scalars['ID'];
-    ModelGeometryFile: ModelGeometryFile;
-    Asset: Asset;
-    UVMapEdgeLength: Scalars['Int'];
-    ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
-};
-
-export type ModelUvMapChannel = {
-    __typename?: 'ModelUVMapChannel';
-    idModelUVMapChannel: Scalars['ID'];
-    ModelUvMapFile: ModelUvMapFile;
-    ChannelPosition: Scalars['Int'];
-    ChannelWidth: Scalars['Int'];
-    VUVMapType: Vocabulary;
-};
-
-export type Scene = {
-    __typename?: 'Scene';
-    idScene: Scalars['ID'];
-    Name: Scalars['String'];
-    AssetThumbnail?: Maybe<Asset>;
-    IsOriented: Scalars['Boolean'];
-    HasBeenQCd: Scalars['Boolean'];
-    Model?: Maybe<Array<Maybe<Model>>>;
-};
-
-export type Actor = {
-    __typename?: 'Actor';
-    idActor: Scalars['ID'];
-    IndividualName?: Maybe<Scalars['String']>;
-    OrganizationName?: Maybe<Scalars['String']>;
-    Unit?: Maybe<Unit>;
-};
-
-export type IntermediaryFile = {
-    __typename?: 'IntermediaryFile';
-    idIntermediaryFile: Scalars['ID'];
-    Asset: Asset;
-    DateCreated: Scalars['DateTime'];
-};
-
-export type Unit = {
-    __typename?: 'Unit';
-    idUnit: Scalars['ID'];
-    Name: Scalars['String'];
-    Abbreviation?: Maybe<Scalars['String']>;
-    ARKPrefix?: Maybe<Scalars['String']>;
-    Subject?: Maybe<Array<Maybe<Subject>>>;
-    Actor?: Maybe<Array<Maybe<Actor>>>;
-};
-
-export type Project = {
-    __typename?: 'Project';
-    idProject: Scalars['ID'];
-    Name: Scalars['String'];
-    Description?: Maybe<Scalars['String']>;
-    ProjectDocumentation?: Maybe<Array<Maybe<ProjectDocumentation>>>;
-};
-
-export type ProjectDocumentation = {
-    __typename?: 'ProjectDocumentation';
-    idProjectDocumentation: Scalars['ID'];
-    Project: Project;
-    Name: Scalars['String'];
-    Description: Scalars['String'];
-};
-
-export type Stakeholder = {
-    __typename?: 'Stakeholder';
-    idStakeholder: Scalars['ID'];
-    IndividualName: Scalars['String'];
-    OrganizationName: Scalars['String'];
-    EmailAddress?: Maybe<Scalars['String']>;
-    PhoneNumberMobile?: Maybe<Scalars['String']>;
-    PhoneNumberOffice?: Maybe<Scalars['String']>;
-    MailingAddress?: Maybe<Scalars['String']>;
-};
-
-export type GeoLocation = {
-    __typename?: 'GeoLocation';
-    idGeoLocation: Scalars['ID'];
-    Latitude?: Maybe<Scalars['Float']>;
-    Longitude?: Maybe<Scalars['Float']>;
-    Altitude?: Maybe<Scalars['Float']>;
-    TS0?: Maybe<Scalars['Float']>;
-    TS1?: Maybe<Scalars['Float']>;
-    TS2?: Maybe<Scalars['Float']>;
+export type ModelSceneXref = {
+    __typename?: 'ModelSceneXref';
+    idModelSceneXref: Scalars['Int'];
+    idModel: Scalars['Int'];
+    idScene: Scalars['Int'];
     R0?: Maybe<Scalars['Float']>;
     R1?: Maybe<Scalars['Float']>;
     R2?: Maybe<Scalars['Float']>;
     R3?: Maybe<Scalars['Float']>;
-    Item?: Maybe<Array<Maybe<Item>>>;
-    Subject?: Maybe<Array<Maybe<Subject>>>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+    Model?: Maybe<Model>;
+    Scene?: Maybe<Scene>;
+};
+
+export type ModelUvMapChannel = {
+    __typename?: 'ModelUVMapChannel';
+    idModelUVMapChannel: Scalars['Int'];
+    ChannelPosition: Scalars['Int'];
+    ChannelWidth: Scalars['Int'];
+    idModelUVMapFile: Scalars['Int'];
+    idVUVMapType: Scalars['Int'];
+    ModelUVMapFile?: Maybe<ModelUvMapFile>;
+    Vocabulary?: Maybe<Vocabulary>;
+};
+
+export type ModelUvMapFile = {
+    __typename?: 'ModelUVMapFile';
+    idModelUVMapFile: Scalars['Int'];
+    idAsset: Scalars['Int'];
+    idModelGeometryFile: Scalars['Int'];
+    UVMapEdgeLength: Scalars['Int'];
+    Asset?: Maybe<Asset>;
+    ModelGeometryFile?: Maybe<ModelGeometryFile>;
+    ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
+};
+
+export type Project = {
+    __typename?: 'Project';
+    idProject: Scalars['Int'];
+    Name: Scalars['String'];
+    Description?: Maybe<Scalars['String']>;
+    ProjectDocumentation?: Maybe<Array<Maybe<ProjectDocumentation>>>;
+    SystemObject?: Maybe<SystemObject>;
+    Workflow?: Maybe<Array<Maybe<Workflow>>>;
+};
+
+export type ProjectDocumentation = {
+    __typename?: 'ProjectDocumentation';
+    idProjectDocumentation: Scalars['Int'];
+    Description: Scalars['String'];
+    idProject: Scalars['Int'];
+    Name: Scalars['String'];
+    Project: Project;
+    SystemObject?: Maybe<SystemObject>;
+};
+
+export type Scene = {
+    __typename?: 'Scene';
+    idScene: Scalars['Int'];
+    HasBeenQCd: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    IsOriented: Scalars['Boolean'];
+    Name: Scalars['String'];
+    Asset?: Maybe<Asset>;
+    ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
+    SystemObject?: Maybe<SystemObject>;
+};
+
+export type Stakeholder = {
+    __typename?: 'Stakeholder';
+    idStakeholder: Scalars['Int'];
+    IndividualName: Scalars['String'];
+    OrganizationName: Scalars['String'];
+    MailingAddress?: Maybe<Scalars['String']>;
+    EmailAddress?: Maybe<Scalars['String']>;
+    PhoneNumberMobile?: Maybe<Scalars['String']>;
+    PhoneNumberOffice?: Maybe<Scalars['String']>;
+    SystemObject?: Maybe<SystemObject>;
 };
 
 export type Subject = {
     __typename?: 'Subject';
-    idSubject: Scalars['ID'];
-    Unit?: Maybe<Unit>;
-    AssetThumbnail?: Maybe<Asset>;
+    idSubject: Scalars['Int'];
+    idUnit: Scalars['Int'];
     Name: Scalars['String'];
+    Asset?: Maybe<Asset>;
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idGeoLocation?: Maybe<Scalars['Int']>;
     GeoLocation?: Maybe<GeoLocation>;
+    Unit?: Maybe<Unit>;
     Item?: Maybe<Array<Maybe<Item>>>;
+    SystemObject?: Maybe<SystemObject>;
 };
 
-export type Item = {
-    __typename?: 'Item';
-    idItem: Scalars['ID'];
+export type SystemObject = {
+    __typename?: 'SystemObject';
+    idSystemObject: Scalars['Int'];
+    Retired: Scalars['Boolean'];
+    idActor?: Maybe<Scalars['Int']>;
+    idAsset?: Maybe<Scalars['Int']>;
+    idAssetVersion?: Maybe<Scalars['Int']>;
+    idCaptureData?: Maybe<Scalars['Int']>;
+    idIntermediaryFile?: Maybe<Scalars['Int']>;
+    idItem?: Maybe<Scalars['Int']>;
+    idModel?: Maybe<Scalars['Int']>;
+    idProject?: Maybe<Scalars['Int']>;
+    idProjectDocumentation?: Maybe<Scalars['Int']>;
+    idScene?: Maybe<Scalars['Int']>;
+    idStakeholder?: Maybe<Scalars['Int']>;
+    idSubject?: Maybe<Scalars['Int']>;
+    idUnit?: Maybe<Scalars['Int']>;
+    idWorkflow?: Maybe<Scalars['Int']>;
+    idWorkflowStep?: Maybe<Scalars['Int']>;
+    Actor?: Maybe<Actor>;
+    Asset?: Maybe<Asset>;
+    AssetVersion?: Maybe<AssetVersion>;
+    CaptureData?: Maybe<CaptureData>;
+    IntermediaryFile?: Maybe<IntermediaryFile>;
+    Item?: Maybe<Item>;
+    Model?: Maybe<Model>;
+    Project?: Maybe<Project>;
+    ProjectDocumentation?: Maybe<ProjectDocumentation>;
+    Scene?: Maybe<Scene>;
+    Stakeholder?: Maybe<Stakeholder>;
     Subject?: Maybe<Subject>;
-    AssetThumbnail?: Maybe<Asset>;
-    GeoLocation?: Maybe<GeoLocation>;
+    Unit?: Maybe<Unit>;
+    Workflow?: Maybe<Workflow>;
+    WorkflowStep?: Maybe<WorkflowStep>;
+    AccessContextObject?: Maybe<Array<Maybe<AccessContextObject>>>;
+    Identifier?: Maybe<Array<Maybe<Identifier>>>;
+    LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
+    Metadata?: Maybe<Array<Maybe<Metadata>>>;
+    SystemObjectVersion?: Maybe<Array<Maybe<SystemObjectVersion>>>;
+    SystemObjectDerived?: Maybe<Array<Maybe<SystemObjectXref>>>;
+    SystemObjectMaster?: Maybe<Array<Maybe<SystemObjectXref>>>;
+    UserPersonalizationSystemObject?: Maybe<Array<Maybe<UserPersonalizationSystemObject>>>;
+    WorkflowStepSystemObjectXref: Array<Maybe<WorkflowStepSystemObjectXref>>;
+};
+
+export type SystemObjectVersion = {
+    __typename?: 'SystemObjectVersion';
+    idSystemObjectVersion: Scalars['Int'];
+    idSystemObject: Scalars['Int'];
+    PublishedState: Scalars['Int'];
+    SystemObject?: Maybe<SystemObject>;
+};
+
+export type SystemObjectXref = {
+    __typename?: 'SystemObjectXref';
+    idSystemObjectXref: Scalars['Int'];
+    idSystemObjectDerived: Scalars['Int'];
+    idSystemObjectMaster: Scalars['Int'];
+    SystemObjectDerived?: Maybe<SystemObject>;
+    SystemObjectMaster?: Maybe<SystemObject>;
+};
+
+export type Unit = {
+    __typename?: 'Unit';
+    idUnit: Scalars['Int'];
+    Abbreviation?: Maybe<Scalars['String']>;
+    ARKPrefix?: Maybe<Scalars['String']>;
     Name: Scalars['String'];
-    EntireSubject: Scalars['Boolean'];
+    Actor?: Maybe<Array<Maybe<Actor>>>;
+    Subject?: Maybe<Array<Maybe<Subject>>>;
+    SystemObject?: Maybe<SystemObject>;
 };
 
 export type User = {
     __typename?: 'User';
-    idUser: Scalars['ID'];
-    Name: Scalars['String'];
-    EmailAddress: Scalars['String'];
-    SecurityID: Scalars['String'];
+    idUser: Scalars['Int'];
     Active: Scalars['Boolean'];
     DateActivated: Scalars['DateTime'];
+    EmailAddress: Scalars['String'];
+    Name: Scalars['String'];
+    SecurityID: Scalars['String'];
     DateDisabled?: Maybe<Scalars['DateTime']>;
-    WorkflowNotificationTime?: Maybe<Scalars['DateTime']>;
     EmailSettings?: Maybe<Scalars['Int']>;
+    WorkflowNotificationTime?: Maybe<Scalars['DateTime']>;
+    AccessPolicy?: Maybe<Array<Maybe<AccessPolicy>>>;
+    AssetVersion?: Maybe<Array<Maybe<AssetVersion>>>;
+    LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
+    Metadata?: Maybe<Array<Maybe<Metadata>>>;
     UserPersonalizationSystemObject?: Maybe<Array<Maybe<UserPersonalizationSystemObject>>>;
     UserPersonalizationUrl?: Maybe<Array<Maybe<UserPersonalizationUrl>>>;
-    LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
+    Workflow?: Maybe<Array<Maybe<Workflow>>>;
+    WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 
 export type UserPersonalizationSystemObject = {
     __typename?: 'UserPersonalizationSystemObject';
-    idUserPersonalizationSystemObject: Scalars['ID'];
-    User?: Maybe<User>;
+    idUserPersonalizationSystemObject: Scalars['Int'];
+    idSystemObject: Scalars['Int'];
+    idUser: Scalars['Int'];
     Personalization?: Maybe<Scalars['String']>;
+    SystemObject?: Maybe<SystemObject>;
+    User?: Maybe<User>;
 };
 
 export type UserPersonalizationUrl = {
     __typename?: 'UserPersonalizationUrl';
-    idUserPersonalizationUrl: Scalars['ID'];
-    User?: Maybe<User>;
-    URL: Scalars['String'];
+    idUserPersonalizationUrl: Scalars['Int'];
+    idUser: Scalars['Int'];
     Personalization: Scalars['String'];
+    URL: Scalars['String'];
+    User?: Maybe<User>;
 };
 
 export type Vocabulary = {
     __typename?: 'Vocabulary';
-    idVocabulary: Scalars['ID'];
-    VocabularySet: VocabularySet;
+    idVocabulary: Scalars['Int'];
+    idVocabularySet: Scalars['Int'];
     SortOrder: Scalars['Int'];
+    VocabularySet?: Maybe<VocabularySet>;
+    CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
+    Identifier?: Maybe<Array<Maybe<Identifier>>>;
+    Metadata?: Maybe<Array<Maybe<Metadata>>>;
+    ModelGeometryFile?: Maybe<Array<Maybe<ModelGeometryFile>>>;
+    ModelProcessingActionStep?: Maybe<Array<Maybe<ModelProcessingActionStep>>>;
+    ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
+    WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 
 export type VocabularySet = {
     __typename?: 'VocabularySet';
-    idVocabularySet: Scalars['ID'];
+    idVocabularySet: Scalars['Int'];
     Name: Scalars['String'];
     SystemMaintained: Scalars['Boolean'];
+    Vocabulary?: Maybe<Array<Maybe<Vocabulary>>>;
+};
+
+export type Workflow = {
+    __typename?: 'Workflow';
+    idWorkflow: Scalars['Int'];
+    DateInitiated: Scalars['DateTime'];
+    DateUpdated: Scalars['DateTime'];
+    idWorkflowTemplate: Scalars['Int'];
+    idProject?: Maybe<Scalars['Int']>;
+    idUserInitiator?: Maybe<Scalars['Int']>;
+    Project?: Maybe<Project>;
+    User?: Maybe<User>;
+    WorkflowTemplate?: Maybe<WorkflowTemplate>;
+    SystemObject?: Maybe<SystemObject>;
+    WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
+};
+
+export type WorkflowStep = {
+    __typename?: 'WorkflowStep';
+    idWorkflowStep: Scalars['Int'];
+    DateCreated: Scalars['DateTime'];
+    idUserOwner: Scalars['Int'];
+    idVWorkflowStepType: Scalars['Int'];
+    idWorkflow: Scalars['Int'];
+    State: Scalars['Int'];
+    DateCompleted?: Maybe<Scalars['DateTime']>;
+    User?: Maybe<User>;
+    Vocabulary?: Maybe<Vocabulary>;
+    Workflow?: Maybe<Workflow>;
+    SystemObject?: Maybe<SystemObject>;
+    WorkflowStepSystemObjectXref?: Maybe<Array<Maybe<WorkflowStepSystemObjectXref>>>;
+};
+
+export type WorkflowStepSystemObjectXref = {
+    __typename?: 'WorkflowStepSystemObjectXref';
+    idSystemObject: Scalars['Int'];
+    idWorkflowStep: Scalars['Int'];
+    idWorkflowStepSystemObjectXref: Scalars['Int'];
+    Input: Scalars['Boolean'];
+    SystemObject?: Maybe<SystemObject>;
+    WorkflowStep?: Maybe<WorkflowStep>;
+};
+
+export type WorkflowTemplate = {
+    __typename?: 'WorkflowTemplate';
+    idWorkflowTemplate: Scalars['Int'];
+    Name: Scalars['String'];
+    Workflow?: Maybe<Array<Maybe<Workflow>>>;
 };
 
 export type Query = {

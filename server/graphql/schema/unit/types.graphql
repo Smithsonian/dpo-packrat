@@ -2,68 +2,82 @@
 # import Actor from "../scene/types.graphql"
 
 type Unit {
-  idUnit: ID!
-  Name: String!
-  Abbreviation: String
-  ARKPrefix: String
-  Subject: [Subject]
-  Actor: [Actor]
+    idUnit: Int!
+    Abbreviation: String
+    ARKPrefix: String
+    Name: String!
+    Actor: [Actor]
+    Subject: [Subject]
+    SystemObject: SystemObject
 }
 
 type Project {
-  idProject: ID!
-  Name: String!
-  Description: String
-  ProjectDocumentation: [ProjectDocumentation]
+    idProject: Int!
+    Name: String!
+    Description: String
+    ProjectDocumentation: [ProjectDocumentation]
+    SystemObject: SystemObject
+    Workflow: [Workflow]
 }
 
 type ProjectDocumentation {
-  idProjectDocumentation: ID!
-  Project: Project!
-  Name: String!
-  Description: String!
+    idProjectDocumentation: Int!
+    Description: String!
+    idProject: Int!
+    Name: String!
+    Project: Project!
+    SystemObject: SystemObject
 }
 
 type Stakeholder {
-  idStakeholder: ID!
-  IndividualName: String!
-  OrganizationName: String!
-  EmailAddress: String
-  PhoneNumberMobile: String
-  PhoneNumberOffice: String
-  MailingAddress: String
+    idStakeholder: Int!
+    IndividualName: String!
+    OrganizationName: String!
+    MailingAddress: String
+    EmailAddress: String
+    PhoneNumberMobile: String
+    PhoneNumberOffice: String
+    SystemObject: SystemObject
 }
 
 type GeoLocation {
-  idGeoLocation: ID!
-  Latitude: Float
-  Longitude: Float
-  Altitude: Float
-  TS0: Float
-  TS1: Float
-  TS2: Float
-  R0: Float
-  R1: Float
-  R2: Float
-  R3: Float
-  Item: [Item]
-  Subject: [Subject]
+    idGeoLocation: Int!
+    Altitude: Float
+    Latitude: Float
+    Longitude: Float
+    R0: Float
+    R1: Float
+    R2: Float
+    R3: Float
+    TS0: Float
+    TS1: Float
+    TS2: Float
+    Item: [Item]
+    Subject: [Subject]
 }
 
 type Subject {
-  idSubject: ID!
-  Unit: Unit
-  AssetThumbnail: Asset
-  Name: String!
-  GeoLocation: GeoLocation
-  Item: [Item]
+    idSubject: Int!
+    idUnit: Int!
+    Name: String!
+    Asset: Asset
+    idAssetThumbnail: Int
+    idGeoLocation: Int
+    GeoLocation: GeoLocation
+    Unit: Unit
+    Item: [Item]
+    SystemObject: SystemObject
 }
 
 type Item {
-  idItem: ID!
-  Subject: Subject
-  AssetThumbnail: Asset
-  GeoLocation: GeoLocation
-  Name: String!
-  EntireSubject: Boolean!
+    idItem: Int!
+    EntireSubject: Boolean!
+    idSubject: Int!
+    Name: String!
+    idAssetThumbnail: Int
+    idGeoLocation: Int
+    Asset: Asset
+    GeoLocation: GeoLocation
+    Subject: Subject
+    SystemObject: SystemObject
 }
