@@ -2,16 +2,13 @@ import { GetAccessPolicyInput, GetAccessPolicyResult } from '../../../../types/g
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
 
-const utils = new TestSuiteUtils();
-utils.setupJest();
+const getAccessPolicyTest = (utils: TestSuiteUtils): void => {
+    let graphQLApi: GraphQLApi;
 
-let graphQLApi: GraphQLApi;
+    beforeAll(() => {
+        graphQLApi = utils.graphQLApi;
+    });
 
-beforeAll(() => {
-    graphQLApi = utils.graphQLApi;
-});
-
-const getAccessPolicyTest = (): void => {
     describe('Query: getAccessPolicy', () => {
         test('should work with valid input', async () => {
             const input: GetAccessPolicyInput = {

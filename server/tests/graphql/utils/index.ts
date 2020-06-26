@@ -8,12 +8,7 @@ import GraphQLApi from '../../../graphql';
 import * as LOG from '../../../utils/logger';
 import * as path from 'path';
 
-export interface ITestSuiteUtils {
-    prisma: PrismaClient;
-    graphQLApi: GraphQLApi;
-}
-
-class TestSuiteUtils implements ITestSuiteUtils {
+class TestSuiteUtils {
     prisma!: PrismaClient;
     graphQLApi!: GraphQLApi;
 
