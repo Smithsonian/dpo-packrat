@@ -1,6 +1,6 @@
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
-    testMatch: [ '**/tests/**/?(*.)+(test).ts' ],
+    testMatch: ['**/tests/db/**/?(*.)+(test).ts', '**/tests/graphql/graphql.test.ts'],
     testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/build/']
 };
