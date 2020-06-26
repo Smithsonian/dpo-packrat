@@ -16,5 +16,5 @@ type LicenseAssignment {
     idUserCreator: Int
     License: License
     SystemObject: SystemObject
-    User: User
+    UserCreator: User
 }
