@@ -34,7 +34,7 @@
     "generate": "graphql-codegen --config codegen.yml",
     "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
     "postinstall": "cd .. && yarn generate:server:prisma && cd server",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests --detectOpenHandles --verbose"
   },
   "dependencies": {
     "@dpo-packrat/common": "1.0.0",
