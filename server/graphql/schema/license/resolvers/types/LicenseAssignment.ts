@@ -18,7 +18,7 @@ const LicenseAssignment = {
 
         return prisma.licenseAssignment.findOne({ where: { idLicenseAssignment } }).SystemObject();
     },
-    User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
+    UserCreator: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { idLicenseAssignment } = parent;
         const { prisma } = context;
 

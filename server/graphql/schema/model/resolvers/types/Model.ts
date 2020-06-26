@@ -5,7 +5,7 @@ import { Asset, Vocabulary, ModelGeometryFile, ModelProcessingAction, ModelScene
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 
 const Model = {
-    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
+    AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
         const { idModel } = parent;
         const { prisma } = context;
 

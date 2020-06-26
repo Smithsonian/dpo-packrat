@@ -6,7 +6,7 @@ import { Asset, SystemObject, User, Vocabulary } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 
 const Metadata = {
-    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
+    AssetValue: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
         const { idMetadata } = parent;
         const { prisma } = context;
 
@@ -24,7 +24,7 @@ const Metadata = {
 
         return prisma.metadata.findOne({ where: { idMetadata } }).User();
     },
-    Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
+    VMetadataSource: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idMetadata } = parent;
         const { prisma } = context;
 

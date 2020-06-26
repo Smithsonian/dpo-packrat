@@ -10,7 +10,7 @@ type Model {
     idVPurpose: Int!
     idVUnits: Int!
     Master: Boolean!
-    Asset: Asset
+    AssetThumbnail: Asset
     VCreationMethod: Vocabulary
     VModality: Vocabulary
     VPurpose: Vocabulary

@@ -17,7 +17,7 @@ type Actor {
     IndividualName: String
     OrganizationName: String
     Unit: Unit
-    ModelProcessingAction: [ModelProcessingAction]
+    """ Unneeded: ModelProcessingAction: [ModelProcessingAction] """
     SystemObject: SystemObject
 }
 
