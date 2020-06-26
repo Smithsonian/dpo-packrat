@@ -8,7 +8,7 @@ import * as path from 'path';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { ApolloServer, ApolloServerExpressConfig } from 'apollo-server-express';
-import schema from './graphql/schema';
+import { schema } from './graphql';
 import * as LOG from './utils/logger';
 
 import { PrismaClient } from '@prisma/client';
