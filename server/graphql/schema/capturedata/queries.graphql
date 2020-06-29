@@ -1,0 +1,11 @@
+type Query {
+    getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
+}
+
+input GetCaptureDataInput {
+    idCaptureData: Int!
+}
+
+type GetCaptureDataResult {
+    CaptureData: CaptureData
+}

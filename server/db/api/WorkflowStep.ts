@@ -59,3 +59,18 @@ export async function fetchSystemObjectAndWorkflowStep(prisma: PrismaClient, idW
         return null;
     }
 }
+
+export async function fetchSystemObjectFromXref(prisma: PrismaClient, idWorkflowStep: number): Promise<SystemObject[] | null> {
+    try {
+        return await prisma.systemObject.findMany({
+            where: {
+                WorkflowStepSystemObjectXref: {
+                    some: { idWorkflowStep },
+                },
+            },
+        });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromXref', error);
+        return null;
+    }
+}

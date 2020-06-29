@@ -1,9 +1,13 @@
 import Vocabulary from './types/Vocabulary';
 import VocabularySet from './types/VocabularySet';
+import getVocabulary from './queries/getVocabulary';
 
 const resolvers = {
+    Query: {
+        getVocabulary
+    },
     Vocabulary,
-    VocabularySet,
+    VocabularySet
 };
 
 export default resolvers;

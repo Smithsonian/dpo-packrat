@@ -1,0 +1,11 @@
+type Query {
+    getUnit(input: GetUnitInput!): GetUnitResult!
+}
+
+input GetUnitInput {
+    idUnit: Int!
+}
+
+type GetUnitResult {
+    Unit: Unit
+}

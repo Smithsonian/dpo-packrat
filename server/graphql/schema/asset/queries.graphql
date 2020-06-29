@@ -1,0 +1,11 @@
+type Query {
+    getAsset(input: GetAssetInput!): GetAssetResult!
+}
+
+input GetAssetInput {
+    idAsset: Int!
+}
+
+type GetAssetResult {
+    Asset: Asset
+}
