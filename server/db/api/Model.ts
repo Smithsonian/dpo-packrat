@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Model, SystemObject } from '@prisma/client';
+import { PrismaClient, Model, Scene, SystemObject } from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 export async function createModel(prisma: PrismaClient, model: Model): Promise<Model | null> {
@@ -58,6 +58,21 @@ export async function fetchSystemObjectAndModel(prisma: PrismaClient, idModel: n
         return await prisma.systemObject.findOne({ where: { idModel, }, include: { Model: true, }, });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchSystemObjectAndModel', error);
+        return null;
+    }
+}
+
+export async function fetchSceneFromXref(prisma: PrismaClient, idModel: number): Promise<Scene[] | null> {
+    try {
+        return await prisma.scene.findMany({
+            where: {
+                ModelSceneXref: {
+                    some: { idModel },
+                },
+            },
+        });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSceneFromXref', error);
         return null;
     }
 }

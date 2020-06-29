@@ -33,3 +33,5 @@ EXPOSE 80
 RUN rm /usr/share/nginx/html/*
 COPY nginx.conf /etc/nginx/nginx.conf
 CMD ["nginx", "-g", "daemon off;"]
+
+FROM mariadb:10.5 as db

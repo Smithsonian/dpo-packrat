@@ -1,18 +1,20 @@
-# import User from "../user/types.graphql"
-
 scalar DateTime
 
 type License {
-  id: ID!
-  name: String!
-  description: String!
-  licenseAssignments: [LicenseAssignment]
+    idLicense: Int!
+    Description: String!
+    Name: String!
+    LicenseAssignment: [LicenseAssignment]
 }
 
 type LicenseAssignment {
-  id: ID!
-  license: License!
-  userCreators: User
-  dateStart: DateTime
-  dateEnd: DateTime
+    idLicenseAssignment: Int!
+    idLicense: Int!
+    DateEnd: DateTime
+    DateStart: DateTime
+    idSystemObject: Int
+    idUserCreator: Int
+    License: License
+    SystemObject: SystemObject
+    User: User
 }

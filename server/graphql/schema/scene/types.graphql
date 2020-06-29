@@ -1,27 +1,30 @@
-# import Asset from "../asset/types.graphql"
-# import Model from "../model/types.graphql"
-# import Unit from "../unit/types.graphql"
-
 scalar DateTime
 
 type Scene {
-  id: ID!
-  name: String!
-  assetThumbnail: Asset
-  isOriented: Boolean!
-  hasBeenQCd: Boolean!
-  models: [Model]
+    idScene: Int!
+    HasBeenQCd: Boolean!
+    idAssetThumbnail: Int
+    IsOriented: Boolean!
+    Name: String!
+    Asset: Asset
+    ModelSceneXref: [ModelSceneXref]
+    SystemObject: SystemObject
 }
 
 type Actor {
-  id: ID!
-  individualName: String
-  organizationName: String
-  unit: Unit
+    idActor: Int!
+    idUnit: Int
+    IndividualName: String
+    OrganizationName: String
+    Unit: Unit
+    ModelProcessingAction: [ModelProcessingAction]
+    SystemObject: SystemObject
 }
 
 type IntermediaryFile {
-  id: ID!
-  asset: Asset!
-  dateCreated: DateTime!
+    idIntermediaryFile: Int!
+    DateCreated: DateTime!
+    idAsset: Int!
+    Asset: Asset
+    SystemObject: SystemObject
 }

@@ -1,0 +1,11 @@
+type Query {
+    getScene(input: GetSceneInput!): GetSceneResult!
+}
+
+input GetSceneInput {
+    idScene: Int!
+}
+
+type GetSceneResult {
+    Scene: Scene
+}

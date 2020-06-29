@@ -1,32 +1,39 @@
-# import CaptureDataFile from "../capturedata/types.graphql"
-# import Scene from "../scene/types.graphql"
-# import IntermediaryFile from "../scene/types.graphql"
-# import User from "../user/types.graphql"
-
 scalar DateTime
 
 type Asset {
-  id: ID!
-  fileName: String!
-  filePath: String!
-  assetGroups: AssetGroup
-  captureDataFiles: [CaptureDataFile]
-  scenes: [Scene]
-  intermediaryFiles: [IntermediaryFile]
+    idAsset: Int!
+    FileName: String!
+    FilePath: String!
+    idAssetGroup: Int
+    AssetGroup: AssetGroup
+    AssetVersion: [AssetVersion]
+    CaptureData: [CaptureData]
+    CaptureDataFile: [CaptureDataFile]
+    IntermediaryFile: [IntermediaryFile]
+    Item: [Item]
+    Metadata: [Metadata]
+    Model: [Model]
+    ModelGeometryFile: [ModelGeometryFile]
+    ModelUVMapFile: [ModelUVMapFile]
+    Scene: [Scene]
+    Subject: [Subject]
+    SystemObject: SystemObject
 }
 
 type AssetVersion {
-  id: ID!
-  asset: Asset!
-  userCreator: User!
-  creationDate: DateTime!
-  storageLocation: String!
-  storageChecksum: String!
-  storageSize: Int!
-  assets: [Asset]
+    idAssetVersion: Int!
+    DateCreated: DateTime!
+    idAsset: Int!
+    idUserCreator: Int!
+    StorageChecksum: String!
+    StorageLocation: String!
+    StorageSize: Int!
+    Asset: Asset
+    User: User
+    SystemObject: SystemObject
 }
 
 type AssetGroup {
-  id: ID!
-  assets: [Asset]!
+    idAssetGroup: Int!
+    Asset: [Asset]
 }

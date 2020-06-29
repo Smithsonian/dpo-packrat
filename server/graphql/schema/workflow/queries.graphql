@@ -1,0 +1,11 @@
+type Query {
+    getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
+}
+
+input GetWorkflowInput {
+    idWorkflow: Int!
+}
+
+type GetWorkflowResult {
+    Workflow: Workflow
+}
