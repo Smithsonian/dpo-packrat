@@ -41,7 +41,7 @@ type SystemObject {
     SystemObjectDerived: [SystemObject] """ Derived from SystemObjectXref """
     SystemObjectMaster: [SystemObject]  """ Derived from SystemObjectXref """
     UserPersonalizationSystemObject: [UserPersonalizationSystemObject]
-    WorkflowStep: [WorkflowStep] """ Derived from WorkflowStepSystemObjectXref; may be null """
+    WorkflowStepXref: [WorkflowStep] """ Derived from WorkflowStepSystemObjectXref; may be null """
 }
 
 type SystemObjectVersion {

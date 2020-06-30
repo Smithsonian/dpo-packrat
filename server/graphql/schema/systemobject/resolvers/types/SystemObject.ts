@@ -21,12 +21,12 @@ import {
     Identifier,
     LicenseAssignment,
     Metadata,
+    SystemObject,
     SystemObjectVersion,
-    SystemObjectXref,
-    UserPersonalizationSystemObject,
-    WorkflowStepSystemObjectXref
+    UserPersonalizationSystemObject
 } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const SystemObject = {
     Actor: async (parent: Parent, _: Args, context: Context): Promise<Actor | null> => {
@@ -149,17 +149,17 @@ const SystemObject = {
 
         return prisma.systemObject.findOne({ where: { idSystemObject } }).SystemObjectVersion();
     },
-    SystemObjectDerived: async (parent: Parent, _: Args, context: Context): Promise<SystemObjectXref[] | null> => {
+    SystemObjectDerived: async (parent: Parent, _: Args, context: Context): Promise<SystemObject[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived();
+        return await DBAPI.fetchDerivedSystemObjectFromXref(prisma, idSystemObject);
     },
-    SystemObjectMaster: async (parent: Parent, _: Args, context: Context): Promise<SystemObjectXref[] | null> => {
+    SystemObjectMaster: async (parent: Parent, _: Args, context: Context): Promise<SystemObject[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster();
+        return await DBAPI.fetchMasterSystemObjectFromXref(prisma, idSystemObject);
     },
     UserPersonalizationSystemObject: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationSystemObject[] | null> => {
         const { idSystemObject } = parent;
@@ -167,11 +167,11 @@ const SystemObject = {
 
         return prisma.systemObject.findOne({ where: { idSystemObject } }).UserPersonalizationSystemObject();
     },
-    WorkflowStepSystemObjectXref: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStepSystemObjectXref[] | null> => {
+    WorkflowStepXref: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).WorkflowStepSystemObjectXref();
+        return await DBAPI.fetchWorkflowStepFromXref(prisma, idSystemObject);
     }
 };
 
