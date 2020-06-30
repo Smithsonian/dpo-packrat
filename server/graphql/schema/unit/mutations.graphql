@@ -1,7 +1,7 @@
 type Mutation {
     createUnit(input: CreateUnitInput!): CreateUnitResult!
     createProject(input: CreateProjectInput!): CreateProjectResult!
-    createSubject(input: CreateSubjectInput!): CreateUnitResult!
+    createSubject(input: CreateSubjectInput!): CreateSubjectResult!
     createItem(input: CreateItemInput!): CreateItemResult!
 }
 

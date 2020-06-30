@@ -22,6 +22,8 @@ import createUnit from './mutations/unit/createUnit';
 import createProject from './mutations/unit/createProject';
 import createItem from './mutations/unit/createItem';
 import createSubject from './mutations/unit/createSubject';
+import createVocabulary from './mutations/vocabulary/createVocabulary';
+import createVocabularySet from './mutations/vocabulary/createVocabularySet';
 
 const allQueries = {
     getUser,
@@ -44,7 +46,9 @@ const allQueries = {
     createUnit,
     createProject,
     createItem,
-    createSubject
+    createSubject,
+    createVocabulary,
+    createVocabularySet
 };
 
 export { allQueries };

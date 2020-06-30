@@ -52,7 +52,11 @@ import {
     CreateItemInput,
     CreateItemResult,
     CreateSubjectInput,
-    CreateSubjectResult
+    CreateSubjectResult,
+    CreateVocabularyInput,
+    CreateVocabularyResult,
+    CreateVocabularySetInput,
+    CreateVocabularySetResult
 } from '../types/graphql';
 
 type GraphQLApiArgs = {
@@ -265,6 +269,26 @@ class GraphQLApi {
 
     async getVocabulary(input: GetVocabularyInput, context?: Context | Object): Promise<GetVocabularyResult> {
         const operationName = 'getVocabulary';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async createVocabulary(input: CreateVocabularyInput, context?: Context | Object): Promise<CreateVocabularyResult> {
+        const operationName = 'createVocabulary';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async createVocabularySet(input: CreateVocabularySetInput, context?: Context | Object): Promise<CreateVocabularySetResult> {
+        const operationName = 'createVocabularySet';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
