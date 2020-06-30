@@ -803,11 +803,26 @@ export type GetWorkflowResult = {
 
 export type Mutation = {
     __typename?: 'Mutation';
+    createCaptureData: CreateCaptureDataResult;
+    createModel: CreateModelResult;
+    createScene: CreateSceneResult;
     createUnit: CreateUnitResult;
     createProject: CreateProjectResult;
     createSubject: CreateUnitResult;
     createItem: CreateItemResult;
     createUser: CreateUserResult;
+};
+
+export type MutationCreateCaptureDataArgs = {
+    input: CreateCaptureDataInput;
+};
+
+export type MutationCreateModelArgs = {
+    input: CreateModelInput;
+};
+
+export type MutationCreateSceneArgs = {
+    input: CreateSceneInput;
 };
 
 export type MutationCreateUnitArgs = {
@@ -828,6 +843,56 @@ export type MutationCreateItemArgs = {
 
 export type MutationCreateUserArgs = {
     input: CreateUserInput;
+};
+
+export type CreateCaptureDataInput = {
+    idVCaptureMethod: Scalars['Int'];
+    idVCaptureDatasetType: Scalars['Int'];
+    DateCaptured: Scalars['DateTime'];
+    Description: Scalars['String'];
+    CaptureDatasetFieldID: Scalars['Int'];
+    ItemPositionFieldID: Scalars['Int'];
+    ItemArrangementFieldID: Scalars['Int'];
+    idVBackgroundRemovalMethod: Scalars['Int'];
+    ClusterGeometryFieldID: Scalars['Int'];
+    CameraSettingsUniform: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idVItemPositionType?: Maybe<Scalars['Int']>;
+    idVFocusType?: Maybe<Scalars['Int']>;
+    idVLightSourceType?: Maybe<Scalars['Int']>;
+    idVClusterType?: Maybe<Scalars['Int']>;
+};
+
+export type CreateCaptureDataResult = {
+    __typename?: 'CreateCaptureDataResult';
+    CaptureData?: Maybe<CaptureData>;
+};
+
+export type CreateModelInput = {
+    Authoritative: Scalars['Boolean'];
+    idVCreationMethod: Scalars['Int'];
+    idVModality: Scalars['Int'];
+    idVPurpose: Scalars['Int'];
+    idVUnits: Scalars['Int'];
+    Master: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+};
+
+export type CreateModelResult = {
+    __typename?: 'CreateModelResult';
+    Model?: Maybe<Model>;
+};
+
+export type CreateSceneInput = {
+    Name: Scalars['String'];
+    HasBeenQCd: Scalars['Boolean'];
+    IsOriented: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+};
+
+export type CreateSceneResult = {
+    __typename?: 'CreateSceneResult';
+    Scene?: Maybe<Scene>;
 };
 
 export type CreateUnitInput = {
