@@ -1,51 +1,33 @@
-import { CreateCaptureDataInput } from '../../../../types/graphql';
+import { CreateCaptureDataInput, CreateVocabularySetInput, CreateVocabularyInput } from '../../../../types/graphql';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
 
 const createCaptureDataTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
+    let createVocabularyInput: (idVocabularySet: number) => CreateVocabularyInput;
+    let createVocabularySetInput: () => CreateVocabularySetInput;
+    let createCaptureDataInput: (idVocabulary: number) => CreateCaptureDataInput;
 
     beforeAll(() => {
         graphQLApi = utils.graphQLApi;
+        createVocabularyInput = utils.createVocabularyInput;
+        createVocabularySetInput = utils.createVocabularySetInput;
+        createCaptureDataInput = utils.createCaptureDataInput;
     });
 
     describe('Mutation: createCaptureData', () => {
         test('should work with valid input', async () => {
-            const vocabularySetArgs = {
-                Name: 'Test Vocabulary Set',
-                SystemMaintained: false,
-            };
-
+            const vocabularySetArgs: CreateVocabularySetInput = createVocabularySetInput();
             const { VocabularySet } = await graphQLApi.createVocabularySet(vocabularySetArgs);
             expect(VocabularySet).toBeTruthy();
 
             if (VocabularySet) {
-                const vocabularyArgs = {
-                    idVocabularySet: VocabularySet.idVocabularySet,
-                    SortOrder: 0,
-                };
-
+                const vocabularyArgs: CreateVocabularyInput = createVocabularyInput(VocabularySet.idVocabularySet);
                 const { Vocabulary } = await graphQLApi.createVocabulary(vocabularyArgs);
                 expect(Vocabulary).toBeTruthy();
 
                 if (Vocabulary) {
-                    const captureData: CreateCaptureDataInput = {
-                        idVCaptureMethod: Vocabulary.idVocabulary,
-                        idVCaptureDatasetType: Vocabulary.idVocabulary,
-                        DateCaptured: new Date(),
-                        Description: 'Test Description',
-                        CaptureDatasetFieldID: 0,
-                        ItemPositionFieldID: 0,
-                        ItemArrangementFieldID: 0,
-                        idVBackgroundRemovalMethod: Vocabulary.idVocabulary,
-                        ClusterGeometryFieldID: 0,
-                        CameraSettingsUniform: true,
-                        idVItemPositionType: Vocabulary.idVocabulary,
-                        idVFocusType: Vocabulary.idVocabulary,
-                        idVLightSourceType: Vocabulary.idVocabulary,
-                        idVClusterType: Vocabulary.idVocabulary
-                    };
-
+                    const captureData: CreateCaptureDataInput = createCaptureDataInput(Vocabulary.idVocabulary);
                     const { CaptureData } = await graphQLApi.createCaptureData(captureData);
                     expect(CaptureData).toBeTruthy();
                 }
