@@ -624,6 +624,9 @@ export type Query = {
     getModel: GetModelResult;
     getScene: GetSceneResult;
     getUnit: GetUnitResult;
+    getProject: GetProjectResult;
+    getSubject: GetUnitResult;
+    getItem: GetItemResult;
     getUser: GetUserResult;
     getVocabulary: GetVocabularyResult;
     getWorkflow: GetWorkflowResult;
@@ -655,6 +658,18 @@ export type QueryGetSceneArgs = {
 
 export type QueryGetUnitArgs = {
     input: GetUnitInput;
+};
+
+export type QueryGetProjectArgs = {
+    input: GetProjectInput;
+};
+
+export type QueryGetSubjectArgs = {
+    input: GetSubjectInput;
+};
+
+export type QueryGetItemArgs = {
+    input: GetItemInput;
 };
 
 export type QueryGetUserArgs = {
@@ -732,6 +747,33 @@ export type GetUnitResult = {
     Unit?: Maybe<Unit>;
 };
 
+export type GetProjectInput = {
+    idProject: Scalars['Int'];
+};
+
+export type GetProjectResult = {
+    __typename?: 'GetProjectResult';
+    Project?: Maybe<Project>;
+};
+
+export type GetSubjectInput = {
+    idSubject: Scalars['Int'];
+};
+
+export type GetSubjectResult = {
+    __typename?: 'GetSubjectResult';
+    Subject?: Maybe<Subject>;
+};
+
+export type GetItemInput = {
+    idItem: Scalars['Int'];
+};
+
+export type GetItemResult = {
+    __typename?: 'GetItemResult';
+    Item?: Maybe<Item>;
+};
+
 export type GetUserInput = {
     idUser: Scalars['Int'];
 };
@@ -757,4 +799,185 @@ export type GetWorkflowInput = {
 export type GetWorkflowResult = {
     __typename?: 'GetWorkflowResult';
     Workflow?: Maybe<Workflow>;
+};
+
+export type Mutation = {
+    __typename?: 'Mutation';
+    createCaptureData: CreateCaptureDataResult;
+    createModel: CreateModelResult;
+    createScene: CreateSceneResult;
+    createUnit: CreateUnitResult;
+    createProject: CreateProjectResult;
+    createSubject: CreateSubjectResult;
+    createItem: CreateItemResult;
+    createUser: CreateUserResult;
+    createVocabulary: CreateVocabularyResult;
+    createVocabularySet: CreateVocabularySetResult;
+};
+
+export type MutationCreateCaptureDataArgs = {
+    input: CreateCaptureDataInput;
+};
+
+export type MutationCreateModelArgs = {
+    input: CreateModelInput;
+};
+
+export type MutationCreateSceneArgs = {
+    input: CreateSceneInput;
+};
+
+export type MutationCreateUnitArgs = {
+    input: CreateUnitInput;
+};
+
+export type MutationCreateProjectArgs = {
+    input: CreateProjectInput;
+};
+
+export type MutationCreateSubjectArgs = {
+    input: CreateSubjectInput;
+};
+
+export type MutationCreateItemArgs = {
+    input: CreateItemInput;
+};
+
+export type MutationCreateUserArgs = {
+    input: CreateUserInput;
+};
+
+export type MutationCreateVocabularyArgs = {
+    input: CreateVocabularyInput;
+};
+
+export type MutationCreateVocabularySetArgs = {
+    input: CreateVocabularySetInput;
+};
+
+export type CreateCaptureDataInput = {
+    idVCaptureMethod: Scalars['Int'];
+    idVCaptureDatasetType: Scalars['Int'];
+    DateCaptured: Scalars['DateTime'];
+    Description: Scalars['String'];
+    CaptureDatasetFieldID: Scalars['Int'];
+    ItemPositionFieldID: Scalars['Int'];
+    ItemArrangementFieldID: Scalars['Int'];
+    idVBackgroundRemovalMethod: Scalars['Int'];
+    ClusterGeometryFieldID: Scalars['Int'];
+    CameraSettingsUniform: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idVItemPositionType?: Maybe<Scalars['Int']>;
+    idVFocusType?: Maybe<Scalars['Int']>;
+    idVLightSourceType?: Maybe<Scalars['Int']>;
+    idVClusterType?: Maybe<Scalars['Int']>;
+};
+
+export type CreateCaptureDataResult = {
+    __typename?: 'CreateCaptureDataResult';
+    CaptureData?: Maybe<CaptureData>;
+};
+
+export type CreateModelInput = {
+    Authoritative: Scalars['Boolean'];
+    idVCreationMethod: Scalars['Int'];
+    idVModality: Scalars['Int'];
+    idVPurpose: Scalars['Int'];
+    idVUnits: Scalars['Int'];
+    Master: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+};
+
+export type CreateModelResult = {
+    __typename?: 'CreateModelResult';
+    Model?: Maybe<Model>;
+};
+
+export type CreateSceneInput = {
+    Name: Scalars['String'];
+    HasBeenQCd: Scalars['Boolean'];
+    IsOriented: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+};
+
+export type CreateSceneResult = {
+    __typename?: 'CreateSceneResult';
+    Scene?: Maybe<Scene>;
+};
+
+export type CreateUnitInput = {
+    Name: Scalars['String'];
+    Abbreviation: Scalars['String'];
+    ARKPrefix: Scalars['String'];
+};
+
+export type CreateUnitResult = {
+    __typename?: 'CreateUnitResult';
+    Unit?: Maybe<Unit>;
+};
+
+export type CreateProjectInput = {
+    Name: Scalars['String'];
+    Description: Scalars['String'];
+};
+
+export type CreateProjectResult = {
+    __typename?: 'CreateProjectResult';
+    Project?: Maybe<Project>;
+};
+
+export type CreateSubjectInput = {
+    idUnit: Scalars['Int'];
+    Name: Scalars['String'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idGeoLocation?: Maybe<Scalars['Int']>;
+};
+
+export type CreateSubjectResult = {
+    __typename?: 'CreateSubjectResult';
+    Subject?: Maybe<Subject>;
+};
+
+export type CreateItemInput = {
+    idSubject: Scalars['Int'];
+    Name: Scalars['String'];
+    EntireSubject: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idGeoLocation?: Maybe<Scalars['Int']>;
+};
+
+export type CreateItemResult = {
+    __typename?: 'CreateItemResult';
+    Item?: Maybe<Item>;
+};
+
+export type CreateUserInput = {
+    Name: Scalars['String'];
+    EmailAddress: Scalars['String'];
+    SecurityID: Scalars['String'];
+};
+
+export type CreateUserResult = {
+    __typename?: 'CreateUserResult';
+    User?: Maybe<User>;
+};
+
+export type CreateVocabularyInput = {
+    idVocabularySet: Scalars['Int'];
+    SortOrder: Scalars['Int'];
+};
+
+export type CreateVocabularyResult = {
+    __typename?: 'CreateVocabularyResult';
+    Vocabulary?: Maybe<Vocabulary>;
+};
+
+export type CreateVocabularySetInput = {
+    Name: Scalars['String'];
+    SystemMaintained: Scalars['Boolean'];
+};
+
+export type CreateVocabularySetResult = {
+    __typename?: 'CreateVocabularySetResult';
+    VocabularySet?: Maybe<VocabularySet>;
 };
