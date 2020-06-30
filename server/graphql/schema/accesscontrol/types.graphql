@@ -4,7 +4,7 @@ type AccessAction {
     idAccessAction: Int!
     Name: String!
     SortOrder: Int!
-    AccessRole: [AccessRole]  """ via AccessRoleAccessActionXref """
+    AccessRole: [AccessRole]
 }
 
 type AccessContext {
@@ -40,16 +40,5 @@ type AccessPolicy {
 type AccessRole {
     idAccessRole: Int!
     Name: String!
-    """ AccessPolicy: [AccessPolicy] // Not needed """
-    AccessAction: [AccessAction] """ via AccessRoleAccessActionXref """
+    AccessAction: [AccessAction]
 }
-
-""" Not needed!
-type AccessRoleAccessActionXref {
-    idAccessRoleAccessActionXref: Int!
-    idAccessAction: Int!
-    idAccessRole: Int!
-    AccessAction: AccessAction
-    AccessRole: AccessRole
-}
-"""

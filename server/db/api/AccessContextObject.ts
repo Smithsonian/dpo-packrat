@@ -28,3 +28,12 @@ export async function fetchAccessContextObject(prisma: PrismaClient, idAccessCon
         return null;
     }
 }
+
+export async function fetchManyAccessContextObject(prisma: PrismaClient, idAccessContext: number): Promise<AccessContextObject[] | null> {
+    try {
+        return await prisma.accessContextObject.findMany({ where: { idAccessContext } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchAccessContextObject', error);
+        return null;
+    }
+}
