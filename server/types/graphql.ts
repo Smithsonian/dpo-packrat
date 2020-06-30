@@ -808,9 +808,11 @@ export type Mutation = {
     createScene: CreateSceneResult;
     createUnit: CreateUnitResult;
     createProject: CreateProjectResult;
-    createSubject: CreateUnitResult;
+    createSubject: CreateSubjectResult;
     createItem: CreateItemResult;
     createUser: CreateUserResult;
+    createVocabulary: CreateVocabularyResult;
+    createVocabularySet: CreateVocabularySetResult;
 };
 
 export type MutationCreateCaptureDataArgs = {
@@ -843,6 +845,14 @@ export type MutationCreateItemArgs = {
 
 export type MutationCreateUserArgs = {
     input: CreateUserInput;
+};
+
+export type MutationCreateVocabularyArgs = {
+    input: CreateVocabularyInput;
+};
+
+export type MutationCreateVocabularySetArgs = {
+    input: CreateVocabularySetInput;
 };
 
 export type CreateCaptureDataInput = {
@@ -950,4 +960,24 @@ export type CreateUserInput = {
 export type CreateUserResult = {
     __typename?: 'CreateUserResult';
     User?: Maybe<User>;
+};
+
+export type CreateVocabularyInput = {
+    idVocabularySet: Scalars['Int'];
+    SortOrder: Scalars['Int'];
+};
+
+export type CreateVocabularyResult = {
+    __typename?: 'CreateVocabularyResult';
+    Vocabulary?: Maybe<Vocabulary>;
+};
+
+export type CreateVocabularySetInput = {
+    Name: Scalars['String'];
+    SystemMaintained: Scalars['Boolean'];
+};
+
+export type CreateVocabularySetResult = {
+    __typename?: 'CreateVocabularySetResult';
+    VocabularySet?: Maybe<VocabularySet>;
 };

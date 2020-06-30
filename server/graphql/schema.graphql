@@ -686,9 +686,11 @@ type Mutation {
   createScene(input: CreateSceneInput!): CreateSceneResult!
   createUnit(input: CreateUnitInput!): CreateUnitResult!
   createProject(input: CreateProjectInput!): CreateProjectResult!
-  createSubject(input: CreateSubjectInput!): CreateUnitResult!
+  createSubject(input: CreateSubjectInput!): CreateSubjectResult!
   createItem(input: CreateItemInput!): CreateItemResult!
   createUser(input: CreateUserInput!): CreateUserResult!
+  createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
+  createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
 }
 
 input CreateCaptureDataInput {
@@ -788,4 +790,22 @@ input CreateUserInput {
 
 type CreateUserResult {
   User: User
+}
+
+input CreateVocabularyInput {
+  idVocabularySet: Int!
+  SortOrder: Int!
+}
+
+type CreateVocabularyResult {
+  Vocabulary: Vocabulary
+}
+
+input CreateVocabularySetInput {
+  Name: String!
+  SystemMaintained: Boolean!
+}
+
+type CreateVocabularySetResult {
+  VocabularySet: VocabularySet
 }
