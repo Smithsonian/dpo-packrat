@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-express';
 
 const createModel = gql`
-    query createModel($input: CreateModelInput!) {
+    mutation createModel($input: CreateModelInput!) {
         createModel(input: $input) {
             Model {
                 idModel
