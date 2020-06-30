@@ -1,15 +1,16 @@
 /**
  * Type resolver for CaptureDataGroup
  */
-import { CaptureDataGroupCaptureDataXref } from '@prisma/client';
+import { CaptureData } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const CaptureDataGroup = {
-    CaptureDataGroupCaptureDataXref: async (parent: Parent, _: Args, context: Context): Promise<CaptureDataGroupCaptureDataXref[] | null> => {
+    CaptureData: async (parent: Parent, _: Args, context: Context): Promise<CaptureData[] | null> => {
         const { idCaptureDataGroup } = parent;
         const { prisma } = context;
 
-        return prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup } }).CaptureDataGroupCaptureDataXref();
+        return await DBAPI.fetchCaptureDataFromXref(prisma, idCaptureDataGroup);
     }
 };
 
