@@ -568,6 +568,9 @@ type Query {
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
+  getProject(input: GetProjectInput!): GetProjectResult!
+  getSubject(input: GetSubjectInput!): GetUnitResult!
+  getItem(input: GetItemInput!): GetItemResult!
   getUser(input: GetUserInput!): GetUserResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
@@ -629,6 +632,30 @@ type GetUnitResult {
   Unit: Unit
 }
 
+input GetProjectInput {
+  idProject: Int!
+}
+
+type GetProjectResult {
+  Project: Project
+}
+
+input GetSubjectInput {
+  idSubject: Int!
+}
+
+type GetSubjectResult {
+  Subject: Subject
+}
+
+input GetItemInput {
+  idItem: Int!
+}
+
+type GetItemResult {
+  Item: Item
+}
+
 input GetUserInput {
   idUser: Int!
 }
@@ -651,4 +678,64 @@ input GetWorkflowInput {
 
 type GetWorkflowResult {
   Workflow: Workflow
+}
+
+type Mutation {
+  createUnit(input: CreateUnitInput!): CreateUnitResult!
+  createProject(input: CreateProjectInput!): CreateProjectResult!
+  createSubject(input: CreateSubjectInput!): CreateUnitResult!
+  createItem(input: CreateItemInput!): CreateItemResult!
+  createUser(input: CreateUserInput!): CreateUserResult!
+}
+
+input CreateUnitInput {
+  Name: String!
+  Abbreviation: String!
+  ARKPrefix: String!
+}
+
+type CreateUnitResult {
+  Unit: Unit
+}
+
+input CreateProjectInput {
+  Name: String!
+  Description: String!
+}
+
+type CreateProjectResult {
+  Project: Project
+}
+
+input CreateSubjectInput {
+  idUnit: Int!
+  idAssetThumbnail: Int!
+  idGeoLocation: Int!
+  Name: String!
+}
+
+type CreateSubjectResult {
+  Subject: Subject
+}
+
+input CreateItemInput {
+  idSubject: Int!
+  idAssetThumbnail: Int!
+  idGeoLocation: Int!
+  Name: String!
+  EntireSubject: Boolean!
+}
+
+type CreateItemResult {
+  Item: Item
+}
+
+input CreateUserInput {
+  Name: String!
+  EmailAddress: String!
+  SecurityID: String!
+}
+
+type CreateUserResult {
+  User: User
 }
