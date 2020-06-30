@@ -624,6 +624,9 @@ export type Query = {
     getModel: GetModelResult;
     getScene: GetSceneResult;
     getUnit: GetUnitResult;
+    getProject: GetProjectResult;
+    getSubject: GetUnitResult;
+    getItem: GetItemResult;
     getUser: GetUserResult;
     getVocabulary: GetVocabularyResult;
     getWorkflow: GetWorkflowResult;
@@ -655,6 +658,18 @@ export type QueryGetSceneArgs = {
 
 export type QueryGetUnitArgs = {
     input: GetUnitInput;
+};
+
+export type QueryGetProjectArgs = {
+    input: GetProjectInput;
+};
+
+export type QueryGetSubjectArgs = {
+    input: GetSubjectInput;
+};
+
+export type QueryGetItemArgs = {
+    input: GetItemInput;
 };
 
 export type QueryGetUserArgs = {
@@ -732,6 +747,33 @@ export type GetUnitResult = {
     Unit?: Maybe<Unit>;
 };
 
+export type GetProjectInput = {
+    idProject: Scalars['Int'];
+};
+
+export type GetProjectResult = {
+    __typename?: 'GetProjectResult';
+    Project?: Maybe<Project>;
+};
+
+export type GetSubjectInput = {
+    idSubject: Scalars['Int'];
+};
+
+export type GetSubjectResult = {
+    __typename?: 'GetSubjectResult';
+    Subject?: Maybe<Subject>;
+};
+
+export type GetItemInput = {
+    idItem: Scalars['Int'];
+};
+
+export type GetItemResult = {
+    __typename?: 'GetItemResult';
+    Item?: Maybe<Item>;
+};
+
 export type GetUserInput = {
     idUser: Scalars['Int'];
 };
@@ -757,4 +799,90 @@ export type GetWorkflowInput = {
 export type GetWorkflowResult = {
     __typename?: 'GetWorkflowResult';
     Workflow?: Maybe<Workflow>;
+};
+
+export type Mutation = {
+    __typename?: 'Mutation';
+    createUnit: CreateUnitResult;
+    createProject: CreateProjectResult;
+    createSubject: CreateUnitResult;
+    createItem: CreateItemResult;
+    createUser: CreateUserResult;
+};
+
+export type MutationCreateUnitArgs = {
+    input: CreateUnitInput;
+};
+
+export type MutationCreateProjectArgs = {
+    input: CreateProjectInput;
+};
+
+export type MutationCreateSubjectArgs = {
+    input: CreateSubjectInput;
+};
+
+export type MutationCreateItemArgs = {
+    input: CreateItemInput;
+};
+
+export type MutationCreateUserArgs = {
+    input: CreateUserInput;
+};
+
+export type CreateUnitInput = {
+    Name: Scalars['String'];
+    Abbreviation: Scalars['String'];
+    ARKPrefix: Scalars['String'];
+};
+
+export type CreateUnitResult = {
+    __typename?: 'CreateUnitResult';
+    Unit?: Maybe<Unit>;
+};
+
+export type CreateProjectInput = {
+    Name: Scalars['String'];
+    Description: Scalars['String'];
+};
+
+export type CreateProjectResult = {
+    __typename?: 'CreateProjectResult';
+    Project?: Maybe<Project>;
+};
+
+export type CreateSubjectInput = {
+    idUnit: Scalars['Int'];
+    idAssetThumbnail: Scalars['Int'];
+    idGeoLocation: Scalars['Int'];
+    Name: Scalars['String'];
+};
+
+export type CreateSubjectResult = {
+    __typename?: 'CreateSubjectResult';
+    Subject?: Maybe<Subject>;
+};
+
+export type CreateItemInput = {
+    idSubject: Scalars['Int'];
+    idAssetThumbnail: Scalars['Int'];
+    idGeoLocation: Scalars['Int'];
+    Name: Scalars['String'];
+    EntireSubject: Scalars['Boolean'];
+};
+
+export type CreateItemResult = {
+    __typename?: 'CreateItemResult';
+    Item?: Maybe<Item>;
+};
+
+export type CreateUserInput = {
+    Name: Scalars['String'];
+    EmailAddress: Scalars['String'];
+    SecurityID: Scalars['String'];
+};
+
+export type CreateUserResult = {
+    __typename?: 'CreateUserResult';
+    User?: Maybe<User>;
 };
