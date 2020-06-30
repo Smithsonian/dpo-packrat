@@ -32,3 +32,13 @@ export async function fetchAccessContext(prisma: PrismaClient, idAccessContext: 
         return null;
     }
 }
+
+export async function fetchManyAccessContext(prisma: PrismaClient, idAccessContext: number): Promise<AccessContext[] | null> {
+    try {
+        // TODO: how to fetch from idAccessContextObject?
+        return await prisma.accessContext.findMany({ where: { idAccessContext } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchAccessContext', error);
+        return null;
+    }
+}
