@@ -918,9 +918,9 @@ export type CreateProjectResult = {
 
 export type CreateSubjectInput = {
     idUnit: Scalars['Int'];
-    idAssetThumbnail: Scalars['Int'];
-    idGeoLocation: Scalars['Int'];
     Name: Scalars['String'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idGeoLocation?: Maybe<Scalars['Int']>;
 };
 
 export type CreateSubjectResult = {
@@ -930,10 +930,10 @@ export type CreateSubjectResult = {
 
 export type CreateItemInput = {
     idSubject: Scalars['Int'];
-    idAssetThumbnail: Scalars['Int'];
-    idGeoLocation: Scalars['Int'];
     Name: Scalars['String'];
     EntireSubject: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idGeoLocation?: Maybe<Scalars['Int']>;
 };
 
 export type CreateItemResult = {
