@@ -10,8 +10,8 @@ export default async function createSubject(_: Parent, args: MutationCreateSubje
     const subjectArgs = {
         idSubject: 0,
         idUnit,
-        idAssetThumbnail,
-        idGeoLocation,
+        idAssetThumbnail: idAssetThumbnail || null,
+        idGeoLocation: idGeoLocation || null,
         Name
     };
 

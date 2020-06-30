@@ -10,8 +10,8 @@ export default async function createItem(_: Parent, args: MutationCreateItemArgs
     const itemArgs = {
         idItem: 0,
         idSubject,
-        idAssetThumbnail,
-        idGeoLocation,
+        idAssetThumbnail: idAssetThumbnail || null,
+        idGeoLocation: idGeoLocation || null,
         Name,
         EntireSubject
     };

@@ -759,9 +759,9 @@ type CreateProjectResult {
 
 input CreateSubjectInput {
   idUnit: Int!
-  idAssetThumbnail: Int!
-  idGeoLocation: Int!
   Name: String!
+  idAssetThumbnail: Int
+  idGeoLocation: Int
 }
 
 type CreateSubjectResult {
@@ -770,10 +770,10 @@ type CreateSubjectResult {
 
 input CreateItemInput {
   idSubject: Int!
-  idAssetThumbnail: Int!
-  idGeoLocation: Int!
   Name: String!
   EntireSubject: Boolean!
+  idAssetThumbnail: Int
+  idGeoLocation: Int
 }
 
 type CreateItemResult {
