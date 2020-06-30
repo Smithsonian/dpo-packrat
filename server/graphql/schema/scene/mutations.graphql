@@ -1,0 +1,14 @@
+type Mutation {
+    createScene(input: CreateSceneInput!): CreateSceneResult!
+}
+
+input CreateSceneInput {
+    Name: String!
+    HasBeenQCd: Boolean!
+    IsOriented: Boolean!
+    idAssetThumbnail: Int
+}
+
+type CreateSceneResult {
+    Scene: Scene
+}
