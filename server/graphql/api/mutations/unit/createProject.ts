@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-express';
 
 const createProject = gql`
-    query createProject($input: CreateProjectInput!) {
+    mutation createProject($input: CreateProjectInput!) {
         createProject(input: $input) {
             Project {
                 idProject

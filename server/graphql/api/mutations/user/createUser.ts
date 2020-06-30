@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-express';
 
 const createUser = gql`
-    query createUser($input: CreateUserInput!) {
+    mutation createUser($input: CreateUserInput!) {
         createUser(input: $input) {
             User {
                 idUser

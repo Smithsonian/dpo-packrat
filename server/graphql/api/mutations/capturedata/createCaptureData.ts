@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-express';
 
 const createCaptureData = gql`
-    query createCaptureData($input: CreateCaptureDataInput!) {
+    mutation createCaptureData($input: CreateCaptureDataInput!) {
         createCaptureData(input: $input) {
             CaptureData {
                 idCaptureData
