@@ -13,10 +13,20 @@ import getUnitTest from './queries/unit/getUnit.test';
 import getVocabularyTest from './queries/vocabulary/getVocabulary.test';
 import getWorkflowTest from './queries/workflow/getWorkflow.test';
 
+import createCaptureDataTest from './mutations/capturedata/createCaptureData.test';
+import createModelTest from './mutations/model/createModel.test';
+import createSceneTest from './mutations/scene/createScene.test';
+import createUnitTest from './mutations/unit/createUnit.test';
+import createProjectTest from './mutations/unit/createProject.test';
+import createItemTest from './mutations/unit/createItem.test';
+import createSubjectTest from './mutations/unit/createSubject.test';
+import createUserTest from './mutations/user/createUser.test';
+
 const utils = new TestSuiteUtils();
 utils.setupJest();
 
 describe('GraphQL Test Suite', () => {
+    // Queries
     getAccessPolicyTest(utils);
     getAssetTest(utils);
     getCaptureDataTest(utils);
@@ -27,4 +37,14 @@ describe('GraphQL Test Suite', () => {
     getUserTest(utils);
     getVocabularyTest(utils);
     getWorkflowTest(utils);
+
+    // Mutations
+    createCaptureDataTest(utils);
+    createModelTest(utils);
+    createSceneTest(utils);
+    createUnitTest(utils);
+    createProjectTest(utils);
+    createItemTest(utils);
+    createSubjectTest(utils);
+    createUserTest(utils);
 });
