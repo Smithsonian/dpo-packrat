@@ -38,10 +38,10 @@ type SystemObject {
     LicenseAssignment: [LicenseAssignment]
     Metadata: [Metadata]
     SystemObjectVersion: [SystemObjectVersion]
-    SystemObjectDerived: [SystemObject] """ Derived from SystemObjectXref """
-    SystemObjectMaster: [SystemObject]  """ Derived from SystemObjectXref """
+    SystemObjectDerived: [SystemObject]
+    SystemObjectMaster: [SystemObject]
     UserPersonalizationSystemObject: [UserPersonalizationSystemObject]
-    WorkflowStepXref: [WorkflowStep] """ Derived from WorkflowStepSystemObjectXref; may be null """
+    WorkflowStepXref: [WorkflowStep]
 }
 
 type SystemObjectVersion {
@@ -50,16 +50,6 @@ type SystemObjectVersion {
     PublishedState: Int!
     SystemObject: SystemObject
 }
-
-""" Unneeded
-type SystemObjectXref {
-    idSystemObjectXref: Int!
-    idSystemObjectDerived: Int!
-    idSystemObjectMaster: Int!
-    SystemObjectDerived: SystemObject
-    SystemObjectMaster: SystemObject
-}
-"""
 
 type Identifier {
     idIdentifier: Int!
