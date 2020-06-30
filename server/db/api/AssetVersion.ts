@@ -60,3 +60,11 @@ export async function fetchSystemObjectAndAssetVersion(prisma: PrismaClient, idA
     }
 }
 
+export async function fetchAssetVersionFromAsset(prisma: PrismaClient, idAsset: number): Promise<AssetVersion[] | null> {
+    try {
+        return await prisma.assetVersion.findMany({ where: { idAsset } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchAssetVersionFromAsset', error);
+        return null;
+    }
+}
