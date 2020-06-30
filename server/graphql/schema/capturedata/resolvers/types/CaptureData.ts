@@ -7,58 +7,58 @@ import * as DBAPI from '../../../../../db';
 
 const CaptureData = {
     AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idCaptureData } = parent;
+        const { idAssetThumbnail } = parent;
         const { prisma } = context;
 
-        return prisma.captureData.findOne({ where: { idCaptureData } }).Asset();
+        return await DBAPI.fetchAsset(prisma, idAssetThumbnail);
     },
     VCaptureMethod: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idCaptureData } = parent;
+        const { idVCaptureMethod } = parent;
         const { prisma } = context;
 
-        return prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVCaptureMethodToVocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVCaptureMethod);
     },
     VCaptureDatasetType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idCaptureData } = parent;
+        const { idVCaptureDatasetType } = parent;
         const { prisma } = context;
 
-        return prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVCaptureDatasetTypeToVocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVCaptureDatasetType);
     },
     VItemPositionType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idCaptureData } = parent;
+        const { idVItemPositionType } = parent;
         const { prisma } = context;
 
-        return prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVItemPositionTypeToVocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVItemPositionType);
     },
     VFocusType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idCaptureData } = parent;
+        const { idVFocusType } = parent;
         const { prisma } = context;
 
-        return prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVFocusTypeToVocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVFocusType);
     },
     VLightSourceType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idCaptureData } = parent;
+        const { idVLightSourceType } = parent;
         const { prisma } = context;
 
-        return prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVLightSourceTypeToVocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVLightSourceType);
     },
     VBackgroundRemovalMethod: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idCaptureData } = parent;
+        const { idVBackgroundRemovalMethod } = parent;
         const { prisma } = context;
 
-        return prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVBackgroundRemovalMethod);
     },
     VClusterType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idCaptureData } = parent;
+        const { idVClusterType } = parent;
         const { prisma } = context;
 
-        return prisma.captureData.findOne({ where: { idCaptureData } }).Vocabulary_CaptureData_idVClusterTypeToVocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVClusterType);
     },
     CaptureDataFile: async (parent: Parent, _: Args, context: Context): Promise<CaptureDataFile[] | null> => {
         const { idCaptureData } = parent;
         const { prisma } = context;
 
-        return prisma.captureData.findOne({ where: { idCaptureData } }).CaptureDataFile();
+        return await DBAPI.fetchCaptureDataFileFromCaptureData(prisma, idCaptureData);
     },
     CaptureDataGroup: async (parent: Parent, _: Args, context: Context): Promise<CaptureDataGroup[] | null> => {
         const { idCaptureData } = parent;
@@ -69,7 +69,7 @@ const CaptureData = {
         const { idCaptureData } = parent;
         const { prisma } = context;
 
-        return prisma.captureData.findOne({ where: { idCaptureData } }).SystemObject();
+        return await DBAPI.fetchSystemObjectFromCaptureData(prisma, idCaptureData);
     }
 };
 

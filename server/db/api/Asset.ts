@@ -57,3 +57,12 @@ export async function fetchSystemObjectAndAsset(prisma: PrismaClient, idAsset: n
     }
 }
 
+export async function fetchAssetFromAssetGroup(prisma: PrismaClient, idAssetGroup: number): Promise<Asset[] | null> {
+    try {
+        return await prisma.asset.findMany({ where: { idAssetGroup } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchAssetFromAssetGroup', error);
+        return null;
+    }
+}
+

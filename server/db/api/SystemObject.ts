@@ -160,3 +160,30 @@ export async function fetchWorkflowStepFromXref(prisma: PrismaClient, idSystemOb
         return null;
     }
 }
+
+export async function fetchSystemObjectFromCaptureData(prisma: PrismaClient, idCaptureData: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idCaptureData } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromCaptureData', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromAsset(prisma: PrismaClient, idAsset: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idAsset } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromAsset', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromAssetVersion(prisma: PrismaClient, idAssetVersion: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idAssetVersion } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromAssetVersion', error);
+        return null;
+    }
+}
