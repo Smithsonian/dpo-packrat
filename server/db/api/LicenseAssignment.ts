@@ -39,3 +39,21 @@ export async function fetchLicenseAssignmentFromLicense(prisma: PrismaClient, id
         return null;
     }
 }
+
+export async function fetchLicenseAssignmentFromUser(prisma: PrismaClient, idUserCreator: number): Promise<LicenseAssignment[] | null> {
+    try {
+        return await prisma.licenseAssignment.findMany({ where: { idUserCreator } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchLicenseAssignmentFromUser', error);
+        return null;
+    }
+}
+
+export async function fetchLicenseAssignmentFromSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<LicenseAssignment[] | null> {
+    try {
+        return await prisma.licenseAssignment.findMany({ where: { idSystemObject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchLicenseAssignmentFromSystemObject', error);
+        return null;
+    }
+}

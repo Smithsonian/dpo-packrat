@@ -3,13 +3,14 @@
  */
 import { SystemObject } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const Stakeholder = {
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idStakeholder } = parent;
         const { prisma } = context;
 
-        return prisma.stakeholder.findOne({ where: { idStakeholder } }).SystemObject();
+        return await DBAPI.fetchSystemObjectFromStakeholder(prisma, idStakeholder);
     }
 };
 

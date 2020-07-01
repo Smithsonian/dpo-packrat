@@ -32,3 +32,21 @@ export async function fetchMetadata(prisma: PrismaClient, idMetadata: number): P
         return null;
     }
 }
+
+export async function fetchMetadataFromUser(prisma: PrismaClient, idUser: number): Promise<Metadata[] | null> {
+    try {
+        return await prisma.metadata.findMany({ where: { idUser } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchMetadataFromUser', error);
+        return null;
+    }
+}
+
+export async function fetchMetadataFromSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<Metadata[] | null> {
+    try {
+        return await prisma.metadata.findMany({ where: { idSystemObject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchMetadataFromSystemObject', error);
+        return null;
+    }
+}

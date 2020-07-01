@@ -3,13 +3,14 @@
  */
 import { User } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const UserPersonalizationUrl = {
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { idUserPersonalizationUrl } = parent;
+        const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl } }).User();
+        return await DBAPI.fetchUser(prisma, idUser);
     }
 };
 

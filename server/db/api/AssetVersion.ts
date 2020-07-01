@@ -68,3 +68,12 @@ export async function fetchAssetVersionFromAsset(prisma: PrismaClient, idAsset: 
         return null;
     }
 }
+
+export async function fetchAssetVersionFromUser(prisma: PrismaClient, idUserCreator: number): Promise<AssetVersion[] | null> {
+    try {
+        return await prisma.assetVersion.findMany({ where: { idUserCreator } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchAssetVersionFromUser', error);
+        return null;
+    }
+}
