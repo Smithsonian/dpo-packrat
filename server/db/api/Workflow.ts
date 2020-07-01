@@ -76,3 +76,12 @@ export async function fetchWorkflowFromUser(prisma: PrismaClient, idUserInitiato
         return null;
     }
 }
+
+export async function fetchWorkflowFromWorkflowTemplate(prisma: PrismaClient, idWorkflowTemplate: number): Promise<Workflow[] | null> {
+    try {
+        return await prisma.workflow.findMany({ where: { idWorkflowTemplate } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchWorkflowFromWorkflowTemplate', error);
+        return null;
+    }
+}
