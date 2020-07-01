@@ -10,13 +10,13 @@ const AccessContext = {
         const { idAccessContext } = parent;
         const { prisma } = context;
 
-        return await DBAPI.fetchManyAccessContextObject(prisma, idAccessContext);
+        return await DBAPI.fetchAccessContextObjectFromAccessContext(prisma, idAccessContext);
     },
     AccessPolicy: async (parent: Parent, _: Args, context: Context): Promise<AccessPolicy[] | null> => {
         const { idAccessContext } = parent;
         const { prisma } = context;
 
-        return await DBAPI.fetchManyAccessPolicy(prisma, idAccessContext);
+        return await DBAPI.fetchAccessPolicyFromAccessContext(prisma, idAccessContext);
     }
 };
 

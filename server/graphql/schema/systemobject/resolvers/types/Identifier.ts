@@ -3,19 +3,20 @@
  */
 import { SystemObject, Vocabulary } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const Identifier = {
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idIdentifier } = parent;
+        const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.identifier.findOne({ where: { idIdentifier } }).SystemObject();
+        return await DBAPI.fetchSystemObject(prisma, idSystemObject);
     },
     VIdentifierType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idIdentifier } = parent;
+        const { idVIdentifierType } = parent;
         const { prisma } = context;
 
-        return prisma.identifier.findOne({ where: { idIdentifier } }).Vocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVIdentifierType);
     }
 };
 

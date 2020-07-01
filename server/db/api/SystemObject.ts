@@ -187,3 +187,93 @@ export async function fetchSystemObjectFromAssetVersion(prisma: PrismaClient, id
         return null;
     }
 }
+
+export async function fetchSystemObjectFromUnit(prisma: PrismaClient, idUnit: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idUnit } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromUnit', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromProject(prisma: PrismaClient, idProject: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idProject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromProject', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromProjectDocumentation(prisma: PrismaClient, idProjectDocumentation: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idProjectDocumentation } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromProjectDocumentation', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromStakeholder(prisma: PrismaClient, idStakeholder: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idStakeholder } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromStakeholder', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromItem(prisma: PrismaClient, idItem: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idItem } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromItem', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromSubject(prisma: PrismaClient, idItem: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idItem } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromSubject', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromActor(prisma: PrismaClient, idActor: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idActor } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromActor', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromIntermediaryFile(prisma: PrismaClient, idIntermediaryFile: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idIntermediaryFile } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromIntermediaryFile', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromScene(prisma: PrismaClient, idScene: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idScene } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromScene', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromModel(prisma: PrismaClient, idScene: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idScene } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromModel', error);
+        return null;
+    }
+}

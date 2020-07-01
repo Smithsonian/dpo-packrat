@@ -3,19 +3,20 @@
  */
 import { ModelProcessingAction, Vocabulary } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const ModelProcessingActionStep = {
     ModelProcessingAction: async (parent: Parent, _: Args, context: Context): Promise<ModelProcessingAction | null> => {
-        const { idModelProcessingActionStep } = parent;
+        const { idModelProcessingAction } = parent;
         const { prisma } = context;
 
-        return prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep } }).ModelProcessingAction();
+        return await DBAPI.fetchModelProcessingAction(prisma, idModelProcessingAction);
     },
     Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idModelProcessingActionStep } = parent;
+        const { idVActionMethod } = parent;
         const { prisma } = context;
 
-        return prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep } }).Vocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVActionMethod);
     }
 };
 

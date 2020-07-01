@@ -31,3 +31,12 @@ export async function fetchModelGeometryFile(prisma: PrismaClient, idModelGeomet
         return null;
     }
 }
+
+export async function fetchModelGeometryFileFromModel(prisma: PrismaClient, idModel: number): Promise<ModelGeometryFile[] | null> {
+    try {
+        return await prisma.modelGeometryFile.findMany({ where: { idModel } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchModelGeometryFileFromModel', error);
+        return null;
+    }
+}
