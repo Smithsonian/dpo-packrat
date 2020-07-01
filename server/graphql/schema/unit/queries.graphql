@@ -1,5 +1,8 @@
 type Query {
     getUnit(input: GetUnitInput!): GetUnitResult!
+    getProject(input: GetProjectInput!): GetProjectResult!
+    getSubject(input: GetSubjectInput!): GetUnitResult!
+    getItem(input: GetItemInput!): GetItemResult!
 }
 
 input GetUnitInput {
@@ -8,4 +11,28 @@ input GetUnitInput {
 
 type GetUnitResult {
     Unit: Unit
+}
+
+input GetProjectInput {
+    idProject: Int!
+}
+
+type GetProjectResult {
+    Project: Project
+}
+
+input GetSubjectInput {
+    idSubject: Int!
+}
+
+type GetSubjectResult {
+    Subject: Subject
+}
+
+input GetItemInput {
+    idItem: Int!
+}
+
+type GetItemResult {
+    Item: Item
 }

@@ -568,6 +568,9 @@ type Query {
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
+  getProject(input: GetProjectInput!): GetProjectResult!
+  getSubject(input: GetSubjectInput!): GetUnitResult!
+  getItem(input: GetItemInput!): GetItemResult!
   getUser(input: GetUserInput!): GetUserResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
@@ -629,6 +632,30 @@ type GetUnitResult {
   Unit: Unit
 }
 
+input GetProjectInput {
+  idProject: Int!
+}
+
+type GetProjectResult {
+  Project: Project
+}
+
+input GetSubjectInput {
+  idSubject: Int!
+}
+
+type GetSubjectResult {
+  Subject: Subject
+}
+
+input GetItemInput {
+  idItem: Int!
+}
+
+type GetItemResult {
+  Item: Item
+}
+
 input GetUserInput {
   idUser: Int!
 }
@@ -651,4 +678,134 @@ input GetWorkflowInput {
 
 type GetWorkflowResult {
   Workflow: Workflow
+}
+
+type Mutation {
+  createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
+  createModel(input: CreateModelInput!): CreateModelResult!
+  createScene(input: CreateSceneInput!): CreateSceneResult!
+  createUnit(input: CreateUnitInput!): CreateUnitResult!
+  createProject(input: CreateProjectInput!): CreateProjectResult!
+  createSubject(input: CreateSubjectInput!): CreateSubjectResult!
+  createItem(input: CreateItemInput!): CreateItemResult!
+  createUser(input: CreateUserInput!): CreateUserResult!
+  createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
+  createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
+}
+
+input CreateCaptureDataInput {
+  idVCaptureMethod: Int!
+  idVCaptureDatasetType: Int!
+  DateCaptured: DateTime!
+  Description: String!
+  CaptureDatasetFieldID: Int!
+  ItemPositionFieldID: Int!
+  ItemArrangementFieldID: Int!
+  idVBackgroundRemovalMethod: Int!
+  ClusterGeometryFieldID: Int!
+  CameraSettingsUniform: Boolean!
+  idAssetThumbnail: Int
+  idVItemPositionType: Int
+  idVFocusType: Int
+  idVLightSourceType: Int
+  idVClusterType: Int
+}
+
+type CreateCaptureDataResult {
+  CaptureData: CaptureData
+}
+
+input CreateModelInput {
+  Authoritative: Boolean!
+  idVCreationMethod: Int!
+  idVModality: Int!
+  idVPurpose: Int!
+  idVUnits: Int!
+  Master: Boolean!
+  idAssetThumbnail: Int
+}
+
+type CreateModelResult {
+  Model: Model
+}
+
+input CreateSceneInput {
+  Name: String!
+  HasBeenQCd: Boolean!
+  IsOriented: Boolean!
+  idAssetThumbnail: Int
+}
+
+type CreateSceneResult {
+  Scene: Scene
+}
+
+input CreateUnitInput {
+  Name: String!
+  Abbreviation: String!
+  ARKPrefix: String!
+}
+
+type CreateUnitResult {
+  Unit: Unit
+}
+
+input CreateProjectInput {
+  Name: String!
+  Description: String!
+}
+
+type CreateProjectResult {
+  Project: Project
+}
+
+input CreateSubjectInput {
+  idUnit: Int!
+  Name: String!
+  idAssetThumbnail: Int
+  idGeoLocation: Int
+}
+
+type CreateSubjectResult {
+  Subject: Subject
+}
+
+input CreateItemInput {
+  idSubject: Int!
+  Name: String!
+  EntireSubject: Boolean!
+  idAssetThumbnail: Int
+  idGeoLocation: Int
+}
+
+type CreateItemResult {
+  Item: Item
+}
+
+input CreateUserInput {
+  Name: String!
+  EmailAddress: String!
+  SecurityID: String!
+}
+
+type CreateUserResult {
+  User: User
+}
+
+input CreateVocabularyInput {
+  idVocabularySet: Int!
+  SortOrder: Int!
+}
+
+type CreateVocabularyResult {
+  Vocabulary: Vocabulary
+}
+
+input CreateVocabularySetInput {
+  Name: String!
+  SystemMaintained: Boolean!
+}
+
+type CreateVocabularySetResult {
+  VocabularySet: VocabularySet
 }
