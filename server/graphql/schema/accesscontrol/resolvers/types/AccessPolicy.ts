@@ -3,25 +3,26 @@
  */
 import { AccessContext, AccessRole, User } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const AccessPolicy = {
     AccessContext: async (parent: Parent, _: Args, context: Context): Promise<AccessContext | null> => {
-        const { idAccessPolicy } = parent;
+        const { idAccessContext } = parent;
         const { prisma } = context;
 
-        return prisma.accessPolicy.findOne({ where: { idAccessPolicy } }).AccessContext();
+        return await DBAPI.fetchAccessContext(prisma, idAccessContext);
     },
     AccessRole: async (parent: Parent, _: Args, context: Context): Promise<AccessRole | null> => {
-        const { idAccessPolicy } = parent;
+        const { idAccessRole } = parent;
         const { prisma } = context;
 
-        return prisma.accessPolicy.findOne({ where: { idAccessPolicy } }).AccessRole();
+        return await DBAPI.fetchAccessRole(prisma, idAccessRole);
     },
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { idAccessPolicy } = parent;
+        const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.accessPolicy.findOne({ where: { idAccessPolicy } }).User();
+        return await DBAPI.fetchUser(prisma, idUser);
     }
 };
 

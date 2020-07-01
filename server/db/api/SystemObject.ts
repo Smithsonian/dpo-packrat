@@ -277,3 +277,21 @@ export async function fetchSystemObjectFromModel(prisma: PrismaClient, idScene: 
         return null;
     }
 }
+
+export async function fetchSystemObjectFromWorkflow(prisma: PrismaClient, idWorkflow: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idWorkflow } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromWorkflow', error);
+        return null;
+    }
+}
+
+export async function fetchSystemObjectFromWorkflowStep(prisma: PrismaClient, idWorkflowStep: number): Promise<SystemObject | null> {
+    try {
+        return await prisma.systemObject.findOne({ where: { idWorkflowStep } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectFromWorkflowStep', error);
+        return null;
+    }
+}

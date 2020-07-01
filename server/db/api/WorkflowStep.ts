@@ -83,3 +83,12 @@ export async function fetchWorkflowStepFromUser(prisma: PrismaClient, idUserOwne
         return null;
     }
 }
+
+export async function fetchWorkflowStepFromWorkflow(prisma: PrismaClient, idWorkflow: number): Promise<WorkflowStep[] | null> {
+    try {
+        return await prisma.workflowStep.findMany({ where: { idWorkflow } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchWorkflowStepFromWorkflow', error);
+        return null;
+    }
+}

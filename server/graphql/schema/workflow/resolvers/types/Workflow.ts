@@ -3,37 +3,38 @@
  */
 import { Project, User, WorkflowTemplate, SystemObject, WorkflowStep } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const Workflow = {
     Project: async (parent: Parent, _: Args, context: Context): Promise<Project | null> => {
-        const { idWorkflow } = parent;
+        const { idProject } = parent;
         const { prisma } = context;
 
-        return prisma.workflow.findOne({ where: { idWorkflow } }).Project();
+        return await DBAPI.fetchProject(prisma, idProject);
     },
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { idWorkflow } = parent;
+        const { idUserInitiator } = parent;
         const { prisma } = context;
 
-        return prisma.workflow.findOne({ where: { idWorkflow } }).User();
+        return await DBAPI.fetchUser(prisma, idUserInitiator);
     },
     WorkflowTemplate: async (parent: Parent, _: Args, context: Context): Promise<WorkflowTemplate | null> => {
-        const { idWorkflow } = parent;
+        const { idWorkflowTemplate } = parent;
         const { prisma } = context;
 
-        return prisma.workflow.findOne({ where: { idWorkflow } }).WorkflowTemplate();
+        return await DBAPI.fetchWorkflowTemplate(prisma, idWorkflowTemplate);
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idWorkflow } = parent;
         const { prisma } = context;
 
-        return prisma.workflow.findOne({ where: { idWorkflow } }).SystemObject();
+        return await DBAPI.fetchSystemObjectFromWorkflow(prisma, idWorkflow);
     },
     WorkflowStep: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep[] | null> => {
         const { idWorkflow } = parent;
         const { prisma } = context;
 
-        return prisma.workflow.findOne({ where: { idWorkflow } }).WorkflowStep();
+        return await DBAPI.fetchWorkflowStepFromWorkflow(prisma, idWorkflow);
     }
 };
 
