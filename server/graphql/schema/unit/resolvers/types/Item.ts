@@ -12,7 +12,7 @@ const Item = {
 
         return await DBAPI.fetchSubject(prisma, idSubject);
     },
-    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
+    AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
         const { idAssetThumbnail } = parent;
         const { prisma } = context;
 

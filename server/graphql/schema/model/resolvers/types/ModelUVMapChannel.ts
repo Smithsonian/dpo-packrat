@@ -12,7 +12,7 @@ const ModelUVMapChannel = {
 
         return await DBAPI.fetchModelUVMapFile(prisma, idModelUVMapFile);
     },
-    Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
+    VUVMapType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idVUVMapType } = parent;
         const { prisma } = context;
 

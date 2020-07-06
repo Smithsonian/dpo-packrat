@@ -18,7 +18,7 @@ const CaptureDataFile = {
 
         return await DBAPI.fetchCaptureData(prisma, idCaptureData);
     },
-    Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
+    VVariantType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idVVariantType } = parent;
         const { prisma } = context;
 

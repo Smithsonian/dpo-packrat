@@ -12,7 +12,7 @@ const ModelProcessingActionStep = {
 
         return await DBAPI.fetchModelProcessingAction(prisma, idModelProcessingAction);
     },
-    Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
+    VActionMethod: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idVActionMethod } = parent;
         const { prisma } = context;
 

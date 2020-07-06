@@ -6,7 +6,7 @@ import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const Scene = {
-    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
+    AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
         const { idAssetThumbnail } = parent;
         const { prisma } = context;
 

@@ -42,7 +42,7 @@ type ModelGeometryFile {
     Roughness: Float
     Asset: Asset
     Model: Model
-    Vocabulary: Vocabulary
+    VModelFileType: Vocabulary
     ModelUVMapFile: [ModelUVMapFile]
 }
 
@@ -64,7 +64,7 @@ type ModelProcessingActionStep {
     idModelProcessingAction: Int!
     idVActionMethod: Int!
     ModelProcessingAction: ModelProcessingAction
-    Vocabulary: Vocabulary
+    VActionMethod: Vocabulary
 }
 
 type ModelSceneXref {
@@ -89,7 +89,7 @@ type ModelUVMapChannel {
     idModelUVMapFile: Int!
     idVUVMapType: Int!
     ModelUVMapFile: ModelUVMapFile
-    Vocabulary: Vocabulary
+    VUVMapType: Vocabulary
 }
 
 type ModelUVMapFile {

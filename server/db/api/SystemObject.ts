@@ -233,9 +233,9 @@ export async function fetchSystemObjectFromItem(prisma: PrismaClient, idItem: nu
     }
 }
 
-export async function fetchSystemObjectFromSubject(prisma: PrismaClient, idItem: number): Promise<SystemObject | null> {
+export async function fetchSystemObjectFromSubject(prisma: PrismaClient, idSubject: number): Promise<SystemObject | null> {
     try {
-        return await prisma.systemObject.findOne({ where: { idItem } });
+        return await prisma.systemObject.findOne({ where: { idSubject } });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchSystemObjectFromSubject', error);
         return null;
@@ -269,9 +269,9 @@ export async function fetchSystemObjectFromScene(prisma: PrismaClient, idScene: 
     }
 }
 
-export async function fetchSystemObjectFromModel(prisma: PrismaClient, idScene: number): Promise<SystemObject | null> {
+export async function fetchSystemObjectFromModel(prisma: PrismaClient, idModel: number): Promise<SystemObject | null> {
     try {
-        return await prisma.systemObject.findOne({ where: { idScene } });
+        return await prisma.systemObject.findOne({ where: { idModel } });
     } catch (error) {
         LOG.logger.error('DBAPI.fetchSystemObjectFromModel', error);
         return null;

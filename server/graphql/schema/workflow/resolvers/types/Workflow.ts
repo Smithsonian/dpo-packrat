@@ -12,7 +12,7 @@ const Workflow = {
 
         return await DBAPI.fetchProject(prisma, idProject);
     },
-    User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
+    UserInitiator: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { idUserInitiator } = parent;
         const { prisma } = context;
 
