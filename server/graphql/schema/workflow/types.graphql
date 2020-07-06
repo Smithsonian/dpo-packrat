@@ -30,9 +30,9 @@ type WorkflowStep {
 }
 
 type WorkflowStepSystemObjectXref {
+    idWorkflowStepSystemObjectXref: Int!
     idSystemObject: Int!
     idWorkflowStep: Int!
-    idWorkflowStepSystemObjectXref: Int!
     Input: Boolean!
     SystemObject: SystemObject
     WorkflowStep: WorkflowStep

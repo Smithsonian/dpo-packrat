@@ -33,8 +33,8 @@ const WorkflowStep = {
     WorkflowStepSystemObjectXref: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStepSystemObjectXref[] | null> => {
         const { idWorkflowStep } = parent;
         const { prisma } = context;
-        // TODO: xref elimination
-        return prisma.workflowStep.findOne({ where: { idWorkflowStep } }).WorkflowStepSystemObjectXref();
+
+        return await DBAPI.fetchWorkflowStepSystemObjectXrefFromWorkflowStep(prisma, idWorkflowStep);
     }
 };
 
