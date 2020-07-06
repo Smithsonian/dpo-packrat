@@ -6,7 +6,7 @@ type Scene {
     idAssetThumbnail: Int
     IsOriented: Boolean!
     Name: String!
-    Asset: Asset
+    AssetThumbnail: Asset
     ModelSceneXref: [ModelSceneXref]
     SystemObject: SystemObject
 }

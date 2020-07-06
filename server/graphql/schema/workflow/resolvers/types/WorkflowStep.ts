@@ -12,7 +12,7 @@ const WorkflowStep = {
 
         return await DBAPI.fetchUser(prisma, idUserOwner);
     },
-    Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
+    VWorkflowStepType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idVWorkflowStepType } = parent;
         const { prisma } = context;
 

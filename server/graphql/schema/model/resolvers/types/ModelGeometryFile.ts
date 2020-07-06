@@ -18,7 +18,7 @@ const ModelGeometryFile = {
 
         return await DBAPI.fetchModel(prisma, idModel);
     },
-    Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
+    VModelFileType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
         const { idVModelFileType } = parent;
         const { prisma } = context;
 

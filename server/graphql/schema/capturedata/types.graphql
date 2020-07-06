@@ -38,7 +38,7 @@ type CaptureDataFile {
     idVVariantType: Int!
     Asset: Asset
     CaptureData: CaptureData
-    Vocabulary: Vocabulary
+    VVariantType: Vocabulary
 }
 
 type CaptureDataGroup {

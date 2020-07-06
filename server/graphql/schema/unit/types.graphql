@@ -55,7 +55,7 @@ type Subject {
     idSubject: Int!
     idUnit: Int!
     Name: String!
-    Asset: Asset
+    AssetThumbnail: Asset
     idAssetThumbnail: Int
     idGeoLocation: Int
     GeoLocation: GeoLocation
@@ -71,7 +71,7 @@ type Item {
     Name: String!
     idAssetThumbnail: Int
     idGeoLocation: Int
-    Asset: Asset
+    AssetThumbnail: Asset
     GeoLocation: GeoLocation
     Subject: Subject
     SystemObject: SystemObject
