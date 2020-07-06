@@ -15,8 +15,8 @@ const Scene = {
     ModelSceneXref: async (parent: Parent, _: Args, context: Context): Promise<ModelSceneXref[] | null> => {
         const { idScene } = parent;
         const { prisma } = context;
-        // TODO: xref elimination
-        return prisma.scene.findOne({ where: { idScene } }).ModelSceneXref();
+
+        return await DBAPI.fetchModelSceneXrefFromScene(prisma, idScene);
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idScene } = parent;

@@ -28,3 +28,21 @@ export async function fetchModelSceneXref(prisma: PrismaClient, idModelSceneXref
         return null;
     }
 }
+
+export async function fetchModelSceneXrefFromScene(prisma: PrismaClient, idScene: number): Promise<ModelSceneXref[] | null> {
+    try {
+        return await prisma.modelSceneXref.findMany({ where: { idScene } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchModelSceneXrefFromScene', error);
+        return null;
+    }
+}
+
+export async function fetchModelSceneXrefFromModel(prisma: PrismaClient, idModel: number): Promise<ModelSceneXref[] | null> {
+    try {
+        return await prisma.modelSceneXref.findMany({ where: { idModel } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchModelSceneXrefFromModel', error);
+        return null;
+    }
+}

@@ -3,19 +3,20 @@
  */
 import { Model, Scene } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const ModelSceneXref = {
     Model: async (parent: Parent, _: Args, context: Context): Promise<Model | null> => {
-        const { idModelSceneXref } = parent;
+        const { idModel } = parent;
         const { prisma } = context;
 
-        return prisma.modelSceneXref.findOne({ where: { idModelSceneXref } }).Model();
+        return await DBAPI.fetchModel(prisma, idModel);
     },
     Scene: async (parent: Parent, _: Args, context: Context): Promise<Scene | null> => {
-        const { idModelSceneXref } = parent;
+        const { idScene } = parent;
         const { prisma } = context;
 
-        return prisma.modelSceneXref.findOne({ where: { idModelSceneXref } }).Scene();
+        return await DBAPI.fetchScene(prisma, idScene);
     }
 };
 
