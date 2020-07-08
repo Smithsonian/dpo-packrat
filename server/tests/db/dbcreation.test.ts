@@ -1,7 +1,7 @@
 import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 import * as path from 'path';
-import { PrismaClient,
+import {
     AccessAction, AccessContext, AccessContextObject, AccessPolicy, AccessRole, AccessRoleAccessActionXref,
     Actor, Asset, AssetGroup, AssetVersion, CaptureData, CaptureDataGroup, CaptureDataGroupCaptureDataXref,
     GeoLocation, Identifier, IntermediaryFile, Item, License, LicenseAssignment, Metadata,
@@ -10,6 +10,7 @@ import { PrismaClient,
     Subject, SystemObject, SystemObjectVersion, SystemObjectXref,
     Unit, User, UserPersonalizationSystemObject, UserPersonalizationUrl, Vocabulary, VocabularySet,
     Workflow, WorkflowStep, WorkflowStepSystemObjectXref, WorkflowTemplate } from '@prisma/client';
+import { DBConnectionFactory } from '../../db';
 
 let prisma;
 
@@ -19,11 +20,11 @@ beforeAll(() => {
     LOG.logger.info('**************************');
     LOG.logger.info('DB Creation Tests');
     LOG.logger.info(`DB Creation Tests writing logs to ${path.resolve(logPath)}`);
-    prisma = new PrismaClient();
+    prisma = DBConnectionFactory.getFactory().prisma;
 });
 
 afterAll(async done => {
-    await prisma.disconnect();
+    await DBConnectionFactory.getFactory().disconnect();
     done();
 });
 
