@@ -58,3 +58,11 @@ export async function fetchSystemObjectAndSubject(prisma: PrismaClient, idSubjec
     }
 }
 
+export async function fetchSubjectFromUnit(prisma: PrismaClient, idUnit: number): Promise<Subject[] | null> {
+    try {
+        return await prisma.subject.findMany({ where: { idUnit } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSubjectFromUnit', error);
+        return null;
+    }
+}

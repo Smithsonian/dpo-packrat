@@ -49,15 +49,13 @@ type GeoLocation {
     TS0: Float
     TS1: Float
     TS2: Float
-    Item: [Item]
-    Subject: [Subject]
 }
 
 type Subject {
     idSubject: Int!
     idUnit: Int!
     Name: String!
-    Asset: Asset
+    AssetThumbnail: Asset
     idAssetThumbnail: Int
     idGeoLocation: Int
     GeoLocation: GeoLocation
@@ -73,7 +71,7 @@ type Item {
     Name: String!
     idAssetThumbnail: Int
     idGeoLocation: Int
-    Asset: Asset
+    AssetThumbnail: Asset
     GeoLocation: GeoLocation
     Subject: Subject
     SystemObject: SystemObject

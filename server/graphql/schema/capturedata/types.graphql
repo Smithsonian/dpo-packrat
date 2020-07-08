@@ -17,7 +17,7 @@ type CaptureData {
     idVLightSourceType: Int
     ItemArrangementFieldID: Int
     ItemPositionFieldID: Int
-    Asset: Asset
+    AssetThumbnail: Asset
     VBackgroundRemovalMethod: Vocabulary
     VCaptureDatasetType: Vocabulary
     VCaptureMethod: Vocabulary
@@ -26,7 +26,7 @@ type CaptureData {
     VItemPositionType: Vocabulary
     VLightSourceType: Vocabulary
     CaptureDataFile: [CaptureDataFile]
-    CaptureDataGroupCaptureDataXref: [CaptureDataGroupCaptureDataXref]
+    CaptureDataGroup: [CaptureDataGroup]
     SystemObject: SystemObject
 }
 
@@ -38,18 +38,10 @@ type CaptureDataFile {
     idVVariantType: Int!
     Asset: Asset
     CaptureData: CaptureData
-    Vocabulary: Vocabulary
+    VVariantType: Vocabulary
 }
 
 type CaptureDataGroup {
     idCaptureDataGroup: Int!
-    CaptureDataGroupCaptureDataXref: [CaptureDataGroupCaptureDataXref]
-}
-
-type CaptureDataGroupCaptureDataXref {
-    idCaptureData: Int!
-    idCaptureDataGroup: Int!
-    idCaptureDataGroupCaptureDataXref: Int!
-    CaptureData: CaptureData
-    CaptureDataGroup: CaptureDataGroup
+    CaptureData: [CaptureData]
 }

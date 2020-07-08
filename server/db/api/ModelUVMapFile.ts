@@ -28,3 +28,12 @@ export async function fetchModelUVMapFile(prisma: PrismaClient, idModelUVMapFile
         return null;
     }
 }
+
+export async function fetchModelUVMapFileFromModelGeometryFile(prisma: PrismaClient, idModelGeometryFile: number): Promise<ModelUVMapFile[] | null> {
+    try {
+        return await prisma.modelUVMapFile.findMany({ where: { idModelGeometryFile } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchModelUVMapFileFromModelGeometryFile', error);
+        return null;
+    }
+}

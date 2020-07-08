@@ -3,19 +3,20 @@
  */
 import { ModelUVMapFile, Vocabulary } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const ModelUVMapChannel = {
     ModelUVMapFile: async (parent: Parent, _: Args, context: Context): Promise<ModelUVMapFile | null> => {
-        const { idModelUVMapChannel } = parent;
+        const { idModelUVMapFile } = parent;
         const { prisma } = context;
 
-        return prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel } }).ModelUVMapFile();
+        return await DBAPI.fetchModelUVMapFile(prisma, idModelUVMapFile);
     },
-    Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idModelUVMapChannel } = parent;
+    VUVMapType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
+        const { idVUVMapType } = parent;
         const { prisma } = context;
 
-        return prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel } }).Vocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVUVMapType);
     }
 };
 

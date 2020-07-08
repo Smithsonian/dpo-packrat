@@ -28,3 +28,12 @@ export async function fetchCaptureDataFile(prisma: PrismaClient, idCaptureDataFi
         return null;
     }
 }
+
+export async function fetchCaptureDataFileFromCaptureData(prisma: PrismaClient, idCaptureData: number): Promise<CaptureDataFile[] | null> {
+    try {
+        return await prisma.captureDataFile.findMany({ where: { idCaptureData } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchCaptureDataFileFromCaptureData', error);
+        return null;
+    }
+}

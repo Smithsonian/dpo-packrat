@@ -3,13 +3,6 @@ type Vocabulary {
     idVocabularySet: Int!
     SortOrder: Int!
     VocabularySet: VocabularySet
-    CaptureDataFile: [CaptureDataFile]
-    Identifier: [Identifier]
-    Metadata: [Metadata]
-    ModelGeometryFile: [ModelGeometryFile]
-    ModelProcessingActionStep: [ModelProcessingActionStep]
-    ModelUVMapChannel: [ModelUVMapChannel]
-    WorkflowStep: [WorkflowStep]
 }
 
 type VocabularySet {

@@ -3,55 +3,56 @@
  */
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import { UserPersonalizationSystemObject, UserPersonalizationUrl, LicenseAssignment, AccessPolicy, AssetVersion, Metadata, Workflow, WorkflowStep } from '@prisma/client';
+import * as DBAPI from '../../../../../db';
 
 const User = {
     AccessPolicy: async (parent: Parent, _: Args, context: Context): Promise<AccessPolicy[] | null> => {
         const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.user.findOne({ where: { idUser } }).AccessPolicy();
+        return await DBAPI.fetchAccessPolicyFromUser(prisma, idUser);
     },
     AssetVersion: async (parent: Parent, _: Args, context: Context): Promise<AssetVersion[] | null> => {
         const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.user.findOne({ where: { idUser } }).AssetVersion();
+        return await DBAPI.fetchAssetVersionFromUser(prisma, idUser);
     },
     LicenseAssignment: async (parent: Parent, _: Args, context: Context): Promise<LicenseAssignment[] | null> => {
         const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.user.findOne({ where: { idUser } }).LicenseAssignment();
+        return await DBAPI.fetchLicenseAssignmentFromUser(prisma, idUser);
     },
     Metadata: async (parent: Parent, _: Args, context: Context): Promise<Metadata[] | null> => {
         const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.user.findOne({ where: { idUser } }).Metadata();
+        return await DBAPI.fetchMetadataFromUser(prisma, idUser);
     },
     UserPersonalizationSystemObject: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationSystemObject[] | null> => {
         const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.user.findOne({ where: { idUser } }).UserPersonalizationSystemObject();
+        return await DBAPI.fetchUserPersonalizationSystemObjectFromUser(prisma, idUser);
     },
     UserPersonalizationUrl: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationUrl[] | null> => {
         const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.user.findOne({ where: { idUser } }).UserPersonalizationUrl();
+        return await DBAPI.fetchUserPersonalizationUrlFromUser(prisma, idUser);
     },
     Workflow: async (parent: Parent, _: Args, context: Context): Promise<Workflow[] | null> => {
         const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.user.findOne({ where: { idUser } }).Workflow();
+        return await DBAPI.fetchWorkflowFromUser(prisma, idUser);
     },
     WorkflowStep: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep[] | null> => {
         const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.user.findOne({ where: { idUser } }).WorkflowStep();
+        return await DBAPI.fetchWorkflowStepFromUser(prisma, idUser);
     }
 };
 

@@ -28,3 +28,12 @@ export async function fetchUserPersonalizationUrl(prisma: PrismaClient, idUserPe
         return null;
     }
 }
+
+export async function fetchUserPersonalizationUrlFromUser(prisma: PrismaClient, idUser: number): Promise<UserPersonalizationUrl[] | null> {
+    try {
+        return await prisma.userPersonalizationUrl.findMany({ where: { idUser } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchUserPersonalizationUrlFromUser', error);
+        return null;
+    }
+}

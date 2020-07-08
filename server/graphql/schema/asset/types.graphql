@@ -7,16 +7,6 @@ type Asset {
     idAssetGroup: Int
     AssetGroup: AssetGroup
     AssetVersion: [AssetVersion]
-    CaptureData: [CaptureData]
-    CaptureDataFile: [CaptureDataFile]
-    IntermediaryFile: [IntermediaryFile]
-    Item: [Item]
-    Metadata: [Metadata]
-    Model: [Model]
-    ModelGeometryFile: [ModelGeometryFile]
-    ModelUVMapFile: [ModelUVMapFile]
-    Scene: [Scene]
-    Subject: [Subject]
     SystemObject: SystemObject
 }
 

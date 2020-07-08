@@ -3,31 +3,32 @@
  */
 import { Subject, Item, GeoLocation, Asset, SystemObject } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const Item = {
     Subject: async (parent: Parent, _: Args, context: Context): Promise<Subject | null> => {
-        const { idItem } = parent;
+        const { idSubject } = parent;
         const { prisma } = context;
 
-        return prisma.item.findOne({ where: { idItem } }).Subject();
+        return await DBAPI.fetchSubject(prisma, idSubject);
     },
-    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idItem } = parent;
+    AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
+        const { idAssetThumbnail } = parent;
         const { prisma } = context;
 
-        return prisma.item.findOne({ where: { idItem } }).Asset();
+        return await DBAPI.fetchAsset(prisma, idAssetThumbnail);
     },
     GeoLocation: async (parent: Parent, _: Args, context: Context): Promise<GeoLocation | null> => {
-        const { idItem } = parent;
+        const { idGeoLocation } = parent;
         const { prisma } = context;
 
-        return prisma.item.findOne({ where: { idItem } }).GeoLocation();
+        return await DBAPI.fetchGeoLocation(prisma, idGeoLocation);
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idItem } = parent;
         const { prisma } = context;
 
-        return prisma.item.findOne({ where: { idItem } }).SystemObject();
+        return await DBAPI.fetchSystemObjectFromItem(prisma, idItem);
     }
 };
 
