@@ -57,3 +57,12 @@ export async function fetchSystemObjectAndActor(prisma: PrismaClient, idActor: n
         return null;
     }
 }
+
+export async function fetchActorFromUnit(prisma: PrismaClient, idUnit: number): Promise<Actor[] | null> {
+    try {
+        return await prisma.actor.findMany({ where: { idUnit } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchActorFromUnit', error);
+        return null;
+    }
+}

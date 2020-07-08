@@ -21,157 +21,157 @@ import {
     Identifier,
     LicenseAssignment,
     Metadata,
+    SystemObject,
     SystemObjectVersion,
-    SystemObjectXref,
-    UserPersonalizationSystemObject,
-    WorkflowStepSystemObjectXref
+    UserPersonalizationSystemObject
 } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const SystemObject = {
     Actor: async (parent: Parent, _: Args, context: Context): Promise<Actor | null> => {
-        const { idSystemObject } = parent;
+        const { idActor } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Actor();
+        return await DBAPI.fetchActor(prisma, idActor);
     },
     Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idSystemObject } = parent;
+        const { idAsset } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Asset();
+        return await DBAPI.fetchAsset(prisma, idAsset);
     },
     AssetVersion: async (parent: Parent, _: Args, context: Context): Promise<AssetVersion | null> => {
-        const { idSystemObject } = parent;
+        const { idAssetVersion } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).AssetVersion();
+        return await DBAPI.fetchAssetVersion(prisma, idAssetVersion);
     },
     CaptureData: async (parent: Parent, _: Args, context: Context): Promise<CaptureData | null> => {
-        const { idSystemObject } = parent;
+        const { idCaptureData } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).CaptureData();
+        return await DBAPI.fetchCaptureData(prisma, idCaptureData);
     },
     IntermediaryFile: async (parent: Parent, _: Args, context: Context): Promise<IntermediaryFile | null> => {
-        const { idSystemObject } = parent;
+        const { idIntermediaryFile } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).IntermediaryFile();
+        return await DBAPI.fetchIntermediaryFile(prisma, idIntermediaryFile);
     },
     Item: async (parent: Parent, _: Args, context: Context): Promise<Item | null> => {
-        const { idSystemObject } = parent;
+        const { idItem } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Item();
+        return await DBAPI.fetchItem(prisma, idItem);
     },
     Model: async (parent: Parent, _: Args, context: Context): Promise<Model | null> => {
-        const { idSystemObject } = parent;
+        const { idModel } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Model();
+        return await DBAPI.fetchModel(prisma, idModel);
     },
     Project: async (parent: Parent, _: Args, context: Context): Promise<Project | null> => {
-        const { idSystemObject } = parent;
+        const { idProject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Project();
+        return await DBAPI.fetchProject(prisma, idProject);
     },
     ProjectDocumentation: async (parent: Parent, _: Args, context: Context): Promise<ProjectDocumentation | null> => {
-        const { idSystemObject } = parent;
+        const { idProjectDocumentation } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).ProjectDocumentation();
+        return await DBAPI.fetchProjectDocumentation(prisma, idProjectDocumentation);
     },
     Scene: async (parent: Parent, _: Args, context: Context): Promise<Scene | null> => {
-        const { idSystemObject } = parent;
+        const { idScene } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Scene();
+        return await DBAPI.fetchScene(prisma, idScene);
     },
     Stakeholder: async (parent: Parent, _: Args, context: Context): Promise<Stakeholder | null> => {
-        const { idSystemObject } = parent;
+        const { idStakeholder } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Stakeholder();
+        return await DBAPI.fetchStakeholder(prisma, idStakeholder);
     },
     Subject: async (parent: Parent, _: Args, context: Context): Promise<Subject | null> => {
-        const { idSystemObject } = parent;
+        const { idSubject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Subject();
+        return await DBAPI.fetchSubject(prisma, idSubject);
     },
     Unit: async (parent: Parent, _: Args, context: Context): Promise<Unit | null> => {
-        const { idSystemObject } = parent;
+        const { idUnit } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Unit();
+        return await DBAPI.fetchUnit(prisma, idUnit);
     },
     Workflow: async (parent: Parent, _: Args, context: Context): Promise<Workflow | null> => {
-        const { idSystemObject } = parent;
+        const { idWorkflow } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Workflow();
+        return await DBAPI.fetchWorkflow(prisma, idWorkflow);
     },
     WorkflowStep: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep | null> => {
-        const { idSystemObject } = parent;
+        const { idWorkflowStep } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).WorkflowStep();
+        return await DBAPI.fetchWorkflowStep(prisma, idWorkflowStep);
     },
     AccessContextObject: async (parent: Parent, _: Args, context: Context): Promise<AccessContextObject[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).AccessContextObject();
+        return await DBAPI.fetchAccessContextObjectFromSystemObject(prisma, idSystemObject);
     },
     Identifier: async (parent: Parent, _: Args, context: Context): Promise<Identifier[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Identifier();
+        return await DBAPI.fetchIdentifierFromSystemObject(prisma, idSystemObject);
     },
     LicenseAssignment: async (parent: Parent, _: Args, context: Context): Promise<LicenseAssignment[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).LicenseAssignment();
+        return await DBAPI.fetchLicenseAssignmentFromSystemObject(prisma, idSystemObject);
     },
     Metadata: async (parent: Parent, _: Args, context: Context): Promise<Metadata[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).Metadata();
+        return await DBAPI.fetchMetadataFromSystemObject(prisma, idSystemObject);
     },
     SystemObjectVersion: async (parent: Parent, _: Args, context: Context): Promise<SystemObjectVersion[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).SystemObjectVersion();
+        return await DBAPI.fetchSystemObjectVersionFromSystemObject(prisma, idSystemObject);
     },
-    SystemObjectDerived: async (parent: Parent, _: Args, context: Context): Promise<SystemObjectXref[] | null> => {
+    SystemObjectDerived: async (parent: Parent, _: Args, context: Context): Promise<SystemObject[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived();
+        return await DBAPI.fetchDerivedSystemObjectFromXref(prisma, idSystemObject);
     },
-    SystemObjectMaster: async (parent: Parent, _: Args, context: Context): Promise<SystemObjectXref[] | null> => {
+    SystemObjectMaster: async (parent: Parent, _: Args, context: Context): Promise<SystemObject[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster();
+        return await DBAPI.fetchMasterSystemObjectFromXref(prisma, idSystemObject);
     },
     UserPersonalizationSystemObject: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationSystemObject[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).UserPersonalizationSystemObject();
+        return await DBAPI.fetchUserPersonalizationSystemObjectFromSystemObject(prisma, idSystemObject);
     },
-    WorkflowStepSystemObjectXref: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStepSystemObjectXref[] | null> => {
+    WorkflowStepXref: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep[] | null> => {
         const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.systemObject.findOne({ where: { idSystemObject } }).WorkflowStepSystemObjectXref();
+        return await DBAPI.fetchWorkflowStepFromXref(prisma, idSystemObject);
     }
 };
 

@@ -58,3 +58,30 @@ export async function fetchSystemObjectAndWorkflow(prisma: PrismaClient, idWorkf
         return null;
     }
 }
+
+export async function fetchWorkflowFromProject(prisma: PrismaClient, idProject: number): Promise<Workflow[] | null> {
+    try {
+        return await prisma.workflow.findMany({ where: { idProject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchWorkflowFromProject', error);
+        return null;
+    }
+}
+
+export async function fetchWorkflowFromUser(prisma: PrismaClient, idUserInitiator: number): Promise<Workflow[] | null> {
+    try {
+        return await prisma.workflow.findMany({ where: { idUserInitiator } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchWorkflowFromUser', error);
+        return null;
+    }
+}
+
+export async function fetchWorkflowFromWorkflowTemplate(prisma: PrismaClient, idWorkflowTemplate: number): Promise<Workflow[] | null> {
+    try {
+        return await prisma.workflow.findMany({ where: { idWorkflowTemplate } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchWorkflowFromWorkflowTemplate', error);
+        return null;
+    }
+}

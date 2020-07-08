@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Packrat",
+  "name": "Packrat: Smithsonian DPO 3D Repository",
   "icons": [
     {
       "src": "favicon.ico",

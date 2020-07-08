@@ -3,19 +3,20 @@
  */
 import { SystemObject, WorkflowStep } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const WorkflowStepSystemObjectXref = {
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idWorkflowStepSystemObjectXref } = parent;
+        const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref } }).SystemObject();
+        return await DBAPI.fetchSystemObject(prisma, idSystemObject);
     },
     WorkflowStep: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep | null> => {
-        const { idWorkflowStepSystemObjectXref } = parent;
+        const { idWorkflowStep } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref } }).WorkflowStep();
+        return await DBAPI.fetchWorkflowStep(prisma, idWorkflowStep);
     }
 };
 

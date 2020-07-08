@@ -1,21 +1,16 @@
 /**
  * Type resolver for AccessRole
  */
-import { AccessPolicy, AccessRoleAccessActionXref } from '@prisma/client';
+import { AccessAction } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const AccessRole = {
-    AccessPolicy: async (parent: Parent, _: Args, context: Context): Promise<AccessPolicy[] | null> => {
+    AccessAction: async (parent: Parent, _: Args, context: Context): Promise<AccessAction[] | null> => {
         const { idAccessRole } = parent;
         const { prisma } = context;
 
-        return prisma.accessRole.findOne({ where: { idAccessRole } }).AccessPolicy();
-    },
-    AccessRoleAccessActionXref: async (parent: Parent, _: Args, context: Context): Promise<AccessRoleAccessActionXref[] | null> => {
-        const { idAccessRole } = parent;
-        const { prisma } = context;
-
-        return prisma.accessRole.findOne({ where: { idAccessRole } }).AccessRoleAccessActionXref();
+        return await DBAPI.fetchAccessActionFromXref(prisma, idAccessRole);
     }
 };
 

@@ -59,3 +59,11 @@ export async function fetchSystemObjectAndItem(prisma: PrismaClient, idItem: num
     }
 }
 
+export async function fetchItemFromSubject(prisma: PrismaClient, idSubject: number): Promise<Item[] | null> {
+    try {
+        return await prisma.item.findMany({ where: { idSubject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchItemFromSubject', error);
+        return null;
+    }
+}

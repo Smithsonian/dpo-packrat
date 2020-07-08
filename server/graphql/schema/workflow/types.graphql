@@ -8,7 +8,7 @@ type Workflow {
     idProject: Int
     idUserInitiator: Int
     Project: Project
-    User: User
+    UserInitiator: User
     WorkflowTemplate: WorkflowTemplate
     SystemObject: SystemObject
     WorkflowStep: [WorkflowStep]
@@ -23,16 +23,16 @@ type WorkflowStep {
     State: Int!
     DateCompleted: DateTime
     User: User
-    Vocabulary: Vocabulary
+    VWorkflowStepType: Vocabulary
     Workflow: Workflow
     SystemObject: SystemObject
     WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]
 }
 
 type WorkflowStepSystemObjectXref {
+    idWorkflowStepSystemObjectXref: Int!
     idSystemObject: Int!
     idWorkflowStep: Int!
-    idWorkflowStepSystemObjectXref: Int!
     Input: Boolean!
     SystemObject: SystemObject
     WorkflowStep: WorkflowStep

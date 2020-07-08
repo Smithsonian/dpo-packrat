@@ -3,25 +3,26 @@
  */
 import { Asset, ModelSceneXref, SystemObject } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const Scene = {
-    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idScene } = parent;
+    AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
+        const { idAssetThumbnail } = parent;
         const { prisma } = context;
 
-        return prisma.scene.findOne({ where: { idScene } }).Asset();
+        return await DBAPI.fetchAsset(prisma, idAssetThumbnail);
     },
     ModelSceneXref: async (parent: Parent, _: Args, context: Context): Promise<ModelSceneXref[] | null> => {
         const { idScene } = parent;
         const { prisma } = context;
 
-        return prisma.scene.findOne({ where: { idScene } }).ModelSceneXref();
+        return await DBAPI.fetchModelSceneXrefFromScene(prisma, idScene);
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idScene } = parent;
         const { prisma } = context;
 
-        return prisma.scene.findOne({ where: { idScene } }).SystemObject();
+        return await DBAPI.fetchSystemObjectFromScene(prisma, idScene);
     }
 };
 

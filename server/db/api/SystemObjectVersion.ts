@@ -28,3 +28,11 @@ export async function fetchSystemObjectVersion(prisma: PrismaClient, idSystemObj
     }
 }
 
+export async function fetchSystemObjectVersionFromSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<SystemObjectVersion[] | null> {
+    try {
+        return await prisma.systemObjectVersion.findMany({ where: { idSystemObject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchSystemObjectVersionFromSystemObject', error);
+        return null;
+    }
+}

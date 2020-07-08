@@ -30,3 +30,12 @@ export async function fetchModelProcessingAction(prisma: PrismaClient, idModelPr
         return null;
     }
 }
+
+export async function fetchModelProcessingActionFromModel(prisma: PrismaClient, idModel: number): Promise<ModelProcessingAction[] | null> {
+    try {
+        return await prisma.modelProcessingAction.findMany({ where: { idModel } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchModelProcessingActionFromModel', error);
+        return null;
+    }
+}

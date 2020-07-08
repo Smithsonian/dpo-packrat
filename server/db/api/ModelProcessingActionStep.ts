@@ -28,3 +28,12 @@ export async function fetchModelProcessingActionStep(prisma: PrismaClient, idMod
         return null;
     }
 }
+
+export async function fetchModelProcessingActionStepFromModelProcessingAction(prisma: PrismaClient, idModelProcessingAction: number): Promise<ModelProcessingActionStep[] | null> {
+    try {
+        return await prisma.modelProcessingActionStep.findMany({ where: { idModelProcessingAction } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchModelProcessingActionStepFromModelProcessingAction', error);
+        return null;
+    }
+}

@@ -3,19 +3,20 @@
  */
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import { User, SystemObject } from '@prisma/client';
+import * as DBAPI from '../../../../../db';
 
 const UserPersonalizationSystemObject = {
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { idUserPersonalizationSystemObject } = parent;
+        const { idUser } = parent;
         const { prisma } = context;
 
-        return prisma.userPersonalizationSystemObject.findOne({ where: { idUserPersonalizationSystemObject } }).User();
+        return await DBAPI.fetchUser(prisma, idUser);
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idUserPersonalizationSystemObject } = parent;
+        const { idSystemObject } = parent;
         const { prisma } = context;
 
-        return prisma.userPersonalizationSystemObject.findOne({ where: { idUserPersonalizationSystemObject } }).SystemObject();
+        return await DBAPI.fetchSystemObject(prisma, idSystemObject);
     }
 };
 

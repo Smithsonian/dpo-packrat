@@ -27,3 +27,12 @@ export async function fetchIdentifier(prisma: PrismaClient, idIdentifier: number
         return null;
     }
 }
+
+export async function fetchIdentifierFromSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<Identifier[] | null> {
+    try {
+        return await prisma.identifier.findMany({ where: { idSystemObject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchIdentifierFromSystemObject', error);
+        return null;
+    }
+}

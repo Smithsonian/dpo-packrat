@@ -57,3 +57,12 @@ export async function fetchSystemObjectAndProjectDocumentation(prisma: PrismaCli
     }
 }
 
+
+export async function fetchProjectDocumentationFromProject(prisma: PrismaClient, idProject: number): Promise<ProjectDocumentation[] | null> {
+    try {
+        return await prisma.projectDocumentation.findMany({ where: { idProject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchProjectDocumentationFromProject', error);
+        return null;
+    }
+}

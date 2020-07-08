@@ -6,7 +6,7 @@ type Scene {
     idAssetThumbnail: Int
     IsOriented: Boolean!
     Name: String!
-    Asset: Asset
+    AssetThumbnail: Asset
     ModelSceneXref: [ModelSceneXref]
     SystemObject: SystemObject
 }
@@ -17,7 +17,6 @@ type Actor {
     IndividualName: String
     OrganizationName: String
     Unit: Unit
-    ModelProcessingAction: [ModelProcessingAction]
     SystemObject: SystemObject
 }
 

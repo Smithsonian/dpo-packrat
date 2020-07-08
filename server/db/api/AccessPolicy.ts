@@ -29,3 +29,21 @@ export async function fetchAccessPolicy(prisma: PrismaClient, idAccessPolicy: nu
         return null;
     }
 }
+
+export async function fetchAccessPolicyFromAccessContext(prisma: PrismaClient, idAccessContext: number): Promise<AccessPolicy[] | null> {
+    try {
+        return await prisma.accessPolicy.findMany({ where: { idAccessContext } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchAccessPolicyFromAccessContext', error);
+        return null;
+    }
+}
+
+export async function fetchAccessPolicyFromUser(prisma: PrismaClient, idUser: number): Promise<AccessPolicy[] | null> {
+    try {
+        return await prisma.accessPolicy.findMany({ where: { idUser } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchAccessPolicyFromUser', error);
+        return null;
+    }
+}

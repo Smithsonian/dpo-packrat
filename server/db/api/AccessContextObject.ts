@@ -28,3 +28,21 @@ export async function fetchAccessContextObject(prisma: PrismaClient, idAccessCon
         return null;
     }
 }
+
+export async function fetchAccessContextObjectFromAccessContext(prisma: PrismaClient, idAccessContext: number): Promise<AccessContextObject[] | null> {
+    try {
+        return await prisma.accessContextObject.findMany({ where: { idAccessContext } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchAccessContextObjectFromAccessContext', error);
+        return null;
+    }
+}
+
+export async function fetchAccessContextObjectFromSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<AccessContextObject[] | null> {
+    try {
+        return await prisma.accessContextObject.findMany({ where: { idSystemObject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchAccessContextObjectFromAccessContext', error);
+        return null;
+    }
+}

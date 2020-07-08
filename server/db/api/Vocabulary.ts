@@ -3,7 +3,17 @@ import * as PRISMA from '@prisma/client';
 import * as LOG from '../../utils/logger';
 
 // declare module 'PRISMA' {
-export class Vocabulary {
+// export interface Vocabulary {
+//     create(prisma: PRISMA.PrismaClient, vocabulary: PRISMA.Vocabulary): Promise<PRISMA.Vocabulary | null>;
+//     fetch(prisma: PRISMA.PrismaClient, idVocabulary: number): Promise<PRISMA.Vocabulary | null>;
+// }
+// }
+
+export class Vocabulary implements PRISMA.Vocabulary {
+    idVocabulary: number = 0;
+    idVocabularySet: number = 0;
+    SortOrder: number = 0;
+
     static async create(prisma: PRISMA.PrismaClient, vocabulary: PRISMA.Vocabulary): Promise<PRISMA.Vocabulary | null> {
         let createSystemObject: PRISMA.Vocabulary;
         const { idVocabularySet, SortOrder } = vocabulary;

@@ -1,33 +1,40 @@
 /**
  * Type resolver for WorkflowStep
  */
-import { Vocabulary, Workflow, SystemObject, WorkflowStepSystemObjectXref } from '@prisma/client';
+import { User, Vocabulary, Workflow, SystemObject, WorkflowStepSystemObjectXref } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const WorkflowStep = {
-    Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idWorkflowStep } = parent;
+    User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
+        const { idUserOwner } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStep.findOne({ where: { idWorkflowStep } }).Vocabulary();
+        return await DBAPI.fetchUser(prisma, idUserOwner);
+    },
+    VWorkflowStepType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
+        const { idVWorkflowStepType } = parent;
+        const { prisma } = context;
+
+        return await DBAPI.Vocabulary.fetch(prisma, idVWorkflowStepType);
     },
     Workflow: async (parent: Parent, _: Args, context: Context): Promise<Workflow | null> => {
-        const { idWorkflowStep } = parent;
+        const { idWorkflow } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStep.findOne({ where: { idWorkflowStep } }).Workflow();
+        return await DBAPI.fetchWorkflow(prisma, idWorkflow);
     },
     SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
         const { idWorkflowStep } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStep.findOne({ where: { idWorkflowStep } }).SystemObject();
+        return await DBAPI.fetchSystemObjectFromWorkflowStep(prisma, idWorkflowStep);
     },
     WorkflowStepSystemObjectXref: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStepSystemObjectXref[] | null> => {
         const { idWorkflowStep } = parent;
         const { prisma } = context;
 
-        return prisma.workflowStep.findOne({ where: { idWorkflowStep } }).WorkflowStepSystemObjectXref();
+        return await DBAPI.fetchWorkflowStepSystemObjectXrefFromWorkflowStep(prisma, idWorkflowStep);
     }
 };
 

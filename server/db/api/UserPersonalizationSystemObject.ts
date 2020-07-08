@@ -28,3 +28,21 @@ export async function fetchUserPersonalizationSystemObject(prisma: PrismaClient,
         return null;
     }
 }
+
+export async function fetchUserPersonalizationSystemObjectFromUser(prisma: PrismaClient, idUser: number): Promise<UserPersonalizationSystemObject[] | null> {
+    try {
+        return await prisma.userPersonalizationSystemObject.findMany({ where: { idUser } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchUserPersonalizationSystemObjectFromUser', error);
+        return null;
+    }
+}
+
+export async function fetchUserPersonalizationSystemObjectFromSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<UserPersonalizationSystemObject[] | null> {
+    try {
+        return await prisma.userPersonalizationSystemObject.findMany({ where: { idSystemObject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchUserPersonalizationSystemObjectFromSystemObject', error);
+        return null;
+    }
+}

@@ -3,25 +3,26 @@
  */
 import { CaptureDataFile, CaptureData, Asset, Vocabulary } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const CaptureDataFile = {
     Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idCaptureDataFile } = parent;
+        const { idAsset } = parent;
         const { prisma } = context;
 
-        return prisma.captureDataFile.findOne({ where: { idCaptureDataFile } }).Asset();
+        return await DBAPI.fetchAsset(prisma, idAsset);
     },
     CaptureData: async (parent: Parent, _: Args, context: Context): Promise<CaptureData | null> => {
-        const { idCaptureDataFile } = parent;
+        const { idCaptureData } = parent;
         const { prisma } = context;
 
-        return prisma.captureDataFile.findOne({ where: { idCaptureDataFile } }).CaptureData();
+        return await DBAPI.fetchCaptureData(prisma, idCaptureData);
     },
-    Vocabulary: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idCaptureDataFile } = parent;
+    VVariantType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
+        const { idVVariantType } = parent;
         const { prisma } = context;
 
-        return prisma.captureDataFile.findOne({ where: { idCaptureDataFile } }).Vocabulary();
+        return await DBAPI.Vocabulary.fetch(prisma, idVVariantType);
     }
 };
 

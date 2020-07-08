@@ -38,10 +38,10 @@ type SystemObject {
     LicenseAssignment: [LicenseAssignment]
     Metadata: [Metadata]
     SystemObjectVersion: [SystemObjectVersion]
-    SystemObjectDerived: [SystemObjectXref]
-    SystemObjectMaster: [SystemObjectXref]
+    SystemObjectDerived: [SystemObject]
+    SystemObjectMaster: [SystemObject]
     UserPersonalizationSystemObject: [UserPersonalizationSystemObject]
-    WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]!
+    WorkflowStepXref: [WorkflowStep]
 }
 
 type SystemObjectVersion {
@@ -51,21 +51,13 @@ type SystemObjectVersion {
     SystemObject: SystemObject
 }
 
-type SystemObjectXref {
-    idSystemObjectXref: Int!
-    idSystemObjectDerived: Int!
-    idSystemObjectMaster: Int!
-    SystemObjectDerived: SystemObject
-    SystemObjectMaster: SystemObject
-}
-
 type Identifier {
     idIdentifier: Int!
     IdentifierValue: String!
     idSystemObject: Int
     idVIdentifierType: Int
     SystemObject: SystemObject
-    Vocabulary: Vocabulary
+    VIdentifierType: Vocabulary
 }
 
 type Metadata {
@@ -77,8 +69,8 @@ type Metadata {
     idVMetadataSource: Int
     ValueExtended: String
     ValueShort: String
-    Asset: Asset
+    AssetValue: Asset
     SystemObject: SystemObject
     User: User
-    Vocabulary: Vocabulary
+    VMetadataSource: Vocabulary
 }

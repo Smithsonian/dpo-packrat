@@ -30,3 +30,30 @@ export async function fetchLicenseAssignment(prisma: PrismaClient, idLicenseAssi
         return null;
     }
 }
+
+export async function fetchLicenseAssignmentFromLicense(prisma: PrismaClient, idLicense: number): Promise<LicenseAssignment[] | null> {
+    try {
+        return await prisma.licenseAssignment.findMany({ where: { idLicense } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchLicenseAssignmentFromLicense', error);
+        return null;
+    }
+}
+
+export async function fetchLicenseAssignmentFromUser(prisma: PrismaClient, idUserCreator: number): Promise<LicenseAssignment[] | null> {
+    try {
+        return await prisma.licenseAssignment.findMany({ where: { idUserCreator } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchLicenseAssignmentFromUser', error);
+        return null;
+    }
+}
+
+export async function fetchLicenseAssignmentFromSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<LicenseAssignment[] | null> {
+    try {
+        return await prisma.licenseAssignment.findMany({ where: { idSystemObject } });
+    } catch (error) {
+        LOG.logger.error('DBAPI.fetchLicenseAssignmentFromSystemObject', error);
+        return null;
+    }
+}
