@@ -4,7 +4,6 @@ import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
-        height: '100vh',
         background: palette.text.secondary,
     },
     loginTitle: {
