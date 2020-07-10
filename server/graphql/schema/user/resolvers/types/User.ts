@@ -6,11 +6,8 @@ import { UserPersonalizationSystemObject, UserPersonalizationUrl, LicenseAssignm
 import * as DBAPI from '../../../../../db';
 
 const User = {
-    AccessPolicy: async (parent: Parent, _: Args, context: Context): Promise<AccessPolicy[] | null> => {
-        const { idUser } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchAccessPolicyFromUser(prisma, idUser);
+    AccessPolicy: async (parent: Parent): Promise<AccessPolicy[] | null> => {
+        return await DBAPI.AccessPolicy.fetchFromUser(parent.idUser);
     },
     AssetVersion: async (parent: Parent, _: Args, context: Context): Promise<AssetVersion[] | null> => {
         const { idUser } = parent;
