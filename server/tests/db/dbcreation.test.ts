@@ -2,7 +2,7 @@ import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 import * as path from 'path';
 import {
-    AccessAction, AccessContext, AccessContextObject, AccessPolicy, AccessRole, AccessRoleAccessActionXref,
+    AccessAction as PAccessAction, AccessRole as PAccessRole, AccessRoleAccessActionXref,
     Actor, Asset, AssetGroup, AssetVersion, CaptureData, CaptureDataGroup, CaptureDataGroupCaptureDataXref,
     GeoLocation, Identifier, IntermediaryFile, Item, License, LicenseAssignment, Metadata,
     Model, ModelGeometryFile, ModelProcessingAction, ModelProcessingActionStep,
@@ -10,7 +10,6 @@ import {
     Subject, SystemObject, SystemObjectVersion, SystemObjectXref,
     Unit, User, UserPersonalizationSystemObject, UserPersonalizationUrl, Vocabulary, VocabularySet,
     Workflow, WorkflowStep, WorkflowStepSystemObjectXref, WorkflowTemplate } from '@prisma/client';
-import { DBConnectionFactory } from '../../db';
 
 let prisma;
 
@@ -20,11 +19,12 @@ beforeAll(() => {
     LOG.logger.info('**************************');
     LOG.logger.info('DB Creation Tests');
     LOG.logger.info(`DB Creation Tests writing logs to ${path.resolve(logPath)}`);
-    prisma = DBConnectionFactory.getFactory().prisma;
+    prisma = DBAPI.DBConnectionFactory.prisma;
 });
 
 afterAll(async done => {
-    await DBConnectionFactory.getFactory().disconnect();
+    LOG.logger.info('DB Creation Tests afterAll()');
+    await DBAPI.DBConnectionFactory.disconnect();
     done();
 });
 
@@ -42,12 +42,12 @@ let sceneNulls: Scene | null;
 let systemObjectAsset: SystemObject | null;
 let systemObjectSubject: SystemObject | null;
 let systemObjectScene: SystemObject | null;
-let accessAction: AccessAction | null;
-let accessAction2: AccessAction | null;
-let accessContext: AccessContext | null;
-let accessRole: AccessRole | null;
-let accessPolicy: AccessPolicy | null;
-let accessContextObject: AccessContextObject | null;
+let accessAction: DBAPI.AccessAction | null;
+let accessAction2: DBAPI.AccessAction | null;
+let accessContext: DBAPI.AccessContext | null;
+let accessRole: DBAPI.AccessRole | null;
+let accessPolicy: DBAPI.AccessPolicy | null;
+let accessContextObject: DBAPI.AccessContextObject | null;
 let accessRoleAccessActionXref: AccessRoleAccessActionXref | null;
 let accessRoleAccessActionXref2: AccessRoleAccessActionXref | null;
 let actorWithUnit: Actor | null;
@@ -263,75 +263,79 @@ describe('DB Creation Test Suite', () => {
     // Makes use of objects created above
     // *************************************************************************
     test('DB Creation: AccessAction', async () => {
-        accessAction = await DBAPI.createAccessAction(prisma, {
+        accessAction = new DBAPI.AccessAction({
             Name: 'Test AccessAction',
             SortOrder: 0,
             idAccessAction: 0
         });
-        expect(accessAction).toBeTruthy();
-        if (accessAction)
-            expect(accessAction.idAccessAction).toBeGreaterThan(0);
+
+        expect(await accessAction.create()).toBeTruthy();
+        expect(accessAction.data.idAccessAction).toBeGreaterThan(0);
     });
 
     test('DB Creation: AccessAction 2', async () => {
-        accessAction2 = await DBAPI.createAccessAction(prisma, {
+        accessAction2 = new DBAPI.AccessAction({
             Name: 'Test AccessAction 2',
             SortOrder: 0,
             idAccessAction: 0
         });
-        expect(accessAction2).toBeTruthy();
-        if (accessAction2)
-            expect(accessAction2.idAccessAction).toBeGreaterThan(0);
+
+        expect(await accessAction2.create()).toBeTruthy();
+        expect(accessAction2.data.idAccessAction).toBeGreaterThan(0);
     });
 
     test('DB Creation: AccessContext', async () => {
-        accessContext = await DBAPI.createAccessContext(prisma,
-            { Global: false, Authoritative: false, CaptureData: false, Model: false, Scene: false, IntermediaryFile: false, idAccessContext: 0 });
-        expect(accessContext).toBeTruthy();
-        if (accessContext)
-            expect(accessContext.idAccessContext).toBeGreaterThan(0);
+        accessContext = new DBAPI.AccessContext(
+            { Global: false, Authoritative: false, CaptureData: false, Model: false, Scene: false, IntermediaryFile: false, idAccessContext: 0 }
+        );
+        expect(await accessContext.create()).toBeTruthy();
+        expect(accessContext.data.idAccessContext).toBeGreaterThan(0);
     });
 
     test('DB Creation: AccessRole', async () => {
-        accessRole = await DBAPI.createAccessRole(prisma, {
+        accessRole = new DBAPI.AccessRole({
             Name: 'Test AccessRole',
             idAccessRole: 0
         });
-        expect(accessRole).toBeTruthy();
-        if (accessRole)
-            expect(accessRole.idAccessRole).toBeGreaterThan(0);
+
+        expect(await accessRole.create()).toBeTruthy();
+        expect(accessRole.idAccessRole).toBeGreaterThan(0);
     });
 
     test('DB Creation: AccessPolicy', async () => {
-        if (user && accessRole && accessContext)
-            accessPolicy = await DBAPI.createAccessPolicy(prisma, {
+        if (user && accessRole && accessContext) {
+            accessPolicy = new DBAPI.AccessPolicy({
                 idUser: user.idUser,
                 idAccessRole: accessRole.idAccessRole,
-                idAccessContext: accessContext.idAccessContext,
+                idAccessContext: accessContext.data.idAccessContext,
                 idAccessPolicy: 0
             });
+            expect(await accessPolicy.create()).toBeTruthy();
+        }
         expect(accessPolicy).toBeTruthy();
         if (accessPolicy)
-            expect(accessPolicy.idAccessPolicy).toBeGreaterThan(0);
+            expect(accessPolicy.data.idAccessPolicy).toBeGreaterThan(0);
     });
 
     test('DB Creation: AccessContextObject', async () => {
         if (systemObjectScene && accessContext)
-            accessContextObject = await DBAPI.createAccessContextObject(prisma, {
-                idAccessContext: accessContext.idAccessContext,
+            accessContextObject = new DBAPI.AccessContextObject({
+                idAccessContext: accessContext.data.idAccessContext,
                 idSystemObject: systemObjectScene.idSystemObject,
                 idAccessContextObject: 0
             });
         expect(accessContextObject).toBeTruthy();
-        if (accessContextObject)
-            expect(accessContextObject.idAccessContextObject).toBeGreaterThan(0);
+        if (accessContextObject) {
+            expect(await accessContextObject.create()).toBeTruthy();
+            expect(accessContextObject.data.idAccessContextObject).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: AccessRoleAccessActionXref', async () => {
         if (accessRole && accessAction)
             accessRoleAccessActionXref = await DBAPI.createAccessRoleAccessActionXref(prisma, {
                 idAccessRole: accessRole.idAccessRole,
-                idAccessAction: accessAction.idAccessAction,
+                idAccessAction: accessAction.data.idAccessAction,
                 idAccessRoleAccessActionXref: 0
             });
         expect(accessRoleAccessActionXref).toBeTruthy();
@@ -343,7 +347,7 @@ describe('DB Creation Test Suite', () => {
         if (accessRole && accessAction2)
             accessRoleAccessActionXref2 = await DBAPI.createAccessRoleAccessActionXref(prisma, {
                 idAccessRole: accessRole.idAccessRole,
-                idAccessAction: accessAction2.idAccessAction,
+                idAccessAction: accessAction2.data.idAccessAction,
                 idAccessRoleAccessActionXref: 0
             });
         expect(accessRoleAccessActionXref2).toBeTruthy();
@@ -969,9 +973,9 @@ describe('DB Creation Test Suite', () => {
 // *******************************************************************
 describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch By ID: AccessAction', async () => {
-        let accessActionFetch: AccessAction | null = null;
+        let accessActionFetch: DBAPI.AccessAction | null = null;
         if (accessAction) {
-            accessActionFetch = await DBAPI.fetchAccessAction(prisma, accessAction.idAccessAction);
+            accessActionFetch = await DBAPI.AccessAction.fetch(accessAction.data.idAccessAction);
             if (accessActionFetch) {
                 expect(accessActionFetch).toMatchObject(accessAction);
                 expect(accessAction).toMatchObject(accessActionFetch);
@@ -981,9 +985,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: AccessContext', async () => {
-        let accessContextFetch: AccessContext | null = null;
+        let accessContextFetch: DBAPI.AccessContext | null = null;
         if (accessContext) {
-            accessContextFetch = await DBAPI.fetchAccessContext(prisma, accessContext.idAccessContext);
+            accessContextFetch = await DBAPI.AccessContext.fetch(accessContext.data.idAccessContext);
             if (accessContextFetch) {
                 expect(accessContextFetch).toMatchObject(accessContext);
                 expect(accessContext).toMatchObject(accessContextFetch);
@@ -993,9 +997,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: AccessContextObject', async () => {
-        let accessContextObjectFetch: AccessContextObject | null = null;
+        let accessContextObjectFetch: DBAPI.AccessContextObject | null = null;
         if (accessContextObject) {
-            accessContextObjectFetch = await DBAPI.fetchAccessContextObject(prisma, accessContextObject.idAccessContextObject);
+            accessContextObjectFetch = await DBAPI.AccessContextObject.fetch(accessContextObject.data.idAccessContextObject);
             if (accessContextObjectFetch) {
                 expect(accessContextObjectFetch).toMatchObject(accessContextObject);
                 expect(accessContextObject).toMatchObject(accessContextObjectFetch);
@@ -1005,9 +1009,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: AccessPolicy', async () => {
-        let accessPolicyFetch: AccessPolicy | null = null;
+        let accessPolicyFetch: DBAPI.AccessPolicy | null = null;
         if (accessPolicy) {
-            accessPolicyFetch = await DBAPI.fetchAccessPolicy(prisma, accessPolicy.idAccessPolicy);
+            accessPolicyFetch = await DBAPI.AccessPolicy.fetch(accessPolicy.data.idAccessPolicy);
             if (accessPolicyFetch) {
                 expect(accessPolicyFetch).toMatchObject(accessPolicy);
                 expect(accessPolicy).toMatchObject(accessPolicyFetch);
@@ -1017,9 +1021,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: AccessRole', async () => {
-        let accessRoleFetch: AccessRole | null = null;
+        let accessRoleFetch: DBAPI.AccessRole | null = null;
         if (accessRole) {
-            accessRoleFetch = await DBAPI.fetchAccessRole(prisma, accessRole.idAccessRole);
+            accessRoleFetch = await DBAPI.AccessRole.fetch(accessRole.idAccessRole);
             if (accessRoleFetch) {
                 expect(accessRoleFetch).toMatchObject(accessRole);
                 expect(accessRole).toMatchObject(accessRoleFetch);
@@ -2328,10 +2332,10 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
 });
 
 describe('DB Fetch Xref Test Suite', () => {
-    test('DB Fetch Xref: fetchAccessRoleFromXref', async () => {
-        let AR: AccessRole[] | null = null;
+    test('DB Fetch Xref: AccessRole.fetchFromXref', async () => {
+        let AR: PAccessRole[] | null = null;
         if (accessAction && accessRole) {
-            AR = await DBAPI.fetchAccessRoleFromXref(prisma, accessAction.idAccessAction);
+            AR = await DBAPI.AccessRole.fetchFromXref(accessAction.data.idAccessAction);
             if (AR) {
                 expect(AR.length).toBe(1);
                 if (AR.length == 1)
@@ -2341,14 +2345,14 @@ describe('DB Fetch Xref Test Suite', () => {
         expect(AR).toBeTruthy();
     });
 
-    test('DB Fetch Xref: fetchAccessActionFromXref', async () => {
-        let AA: AccessAction[] | null = null;
+    test('DB Fetch Xref: AccessAction.fetchFromXref', async () => {
+        let AA: PAccessAction[] | null = null;
         if (accessAction && accessAction2 && accessRole) {
-            AA = await DBAPI.fetchAccessActionFromXref(prisma, accessRole.idAccessRole);
+            AA = await DBAPI.AccessAction.fetchFromXref(accessRole.idAccessRole);
             if (AA) {
                 expect(AA.length).toBe(2);
                 if (AA.length == 2)
-                    expect(AA[0].idAccessAction + AA[1].idAccessAction).toBe(accessAction.idAccessAction + accessAction2?.idAccessAction);
+                    expect(AA[0].idAccessAction + AA[1].idAccessAction).toBe(accessAction.data.idAccessAction + accessAction2?.data.idAccessAction);
             }
         }
         expect(AA).toBeTruthy();

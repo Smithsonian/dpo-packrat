@@ -1,19 +1,18 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { PrismaClient, } from '@prisma/client';
-// import * as LOG from '../../utils/logger';
 
 export class DBConnectionFactory {
     private static dbConnectionFactory: DBConnectionFactory;
     private _prisma: PrismaClient | null = null;
     private constructor() { }
 
-    static getFactory(): DBConnectionFactory {
+    private static getFactory(): DBConnectionFactory {
         if (!DBConnectionFactory.dbConnectionFactory)
             DBConnectionFactory.dbConnectionFactory = new DBConnectionFactory();
         return DBConnectionFactory.dbConnectionFactory;
     }
 
-    get prisma(): PrismaClient {
+    private get prisma(): PrismaClient {
         if (!this._prisma) {
             this._prisma = new PrismaClient();
             return this._prisma;
@@ -21,10 +20,18 @@ export class DBConnectionFactory {
             return this._prisma;
     }
 
-    async disconnect(): Promise<void> {
+    private async disconnect(): Promise<void> {
         if (this._prisma) {
             await this._prisma.disconnect();
             this._prisma = null;
         }
+    }
+
+    static get prisma(): PrismaClient {
+        return DBConnectionFactory.getFactory().prisma;
+    }
+
+    static async disconnect(): Promise<void> {
+        await DBConnectionFactory.getFactory().disconnect();
     }
 }

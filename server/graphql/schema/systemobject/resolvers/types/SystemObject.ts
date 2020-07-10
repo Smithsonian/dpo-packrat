@@ -119,11 +119,8 @@ const SystemObject = {
 
         return await DBAPI.fetchWorkflowStep(prisma, idWorkflowStep);
     },
-    AccessContextObject: async (parent: Parent, _: Args, context: Context): Promise<AccessContextObject[] | null> => {
-        const { idSystemObject } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchAccessContextObjectFromSystemObject(prisma, idSystemObject);
+    AccessContextObject: async (parent: Parent): Promise<AccessContextObject[] | null> => {
+        return await DBAPI.AccessContextObject.fetchFromSystemObject(parent.idSystemObject);
     },
     Identifier: async (parent: Parent, _: Args, context: Context): Promise<Identifier[] | null> => {
         const { idSystemObject } = parent;
