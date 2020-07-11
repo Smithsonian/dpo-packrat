@@ -19,33 +19,45 @@ yarn
 yarn build
 ```
 
-3. Build the docker images, if they're already available then this would just start them (if you're on a mac then make sure Docker for mac is running):
+3. Compose and build the docker images, if they're already available then this would just start them (make sure docker desktop is running):
 
 ``` 
-yarn dev
+yarn compose:dev
 ```
 
-4. Now the docker containers should start in 10s-20s. The client should be reachable at `http://localhost:3000` and server should be reachable at `http://localhost:4000` or the ports you specified in `.env` following `.env.template`
+4. Start up client and server in dev mode:
 
-5. If you want to follow debug logs for `client` or `server` container then just run `yarn log:client` or `yarn log:server`
-
-6. If you're developing `common` package then make sure to use `yarn start:common` so that it's actively watched/compiled and made available to other packages it's imported at. The other packages should auto reload when changes are made to them.
-
-7. If not using docker run each command in a separate terminal for the package you're developing:
-
-**For client:**
+**Client:**
 
 ``` 
+yarn dev:client
+``` 
+
+You should be inside the `packrat-client` docker image now
+
+```
 yarn start:client
+```
+
+Client should be reachable at `http://localhost:3000`
+
+**Server:**
+
+``` 
+yarn dev:server
 ``` 
 
-**For server:**
+You should be inside the `packrat-server` docker image now
 
 ```
 yarn start:server
-``` 
+```
 
-**For common:**
+Server should be reachable at `http://localhost:4000`
+
+**Common:** (not required)
+
+If you're developing `common` package then make sure to use `yarn start:common` so that it's actively watched/compiled and made available to other packages it's imported at. The other packages should auto reload when changes are made to them.
 
 ```
 yarn start:common
