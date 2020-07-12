@@ -13,7 +13,9 @@ RUN rm -rf server
 # Expose port(s)
 EXPOSE 3000
 # Install dependencies and build
-RUN yarn
+RUN yarn && yarn build
+# Start on excecution
+CMD [ "yarn", "start:client" ]
 
 # Build server from common base
 FROM base AS server
@@ -22,7 +24,9 @@ RUN rm -rf client
 # Expose port(s)
 EXPOSE 4000
 # Install dependencies and build
-RUN yarn
+RUN yarn && yarn build
+# Start on excecution
+CMD [ "yarn", "start:server" ]
 
 FROM nginx:1.17.10 as proxy
 EXPOSE 80
