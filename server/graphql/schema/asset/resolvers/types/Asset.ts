@@ -1,7 +1,7 @@
 /**
  * Type resolver for Asset
  */
-import { Asset, AssetGroup, AssetVersion, SystemObject } from '@prisma/client';
+import { Asset, AssetGroup, AssetVersion } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
@@ -18,11 +18,8 @@ const Asset = {
 
         return await DBAPI.fetchAssetVersionFromAsset(prisma, idAsset);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idAsset } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromAsset(prisma, idAsset);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromAssetID(parent.idAsset);
     }
 };
 

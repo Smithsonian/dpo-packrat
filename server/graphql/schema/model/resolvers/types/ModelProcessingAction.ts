@@ -1,16 +1,13 @@
 /**
  * Type resolver for ModelProcessingAction
  */
-import { Actor, Model, ModelProcessingActionStep } from '@prisma/client';
+import { Model, ModelProcessingActionStep } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const ModelProcessingAction = {
-    Actor: async (parent: Parent, _: Args, context: Context): Promise<Actor | null> => {
-        const { idActor } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchActor(prisma, idActor);
+    Actor: async (parent: Parent): Promise<DBAPI.Actor | null> => {
+        return await DBAPI.Actor.fetch(parent.idActor);
     },
     Model: async (parent: Parent, _: Args, context: Context): Promise<Model | null> => {
         const { idModel } = parent;

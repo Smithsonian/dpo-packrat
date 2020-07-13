@@ -1,7 +1,7 @@
 /**
  * Type resolver for ProjectDocumentation
  */
-import { Project, SystemObject } from '@prisma/client';
+import { Project } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
@@ -12,11 +12,8 @@ const ProjectDocumentation = {
 
         return await DBAPI.fetchProject(prisma, idProject);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idProjectDocumentation } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromProjectDocumentation(prisma, idProjectDocumentation);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromProjectDocumentationID(parent.idProjectDocumentation);
     }
 };
 

@@ -6,6 +6,7 @@
 import { PrismaClient } from '@prisma/client';
 import GraphQLApi from '../../../graphql';
 import * as LOG from '../../../utils/logger';
+import * as DBAPI from '../../../db';
 import * as path from 'path';
 import {
     CreateUserInput,
@@ -36,13 +37,14 @@ class TestSuiteUtils {
         LOG.logger.info('GraphQL Test Suite');
         LOG.logger.info(`GraphQL Tests writing logs to ${path.resolve(logPath)}`);
 
-        this.prisma = new PrismaClient();
+        this.prisma = DBAPI.DBConnectionFactory.prisma;
+
         const context = { prisma: this.prisma };
         this.graphQLApi = new GraphQLApi({ context });
     };
 
     private afterAll = async (done: () => void): Promise<void> => {
-        await this.prisma.disconnect();
+        await DBAPI.DBConnectionFactory.disconnect();
         done();
     };
 

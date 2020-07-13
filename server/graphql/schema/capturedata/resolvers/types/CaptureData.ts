@@ -1,7 +1,7 @@
 /**
  * Type resolver for CaptureData
  */
-import { CaptureData, Vocabulary, CaptureDataFile, CaptureDataGroup, Asset, SystemObject } from '@prisma/client';
+import { CaptureData, Vocabulary, CaptureDataFile, CaptureDataGroup, Asset } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
@@ -65,11 +65,8 @@ const CaptureData = {
         const { prisma } = context;
         return await DBAPI.fetchCaptureDataGroupFromXref(prisma, idCaptureData);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idCaptureData } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromCaptureData(prisma, idCaptureData);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromCaptureDataID(parent.idCaptureData);
     }
 };
 

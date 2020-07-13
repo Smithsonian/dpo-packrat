@@ -2,7 +2,7 @@
  * Type resolver for UserPersonalizationSystemObject
  */
 import { Parent, Args, Context } from '../../../../../types/resolvers';
-import { User, SystemObject } from '@prisma/client';
+import { User } from '@prisma/client';
 import * as DBAPI from '../../../../../db';
 
 const UserPersonalizationSystemObject = {
@@ -12,11 +12,8 @@ const UserPersonalizationSystemObject = {
 
         return await DBAPI.fetchUser(prisma, idUser);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idSystemObject } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObject(prisma, idSystemObject);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetch(parent.idSystemObject);
     }
 };
 

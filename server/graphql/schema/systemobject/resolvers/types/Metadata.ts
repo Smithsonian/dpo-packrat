@@ -2,7 +2,7 @@
  * Type resolver for Metadata
  */
 
-import { Asset, SystemObject, User, Vocabulary } from '@prisma/client';
+import { Asset, User, Vocabulary } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
@@ -13,11 +13,8 @@ const Metadata = {
 
         return await DBAPI.fetchAsset(prisma, idAssetValue);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idSystemObject } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObject(prisma, idSystemObject);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetch(parent.idSystemObject);
     },
     User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
         const { idUser } = parent;

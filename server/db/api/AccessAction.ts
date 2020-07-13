@@ -1,24 +1,28 @@
 /* eslint-disable camelcase */
-import * as P from '@prisma/client';
+import { AccessAction as AccessActionBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
-import { DBObject } from '../api/DBObject';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export class AccessAction extends DBObject<P.AccessAction> {
-    constructor(input: P.AccessAction) {
+export class AccessAction extends DBO.DBObject<AccessActionBase> implements AccessActionBase {
+    idAccessAction!: number;
+    Name!: string;
+    SortOrder!: number;
+
+    constructor(input: AccessActionBase) {
         super(input);
-        this.data = input;
     }
 
     async create(): Promise<boolean> {
         try {
-            const { Name, SortOrder } = this.data;
-            this.data = await DBConnectionFactory.prisma.accessAction.create({
-                data: {
-                    Name,
-                    SortOrder,
-                }
-            });
+            const { Name, SortOrder } = this;
+            ({ idAccessAction: this.idAccessAction, Name: this.Name, SortOrder: this.SortOrder } =
+                await DBConnectionFactory.prisma.accessAction.create({
+                    data: {
+                        Name,
+                        SortOrder,
+                    }
+                }));
             return true;
         } catch (error) {
             LOG.logger.error('DBAPI.AccessAction.create', error);
@@ -27,29 +31,38 @@ export class AccessAction extends DBObject<P.AccessAction> {
     }
 
     async update(): Promise<boolean> {
-        return true;
+        try {
+            const { idAccessAction, Name, SortOrder } = this;
+            return await DBConnectionFactory.prisma.accessAction.update({
+                where: { idAccessAction, },
+                data: { Name, SortOrder, },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.AccessAction.update', error);
+            return false;
+        }
     }
 
     static async fetch(idAccessAction: number): Promise<AccessAction | null> {
         try {
-            const pObj: P.AccessAction | null =
-                await DBConnectionFactory.prisma.accessAction.findOne({ where: { idAccessAction, }, });
-            return pObj ? new AccessAction(pObj) : null;
+            return DBO.CopyObject<AccessActionBase, AccessAction>(
+                await DBConnectionFactory.prisma.accessAction.findOne({ where: { idAccessAction, }, }), AccessAction);
         } catch (error) {
             LOG.logger.error('DBAPI.AccessAction.fetch', error);
             return null;
         }
     }
 
-    static async fetchFromXref(idAccessRole: number): Promise<P.AccessAction[] | null> {
+    static async fetchFromXref(idAccessRole: number): Promise<AccessAction[] | null> {
         try {
-            return await DBConnectionFactory.prisma.accessAction.findMany({
-                where: {
-                    AccessRoleAccessActionXref: {
-                        some: { idAccessRole },
+            return DBO.CopyArray<AccessActionBase, AccessAction>(
+                await DBConnectionFactory.prisma.accessAction.findMany({
+                    where: {
+                        AccessRoleAccessActionXref: {
+                            some: { idAccessRole },
+                        },
                     },
-                },
-            });
+                }), AccessAction);
         } catch (error) {
             LOG.logger.error('DBAPI.AccessAction.fetchFromXref', error);
             return null;

@@ -35,7 +35,7 @@ export function configureLogger(logPath: string): void {
                 winston.format.errors({ stack: true }), // emit stack trace when Error objects are passed in
                 winston.format.timestamp(),
                 winston.format.colorize(),
-                winston.format.prettyPrint()
+                winston.format.simple()
             )
         }));
     }

@@ -1,68 +1,93 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Actor, SystemObject } from '@prisma/client';
+import { Actor as ActorBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { DBConnectionFactory, SystemObject } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createActor(prisma: PrismaClient, actor: Actor): Promise<Actor | null> {
-    let createSystemObject: Actor;
-    const { IndividualName, OrganizationName, idUnit } = actor;
-    try {
-        createSystemObject = await prisma.actor.create({
-            data: {
-                IndividualName,
-                OrganizationName,
-                Unit:               idUnit ? { connect: { idUnit }, } : undefined,
-                SystemObject:       { create: { Retired: false }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createActor', error);
-        return null;
+export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
+    idActor!: number;
+    idUnit!: number | null;
+    IndividualName!: string | null;
+    OrganizationName!: string | null;
+
+    constructor(input: ActorBase) {
+        super(input);
     }
 
-    return createSystemObject;
-}
-
-export async function fetchActor(prisma: PrismaClient, idActor: number): Promise<Actor | null> {
-    try {
-        return await prisma.actor.findOne({ where: { idActor, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchActor', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { idUnit, IndividualName, OrganizationName } = this;
+            ({ idActor: this.idActor, idUnit: this.idUnit, IndividualName: this.IndividualName, OrganizationName: this.OrganizationName } =
+                await DBConnectionFactory.prisma.actor.create({
+                    data: {
+                        IndividualName,
+                        OrganizationName,
+                        Unit:               idUnit ? { connect: { idUnit }, } : undefined,
+                        SystemObject:       { create: { Retired: false }, },
+                    }
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Actor.create', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectForActor(prisma: PrismaClient, sysObj: Actor): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idActor: sysObj.idActor, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForActor', error);
-        return null;
+    async update(): Promise<boolean> {
+        try {
+            const { idActor, idUnit, IndividualName, OrganizationName } = this;
+            return await DBConnectionFactory.prisma.actor.update({
+                where: { idActor, },
+                data: {
+                    IndividualName,
+                    OrganizationName,
+                    Unit:               idUnit ? { connect: { idUnit }, } : undefined,
+                    SystemObject:       { create: { Retired: false }, },
+                }
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Actor.update', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectForActorID(prisma: PrismaClient, idActor: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idActor, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForActorID', error);
-        return null;
+    async fetchSystemObject(): Promise<SystemObject | null> {
+        try {
+            const { idActor } = this;
+            return DBO.CopyObject<SystemObjectBase, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor, }, }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Actor.fetchSystemObject', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectAndActor(prisma: PrismaClient, idActor: number): Promise<SystemObject & { Actor: Actor | null} | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idActor, }, include: { Actor: true, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectAndActor', error);
-        return null;
+    static async fetch(idActor: number): Promise<Actor | null> {
+        try {
+            return DBO.CopyObject<ActorBase, Actor>(
+                await DBConnectionFactory.prisma.actor.findOne({ where: { idActor, }, }), Actor);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Actor.fetch', error);
+            return null;
+        }
     }
-}
 
-export async function fetchActorFromUnit(prisma: PrismaClient, idUnit: number): Promise<Actor[] | null> {
-    try {
-        return await prisma.actor.findMany({ where: { idUnit } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchActorFromUnit', error);
-        return null;
+    static async fetchSystemObjectAndActor(idActor: number): Promise<SystemObjectBase & { Actor: ActorBase | null} | null> {
+        try {
+            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor, }, include: { Actor: true, }, });
+        } catch (error) {
+            LOG.logger.error('DBAPI.fetchSystemObjectAndActor', error);
+            return null;
+        }
+    }
+
+    static async fetchFromUnit(idUnit: number): Promise<Actor[] | null> {
+        try {
+            return DBO.CopyArray<ActorBase, Actor>(
+                await DBConnectionFactory.prisma.actor.findMany({ where: { idUnit } }), Actor);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Actor.fetchFromUnit', error);
+            return null;
+        }
     }
 }
