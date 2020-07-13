@@ -2,7 +2,6 @@
  * Type resolver for SystemObject
  */
 import {
-    Actor,
     Asset,
     AssetVersion,
     CaptureData,
@@ -16,8 +15,6 @@ import {
     Subject,
     Unit,
     Workflow,
-    WorkflowStep,
-    AccessContextObject,
     Identifier,
     LicenseAssignment,
     Metadata,
@@ -29,11 +26,8 @@ import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const SystemObject = {
-    Actor: async (parent: Parent, _: Args, context: Context): Promise<Actor | null> => {
-        const { idActor } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchActor(prisma, idActor);
+    Actor: async (parent: Parent): Promise<DBAPI.Actor | null> => {
+        return await DBAPI.Actor.fetch(parent.idActor);
     },
     Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
         const { idAsset } = parent;
@@ -113,13 +107,10 @@ const SystemObject = {
 
         return await DBAPI.fetchWorkflow(prisma, idWorkflow);
     },
-    WorkflowStep: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep | null> => {
-        const { idWorkflowStep } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchWorkflowStep(prisma, idWorkflowStep);
+    WorkflowStep: async (parent: Parent): Promise<DBAPI.WorkflowStep | null> => {
+        return await DBAPI.WorkflowStep.fetch(parent.idWorkflowStep);
     },
-    AccessContextObject: async (parent: Parent): Promise<AccessContextObject[] | null> => {
+    AccessContextObject: async (parent: Parent): Promise<DBAPI.AccessContextObject[] | null> => {
         return await DBAPI.AccessContextObject.fetchFromSystemObject(parent.idSystemObject);
     },
     Identifier: async (parent: Parent, _: Args, context: Context): Promise<Identifier[] | null> => {
@@ -146,17 +137,11 @@ const SystemObject = {
 
         return await DBAPI.fetchSystemObjectVersionFromSystemObject(prisma, idSystemObject);
     },
-    SystemObjectDerived: async (parent: Parent, _: Args, context: Context): Promise<SystemObject[] | null> => {
-        const { idSystemObject } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchDerivedSystemObjectFromXref(prisma, idSystemObject);
+    SystemObjectDerived: async (parent: Parent): Promise<DBAPI.SystemObject[] | null> => {
+        return await DBAPI.SystemObject.fetchDerivedFromXref(parent.idSystemObject);
     },
-    SystemObjectMaster: async (parent: Parent, _: Args, context: Context): Promise<SystemObject[] | null> => {
-        const { idSystemObject } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchMasterSystemObjectFromXref(prisma, idSystemObject);
+    SystemObjectMaster: async (parent: Parent): Promise<DBAPI.SystemObject[] | null> => {
+        return await DBAPI.SystemObject.fetchMasterFromXref(parent.idSystemObject);
     },
     UserPersonalizationSystemObject: async (parent: Parent, _: Args, context: Context): Promise<UserPersonalizationSystemObject[] | null> => {
         const { idSystemObject } = parent;
@@ -164,11 +149,8 @@ const SystemObject = {
 
         return await DBAPI.fetchUserPersonalizationSystemObjectFromSystemObject(prisma, idSystemObject);
     },
-    WorkflowStepXref: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep[] | null> => {
-        const { idSystemObject } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchWorkflowStepFromXref(prisma, idSystemObject);
+    WorkflowStepXref: async (parent: Parent): Promise<DBAPI.WorkflowStep[] | null> => {
+        return await DBAPI.SystemObject.fetchWorkflowStepFromXref(parent.idSystemObject);
     }
 };
 

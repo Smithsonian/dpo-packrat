@@ -1,7 +1,7 @@
 /**
  * Type resolver for IntermediaryFile
  */
-import { Asset, SystemObject } from '@prisma/client';
+import { Asset } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
@@ -12,11 +12,8 @@ const IntermediaryFile = {
 
         return await DBAPI.fetchAsset(prisma, idAsset);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idIntermediaryFile } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromIntermediaryFile(prisma, idIntermediaryFile);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromIntermediaryFileID(parent.idIntermediaryFile);
     }
 };
 

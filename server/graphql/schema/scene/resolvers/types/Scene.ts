@@ -1,7 +1,7 @@
 /**
  * Type resolver for Scene
  */
-import { Asset, ModelSceneXref, SystemObject } from '@prisma/client';
+import { Asset, ModelSceneXref } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
@@ -18,11 +18,8 @@ const Scene = {
 
         return await DBAPI.fetchModelSceneXrefFromScene(prisma, idScene);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idScene } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromScene(prisma, idScene);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromSceneID(parent.idScene);
     }
 };
 

@@ -1,7 +1,7 @@
 /**
  * Type resolver for Subject
  */
-import { Subject, Unit, Item, GeoLocation, Asset, SystemObject } from '@prisma/client';
+import { Subject, Unit, Item, GeoLocation, Asset } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
@@ -30,11 +30,8 @@ const Subject = {
 
         return await DBAPI.fetchItemFromSubject(prisma, idSubject);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idSubject } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromSubject(prisma, idSubject);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromSubjectID(parent.idSubject);
     }
 };
 

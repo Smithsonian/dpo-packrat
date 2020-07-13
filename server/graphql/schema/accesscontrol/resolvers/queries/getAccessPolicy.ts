@@ -11,5 +11,5 @@ export default async function getAccessPolicy(_: Parent, args: Args): Promise<Ge
 
     const AccessPolicy = await DBAPI.AccessPolicy.fetch(idAccessPolicy);
 
-    return { AccessPolicy: AccessPolicy != null ? AccessPolicy.data : null };
+    return { AccessPolicy: AccessPolicy != null ? AccessPolicy : null };
 }

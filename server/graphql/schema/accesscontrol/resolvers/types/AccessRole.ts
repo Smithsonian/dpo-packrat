@@ -1,12 +1,11 @@
 /**
  * Type resolver for AccessRole
  */
-import { AccessAction } from '@prisma/client';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const AccessRole = {
-    AccessAction: async (parent: Parent): Promise<AccessAction[] | null> => {
+    AccessAction: async (parent: Parent): Promise<DBAPI.AccessAction[] | null> => {
         return await DBAPI.AccessAction.fetchFromXref(parent.idAccessRole);
     }
 };

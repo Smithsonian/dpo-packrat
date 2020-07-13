@@ -1,7 +1,7 @@
 /**
  * Type resolver for WorkflowStep
  */
-import { User, Vocabulary, Workflow, SystemObject, WorkflowStepSystemObjectXref } from '@prisma/client';
+import { User, Vocabulary, Workflow, WorkflowStepSystemObjectXref } from '@prisma/client';
 import { Parent, Args, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
@@ -24,11 +24,8 @@ const WorkflowStep = {
 
         return await DBAPI.fetchWorkflow(prisma, idWorkflow);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idWorkflowStep } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromWorkflowStep(prisma, idWorkflowStep);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromWorkflowStepID(parent.idWorkflowStep);
     },
     WorkflowStepSystemObjectXref: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStepSystemObjectXref[] | null> => {
         const { idWorkflowStep } = parent;

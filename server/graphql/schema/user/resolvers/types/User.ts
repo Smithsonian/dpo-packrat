@@ -2,11 +2,11 @@
  * Type resolver for User
  */
 import { Parent, Args, Context } from '../../../../../types/resolvers';
-import { UserPersonalizationSystemObject, UserPersonalizationUrl, LicenseAssignment, AccessPolicy, AssetVersion, Metadata, Workflow, WorkflowStep } from '@prisma/client';
+import { UserPersonalizationSystemObject, UserPersonalizationUrl, LicenseAssignment, AssetVersion, Metadata, Workflow } from '@prisma/client';
 import * as DBAPI from '../../../../../db';
 
 const User = {
-    AccessPolicy: async (parent: Parent): Promise<AccessPolicy[] | null> => {
+    AccessPolicy: async (parent: Parent): Promise<DBAPI.AccessPolicy[] | null> => {
         return await DBAPI.AccessPolicy.fetchFromUser(parent.idUser);
     },
     AssetVersion: async (parent: Parent, _: Args, context: Context): Promise<AssetVersion[] | null> => {
@@ -45,11 +45,8 @@ const User = {
 
         return await DBAPI.fetchWorkflowFromUser(prisma, idUser);
     },
-    WorkflowStep: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep[] | null> => {
-        const { idUser } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchWorkflowStepFromUser(prisma, idUser);
+    WorkflowStep: async (parent: Parent): Promise<DBAPI.WorkflowStep[] | null> => {
+        return await DBAPI.WorkflowStep.fetchFromUser(parent.idUser);
     }
 };
 
