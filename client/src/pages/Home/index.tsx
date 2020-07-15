@@ -18,7 +18,7 @@ function Home(): React.ReactElement {
     const classes = useStyles();
     const { userLoading, userError } = userUser(0);
 
-    let queryProgress = <CircularProgress color='primary' size={20} />
+    let queryProgress = <CircularProgress color='primary' size={20} />;
 
     if (!userLoading && !userError) {
         queryProgress = (
@@ -26,7 +26,7 @@ function Home(): React.ReactElement {
                 <Typography color='textPrimary' variant='body1'>Server reachable</Typography>
                 <Check color='primary' />
             </>
-        )
+        );
     }
 
     if (userError) {
@@ -35,7 +35,7 @@ function Home(): React.ReactElement {
                 <Typography color='textPrimary' variant='body1'>Server unreachable</Typography>
                 <Warning htmlColor='red' />
             </>
-        )
+        );
     }
 
     return (
