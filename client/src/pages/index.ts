@@ -2,6 +2,8 @@
  * Pages
  * User facing pages are organized here
  */
-import LoginPage from './LoginPage';
+import Home from './Home';
+import Login from './Login';
+import About from './About';
 
-export { LoginPage };
+export { Home, Login, About };

@@ -4,7 +4,10 @@ import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
-        height: '100vh',
+        display: 'flex',
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
         background: palette.text.secondary,
     },
     loginTitle: {
@@ -28,7 +31,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     }
 }));
 
-const LoginPage = (): React.ReactElement => {
+function Login(): React.ReactElement {
     const classes = useStyles();
 
     const InputProps = {
@@ -39,13 +42,7 @@ const LoginPage = (): React.ReactElement => {
     };
 
     return (
-        <Box
-            className={classes.container}
-            display='flex'
-            flex={1}
-            alignItems='center'
-            justifyContent='center'
-        >
+        <Box className={classes.container}>
             <Container maxWidth='xs'>
                 <Typography className={classes.loginTitle} variant='h4' color='textPrimary'>Login</Typography>
                 <Typography className={classes.loginSubtitle} variant='subtitle1'>Welcome to packrat</Typography>
@@ -75,6 +72,6 @@ const LoginPage = (): React.ReactElement => {
             </Container>
         </Box>
     );
-};
+}
 
-export default LoginPage;
+export default Login;
