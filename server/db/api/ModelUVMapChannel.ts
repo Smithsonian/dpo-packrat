@@ -1,39 +1,73 @@
 /* eslint-disable camelcase */
-import { PrismaClient, ModelUVMapChannel } from '@prisma/client';
+import { ModelUVMapChannel as ModelUVMapChannelBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createModelUVMapChannel(prisma: PrismaClient, modelUVMapChannel: ModelUVMapChannel): Promise<ModelUVMapChannel | null> {
-    let createSystemObject: ModelUVMapChannel;
-    const { idModelUVMapFile, ChannelPosition, ChannelWidth, idVUVMapType } = modelUVMapChannel;
-    try {
-        createSystemObject = await prisma.modelUVMapChannel.create({
-            data: {
-                ModelUVMapFile:  { connect: { idModelUVMapFile }, },
-                ChannelPosition, ChannelWidth,
-                Vocabulary: { connect: { idVocabulary: idVUVMapType }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createModelUVMapChannel', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> implements ModelUVMapChannelBase {
+    idModelUVMapChannel!: number;
+    ChannelPosition!: number;
+    ChannelWidth!: number;
+    idModelUVMapFile!: number;
+    idVUVMapType!: number;
 
-export async function fetchModelUVMapChannel(prisma: PrismaClient, idModelUVMapChannel: number): Promise<ModelUVMapChannel | null> {
-    try {
-        return await prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchModelUVMapChannel', error);
-        return null;
+    constructor(input: ModelUVMapChannelBase) {
+        super(input);
     }
-}
 
-export async function fetchModelUVMapChannelFromModelUVMapFile(prisma: PrismaClient, idModelUVMapFile: number): Promise<ModelUVMapChannel[] | null> {
-    try {
-        return await prisma.modelUVMapChannel.findMany({ where: { idModelUVMapFile } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchModelUVMapChannelFromModelUVMapFile', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { idModelUVMapFile, ChannelPosition, ChannelWidth, idVUVMapType } = this;
+            ({ idModelUVMapChannel: this.idModelUVMapChannel, idModelUVMapFile: this.idModelUVMapFile,
+                ChannelPosition: this.ChannelPosition, ChannelWidth: this.ChannelWidth, idVUVMapType: this.idVUVMapType } =
+                await DBConnectionFactory.prisma.modelUVMapChannel.create({
+                    data: {
+                        ModelUVMapFile:  { connect: { idModelUVMapFile }, },
+                        ChannelPosition, ChannelWidth,
+                        Vocabulary: { connect: { idVocabulary: idVUVMapType }, },
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelUVMapChannel.create', error);
+            return false;
+        }
+    }
+
+    async update(): Promise<boolean> {
+        try {
+            const { idModelUVMapChannel, idModelUVMapFile, ChannelPosition, ChannelWidth, idVUVMapType } = this;
+            return await DBConnectionFactory.prisma.modelUVMapChannel.update({
+                where: { idModelUVMapChannel, },
+                data: {
+                    ModelUVMapFile:  { connect: { idModelUVMapFile }, },
+                    ChannelPosition, ChannelWidth,
+                    Vocabulary: { connect: { idVocabulary: idVUVMapType }, },
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelUVMapChannel.update', error);
+            return false;
+        }
+    }
+
+    static async fetch(idModelUVMapChannel: number): Promise<ModelUVMapChannel | null> {
+        try {
+            return DBO.CopyObject<ModelUVMapChannelBase, ModelUVMapChannel>(
+                await DBConnectionFactory.prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel, }, }), ModelUVMapChannel);
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelUVMapChannel.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromModelUVMapFile(idModelUVMapFile: number): Promise<ModelUVMapChannel[] | null> {
+        try {
+            return DBO.CopyArray<ModelUVMapChannelBase, ModelUVMapChannel>(
+                await DBConnectionFactory.prisma.modelUVMapChannel.findMany({ where: { idModelUVMapFile } }), ModelUVMapChannel);
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelUVMapChannel.fetchFromModelUVMapFile', error);
+            return null;
+        }
     }
 }

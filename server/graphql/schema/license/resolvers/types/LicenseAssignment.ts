@@ -2,25 +2,18 @@
  * Type resolver for LicenseAssignment
  */
 
-import { License, LicenseAssignment, User } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const LicenseAssignment = {
-    License: async (parent: Parent, _: Args, context: Context): Promise<License | null> => {
-        const { idLicense } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchLicense(prisma, idLicense);
+    License: async (parent: Parent): Promise<DBAPI.License | null> => {
+        return await DBAPI.License.fetch(parent.idLicense);
     },
     SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
         return await DBAPI.SystemObject.fetch(parent.idSystemObject);
     },
-    UserCreator: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { idUserCreator } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchUser(prisma, idUserCreator);
+    UserCreator: async (parent: Parent): Promise<DBAPI.User | null> => {
+        return await DBAPI.User.fetch(parent.idUserCreator);
     }
 };
 

@@ -1,58 +1,82 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Unit, SystemObject } from '@prisma/client';
+import { Unit as UnitBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { DBConnectionFactory, SystemObject } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createUnit(prisma: PrismaClient, unit: Unit): Promise<Unit | null> {
-    let createSystemObject: Unit;
-    const { Name, Abbreviation, ARKPrefix } = unit;
-    try {
-        createSystemObject = await prisma.unit.create({
-            data: {
-                Name,
-                Abbreviation,
-                ARKPrefix,
-                SystemObject:   { create: { Retired: false }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createUnit', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class Unit extends DBO.DBObject<UnitBase> implements UnitBase {
+    idUnit!: number;
+    Abbreviation!: string | null;
+    ARKPrefix!: string | null;
+    Name!: string;
 
-export async function fetchUnit(prisma: PrismaClient, idUnit: number): Promise<Unit | null> {
-    try {
-        return await prisma.unit.findOne({ where: { idUnit, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchUnit', error);
-        return null;
+    constructor(input: UnitBase) {
+        super(input);
     }
-}
 
-export async function fetchSystemObjectForUnit(prisma: PrismaClient, sysObj: Unit): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idUnit: sysObj.idUnit, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForUnit', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { Name, Abbreviation, ARKPrefix } = this;
+            ({ idUnit: this.idUnit, Name: this.Name, Abbreviation: this.Abbreviation, ARKPrefix: this.ARKPrefix } =
+                await DBConnectionFactory.prisma.unit.create({
+                    data: {
+                        Name,
+                        Abbreviation,
+                        ARKPrefix,
+                        SystemObject:   { create: { Retired: false }, },
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Unit.create', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectForUnitID(prisma: PrismaClient, idUnit: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idUnit, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForUnitID', error);
-        return null;
+    async update(): Promise<boolean> {
+        try {
+            const { idUnit, Name, Abbreviation, ARKPrefix } = this;
+            return await DBConnectionFactory.prisma.unit.update({
+                where: { idUnit, },
+                data: {
+                    Name,
+                    Abbreviation,
+                    ARKPrefix,
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Unit.update', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectAndUnit(prisma: PrismaClient, idUnit: number): Promise<SystemObject & { Unit: Unit | null} | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idUnit, }, include: { Unit: true, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectAndUnit', error);
-        return null;
+    async fetchSystemObject(): Promise<SystemObject | null> {
+        try {
+            const { idUnit } = this;
+            return DBO.CopyObject<SystemObjectBase, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit, }, }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.unit.fetchSystemObject', error);
+            return null;
+        }
+    }
+
+    static async fetch(idUnit: number): Promise<Unit | null> {
+        try {
+            return DBO.CopyObject<UnitBase, Unit>(
+                await DBConnectionFactory.prisma.unit.findOne({ where: { idUnit, }, }), Unit);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Unit.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchSystemObjectAndUnit(idUnit: number): Promise<SystemObjectBase & { Unit: UnitBase | null} | null> {
+        try {
+            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit, }, include: { Unit: true, }, });
+        } catch (error) {
+            LOG.logger.error('DBAPI.Unit.fetchSystemObjectAndUnit', error);
+            return null;
+        }
     }
 }

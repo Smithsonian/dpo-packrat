@@ -1,69 +1,39 @@
 /**
  * Type resolver for CaptureData
  */
-import { CaptureData, Vocabulary, CaptureDataFile, CaptureDataGroup, Asset } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const CaptureData = {
-    AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idAssetThumbnail } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchAsset(prisma, idAssetThumbnail);
+    AssetThumbnail: async (parent: Parent): Promise<DBAPI.Asset | null> => {
+        return await DBAPI.Asset.fetch(parent.idAssetThumbnail);
     },
-    VCaptureMethod: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVCaptureMethod } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVCaptureMethod);
+    VCaptureMethod: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVCaptureMethod);
     },
-    VCaptureDatasetType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVCaptureDatasetType } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVCaptureDatasetType);
+    VCaptureDatasetType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVCaptureDatasetType);
     },
-    VItemPositionType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVItemPositionType } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVItemPositionType);
+    VItemPositionType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVItemPositionType);
     },
-    VFocusType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVFocusType } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVFocusType);
+    VFocusType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVFocusType);
     },
-    VLightSourceType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVLightSourceType } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVLightSourceType);
+    VLightSourceType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVLightSourceType);
     },
-    VBackgroundRemovalMethod: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVBackgroundRemovalMethod } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVBackgroundRemovalMethod);
+    VBackgroundRemovalMethod: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVBackgroundRemovalMethod);
     },
-    VClusterType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVClusterType } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVClusterType);
+    VClusterType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVClusterType);
     },
-    CaptureDataFile: async (parent: Parent, _: Args, context: Context): Promise<CaptureDataFile[] | null> => {
-        const { idCaptureData } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchCaptureDataFileFromCaptureData(prisma, idCaptureData);
+    CaptureDataFile: async (parent: Parent): Promise<DBAPI.CaptureDataFile[] | null> => {
+        return await DBAPI.CaptureDataFile.fetchFromCaptureData(parent.idCaptureData);
     },
-    CaptureDataGroup: async (parent: Parent, _: Args, context: Context): Promise<CaptureDataGroup[] | null> => {
-        const { idCaptureData } = parent;
-        const { prisma } = context;
-        return await DBAPI.fetchCaptureDataGroupFromXref(prisma, idCaptureData);
+    CaptureDataGroup: async (parent: Parent): Promise<DBAPI.CaptureDataGroup[] | null> => {
+        return await DBAPI.CaptureDataGroup.fetchFromXref(parent.idCaptureData);
     },
     SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
         return await DBAPI.SystemObject.fetchFromCaptureDataID(parent.idCaptureData);

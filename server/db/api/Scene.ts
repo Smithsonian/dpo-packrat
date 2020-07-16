@@ -1,74 +1,96 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Model, Scene, SystemObject } from '@prisma/client';
+import { Scene as SceneBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { DBConnectionFactory, SystemObject } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createScene(prisma: PrismaClient, scene: Scene): Promise<Scene | null> {
-    let createSystemObject: Scene;
-    const { Name, idAssetThumbnail, IsOriented, HasBeenQCd } = scene;
-    try {
-        createSystemObject = await prisma.scene.create({
-            data: {
-                Name,
-                Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                IsOriented,
-                HasBeenQCd,
-                SystemObject:       { create: { Retired: false }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createScene', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
+    idScene!: number;
+    HasBeenQCd!: boolean;
+    idAssetThumbnail!: number | null;
+    IsOriented!: boolean;
+    Name!: string;
 
-export async function fetchScene(prisma: PrismaClient, idScene: number): Promise<Scene | null> {
-    try {
-        return await prisma.scene.findOne({ where: { idScene, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchScene', error);
-        return null;
+    constructor(input: SceneBase) {
+        super(input);
     }
-}
 
-export async function fetchSystemObjectForScene(prisma: PrismaClient, sysObj: Scene): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idScene: sysObj.idScene, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForScene', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
+            ({ idScene: this.idScene, Name: this.Name, idAssetThumbnail: this.idAssetThumbnail,
+                IsOriented: this.IsOriented, HasBeenQCd: this.HasBeenQCd } =
+                await DBConnectionFactory.prisma.scene.create({
+                    data: {
+                        Name,
+                        Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                        IsOriented,
+                        HasBeenQCd,
+                        SystemObject:       { create: { Retired: false }, },
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Scene.create', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectForSceneID(prisma: PrismaClient, idScene: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idScene, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForSceneID', error);
-        return null;
-    }
-}
-
-export async function fetchSystemObjectAndScene(prisma: PrismaClient, idScene: number): Promise<SystemObject & { Scene: Scene | null} | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idScene, }, include: { Scene: true, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectAndScene', error);
-        return null;
-    }
-}
-
-export async function fetchModelFromXref(prisma: PrismaClient, idScene: number): Promise<Model[] | null> {
-    try {
-        return await prisma.model.findMany({
-            where: {
-                ModelSceneXref: {
-                    some: { idScene },
+    async update(): Promise<boolean> {
+        try {
+            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
+            return await DBConnectionFactory.prisma.scene.update({
+                where: { idScene, },
+                data: {
+                    Name,
+                    Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                    IsOriented,
+                    HasBeenQCd,
                 },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchModelFromXref', error);
-        return null;
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Scene.update', error);
+            return false;
+        }
+    }
+
+    async fetchSystemObject(): Promise<SystemObject | null> {
+        try {
+            const { idScene } = this;
+            return DBO.CopyObject<SystemObjectBase, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene, }, }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.scene.fetchSystemObject', error);
+            return null;
+        }
+    }
+
+    static async fetch(idScene: number): Promise<Scene | null> {
+        try {
+            return DBO.CopyObject<SceneBase, Scene>(
+                await DBConnectionFactory.prisma.scene.findOne({ where: { idScene, }, }), Scene);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Scene.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchSystemObjectAndScene(idScene: number): Promise<SystemObjectBase & { Scene: SceneBase | null} | null> {
+        try {
+            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene, }, include: { Scene: true, }, });
+        } catch (error) {
+            LOG.logger.error('DBAPI.Scene.fetchSystemObjectAndScene', error);
+            return null;
+        }
+    }
+
+    static async fetchFromXref(idModel: number): Promise<Scene[] | null> {
+        try {
+            return DBO.CopyArray<SceneBase, Scene>(
+                await DBConnectionFactory.prisma.scene.findMany({ where: { ModelSceneXref: { some: { idModel }, }, }, }), Scene);
+        } catch (error) {
+            LOG.logger.error('DBAPI.fetchSceneFromXref', error);
+            return null;
+        }
     }
 }

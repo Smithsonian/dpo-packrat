@@ -1,22 +1,15 @@
 /**
  * Type resolver for ModelUVMapChannel
  */
-import { ModelUVMapFile, Vocabulary } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const ModelUVMapChannel = {
-    ModelUVMapFile: async (parent: Parent, _: Args, context: Context): Promise<ModelUVMapFile | null> => {
-        const { idModelUVMapFile } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchModelUVMapFile(prisma, idModelUVMapFile);
+    ModelUVMapFile: async (parent: Parent): Promise<DBAPI.ModelUVMapFile | null> => {
+        return await DBAPI.ModelUVMapFile.fetch(parent.idModelUVMapFile);
     },
-    VUVMapType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVUVMapType } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVUVMapType);
+    VUVMapType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVUVMapType);
     }
 };
 

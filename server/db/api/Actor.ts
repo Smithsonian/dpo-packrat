@@ -42,7 +42,6 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
                     IndividualName,
                     OrganizationName,
                     Unit:               idUnit ? { connect: { idUnit }, } : undefined,
-                    SystemObject:       { create: { Retired: false }, },
                 }
             }) ? true : false;
         } catch (error) {
