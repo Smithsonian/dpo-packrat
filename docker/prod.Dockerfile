@@ -6,25 +6,33 @@ ADD package*.json .
 # Copy app files
 COPY . .
 
-# Build client from common base
-FROM base AS client
+FROM base AS client-builder
 # Remove server to prevent duplication
 RUN rm -rf server
+# Install dependencies (production mode) and build
+RUN yarn install --frozen-lockfile && yarn build
+
+# Client's production image
+FROM node:12-alpine AS client
+# Add a work directory
+WORKDIR /app
+# Copy from build
+COPY --from=client-builder /app/client/build .
 # Expose port(s)
 EXPOSE 3000
-# Install dependencies and build
-RUN yarn && yarn build
+# Install static file server
+RUN npm i -g serve
 # Start on excecution
-CMD [ "yarn", "start:client:prod" ]
+CMD serve -s . -l 3000
 
-# Build server from common base
+# Server's production image
 FROM base AS server
 # Remove client to prevent duplication
 RUN rm -rf client
 # Expose port(s)
 EXPOSE 4000
-# Install dependencies and build
-RUN yarn && yarn build
+# Install dependencies (production mode) and build
+RUN yarn install --frozen-lockfile && yarn build
 # Start on excecution
 CMD [ "yarn", "start:server:prod" ]
 
