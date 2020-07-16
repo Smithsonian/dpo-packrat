@@ -3,7 +3,7 @@ version: "3.4"
 services:
     packrat-proxy:
         container_name: packrat-proxy
-        image: nginx:1.17.10
+        image: packrat-proxy
         restart: always
         build:
             context: .
