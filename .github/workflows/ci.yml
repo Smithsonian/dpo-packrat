@@ -59,30 +59,81 @@ jobs:
         env:
           DATABASE_URL: mysql://root:test@localhost:3306/Packrat
 
-  build:
-    if: github.event_name == 'push'
+  build-dev:
+    if: github.event_name == 'push' && contains(github.ref, 'develop')
     runs-on: ubuntu-latest
     needs: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup node
-        uses: actions/setup-node@v1
+      - name: Get current package version
+        id: dev-version
+        uses: martinbeentjes/npm-get-version-action@v1.1.0
+
+      - name: Build dev server
+        uses: docker/build-push-action@v1.1.0
         with:
-          node-version: 12
+          repository: packrat/server-dev
+          tags: ${{ steps.dev-version.outputs.current-version }}
+          dockerfile: docker/dev.Dockerfile
+          target: server
+          push: false
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: Build dev client
+        uses: docker/build-push-action@v1.1.0
+        with:
+          repository: packrat/client-dev
+          tags: ${{ steps.dev-version.outputs.current-version }}
+          dockerfile: docker/dev.Dockerfile
+          target: client
+          push: false
 
-      - name: Build master
-        run: |
-          echo 'building master'
-          git status
-        if: contains(github.ref, 'master')
+      - name: Build dev proxy
+        uses: docker/build-push-action@v1.1.0
+        with:
+          repository: packrat/proxy-dev
+          tags: ${{ steps.dev-version.outputs.current-version }}
+          dockerfile: docker/dev.Dockerfile
+          target: proxy
+          push: false
 
-      - name: Build develop
-        run: |
-          echo 'building develop'
-          git status
-        if: contains(github.ref, 'develop')
+  build-prod:
+    if: github.event_name == 'push' && contains(github.ref, 'master')
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get current package version
+        id: prod-version
+        uses: martinbeentjes/npm-get-version-action@v1.1.0
+
+      - name: Build prod server
+        uses: docker/build-push-action@v1.1.0
+        with:
+          repository: packrat/server-prod
+          tags: ${{ steps.prod-version.outputs.current-version }}
+          dockerfile: docker/prod.Dockerfile
+          target: server
+          push: false
+
+      - name: Build prod client
+        uses: docker/build-push-action@v1.1.0
+        with:
+          repository: packrat/client-prod
+          tags: ${{ steps.prod-version.outputs.current-version }}
+          dockerfile: docker/prod.Dockerfile
+          target: client
+          push: false
+
+      - name: Build prod proxy
+        uses: docker/build-push-action@v1.1.0
+        with:
+          repository: packrat/proxy-prod
+          tags: ${{ steps.prod-version.outputs.current-version }}
+          dockerfile: docker/prod.Dockerfile
+          target: proxy
+          push: false
+
