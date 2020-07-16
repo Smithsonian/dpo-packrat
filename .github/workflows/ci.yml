@@ -72,10 +72,12 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: test
-    env:
+    env: # Ideally this will be stored in github secrets and will be accessed via ${{ secrets.* }}
       PACKRAT_CLIENT_PORT: 3000
       PACKRAT_SERVER_PORT: 4000
       PACKRAT_DB_PORT: 3306
+      MYSQL_ROOT_PASSWORD: packrat
+      REACT_APP_GRAPHQL_ENDPOINT: http://packrat-server/graphql
 
     steps:
       - name: Checkout code
@@ -86,6 +88,7 @@ jobs:
         uses: martinbeentjes/npm-get-version-action@v1.1.0
 
       # Runs commands pre-build
+      # Ideally .env will be created from secrets ${{ secrets.DEV/PROD_ENV }} > .env
       - name: Prepare build
         run: touch .env
 
