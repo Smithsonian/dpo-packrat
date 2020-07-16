@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, CircularProgress } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { Check, Warning } from '@material-ui/icons';
-import userUser from './hooks/userUser';
+import useUser from './hooks/useUser';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -16,7 +16,7 @@ const useStyles = makeStyles(() => ({
 
 function Home(): React.ReactElement {
     const classes = useStyles();
-    const { userLoading, userError } = userUser(0);
+    const { userLoading, userError } = useUser(0);
 
     let queryProgress = <CircularProgress color='primary' size={20} />;
 
