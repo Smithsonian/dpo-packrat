@@ -115,6 +115,7 @@ jobs:
         run: |
           echo Cleaning up redundant tags
           docker rmi packrat-server:latest packrat-client:latest packrat-proxy:latest
+          docker images
 
       # Pushes built images to container registry
       - name: Push images

@@ -2,13 +2,9 @@ FROM node:12-alpine AS base
 # Add a work directory
 WORKDIR /app
 # Copy package.json for caching
-ADD package*.json .
+ADD package.json yarn.lock ./
 # Copy app files
 COPY . .
-
-FROM base AS client-builder
-# Remove server to prevent duplication
-RUN rm -rf server
 # Install dependencies (production mode) and build
 RUN yarn install --frozen-lockfile && yarn build
 
@@ -16,8 +12,8 @@ RUN yarn install --frozen-lockfile && yarn build
 FROM node:12-alpine AS client
 # Add a work directory
 WORKDIR /app
-# Copy from build
-COPY --from=client-builder /app/client/build .
+# Copy from base builder
+COPY --from=base /app/client/build .
 # Expose port(s)
 EXPOSE 3000
 # Install static file server
@@ -26,15 +22,16 @@ RUN npm i -g serve
 CMD serve -s . -l 3000
 
 # Server's production image
-FROM base AS server
-# Remove client to prevent duplication
-RUN rm -rf client
+FROM node:12-alpine AS server
+# Add a work directory
+WORKDIR /app
+# Copy from base builder
+COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /app/server ./server
 # Expose port(s)
 EXPOSE 4000
-# Install dependencies (production mode) and build
-RUN yarn install --frozen-lockfile && yarn build
 # Start on excecution
-CMD [ "yarn", "start:server:prod" ]
+CMD [ "node", "server/build/index.js" ]
 
 FROM nginx:1.17.10 as proxy
 EXPOSE 80
