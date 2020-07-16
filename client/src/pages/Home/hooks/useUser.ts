@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/react-hooks';
 import { QUERY_GET_USER } from '../../../graphql';
 
-function userUser(idUser: number) {
+function useUser(idUser: number) {
     const variables = {
         input: {
             idUser
@@ -17,4 +17,4 @@ function userUser(idUser: number) {
     };
 }
 
-export default userUser;
+export default useUser;
