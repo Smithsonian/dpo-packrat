@@ -53,7 +53,6 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
                     State,
                     DateCreated,
                     DateCompleted,
-                    SystemObject:       { create: { Retired: false }, },
                 },
             }) ? true : false;
         } catch (error) {
@@ -97,16 +96,6 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
                 }), SystemObject);
         } catch (error) {
             LOG.logger.error('DBAPI.WorkflowStep.fetchSystemObjectFromXref', error);
-            return null;
-        }
-    }
-
-    static async fetchSystemObjectForWorkflowStepID(idWorkflowStep: number): Promise<SystemObject | null> {
-        try {
-            return DBO.CopyObject<SystemObjectBase, SystemObject>(
-                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflowStep, }, }), SystemObject);
-        } catch (error) {
-            LOG.logger.error('DBAPI.WorkflowStep.fetchSystemObjectForWorkflowStepID', error);
             return null;
         }
     }

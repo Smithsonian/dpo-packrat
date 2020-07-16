@@ -1,22 +1,15 @@
 /**
  * Type resolver for AssetVersion
  */
-import { AssetVersion, Asset, User } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const AssetVersion = {
-    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idAsset } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchAsset(prisma, idAsset);
+    Asset: async (parent: Parent): Promise<DBAPI.Asset | null> => {
+        return await DBAPI.Asset.fetch(parent.idAsset);
     },
-    User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { idUserCreator } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchUser(prisma, idUserCreator);
+    User: async (parent: Parent): Promise<DBAPI.User | null> => {
+        return await DBAPI.User.fetch(parent.idUserCreator);
     },
     SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
         return await DBAPI.SystemObject.fetchFromAssetVersionID(parent.idAssetVersion);

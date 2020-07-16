@@ -1,11 +1,10 @@
 import { CreateVocabularyResult, MutationCreateVocabularyArgs } from '../../../../../types/graphql';
-import { Parent, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
-export default async function createVocabulary(_: Parent, args: MutationCreateVocabularyArgs, context: Context): Promise<CreateVocabularyResult> {
+export default async function createVocabulary(_: Parent, args: MutationCreateVocabularyArgs): Promise<CreateVocabularyResult> {
     const { input } = args;
     const { idVocabularySet, SortOrder } = input;
-    const { prisma } = context;
 
     const vocabularyArgs = {
         idVocabulary: 0,
@@ -13,7 +12,7 @@ export default async function createVocabulary(_: Parent, args: MutationCreateVo
         SortOrder
     };
 
-    const Vocabulary = await DBAPI.Vocabulary.create(prisma, vocabularyArgs);
-
+    const Vocabulary = new DBAPI.Vocabulary(vocabularyArgs);
+    await Vocabulary.create();
     return { Vocabulary };
 }

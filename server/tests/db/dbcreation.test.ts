@@ -2,16 +2,9 @@ import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 import * as path from 'path';
 import {
-    Actor,
-    Asset, AssetGroup, AssetVersion, CaptureData, CaptureDataGroup, CaptureDataGroupCaptureDataXref,
-    GeoLocation, Identifier, IntermediaryFile, Item, License, LicenseAssignment, Metadata,
-    Model, ModelGeometryFile, ModelProcessingAction, ModelProcessingActionStep,
-    ModelSceneXref, ModelUVMapChannel, ModelUVMapFile, Project, ProjectDocumentation, Scene, Stakeholder,
-    Subject, SystemObject, SystemObjectVersion, SystemObjectXref,
-    Unit, User, UserPersonalizationSystemObject, UserPersonalizationUrl, Vocabulary, VocabularySet,
-    Workflow, WorkflowStep, WorkflowStepSystemObjectXref, WorkflowTemplate } from '@prisma/client';
-
-let prisma;
+    Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model,
+    Project, ProjectDocumentation, Scene, Stakeholder, Subject, SystemObject, Unit,
+    Workflow, WorkflowStep } from '@prisma/client';
 
 beforeAll(() => {
     const logPath: string = './logs';
@@ -19,8 +12,6 @@ beforeAll(() => {
     LOG.logger.info('**************************');
     LOG.logger.info('DB Creation Tests');
     LOG.logger.info(`DB Creation Tests writing logs to ${path.resolve(logPath)}`);
-
-    prisma = DBAPI.DBConnectionFactory.prisma;
 });
 
 afterAll(async done => {
@@ -28,21 +19,6 @@ afterAll(async done => {
     done();
 });
 
-let assetGroup: AssetGroup | null;
-let assetThumbnail: Asset | null;
-let geoLocation: GeoLocation | null;
-let unit: Unit | null;
-let unit2: Unit | null;
-let user: User | null;
-let subject: Subject | null;
-let vocabularySet: VocabularySet | null;
-let vocabulary: Vocabulary | null;
-let workflowTemplate: WorkflowTemplate | null;
-let scene: Scene | null;
-let sceneNulls: Scene | null;
-let systemObjectAsset: SystemObject | null;
-let systemObjectSubject: SystemObject | null;
-let systemObjectScene: SystemObject | null;
 let accessAction: DBAPI.AccessAction | null;
 let accessAction2: DBAPI.AccessAction | null;
 let accessContext: DBAPI.AccessContext | null;
@@ -53,74 +29,103 @@ let accessRoleAccessActionXref: DBAPI.AccessRoleAccessActionXref | null;
 let accessRoleAccessActionXref2: DBAPI.AccessRoleAccessActionXref | null;
 let actorWithUnit: DBAPI.Actor | null;
 let actorWithOutUnit: DBAPI.Actor | null;
-let assetWithoutAG: Asset | null;
-let assetVersion: AssetVersion | null;
-let captureData: CaptureData | null;
-let captureDataNulls: CaptureData | null;
-let captureDataGroup: CaptureDataGroup | null;
-let captureDataGroupCaptureDataXref: CaptureDataGroupCaptureDataXref | null;
-let captureDataGroupCaptureDataXref2: CaptureDataGroupCaptureDataXref | null;
-let identifier: Identifier | null;
-let identifierNull: Identifier | null;
-let intermediaryFile: IntermediaryFile | null;
-let item: Item | null;
-let itemNulls: Item | null;
-let metadata: Metadata | null;
-let metadataNull: Metadata | null;
-let model: Model | null;
-let modelNulls: Model | null;
-let modelGeometryFile: ModelGeometryFile | null;
-let modelGeometryFileNulls: ModelGeometryFile | null;
-let modelProcessingAction: ModelProcessingAction | null;
-let modelProcessingActionStep: ModelProcessingActionStep | null;
-let modelSceneXref: ModelSceneXref | null;
-let modelSceneXrefNull: ModelSceneXref | null;
-let systemObjectVersion: SystemObjectVersion | null;
-let systemObjectXref: SystemObjectXref | null;
-let systemObjectXref2: SystemObjectXref | null;
-let modelUVMapFile: ModelUVMapFile | null;
-let modelUVMapChannel: ModelUVMapChannel | null;
-let license: License | null;
-let licenseAssignment: LicenseAssignment | null;
-let licenseAssignmentNull: LicenseAssignment | null;
-let project: Project | null;
-let projectDocumentation: ProjectDocumentation | null;
-let subjectNulls: Subject | null;
-let stakeholder: Stakeholder | null;
-let userPersonalizationSystemObject: UserPersonalizationSystemObject | null;
-let userPersonalizationUrl: UserPersonalizationUrl | null;
-let workflow: Workflow | null;
-let workflowNulls: Workflow | null;
+let assetGroup: DBAPI.AssetGroup | null;
+let assetGroup2: DBAPI.AssetGroup | null;
+let assetThumbnail: DBAPI.Asset | null;
+let assetWithoutAG: DBAPI.Asset | null;
+let assetVersion: DBAPI.AssetVersion | null;
+let captureData: DBAPI.CaptureData | null;
+let captureDataNulls: DBAPI.CaptureData | null;
+let captureDataFile: DBAPI.CaptureDataFile | null;
+let captureDataGroup: DBAPI.CaptureDataGroup | null;
+let captureDataGroupCaptureDataXref: DBAPI.CaptureDataGroupCaptureDataXref | null;
+let captureDataGroupCaptureDataXref2: DBAPI.CaptureDataGroupCaptureDataXref | null;
+let geoLocation: DBAPI.GeoLocation | null;
+let identifier: DBAPI.Identifier | null;
+let identifierNull: DBAPI.Identifier | null;
+let intermediaryFile: DBAPI.IntermediaryFile | null;
+let item: DBAPI.Item | null;
+let itemNulls: DBAPI.Item | null;
+let metadata: DBAPI.Metadata | null;
+let metadataNull: DBAPI.Metadata | null;
+let model: DBAPI.Model | null;
+let modelNulls: DBAPI.Model | null;
+let modelGeometryFile: DBAPI.ModelGeometryFile | null;
+let modelGeometryFileNulls: DBAPI.ModelGeometryFile | null;
+let modelProcessingAction: DBAPI.ModelProcessingAction | null;
+let modelProcessingActionStep: DBAPI.ModelProcessingActionStep | null;
+let modelSceneXref: DBAPI.ModelSceneXref | null;
+let modelSceneXrefNull: DBAPI.ModelSceneXref | null;
+let modelUVMapChannel: DBAPI.ModelUVMapChannel | null;
+let modelUVMapFile: DBAPI.ModelUVMapFile | null;
+let license: DBAPI.License | null;
+let licenseAssignment: DBAPI.LicenseAssignment | null;
+let licenseAssignmentNull: DBAPI.LicenseAssignment | null;
+let project: DBAPI.Project | null;
+let project2: DBAPI.Project | null;
+let projectDocumentation: DBAPI.ProjectDocumentation | null;
+let scene: DBAPI.Scene | null;
+let sceneNulls: DBAPI.Scene | null;
+let stakeholder: DBAPI.Stakeholder | null;
+let subject: DBAPI.Subject | null;
+let subjectNulls: DBAPI.Subject | null;
+let systemObjectAsset: DBAPI.SystemObject | null;
+let systemObjectScene: DBAPI.SystemObject | null;
+let systemObjectSubject: DBAPI.SystemObject | null;
+let systemObjectVersion: DBAPI.SystemObjectVersion | null;
+let systemObjectXref: DBAPI.SystemObjectXref | null;
+let systemObjectXref2: DBAPI.SystemObjectXref | null;
+let unit: DBAPI.Unit | null;
+let unit2: DBAPI.Unit | null;
+let user: DBAPI.User | null;
+let userPersonalizationSystemObject: DBAPI.UserPersonalizationSystemObject | null;
+let userPersonalizationUrl: DBAPI.UserPersonalizationUrl | null;
+let vocabulary: DBAPI.Vocabulary | null;
+let vocabularySet: DBAPI.VocabularySet | null;
+let workflow: DBAPI.Workflow | null;
+let workflowNulls: DBAPI.Workflow | null;
 let workflowStep: DBAPI.WorkflowStep | null;
-let workflowStepSystemObjectXref: WorkflowStepSystemObjectXref | null;
-let workflowStepSystemObjectXref2: WorkflowStepSystemObjectXref | null;
+let workflowStepSystemObjectXref: DBAPI.WorkflowStepSystemObjectXref | null;
+let workflowStepSystemObjectXref2: DBAPI.WorkflowStepSystemObjectXref | null;
+let workflowTemplate: DBAPI.WorkflowTemplate | null;
 
 // *******************************************************************
 // DB Creation Test Suite
 // *******************************************************************
 describe('DB Creation Test Suite', () => {
     test('DB Creation: AssetGroup', async () => {
-        assetGroup = await DBAPI.createAssetGroup(prisma, { idAssetGroup: 0 });
+        assetGroup = new DBAPI.AssetGroup({ idAssetGroup: 0 });
         expect(assetGroup).toBeTruthy();
-        if (assetGroup)
+        if (assetGroup) {
+            expect(await assetGroup.create()).toBeTruthy();
             expect(assetGroup.idAssetGroup).toBeGreaterThan(0);
+        }
+
+        assetGroup2 = new DBAPI.AssetGroup({ idAssetGroup: 0 });
+        expect(assetGroup2).toBeTruthy();
+        if (assetGroup2) {
+            expect(await assetGroup2.create()).toBeTruthy();
+            expect(assetGroup2.idAssetGroup).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Asset', async () => {
         if (assetGroup)
-            assetThumbnail = await DBAPI.createAsset(prisma, {
+            assetThumbnail = new DBAPI.Asset({
                 FileName: 'Test Asset Thumbnail',
                 FilePath: '/test/asset/path',
                 idAssetGroup:  assetGroup.idAssetGroup,
                 idAsset: 0
             });
         expect(assetThumbnail).toBeTruthy();
-        if (assetThumbnail)
+        if (assetThumbnail) {
+            expect(await assetThumbnail.create()).toBeTruthy();
             expect(assetThumbnail.idAsset).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: GeoLocation', async () => {
-        geoLocation = await DBAPI.createGeoLocation(prisma, {
+        geoLocation = new DBAPI.GeoLocation({
             Latitude: 0,
             Longitude: 0,
             Altitude: 0,
@@ -134,34 +139,40 @@ describe('DB Creation Test Suite', () => {
             idGeoLocation: 0
         });
         expect(geoLocation).toBeTruthy();
-        if (geoLocation)
+        if (geoLocation) {
+            expect(await geoLocation.create()).toBeTruthy();
             expect(geoLocation.idGeoLocation).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Unit', async () => {
-        unit = await DBAPI.createUnit(prisma, {
+        unit = new DBAPI.Unit({
             Name: 'DPO',
             Abbreviation: 'DPO',
             ARKPrefix: 'http://abbadabbadoo/',
             idUnit: 0
         });
         expect(unit).toBeTruthy();
-        if (unit)
+        if (unit) {
+            expect(await unit.create()).toBeTruthy();
             expect(unit.idUnit).toBeGreaterThan(0);
+        }
 
-        unit2 = await DBAPI.createUnit(prisma, {
+        unit2 = new DBAPI.Unit({
             Name: 'DPO2',
             Abbreviation: 'DPO2',
             ARKPrefix: 'http://abbadabbadoo2/',
             idUnit: 0
         });
         expect(unit2).toBeTruthy();
-        if (unit2)
+        if (unit2) {
+            expect(await unit2.create()).toBeTruthy();
             expect(unit2.idUnit).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: User', async () => {
-        user = await DBAPI.createUser(prisma, {
+        user = new DBAPI.User({
             Name: 'Test User',
             EmailAddress: 'test@si.edu',
             SecurityID: 'SECURITY_ID',
@@ -173,13 +184,15 @@ describe('DB Creation Test Suite', () => {
             idUser: 0
         });
         expect(user).toBeTruthy();
-        if (user)
+        if (user) {
+            expect(await user.create()).toBeTruthy();
             expect(user.idUser).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Subject', async () => {
         if (unit && assetThumbnail && geoLocation)
-            subject = await DBAPI.createSubject(prisma, {
+            subject = new DBAPI.Subject({
                 idUnit: unit.idUnit,
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idGeoLocation: geoLocation.idGeoLocation,
@@ -187,46 +200,54 @@ describe('DB Creation Test Suite', () => {
                 idSubject: 0
             });
         expect(subject).toBeTruthy();
-        if (subject)
+        if (subject) {
+            expect(await subject.create()).toBeTruthy();
             expect(subject.idSubject).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: VocabularySet', async () => {
-        vocabularySet = await DBAPI.createVocabularySet(prisma, {
+        vocabularySet = new DBAPI.VocabularySet({
             Name: 'Test Vocabulary Set',
             SystemMaintained: false,
             idVocabularySet: 0
         });
         expect(vocabularySet).toBeTruthy();
-        if (vocabularySet)
+        if (vocabularySet) {
+            expect(await vocabularySet.create()).toBeTruthy();
             expect(vocabularySet.idVocabularySet).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Vocabulary', async () => {
         if (vocabularySet)
-            vocabulary = await DBAPI.Vocabulary.create(prisma, {
+            vocabulary = new DBAPI.Vocabulary({
                 idVocabularySet: vocabularySet.idVocabularySet,
                 SortOrder: 0,
                 idVocabulary: 0
             });
         expect(vocabulary).toBeTruthy();
-        if (vocabulary)
+        if (vocabulary) {
+            expect(await vocabulary.create()).toBeTruthy();
             expect(vocabulary.idVocabulary).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: WorkflowTemplate', async () => {
-        workflowTemplate = await DBAPI.createWorkflowTemplate(prisma, {
+        workflowTemplate = new DBAPI.WorkflowTemplate({
             Name: 'Test Workflow Template',
             idWorkflowTemplate: 0
         });
         expect(workflowTemplate).toBeTruthy();
-        if (workflowTemplate)
+        if (workflowTemplate) {
+            expect(await workflowTemplate.create()).toBeTruthy();
             expect(workflowTemplate.idWorkflowTemplate).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Scene', async () => {
         if (assetThumbnail)
-            scene = await DBAPI.createScene(prisma, {
+            scene = new DBAPI.Scene({
                 Name: 'Test Scene',
                 idAssetThumbnail: assetThumbnail.idAsset,
                 IsOriented: true,
@@ -234,12 +255,14 @@ describe('DB Creation Test Suite', () => {
                 idScene: 0
             });
         expect(scene).toBeTruthy();
-        if (scene)
+        if (scene) {
+            expect(await scene.create()).toBeTruthy();
             expect(scene.idScene).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Scene With Nulls', async () => {
-        sceneNulls = await DBAPI.createScene(prisma, {
+        sceneNulls = new DBAPI.Scene({
             Name: 'Test Scene',
             idAssetThumbnail: null,
             IsOriented: true,
@@ -247,25 +270,27 @@ describe('DB Creation Test Suite', () => {
             idScene: 0
         });
         expect(sceneNulls).toBeTruthy();
-        if (sceneNulls)
+        if (sceneNulls) {
+            expect(await sceneNulls.create()).toBeTruthy();
             expect(sceneNulls.idScene).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Fetch System Object Subject', async() => {
-        systemObjectSubject = subject ? await DBAPI.fetchSystemObjectForSubject(prisma, subject) : null;
+        systemObjectSubject = subject ? await subject.fetchSystemObject() : null;
         expect(systemObjectSubject).toBeTruthy();
         expect(systemObjectSubject ? systemObjectSubject.idSubject : -1).toBe(subject ? subject.idSubject : -2);
     });
 
     test('DB Creation: Fetch System Object Scene', async() => {
-        systemObjectScene = scene ? await DBAPI.fetchSystemObjectForScene(prisma, scene) : null;
+        systemObjectScene = scene ? await scene.fetchSystemObject() : null;
         expect(systemObjectScene).toBeTruthy();
         expect(systemObjectScene ? systemObjectScene.idScene : -1).toBe(scene ? scene.idScene : -2);
     });
 
     test('DB Creation: Fetch System Object Asset', async() => {
         if (assetThumbnail)
-            systemObjectAsset = scene ? await DBAPI.fetchSystemObjectForAsset(prisma, assetThumbnail) : null;
+            systemObjectAsset = scene ? await assetThumbnail.fetchSystemObject() : null;
         expect(systemObjectAsset).toBeTruthy();
         expect(systemObjectAsset ? systemObjectAsset.idAsset : -1).toBe(assetThumbnail ? assetThumbnail.idAsset : -2);
     });
@@ -400,20 +425,22 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Asset Without Asset Group', async () => {
-        assetWithoutAG = await DBAPI.createAsset(prisma, {
+        assetWithoutAG = new DBAPI.Asset({
             FileName: 'Test Asset 2',
             FilePath: '/test/asset/path2',
             idAssetGroup:  null,
             idAsset: 0
         });
         expect(assetWithoutAG).toBeTruthy();
-        if (assetWithoutAG)
+        if (assetWithoutAG) {
+            expect(await assetWithoutAG.create()).toBeTruthy();
             expect(assetWithoutAG.idAsset).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: AssetVersion', async () => {
         if (assetThumbnail && user)
-            assetVersion = await DBAPI.createAssetVersion(prisma, {
+            assetVersion = new DBAPI.AssetVersion({
                 idAsset: assetThumbnail.idAsset,
                 idUserCreator: user.idUser,
                 DateCreated: new Date(),
@@ -423,13 +450,15 @@ describe('DB Creation Test Suite', () => {
                 idAssetVersion: 0
             });
         expect(assetVersion).toBeTruthy();
-        if (assetVersion)
+        if (assetVersion) {
+            expect(await assetVersion.create()).toBeTruthy();
             expect(assetVersion.idAsset).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: CaptureData', async () => {
         if (vocabulary && assetThumbnail)
-            captureData = await DBAPI.createCaptureData(prisma, {
+            captureData = new DBAPI.CaptureData({
                 idVCaptureMethod: vocabulary.idVocabulary,
                 idVCaptureDatasetType: vocabulary.idVocabulary,
                 DateCaptured: new Date(),
@@ -448,13 +477,15 @@ describe('DB Creation Test Suite', () => {
                 idCaptureData: 0
             });
         expect(captureData).toBeTruthy();
-        if (captureData)
+        if (captureData) {
+            expect(await captureData.create()).toBeTruthy();
             expect(captureData.idCaptureData).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: CaptureData With Nulls', async () => {
         if (vocabulary)
-            captureDataNulls = await DBAPI.createCaptureData(prisma, {
+            captureDataNulls = new DBAPI.CaptureData({
                 idVCaptureMethod: vocabulary.idVocabulary,
                 idVCaptureDatasetType: vocabulary.idVocabulary,
                 DateCaptured: new Date(),
@@ -473,82 +504,112 @@ describe('DB Creation Test Suite', () => {
                 idCaptureData: 0
             });
         expect(captureDataNulls).toBeTruthy();
-        if (captureDataNulls)
+        if (captureDataNulls) {
+            expect(await captureDataNulls.create()).toBeTruthy();
             expect(captureDataNulls.idCaptureData).toBeGreaterThan(0);
+        }
+    });
+
+    test('dB Creation: CaptureDataFile', async () => {
+        if (captureData && assetThumbnail && vocabulary)
+            captureDataFile = new DBAPI.CaptureDataFile({
+                idCaptureDataFile: 0,
+                CompressedMultipleFiles: false,
+                idAsset: assetThumbnail.idAsset,
+                idCaptureData: captureData.idCaptureData,
+                idVVariantType!: vocabulary.idVocabulary
+            });
+        expect(captureDataFile).toBeTruthy();
+        if (captureDataFile) {
+            expect(await captureDataFile.create()).toBeTruthy();
+            expect(captureDataFile.idCaptureDataFile).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: CaptureDataGroup', async () => {
-        captureDataGroup = await DBAPI.createCaptureDataGroup(prisma);
+        captureDataGroup = new DBAPI.CaptureDataGroup({ idCaptureDataGroup: 0 });
         expect(captureDataGroup).toBeTruthy();
-        if (captureDataGroup)
+        if (captureDataGroup) {
+            expect(await captureDataGroup.create()).toBeTruthy();
             expect(captureDataGroup.idCaptureDataGroup).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: CaptureDataGroupCaptureDataXref', async () => {
         if (captureDataGroup && captureData)
-            captureDataGroupCaptureDataXref = await DBAPI.createCaptureDataGroupCaptureDataXref(prisma, {
+            captureDataGroupCaptureDataXref = new DBAPI.CaptureDataGroupCaptureDataXref({
                 idCaptureDataGroup: captureDataGroup.idCaptureDataGroup,
                 idCaptureData: captureData.idCaptureData,
                 idCaptureDataGroupCaptureDataXref: 0
             });
         expect(captureDataGroupCaptureDataXref).toBeTruthy();
-        if (captureDataGroupCaptureDataXref)
+        if (captureDataGroupCaptureDataXref) {
+            expect(await captureDataGroupCaptureDataXref.create()).toBeTruthy();
             expect(captureDataGroupCaptureDataXref.idCaptureDataGroupCaptureDataXref).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: CaptureDataGroupCaptureDataXref 2', async () => {
         if (captureDataGroup && captureDataNulls)
-            captureDataGroupCaptureDataXref2 = await DBAPI.createCaptureDataGroupCaptureDataXref(prisma, {
+            captureDataGroupCaptureDataXref2 = new DBAPI.CaptureDataGroupCaptureDataXref({
                 idCaptureDataGroup: captureDataGroup.idCaptureDataGroup,
                 idCaptureData: captureDataNulls.idCaptureData,
                 idCaptureDataGroupCaptureDataXref: 0
             });
         expect(captureDataGroupCaptureDataXref2).toBeTruthy();
-        if (captureDataGroupCaptureDataXref2)
+        if (captureDataGroupCaptureDataXref2) {
+            expect(await captureDataGroupCaptureDataXref2.create()).toBeTruthy();
             expect(captureDataGroupCaptureDataXref2.idCaptureDataGroupCaptureDataXref).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Identifier', async () => {
         if (systemObjectSubject && vocabulary)
-            identifier = await DBAPI.createIdentifier(prisma, {
+            identifier = new DBAPI.Identifier({
                 IdentifierValue: 'Test Identifier',
                 idVIdentifierType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectSubject.idSystemObject,
                 idIdentifier: 0
             });
         expect(identifier).toBeTruthy();
-        if (identifier)
+        if (identifier) {
+            expect(await identifier.create()).toBeTruthy();
             expect(identifier.idIdentifier).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Identifier With Nulls', async () => {
         if (vocabulary)
-            identifierNull = await DBAPI.createIdentifier(prisma, {
+            identifierNull = new DBAPI.Identifier({
                 IdentifierValue: 'Test Identifier Null',
                 idVIdentifierType: vocabulary.idVocabulary,
                 idSystemObject: null,
                 idIdentifier: 0
             });
         expect(identifierNull).toBeTruthy();
-        if (identifierNull)
+        if (identifierNull) {
+            expect(await identifierNull.create()).toBeTruthy();
             expect(identifierNull.idIdentifier).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: IntermediaryFile', async () => {
         if (assetThumbnail)
-            intermediaryFile = await DBAPI.createIntermediaryFile(prisma, {
+            intermediaryFile = new DBAPI.IntermediaryFile({
                 idAsset: assetThumbnail.idAsset,
                 DateCreated: new Date(),
                 idIntermediaryFile: 0
             });
         expect(intermediaryFile).toBeTruthy();
-        if (intermediaryFile)
+        if (intermediaryFile) {
+            expect(await intermediaryFile.create()).toBeTruthy();
             expect(intermediaryFile.idIntermediaryFile).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Item', async () => {
         if (subject && assetThumbnail && geoLocation)
-            item = await DBAPI.createItem(prisma, {
+            item = new DBAPI.Item({
                 idSubject: subject.idSubject,
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idGeoLocation: geoLocation.idGeoLocation,
@@ -557,13 +618,15 @@ describe('DB Creation Test Suite', () => {
                 idItem: 0
             });
         expect(item).toBeTruthy();
-        if (item)
+        if (item) {
+            expect(await item.create()).toBeTruthy();
             expect(item.idItem).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Item With Nulls', async () => {
         if (subject)
-            itemNulls = await DBAPI.createItem(prisma, {
+            itemNulls = new DBAPI.Item({
                 idSubject: subject.idSubject,
                 idAssetThumbnail: null,
                 idGeoLocation: null,
@@ -572,13 +635,15 @@ describe('DB Creation Test Suite', () => {
                 idItem: 0
             });
         expect(itemNulls).toBeTruthy();
-        if (itemNulls)
+        if (itemNulls) {
+            expect(await itemNulls.create()).toBeTruthy();
             expect(itemNulls.idItem).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Metadata', async () => {
         if (assetThumbnail && user && vocabulary && systemObjectScene)
-            metadata = await DBAPI.createMetadata(prisma, {
+            metadata = new DBAPI.Metadata({
                 Name: 'Test Metadata',
                 ValueShort: 'Test Value Short',
                 ValueExtended: 'Test Value Ext',
@@ -589,12 +654,14 @@ describe('DB Creation Test Suite', () => {
                 idMetadata: 0,
             });
         expect(metadata).toBeTruthy();
-        if (metadata)
+        if (metadata) {
+            expect(await metadata.create()).toBeTruthy();
             expect(metadata.idMetadata).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Metadata With Nulls', async () => {
-        metadataNull = await DBAPI.createMetadata(prisma, {
+        metadataNull = new DBAPI.Metadata({
             Name: 'Test Metadata',
             ValueShort: null,
             ValueExtended: null,
@@ -605,13 +672,15 @@ describe('DB Creation Test Suite', () => {
             idMetadata: 0,
         });
         expect(metadataNull).toBeTruthy();
-        if (metadataNull)
+        if (metadataNull) {
+            expect(await metadataNull.create()).toBeTruthy();
             expect(metadataNull.idMetadata).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Model', async () => {
         if (vocabulary && assetThumbnail)
-            model = await DBAPI.createModel(prisma, {
+            model = new DBAPI.Model({
                 DateCreated: new Date(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 Master: true,
@@ -623,13 +692,15 @@ describe('DB Creation Test Suite', () => {
                 idModel: 0
             });
         expect(model).toBeTruthy();
-        if (model)
+        if (model) {
+            expect(await model.create()).toBeTruthy();
             expect(model.idModel).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Model With Nulls', async () => {
         if (vocabulary)
-            modelNulls = await DBAPI.createModel(prisma, {
+            modelNulls = new DBAPI.Model({
                 DateCreated: new Date(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 Master: true,
@@ -641,13 +712,15 @@ describe('DB Creation Test Suite', () => {
                 idModel: 0
             });
         expect(modelNulls).toBeTruthy();
-        if (modelNulls)
+        if (modelNulls) {
+            expect(await modelNulls.create()).toBeTruthy();
             expect(modelNulls.idModel).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: ModelGeometryFile', async () => {
         if (model && assetThumbnail && vocabulary)
-            modelGeometryFile = await DBAPI.createModelGeometryFile(prisma, {
+            modelGeometryFile = new DBAPI.ModelGeometryFile({
                 idModel: model.idModel,
                 idAsset: assetThumbnail.idAsset,
                 idVModelFileType: vocabulary.idVocabulary,
@@ -656,13 +729,15 @@ describe('DB Creation Test Suite', () => {
                 idModelGeometryFile: 0
             });
         expect(modelGeometryFile).toBeTruthy();
-        if (modelGeometryFile)
+        if (modelGeometryFile) {
+            expect(await modelGeometryFile.create()).toBeTruthy();
             expect(modelGeometryFile.idModelGeometryFile).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: ModelGeometryFile With Nulls', async () => {
         if (model && assetThumbnail && vocabulary)
-            modelGeometryFileNulls = await DBAPI.createModelGeometryFile(prisma, {
+            modelGeometryFileNulls = new DBAPI.ModelGeometryFile({
                 idModel: model.idModel,
                 idAsset: assetThumbnail.idAsset,
                 idVModelFileType: vocabulary.idVocabulary,
@@ -671,13 +746,15 @@ describe('DB Creation Test Suite', () => {
                 idModelGeometryFile: 0
             });
         expect(modelGeometryFileNulls).toBeTruthy();
-        if (modelGeometryFileNulls)
+        if (modelGeometryFileNulls) {
+            expect(await modelGeometryFileNulls.create()).toBeTruthy();
             expect(modelGeometryFileNulls.idModelGeometryFile).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: ModelProcessingAction', async () => {
         if (model && actorWithUnit)
-            modelProcessingAction = await DBAPI.createModelProcessingAction(prisma, {
+            modelProcessingAction = new DBAPI.ModelProcessingAction({
                 idModel: model.idModel,
                 idActor: actorWithUnit.idActor,
                 DateProcessed: new Date(),
@@ -686,128 +763,148 @@ describe('DB Creation Test Suite', () => {
                 idModelProcessingAction: 0
             });
         expect(modelProcessingAction).toBeTruthy();
-        if (modelProcessingAction)
+        if (modelProcessingAction) {
+            expect(await modelProcessingAction.create()).toBeTruthy();
             expect(modelProcessingAction.idModelProcessingAction).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: ModelProcessingActionStep', async () => {
         if (modelProcessingAction && vocabulary)
-            modelProcessingActionStep = await DBAPI.createModelProcessingActionStep(prisma, {
+            modelProcessingActionStep = new DBAPI.ModelProcessingActionStep({
                 idModelProcessingAction: modelProcessingAction.idModelProcessingAction,
                 idVActionMethod: vocabulary.idVocabulary,
                 Description: 'Test Model Processing Action Step',
                 idModelProcessingActionStep: 0
             });
         expect(modelProcessingActionStep).toBeTruthy();
-        if (modelProcessingActionStep)
+        if (modelProcessingActionStep) {
+            expect(await modelProcessingActionStep.create()).toBeTruthy();
             expect(modelProcessingActionStep.idModelProcessingActionStep).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: ModelSceneXref', async () => {
         if (model && scene)
-            modelSceneXref = await DBAPI.createModelSceneXref(prisma, {
+            modelSceneXref = new DBAPI.ModelSceneXref({
                 idModel: model.idModel,
                 idScene: scene.idScene,
                 TS0: 0, TS1: 0, TS2: 0, R0: 0, R1: 0, R2: 0, R3: 0,
                 idModelSceneXref: 0
             });
         expect(modelSceneXref).toBeTruthy();
-        if (modelSceneXref)
+        if (modelSceneXref) {
+            expect(await modelSceneXref.create()).toBeTruthy();
             expect(modelSceneXref.idModelSceneXref).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: ModelSceneXref With Nulls', async () => {
         if (model && sceneNulls)
-            modelSceneXrefNull = await DBAPI.createModelSceneXref(prisma, {
+            modelSceneXrefNull = new DBAPI.ModelSceneXref({
                 idModel: model.idModel,
                 idScene: sceneNulls.idScene,
                 TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null,
                 idModelSceneXref: 0
             });
         expect(modelSceneXrefNull).toBeTruthy();
-        if (modelSceneXrefNull)
+        if (modelSceneXrefNull) {
+            expect(await modelSceneXrefNull.create()).toBeTruthy();
             expect(modelSceneXrefNull.idModelSceneXref).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: SystemObjectVersion', async () => {
         if (systemObjectScene) {
-            systemObjectVersion = await DBAPI.createSystemObjectVersion(prisma, {
+            systemObjectVersion = new DBAPI.SystemObjectVersion({
                 idSystemObject: systemObjectScene.idSystemObject,
                 PublishedState: 0,
                 idSystemObjectVersion: 0
             });
         }
         expect(systemObjectVersion).toBeTruthy();
-        if (systemObjectVersion)
+        if (systemObjectVersion) {
+            expect(await systemObjectVersion.create()).toBeTruthy();
             expect(systemObjectVersion.idSystemObjectVersion).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: SystemObjectXref', async () => {
         if (systemObjectSubject && systemObjectScene) {
-            systemObjectXref = await DBAPI.createSystemObjectXref(prisma, {
+            systemObjectXref = new DBAPI.SystemObjectXref({
                 idSystemObjectMaster: systemObjectSubject.idSystemObject,
                 idSystemObjectDerived: systemObjectScene.idSystemObject,
                 idSystemObjectXref: 0
             });
         }
         expect(systemObjectXref).toBeTruthy();
-        if (systemObjectXref)
+        if (systemObjectXref) {
+            expect(await systemObjectXref.create()).toBeTruthy();
             expect(systemObjectXref.idSystemObjectXref).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: SystemObjectXref 2', async () => {
         if (systemObjectSubject && systemObjectAsset) {
-            systemObjectXref2 = await DBAPI.createSystemObjectXref(prisma, {
+            systemObjectXref2 = new DBAPI.SystemObjectXref({
                 idSystemObjectMaster: systemObjectSubject.idSystemObject,
                 idSystemObjectDerived: systemObjectAsset.idSystemObject,
                 idSystemObjectXref: 0
             });
         }
         expect(systemObjectXref2).toBeTruthy();
-        if (systemObjectXref2)
+        if (systemObjectXref2) {
+            expect(await systemObjectXref2.create()).toBeTruthy();
             expect(systemObjectXref2.idSystemObjectXref).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: ModelUVMapFile', async () => {
         if (modelGeometryFile && assetThumbnail)
-            modelUVMapFile = await DBAPI.createModelUVMapFile(prisma, {
+            modelUVMapFile = new DBAPI.ModelUVMapFile({
                 idModelGeometryFile: modelGeometryFile.idModelGeometryFile,
                 idAsset: assetThumbnail.idAsset,
                 UVMapEdgeLength: 0,
                 idModelUVMapFile: 0
             });
         expect(modelUVMapFile).toBeTruthy();
-        if (modelUVMapFile)
+        if (modelUVMapFile) {
+            expect(await modelUVMapFile.create()).toBeTruthy();
             expect(modelUVMapFile.idModelUVMapFile).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: ModelUVMapChannel', async () => {
         if (modelUVMapFile && vocabulary)
-            modelUVMapChannel = await DBAPI.createModelUVMapChannel(prisma, {
+            modelUVMapChannel = new DBAPI.ModelUVMapChannel({
                 idModelUVMapFile: modelUVMapFile.idModelUVMapFile,
                 ChannelPosition: 0, ChannelWidth: 1,
                 idVUVMapType: vocabulary.idVocabulary,
                 idModelUVMapChannel: 0
             });
         expect(modelUVMapChannel).toBeTruthy();
-        if (modelUVMapChannel)
+        if (modelUVMapChannel) {
+            expect(await modelUVMapChannel.create()).toBeTruthy();
             expect(modelUVMapChannel.idModelUVMapChannel).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: License', async () => {
-        license = await DBAPI.createLicense(prisma, {
+        license = new DBAPI.License({
             Name: 'Test License',
             Description: 'Test License Description',
             idLicense: 0
         });
         expect(license).toBeTruthy();
-        if (license)
+        if (license) {
+            expect(await license.create()).toBeTruthy();
             expect(license.idLicense).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: LicenseAssignment', async () => {
         if (license && user && systemObjectSubject)
-            licenseAssignment = await DBAPI.createLicenseAssignment(prisma, {
+            licenseAssignment = new DBAPI.LicenseAssignment({
                 idLicense: license.idLicense,
                 idUserCreator: user.idUser,
                 DateStart: new Date(),
@@ -816,13 +913,15 @@ describe('DB Creation Test Suite', () => {
                 idLicenseAssignment: 0
             });
         expect(licenseAssignment).toBeTruthy();
-        if (licenseAssignment)
+        if (licenseAssignment) {
+            expect(await licenseAssignment.create()).toBeTruthy();
             expect(licenseAssignment.idLicenseAssignment).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: LicenseAssignment With Nulls', async () => {
         if (license)
-            licenseAssignmentNull = await DBAPI.createLicenseAssignment(prisma, {
+            licenseAssignmentNull = new DBAPI.LicenseAssignment({
                 idLicense: license.idLicense,
                 idUserCreator: null,
                 DateStart: null,
@@ -831,37 +930,54 @@ describe('DB Creation Test Suite', () => {
                 idLicenseAssignment: 0
             });
         expect(licenseAssignmentNull).toBeTruthy();
-        if (licenseAssignmentNull)
+        if (licenseAssignmentNull) {
+            expect(await licenseAssignmentNull.create()).toBeTruthy();
             expect(licenseAssignmentNull.idLicenseAssignment).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Project', async () => {
-        project = await DBAPI.createProject(prisma, {
+        project = new DBAPI.Project({
             Name: 'Test Project',
             Description: 'Test',
             idProject: 0,
         });
         expect(project).toBeTruthy();
-        if (project)
+        if (project) {
+            expect(await project.create()).toBeTruthy();
             expect(project.idProject).toBeGreaterThan(0);
+        }
+
+        project2 = new DBAPI.Project({
+            Name: 'Test Project 2',
+            Description: 'Test',
+            idProject: 0,
+        });
+        expect(project2).toBeTruthy();
+        if (project2) {
+            expect(await project2.create()).toBeTruthy();
+            expect(project2.idProject).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: ProjectDocumentation', async () => {
         if (project)
-            projectDocumentation = await DBAPI.createProjectDocumentation(prisma, {
+            projectDocumentation = new DBAPI.ProjectDocumentation({
                 idProject: project.idProject,
                 Name: 'Test Project Documentation',
                 Description: 'Test Description',
                 idProjectDocumentation: 0
             });
         expect(projectDocumentation).toBeTruthy();
-        if (projectDocumentation)
+        if (projectDocumentation) {
+            expect(await projectDocumentation.create()).toBeTruthy();
             expect(projectDocumentation.idProjectDocumentation).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Subject With Nulls', async () => {
         if (unit)
-            subjectNulls = await DBAPI.createSubject(prisma, {
+            subjectNulls = new DBAPI.Subject({
                 idUnit: unit.idUnit,
                 idAssetThumbnail: null,
                 idGeoLocation: null,
@@ -869,12 +985,14 @@ describe('DB Creation Test Suite', () => {
                 idSubject: 0
             });
         expect(subjectNulls).toBeTruthy();
-        if (subjectNulls)
+        if (subjectNulls) {
+            expect(await subjectNulls.create()).toBeTruthy();
             expect(subjectNulls.idSubject).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Stakeholder', async () => {
-        stakeholder = await DBAPI.createStakeholder(prisma, {
+        stakeholder = new DBAPI.Stakeholder({
             IndividualName: 'Test Stakeholder Name',
             OrganizationName: 'Test Stakeholder Org',
             EmailAddress: 'Test Email',
@@ -884,39 +1002,45 @@ describe('DB Creation Test Suite', () => {
             idStakeholder: 0
         });
         expect(stakeholder).toBeTruthy();
-        if (stakeholder)
+        if (stakeholder) {
+            expect(await stakeholder.create()).toBeTruthy();
             expect(stakeholder.idStakeholder).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: UserPersonalizationSystemObject', async () => {
         if (systemObjectSubject && user)
-            userPersonalizationSystemObject = await DBAPI.createUserPersonalizationSystemObject(prisma, {
+            userPersonalizationSystemObject = new DBAPI.UserPersonalizationSystemObject({
                 idUser: user.idUser,
                 idSystemObject: systemObjectSubject.idSystemObject,
                 Personalization: 'Test Personalization',
                 idUserPersonalizationSystemObject: 0
             });
         expect(userPersonalizationSystemObject).toBeTruthy();
-        if (userPersonalizationSystemObject)
+        if (userPersonalizationSystemObject) {
+            expect(await userPersonalizationSystemObject.create()).toBeTruthy();
             expect(userPersonalizationSystemObject.idUserPersonalizationSystemObject).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: UserPersonalizationUrl', async () => {
         if (user)
-            userPersonalizationUrl = await DBAPI.createUserPersonalizationUrl(prisma, {
+            userPersonalizationUrl = new DBAPI.UserPersonalizationUrl({
                 idUser: user.idUser,
                 URL: '/test/personalization/Url',
                 Personalization: 'Test Personalization',
                 idUserPersonalizationUrl: 0
             });
         expect(userPersonalizationUrl).toBeTruthy();
-        if (userPersonalizationUrl)
+        if (userPersonalizationUrl) {
+            expect(await userPersonalizationUrl.create()).toBeTruthy();
             expect(userPersonalizationUrl.idUserPersonalizationUrl).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Workflow', async () => {
         if (workflowTemplate && project && user)
-            workflow = await DBAPI.createWorkflow(prisma, {
+            workflow = new DBAPI.Workflow({
                 idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
                 idProject: project.idProject,
                 idUserInitiator: user.idUser,
@@ -925,13 +1049,15 @@ describe('DB Creation Test Suite', () => {
                 idWorkflow: 0
             });
         expect(workflow).toBeTruthy();
-        if (workflow)
+        if (workflow) {
+            expect(await workflow.create()).toBeTruthy();
             expect(workflow.idWorkflow).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: Workflow With Nulls', async () => {
         if (workflowTemplate)
-            workflowNulls = await DBAPI.createWorkflow(prisma, {
+            workflowNulls = new DBAPI.Workflow({
                 idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
                 idProject: null,
                 idUserInitiator: null,
@@ -940,8 +1066,10 @@ describe('DB Creation Test Suite', () => {
                 idWorkflow: 0
             });
         expect(workflowNulls).toBeTruthy();
-        if (workflowNulls)
+        if (workflowNulls) {
+            expect(await workflowNulls.create()).toBeTruthy();
             expect(workflowNulls.idWorkflow).toBeGreaterThan(0);
+        }
     });
 
     test('DB Creation: WorkflowStep', async () => {
@@ -962,30 +1090,32 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
-    test('DB Creation: WorkflowStepSystemObjectXref 1', async () => {
+    test('DB Creation: WorkflowStepSystemObjectXref', async () => {
         if (systemObjectScene && workflowStep)
-            workflowStepSystemObjectXref = await DBAPI.createWorkflowStepSystemObjectXref(prisma, {
+            workflowStepSystemObjectXref = new DBAPI.WorkflowStepSystemObjectXref({
                 idWorkflowStep: workflowStep.idWorkflowStep,
                 idSystemObject: systemObjectScene.idSystemObject,
                 Input: false,
                 idWorkflowStepSystemObjectXref: 0
             });
         expect(workflowStepSystemObjectXref).toBeTruthy();
-        if (workflowStepSystemObjectXref)
+        if (workflowStepSystemObjectXref) {
+            expect(await workflowStepSystemObjectXref.create()).toBeTruthy();
             expect(workflowStepSystemObjectXref.idWorkflowStepSystemObjectXref).toBeGreaterThan(0);
-    });
+        }
 
-    test('DB Creation: WorkflowStepSystemObjectXref 2', async () => {
         if (systemObjectSubject && workflowStep)
-            workflowStepSystemObjectXref2 = await DBAPI.createWorkflowStepSystemObjectXref(prisma, {
+            workflowStepSystemObjectXref2 = new DBAPI.WorkflowStepSystemObjectXref({
                 idWorkflowStep: workflowStep.idWorkflowStep,
                 idSystemObject: systemObjectSubject.idSystemObject,
                 Input: false,
                 idWorkflowStepSystemObjectXref: 0
             });
         expect(workflowStepSystemObjectXref2).toBeTruthy();
-        if (workflowStepSystemObjectXref2)
+        if (workflowStepSystemObjectXref2) {
+            expect(await workflowStepSystemObjectXref2.create()).toBeTruthy();
             expect(workflowStepSystemObjectXref2.idWorkflowStepSystemObjectXref).toBeGreaterThan(0);
+        }
     });
 });
 
@@ -1078,9 +1208,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: AssetGroup', async () => {
-        let assetGroupFetch: AssetGroup | null = null;
+        let assetGroupFetch: DBAPI.AssetGroup | null = null;
         if (assetGroup) {
-            assetGroupFetch = await DBAPI.fetchAssetGroup(prisma, assetGroup.idAssetGroup);
+            assetGroupFetch = await DBAPI.AssetGroup.fetch(assetGroup.idAssetGroup);
             if (assetGroupFetch) {
                 expect(assetGroupFetch).toMatchObject(assetGroup);
                 expect(assetGroup).toMatchObject(assetGroupFetch);
@@ -1090,9 +1220,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Asset', async () => {
-        let assetFetch: Asset | null = null;
+        let assetFetch: DBAPI.Asset | null = null;
         if (assetThumbnail) {
-            assetFetch = await DBAPI.fetchAsset(prisma, assetThumbnail.idAsset);
+            assetFetch = await DBAPI.Asset.fetch(assetThumbnail.idAsset);
             if (assetFetch) {
                 expect(assetFetch).toMatchObject(assetThumbnail);
                 expect(assetThumbnail).toMatchObject(assetFetch);
@@ -1102,9 +1232,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: AssetVersion', async () => {
-        let assetVersionFetch: AssetVersion | null = null;
+        let assetVersionFetch: DBAPI.AssetVersion | null = null;
         if (assetVersion) {
-            assetVersionFetch = await DBAPI.fetchAssetVersion(prisma, assetVersion.idAssetVersion);
+            assetVersionFetch = await DBAPI.AssetVersion.fetch(assetVersion.idAssetVersion);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toMatchObject(assetVersion);
                 expect(assetVersion).toMatchObject(assetVersionFetch);
@@ -1114,9 +1244,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: CaptureData', async () => {
-        let captureDataFetch: CaptureData | null = null;
+        let captureDataFetch: DBAPI.CaptureData | null = null;
         if (captureData) {
-            captureDataFetch = await DBAPI.fetchCaptureData(prisma, captureData.idCaptureData);
+            captureDataFetch = await DBAPI.CaptureData.fetch(captureData.idCaptureData);
             if (captureDataFetch) {
                 expect(captureDataFetch).toMatchObject(captureData);
                 expect(captureData).toMatchObject(captureDataFetch);
@@ -1126,9 +1256,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: CaptureDataGroup', async () => {
-        let captureDataGroupFetch: CaptureDataGroup | null = null;
+        let captureDataGroupFetch: DBAPI.CaptureDataGroup | null = null;
         if (captureDataGroup) {
-            captureDataGroupFetch = await DBAPI.fetchCaptureDataGroup(prisma, captureDataGroup.idCaptureDataGroup);
+            captureDataGroupFetch = await DBAPI.CaptureDataGroup.fetch(captureDataGroup.idCaptureDataGroup);
             if (captureDataGroupFetch) {
                 expect(captureDataGroupFetch).toMatchObject(captureDataGroup);
                 expect(captureDataGroup).toMatchObject(captureDataGroupFetch);
@@ -1138,9 +1268,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: CaptureDataGroupCaptureDataXref', async () => {
-        let captureDataGroupCaptureDataXrefFetch: CaptureDataGroupCaptureDataXref | null = null;
+        let captureDataGroupCaptureDataXrefFetch: DBAPI.CaptureDataGroupCaptureDataXref | null = null;
         if (captureDataGroupCaptureDataXref) {
-            captureDataGroupCaptureDataXrefFetch = await DBAPI.fetchCaptureDataGroupCaptureDataXref(prisma, captureDataGroupCaptureDataXref.idCaptureDataGroupCaptureDataXref);
+            captureDataGroupCaptureDataXrefFetch = await DBAPI.CaptureDataGroupCaptureDataXref.fetch(captureDataGroupCaptureDataXref.idCaptureDataGroupCaptureDataXref);
             if (captureDataGroupCaptureDataXrefFetch) {
                 expect(captureDataGroupCaptureDataXrefFetch).toMatchObject(captureDataGroupCaptureDataXref);
                 expect(captureDataGroupCaptureDataXref).toMatchObject(captureDataGroupCaptureDataXrefFetch);
@@ -1150,9 +1280,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: GeoLocation', async () => {
-        let geoLocationFetch: GeoLocation | null = null;
+        let geoLocationFetch: DBAPI.GeoLocation | null = null;
         if (geoLocation) {
-            geoLocationFetch = await DBAPI.fetchGeoLocation(prisma, geoLocation.idGeoLocation);
+            geoLocationFetch = await DBAPI.GeoLocation.fetch(geoLocation.idGeoLocation);
             if (geoLocationFetch) {
                 expect(geoLocationFetch).toMatchObject(geoLocation);
                 expect(geoLocation).toMatchObject(geoLocationFetch);
@@ -1162,9 +1292,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Identifier', async () => {
-        let identifierFetch: Identifier | null = null;
+        let identifierFetch: DBAPI.Identifier | null = null;
         if (identifier) {
-            identifierFetch = await DBAPI.fetchIdentifier(prisma, identifier.idIdentifier);
+            identifierFetch = await DBAPI.Identifier.fetch(identifier.idIdentifier);
             if (identifierFetch) {
                 expect(identifierFetch).toMatchObject(identifier);
                 expect(identifier).toMatchObject(identifierFetch);
@@ -1174,9 +1304,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: IntermediaryFile', async () => {
-        let intermediaryFileFetch: IntermediaryFile | null = null;
+        let intermediaryFileFetch: DBAPI.IntermediaryFile | null = null;
         if (intermediaryFile) {
-            intermediaryFileFetch = await DBAPI.fetchIntermediaryFile(prisma, intermediaryFile.idIntermediaryFile);
+            intermediaryFileFetch = await DBAPI.IntermediaryFile.fetch(intermediaryFile.idIntermediaryFile);
             if (intermediaryFileFetch) {
                 expect(intermediaryFileFetch).toMatchObject(intermediaryFile);
                 expect(intermediaryFile).toMatchObject(intermediaryFileFetch);
@@ -1186,9 +1316,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Item', async () => {
-        let itemFetch: Item | null = null;
+        let itemFetch: DBAPI.Item | null = null;
         if (item) {
-            itemFetch = await DBAPI.fetchItem(prisma, item.idItem);
+            itemFetch = await DBAPI.Item.fetch(item.idItem);
             if (itemFetch) {
                 expect(itemFetch).toMatchObject(item);
                 expect(item).toMatchObject(itemFetch);
@@ -1198,9 +1328,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: License', async () => {
-        let licenseFetch: License | null = null;
+        let licenseFetch: DBAPI.License | null = null;
         if (license) {
-            licenseFetch = await DBAPI.fetchLicense(prisma, license.idLicense);
+            licenseFetch = await DBAPI.License.fetch(license.idLicense);
             if (licenseFetch) {
                 expect(licenseFetch).toMatchObject(license);
                 expect(license).toMatchObject(licenseFetch);
@@ -1210,9 +1340,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: LicenseAssignment', async () => {
-        let licenseAssignmentFetch: LicenseAssignment | null = null;
+        let licenseAssignmentFetch: DBAPI.LicenseAssignment | null = null;
         if (licenseAssignment) {
-            licenseAssignmentFetch = await DBAPI.fetchLicenseAssignment(prisma, licenseAssignment.idLicenseAssignment);
+            licenseAssignmentFetch = await DBAPI.LicenseAssignment.fetch(licenseAssignment.idLicenseAssignment);
             if (licenseAssignmentFetch) {
                 expect(licenseAssignmentFetch).toMatchObject(licenseAssignment);
                 expect(licenseAssignment).toMatchObject(licenseAssignmentFetch);
@@ -1222,9 +1352,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Metadata', async () => {
-        let metadataFetch: Metadata | null = null;
+        let metadataFetch: DBAPI.Metadata | null = null;
         if (metadata) {
-            metadataFetch = await DBAPI.fetchMetadata(prisma, metadata.idMetadata);
+            metadataFetch = await DBAPI.Metadata.fetch(metadata.idMetadata);
             if (metadataFetch) {
                 expect(metadataFetch).toMatchObject(metadata);
                 expect(metadata).toMatchObject(metadataFetch);
@@ -1234,9 +1364,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Model', async () => {
-        let modelFetch: Model | null = null;
+        let modelFetch: DBAPI.Model | null = null;
         if (model) {
-            modelFetch = await DBAPI.fetchModel(prisma, model.idModel);
+            modelFetch = await DBAPI.Model.fetch(model.idModel);
             if (modelFetch) {
                 expect(modelFetch).toMatchObject(model);
                 expect(model).toMatchObject(modelFetch);
@@ -1246,9 +1376,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: ModelGeometryFile', async () => {
-        let modelGeometryFileFetch: ModelGeometryFile | null = null;
+        let modelGeometryFileFetch: DBAPI.ModelGeometryFile | null = null;
         if (modelGeometryFile) {
-            modelGeometryFileFetch = await DBAPI.fetchModelGeometryFile(prisma, modelGeometryFile.idModelGeometryFile);
+            modelGeometryFileFetch = await DBAPI.ModelGeometryFile.fetch(modelGeometryFile.idModelGeometryFile);
             if (modelGeometryFileFetch) {
                 expect(modelGeometryFileFetch).toMatchObject(modelGeometryFile);
                 expect(modelGeometryFile).toMatchObject(modelGeometryFileFetch);
@@ -1258,9 +1388,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: ModelProcessingAction', async () => {
-        let modelProcessingActionFetch: ModelProcessingAction | null = null;
+        let modelProcessingActionFetch: DBAPI.ModelProcessingAction | null = null;
         if (modelProcessingAction) {
-            modelProcessingActionFetch = await DBAPI.fetchModelProcessingAction(prisma, modelProcessingAction.idModelProcessingAction);
+            modelProcessingActionFetch = await DBAPI.ModelProcessingAction.fetch(modelProcessingAction.idModelProcessingAction);
             if (modelProcessingActionFetch) {
                 expect(modelProcessingActionFetch).toMatchObject(modelProcessingAction);
                 expect(modelProcessingAction).toMatchObject(modelProcessingActionFetch);
@@ -1270,9 +1400,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: ModelProcessingActionStep', async () => {
-        let modelProcessingActionStepFetch: ModelProcessingActionStep | null = null;
+        let modelProcessingActionStepFetch: DBAPI.ModelProcessingActionStep | null = null;
         if (modelProcessingActionStep) {
-            modelProcessingActionStepFetch = await DBAPI.fetchModelProcessingActionStep(prisma, modelProcessingActionStep.idModelProcessingActionStep);
+            modelProcessingActionStepFetch = await DBAPI.ModelProcessingActionStep.fetch(modelProcessingActionStep.idModelProcessingActionStep);
             if (modelProcessingActionStepFetch) {
                 expect(modelProcessingActionStepFetch).toMatchObject(modelProcessingActionStep);
                 expect(modelProcessingActionStep).toMatchObject(modelProcessingActionStepFetch);
@@ -1282,9 +1412,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: ModelSceneXref', async () => {
-        let modelSceneXrefFetch: ModelSceneXref | null = null;
+        let modelSceneXrefFetch: DBAPI.ModelSceneXref | null = null;
         if (modelSceneXref) {
-            modelSceneXrefFetch = await DBAPI.fetchModelSceneXref(prisma, modelSceneXref.idModelSceneXref);
+            modelSceneXrefFetch = await DBAPI.ModelSceneXref.fetch(modelSceneXref.idModelSceneXref);
             if (modelSceneXrefFetch) {
                 expect(modelSceneXrefFetch).toMatchObject(modelSceneXref);
                 expect(modelSceneXref).toMatchObject(modelSceneXrefFetch);
@@ -1294,9 +1424,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: ModelUVMapChannel', async () => {
-        let modelUVMapChannelFetch: ModelUVMapChannel | null = null;
+        let modelUVMapChannelFetch: DBAPI.ModelUVMapChannel | null = null;
         if (modelUVMapChannel) {
-            modelUVMapChannelFetch = await DBAPI.fetchModelUVMapChannel(prisma, modelUVMapChannel.idModelUVMapChannel);
+            modelUVMapChannelFetch = await DBAPI.ModelUVMapChannel.fetch(modelUVMapChannel.idModelUVMapChannel);
             if (modelUVMapChannelFetch) {
                 expect(modelUVMapChannelFetch).toMatchObject(modelUVMapChannel);
                 expect(modelUVMapChannel).toMatchObject(modelUVMapChannelFetch);
@@ -1306,9 +1436,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: ModelUVMapFile', async () => {
-        let modelUVMapFileFetch: ModelUVMapFile | null = null;
+        let modelUVMapFileFetch: DBAPI.ModelUVMapFile | null = null;
         if (modelUVMapFile) {
-            modelUVMapFileFetch = await DBAPI.fetchModelUVMapFile(prisma, modelUVMapFile.idModelUVMapFile);
+            modelUVMapFileFetch = await DBAPI.ModelUVMapFile.fetch(modelUVMapFile.idModelUVMapFile);
             if (modelUVMapFileFetch) {
                 expect(modelUVMapFileFetch).toMatchObject(modelUVMapFile);
                 expect(modelUVMapFile).toMatchObject(modelUVMapFileFetch);
@@ -1318,9 +1448,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Project', async () => {
-        let projectFetch: Project | null = null;
+        let projectFetch: DBAPI.Project | null = null;
         if (project) {
-            projectFetch = await DBAPI.fetchProject(prisma, project.idProject);
+            projectFetch = await DBAPI.Project.fetch(project.idProject);
             if (projectFetch) {
                 expect(projectFetch).toMatchObject(project);
                 expect(project).toMatchObject(projectFetch);
@@ -1330,9 +1460,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: ProjectDocumentation', async () => {
-        let projectDocumentationFetch: ProjectDocumentation | null = null;
+        let projectDocumentationFetch: DBAPI.ProjectDocumentation | null = null;
         if (projectDocumentation) {
-            projectDocumentationFetch = await DBAPI.fetchProjectDocumentation(prisma, projectDocumentation.idProjectDocumentation);
+            projectDocumentationFetch = await DBAPI.ProjectDocumentation.fetch(projectDocumentation.idProjectDocumentation);
             if (projectDocumentationFetch) {
                 expect(projectDocumentationFetch).toMatchObject(projectDocumentation);
                 expect(projectDocumentation).toMatchObject(projectDocumentationFetch);
@@ -1342,9 +1472,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Scene', async () => {
-        let sceneFetch: Scene | null = null;
+        let sceneFetch: DBAPI.Scene | null = null;
         if (scene) {
-            sceneFetch = await DBAPI.fetchScene(prisma, scene.idScene);
+            sceneFetch = await DBAPI.Scene.fetch(scene.idScene);
             if (sceneFetch) {
                 expect(sceneFetch).toMatchObject(scene);
                 expect(scene).toMatchObject(sceneFetch);
@@ -1354,9 +1484,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Stakeholder', async () => {
-        let stakeholderFetch: Stakeholder | null = null;
+        let stakeholderFetch: DBAPI.Stakeholder | null = null;
         if (stakeholder) {
-            stakeholderFetch = await DBAPI.fetchStakeholder(prisma, stakeholder.idStakeholder);
+            stakeholderFetch = await DBAPI.Stakeholder.fetch(stakeholder.idStakeholder);
             if (stakeholderFetch) {
                 expect(stakeholderFetch).toMatchObject(stakeholder);
                 expect(stakeholder).toMatchObject(stakeholderFetch);
@@ -1366,9 +1496,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Subject', async () => {
-        let subjectFetch: Subject | null = null;
+        let subjectFetch: DBAPI.Subject | null = null;
         if (subject) {
-            subjectFetch = await DBAPI.fetchSubject(prisma, subject.idSubject);
+            subjectFetch = await DBAPI.Subject.fetch(subject.idSubject);
             if (subjectFetch) {
                 expect(subjectFetch).toMatchObject(subject);
                 expect(subject).toMatchObject(subjectFetch);
@@ -1378,9 +1508,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: SystemObjectVersion', async () => {
-        let systemObjectVersionFetch: SystemObjectVersion | null = null;
+        let systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = null;
         if (systemObjectVersion) {
-            systemObjectVersionFetch = await DBAPI.fetchSystemObjectVersion(prisma, systemObjectVersion.idSystemObjectVersion);
+            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.fetch(systemObjectVersion.idSystemObjectVersion);
             if (systemObjectVersionFetch) {
                 expect(systemObjectVersionFetch).toMatchObject(systemObjectVersion);
                 expect(systemObjectVersion).toMatchObject(systemObjectVersionFetch);
@@ -1390,9 +1520,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: SystemObjectXref', async () => {
-        let systemObjectXrefFetch: SystemObjectXref | null = null;
+        let systemObjectXrefFetch: DBAPI.SystemObjectXref | null = null;
         if (systemObjectXref) {
-            systemObjectXrefFetch = await DBAPI.fetchSystemObjectXref(prisma, systemObjectXref.idSystemObjectXref);
+            systemObjectXrefFetch = await DBAPI.SystemObjectXref.fetch(systemObjectXref.idSystemObjectXref);
             if (systemObjectXrefFetch) {
                 expect(systemObjectXrefFetch).toMatchObject(systemObjectXref);
                 expect(systemObjectXref).toMatchObject(systemObjectXrefFetch);
@@ -1402,9 +1532,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Unit', async () => {
-        let unitFetch: Unit | null = null;
+        let unitFetch: DBAPI.Unit | null = null;
         if (unit) {
-            unitFetch = await DBAPI.fetchUnit(prisma, unit.idUnit);
+            unitFetch = await DBAPI.Unit.fetch(unit.idUnit);
             if (unitFetch) {
                 expect(unitFetch).toMatchObject(unit);
                 expect(unit).toMatchObject(unitFetch);
@@ -1414,9 +1544,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: User', async () => {
-        let userFetch: User | null = null;
+        let userFetch: DBAPI.User | null = null;
         if (user) {
-            userFetch = await DBAPI.fetchUser(prisma, user.idUser);
+            userFetch = await DBAPI.User.fetch(user.idUser);
             if (userFetch) {
                 expect(userFetch).toMatchObject(user);
                 expect(user).toMatchObject(userFetch);
@@ -1426,9 +1556,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: UserPersonalizationSystemObject', async () => {
-        let userPersonalizationSystemObjectFetch: UserPersonalizationSystemObject | null = null;
+        let userPersonalizationSystemObjectFetch: DBAPI.UserPersonalizationSystemObject | null = null;
         if (userPersonalizationSystemObject) {
-            userPersonalizationSystemObjectFetch = await DBAPI.fetchUserPersonalizationSystemObject(prisma, userPersonalizationSystemObject.idUserPersonalizationSystemObject);
+            userPersonalizationSystemObjectFetch = await DBAPI.UserPersonalizationSystemObject.fetch(userPersonalizationSystemObject.idUserPersonalizationSystemObject);
             if (userPersonalizationSystemObjectFetch) {
                 expect(userPersonalizationSystemObjectFetch).toMatchObject(userPersonalizationSystemObject);
                 expect(userPersonalizationSystemObject).toMatchObject(userPersonalizationSystemObjectFetch);
@@ -1438,9 +1568,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: UserPersonalizationUrl', async () => {
-        let userPersonalizationUrlFetch: UserPersonalizationUrl | null = null;
+        let userPersonalizationUrlFetch: DBAPI.UserPersonalizationUrl | null = null;
         if (userPersonalizationUrl) {
-            userPersonalizationUrlFetch = await DBAPI.fetchUserPersonalizationUrl(prisma, userPersonalizationUrl.idUserPersonalizationUrl);
+            userPersonalizationUrlFetch = await DBAPI.UserPersonalizationUrl.fetch(userPersonalizationUrl.idUserPersonalizationUrl);
             if (userPersonalizationUrlFetch) {
                 expect(userPersonalizationUrlFetch).toMatchObject(userPersonalizationUrl);
                 expect(userPersonalizationUrl).toMatchObject(userPersonalizationUrlFetch);
@@ -1450,9 +1580,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Vocabulary', async () => {
-        let vocabularyFetch: Vocabulary | null = null;
+        let vocabularyFetch: DBAPI.Vocabulary | null = null;
         if (vocabulary) {
-            vocabularyFetch = await DBAPI.Vocabulary.fetch(prisma, vocabulary.idVocabulary);
+            vocabularyFetch = await DBAPI.Vocabulary.fetch(vocabulary.idVocabulary);
             if (vocabularyFetch) {
                 expect(vocabularyFetch).toMatchObject(vocabulary);
                 expect(vocabulary).toMatchObject(vocabularyFetch);
@@ -1462,9 +1592,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: VocabularySet', async () => {
-        let vocabularySetFetch: VocabularySet | null = null;
+        let vocabularySetFetch: DBAPI.VocabularySet | null = null;
         if (vocabularySet) {
-            vocabularySetFetch = await DBAPI.fetchVocabularySet(prisma, vocabularySet.idVocabularySet);
+            vocabularySetFetch = await DBAPI.VocabularySet.fetch(vocabularySet.idVocabularySet);
             if (vocabularySetFetch) {
                 expect(vocabularySetFetch).toMatchObject(vocabularySet);
                 expect(vocabularySet).toMatchObject(vocabularySetFetch);
@@ -1474,9 +1604,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: Workflow', async () => {
-        let workflowFetch: Workflow | null = null;
+        let workflowFetch: DBAPI.Workflow | null = null;
         if (workflow) {
-            workflowFetch = await DBAPI.fetchWorkflow(prisma, workflow.idWorkflow);
+            workflowFetch = await DBAPI.Workflow.fetch(workflow.idWorkflow);
             if (workflowFetch) {
                 expect(workflowFetch).toMatchObject(workflow);
                 expect(workflow).toMatchObject(workflowFetch);
@@ -1498,9 +1628,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: WorkflowStepSystemObjectXref', async () => {
-        let workflowStepSystemObjectXrefFetch: WorkflowStepSystemObjectXref | null = null;
+        let workflowStepSystemObjectXrefFetch: DBAPI.WorkflowStepSystemObjectXref | null = null;
         if (workflowStepSystemObjectXref) {
-            workflowStepSystemObjectXrefFetch = await DBAPI.fetchWorkflowStepSystemObjectXref(prisma, workflowStepSystemObjectXref.idWorkflowStepSystemObjectXref);
+            workflowStepSystemObjectXrefFetch = await DBAPI.WorkflowStepSystemObjectXref.fetch(workflowStepSystemObjectXref.idWorkflowStepSystemObjectXref);
             if (workflowStepSystemObjectXrefFetch) {
                 expect(workflowStepSystemObjectXrefFetch).toMatchObject(workflowStepSystemObjectXref);
                 expect(workflowStepSystemObjectXref).toMatchObject(workflowStepSystemObjectXrefFetch);
@@ -1510,9 +1640,9 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch By ID: WorkflowTemplate', async () => {
-        let workflowTemplateFetch: WorkflowTemplate | null = null;
+        let workflowTemplateFetch: DBAPI.WorkflowTemplate | null = null;
         if (workflowTemplate) {
-            workflowTemplateFetch = await DBAPI.fetchWorkflowTemplate(prisma, workflowTemplate.idWorkflowTemplate);
+            workflowTemplateFetch = await DBAPI.WorkflowTemplate.fetch(workflowTemplate.idWorkflowTemplate);
             if (workflowTemplateFetch) {
                 expect(workflowTemplateFetch).toMatchObject(workflowTemplate);
                 expect(workflowTemplate).toMatchObject(workflowTemplateFetch);
@@ -1536,7 +1666,7 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForActorID', async () => {
+    test('DB Fetch SystemObject: SystemObject.fetchFromActorID', async () => {
         let SO: DBAPI.SystemObject | null = null;
         if (actorWithUnit) {
             SO = await DBAPI.SystemObject.fetchFromActorID(actorWithUnit.idActor);
@@ -1546,7 +1676,7 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndActor', async () => {
+    test('DB Fetch SystemObject: Actor.fetchSystemObjectAndActor', async () => {
         let SO: SystemObject & { Actor: Actor | null} | null = null;
         if (actorWithUnit) {
             SO = await DBAPI.Actor.fetchSystemObjectAndActor(actorWithUnit.idActor);
@@ -1562,30 +1692,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForAsset', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: Asset.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (assetThumbnail) {
-            SO = await DBAPI.fetchSystemObjectForAsset(prisma, assetThumbnail);
+            SO = await assetThumbnail.fetchSystemObject();
             if (SO)
                 expect(SO.idAsset).toEqual(assetThumbnail.idAsset);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForAssetID', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromAssetID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (assetThumbnail) {
-            SO = await DBAPI.fetchSystemObjectForAssetID(prisma, assetThumbnail.idAsset);
+            SO = await DBAPI.SystemObject.fetchFromAssetID(assetThumbnail.idAsset);
             if (SO)
                 expect(SO.idAsset).toEqual(assetThumbnail.idAsset);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndAsset', async () => {
+    test('DB Fetch SystemObject: Asset.fetchSystemObjectAndAsset', async () => {
         let SO: SystemObject & { Asset: Asset | null} | null = null;
         if (assetThumbnail) {
-            SO = await DBAPI.fetchSystemObjectAndAsset(prisma, assetThumbnail.idAsset);
+            SO = await DBAPI.Asset.fetchSystemObjectAndAsset(assetThumbnail.idAsset);
             if (SO) {
                 expect(SO.idAsset).toEqual(assetThumbnail.idAsset);
                 expect(SO.Asset).toBeTruthy();
@@ -1598,30 +1728,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForAssetVersion', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: AssetVersion.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (assetVersion) {
-            SO = await DBAPI.fetchSystemObjectForAssetVersion(prisma, assetVersion);
+            SO = await assetVersion.fetchSystemObject();
             if (SO)
                 expect(SO.idAssetVersion).toEqual(assetVersion.idAssetVersion);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForAssetVersionID', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromAssetVersionID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (assetVersion) {
-            SO = await DBAPI.fetchSystemObjectForAssetVersionID(prisma, assetVersion.idAssetVersion);
+            SO = await DBAPI.SystemObject.fetchFromAssetVersionID(assetVersion.idAssetVersion);
             if (SO)
                 expect(SO.idAssetVersion).toEqual(assetVersion.idAssetVersion);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndAssetVersion', async () => {
+    test('DB Fetch SystemObject: AssetVersion.fetchSystemObjectAndAssetVersion', async () => {
         let SO: SystemObject & { AssetVersion: AssetVersion | null} | null = null;
         if (assetVersion) {
-            SO = await DBAPI.fetchSystemObjectAndAssetVersion(prisma, assetVersion.idAssetVersion);
+            SO = await DBAPI.AssetVersion.fetchSystemObjectAndAssetVersion(assetVersion.idAssetVersion);
             if (SO) {
                 expect(SO.idAssetVersion).toEqual(assetVersion.idAssetVersion);
                 expect(SO.AssetVersion).toBeTruthy();
@@ -1634,30 +1764,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForCaptureData', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: CaptureData.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (captureData) {
-            SO = await DBAPI.fetchSystemObjectForCaptureData(prisma, captureData);
+            SO = await captureData.fetchSystemObject();
             if (SO)
                 expect(SO.idCaptureData).toEqual(captureData.idCaptureData);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForCaptureDataID', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromCaptureDataID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (captureData) {
-            SO = await DBAPI.fetchSystemObjectForCaptureDataID(prisma, captureData.idCaptureData);
+            SO = await DBAPI.SystemObject.fetchFromCaptureDataID(captureData.idCaptureData);
             if (SO)
                 expect(SO.idCaptureData).toEqual(captureData.idCaptureData);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndCaptureData', async () => {
+    test('DB Fetch SystemObject: CaptureData.fetchSystemObjectAndCaptureData', async () => {
         let SO: SystemObject & { CaptureData: CaptureData | null} | null = null;
         if (captureData) {
-            SO = await DBAPI.fetchSystemObjectAndCaptureData(prisma, captureData.idCaptureData);
+            SO = await DBAPI.CaptureData.fetchSystemObjectAndCaptureData(captureData.idCaptureData);
             if (SO) {
                 expect(SO.idCaptureData).toEqual(captureData.idCaptureData);
                 expect(SO.CaptureData).toBeTruthy();
@@ -1670,30 +1800,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForIntermediaryFile', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: IntermediaryFile.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (intermediaryFile) {
-            SO = await DBAPI.fetchSystemObjectForIntermediaryFile(prisma, intermediaryFile);
+            SO = await intermediaryFile.fetchSystemObject();
             if (SO)
                 expect(SO.idIntermediaryFile).toEqual(intermediaryFile.idIntermediaryFile);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForIntermediaryFileID', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromIntermediaryFileID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (intermediaryFile) {
-            SO = await DBAPI.fetchSystemObjectForIntermediaryFileID(prisma, intermediaryFile.idIntermediaryFile);
+            SO = await DBAPI.SystemObject.fetchFromIntermediaryFileID(intermediaryFile.idIntermediaryFile);
             if (SO)
                 expect(SO.idIntermediaryFile).toEqual(intermediaryFile.idIntermediaryFile);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndIntermediaryFile', async () => {
+    test('DB Fetch SystemObject: IntermediaryFile.fetchSystemObjectAndIntermediaryFile', async () => {
         let SO: SystemObject & { IntermediaryFile: IntermediaryFile | null} | null = null;
         if (intermediaryFile) {
-            SO = await DBAPI.fetchSystemObjectAndIntermediaryFile(prisma, intermediaryFile.idIntermediaryFile);
+            SO = await DBAPI.IntermediaryFile.fetchSystemObjectAndIntermediaryFile(intermediaryFile.idIntermediaryFile);
             if (SO) {
                 expect(SO.idIntermediaryFile).toEqual(intermediaryFile.idIntermediaryFile);
                 expect(SO.IntermediaryFile).toBeTruthy();
@@ -1706,30 +1836,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForItem', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: Item.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (item) {
-            SO = await DBAPI.fetchSystemObjectForItem(prisma, item);
+            SO = await item.fetchSystemObject();
             if (SO)
                 expect(SO.idItem).toEqual(item.idItem);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForItemID', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromItemID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (item) {
-            SO = await DBAPI.fetchSystemObjectForItemID(prisma, item.idItem);
+            SO = await DBAPI.SystemObject.fetchFromItemID(item.idItem);
             if (SO)
                 expect(SO.idItem).toEqual(item.idItem);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndItem', async () => {
+    test('DB Fetch SystemObject: Item.fetchSystemObjectAndItem', async () => {
         let SO: SystemObject & { Item: Item | null} | null = null;
         if (item) {
-            SO = await DBAPI.fetchSystemObjectAndItem(prisma, item.idItem);
+            SO = await DBAPI.Item.fetchSystemObjectAndItem(item.idItem);
             if (SO) {
                 expect(SO.idItem).toEqual(item.idItem);
                 expect(SO.Item).toBeTruthy();
@@ -1742,30 +1872,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForModel', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: Model.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (model) {
-            SO = await DBAPI.fetchSystemObjectForModel(prisma, model);
+            SO = await model.fetchSystemObject();
             if (SO)
                 expect(SO.idModel).toEqual(model.idModel);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForModelID', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromModelID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (model) {
-            SO = await DBAPI.fetchSystemObjectForModelID(prisma, model.idModel);
+            SO = await DBAPI.SystemObject.fetchFromModelID(model.idModel);
             if (SO)
                 expect(SO.idModel).toEqual(model.idModel);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndModel', async () => {
+    test('DB Fetch SystemObject: Model.fetchSystemObjectAndModel', async () => {
         let SO: SystemObject & { Model: Model | null} | null = null;
         if (model) {
-            SO = await DBAPI.fetchSystemObjectAndModel(prisma, model.idModel);
+            SO = await DBAPI.Model.fetchSystemObjectAndModel(model.idModel);
             if (SO) {
                 expect(SO.idModel).toEqual(model.idModel);
                 expect(SO.Model).toBeTruthy();
@@ -1778,30 +1908,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForProject', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: Project.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (project) {
-            SO = await DBAPI.fetchSystemObjectForProject(prisma, project);
+            SO = await project.fetchSystemObject();
             if (SO)
                 expect(SO.idProject).toEqual(project.idProject);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForProjectID', async () => {
+    test('DB Fetch SystemObject: SystemObject.fetchFromProjectID', async () => {
         let SO: SystemObject | null = null;
         if (project) {
-            SO = await DBAPI.fetchSystemObjectForProjectID(prisma, project.idProject);
+            SO = await DBAPI.SystemObject.fetchFromProjectID(project.idProject);
             if (SO)
                 expect(SO.idProject).toEqual(project.idProject);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndProject', async () => {
+    test('DB Fetch SystemObject: Project.fetchSystemObjectAndProject', async () => {
         let SO: SystemObject & { Project: Project | null} | null = null;
         if (project) {
-            SO = await DBAPI.fetchSystemObjectAndProject(prisma, project.idProject);
+            SO = await DBAPI.Project.fetchSystemObjectAndProject(project.idProject);
             if (SO) {
                 expect(SO.idProject).toEqual(project.idProject);
                 expect(SO.Project).toBeTruthy();
@@ -1814,30 +1944,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForProjectDocumentation', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: ProjectDocumentation.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (projectDocumentation) {
-            SO = await DBAPI.fetchSystemObjectForProjectDocumentation(prisma, projectDocumentation);
+            SO = await projectDocumentation.fetchSystemObject();
             if (SO)
                 expect(SO.idProjectDocumentation).toEqual(projectDocumentation.idProjectDocumentation);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForProjectDocumentationID', async () => {
+    test('DB Fetch SystemObject: SystemObject.fetchFromProjectDocumentationID', async () => {
         let SO: SystemObject | null = null;
         if (projectDocumentation) {
-            SO = await DBAPI.fetchSystemObjectForProjectDocumentationID(prisma, projectDocumentation.idProjectDocumentation);
+            SO = await DBAPI.SystemObject.fetchFromProjectDocumentationID(projectDocumentation.idProjectDocumentation);
             if (SO)
                 expect(SO.idProjectDocumentation).toEqual(projectDocumentation.idProjectDocumentation);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndProjectDocumentation', async () => {
+    test('DB Fetch SystemObject: ProjectDocumentation.fetchSystemObjectAndProjectDocumentation', async () => {
         let SO: SystemObject & { ProjectDocumentation: ProjectDocumentation | null} | null = null;
         if (projectDocumentation) {
-            SO = await DBAPI.fetchSystemObjectAndProjectDocumentation(prisma, projectDocumentation.idProjectDocumentation);
+            SO = await DBAPI.ProjectDocumentation.fetchSystemObjectAndProjectDocumentation(projectDocumentation.idProjectDocumentation);
             if (SO) {
                 expect(SO.idProjectDocumentation).toEqual(projectDocumentation.idProjectDocumentation);
                 expect(SO.ProjectDocumentation).toBeTruthy();
@@ -1850,30 +1980,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForScene', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: Scene.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (scene) {
-            SO = await DBAPI.fetchSystemObjectForScene(prisma, scene);
+            SO = await scene.fetchSystemObject();
             if (SO)
                 expect(SO.idScene).toEqual(scene.idScene);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForSceneID', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromSceneID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (scene) {
-            SO = await DBAPI.fetchSystemObjectForSceneID(prisma, scene.idScene);
+            SO = await DBAPI.SystemObject.fetchFromSceneID(scene.idScene);
             if (SO)
                 expect(SO.idScene).toEqual(scene.idScene);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndScene', async () => {
+    test('DB Fetch SystemObject: Scene.fetchSystemObjectAndScene', async () => {
         let SO: SystemObject & { Scene: Scene | null} | null = null;
         if (scene) {
-            SO = await DBAPI.fetchSystemObjectAndScene(prisma, scene.idScene);
+            SO = await DBAPI.Scene.fetchSystemObjectAndScene(scene.idScene);
             if (SO) {
                 expect(SO.idScene).toEqual(scene.idScene);
                 expect(SO.Scene).toBeTruthy();
@@ -1886,30 +2016,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForStakeholder', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: Stakeholder.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (stakeholder) {
-            SO = await DBAPI.fetchSystemObjectForStakeholder(prisma, stakeholder);
+            SO = await stakeholder.fetchSystemObject();
             if (SO)
                 expect(SO.idStakeholder).toEqual(stakeholder.idStakeholder);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForStakeholderID', async () => {
+    test('DB Fetch SystemObject: SystemObject.fetchFromStakeholderID', async () => {
         let SO: SystemObject | null = null;
         if (stakeholder) {
-            SO = await DBAPI.fetchSystemObjectForStakeholderID(prisma, stakeholder.idStakeholder);
+            SO = await DBAPI.SystemObject.fetchFromStakeholderID(stakeholder.idStakeholder);
             if (SO)
                 expect(SO.idStakeholder).toEqual(stakeholder.idStakeholder);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndStakeholder', async () => {
+    test('DB Fetch SystemObject: Stakeholder.fetchSystemObjectAndStakeholder', async () => {
         let SO: SystemObject & { Stakeholder: Stakeholder | null} | null = null;
         if (stakeholder) {
-            SO = await DBAPI.fetchSystemObjectAndStakeholder(prisma, stakeholder.idStakeholder);
+            SO = await DBAPI.Stakeholder.fetchSystemObjectAndStakeholder(stakeholder.idStakeholder);
             if (SO) {
                 expect(SO.idStakeholder).toEqual(stakeholder.idStakeholder);
                 expect(SO.Stakeholder).toBeTruthy();
@@ -1922,30 +2052,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForSubject', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: Subject.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (subject) {
-            SO = await DBAPI.fetchSystemObjectForSubject(prisma, subject);
+            SO = await subject.fetchSystemObject();
             if (SO)
                 expect(SO.idSubject).toEqual(subject.idSubject);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForSubjectID', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromSubjectID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (subject) {
-            SO = await DBAPI.fetchSystemObjectForSubjectID(prisma, subject.idSubject);
+            SO = await DBAPI.SystemObject.fetchFromSubjectID(subject.idSubject);
             if (SO)
                 expect(SO.idSubject).toEqual(subject.idSubject);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndSubject', async () => {
+    test('DB Fetch SystemObject: Subject.fetchSystemObjectAndSubject', async () => {
         let SO: SystemObject & { Subject: Subject | null} | null = null;
         if (subject) {
-            SO = await DBAPI.fetchSystemObjectAndSubject(prisma, subject.idSubject);
+            SO = await DBAPI.Subject.fetchSystemObjectAndSubject(subject.idSubject);
             if (SO) {
                 expect(SO.idSubject).toEqual(subject.idSubject);
                 expect(SO.Subject).toBeTruthy();
@@ -1958,30 +2088,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForUnit', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: Unit.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (unit) {
-            SO = await DBAPI.fetchSystemObjectForUnit(prisma, unit);
+            SO = await unit.fetchSystemObject();
             if (SO)
                 expect(SO.idUnit).toEqual(unit.idUnit);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForUnitID', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromUnitID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (unit) {
-            SO = await DBAPI.fetchSystemObjectForUnitID(prisma, unit.idUnit);
+            SO = await DBAPI.SystemObject.fetchFromUnitID(unit.idUnit);
             if (SO)
                 expect(SO.idUnit).toEqual(unit.idUnit);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndUnit', async () => {
+    test('DB Fetch SystemObject: Unit.fetchSystemObjectAndUnit', async () => {
         let SO: SystemObject & { Unit: Unit | null} | null = null;
         if (unit) {
-            SO = await DBAPI.fetchSystemObjectAndUnit(prisma, unit.idUnit);
+            SO = await DBAPI.Unit.fetchSystemObjectAndUnit(unit.idUnit);
             if (SO) {
                 expect(SO.idUnit).toEqual(unit.idUnit);
                 expect(SO.Unit).toBeTruthy();
@@ -1994,30 +2124,30 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForWorkflow', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: Workflow.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (workflow) {
-            SO = await DBAPI.fetchSystemObjectForWorkflow(prisma, workflow);
+            SO = await workflow.fetchSystemObject();
             if (SO)
                 expect(SO.idWorkflow).toEqual(workflow.idWorkflow);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForWorkflowID', async () => {
-        let SO: SystemObject | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromWorkflowID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
         if (workflow) {
-            SO = await DBAPI.fetchSystemObjectForWorkflowID(prisma, workflow.idWorkflow);
+            SO = await DBAPI.SystemObject.fetchFromWorkflowID(workflow.idWorkflow);
             if (SO)
                 expect(SO.idWorkflow).toEqual(workflow.idWorkflow);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndWorkflow', async () => {
+    test('DB Fetch SystemObject: Workflow.fetchSystemObjectAndWorkflow', async () => {
         let SO: SystemObject & { Workflow: Workflow | null} | null = null;
         if (workflow) {
-            SO = await DBAPI.fetchSystemObjectAndWorkflow(prisma, workflow.idWorkflow);
+            SO = await DBAPI.Workflow.fetchSystemObjectAndWorkflow(workflow.idWorkflow);
             if (SO) {
                 expect(SO.idWorkflow).toEqual(workflow.idWorkflow);
                 expect(SO.Workflow).toBeTruthy();
@@ -2030,7 +2160,7 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForWorkflowStep', async () => {
+    test('DB Fetch SystemObject: WorkflowStep.fetchSystemObject', async () => {
         let SO: DBAPI.SystemObject | null = null;
         if (workflowStep) {
             SO = await workflowStep.fetchSystemObject();
@@ -2040,17 +2170,17 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectForWorkflowStepID', async () => {
+    test('DB Fetch SystemObject: SystemObject.fetchFromWorkflowStepID', async () => {
         let SO: DBAPI.SystemObject | null = null;
         if (workflowStep) {
-            SO = await DBAPI.WorkflowStep.fetchSystemObjectForWorkflowStepID(workflowStep.idWorkflowStep);
+            SO = await DBAPI.SystemObject.fetchFromWorkflowStepID(workflowStep.idWorkflowStep);
             if (SO)
                 expect(SO.idWorkflowStep).toEqual(workflowStep.idWorkflowStep);
         }
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: fetchSystemObjectAndWorkflowStep', async () => {
+    test('DB Fetch SystemObject: WorkflowStep.fetchSystemObjectAndWorkflowStep', async () => {
         let SO: SystemObject & { WorkflowStep: WorkflowStep | null} | null = null;
         if (workflowStep) {
             SO = await DBAPI.WorkflowStep.fetchSystemObjectAndWorkflowStep(workflowStep.idWorkflowStep);
@@ -2077,36 +2207,36 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     });
 
     let SOActor: DBAPI.SystemObject | null = null;
-    let SOAsset: SystemObject | null = null;
-    let SOAssetVersion: SystemObject | null = null;
-    let SOCaptureData: SystemObject | null = null;
-    let SOIntermediaryFile: SystemObject | null = null;
-    let SOItem: SystemObject | null = null;
-    let SOModel: SystemObject | null = null;
-    let SOProject: SystemObject | null = null;
-    let SOProjectDocumentation: SystemObject | null = null;
-    let SOScene: SystemObject | null = null;
-    let SOStakeholder: SystemObject | null = null;
-    let SOSubject: SystemObject | null = null;
-    let SOUnit: SystemObject | null = null;
-    let SOWorkflow: SystemObject | null = null;
+    let SOAsset: DBAPI.SystemObject | null = null;
+    let SOAssetVersion: DBAPI.SystemObject | null = null;
+    let SOCaptureData: DBAPI.SystemObject | null = null;
+    let SOIntermediaryFile: DBAPI.SystemObject | null = null;
+    let SOItem: DBAPI.SystemObject | null = null;
+    let SOModel: DBAPI.SystemObject | null = null;
+    let SOProject: DBAPI.SystemObject | null = null;
+    let SOProjectDocumentation: DBAPI.SystemObject | null = null;
+    let SOScene: DBAPI.SystemObject | null = null;
+    let SOStakeholder: DBAPI.SystemObject | null = null;
+    let SOSubject: DBAPI.SystemObject | null = null;
+    let SOUnit: DBAPI.SystemObject | null = null;
+    let SOWorkflow: DBAPI.SystemObject | null = null;
     let SOWorkflowStep: DBAPI.SystemObject | null = null;
 
     test('DB Fetch SystemObject: fetchSystemObjectFor * setup', async() => {
         SOActor = actorWithUnit ? await actorWithUnit.fetchSystemObject() : null;
-        SOAsset = assetThumbnail ? await DBAPI.fetchSystemObjectForAsset(prisma, assetThumbnail) : null;
-        SOAssetVersion = assetVersion ? await DBAPI.fetchSystemObjectForAssetVersion(prisma, assetVersion) : null;
-        SOCaptureData = captureData ? await DBAPI.fetchSystemObjectForCaptureData(prisma, captureData) : null;
-        SOIntermediaryFile = intermediaryFile ? await DBAPI.fetchSystemObjectForIntermediaryFile(prisma, intermediaryFile) : null;
-        SOItem = item ? await DBAPI.fetchSystemObjectForItem(prisma, item) : null;
-        SOModel = model ? await DBAPI.fetchSystemObjectForModel(prisma, model) : null;
-        SOProject = project ? await DBAPI.fetchSystemObjectForProject(prisma, project) : null;
-        SOProjectDocumentation = projectDocumentation ? await DBAPI.fetchSystemObjectForProjectDocumentation(prisma, projectDocumentation) : null;
-        SOScene = scene ? await DBAPI.fetchSystemObjectForScene(prisma, scene) : null;
-        SOStakeholder = stakeholder ? await DBAPI.fetchSystemObjectForStakeholder(prisma, stakeholder) : null;
-        SOSubject = subject ? await DBAPI.fetchSystemObjectForSubject(prisma, subject) : null;
-        SOUnit = unit ? await DBAPI.fetchSystemObjectForUnit(prisma, unit) : null;
-        SOWorkflow = workflow ? await DBAPI.fetchSystemObjectForWorkflow(prisma, workflow) : null;
+        SOAsset = assetThumbnail ? await assetThumbnail.fetchSystemObject() : null;
+        SOAssetVersion = assetVersion ? await assetVersion.fetchSystemObject() : null;
+        SOCaptureData = captureData ? await captureData.fetchSystemObject() : null;
+        SOIntermediaryFile = intermediaryFile ? await intermediaryFile.fetchSystemObject() : null;
+        SOItem = item ? await item.fetchSystemObject() : null;
+        SOModel = model ? await model.fetchSystemObject() : null;
+        SOProject = project ? await project.fetchSystemObject() : null;
+        SOProjectDocumentation = projectDocumentation ? await projectDocumentation.fetchSystemObject() : null;
+        SOScene = scene ? await scene.fetchSystemObject() : null;
+        SOStakeholder = stakeholder ? await stakeholder.fetchSystemObject() : null;
+        SOSubject = subject ? await subject.fetchSystemObject() : null;
+        SOUnit = unit ? await unit.fetchSystemObject() : null;
+        SOWorkflow = workflow ? await workflow.fetchSystemObject() : null;
         SOWorkflowStep = workflowStep ? await workflowStep.fetchSystemObject() : null;
 
         expect(SOActor).toBeTruthy();
@@ -2380,9 +2510,9 @@ describe('DB Fetch Xref Test Suite', () => {
     });
 
     test('DB Fetch Xref: fetchCaptureDataGroupFromXref', async () => {
-        let CDG: CaptureDataGroup[] | null = null;
+        let CDG: DBAPI.CaptureDataGroup[] | null = null;
         if (captureData && captureDataGroup) {
-            CDG = await DBAPI.fetchCaptureDataGroupFromXref(prisma, captureData.idCaptureData);
+            CDG = await DBAPI.CaptureDataGroup.fetchFromXref(captureData.idCaptureData);
             if (CDG) {
                 expect(CDG.length).toBe(1);
                 if (CDG.length == 1)
@@ -2393,9 +2523,9 @@ describe('DB Fetch Xref Test Suite', () => {
     });
 
     test('DB Fetch Xref: fetchCaptureDataFromXref', async () => {
-        let CD: CaptureData[] | null = null;
+        let CD: DBAPI.CaptureData[] | null = null;
         if (captureData && captureDataNulls && captureDataGroup) {
-            CD = await DBAPI.fetchCaptureDataFromXref(prisma, captureDataGroup.idCaptureDataGroup);
+            CD = await DBAPI.CaptureData.fetchFromXref(captureDataGroup.idCaptureDataGroup);
             if (CD) {
                 expect(CD.length).toBe(2);
                 if (CD.length == 2) {
@@ -2406,10 +2536,10 @@ describe('DB Fetch Xref Test Suite', () => {
         expect(CD).toBeTruthy();
     });
 
-    test('DB Fetch Xref: fetchModelFromXref', async () => {
-        let MO: Model[] | null = null;
+    test('DB Fetch Xref: Model.fetchFromXref', async () => {
+        let MO: DBAPI.Model[] | null = null;
         if (scene && model) {
-            MO = await DBAPI.fetchModelFromXref(prisma, scene.idScene);
+            MO = await DBAPI.Model.fetchFromXref(scene.idScene);
             if (MO) {
                 expect(MO.length).toBe(1);
                 if (MO.length == 1)
@@ -2419,10 +2549,10 @@ describe('DB Fetch Xref Test Suite', () => {
         expect(MO).toBeTruthy();
     });
 
-    test('DB Fetch Xref: fetchSceneFromXref', async () => {
-        let SC: Scene[] | null = null;
+    test('DB Fetch Xref: Scene.fetchFromXref', async () => {
+        let SC: DBAPI.Scene[] | null = null;
         if (scene && sceneNulls && model) {
-            SC = await DBAPI.fetchSceneFromXref(prisma, model.idModel);
+            SC = await DBAPI.Scene.fetchFromXref(model.idModel);
             if (SC) {
                 expect(SC.length).toBe(2);
                 if (SC.length == 2)
@@ -2643,6 +2773,517 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: Asset.update', async () => {
+        let bUpdated: boolean = false;
+        if (assetThumbnail && assetGroup2) {
+            assetThumbnail.idAssetGroup = assetGroup2.idAssetGroup;
+            bUpdated = await assetThumbnail.update();
+
+            const assetFetch: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetThumbnail.idAsset);
+            expect(assetFetch).toBeTruthy();
+            if (assetFetch)
+                expect(assetFetch.idAssetGroup).toBe(assetGroup2.idAssetGroup);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: AssetGroup.update', async () => {
+        let bUpdated: boolean = false;
+        if (assetGroup) {
+            bUpdated            = await assetGroup.update();
+
+            const assetGroupFetch: DBAPI.AssetGroup | null = await DBAPI.AssetGroup.fetch(assetGroup.idAssetGroup);
+            expect(assetGroupFetch).toBeTruthy();
+            if (assetGroupFetch)
+                expect(assetGroupFetch.idAssetGroup).toBe(assetGroup.idAssetGroup);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: AssetVersion.update', async () => {
+        let bUpdated: boolean = false;
+        if (assetVersion && assetWithoutAG) {
+            assetVersion.idAsset = assetWithoutAG.idAsset;
+            bUpdated            = await assetVersion.update();
+
+            const assetVersionFetch: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(assetVersion.idAssetVersion);
+            expect(assetVersionFetch).toBeTruthy();
+            if (assetVersionFetch)
+                expect(assetVersionFetch.idAsset).toBe(assetWithoutAG.idAsset);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: CaptureData.update', async () => {
+        let bUpdated: boolean = false;
+        if (captureData && assetWithoutAG) {
+            captureData.idAssetThumbnail = assetWithoutAG.idAsset;
+            bUpdated = await captureData.update();
+
+            const captureDataFetch: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetch(captureData.idCaptureData);
+            expect(captureDataFetch).toBeTruthy();
+            if (captureDataFetch)
+                expect(captureDataFetch.idAssetThumbnail).toBe(assetWithoutAG.idAsset);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: CaptureDataFile.update', async () => {
+        let bUpdated: boolean = false;
+        if (captureDataFile && assetWithoutAG) {
+            captureDataFile.idAsset = assetWithoutAG.idAsset;
+            bUpdated = await captureDataFile.update();
+
+            const captureDataFileFetch: DBAPI.CaptureDataFile | null = await DBAPI.CaptureDataFile.fetch(captureDataFile.idCaptureDataFile);
+            expect(captureDataFileFetch).toBeTruthy();
+            if (captureDataFileFetch)
+                expect(captureDataFileFetch.idAsset).toBe(assetWithoutAG.idAsset);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: CaptureDataGroup.update', async () => {
+        let bUpdated: boolean = false;
+        if (captureDataGroup) {
+            bUpdated = await captureDataGroup.update();
+
+            const captureDataGroupFetch: DBAPI.CaptureDataGroup | null = await DBAPI.CaptureDataGroup.fetch(captureDataGroup.idCaptureDataGroup);
+            expect(captureDataGroupFetch).toBeTruthy();
+            if (captureDataGroupFetch)
+                expect(captureDataGroupFetch.idCaptureDataGroup).toBe(captureDataGroup.idCaptureDataGroup);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: CaptureDataGroupCaptureDataXref.update', async () => {
+        let bUpdated: boolean = false;
+        if (captureDataGroupCaptureDataXref && captureDataNulls) {
+            captureDataGroupCaptureDataXref.idCaptureData = captureDataNulls.idCaptureData;
+            bUpdated = await captureDataGroupCaptureDataXref.update();
+
+            const captureDataGroupCaptureDataXrefFetch: DBAPI.CaptureDataGroupCaptureDataXref | null = await DBAPI.CaptureDataGroupCaptureDataXref.fetch(captureDataGroupCaptureDataXref.idCaptureDataGroupCaptureDataXref);
+            expect(captureDataGroupCaptureDataXrefFetch).toBeTruthy();
+            if (captureDataGroupCaptureDataXrefFetch)
+                expect(captureDataGroupCaptureDataXrefFetch.idCaptureData).toBe(captureDataNulls.idCaptureData);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: GeoLocation.update', async () => {
+        let bUpdated: boolean = false;
+        if (geoLocation) {
+            geoLocation.R0 = -1;
+            bUpdated = await geoLocation.update();
+
+            const geoLocationFetch: DBAPI.GeoLocation | null = await DBAPI.GeoLocation.fetch(geoLocation.idGeoLocation);
+            expect(geoLocationFetch).toBeTruthy();
+            if (geoLocationFetch)
+                expect(geoLocationFetch.R0).toBe(-1);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+
+    test('DB Update: Identifier.update', async () => {
+        let bUpdated: boolean = false;
+        if (identifier) {
+            const updatedValue: string = 'Updated Identifier';
+            identifier.IdentifierValue = updatedValue;
+            bUpdated = await identifier.update();
+
+            const identifierFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifier.idIdentifier);
+            expect(identifierFetch).toBeTruthy();
+            if (identifierFetch)
+                expect(identifierFetch.IdentifierValue).toBe(updatedValue);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: IntermediaryFile.update', async () => {
+        let bUpdated: boolean = false;
+        if (intermediaryFile && assetWithoutAG) {
+            intermediaryFile.idAsset = assetWithoutAG.idAsset;
+            bUpdated = await intermediaryFile.update();
+
+            const intermediaryFileFetch: DBAPI.IntermediaryFile | null = await DBAPI.IntermediaryFile.fetch(intermediaryFile.idIntermediaryFile);
+            expect(intermediaryFileFetch).toBeTruthy();
+            if (intermediaryFileFetch)
+                expect(intermediaryFileFetch.idAsset).toBe(assetWithoutAG.idAsset);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Item.update', async () => {
+        let bUpdated: boolean = false;
+        if (item && assetWithoutAG) {
+            const updatedName: string = 'Updated Test Item';
+            item.Name = updatedName;
+            item.idAssetThumbnail = assetWithoutAG.idAsset;
+            bUpdated = await item.update();
+
+            const itemFetch: DBAPI.Item | null = await DBAPI.Item.fetch(item.idItem);
+            expect(itemFetch).toBeTruthy();
+            if (itemFetch) {
+                expect(itemFetch.Name).toBe(updatedName);
+                expect(itemFetch.idAssetThumbnail).toBe(assetWithoutAG.idAsset);
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: License.update', async () => {
+        let bUpdated: boolean = false;
+        if (license) {
+            const updatedName: string = 'Updated Test License';
+            license.Name   = updatedName;
+            bUpdated = await license.update();
+
+            const licenseFetch: DBAPI.License | null = await DBAPI.License.fetch(license.idLicense);
+            expect(licenseFetch).toBeTruthy();
+            if (licenseFetch)
+                expect(licenseFetch.Name).toBe(updatedName);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: LicenseAssignment.update', async () => {
+        let bUpdated: boolean = false;
+        if (licenseAssignmentNull && user) {
+            licenseAssignmentNull.idUserCreator = user.idUser;
+            bUpdated = await licenseAssignmentNull.update();
+
+            const licenseAssignmentFetch: DBAPI.LicenseAssignment | null = await DBAPI.LicenseAssignment.fetch(licenseAssignmentNull.idLicenseAssignment);
+            expect(licenseAssignmentFetch).toBeTruthy();
+            if (licenseAssignmentFetch)
+                expect(licenseAssignmentFetch.idUserCreator).toBe(user.idUser);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Metadata.update', async () => {
+        let bUpdated: boolean = false;
+        if (metadataNull && assetThumbnail) {
+            metadataNull.idAssetValue = assetThumbnail.idAsset;
+            bUpdated = await metadataNull.update();
+
+            const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadataNull.idMetadata);
+            expect(metadataFetch).toBeTruthy();
+            if (metadataFetch)
+                expect(metadataFetch.idAssetValue).toBe(assetThumbnail.idAsset);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Model.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelNulls && assetThumbnail) {
+            modelNulls.idAssetThumbnail = assetThumbnail.idAsset;
+            bUpdated = await modelNulls.update();
+
+            const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
+            expect(modelFetch).toBeTruthy();
+            if (modelFetch)
+                expect(modelFetch.idAssetThumbnail).toBe(assetThumbnail.idAsset);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelGeometryFile.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelGeometryFileNulls) {
+            const roughness: number = 2.0;
+            modelGeometryFileNulls.Roughness = roughness;
+            bUpdated = await modelGeometryFileNulls.update();
+
+            const modelGeometryFileFetch: DBAPI.ModelGeometryFile | null = await DBAPI.ModelGeometryFile.fetch(modelGeometryFileNulls.idModelGeometryFile);
+            expect(modelGeometryFileFetch).toBeTruthy();
+            if (modelGeometryFileFetch)
+                expect(modelGeometryFileFetch.Roughness).toBe(roughness);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelProcessingAction.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelProcessingAction) {
+            const toolsUsed: string = 'Updated Tools Used';
+            modelProcessingAction.ToolsUsed = toolsUsed;
+            bUpdated            = await modelProcessingAction.update();
+
+            const modelProcessingActionFetch: DBAPI.ModelProcessingAction | null = await DBAPI.ModelProcessingAction.fetch(modelProcessingAction.idModelProcessingAction);
+            expect(modelProcessingActionFetch).toBeTruthy();
+            if (modelProcessingActionFetch)
+                expect(modelProcessingActionFetch.ToolsUsed).toBe(toolsUsed);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelProcessingActionStep.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelProcessingActionStep) {
+            const updatedDesc: string = 'Updated Test Description';
+            modelProcessingActionStep.Description = updatedDesc;
+            bUpdated = await modelProcessingActionStep.update();
+
+            const modelProcessingActionStepFetch: DBAPI.ModelProcessingActionStep | null = await DBAPI.ModelProcessingActionStep.fetch(modelProcessingActionStep.idModelProcessingActionStep);
+            expect(modelProcessingActionStepFetch).toBeTruthy();
+            if (modelProcessingActionStepFetch)
+                expect(modelProcessingActionStepFetch.Description).toBe(updatedDesc);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelSceneXref.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelSceneXref) {
+            const r0: number = 3.0;
+            modelSceneXref.R0 = r0;
+            bUpdated = await modelSceneXref.update();
+
+            const modelSceneXrefFetch: DBAPI.ModelSceneXref | null = await DBAPI.ModelSceneXref.fetch(modelSceneXref.idModelSceneXref);
+            expect(modelSceneXrefFetch).toBeTruthy();
+            if (modelSceneXrefFetch)
+                expect(modelSceneXrefFetch.R0).toBe(r0);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelUVMapChannel.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelUVMapChannel) {
+            const updatedWidth: number = 2;
+            modelUVMapChannel.ChannelWidth = updatedWidth;
+            bUpdated            = await modelUVMapChannel.update();
+
+            const modelUVMapChannelFetch: DBAPI.ModelUVMapChannel | null = await DBAPI.ModelUVMapChannel.fetch(modelUVMapChannel.idModelUVMapChannel);
+            expect(modelUVMapChannelFetch).toBeTruthy();
+            if (modelUVMapChannelFetch)
+                expect(modelUVMapChannelFetch.ChannelWidth).toBe(updatedWidth);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelUVMapFile.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelUVMapFile) {
+            const updatedEdgeLen: number = 3;
+            modelUVMapFile.UVMapEdgeLength = updatedEdgeLen;
+            bUpdated = await modelUVMapFile.update();
+
+            const modelUVMapFileFetch: DBAPI.ModelUVMapFile | null = await DBAPI.ModelUVMapFile.fetch(modelUVMapFile.idModelUVMapFile);
+            expect(modelUVMapFileFetch).toBeTruthy();
+            if (modelUVMapFileFetch)
+                expect(modelUVMapFileFetch.UVMapEdgeLength).toBe(updatedEdgeLen);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Project.update', async () => {
+        let bUpdated: boolean = false;
+        if (project) {
+            const updatedName: string = 'Updated Test Project Name';
+            project.Name = updatedName;
+            bUpdated = await project.update();
+
+            const projectFetch: DBAPI.Project | null = await DBAPI.Project.fetch(project.idProject);
+            expect(projectFetch).toBeTruthy();
+            if (projectFetch)
+                expect(projectFetch.Name).toBe(updatedName);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ProjectDocumentation.update', async () => {
+        let bUpdated: boolean = false;
+        if (projectDocumentation) {
+            const updatedName: string = 'Updated Test Access Action';
+            projectDocumentation.Name   = updatedName;
+            bUpdated            = await projectDocumentation.update();
+
+            const projectDocumentationFetch: DBAPI.ProjectDocumentation | null = await DBAPI.ProjectDocumentation.fetch(projectDocumentation.idProjectDocumentation);
+            expect(projectDocumentationFetch).toBeTruthy();
+            if (projectDocumentationFetch)
+                expect(projectDocumentationFetch.Name).toBe(updatedName);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Scene.update', async () => {
+        let bUpdated: boolean = false;
+        if (sceneNulls && assetThumbnail) {
+            sceneNulls.idAssetThumbnail = assetThumbnail.idAsset;
+            bUpdated = await sceneNulls.update();
+
+            const sceneFetch: DBAPI.Scene | null = await DBAPI.Scene.fetch(sceneNulls.idScene);
+            expect(sceneFetch).toBeTruthy();
+            if (sceneFetch)
+                expect(sceneFetch.idAssetThumbnail).toBe(assetThumbnail.idAsset);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Stakeholder.update', async () => {
+        let bUpdated: boolean = false;
+        if (stakeholder) {
+            const updatedEmail: string = 'abba@dabbadoo.com';
+            stakeholder.EmailAddress = updatedEmail;
+            bUpdated = await stakeholder.update();
+
+            const stakeholderFetch: DBAPI.Stakeholder | null = await DBAPI.Stakeholder.fetch(stakeholder.idStakeholder);
+            expect(stakeholderFetch).toBeTruthy();
+            if (stakeholderFetch)
+                expect(stakeholderFetch.EmailAddress).toBe(updatedEmail);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Subject.update', async () => {
+        let bUpdated: boolean = false;
+        if (subjectNulls && assetThumbnail) {
+            subjectNulls.idAssetThumbnail = assetThumbnail.idAsset;
+            bUpdated = await subjectNulls.update();
+
+            const subjectFetch: DBAPI.Subject | null = await DBAPI.Subject.fetch(subjectNulls.idSubject);
+            expect(subjectFetch).toBeTruthy();
+            if (subjectFetch)
+                expect(subjectFetch.idAssetThumbnail).toBe(assetThumbnail.idAsset);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: SystemObjectVersion.update', async () => {
+        let bUpdated: boolean = false;
+        if (systemObjectVersion) {
+            const updatedPubState: number = 2;
+            systemObjectVersion.PublishedState = updatedPubState;
+            bUpdated = await systemObjectVersion.update();
+
+            const systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(systemObjectVersion.idSystemObjectVersion);
+            expect(systemObjectVersionFetch).toBeTruthy();
+            if (systemObjectVersionFetch)
+                expect(systemObjectVersionFetch.PublishedState).toBe(updatedPubState);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: SystemObjectXref.update', async () => {
+        let bUpdated: boolean = false;
+        if (systemObjectXref && systemObjectAsset) {
+            systemObjectXref.idSystemObjectDerived = systemObjectAsset.idSystemObject;
+            bUpdated = await systemObjectXref.update();
+
+            const systemObjectXrefFetch: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.fetch(systemObjectXref.idSystemObjectXref);
+            expect(systemObjectXrefFetch).toBeTruthy();
+            if (systemObjectXrefFetch)
+                expect(systemObjectXrefFetch.idSystemObjectDerived).toBe(systemObjectAsset.idSystemObject);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Unit.update', async () => {
+        let bUpdated: boolean = false;
+        if (unit) {
+            const updatedName: string = 'Updated Test Unit';
+            unit.Name = updatedName;
+            bUpdated  = await unit.update();
+
+            const unitFetch: DBAPI.Unit | null = await DBAPI.Unit.fetch(unit.idUnit);
+            expect(unitFetch).toBeTruthy();
+            if (unitFetch)
+                expect(unitFetch.Name).toBe(updatedName);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: User.update', async () => {
+        let bUpdated: boolean = false;
+        if (user) {
+            const updatedName: string = 'Updated Test User';
+            user.Name   = updatedName;
+            bUpdated = await user.update();
+
+            const userFetch: DBAPI.User | null = await DBAPI.User.fetch(user.idUser);
+            expect(userFetch).toBeTruthy();
+            if (userFetch)
+                expect(userFetch.Name).toBe(updatedName);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: UserPersonalizationSystemObject.update', async () => {
+        let bUpdated: boolean = false;
+        if (userPersonalizationSystemObject) {
+            const updatedPersonalization: string = 'Updated Test User Personalization';
+            userPersonalizationSystemObject.Personalization = updatedPersonalization;
+            bUpdated = await userPersonalizationSystemObject.update();
+
+            const userPersonalizationSystemObjectFetch: DBAPI.UserPersonalizationSystemObject | null = await DBAPI.UserPersonalizationSystemObject.fetch(userPersonalizationSystemObject.idUserPersonalizationSystemObject);
+            expect(userPersonalizationSystemObjectFetch).toBeTruthy();
+            if (userPersonalizationSystemObjectFetch)
+                expect(userPersonalizationSystemObjectFetch.Personalization).toBe(updatedPersonalization);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: UserPersonalizationUrl.update', async () => {
+        let bUpdated: boolean = false;
+        if (userPersonalizationUrl) {
+            const updatedPersonalization: string = 'Updated Test Access Action';
+            userPersonalizationUrl.Personalization   = updatedPersonalization;
+            bUpdated            = await userPersonalizationUrl.update();
+
+            const userPersonalizationUrlFetch: DBAPI.UserPersonalizationUrl | null = await DBAPI.UserPersonalizationUrl.fetch(userPersonalizationUrl.idUserPersonalizationUrl);
+            expect(userPersonalizationUrlFetch).toBeTruthy();
+            if (userPersonalizationUrlFetch)
+                expect(userPersonalizationUrlFetch.Personalization).toBe(updatedPersonalization);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Vocabulary.update', async () => {
+        let bUpdated: boolean = false;
+        if (vocabulary) {
+            const updatedSort: number = 3;
+            vocabulary.SortOrder = updatedSort;
+            bUpdated = await vocabulary.update();
+
+            const vocabularyFetch: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(vocabulary.idVocabulary);
+            expect(vocabularyFetch).toBeTruthy();
+            if (vocabularyFetch)
+                expect(vocabularyFetch.SortOrder).toBe(updatedSort);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: VocabularySet.update', async () => {
+        let bUpdated: boolean = false;
+        if (vocabularySet) {
+            const updatedName: string = 'Updated Test Vocabulary Set';
+            vocabularySet.Name = updatedName;
+            bUpdated = await vocabularySet.update();
+
+            const vocabularySetFetch: DBAPI.VocabularySet | null = await DBAPI.VocabularySet.fetch(vocabularySet.idVocabularySet);
+            expect(vocabularySetFetch).toBeTruthy();
+            if (vocabularySetFetch)
+                expect(vocabularySetFetch.Name).toBe(updatedName);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Workflow.update', async () => {
+        let bUpdated: boolean = false;
+        if (workflow && project2) {
+            workflow.idProject = project2.idProject;
+            bUpdated = await workflow.update();
+
+            const workflowFetch: DBAPI.Workflow | null = await DBAPI.Workflow.fetch(workflow.idWorkflow);
+            expect(workflowFetch).toBeTruthy();
+            if (workflowFetch)
+                expect(workflowFetch.idProject).toBe(project2.idProject);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: WorkflowStep.update', async () => {
         let bUpdated: boolean = false;
         if (workflowStep && workflowNulls) {
@@ -2652,7 +3293,37 @@ describe('DB Update Test Suite', () => {
             const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
             expect(workflowStepFetch).toBeTruthy();
             if (workflowStepFetch)
-                expect(workflowStepFetch.idWorkflowStep).toBe(workflowNulls.idWorkflow);
+                expect(workflowStepFetch.idWorkflow).toBe(workflowNulls.idWorkflow);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: WorkflowStepSystemObjectXref.update', async () => {
+        let bUpdated: boolean = false;
+        if (workflowStepSystemObjectXref) {
+            const updatedInput: boolean = true;
+            workflowStepSystemObjectXref.Input = updatedInput;
+            bUpdated            = await workflowStepSystemObjectXref.update();
+
+            const workflowStepSystemObjectXrefFetch: DBAPI.WorkflowStepSystemObjectXref | null = await DBAPI.WorkflowStepSystemObjectXref.fetch(workflowStepSystemObjectXref.idWorkflowStepSystemObjectXref);
+            expect(workflowStepSystemObjectXrefFetch).toBeTruthy();
+            if (workflowStepSystemObjectXrefFetch)
+                expect(workflowStepSystemObjectXrefFetch.Input).toBe(updatedInput);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: WorkflowTemplate.update', async () => {
+        let bUpdated: boolean = false;
+        if (workflowTemplate) {
+            const updatedName: string = 'Updated Test Workflow Template Name';
+            workflowTemplate.Name   = updatedName;
+            bUpdated = await workflowTemplate.update();
+
+            const workflowTemplateFetch: DBAPI.WorkflowTemplate | null = await DBAPI.WorkflowTemplate.fetch(workflowTemplate.idWorkflowTemplate);
+            expect(workflowTemplateFetch).toBeTruthy();
+            if (workflowTemplateFetch)
+                expect(workflowTemplateFetch.Name).toBe(updatedName);
         }
         expect(bUpdated).toBeTruthy();
     });

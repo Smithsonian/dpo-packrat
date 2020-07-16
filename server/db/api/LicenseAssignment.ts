@@ -1,59 +1,98 @@
 /* eslint-disable camelcase */
-import { PrismaClient, LicenseAssignment } from '@prisma/client';
+import { LicenseAssignment as LicenseAssignmentBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createLicenseAssignment(prisma: PrismaClient, licenseAssignment: LicenseAssignment): Promise<LicenseAssignment | null> {
-    let createSystemObject: LicenseAssignment;
-    const { idLicense, idUserCreator, DateStart, DateEnd, idSystemObject } = licenseAssignment;
-    try {
-        createSystemObject = await prisma.licenseAssignment.create({
-            data: {
-                License:        { connect: { idLicense }, },
-                User:           idUserCreator ? { connect: { idUser: idUserCreator }, } : undefined,
-                DateStart,
-                DateEnd,
-                SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : undefined
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createLicenseAssignment', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> implements LicenseAssignmentBase {
+    idLicenseAssignment!: number;
+    DateEnd!: Date | null;
+    DateStart!: Date | null;
+    idLicense!: number;
+    idSystemObject!: number | null;
+    idUserCreator!: number | null;
 
-export async function fetchLicenseAssignment(prisma: PrismaClient, idLicenseAssignment: number): Promise<LicenseAssignment | null> {
-    try {
-        return await prisma.licenseAssignment.findOne({ where: { idLicenseAssignment, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchLicenseAssignment', error);
-        return null;
+    constructor(input: LicenseAssignmentBase) {
+        super(input);
     }
-}
 
-export async function fetchLicenseAssignmentFromLicense(prisma: PrismaClient, idLicense: number): Promise<LicenseAssignment[] | null> {
-    try {
-        return await prisma.licenseAssignment.findMany({ where: { idLicense } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchLicenseAssignmentFromLicense', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { idLicense, idUserCreator, DateStart, DateEnd, idSystemObject } = this;
+            ({ idLicenseAssignment: this.idLicenseAssignment, idUserCreator: this.idUserCreator,
+                DateStart: this.DateStart, DateEnd: this.DateEnd, idSystemObject: this.idSystemObject } =
+                await DBConnectionFactory.prisma.licenseAssignment.create({
+                    data: {
+                        License:        { connect: { idLicense }, },
+                        User:           idUserCreator ? { connect: { idUser: idUserCreator }, } : undefined,
+                        DateStart,
+                        DateEnd,
+                        SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : undefined
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.LicenseAssignment.create', error);
+            return false;
+        }
     }
-}
 
-export async function fetchLicenseAssignmentFromUser(prisma: PrismaClient, idUserCreator: number): Promise<LicenseAssignment[] | null> {
-    try {
-        return await prisma.licenseAssignment.findMany({ where: { idUserCreator } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchLicenseAssignmentFromUser', error);
-        return null;
+    async update(): Promise<boolean> {
+        try {
+            const { idLicenseAssignment, idLicense, idUserCreator, DateStart, DateEnd, idSystemObject } = this;
+            return await DBConnectionFactory.prisma.licenseAssignment.update({
+                where: { idLicenseAssignment, },
+                data: {
+                    License:        { connect: { idLicense }, },
+                    User:           idUserCreator ? { connect: { idUser: idUserCreator }, } : undefined,
+                    DateStart,
+                    DateEnd,
+                    SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : undefined
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.LicenseAssignment.update', error);
+            return false;
+        }
     }
-}
 
-export async function fetchLicenseAssignmentFromSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<LicenseAssignment[] | null> {
-    try {
-        return await prisma.licenseAssignment.findMany({ where: { idSystemObject } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchLicenseAssignmentFromSystemObject', error);
-        return null;
+    static async fetch(idLicenseAssignment: number): Promise<LicenseAssignment | null> {
+        try {
+            return DBO.CopyObject<LicenseAssignmentBase, LicenseAssignment>(
+                await DBConnectionFactory.prisma.licenseAssignment.findOne({ where: { idLicenseAssignment, }, }), LicenseAssignment);
+        } catch (error) {
+            LOG.logger.error('DBAPI.LicenseAssignment.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromLicense(idLicense: number): Promise<LicenseAssignment[] | null> {
+        try {
+            return DBO.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
+                await DBConnectionFactory.prisma.licenseAssignment.findMany({ where: { idLicense } }), LicenseAssignment);
+        } catch (error) {
+            LOG.logger.error('DBAPI.LicenseAssignment.fetchFromLicense', error);
+            return null;
+        }
+    }
+
+    static async fetchFromUser(idUserCreator: number): Promise<LicenseAssignment[] | null> {
+        try {
+            return DBO.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
+                await DBConnectionFactory.prisma.licenseAssignment.findMany({ where: { idUserCreator } }), LicenseAssignment);
+        } catch (error) {
+            LOG.logger.error('DBAPI.LicenseAssignment.fetchFromUser', error);
+            return null;
+        }
+    }
+
+    static async fetchFromSystemObject(idSystemObject: number): Promise<LicenseAssignment[] | null> {
+        try {
+            return DBO.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
+                await DBConnectionFactory.prisma.licenseAssignment.findMany({ where: { idSystemObject } }), LicenseAssignment);
+        } catch (error) {
+            LOG.logger.error('DBAPI.LicenseAssignment.fetchFromSystemObject', error);
+            return null;
+        }
     }
 }

@@ -1,28 +1,46 @@
 /* eslint-disable camelcase */
-import { PrismaClient, AssetGroup } from '@prisma/client';
+import { AssetGroup as AssetGroupBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createAssetGroup(prisma: PrismaClient, assetGroup: AssetGroup): Promise<AssetGroup | null> {
-    let createSystemObject: AssetGroup;
-    assetGroup;
-    try {
-        createSystemObject = await prisma.assetGroup.create({
-            data: {
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createAssetGroup', error);
-        return null;
+export class AssetGroup extends DBO.DBObject<AssetGroupBase> implements AssetGroupBase {
+    idAssetGroup!: number;
+
+    constructor(input: AssetGroupBase) {
+        super(input);
     }
 
-    return createSystemObject;
-}
+    async create(): Promise<boolean> {
+        try {
+            ({ idAssetGroup: this.idAssetGroup } = await DBConnectionFactory.prisma.assetGroup.create({ data: { } }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.AssetGroup.create', error);
+            return false;
+        }
+    }
 
-export async function fetchAssetGroup(prisma: PrismaClient, idAssetGroup: number): Promise<AssetGroup | null> {
-    try {
-        return await prisma.assetGroup.findOne({ where: { idAssetGroup, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAssetGroup', error);
-        return null;
+    async update(): Promise<boolean> {
+        try {
+            const { idAssetGroup } = this;
+            return await DBConnectionFactory.prisma.assetGroup.update({
+                where: { idAssetGroup, },
+                data: { },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.AssetGroup.update', error);
+            return false;
+        }
+    }
+
+    static async fetch(idAssetGroup: number): Promise<AssetGroup | null> {
+        try {
+            return DBO.CopyObject<AssetGroupBase, AssetGroup>(
+                await DBConnectionFactory.prisma.assetGroup.findOne({ where: { idAssetGroup, }, }), AssetGroup);
+        } catch (error) {
+            LOG.logger.error('DBAPI.AssetGroup.fetch', error);
+            return null;
+        }
     }
 }

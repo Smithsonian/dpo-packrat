@@ -1,11 +1,10 @@
 import { CreateProjectResult, MutationCreateProjectArgs } from '../../../../../types/graphql';
-import { Parent, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
-export default async function CreateProject(_: Parent, args: MutationCreateProjectArgs, context: Context): Promise<CreateProjectResult> {
+export default async function CreateProject(_: Parent, args: MutationCreateProjectArgs): Promise<CreateProjectResult> {
     const { input } = args;
     const { Name, Description } = input;
-    const { prisma } = context;
 
     const projectArgs = {
         idProject: 0,
@@ -13,7 +12,7 @@ export default async function CreateProject(_: Parent, args: MutationCreateProje
         Description
     };
 
-    const Project = await DBAPI.createProject(prisma, projectArgs);
-
+    const Project = new DBAPI.Project(projectArgs);
+    await Project.create();
     return { Project };
 }

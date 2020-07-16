@@ -1,58 +1,79 @@
 /* eslint-disable camelcase */
-import { PrismaClient, IntermediaryFile, SystemObject } from '@prisma/client';
+import { IntermediaryFile as IntermediaryFileBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { DBConnectionFactory, SystemObject } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createIntermediaryFile(prisma: PrismaClient, intermediaryFile: IntermediaryFile): Promise<IntermediaryFile | null> {
-    let createSystemObject: IntermediaryFile;
-    const { idAsset, DateCreated } = intermediaryFile;
-    try {
-        createSystemObject = await prisma.intermediaryFile.create({
-            data: {
-                Asset:          { connect: { idAsset }, },
-                DateCreated,
-                SystemObject:   { create: { Retired: false }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createIntermediaryFile', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> implements IntermediaryFileBase {
+    idIntermediaryFile!: number;
+    DateCreated!: Date;
+    idAsset!: number;
 
-export async function fetchIntermediaryFile(prisma: PrismaClient, idIntermediaryFile: number): Promise<IntermediaryFile | null> {
-    try {
-        return await prisma.intermediaryFile.findOne({ where: { idIntermediaryFile, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchIntermediaryFile', error);
-        return null;
+    constructor(input: IntermediaryFileBase) {
+        super(input);
+    }
+
+    async create(): Promise<boolean> {
+        try {
+            const { idAsset, DateCreated } = this;
+            ({ idIntermediaryFile: this.idIntermediaryFile, idAsset: this.idAsset, DateCreated: this.DateCreated } =
+                await DBConnectionFactory.prisma.intermediaryFile.create({
+                    data: {
+                        Asset:          { connect: { idAsset }, },
+                        DateCreated,
+                        SystemObject:   { create: { Retired: false }, },
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.IntermediaryFile.create', error);
+            return false;
+        }
+    }
+
+    async update(): Promise<boolean> {
+        try {
+            const { idIntermediaryFile, idAsset, DateCreated } = this;
+            return await DBConnectionFactory.prisma.intermediaryFile.update({
+                where: { idIntermediaryFile, },
+                data: {
+                    Asset:          { connect: { idAsset }, },
+                    DateCreated,
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.IntermediaryFile.update', error);
+            return false;
+        }
+    }
+
+    async fetchSystemObject(): Promise<SystemObject | null> {
+        try {
+            const { idIntermediaryFile } = this;
+            return DBO.CopyObject<SystemObjectBase, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.intermediaryFile.fetchSystemObject', error);
+            return null;
+        }
+    }
+
+    static async fetch(idIntermediaryFile: number): Promise<IntermediaryFile | null> {
+        try {
+            return DBO.CopyObject<IntermediaryFileBase, IntermediaryFile>(
+                await DBConnectionFactory.prisma.intermediaryFile.findOne({ where: { idIntermediaryFile, }, }), IntermediaryFile);
+        } catch (error) {
+            LOG.logger.error('DBAPI.IntermediaryFile.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchSystemObjectAndIntermediaryFile(idIntermediaryFile: number): Promise<SystemObjectBase & { IntermediaryFile: IntermediaryFileBase | null} | null> {
+        try {
+            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, include: { IntermediaryFile: true, }, });
+        } catch (error) {
+            LOG.logger.error('DBAPI.IntermediaryFile.fetchSystemObjectAndIntermediaryFile', error);
+            return null;
+        }
     }
 }
-
-export async function fetchSystemObjectForIntermediaryFile(prisma: PrismaClient, sysObj: IntermediaryFile): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idIntermediaryFile: sysObj.idIntermediaryFile, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForIntermediaryFile', error);
-        return null;
-    }
-}
-
-export async function fetchSystemObjectForIntermediaryFileID(prisma: PrismaClient, idIntermediaryFile: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idIntermediaryFile, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForIntermediaryFileID', error);
-        return null;
-    }
-}
-
-export async function fetchSystemObjectAndIntermediaryFile(prisma: PrismaClient, idIntermediaryFile: number): Promise<SystemObject & { IntermediaryFile: IntermediaryFile | null} | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idIntermediaryFile, }, include: { IntermediaryFile: true, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectAndIntermediaryFile', error);
-        return null;
-    }
-}
-

@@ -1,39 +1,72 @@
 /* eslint-disable camelcase */
-import { PrismaClient, ModelUVMapFile } from '@prisma/client';
+import { ModelUVMapFile as ModelUVMapFileBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createModelUVMapFile(prisma: PrismaClient, modelUVMapFile: ModelUVMapFile): Promise<ModelUVMapFile | null> {
-    let createSystemObject: ModelUVMapFile;
-    const { idModelGeometryFile, idAsset, UVMapEdgeLength } = modelUVMapFile;
-    try {
-        createSystemObject = await prisma.modelUVMapFile.create({
-            data: {
-                ModelGeometryFile:  { connect: { idModelGeometryFile }, },
-                Asset:              { connect: { idAsset }, },
-                UVMapEdgeLength,
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createModelUVMapFile', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements ModelUVMapFileBase {
+    idModelUVMapFile!: number;
+    idAsset!: number;
+    idModelGeometryFile!: number;
+    UVMapEdgeLength!: number;
 
-export async function fetchModelUVMapFile(prisma: PrismaClient, idModelUVMapFile: number): Promise<ModelUVMapFile | null> {
-    try {
-        return await prisma.modelUVMapFile.findOne({ where: { idModelUVMapFile, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchModelUVMapFile', error);
-        return null;
+    constructor(input: ModelUVMapFileBase) {
+        super(input);
     }
-}
 
-export async function fetchModelUVMapFileFromModelGeometryFile(prisma: PrismaClient, idModelGeometryFile: number): Promise<ModelUVMapFile[] | null> {
-    try {
-        return await prisma.modelUVMapFile.findMany({ where: { idModelGeometryFile } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchModelUVMapFileFromModelGeometryFile', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { idModelGeometryFile, idAsset, UVMapEdgeLength } = this;
+            ({ idModelUVMapFile: this.idModelUVMapFile, idModelGeometryFile: this.idModelGeometryFile,
+                idAsset: this.idAsset, UVMapEdgeLength: this.UVMapEdgeLength } =
+                await DBConnectionFactory.prisma.modelUVMapFile.create({
+                    data: {
+                        ModelGeometryFile:  { connect: { idModelGeometryFile }, },
+                        Asset:              { connect: { idAsset }, },
+                        UVMapEdgeLength,
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelUVMapFile.create', error);
+            return false;
+        }
+    }
+
+    async update(): Promise<boolean> {
+        try {
+            const { idModelUVMapFile, idModelGeometryFile, idAsset, UVMapEdgeLength } = this;
+            return await DBConnectionFactory.prisma.modelUVMapFile.update({
+                where: { idModelUVMapFile, },
+                data: {
+                    ModelGeometryFile:  { connect: { idModelGeometryFile }, },
+                    Asset:              { connect: { idAsset }, },
+                    UVMapEdgeLength,
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelUVMapFile.update', error);
+            return false;
+        }
+    }
+
+    static async fetch(idModelUVMapFile: number): Promise<ModelUVMapFile | null> {
+        try {
+            return DBO.CopyObject<ModelUVMapFileBase, ModelUVMapFile>(
+                await DBConnectionFactory.prisma.modelUVMapFile.findOne({ where: { idModelUVMapFile, }, }), ModelUVMapFile);
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelUVMapFile.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromModelGeometryFile(idModelGeometryFile: number): Promise<ModelUVMapFile[] | null> {
+        try {
+            return DBO.CopyArray<ModelUVMapFileBase, ModelUVMapFile>(
+                await DBConnectionFactory.prisma.modelUVMapFile.findMany({ where: { idModelGeometryFile } }), ModelUVMapFile);
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelUVMapFile.fetchFromModelGeometryFile', error);
+            return null;
+        }
     }
 }

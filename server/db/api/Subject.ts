@@ -1,68 +1,96 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Subject, SystemObject } from '@prisma/client';
+import { Subject as SubjectBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { DBConnectionFactory, SystemObject } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createSubject(prisma: PrismaClient, subject: Subject): Promise<Subject | null> {
-    let createSystemObject: Subject;
-    const { idUnit, idAssetThumbnail, idGeoLocation, Name } = subject;
-    try {
-        createSystemObject = await prisma.subject.create({
-            data: {
-                Unit:           { connect: { idUnit }, },
-                Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
-                Name,
-                SystemObject:   { create: { Retired: false }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createSubject', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
+    idSubject!: number;
+    idAssetThumbnail!: number | null;
+    idGeoLocation!: number | null;
+    idUnit!: number;
+    Name!: string;
 
-export async function fetchSubject(prisma: PrismaClient, idSubject: number): Promise<Subject | null> {
-    try {
-        return await prisma.subject.findOne({ where: { idSubject, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSubject', error);
-        return null;
+    constructor(input: SubjectBase) {
+        super(input);
     }
-}
 
-export async function fetchSystemObjectForSubject(prisma: PrismaClient, sysObj: Subject): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idSubject: sysObj.idSubject, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForSubject', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { idUnit, idAssetThumbnail, idGeoLocation, Name } = this;
+            ({ idSubject: this.idSubject, idUnit: this.idUnit, idAssetThumbnail: this.idAssetThumbnail,
+                idGeoLocation: this.idGeoLocation, Name: this.Name } =
+                await DBConnectionFactory.prisma.subject.create({
+                    data: {
+                        Unit:           { connect: { idUnit }, },
+                        Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                        GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
+                        Name,
+                        SystemObject:   { create: { Retired: false }, },
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Subject.create', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectForSubjectID(prisma: PrismaClient, idSubject: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idSubject, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForSubjectID', error);
-        return null;
+    async update(): Promise<boolean> {
+        try {
+            const { idSubject, idUnit, idAssetThumbnail, idGeoLocation, Name } = this;
+            return await DBConnectionFactory.prisma.subject.update({
+                where: { idSubject, },
+                data: {
+                    Unit:           { connect: { idUnit }, },
+                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                    GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
+                    Name,
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Subject.update', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectAndSubject(prisma: PrismaClient, idSubject: number): Promise<SystemObject & { Subject: Subject | null} | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idSubject, }, include: { Subject: true, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectAndSubject', error);
-        return null;
+    async fetchSystemObject(): Promise<SystemObject | null> {
+        try {
+            const { idSubject } = this;
+            return DBO.CopyObject<SystemObjectBase, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject, }, }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.subject.fetchSystemObject', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSubjectFromUnit(prisma: PrismaClient, idUnit: number): Promise<Subject[] | null> {
-    try {
-        return await prisma.subject.findMany({ where: { idUnit } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSubjectFromUnit', error);
-        return null;
+    static async fetch(idSubject: number): Promise<Subject | null> {
+        try {
+            return DBO.CopyObject<SubjectBase, Subject>(
+                await DBConnectionFactory.prisma.subject.findOne({ where: { idSubject, }, }), Subject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Subject.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchSystemObjectAndSubject(idSubject: number): Promise<SystemObjectBase & { Subject: SubjectBase | null} | null> {
+        try {
+            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject, }, include: { Subject: true, }, });
+        } catch (error) {
+            LOG.logger.error('DBAPI.Subject.fetchSystemObjectAndSubject', error);
+            return null;
+        }
+    }
+
+    static async fetchFromUnit(idUnit: number): Promise<Subject[] | null> {
+        try {
+            return DBO.CopyArray<SubjectBase, Subject>(
+                await DBConnectionFactory.prisma.subject.findMany({ where: { idUnit } }), Subject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Subject.fetchFromUnit', error);
+            return null;
+        }
     }
 }

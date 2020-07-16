@@ -1,28 +1,18 @@
 /**
  * Type resolver for Item
  */
-import { Subject, Item, GeoLocation, Asset } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const Item = {
-    Subject: async (parent: Parent, _: Args, context: Context): Promise<Subject | null> => {
-        const { idSubject } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSubject(prisma, idSubject);
+    Subject: async (parent: Parent): Promise<DBAPI.Subject | null> => {
+        return await DBAPI.Subject.fetch(parent.idSubject);
     },
-    AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idAssetThumbnail } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchAsset(prisma, idAssetThumbnail);
+    AssetThumbnail: async (parent: Parent): Promise<DBAPI.Asset | null> => {
+        return await DBAPI.Asset.fetch(parent.idAssetThumbnail);
     },
-    GeoLocation: async (parent: Parent, _: Args, context: Context): Promise<GeoLocation | null> => {
-        const { idGeoLocation } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchGeoLocation(prisma, idGeoLocation);
+    GeoLocation: async (parent: Parent): Promise<DBAPI.GeoLocation | null> => {
+        return await DBAPI.GeoLocation.fetch(parent.idGeoLocation);
     },
     SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
         return await DBAPI.SystemObject.fetchFromItemID(parent.idItem);

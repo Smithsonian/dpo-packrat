@@ -1,68 +1,92 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Asset, SystemObject } from '@prisma/client';
+import { Asset as AssetBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { DBConnectionFactory, SystemObject } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createAsset(prisma: PrismaClient, asset: Asset): Promise<Asset | null> {
-    let createSystemObject: Asset;
-    const { FileName, FilePath, idAssetGroup } = asset;
-    try {
-        createSystemObject = await prisma.asset.create({
-            data: {
-                FileName,
-                FilePath,
-                AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : undefined,
-                SystemObject:   { create: { Retired: false }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createAsset', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
+    idAsset!: number;
+    FileName!: string;
+    FilePath!: string;
+    idAssetGroup!: number | null;
 
-export async function fetchAsset(prisma: PrismaClient, idAsset: number): Promise<Asset | null> {
-    try {
-        return await prisma.asset.findOne({ where: { idAsset, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAsset', error);
-        return null;
+    constructor(input: AssetBase) {
+        super(input);
+    }
+
+    async create(): Promise<boolean> {
+        try {
+            const { FileName, FilePath, idAssetGroup } = this;
+            ({ idAsset: this.idAsset, FileName: this.FileName, FilePath: this.FilePath, idAssetGroup: this.idAssetGroup } =
+                await DBConnectionFactory.prisma.asset.create({
+                    data: {
+                        FileName,
+                        FilePath,
+                        AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : undefined,
+                        SystemObject:   { create: { Retired: false }, },
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Asset.create', error);
+            return false;
+        }
+    }
+
+    async update(): Promise<boolean> {
+        try {
+            const { idAsset, FileName, FilePath, idAssetGroup } = this;
+            return await DBConnectionFactory.prisma.asset.update({
+                where: { idAsset, },
+                data: {
+                    FileName,
+                    FilePath,
+                    AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : undefined,
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Asset.update', error);
+            return false;
+        }
+    }
+
+    async fetchSystemObject(): Promise<SystemObject | null> {
+        try {
+            const { idAsset } = this;
+            return DBO.CopyObject<SystemObjectBase, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset, }, }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Asset.fetchSystemObject', error);
+            return null;
+        }
+    }
+
+    static async fetch(idAsset: number): Promise<Asset | null> {
+        try {
+            return DBO.CopyObject<AssetBase, Asset>(
+                await DBConnectionFactory.prisma.asset.findOne({ where: { idAsset, }, }), Asset);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Asset.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchSystemObjectAndAsset(idAsset: number): Promise<SystemObjectBase & { Asset: AssetBase | null} | null> {
+        try {
+            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
+        } catch (error) {
+            LOG.logger.error('DBAPI.Asset.fetchSystemObjectAndAssetID', error);
+            return null;
+        }
+    }
+
+    static async fetchFromAssetGroup(idAssetGroup: number): Promise<Asset[] | null> {
+        try {
+            return DBO.CopyArray<AssetBase, Asset>(
+                await DBConnectionFactory.prisma.asset.findMany({ where: { idAssetGroup } }), Asset);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Asset.fetchFromAssetGroup', error);
+            return null;
+        }
     }
 }
-
-export async function fetchSystemObjectForAsset(prisma: PrismaClient, sysObj: Asset): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idAsset: sysObj.idAsset, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForAsset', error);
-        return null;
-    }
-}
-
-export async function fetchSystemObjectForAssetID(prisma: PrismaClient, idAsset: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idAsset, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForAssetID', error);
-        return null;
-    }
-}
-
-export async function fetchSystemObjectAndAsset(prisma: PrismaClient, idAsset: number): Promise<SystemObject & { Asset: Asset | null} | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectAndAssetID', error);
-        return null;
-    }
-}
-
-export async function fetchAssetFromAssetGroup(prisma: PrismaClient, idAssetGroup: number): Promise<Asset[] | null> {
-    try {
-        return await prisma.asset.findMany({ where: { idAssetGroup } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAssetFromAssetGroup', error);
-        return null;
-    }
-}
-

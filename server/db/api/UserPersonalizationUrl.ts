@@ -1,39 +1,72 @@
 /* eslint-disable camelcase */
-import { PrismaClient,  UserPersonalizationUrl } from '@prisma/client';
+import { UserPersonalizationUrl as UserPersonalizationUrlBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createUserPersonalizationUrl(prisma: PrismaClient, userPersonalizationUrl: UserPersonalizationUrl): Promise<UserPersonalizationUrl | null> {
-    let createSystemObject: UserPersonalizationUrl;
-    const { idUser, URL, Personalization } = userPersonalizationUrl;
-    try {
-        createSystemObject = await prisma.userPersonalizationUrl.create({
-            data: {
-                User:   { connect: { idUser }, },
-                URL,
-                Personalization,
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createUserPersonalizationUrl', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlBase> implements UserPersonalizationUrlBase {
+    idUserPersonalizationUrl!: number;
+    idUser!: number;
+    Personalization!: string;
+    URL!: string;
 
-export async function fetchUserPersonalizationUrl(prisma: PrismaClient, idUserPersonalizationUrl: number): Promise<UserPersonalizationUrl | null> {
-    try {
-        return await prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchUserPersonalizationUrl', error);
-        return null;
+    constructor(input: UserPersonalizationUrlBase) {
+        super(input);
     }
-}
 
-export async function fetchUserPersonalizationUrlFromUser(prisma: PrismaClient, idUser: number): Promise<UserPersonalizationUrl[] | null> {
-    try {
-        return await prisma.userPersonalizationUrl.findMany({ where: { idUser } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchUserPersonalizationUrlFromUser', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { idUser, URL, Personalization } = this;
+            ({ idUserPersonalizationUrl: this.idUserPersonalizationUrl, idUser: this.idUser,
+                URL: this.URL, Personalization: this.Personalization } =
+                await DBConnectionFactory.prisma.userPersonalizationUrl.create({
+                    data: {
+                        User:   { connect: { idUser }, },
+                        URL,
+                        Personalization,
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.UserPersonalizationUrl.create', error);
+            return false;
+        }
+    }
+
+    async update(): Promise<boolean> {
+        try {
+            const { idUserPersonalizationUrl, idUser, URL, Personalization } = this;
+            return await DBConnectionFactory.prisma.userPersonalizationUrl.update({
+                where: { idUserPersonalizationUrl, },
+                data: {
+                    User:   { connect: { idUser }, },
+                    URL,
+                    Personalization,
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.UserPersonalizationUrl.update', error);
+            return false;
+        }
+    }
+
+    static async fetch(idUserPersonalizationUrl: number): Promise<UserPersonalizationUrl | null> {
+        try {
+            return DBO.CopyObject<UserPersonalizationUrlBase, UserPersonalizationUrl>(
+                await DBConnectionFactory.prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
+        } catch (error) {
+            LOG.logger.error('DBAPI.UserPersonalizationUrl.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromUser(idUser: number): Promise<UserPersonalizationUrl[] | null> {
+        try {
+            return DBO.CopyArray<UserPersonalizationUrlBase, UserPersonalizationUrl>(
+                await DBConnectionFactory.prisma.userPersonalizationUrl.findMany({ where: { idUser } }), UserPersonalizationUrl);
+        } catch (error) {
+            LOG.logger.error('DBAPI.UserPersonalizationUrl.fetchFromUser', error);
+            return null;
+        }
     }
 }
