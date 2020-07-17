@@ -1,39 +1,80 @@
-import { PrismaClient, CaptureDataFile } from '@prisma/client';
+/* eslint-disable camelcase */
+import { CaptureDataFile as CaptureDataFileBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createCaptureDataFile(prisma: PrismaClient, captureDataFile: CaptureDataFile): Promise<CaptureDataFile | null> {
-    let createSystemObject: CaptureDataFile;
-    const { idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = captureDataFile;
-    try {
-        createSystemObject = await prisma.captureDataFile.create({
-            data: {
-                CaptureData:    { connect: { idCaptureData }, },
-                Asset:          { connect: { idAsset }, },
-                Vocabulary:     { connect: { idVocabulary: idVVariantType }, },
-                CompressedMultipleFiles
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createCaptureDataFile', error);
-        return null;
+export class CaptureDataFile extends DBO.DBObject<CaptureDataFileBase> implements CaptureDataFileBase {
+    idCaptureDataFile!: number;
+    CompressedMultipleFiles!: boolean;
+    idAsset!: number;
+    idCaptureData!: number;
+    idVVariantType!: number;
+
+    constructor(input: CaptureDataFileBase) {
+        super(input);
     }
-    return createSystemObject;
+
+    async create(): Promise<boolean> {
+        try {
+            const { idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = this;
+            ({ idCaptureDataFile: this.idCaptureDataFile, idCaptureData: this.idCaptureData, idAsset: this.idAsset,
+                idVVariantType: this.idVVariantType, CompressedMultipleFiles: this.CompressedMultipleFiles } =
+                await DBConnectionFactory.prisma.captureDataFile.create({
+                    data: {
+                        CaptureData:    { connect: { idCaptureData }, },
+                        Asset:          { connect: { idAsset }, },
+                        Vocabulary:     { connect: { idVocabulary: idVVariantType }, },
+                        CompressedMultipleFiles
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.CaptureDataFile.create', error);
+            return false;
+        }
+    }
+
+    async update(): Promise<boolean> {
+        try {
+            const { idCaptureDataFile, idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = this;
+            return await DBConnectionFactory.prisma.captureDataFile.update({
+                where: { idCaptureDataFile, },
+                data: {
+                    CaptureData:    { connect: { idCaptureData }, },
+                    Asset:          { connect: { idAsset }, },
+                    Vocabulary:     { connect: { idVocabulary: idVVariantType }, },
+                    CompressedMultipleFiles
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.CaptureDataFile.update', error);
+            return false;
+        }
+    }
+
+    static async fetch(idCaptureDataFile: number): Promise<CaptureDataFile | null> {
+        if (!idCaptureDataFile)
+            return null;
+        try {
+            return DBO.CopyObject<CaptureDataFileBase, CaptureDataFile>(
+                await DBConnectionFactory.prisma.captureDataFile.findOne({ where: { idCaptureDataFile, }, }), CaptureDataFile);
+        } catch (error) {
+            LOG.logger.error('DBAPI.CaptureDataFile.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromCaptureData(idCaptureData: number): Promise<CaptureDataFile[] | null> {
+        if (!idCaptureData)
+            return null;
+        try {
+            return DBO.CopyArray<CaptureDataFileBase, CaptureDataFile>(
+                await DBConnectionFactory.prisma.captureDataFile.findMany({ where: { idCaptureData } }), CaptureDataFile);
+        } catch (error) {
+            LOG.logger.error('DBAPI.CaptureDataFile.fetchFromCaptureData', error);
+            return null;
+        }
+    }
 }
 
-export async function fetchCaptureDataFile(prisma: PrismaClient, idCaptureDataFile: number): Promise<CaptureDataFile | null> {
-    try {
-        return await prisma.captureDataFile.findOne({ where: { idCaptureDataFile, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchCaptureDataFile', error);
-        return null;
-    }
-}
-
-export async function fetchCaptureDataFileFromCaptureData(prisma: PrismaClient, idCaptureData: number): Promise<CaptureDataFile[] | null> {
-    try {
-        return await prisma.captureDataFile.findMany({ where: { idCaptureData } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchCaptureDataFileFromCaptureData', error);
-        return null;
-    }
-}

@@ -1,11 +1,10 @@
 import { CreateSubjectResult, MutationCreateSubjectArgs } from '../../../../../types/graphql';
-import { Parent, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
-export default async function createSubject(_: Parent, args: MutationCreateSubjectArgs, context: Context): Promise<CreateSubjectResult> {
+export default async function createSubject(_: Parent, args: MutationCreateSubjectArgs): Promise<CreateSubjectResult> {
     const { input } = args;
     const { idUnit, idAssetThumbnail, idGeoLocation, Name } = input;
-    const { prisma } = context;
 
     const subjectArgs = {
         idSubject: 0,
@@ -15,7 +14,8 @@ export default async function createSubject(_: Parent, args: MutationCreateSubje
         Name
     };
 
-    const Subject = await DBAPI.createSubject(prisma, subjectArgs);
+    const Subject = new DBAPI.Subject(subjectArgs);
+    await Subject.create();
 
     return { Subject };
 }

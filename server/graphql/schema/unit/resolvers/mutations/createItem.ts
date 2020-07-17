@@ -1,11 +1,10 @@
 import { CreateItemResult, MutationCreateItemArgs } from '../../../../../types/graphql';
-import { Parent, Context } from '../../../../../types/resolvers';
+import { Parent  } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
-export default async function createItem(_: Parent, args: MutationCreateItemArgs, context: Context): Promise<CreateItemResult> {
+export default async function createItem(_: Parent, args: MutationCreateItemArgs): Promise<CreateItemResult> {
     const { input } = args;
     const { idSubject, idAssetThumbnail, idGeoLocation, Name, EntireSubject } = input;
-    const { prisma } = context;
 
     const itemArgs = {
         idItem: 0,
@@ -16,7 +15,8 @@ export default async function createItem(_: Parent, args: MutationCreateItemArgs
         EntireSubject
     };
 
-    const Item = await DBAPI.createItem(prisma, itemArgs);
+    const Item = new DBAPI.Item(itemArgs);
+    await Item.create();
 
     return { Item };
 }

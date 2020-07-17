@@ -1,34 +1,21 @@
 /**
  * Type resolver for ModelGeometryFile
  */
-import { Asset, Model, Vocabulary, ModelUVMapFile } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const ModelGeometryFile = {
-    Asset: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idAsset } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchAsset(prisma, idAsset);
+    Asset: async (parent: Parent): Promise<DBAPI.Asset | null> => {
+        return await DBAPI.Asset.fetch(parent.idAsset);
     },
-    Model: async (parent: Parent, _: Args, context: Context): Promise<Model | null> => {
-        const { idModel } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchModel(prisma, idModel);
+    Model: async (parent: Parent): Promise<DBAPI.Model | null> => {
+        return await DBAPI.Model.fetch(parent.idModel);
     },
-    VModelFileType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVModelFileType } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVModelFileType);
+    VModelFileType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVModelFileType);
     },
-    ModelUVMapFile: async (parent: Parent, _: Args, context: Context): Promise<ModelUVMapFile[] | null> => {
-        const { idModelGeometryFile } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchModelUVMapFileFromModelGeometryFile(prisma, idModelGeometryFile);
+    ModelUVMapFile: async (parent: Parent): Promise<DBAPI.ModelUVMapFile[] | null> => {
+        return await DBAPI.ModelUVMapFile.fetchFromModelGeometryFile(parent.idModelGeometryFile);
     }
 };
 

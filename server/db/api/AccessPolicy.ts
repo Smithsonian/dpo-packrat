@@ -1,49 +1,88 @@
 /* eslint-disable camelcase */
-import { PrismaClient, AccessPolicy } from '@prisma/client';
+import { AccessPolicy as AccessPolicyBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createAccessPolicy(prisma: PrismaClient, accessPolicy: AccessPolicy): Promise<AccessPolicy | null> {
-    let createSystemObject: AccessPolicy;
-    const { idUser, idAccessRole, idAccessContext } = accessPolicy;
-    try {
-        createSystemObject = await prisma.accessPolicy.create({
-            data: {
-                User:           { connect: { idUser }, },
-                AccessRole:     { connect: { idAccessRole }, },
-                AccessContext:  { connect: { idAccessContext }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createAccessPolicy', error);
-        return null;
+export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements AccessPolicyBase {
+    idAccessContext!: number;
+    idAccessPolicy!: number;
+    idAccessRole!: number;
+    idUser!: number;
+
+    constructor(input: AccessPolicyBase) {
+        super(input);
     }
 
-    return createSystemObject;
-}
-
-export async function fetchAccessPolicy(prisma: PrismaClient, idAccessPolicy: number): Promise<AccessPolicy | null> {
-    try {
-        return await prisma.accessPolicy.findOne({ where: { idAccessPolicy, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAccessPolicy', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { idUser, idAccessRole, idAccessContext } = this;
+            ({ idAccessPolicy: this.idAccessPolicy, idUser: this.idUser,
+                idAccessRole: this.idAccessRole, idAccessContext: this.idAccessContext } =
+                await DBConnectionFactory.prisma.accessPolicy.create({
+                    data: {
+                        User:           { connect: { idUser }, },
+                        AccessRole:     { connect: { idAccessRole }, },
+                        AccessContext:  { connect: { idAccessContext }, },
+                    }
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.AccessPolicy.create', error);
+            return false;
+        }
     }
-}
 
-export async function fetchAccessPolicyFromAccessContext(prisma: PrismaClient, idAccessContext: number): Promise<AccessPolicy[] | null> {
-    try {
-        return await prisma.accessPolicy.findMany({ where: { idAccessContext } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAccessPolicyFromAccessContext', error);
-        return null;
+    async update(): Promise<boolean> {
+        try {
+            const { idAccessPolicy, idUser, idAccessRole, idAccessContext } = this;
+            return await DBConnectionFactory.prisma.accessPolicy.update({
+                where: { idAccessPolicy, },
+                data: {
+                    User:           { connect: { idUser }, },
+                    AccessRole:     { connect: { idAccessRole }, },
+                    AccessContext:  { connect: { idAccessContext }, },
+                }
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.AccessPolicy.update', error);
+            return false;
+        }
     }
-}
 
-export async function fetchAccessPolicyFromUser(prisma: PrismaClient, idUser: number): Promise<AccessPolicy[] | null> {
-    try {
-        return await prisma.accessPolicy.findMany({ where: { idUser } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAccessPolicyFromUser', error);
-        return null;
+    static async fetch(idAccessPolicy: number): Promise<AccessPolicy | null> {
+        if (!idAccessPolicy)
+            return null;
+        try {
+            return DBO.CopyObject<AccessPolicyBase, AccessPolicy>(
+                await DBConnectionFactory.prisma.accessPolicy.findOne({ where: { idAccessPolicy, }, }), AccessPolicy);
+        } catch (error) {
+            LOG.logger.error('DBAPI.AccessPolicy.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromAccessContext(idAccessContext: number): Promise<AccessPolicy[] | null> {
+        if (!idAccessContext)
+            return null;
+        try {
+            return DBO.CopyArray<AccessPolicyBase, AccessPolicy>(
+                await DBConnectionFactory.prisma.accessPolicy.findMany({ where: { idAccessContext } }), AccessPolicy);
+        } catch (error) {
+            LOG.logger.error('DBAPI.AccessPolicy.fetchFromAccessContext', error);
+            return null;
+        }
+    }
+
+    static async fetchFromUser(idUser: number): Promise<AccessPolicy[] | null> {
+        if (!idUser)
+            return null;
+        try {
+            return DBO.CopyArray<AccessPolicyBase, AccessPolicy>(
+                await DBConnectionFactory.prisma.accessPolicy.findMany({ where: { idUser } }), AccessPolicy);
+        } catch (error) {
+            LOG.logger.error('DBAPI.AccessPolicy.fetchFromUser', error);
+            return null;
+        }
     }
 }

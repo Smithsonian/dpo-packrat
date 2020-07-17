@@ -1,15 +1,13 @@
 import { GetLicenseResult, GetLicenseInput } from '../../../../../types/graphql';
-import { Parent, Context } from '../../../../../types/resolvers';
-import { fetchLicense } from '../../../../../db';
+import { Parent } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 type Args = { input: GetLicenseInput };
 
-export default async function getLicense(_: Parent, args: Args, context: Context): Promise<GetLicenseResult> {
+export default async function getLicense(_: Parent, args: Args): Promise<GetLicenseResult> {
     const { input } = args;
     const { idLicense } = input;
-    const { prisma } = context;
 
-    const License = await fetchLicense(prisma, idLicense);
-
+    const License = await DBAPI.License.fetch(idLicense);
     return { License };
 }

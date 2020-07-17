@@ -1,42 +1,73 @@
 /* eslint-disable camelcase */
-import * as PRISMA from '@prisma/client';
+import { Vocabulary as VocabularyBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-// declare module 'PRISMA' {
-// export interface Vocabulary {
-//     create(prisma: PRISMA.PrismaClient, vocabulary: PRISMA.Vocabulary): Promise<PRISMA.Vocabulary | null>;
-//     fetch(prisma: PRISMA.PrismaClient, idVocabulary: number): Promise<PRISMA.Vocabulary | null>;
-// }
-// }
+export class Vocabulary extends DBO.DBObject<VocabularyBase> implements VocabularyBase {
+    idVocabulary!: number;
+    idVocabularySet!: number;
+    SortOrder!: number;
 
-export class Vocabulary implements PRISMA.Vocabulary {
-    idVocabulary: number = 0;
-    idVocabularySet: number = 0;
-    SortOrder: number = 0;
+    constructor(input: VocabularyBase) {
+        super(input);
+    }
 
-    static async create(prisma: PRISMA.PrismaClient, vocabulary: PRISMA.Vocabulary): Promise<PRISMA.Vocabulary | null> {
-        let createSystemObject: PRISMA.Vocabulary;
-        const { idVocabularySet, SortOrder } = vocabulary;
+    async create(): Promise<boolean> {
         try {
-            createSystemObject = await prisma.vocabulary.create({
+            const { idVocabularySet, SortOrder } = this;
+            ({ idVocabulary: this.idVocabulary, idVocabularySet: this.idVocabularySet, SortOrder: this.SortOrder } =
+                await DBConnectionFactory.prisma.vocabulary.create({
+                    data: {
+                        VocabularySet: { connect: { idVocabularySet }, },
+                        SortOrder
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Vocabulary.create', error);
+            return false;
+        }
+    }
+
+    async update(): Promise<boolean> {
+        try {
+            const { idVocabulary, idVocabularySet, SortOrder } = this;
+            return await DBConnectionFactory.prisma.vocabulary.update({
+                where: { idVocabulary, },
                 data: {
                     VocabularySet: { connect: { idVocabularySet }, },
                     SortOrder
                 },
-            });
+            }) ? true : false;
         } catch (error) {
-            LOG.logger.error('DBAPI.Vocabulary.create', error);
-            return null;
+            LOG.logger.error('DBAPI.Vocabulary.update', error);
+            return false;
         }
-        return createSystemObject;
     }
 
-    static async fetch(prisma: PRISMA.PrismaClient, idVocabulary: number): Promise<PRISMA.Vocabulary | null> {
+    static async fetch(idVocabulary: number): Promise<Vocabulary | null> {
+        if (!idVocabulary)
+            return null;
         try {
-            return await prisma.vocabulary.findOne({ where: { idVocabulary, }, });
+            return DBO.CopyObject<VocabularyBase, Vocabulary>(
+                await DBConnectionFactory.prisma.vocabulary.findOne({ where: { idVocabulary, }, }), Vocabulary);
         } catch (error) {
             LOG.logger.error('DBAPI.Vocabulary.fetch', error);
             return null;
         }
     }
+
+    static async fetchFromVocabularySet(idVocabularySet: number): Promise<Vocabulary[] | null> {
+        if (!idVocabularySet)
+            return null;
+        try {
+            return DBO.CopyArray<VocabularyBase, Vocabulary>(
+                await DBConnectionFactory.prisma.vocabulary.findMany({ where: { idVocabularySet } }), Vocabulary);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Vocabulary.fetchFromVocabularySet', error);
+            return null;
+        }
+    }
 }
+

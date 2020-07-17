@@ -1,28 +1,18 @@
 /**
  * Type resolver for Scene
  */
-import { Asset, ModelSceneXref, SystemObject } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const Scene = {
-    AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idAssetThumbnail } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchAsset(prisma, idAssetThumbnail);
+    AssetThumbnail: async (parent: Parent): Promise<DBAPI.Asset | null> => {
+        return await DBAPI.Asset.fetch(parent.idAssetThumbnail);
     },
-    ModelSceneXref: async (parent: Parent, _: Args, context: Context): Promise<ModelSceneXref[] | null> => {
-        const { idScene } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchModelSceneXrefFromScene(prisma, idScene);
+    ModelSceneXref: async (parent: Parent): Promise<DBAPI.ModelSceneXref[] | null> => {
+        return await DBAPI.ModelSceneXref.fetchFromScene(parent.idScene);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idScene } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromScene(prisma, idScene);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromSceneID(parent.idScene);
     }
 };
 

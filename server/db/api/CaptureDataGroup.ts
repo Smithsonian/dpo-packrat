@@ -1,41 +1,66 @@
 /* eslint-disable camelcase */
-import { PrismaClient, CaptureData, CaptureDataGroup } from '@prisma/client';
+import { CaptureDataGroup as CaptureDataGroupBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createCaptureDataGroup(prisma: PrismaClient): Promise<CaptureDataGroup | null> {
-    let createSystemObject: CaptureDataGroup;
-    try {
-        createSystemObject = await prisma.captureDataGroup.create({
-            data: {
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createCaptureDataGroup', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> implements CaptureDataGroupBase {
+    idCaptureDataGroup!: number;
 
-export async function fetchCaptureDataGroup(prisma: PrismaClient, idCaptureDataGroup: number): Promise<CaptureDataGroup | null> {
-    try {
-        return await prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchCaptureDataGroup', error);
-        return null;
+    constructor(input: CaptureDataGroupBase) {
+        super(input);
     }
-}
 
-export async function fetchCaptureDataFromXref(prisma: PrismaClient, idCaptureDataGroup: number): Promise<CaptureData[] | null> {
-    try {
-        return await prisma.captureData.findMany({
-            where: {
-                CaptureDataGroupCaptureDataXref: {
-                    some: { idCaptureDataGroup },
-                },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchCaptureDataFromXref', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBConnectionFactory.prisma.captureDataGroup.create({ data: { } }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.CaptureDataGroup.create', error);
+            return false;
+        }
+    }
+
+    async update(): Promise<boolean> {
+        try {
+            const { idCaptureDataGroup } = this;
+            return await DBConnectionFactory.prisma.captureDataGroup.update({
+                where: { idCaptureDataGroup, },
+                data: { },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.CaptureDataGroup.update', error);
+            return false;
+        }
+    }
+
+    static async fetch(idCaptureDataGroup: number): Promise<CaptureDataGroup | null> {
+        if (!idCaptureDataGroup)
+            return null;
+        try {
+            return DBO.CopyObject<CaptureDataGroupBase, CaptureDataGroup>(
+                await DBConnectionFactory.prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
+        } catch (error) {
+            LOG.logger.error('DBAPI.CaptureDataGroup.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromXref(idCaptureData: number): Promise<CaptureDataGroup[] | null> {
+        if (!idCaptureData)
+            return null;
+        try {
+            return DBO.CopyArray<CaptureDataGroupBase, CaptureDataGroup>(
+                await DBConnectionFactory.prisma.captureDataGroup.findMany({
+                    where: {
+                        CaptureDataGroupCaptureDataXref: {
+                            some: { idCaptureData },
+                        },
+                    },
+                }), CaptureDataGroup);
+        } catch (error) {
+            LOG.logger.error('DBAPI.CaptureDataGroup.fetchFromXref', error);
+            return null;
+        }
     }
 }

@@ -1,40 +1,24 @@
 /**
  * Type resolver for Workflow
  */
-import { Project, User, WorkflowTemplate, SystemObject, WorkflowStep } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const Workflow = {
-    Project: async (parent: Parent, _: Args, context: Context): Promise<Project | null> => {
-        const { idProject } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchProject(prisma, idProject);
+    Project: async (parent: Parent): Promise<DBAPI.Project | null> => {
+        return await DBAPI.Project.fetch(parent.idProject);
     },
-    UserInitiator: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { idUserInitiator } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchUser(prisma, idUserInitiator);
+    UserInitiator: async (parent: Parent): Promise<DBAPI.User | null> => {
+        return await DBAPI.User.fetch(parent.idUserInitiator);
     },
-    WorkflowTemplate: async (parent: Parent, _: Args, context: Context): Promise<WorkflowTemplate | null> => {
-        const { idWorkflowTemplate } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchWorkflowTemplate(prisma, idWorkflowTemplate);
+    WorkflowTemplate: async (parent: Parent): Promise<DBAPI.WorkflowTemplate | null> => {
+        return await DBAPI.WorkflowTemplate.fetch(parent.idWorkflowTemplate);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idWorkflow } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromWorkflow(prisma, idWorkflow);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromWorkflowID(parent.idWorkflow);
     },
-    WorkflowStep: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStep[] | null> => {
-        const { idWorkflow } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchWorkflowStepFromWorkflow(prisma, idWorkflow);
+    WorkflowStep: async (parent: Parent): Promise<DBAPI.WorkflowStep[] | null> => {
+        return await DBAPI.WorkflowStep.fetchFromWorkflow(parent.idWorkflow);
     }
 };
 

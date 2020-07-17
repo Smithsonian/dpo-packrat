@@ -11,8 +11,6 @@ import { ApolloServer, ApolloServerExpressConfig } from 'apollo-server-express';
 import { schema } from './graphql';
 import * as LOG from './utils/logger';
 
-import { PrismaClient } from '@prisma/client';
-
 const logPath: string = './logs';
 LOG.configureLogger(logPath);
 LOG.logger.info('**************************');
@@ -24,14 +22,8 @@ app.use(cors());
 
 const PORT = 4000;
 
-const prisma = new PrismaClient();
-
 const serverOptions: ApolloServerExpressConfig = {
-    schema,
-    context: context => ({
-        ...context,
-        prisma
-    })
+    schema
 };
 
 const server = new ApolloServer(serverOptions);

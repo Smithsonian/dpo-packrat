@@ -1,16 +1,13 @@
 import { GetUserInput, GetUserResult } from '../../../../types/graphql';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
-import { PrismaClient } from '@prisma/client';
 import * as DBAPI from '../../../../db';
 
 const getUserTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
-    let prisma: PrismaClient;
 
     beforeAll(() => {
         graphQLApi = utils.graphQLApi;
-        prisma = utils.prisma;
     });
 
     describe('Query: getUser', () => {
@@ -27,9 +24,8 @@ const getUserTest = (utils: TestSuiteUtils): void => {
                 idUser: 0
             };
 
-            const user = await DBAPI.createUser(prisma, userArgs);
-
-            if (user) {
+            const user = new DBAPI.User(userArgs);
+            if (await user.create()) {
                 const input: GetUserInput = {
                     idUser: user.idUser
                 };

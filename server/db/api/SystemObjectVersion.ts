@@ -1,38 +1,73 @@
 /* eslint-disable camelcase */
-import { PrismaClient, SystemObjectVersion } from '@prisma/client';
+import { SystemObjectVersion as SystemObjectVersionBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createSystemObjectVersion(prisma: PrismaClient, systemObjectVersion: SystemObjectVersion): Promise<SystemObjectVersion | null> {
-    let createSystemObject: SystemObjectVersion;
-    const { idSystemObject, PublishedState } = systemObjectVersion;
-    try {
-        createSystemObject = await prisma.systemObjectVersion.create({
-            data: {
-                SystemObject: { connect: { idSystemObject }, },
-                PublishedState,
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createSystemObjectVersion', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> implements SystemObjectVersionBase {
+    idSystemObjectVersion!: number;
+    idSystemObject!: number;
+    PublishedState!: number;
 
-export async function fetchSystemObjectVersion(prisma: PrismaClient, idSystemObjectVersion: number): Promise<SystemObjectVersion | null> {
-    try {
-        return await prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectVersion', error);
-        return null;
+    constructor(input: SystemObjectVersionBase) {
+        super(input);
     }
-}
 
-export async function fetchSystemObjectVersionFromSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<SystemObjectVersion[] | null> {
-    try {
-        return await prisma.systemObjectVersion.findMany({ where: { idSystemObject } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectVersionFromSystemObject', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { idSystemObject, PublishedState } = this;
+            ({ idSystemObjectVersion: this.idSystemObjectVersion, idSystemObject: this.idSystemObject,
+                PublishedState: this.PublishedState } =
+                await DBConnectionFactory.prisma.systemObjectVersion.create({
+                    data: {
+                        SystemObject: { connect: { idSystemObject }, },
+                        PublishedState,
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObjectVersion.create', error);
+            return false;
+        }
+    }
+
+    async update(): Promise<boolean> {
+        try {
+            const { idSystemObjectVersion, idSystemObject, PublishedState } = this;
+            return await DBConnectionFactory.prisma.systemObjectVersion.update({
+                where: { idSystemObjectVersion, },
+                data: {
+                    SystemObject: { connect: { idSystemObject }, },
+                    PublishedState,
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObjectVersion.update', error);
+            return false;
+        }
+    }
+
+    static async fetch(idSystemObjectVersion: number): Promise<SystemObjectVersion | null> {
+        if (!idSystemObjectVersion)
+            return null;
+        try {
+            return DBO.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
+                await DBConnectionFactory.prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObjectVersion.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromSystemObject(idSystemObject: number): Promise<SystemObjectVersion[] | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            return DBO.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
+                await DBConnectionFactory.prisma.systemObjectVersion.findMany({ where: { idSystemObject } }), SystemObjectVersion);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObjectVersion.fetchFromSystemObject', error);
+            return null;
+        }
     }
 }

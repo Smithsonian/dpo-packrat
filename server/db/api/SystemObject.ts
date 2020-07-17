@@ -1,297 +1,285 @@
 /* eslint-disable camelcase */
-import { PrismaClient, SystemObject,
-    Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model, Project, ProjectDocumentation,
-    Scene, Stakeholder, Subject, Unit, Workflow, WorkflowStep } from '@prisma/client';
+import * as P from '@prisma/client';
+import { DBConnectionFactory, WorkflowStep } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-// NO EXPLICIT METHOD FOR CREATING SYSTEMOBJECT DIRECTLY.
-// This is done via creation methods of the objects linked to SystemObject
+export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.SystemObject {
+    idActor!: number | null;
+    idAsset!: number | null;
+    idAssetVersion!: number | null;
+    idCaptureData!: number | null;
+    idIntermediaryFile!: number | null;
+    idItem!: number | null;
+    idModel!: number | null;
+    idProject!: number | null;
+    idProjectDocumentation!: number | null;
+    idScene!: number | null;
+    idStakeholder!: number | null;
+    idSubject!: number | null;
+    idSystemObject!: number;
+    idUnit!: number | null;
+    idWorkflow!: number | null;
+    idWorkflowStep!: number | null;
+    Retired!: boolean;
 
-export type SystemObjectAndPairs = SystemObject
-& { Actor: Actor | null}
-& { Asset: Asset | null}
-& { AssetVersion: AssetVersion | null}
-& { CaptureData: CaptureData | null}
-& { IntermediaryFile: IntermediaryFile | null}
-& { Item: Item | null}
-& { Model: Model | null}
-& { Project: Project | null}
-& { ProjectDocumentation: ProjectDocumentation | null}
-& { Scene: Scene | null}
-& { Stakeholder: Stakeholder | null}
-& { Subject: Subject | null}
-& { Unit: Unit | null}
-& { Workflow: Workflow | null}
-& { WorkflowStep: WorkflowStep | null};
-
-export async function fetchSystemObject(prisma: PrismaClient, idSystemObject: number): Promise<SystemObjectAndPairs | null> {
-    try {
-        return await prisma.systemObject.findOne({
-            where: { idSystemObject, },
-            include: {
-                Actor: true,
-                Asset: true,
-                AssetVersion: true,
-                CaptureData: true,
-                IntermediaryFile: true,
-                Item: true,
-                Model: true,
-                Project: true,
-                ProjectDocumentation: true,
-                Scene: true,
-                Stakeholder: true,
-                Subject: true,
-                Unit: true,
-                Workflow: true,
-                WorkflowStep: true
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObject', error);
-        return null;
+    constructor(input: P.SystemObject) {
+        super(input);
     }
-}
 
-export async function fetchDerivedSystemObjectFromXref(prisma: PrismaClient, idSystemObjectMaster: number): Promise<SystemObject[] | null> {
-    try {
-        return await prisma.systemObject.findMany({
-            where: {
-                SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived: {
-                    some: { idSystemObjectMaster },
-                },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchDerivedSystemObjectFromXref', error);
-        return null;
+    // NO EXPLICIT METHODS FOR CREATING OR UPDATING SYSTEMOBJECT DIRECTLY.
+    // This is done via create* and update* methods of the objects linked to SystemObject
+    async create(): Promise<boolean> {
+        throw new ReferenceError('DBAPI.SystemObject.create() should never be called; used the explict create methods of objects linked to SystemObject');
     }
-}
 
-export async function fetchDerivedSystemObjectAndPairFromXref(prisma: PrismaClient, idSystemObjectMaster: number): Promise<SystemObjectAndPairs[] | null> {
-    try {
-        return await prisma.systemObject.findMany({
-            where: {
-                SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived: {
-                    some: { idSystemObjectMaster },
-                },
-            },
-            include: {
-                Actor: true,
-                Asset: true,
-                AssetVersion: true,
-                CaptureData: true,
-                IntermediaryFile: true,
-                Item: true,
-                Model: true,
-                Project: true,
-                ProjectDocumentation: true,
-                Scene: true,
-                Stakeholder: true,
-                Subject: true,
-                Unit: true,
-                Workflow: true,
-                WorkflowStep: true
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchDerivedSystemObjectAndPairFromXref', error);
-        return null;
+    async update(): Promise<boolean> {
+        throw new ReferenceError('DBAPI.SystemObject.update() should never be called; used the explict update methods of objects linked to SystemObject');
     }
-}
 
-export async function fetchMasterSystemObjectFromXref(prisma: PrismaClient, idSystemObjectDerived: number): Promise<SystemObject[] | null> {
-    try {
-        return await prisma.systemObject.findMany({
-            where: {
-                SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster: {
-                    some: { idSystemObjectDerived },
-                },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchMasterSystemObjectFromXref', error);
-        return null;
+    static async fetch(idSystemObject: number): Promise<SystemObject | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSystemObject, }, }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetch', error);
+            return null;
+        }
     }
-}
 
-export async function fetchMasterSystemObjectAndPairFromXref(prisma: PrismaClient, idSystemObjectDerived: number): Promise<SystemObjectAndPairs[] | null> {
-    try {
-        return await prisma.systemObject.findMany({
-            where: {
-                SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster: {
-                    some: { idSystemObjectDerived },
-                },
-            },
-            include: {
-                Actor: true,
-                Asset: true,
-                AssetVersion: true,
-                CaptureData: true,
-                IntermediaryFile: true,
-                Item: true,
-                Model: true,
-                Project: true,
-                ProjectDocumentation: true,
-                Scene: true,
-                Stakeholder: true,
-                Subject: true,
-                Unit: true,
-                Workflow: true,
-                WorkflowStep: true
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchMasterSystemObjectAndPairFromXref', error);
-        return null;
+    static async fetchDerivedFromXref(idSystemObjectMaster: number): Promise<SystemObject[] | null> {
+        if (!idSystemObjectMaster)
+            return null;
+        try {
+            return DBO.CopyArray<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findMany({
+                    where: {
+                        SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived: {
+                            some: { idSystemObjectMaster },
+                        },
+                    },
+                }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchDerivedFromXref', error);
+            return null;
+        }
     }
-}
 
-export async function fetchWorkflowStepFromXref(prisma: PrismaClient, idSystemObject: number): Promise<WorkflowStep[] | null> {
-    try {
-        return await prisma.workflowStep.findMany({
-            where: {
-                WorkflowStepSystemObjectXref: {
-                    some: { idSystemObject },
-                },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchWorkflowStepFromXref', error);
-        return null;
+    static async fetchMasterFromXref(idSystemObjectDerived: number): Promise<SystemObject[] | null> {
+        if (!idSystemObjectDerived)
+            return null;
+        try {
+            return DBO.CopyArray<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findMany({
+                    where: {
+                        SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster: {
+                            some: { idSystemObjectDerived },
+                        },
+                    },
+                }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchMasterFromXref', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromCaptureData(prisma: PrismaClient, idCaptureData: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idCaptureData } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromCaptureData', error);
-        return null;
+    static async fetchWorkflowStepFromXref(idSystemObject: number): Promise<WorkflowStep[] | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            return DBO.CopyArray<P.WorkflowStep, WorkflowStep>(
+                await DBConnectionFactory.prisma.workflowStep.findMany({
+                    where: {
+                        WorkflowStepSystemObjectXref: {
+                            some: { idSystemObject },
+                        },
+                    },
+                }), WorkflowStep);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchWorkflowStepFromXref', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromAsset(prisma: PrismaClient, idAsset: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idAsset } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromAsset', error);
-        return null;
+    static async fetchFromActorID(idActor: number): Promise<SystemObject | null> {
+        if (!idActor)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromActor', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromAssetVersion(prisma: PrismaClient, idAssetVersion: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idAssetVersion } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromAssetVersion', error);
-        return null;
+    static async fetchFromAssetID(idAsset: number): Promise<SystemObject | null> {
+        if (!idAsset)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromAsset', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromUnit(prisma: PrismaClient, idUnit: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idUnit } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromUnit', error);
-        return null;
+    static async fetchFromAssetVersionID(idAssetVersion: number): Promise<SystemObject | null> {
+        if (!idAssetVersion)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAssetVersion } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromAssetVersion', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromProject(prisma: PrismaClient, idProject: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idProject } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromProject', error);
-        return null;
+    static async fetchFromCaptureDataID(idCaptureData: number): Promise<SystemObject | null> {
+        if (!idCaptureData)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idCaptureData } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromCaptureData', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromProjectDocumentation(prisma: PrismaClient, idProjectDocumentation: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idProjectDocumentation } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromProjectDocumentation', error);
-        return null;
+    static async fetchFromIntermediaryFileID(idIntermediaryFile: number): Promise<SystemObject | null> {
+        if (!idIntermediaryFile)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromIntermediaryFile', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromStakeholder(prisma: PrismaClient, idStakeholder: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idStakeholder } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromStakeholder', error);
-        return null;
+    static async fetchFromItemID(idItem: number): Promise<SystemObject | null> {
+        if (!idItem)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idItem } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromItem', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromItem(prisma: PrismaClient, idItem: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idItem } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromItem', error);
-        return null;
+    static async fetchFromModelID(idModel: number): Promise<SystemObject | null> {
+        if (!idModel)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idModel } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromModel', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromSubject(prisma: PrismaClient, idSubject: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idSubject } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromSubject', error);
-        return null;
+    static async fetchFromProjectID(idProject: number): Promise<SystemObject | null> {
+        if (!idProject)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromProject', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromActor(prisma: PrismaClient, idActor: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idActor } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromActor', error);
-        return null;
+    static async fetchFromProjectDocumentationID(idProjectDocumentation: number): Promise<SystemObject | null> {
+        if (!idProjectDocumentation)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromProjectDocumentation', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromIntermediaryFile(prisma: PrismaClient, idIntermediaryFile: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idIntermediaryFile } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromIntermediaryFile', error);
-        return null;
+    static async fetchFromSceneID(idScene: number): Promise<SystemObject | null> {
+        if (!idScene)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromScene', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromScene(prisma: PrismaClient, idScene: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idScene } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromScene', error);
-        return null;
+    static async fetchFromStakeholderID(idStakeholder: number): Promise<SystemObject | null> {
+        if (!idStakeholder)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromStakeholder', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromModel(prisma: PrismaClient, idModel: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idModel } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromModel', error);
-        return null;
+    static async fetchFromSubjectID(idSubject: number): Promise<SystemObject | null> {
+        if (!idSubject)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromSubject', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromWorkflow(prisma: PrismaClient, idWorkflow: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idWorkflow } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromWorkflow', error);
-        return null;
+    static async fetchFromUnitID(idUnit: number): Promise<SystemObject | null> {
+        if (!idUnit)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromUnit', error);
+            return null;
+        }
     }
-}
 
-export async function fetchSystemObjectFromWorkflowStep(prisma: PrismaClient, idWorkflowStep: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idWorkflowStep } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectFromWorkflowStep', error);
-        return null;
+    static async fetchFromWorkflowID(idWorkflow: number): Promise<SystemObject | null> {
+        if (!idWorkflow)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflow } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromWorkflow', error);
+            return null;
+        }
+    }
+
+    static async fetchFromWorkflowStepID(idWorkflowStep: number): Promise<SystemObject | null> {
+        if (!idWorkflowStep)
+            return null;
+        try {
+            return DBO.CopyObject<P.SystemObject, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflowStep } }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromWorkflowStep', error);
+            return null;
+        }
     }
 }

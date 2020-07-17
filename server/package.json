@@ -34,7 +34,8 @@
     "generate": "graphql-codegen --config codegen.yml",
     "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
     "postinstall": "cd .. && yarn generate:server:prisma && cd server",
-    "test": "jest --passWithNoTests --detectOpenHandles --verbose"
+    "test": "jest --passWithNoTests",
+    "initdb": "docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.sql\""
   },
   "dependencies": {
     "@dpo-packrat/common": "1.0.0",

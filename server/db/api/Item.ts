@@ -1,69 +1,94 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Item, SystemObject } from '@prisma/client';
+import { Item as ItemBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { DBConnectionFactory, SystemObject } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createItem(prisma: PrismaClient, item: Item): Promise<Item | null> {
-    let createSystemObject: Item;
-    const { idSubject, idAssetThumbnail, idGeoLocation, Name, EntireSubject } = item;
-    try {
-        createSystemObject = await prisma.item.create({
-            data: {
-                Subject:        { connect: { idSubject }, },
-                Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
-                Name,
-                EntireSubject,
-                SystemObject:   { create: { Retired: false }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createItem', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class Item extends DBO.DBObject<ItemBase> implements ItemBase {
+    idItem!: number;
+    EntireSubject!: boolean;
+    idAssetThumbnail!: number | null;
+    idGeoLocation!: number | null;
+    idSubject!: number;
+    Name!: string;
 
-export async function fetchItem(prisma: PrismaClient, idItem: number): Promise<Item | null> {
-    try {
-        return await prisma.item.findOne({ where: { idItem, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchItem', error);
-        return null;
+    constructor(input: ItemBase) {
+        super(input);
     }
-}
 
-export async function fetchSystemObjectForItem(prisma: PrismaClient, sysObj: Item): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idItem: sysObj.idItem, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForItem', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { idSubject, idAssetThumbnail, idGeoLocation, Name, EntireSubject } = this;
+            ({ idItem: this.idItem, EntireSubject: this.EntireSubject, idAssetThumbnail: this.idAssetThumbnail,
+                idGeoLocation: this.idGeoLocation, idSubject: this.idSubject, Name: this.Name } =
+                await DBConnectionFactory.prisma.item.create({
+                    data: {
+                        Subject:        { connect: { idSubject }, },
+                        Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                        GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
+                        Name,
+                        EntireSubject,
+                        SystemObject:   { create: { Retired: false }, },
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Item.create', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectForItemID(prisma: PrismaClient, idItem: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idItem, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForItemID', error);
-        return null;
+    async update(): Promise<boolean> {
+        try {
+            const { idItem, idSubject, idAssetThumbnail, idGeoLocation, Name, EntireSubject } = this;
+            return await DBConnectionFactory.prisma.item.update({
+                where: { idItem, },
+                data: {
+                    Subject:        { connect: { idSubject }, },
+                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                    GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
+                    Name,
+                    EntireSubject,
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Item.update', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectAndItem(prisma: PrismaClient, idItem: number): Promise<SystemObject & { Item: Item | null} | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idItem, }, include: { Item: true, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectAndItem', error);
-        return null;
+    async fetchSystemObject(): Promise<SystemObject | null> {
+        try {
+            const { idItem } = this;
+            return DBO.CopyObject<SystemObjectBase, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idItem, }, }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.item.fetchSystemObject', error);
+            return null;
+        }
     }
-}
 
-export async function fetchItemFromSubject(prisma: PrismaClient, idSubject: number): Promise<Item[] | null> {
-    try {
-        return await prisma.item.findMany({ where: { idSubject } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchItemFromSubject', error);
-        return null;
+    static async fetch(idItem: number): Promise<Item | null> {
+        if (!idItem)
+            return null;
+        try {
+            return DBO.CopyObject<ItemBase, Item>(
+                await DBConnectionFactory.prisma.item.findOne({ where: { idItem, }, }), Item);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Item.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromSubject(idSubject: number): Promise<Item[] | null> {
+        if (!idSubject)
+            return null;
+        try {
+            return DBO.CopyArray<ItemBase, Item>(
+                await DBConnectionFactory.prisma.item.findMany({ where: { idSubject } }), Item);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Item.fetchFromSubject', error);
+            return null;
+        }
     }
 }

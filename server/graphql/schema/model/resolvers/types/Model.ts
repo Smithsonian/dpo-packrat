@@ -1,64 +1,36 @@
 /**
  * Type resolver for Model
  */
-import { Asset, Vocabulary, ModelGeometryFile, ModelProcessingAction, ModelSceneXref, SystemObject } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const Model = {
-    AssetThumbnail: async (parent: Parent, _: Args, context: Context): Promise<Asset | null> => {
-        const { idAssetThumbnail } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchAsset(prisma, idAssetThumbnail);
+    AssetThumbnail: async (parent: Parent): Promise<DBAPI.Asset | null> => {
+        return await DBAPI.Asset.fetch(parent.idAssetThumbnail);
     },
-    VCreationMethod: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVCreationMethod } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVCreationMethod);
+    VCreationMethod: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVCreationMethod);
     },
-    VModality: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVModality } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVModality);
+    VModality: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVModality);
     },
-    VPurpose: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVPurpose } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVPurpose);
+    VPurpose: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVPurpose);
     },
-    VUnits: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVUnits } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVUnits);
+    VUnits: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVUnits);
     },
-    ModelGeometryFile: async (parent: Parent, _: Args, context: Context): Promise<ModelGeometryFile[] | null> => {
-        const { idModel } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchModelGeometryFileFromModel(prisma, idModel);
+    ModelGeometryFile: async (parent: Parent): Promise<DBAPI.ModelGeometryFile[] | null> => {
+        return await DBAPI.ModelGeometryFile.fetchFromModel(parent.idModel);
     },
-    ModelProcessingAction: async (parent: Parent, _: Args, context: Context): Promise<ModelProcessingAction[] | null> => {
-        const { idModel } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchModelProcessingActionFromModel(prisma, idModel);
+    ModelProcessingAction: async (parent: Parent): Promise<DBAPI.ModelProcessingAction[] | null> => {
+        return await DBAPI.ModelProcessingAction.fetchFromModel(parent.idModel);
     },
-    ModelSceneXref: async (parent: Parent, _: Args, context: Context): Promise<ModelSceneXref[] | null> => {
-        const { idModel } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchModelSceneXrefFromModel(prisma, idModel);
+    ModelSceneXref: async (parent: Parent): Promise<DBAPI.ModelSceneXref[] | null> => {
+        return await DBAPI.ModelSceneXref.fetchFromModel(parent.idModel);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idModel } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromModel(prisma, idModel);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromModelID(parent.idModel);
     }
 };
 

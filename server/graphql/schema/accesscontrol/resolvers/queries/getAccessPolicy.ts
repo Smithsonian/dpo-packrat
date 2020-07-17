@@ -1,16 +1,15 @@
 import { GetAccessPolicyResult, GetAccessPolicyInput } from '../../../../../types/graphql';
-import { Parent, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 
-import { fetchAccessPolicy } from '../../../../../db';
+import * as DBAPI from '../../../../../db';
 
 type Args = { input: GetAccessPolicyInput };
 
-export default async function getAccessPolicy(_: Parent, args: Args, context: Context): Promise<GetAccessPolicyResult> {
+export default async function getAccessPolicy(_: Parent, args: Args): Promise<GetAccessPolicyResult> {
     const { input } = args;
     const { idAccessPolicy } = input;
-    const { prisma } = context;
 
-    const AccessPolicy = await fetchAccessPolicy(prisma, idAccessPolicy);
+    const AccessPolicy = await DBAPI.AccessPolicy.fetch(idAccessPolicy);
 
-    return { AccessPolicy };
+    return { AccessPolicy: AccessPolicy != null ? AccessPolicy : null };
 }
