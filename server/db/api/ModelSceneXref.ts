@@ -57,6 +57,8 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
     }
 
     static async fetch(idModelSceneXref: number): Promise<ModelSceneXref | null> {
+        if (!idModelSceneXref)
+            return null;
         try {
             return DBO.CopyObject<ModelSceneXrefBase, ModelSceneXref>(
                 await DBConnectionFactory.prisma.modelSceneXref.findOne({ where: { idModelSceneXref, }, }), ModelSceneXref);
@@ -67,6 +69,8 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
     }
 
     static async fetchFromScene(idScene: number): Promise<ModelSceneXref[] | null> {
+        if (!idScene)
+            return null;
         try {
             return DBO.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBConnectionFactory.prisma.modelSceneXref.findMany({ where: { idScene } }), ModelSceneXref);
@@ -77,6 +81,8 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
     }
 
     static async fetchFromModel(idModel: number): Promise<ModelSceneXref[] | null> {
+        if (!idModel)
+            return null;
         try {
             return DBO.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBConnectionFactory.prisma.modelSceneXref.findMany({ where: { idModel } }), ModelSceneXref);

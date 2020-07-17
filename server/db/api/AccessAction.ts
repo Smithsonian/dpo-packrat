@@ -44,6 +44,8 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
     }
 
     static async fetch(idAccessAction: number): Promise<AccessAction | null> {
+        if (!idAccessAction)
+            return null;
         try {
             return DBO.CopyObject<AccessActionBase, AccessAction>(
                 await DBConnectionFactory.prisma.accessAction.findOne({ where: { idAccessAction, }, }), AccessAction);
@@ -54,6 +56,8 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
     }
 
     static async fetchFromXref(idAccessRole: number): Promise<AccessAction[] | null> {
+        if (!idAccessRole)
+            return null;
         try {
             return DBO.CopyArray<AccessActionBase, AccessAction>(
                 await DBConnectionFactory.prisma.accessAction.findMany({

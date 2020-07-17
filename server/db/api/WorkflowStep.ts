@@ -62,6 +62,8 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
     }
 
     static async fetch(idWorkflowStep: number): Promise<WorkflowStep | null> {
+        if (!idWorkflowStep)
+            return null;
         try {
             return DBO.CopyObject<WorkflowStepBase, WorkflowStep>(
                 await DBConnectionFactory.prisma.workflowStep.findOne({ where: { idWorkflowStep, }, }), WorkflowStep);
@@ -101,6 +103,8 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
     }
 
     static async fetchFromUser(idUserOwner: number): Promise<WorkflowStep[] | null> {
+        if (!idUserOwner)
+            return null;
         try {
             return DBO.CopyArray<WorkflowStepBase, WorkflowStep>(
                 await DBConnectionFactory.prisma.workflowStep.findMany({ where: { idUserOwner } }), WorkflowStep);
@@ -111,6 +115,8 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
     }
 
     static async fetchFromWorkflow(idWorkflow: number): Promise<WorkflowStep[] | null> {
+        if (!idWorkflow)
+            return null;
         try {
             return DBO.CopyArray<WorkflowStepBase, WorkflowStep>(
                 await DBConnectionFactory.prisma.workflowStep.findMany({ where: { idWorkflow } }), WorkflowStep);

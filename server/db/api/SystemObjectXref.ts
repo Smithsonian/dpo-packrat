@@ -48,6 +48,8 @@ export class SystemObjectXref extends DBO.DBObject<SystemObjectXrefBase> impleme
     }
 
     static async fetch(idSystemObjectXref: number): Promise<SystemObjectXref | null> {
+        if (!idSystemObjectXref)
+            return null;
         try {
             return DBO.CopyObject<SystemObjectXrefBase, SystemObjectXref>(
                 await DBConnectionFactory.prisma.systemObjectXref.findOne({ where: { idSystemObjectXref, }, }), SystemObjectXref);

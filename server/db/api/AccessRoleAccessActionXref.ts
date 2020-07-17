@@ -48,6 +48,8 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
     }
 
     static async fetch(idAccessRoleAccessActionXref: number): Promise<AccessRoleAccessActionXref | null> {
+        if (!idAccessRoleAccessActionXref)
+            return null;
         try {
             return DBO.CopyObject<AccessRoleAccessActionXrefBase, AccessRoleAccessActionXref>(
                 await DBConnectionFactory.prisma.accessRoleAccessActionXref.findOne({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);

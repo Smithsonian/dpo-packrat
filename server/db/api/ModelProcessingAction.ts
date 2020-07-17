@@ -57,6 +57,8 @@ export class ModelProcessingAction extends DBO.DBObject<ModelProcessingActionBas
     }
 
     static async fetch(idModelProcessingAction: number): Promise<ModelProcessingAction | null> {
+        if (!idModelProcessingAction)
+            return null;
         try {
             return DBO.CopyObject<ModelProcessingActionBase, ModelProcessingAction>(
                 await DBConnectionFactory.prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction, }, }), ModelProcessingAction);
@@ -67,6 +69,8 @@ export class ModelProcessingAction extends DBO.DBObject<ModelProcessingActionBas
     }
 
     static async fetchFromModel(idModel: number): Promise<ModelProcessingAction[] | null> {
+        if (!idModel)
+            return null;
         try {
             return DBO.CopyArray<ModelProcessingActionBase, ModelProcessingAction>(
                 await DBConnectionFactory.prisma.modelProcessingAction.findMany({ where: { idModel } }), ModelProcessingAction);

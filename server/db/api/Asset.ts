@@ -62,6 +62,8 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
     }
 
     static async fetch(idAsset: number): Promise<Asset | null> {
+        if (!idAsset)
+            return null;
         try {
             return DBO.CopyObject<AssetBase, Asset>(
                 await DBConnectionFactory.prisma.asset.findOne({ where: { idAsset, }, }), Asset);
@@ -72,6 +74,8 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
     }
 
     static async fetchFromAssetGroup(idAssetGroup: number): Promise<Asset[] | null> {
+        if (!idAssetGroup)
+            return null;
         try {
             return DBO.CopyArray<AssetBase, Asset>(
                 await DBConnectionFactory.prisma.asset.findMany({ where: { idAssetGroup } }), Asset);

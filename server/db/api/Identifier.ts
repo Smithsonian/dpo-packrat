@@ -51,6 +51,8 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
     }
 
     static async fetch(idIdentifier: number): Promise<Identifier | null> {
+        if (!idIdentifier)
+            return null;
         try {
             return DBO.CopyObject<IdentifierBase, Identifier>(
                 await DBConnectionFactory.prisma.identifier.findOne({ where: { idIdentifier, }, }), Identifier);
@@ -61,6 +63,8 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
     }
 
     static async fetchFromSystemObject(idSystemObject: number): Promise<Identifier[] | null> {
+        if (!idSystemObject)
+            return null;
         try {
             return DBO.CopyArray<IdentifierBase, Identifier>(
                 await DBConnectionFactory.prisma.identifier.findMany({ where: { idSystemObject } }), Identifier);

@@ -54,6 +54,8 @@ export class CaptureDataFile extends DBO.DBObject<CaptureDataFileBase> implement
     }
 
     static async fetch(idCaptureDataFile: number): Promise<CaptureDataFile | null> {
+        if (!idCaptureDataFile)
+            return null;
         try {
             return DBO.CopyObject<CaptureDataFileBase, CaptureDataFile>(
                 await DBConnectionFactory.prisma.captureDataFile.findOne({ where: { idCaptureDataFile, }, }), CaptureDataFile);
@@ -64,6 +66,8 @@ export class CaptureDataFile extends DBO.DBObject<CaptureDataFileBase> implement
     }
 
     static async fetchFromCaptureData(idCaptureData: number): Promise<CaptureDataFile[] | null> {
+        if (!idCaptureData)
+            return null;
         try {
             return DBO.CopyArray<CaptureDataFileBase, CaptureDataFile>(
                 await DBConnectionFactory.prisma.captureDataFile.findMany({ where: { idCaptureData } }), CaptureDataFile);

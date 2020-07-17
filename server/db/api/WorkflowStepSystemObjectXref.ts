@@ -51,6 +51,8 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
     }
 
     static async fetch(idWorkflowStepSystemObjectXref: number): Promise<WorkflowStepSystemObjectXref | null> {
+        if (!idWorkflowStepSystemObjectXref)
+            return null;
         try {
             return DBO.CopyObject<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
                 await DBConnectionFactory.prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref, }, }), WorkflowStepSystemObjectXref);
@@ -61,6 +63,8 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
     }
 
     static async fetchFromWorkflowStep(idWorkflowStep: number): Promise<WorkflowStepSystemObjectXref[] | null> {
+        if (!idWorkflowStep)
+            return null;
         try {
             return DBO.CopyArray<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
                 await DBConnectionFactory.prisma.workflowStepSystemObjectXref.findMany({ where: { idWorkflowStep } }), WorkflowStepSystemObjectXref);

@@ -47,6 +47,8 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
     }
 
     static async fetch(idVocabularySet: number): Promise<VocabularySet | null> {
+        if (!idVocabularySet)
+            return null;
         try {
             return DBO.CopyObject<VocabularySetBase, VocabularySet>(
                 await DBConnectionFactory.prisma.vocabularySet.findOne({ where: { idVocabularySet, }, }), VocabularySet);

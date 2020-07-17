@@ -39,6 +39,8 @@ export class License extends DBO.DBObject<LicenseBase> implements LicenseBase {
     }
 
     static async fetch(idLicense: number): Promise<License | null> {
+        if (!idLicense)
+            return null;
         try {
             return DBO.CopyObject<LicenseBase, License>(
                 await DBConnectionFactory.prisma.license.findOne({ where: { idLicense, }, }), License);

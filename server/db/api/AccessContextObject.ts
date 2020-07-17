@@ -48,6 +48,8 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
     }
 
     static async fetch(idAccessContextObject: number): Promise<AccessContextObject | null> {
+        if (!idAccessContextObject)
+            return null;
         try {
             return DBO.CopyObject<AccessContextObjectBase, AccessContextObject>(
                 await DBConnectionFactory.prisma.accessContextObject.findOne({ where: { idAccessContextObject, }, }), AccessContextObject);
@@ -58,6 +60,8 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
     }
 
     static async fetchFromAccessContext(idAccessContext: number): Promise<AccessContextObject[] | null> {
+        if (!idAccessContext)
+            return null;
         try {
             return DBO.CopyArray<AccessContextObjectBase, AccessContextObject>(
                 await DBConnectionFactory.prisma.accessContextObject.findMany({ where: { idAccessContext } }), AccessContextObject);
@@ -68,6 +72,8 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
     }
 
     static async fetchFromSystemObject(idSystemObject: number): Promise<AccessContextObject[] | null> {
+        if (!idSystemObject)
+            return null;
         try {
             return DBO.CopyArray<AccessContextObjectBase, AccessContextObject>(
                 await DBConnectionFactory.prisma.accessContextObject.findMany({ where: { idSystemObject } }), AccessContextObject);

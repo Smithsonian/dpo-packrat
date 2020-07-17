@@ -51,6 +51,8 @@ export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements Acce
     }
 
     static async fetch(idAccessPolicy: number): Promise<AccessPolicy | null> {
+        if (!idAccessPolicy)
+            return null;
         try {
             return DBO.CopyObject<AccessPolicyBase, AccessPolicy>(
                 await DBConnectionFactory.prisma.accessPolicy.findOne({ where: { idAccessPolicy, }, }), AccessPolicy);
@@ -61,6 +63,8 @@ export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements Acce
     }
 
     static async fetchFromAccessContext(idAccessContext: number): Promise<AccessPolicy[] | null> {
+        if (!idAccessContext)
+            return null;
         try {
             return DBO.CopyArray<AccessPolicyBase, AccessPolicy>(
                 await DBConnectionFactory.prisma.accessPolicy.findMany({ where: { idAccessContext } }), AccessPolicy);
@@ -71,6 +75,8 @@ export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements Acce
     }
 
     static async fetchFromUser(idUser: number): Promise<AccessPolicy[] | null> {
+        if (!idUser)
+            return null;
         try {
             return DBO.CopyArray<AccessPolicyBase, AccessPolicy>(
                 await DBConnectionFactory.prisma.accessPolicy.findMany({ where: { idUser } }), AccessPolicy);

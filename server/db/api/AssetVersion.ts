@@ -73,6 +73,8 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
     }
 
     static async fetch(idAssetVersion: number): Promise<AssetVersion | null> {
+        if (!idAssetVersion)
+            return null;
         try {
             return DBO.CopyObject<AssetVersionBase, AssetVersion>(
                 await DBConnectionFactory.prisma.assetVersion.findOne({ where: { idAssetVersion, }, }), AssetVersion);
@@ -83,6 +85,8 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
     }
 
     static async fetchFromAsset(idAsset: number): Promise<AssetVersion[] | null> {
+        if (!idAsset)
+            return null;
         try {
             return DBO.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBConnectionFactory.prisma.assetVersion.findMany({ where: { idAsset } }), AssetVersion);
@@ -93,6 +97,8 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
     }
 
     static async fetchFromUser(idUserCreator: number): Promise<AssetVersion[] | null> {
+        if (!idUserCreator)
+            return null;
         try {
             return DBO.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBConnectionFactory.prisma.assetVersion.findMany({ where: { idUserCreator } }), AssetVersion);

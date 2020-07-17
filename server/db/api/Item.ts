@@ -69,6 +69,8 @@ export class Item extends DBO.DBObject<ItemBase> implements ItemBase {
     }
 
     static async fetch(idItem: number): Promise<Item | null> {
+        if (!idItem)
+            return null;
         try {
             return DBO.CopyObject<ItemBase, Item>(
                 await DBConnectionFactory.prisma.item.findOne({ where: { idItem, }, }), Item);
@@ -79,6 +81,8 @@ export class Item extends DBO.DBObject<ItemBase> implements ItemBase {
     }
 
     static async fetchFromSubject(idSubject: number): Promise<Item[] | null> {
+        if (!idSubject)
+            return null;
         try {
             return DBO.CopyArray<ItemBase, Item>(
                 await DBConnectionFactory.prisma.item.findMany({ where: { idSubject } }), Item);

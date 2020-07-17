@@ -66,6 +66,8 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
     }
 
     static async fetch(idSubject: number): Promise<Subject | null> {
+        if (!idSubject)
+            return null;
         try {
             return DBO.CopyObject<SubjectBase, Subject>(
                 await DBConnectionFactory.prisma.subject.findOne({ where: { idSubject, }, }), Subject);
@@ -76,6 +78,8 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
     }
 
     static async fetchFromUnit(idUnit: number): Promise<Subject[] | null> {
+        if (!idUnit)
+            return null;
         try {
             return DBO.CopyArray<SubjectBase, Subject>(
                 await DBConnectionFactory.prisma.subject.findMany({ where: { idUnit } }), Subject);

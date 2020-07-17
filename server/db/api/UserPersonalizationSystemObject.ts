@@ -51,6 +51,8 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
     }
 
     static async fetch(idUserPersonalizationSystemObject: number): Promise<UserPersonalizationSystemObject | null> {
+        if (!idUserPersonalizationSystemObject)
+            return null;
         try {
             return DBO.CopyObject<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBConnectionFactory.prisma.userPersonalizationSystemObject.findOne({ where: { idUserPersonalizationSystemObject, }, }), UserPersonalizationSystemObject);
@@ -61,6 +63,8 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
     }
 
     static async fetchFromUser(idUser: number): Promise<UserPersonalizationSystemObject[] | null> {
+        if (!idUser)
+            return null;
         try {
             return DBO.CopyArray<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBConnectionFactory.prisma.userPersonalizationSystemObject.findMany({ where: { idUser } }), UserPersonalizationSystemObject);
@@ -71,6 +75,8 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
     }
 
     static async fetchFromSystemObject(idSystemObject: number): Promise<UserPersonalizationSystemObject[] | null> {
+        if (!idSystemObject)
+            return null;
         try {
             return DBO.CopyArray<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBConnectionFactory.prisma.userPersonalizationSystemObject.findMany({ where: { idSystemObject } }), UserPersonalizationSystemObject);

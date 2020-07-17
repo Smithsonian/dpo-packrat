@@ -79,6 +79,8 @@ export class Model extends DBO.DBObject<ModelBase> implements ModelBase {
     }
 
     static async fetch(idModel: number): Promise<Model | null> {
+        if (!idModel)
+            return null;
         try {
             return DBO.CopyObject<ModelBase, Model>(
                 await DBConnectionFactory.prisma.model.findOne({ where: { idModel, }, }), Model);
@@ -89,6 +91,8 @@ export class Model extends DBO.DBObject<ModelBase> implements ModelBase {
     }
 
     static async fetchFromXref(idScene: number): Promise<Model[] | null> {
+        if (!idScene)
+            return null;
         try {
             return DBO.CopyArray<ModelBase, Model>(
                 await DBConnectionFactory.prisma.model.findMany({ where: { ModelSceneXref: { some: { idScene }, }, }, }), Model);

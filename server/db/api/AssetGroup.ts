@@ -35,6 +35,8 @@ export class AssetGroup extends DBO.DBObject<AssetGroupBase> implements AssetGro
     }
 
     static async fetch(idAssetGroup: number): Promise<AssetGroup | null> {
+        if (!idAssetGroup)
+            return null;
         try {
             return DBO.CopyObject<AssetGroupBase, AssetGroup>(
                 await DBConnectionFactory.prisma.assetGroup.findOne({ where: { idAssetGroup, }, }), AssetGroup);

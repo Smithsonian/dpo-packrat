@@ -108,6 +108,8 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
     }
 
     static async fetch(idCaptureData: number): Promise<CaptureData | null> {
+        if (!idCaptureData)
+            return null;
         try {
             return DBO.CopyObject<CaptureDataBase, CaptureData>(
                 await DBConnectionFactory.prisma.captureData.findOne({ where: { idCaptureData, }, }), CaptureData);
@@ -118,6 +120,8 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
     }
 
     static async fetchFromXref(idCaptureDataGroup: number): Promise<CaptureData[] | null> {
+        if (!idCaptureDataGroup)
+            return null;
         try {
             return DBO.CopyArray<CaptureDataBase, CaptureData>(
                 await DBConnectionFactory.prisma.captureData.findMany({
