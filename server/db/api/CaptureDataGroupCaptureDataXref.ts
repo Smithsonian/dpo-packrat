@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { CaptureDataGroupCaptureDataXref as CaptureDataGroupCaptureDataXrefBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -13,7 +14,9 @@ export class CaptureDataGroupCaptureDataXref extends DBO.DBObject<CaptureDataGro
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idCaptureDataGroup } = this;
             ({ idCaptureDataGroupCaptureDataXref: this.idCaptureDataGroupCaptureDataXref, idCaptureData: this.idCaptureData,
@@ -31,7 +34,7 @@ export class CaptureDataGroupCaptureDataXref extends DBO.DBObject<CaptureDataGro
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureDataGroupCaptureDataXref, idCaptureData, idCaptureDataGroup } = this;
             return await DBConnectionFactory.prisma.captureDataGroupCaptureDataXref.update({

@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { GeoLocation as GeoLocationBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -21,7 +22,9 @@ export class GeoLocation extends DBO.DBObject<GeoLocationBase> implements GeoLoc
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             ({ idGeoLocation: this.idGeoLocation, Latitude: this.Latitude, Longitude: this.Longitude, Altitude: this.Altitude,
@@ -36,7 +39,7 @@ export class GeoLocation extends DBO.DBObject<GeoLocationBase> implements GeoLoc
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idGeoLocation, Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             return await DBConnectionFactory.prisma.geoLocation.update({

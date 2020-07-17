@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { Vocabulary as VocabularyBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -13,7 +14,9 @@ export class Vocabulary extends DBO.DBObject<VocabularyBase> implements Vocabula
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idVocabularySet, SortOrder } = this;
             ({ idVocabulary: this.idVocabulary, idVocabularySet: this.idVocabularySet, SortOrder: this.SortOrder } =
@@ -30,7 +33,7 @@ export class Vocabulary extends DBO.DBObject<VocabularyBase> implements Vocabula
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idVocabulary, idVocabularySet, SortOrder } = this;
             return await DBConnectionFactory.prisma.vocabulary.update({

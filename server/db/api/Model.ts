@@ -19,14 +19,13 @@ export class Model extends DBO.DBObject<ModelBase> implements ModelBase {
 
     constructor(input: ModelBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idAssetThumbnailOrig = this.idAssetThumbnail;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits, idVPurpose, idAssetThumbnail } = this;
             ({ idModel: this.idModel, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
@@ -45,7 +44,6 @@ export class Model extends DBO.DBObject<ModelBase> implements ModelBase {
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Model.create', error);
@@ -53,7 +51,7 @@ export class Model extends DBO.DBObject<ModelBase> implements ModelBase {
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idModel, DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits,
                 idVPurpose, idAssetThumbnail, idAssetThumbnailOrig } = this;
@@ -70,7 +68,6 @@ export class Model extends DBO.DBObject<ModelBase> implements ModelBase {
                     Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
                 },
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Model.update', error);

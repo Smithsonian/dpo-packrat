@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { WorkflowStepSystemObjectXref as WorkflowStepSystemObjectXrefBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -14,7 +15,9 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idWorkflowStep, idSystemObject, Input } = this;
             ({ idWorkflowStepSystemObjectXref: this.idWorkflowStepSystemObjectXref, idWorkflowStep: this.idWorkflowStep,
@@ -33,7 +36,7 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflowStepSystemObjectXref, idWorkflowStep, idSystemObject, Input } = this;
             return await DBConnectionFactory.prisma.workflowStepSystemObjectXref.update({

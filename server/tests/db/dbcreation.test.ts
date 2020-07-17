@@ -3142,7 +3142,7 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Item.update partial disconnect', async () => {
         let bUpdated: boolean = false;
         if (item) {
-            item.idAssetThumbnail = null
+            item.idAssetThumbnail = null;
             bUpdated = await item.update();
 
             const itemFetch: DBAPI.Item | null = await DBAPI.Item.fetch(item.idItem);

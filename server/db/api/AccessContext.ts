@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { AccessContext as AccessContextBase }from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -17,7 +18,9 @@ export class AccessContext extends DBO.DBObject<AccessContextBase> implements Ac
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene } = this;
             ({ idAccessContext: this.idAccessContext, Authoritative: this.Authoritative, CaptureData: this.CaptureData,
@@ -32,7 +35,7 @@ export class AccessContext extends DBO.DBObject<AccessContextBase> implements Ac
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessContext, Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene } = this;
             return await DBConnectionFactory.prisma.accessContext.update({

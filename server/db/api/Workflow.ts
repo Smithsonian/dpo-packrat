@@ -17,15 +17,14 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
 
     constructor(input: WorkflowBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idProjectOrig = this.idProject;
         this.idUserInitiatorOrig = this.idUserInitiator;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idWorkflowTemplate, idProject, idUserInitiator, DateInitiated, DateUpdated } = this;
             ({ idWorkflow: this.idWorkflow, idWorkflowTemplate: this.idWorkflowTemplate, idProject: this.idProject,
@@ -40,7 +39,6 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
                         SystemObject:       { create: { Retired: false }, },
                     },
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.create', error);
@@ -48,7 +46,7 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflow, idWorkflowTemplate, idProject, idUserInitiator, DateInitiated,
                 DateUpdated, idProjectOrig, idUserInitiatorOrig } = this;
@@ -62,7 +60,6 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
                     DateUpdated,
                 },
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.update', error);

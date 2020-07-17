@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { ModelProcessingActionStep as ModelProcessingActionStepBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -14,7 +15,9 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idModelProcessingAction, idVActionMethod, Description } = this;
             ({ idModelProcessingActionStep: this.idModelProcessingActionStep, idModelProcessingAction: this.idModelProcessingAction,
@@ -33,7 +36,7 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelProcessingActionStep, idModelProcessingAction, idVActionMethod, Description } = this;
             return await DBConnectionFactory.prisma.modelProcessingActionStep.update({

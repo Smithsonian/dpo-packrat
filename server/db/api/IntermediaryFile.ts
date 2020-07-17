@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { IntermediaryFile as IntermediaryFileBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { DBConnectionFactory, SystemObject } from '..';
 import * as DBO from '../api/DBObject';
@@ -13,7 +14,9 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idAsset, DateCreated } = this;
             ({ idIntermediaryFile: this.idIntermediaryFile, idAsset: this.idAsset, DateCreated: this.DateCreated } =
@@ -31,7 +34,7 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idIntermediaryFile, idAsset, DateCreated } = this;
             return await DBConnectionFactory.prisma.intermediaryFile.update({

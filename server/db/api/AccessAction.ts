@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { AccessAction as AccessActionBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -13,7 +14,9 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Name, SortOrder } = this;
             ({ idAccessAction: this.idAccessAction, Name: this.Name, SortOrder: this.SortOrder } =
@@ -30,7 +33,7 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessAction, Name, SortOrder } = this;
             return await DBConnectionFactory.prisma.accessAction.update({

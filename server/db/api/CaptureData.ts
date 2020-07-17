@@ -31,10 +31,9 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
 
     constructor(input: CaptureDataBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idAssetThumbnailOrig = this.idAssetThumbnail;
         this.idVBackgroundRemovalMethodOrig = this.idVBackgroundRemovalMethod;
         this.idVClusterTypeOrig = this.idVClusterType;
@@ -43,7 +42,7 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
         this.idVLightSourceTypeOrig = this.idVLightSourceType;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idVCaptureMethod, idVCaptureDatasetType, DateCaptured, Description, CaptureDatasetFieldID, idVItemPositionType,
                 ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
@@ -75,7 +74,6 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
                         SystemObject:                                                   { create: { Retired: false }, },
                     },
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.create', error);
@@ -83,7 +81,7 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idVCaptureMethod, idVCaptureDatasetType, DateCaptured, Description, CaptureDatasetFieldID, idVItemPositionType,
                 ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
@@ -109,7 +107,6 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
                     Asset:                                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
                 },
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.update', error);

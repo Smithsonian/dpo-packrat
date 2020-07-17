@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { CaptureDataFile as CaptureDataFileBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -15,7 +16,9 @@ export class CaptureDataFile extends DBO.DBObject<CaptureDataFileBase> implement
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = this;
             ({ idCaptureDataFile: this.idCaptureDataFile, idCaptureData: this.idCaptureData, idAsset: this.idAsset,
@@ -35,7 +38,7 @@ export class CaptureDataFile extends DBO.DBObject<CaptureDataFileBase> implement
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureDataFile, idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = this;
             return await DBConnectionFactory.prisma.captureDataFile.update({

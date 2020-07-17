@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { AccessPolicy as AccessPolicyBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -14,7 +15,9 @@ export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements Acce
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idUser, idAccessRole, idAccessContext } = this;
             ({ idAccessPolicy: this.idAccessPolicy, idUser: this.idUser,
@@ -33,7 +36,7 @@ export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements Acce
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessPolicy, idUser, idAccessRole, idAccessContext } = this;
             return await DBConnectionFactory.prisma.accessPolicy.update({

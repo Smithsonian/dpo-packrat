@@ -17,15 +17,14 @@ export class Item extends DBO.DBObject<ItemBase> implements ItemBase {
 
     constructor(input: ItemBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idAssetThumbnailOrig = this.idAssetThumbnail;
         this.idGeoLocationOrig = this.idGeoLocation;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idSubject, idAssetThumbnail, idGeoLocation, Name, EntireSubject } = this;
             ({ idItem: this.idItem, EntireSubject: this.EntireSubject, idAssetThumbnail: this.idAssetThumbnail,
@@ -40,7 +39,6 @@ export class Item extends DBO.DBObject<ItemBase> implements ItemBase {
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Item.create', error);
@@ -48,7 +46,7 @@ export class Item extends DBO.DBObject<ItemBase> implements ItemBase {
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idItem, idSubject, idAssetThumbnail, idGeoLocation, Name, EntireSubject, idAssetThumbnailOrig, idGeoLocationOrig } = this;
             const retValue: boolean = await DBConnectionFactory.prisma.item.update({
@@ -61,7 +59,6 @@ export class Item extends DBO.DBObject<ItemBase> implements ItemBase {
                     EntireSubject,
                 },
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Item.update', error);

@@ -14,14 +14,13 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
 
     constructor(input: IdentifierBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idSystemObjectOrig = this.idSystemObject;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { IdentifierValue, idVIdentifierType, idSystemObject } = this;
             ({ idIdentifier: this.idIdentifier, IdentifierValue: this.IdentifierValue,
@@ -33,7 +32,6 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
                         SystemObject: idSystemObject ? { connect: { idSystemObject }, } : undefined,
                     },
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Identifier.create', error);
@@ -41,7 +39,7 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idIdentifier, IdentifierValue, idVIdentifierType, idSystemObject, idSystemObjectOrig } = this;
             const retValue: boolean = await DBConnectionFactory.prisma.identifier.update({
@@ -52,7 +50,6 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
                     SystemObject: idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
                 },
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Identifier.update', error);

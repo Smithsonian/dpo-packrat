@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { AssetGroup as AssetGroupBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -11,7 +12,9 @@ export class AssetGroup extends DBO.DBObject<AssetGroupBase> implements AssetGro
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             ({ idAssetGroup: this.idAssetGroup } = await DBConnectionFactory.prisma.assetGroup.create({ data: { } }));
             return true;
@@ -21,7 +24,7 @@ export class AssetGroup extends DBO.DBObject<AssetGroupBase> implements AssetGro
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idAssetGroup } = this;
             return await DBConnectionFactory.prisma.assetGroup.update({
