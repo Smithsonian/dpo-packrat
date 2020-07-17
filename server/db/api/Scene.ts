@@ -75,15 +75,6 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
         }
     }
 
-    static async fetchSystemObjectAndScene(idScene: number): Promise<SystemObjectBase & { Scene: SceneBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene, }, include: { Scene: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.Scene.fetchSystemObjectAndScene', error);
-            return null;
-        }
-    }
-
     static async fetchFromXref(idModel: number): Promise<Scene[] | null> {
         try {
             return DBO.CopyArray<SceneBase, Scene>(

@@ -67,13 +67,4 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
             return null;
         }
     }
-
-    static async fetchSystemObjectAndIntermediaryFile(idIntermediaryFile: number): Promise<SystemObjectBase & { IntermediaryFile: IntermediaryFileBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, include: { IntermediaryFile: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.IntermediaryFile.fetchSystemObjectAndIntermediaryFile', error);
-            return null;
-        }
-    }
 }

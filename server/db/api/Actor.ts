@@ -71,15 +71,6 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
         }
     }
 
-    static async fetchSystemObjectAndActor(idActor: number): Promise<SystemObjectBase & { Actor: ActorBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor, }, include: { Actor: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.fetchSystemObjectAndActor', error);
-            return null;
-        }
-    }
-
     static async fetchFromUnit(idUnit: number): Promise<Actor[] | null> {
         try {
             return DBO.CopyArray<ActorBase, Actor>(

@@ -1,10 +1,6 @@
 import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 import * as path from 'path';
-import {
-    Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model,
-    Project, ProjectDocumentation, Scene, Stakeholder, Subject, SystemObject, Unit,
-    Workflow, WorkflowStep } from '@prisma/client';
 
 beforeAll(() => {
     const logPath: string = './logs';
@@ -1653,14 +1649,22 @@ describe('DB Fetch By ID Test Suite', () => {
 });
 
 // *******************************************************************
-// DB Fetch SystemObject Test Suite
+// DB Fetch SystemObject.fetch* Test Suite
 // *******************************************************************
-describe('DB Fetch SystemObject Test Suite', () => {
-    test('DB Fetch SystemObject: Actor.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
+describe('DB Fetch SystemObject.fetch* Test Suite', () => {
+    test('DB Fetch SystemObject: SystemObject.fetch', async () => {
+        let SOActor: DBAPI.SystemObject | null = null;
         if (actorWithUnit) {
-            SO = await actorWithUnit.fetchSystemObject();
-            if (SO)
+            SOActor = await DBAPI.SystemObject.fetchFromActorID(actorWithUnit.idActor);
+            if (SOActor)
+                expect(SOActor.idActor).toEqual(actorWithUnit.idActor);
+        }
+        expect(SOActor).toBeTruthy();
+
+        let SO: DBAPI.SystemObject | null = null;
+        if (SOActor) {
+            SO = await DBAPI.SystemObject.fetch(SOActor.idSystemObject);
+            if (SO && actorWithUnit)
                 expect(SO.idActor).toEqual(actorWithUnit.idActor);
         }
         expect(SO).toBeTruthy();
@@ -1676,64 +1680,12 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: Actor.fetchSystemObjectAndActor', async () => {
-        let SO: SystemObject & { Actor: Actor | null} | null = null;
-        if (actorWithUnit) {
-            SO = await DBAPI.Actor.fetchSystemObjectAndActor(actorWithUnit.idActor);
-            if (SO) {
-                expect(SO.idActor).toEqual(actorWithUnit.idActor);
-                expect(SO.Actor).toBeTruthy();
-                if (SO.Actor) {
-                    expect(SO.Actor).toMatchObject(actorWithUnit);
-                    expect(actorWithUnit).toMatchObject(SO.Actor);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Asset.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (assetThumbnail) {
-            SO = await assetThumbnail.fetchSystemObject();
-            if (SO)
-                expect(SO.idAsset).toEqual(assetThumbnail.idAsset);
-        }
-        expect(SO).toBeTruthy();
-    });
-
     test('DB Fetch SystemObject: SystemObject.fetchFromAssetID', async () => {
         let SO: DBAPI.SystemObject | null = null;
         if (assetThumbnail) {
             SO = await DBAPI.SystemObject.fetchFromAssetID(assetThumbnail.idAsset);
             if (SO)
                 expect(SO.idAsset).toEqual(assetThumbnail.idAsset);
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Asset.fetchSystemObjectAndAsset', async () => {
-        let SO: SystemObject & { Asset: Asset | null} | null = null;
-        if (assetThumbnail) {
-            SO = await DBAPI.Asset.fetchSystemObjectAndAsset(assetThumbnail.idAsset);
-            if (SO) {
-                expect(SO.idAsset).toEqual(assetThumbnail.idAsset);
-                expect(SO.Asset).toBeTruthy();
-                if (SO.Asset) {
-                    expect(SO.Asset).toMatchObject(assetThumbnail);
-                    expect(assetThumbnail).toMatchObject(SO.Asset);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: AssetVersion.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (assetVersion) {
-            SO = await assetVersion.fetchSystemObject();
-            if (SO)
-                expect(SO.idAssetVersion).toEqual(assetVersion.idAssetVersion);
         }
         expect(SO).toBeTruthy();
     });
@@ -1748,64 +1700,12 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: AssetVersion.fetchSystemObjectAndAssetVersion', async () => {
-        let SO: SystemObject & { AssetVersion: AssetVersion | null} | null = null;
-        if (assetVersion) {
-            SO = await DBAPI.AssetVersion.fetchSystemObjectAndAssetVersion(assetVersion.idAssetVersion);
-            if (SO) {
-                expect(SO.idAssetVersion).toEqual(assetVersion.idAssetVersion);
-                expect(SO.AssetVersion).toBeTruthy();
-                if (SO.AssetVersion) {
-                    expect(SO.AssetVersion).toMatchObject(assetVersion);
-                    expect(assetVersion).toMatchObject(SO.AssetVersion);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: CaptureData.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (captureData) {
-            SO = await captureData.fetchSystemObject();
-            if (SO)
-                expect(SO.idCaptureData).toEqual(captureData.idCaptureData);
-        }
-        expect(SO).toBeTruthy();
-    });
-
     test('DB Fetch SystemObject: SystemObject.fetchFromCaptureDataID', async () => {
         let SO: DBAPI.SystemObject | null = null;
         if (captureData) {
             SO = await DBAPI.SystemObject.fetchFromCaptureDataID(captureData.idCaptureData);
             if (SO)
                 expect(SO.idCaptureData).toEqual(captureData.idCaptureData);
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: CaptureData.fetchSystemObjectAndCaptureData', async () => {
-        let SO: SystemObject & { CaptureData: CaptureData | null} | null = null;
-        if (captureData) {
-            SO = await DBAPI.CaptureData.fetchSystemObjectAndCaptureData(captureData.idCaptureData);
-            if (SO) {
-                expect(SO.idCaptureData).toEqual(captureData.idCaptureData);
-                expect(SO.CaptureData).toBeTruthy();
-                if (SO.CaptureData) {
-                    expect(SO.CaptureData).toMatchObject(captureData);
-                    expect(captureData).toMatchObject(SO.CaptureData);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: IntermediaryFile.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (intermediaryFile) {
-            SO = await intermediaryFile.fetchSystemObject();
-            if (SO)
-                expect(SO.idIntermediaryFile).toEqual(intermediaryFile.idIntermediaryFile);
         }
         expect(SO).toBeTruthy();
     });
@@ -1820,64 +1720,12 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: IntermediaryFile.fetchSystemObjectAndIntermediaryFile', async () => {
-        let SO: SystemObject & { IntermediaryFile: IntermediaryFile | null} | null = null;
-        if (intermediaryFile) {
-            SO = await DBAPI.IntermediaryFile.fetchSystemObjectAndIntermediaryFile(intermediaryFile.idIntermediaryFile);
-            if (SO) {
-                expect(SO.idIntermediaryFile).toEqual(intermediaryFile.idIntermediaryFile);
-                expect(SO.IntermediaryFile).toBeTruthy();
-                if (SO.IntermediaryFile) {
-                    expect(SO.IntermediaryFile).toMatchObject(intermediaryFile);
-                    expect(intermediaryFile).toMatchObject(SO.IntermediaryFile);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Item.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (item) {
-            SO = await item.fetchSystemObject();
-            if (SO)
-                expect(SO.idItem).toEqual(item.idItem);
-        }
-        expect(SO).toBeTruthy();
-    });
-
     test('DB Fetch SystemObject: SystemObject.fetchFromItemID', async () => {
         let SO: DBAPI.SystemObject | null = null;
         if (item) {
             SO = await DBAPI.SystemObject.fetchFromItemID(item.idItem);
             if (SO)
                 expect(SO.idItem).toEqual(item.idItem);
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Item.fetchSystemObjectAndItem', async () => {
-        let SO: SystemObject & { Item: Item | null} | null = null;
-        if (item) {
-            SO = await DBAPI.Item.fetchSystemObjectAndItem(item.idItem);
-            if (SO) {
-                expect(SO.idItem).toEqual(item.idItem);
-                expect(SO.Item).toBeTruthy();
-                if (SO.Item) {
-                    expect(SO.Item).toMatchObject(item);
-                    expect(item).toMatchObject(SO.Item);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Model.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (model) {
-            SO = await model.fetchSystemObject();
-            if (SO)
-                expect(SO.idModel).toEqual(model.idModel);
         }
         expect(SO).toBeTruthy();
     });
@@ -1892,34 +1740,8 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: Model.fetchSystemObjectAndModel', async () => {
-        let SO: SystemObject & { Model: Model | null} | null = null;
-        if (model) {
-            SO = await DBAPI.Model.fetchSystemObjectAndModel(model.idModel);
-            if (SO) {
-                expect(SO.idModel).toEqual(model.idModel);
-                expect(SO.Model).toBeTruthy();
-                if (SO.Model) {
-                    expect(SO.Model).toMatchObject(model);
-                    expect(model).toMatchObject(SO.Model);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Project.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (project) {
-            SO = await project.fetchSystemObject();
-            if (SO)
-                expect(SO.idProject).toEqual(project.idProject);
-        }
-        expect(SO).toBeTruthy();
-    });
-
     test('DB Fetch SystemObject: SystemObject.fetchFromProjectID', async () => {
-        let SO: SystemObject | null = null;
+        let SO: DBAPI.SystemObject | null = null;
         if (project) {
             SO = await DBAPI.SystemObject.fetchFromProjectID(project.idProject);
             if (SO)
@@ -1928,64 +1750,12 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: Project.fetchSystemObjectAndProject', async () => {
-        let SO: SystemObject & { Project: Project | null} | null = null;
-        if (project) {
-            SO = await DBAPI.Project.fetchSystemObjectAndProject(project.idProject);
-            if (SO) {
-                expect(SO.idProject).toEqual(project.idProject);
-                expect(SO.Project).toBeTruthy();
-                if (SO.Project) {
-                    expect(SO.Project).toMatchObject(project);
-                    expect(project).toMatchObject(SO.Project);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: ProjectDocumentation.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (projectDocumentation) {
-            SO = await projectDocumentation.fetchSystemObject();
-            if (SO)
-                expect(SO.idProjectDocumentation).toEqual(projectDocumentation.idProjectDocumentation);
-        }
-        expect(SO).toBeTruthy();
-    });
-
     test('DB Fetch SystemObject: SystemObject.fetchFromProjectDocumentationID', async () => {
-        let SO: SystemObject | null = null;
+        let SO: DBAPI.SystemObject | null = null;
         if (projectDocumentation) {
             SO = await DBAPI.SystemObject.fetchFromProjectDocumentationID(projectDocumentation.idProjectDocumentation);
             if (SO)
                 expect(SO.idProjectDocumentation).toEqual(projectDocumentation.idProjectDocumentation);
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: ProjectDocumentation.fetchSystemObjectAndProjectDocumentation', async () => {
-        let SO: SystemObject & { ProjectDocumentation: ProjectDocumentation | null} | null = null;
-        if (projectDocumentation) {
-            SO = await DBAPI.ProjectDocumentation.fetchSystemObjectAndProjectDocumentation(projectDocumentation.idProjectDocumentation);
-            if (SO) {
-                expect(SO.idProjectDocumentation).toEqual(projectDocumentation.idProjectDocumentation);
-                expect(SO.ProjectDocumentation).toBeTruthy();
-                if (SO.ProjectDocumentation) {
-                    expect(SO.ProjectDocumentation).toMatchObject(projectDocumentation);
-                    expect(projectDocumentation).toMatchObject(SO.ProjectDocumentation);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Scene.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (scene) {
-            SO = await scene.fetchSystemObject();
-            if (SO)
-                expect(SO.idScene).toEqual(scene.idScene);
         }
         expect(SO).toBeTruthy();
     });
@@ -2000,64 +1770,12 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: Scene.fetchSystemObjectAndScene', async () => {
-        let SO: SystemObject & { Scene: Scene | null} | null = null;
-        if (scene) {
-            SO = await DBAPI.Scene.fetchSystemObjectAndScene(scene.idScene);
-            if (SO) {
-                expect(SO.idScene).toEqual(scene.idScene);
-                expect(SO.Scene).toBeTruthy();
-                if (SO.Scene) {
-                    expect(SO.Scene).toMatchObject(scene);
-                    expect(scene).toMatchObject(SO.Scene);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Stakeholder.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (stakeholder) {
-            SO = await stakeholder.fetchSystemObject();
-            if (SO)
-                expect(SO.idStakeholder).toEqual(stakeholder.idStakeholder);
-        }
-        expect(SO).toBeTruthy();
-    });
-
     test('DB Fetch SystemObject: SystemObject.fetchFromStakeholderID', async () => {
-        let SO: SystemObject | null = null;
+        let SO: DBAPI.SystemObject | null = null;
         if (stakeholder) {
             SO = await DBAPI.SystemObject.fetchFromStakeholderID(stakeholder.idStakeholder);
             if (SO)
                 expect(SO.idStakeholder).toEqual(stakeholder.idStakeholder);
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Stakeholder.fetchSystemObjectAndStakeholder', async () => {
-        let SO: SystemObject & { Stakeholder: Stakeholder | null} | null = null;
-        if (stakeholder) {
-            SO = await DBAPI.Stakeholder.fetchSystemObjectAndStakeholder(stakeholder.idStakeholder);
-            if (SO) {
-                expect(SO.idStakeholder).toEqual(stakeholder.idStakeholder);
-                expect(SO.Stakeholder).toBeTruthy();
-                if (SO.Stakeholder) {
-                    expect(SO.Stakeholder).toMatchObject(stakeholder);
-                    expect(stakeholder).toMatchObject(SO.Stakeholder);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Subject.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (subject) {
-            SO = await subject.fetchSystemObject();
-            if (SO)
-                expect(SO.idSubject).toEqual(subject.idSubject);
         }
         expect(SO).toBeTruthy();
     });
@@ -2072,64 +1790,12 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: Subject.fetchSystemObjectAndSubject', async () => {
-        let SO: SystemObject & { Subject: Subject | null} | null = null;
-        if (subject) {
-            SO = await DBAPI.Subject.fetchSystemObjectAndSubject(subject.idSubject);
-            if (SO) {
-                expect(SO.idSubject).toEqual(subject.idSubject);
-                expect(SO.Subject).toBeTruthy();
-                if (SO.Subject) {
-                    expect(SO.Subject).toMatchObject(subject);
-                    expect(subject).toMatchObject(SO.Subject);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Unit.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (unit) {
-            SO = await unit.fetchSystemObject();
-            if (SO)
-                expect(SO.idUnit).toEqual(unit.idUnit);
-        }
-        expect(SO).toBeTruthy();
-    });
-
     test('DB Fetch SystemObject: SystemObject.fetchFromUnitID', async () => {
         let SO: DBAPI.SystemObject | null = null;
         if (unit) {
             SO = await DBAPI.SystemObject.fetchFromUnitID(unit.idUnit);
             if (SO)
                 expect(SO.idUnit).toEqual(unit.idUnit);
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Unit.fetchSystemObjectAndUnit', async () => {
-        let SO: SystemObject & { Unit: Unit | null} | null = null;
-        if (unit) {
-            SO = await DBAPI.Unit.fetchSystemObjectAndUnit(unit.idUnit);
-            if (SO) {
-                expect(SO.idUnit).toEqual(unit.idUnit);
-                expect(SO.Unit).toBeTruthy();
-                if (SO.Unit) {
-                    expect(SO.Unit).toMatchObject(unit);
-                    expect(unit).toMatchObject(SO.Unit);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: Workflow.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (workflow) {
-            SO = await workflow.fetchSystemObject();
-            if (SO)
-                expect(SO.idWorkflow).toEqual(workflow.idWorkflow);
         }
         expect(SO).toBeTruthy();
     });
@@ -2144,10 +1810,233 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: Workflow.fetchSystemObjectAndWorkflow', async () => {
-        let SO: SystemObject & { Workflow: Workflow | null} | null = null;
+    test('DB Fetch SystemObject: SystemObject.fetchFromWorkflowStepID', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (workflowStep) {
+            SO = await DBAPI.SystemObject.fetchFromWorkflowStepID(workflowStep.idWorkflowStep);
+            if (SO)
+                expect(SO.idWorkflowStep).toEqual(workflowStep.idWorkflowStep);
+        }
+        expect(SO).toBeTruthy();
+    });
+});
+
+// *******************************************************************
+// DB Fetch SystemObject*.fetch Test Suite
+// *******************************************************************
+describe('DB Fetch SystemObject*.fetch Test Suite', () => {
+    test('DB Fetch SystemObjectActor.fetch', async () => {
+        let SO: DBAPI.SystemObjectActor | null = null;
+        if (actorWithUnit) {
+            SO = await DBAPI.SystemObjectActor.fetch(actorWithUnit.idActor);
+            if (SO) {
+                expect(SO.idActor).toEqual(actorWithUnit.idActor);
+                expect(SO.Actor).toBeTruthy();
+                if (SO.Actor) {
+                    expect(SO.Actor).toMatchObject(actorWithUnit);
+                    expect(actorWithUnit).toMatchObject(SO.Actor);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectAsset.fetch', async () => {
+        let SO: DBAPI.SystemObjectAsset | null = null;
+        if (assetThumbnail) {
+            SO = await DBAPI.SystemObjectAsset.fetch(assetThumbnail.idAsset);
+            if (SO) {
+                expect(SO.idAsset).toEqual(assetThumbnail.idAsset);
+                expect(SO.Asset).toBeTruthy();
+                if (SO.Asset) {
+                    expect(SO.Asset).toMatchObject(assetThumbnail);
+                    expect(assetThumbnail).toMatchObject(SO.Asset);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectAssetVersion.fetch', async () => {
+        let SO: DBAPI.SystemObjectAssetVersion | null = null;
+        if (assetVersion) {
+            SO = await DBAPI.SystemObjectAssetVersion.fetch(assetVersion.idAssetVersion);
+            if (SO) {
+                expect(SO.idAssetVersion).toEqual(assetVersion.idAssetVersion);
+                expect(SO.AssetVersion).toBeTruthy();
+                if (SO.AssetVersion) {
+                    expect(SO.AssetVersion).toMatchObject(assetVersion);
+                    expect(assetVersion).toMatchObject(SO.AssetVersion);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectCaptureData.fetch', async () => {
+        let SO: DBAPI.SystemObjectCaptureData | null = null;
+        if (captureData) {
+            SO = await DBAPI.SystemObjectCaptureData.fetch(captureData.idCaptureData);
+            if (SO) {
+                expect(SO.idCaptureData).toEqual(captureData.idCaptureData);
+                expect(SO.CaptureData).toBeTruthy();
+                if (SO.CaptureData) {
+                    expect(SO.CaptureData).toMatchObject(captureData);
+                    expect(captureData).toMatchObject(SO.CaptureData);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectIntermediaryFile.fetch', async () => {
+        let SO: DBAPI.SystemObjectIntermediaryFile | null = null;
+        if (intermediaryFile) {
+            SO = await DBAPI.SystemObjectIntermediaryFile.fetch(intermediaryFile.idIntermediaryFile);
+            if (SO) {
+                expect(SO.idIntermediaryFile).toEqual(intermediaryFile.idIntermediaryFile);
+                expect(SO.IntermediaryFile).toBeTruthy();
+                if (SO.IntermediaryFile) {
+                    expect(SO.IntermediaryFile).toMatchObject(intermediaryFile);
+                    expect(intermediaryFile).toMatchObject(SO.IntermediaryFile);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectItem.fetch', async () => {
+        let SO: DBAPI.SystemObjectItem | null = null;
+        if (item) {
+            SO = await DBAPI.SystemObjectItem.fetch(item.idItem);
+            if (SO) {
+                expect(SO.idItem).toEqual(item.idItem);
+                expect(SO.Item).toBeTruthy();
+                if (SO.Item) {
+                    expect(SO.Item).toMatchObject(item);
+                    expect(item).toMatchObject(SO.Item);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectModel.fetch', async () => {
+        let SO: DBAPI.SystemObjectModel | null = null;
+        if (model) {
+            SO = await DBAPI.SystemObjectModel.fetch(model.idModel);
+            if (SO) {
+                expect(SO.idModel).toEqual(model.idModel);
+                expect(SO.Model).toBeTruthy();
+                if (SO.Model) {
+                    expect(SO.Model).toMatchObject(model);
+                    expect(model).toMatchObject(SO.Model);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectProject.fetch', async () => {
+        let SO: DBAPI.SystemObjectProject | null = null;
+        if (project) {
+            SO = await DBAPI.SystemObjectProject.fetch(project.idProject);
+            if (SO) {
+                expect(SO.idProject).toEqual(project.idProject);
+                expect(SO.Project).toBeTruthy();
+                if (SO.Project) {
+                    expect(SO.Project).toMatchObject(project);
+                    expect(project).toMatchObject(SO.Project);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectProjectDocumentation.fetch', async () => {
+        let SO: DBAPI.SystemObjectProjectDocumentation | null = null;
+        if (projectDocumentation) {
+            SO = await DBAPI.SystemObjectProjectDocumentation.fetch(projectDocumentation.idProjectDocumentation);
+            if (SO) {
+                expect(SO.idProjectDocumentation).toEqual(projectDocumentation.idProjectDocumentation);
+                expect(SO.ProjectDocumentation).toBeTruthy();
+                if (SO.ProjectDocumentation) {
+                    expect(SO.ProjectDocumentation).toMatchObject(projectDocumentation);
+                    expect(projectDocumentation).toMatchObject(SO.ProjectDocumentation);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectScene.fetch', async () => {
+        let SO: DBAPI.SystemObjectScene | null = null;
+        if (scene) {
+            SO = await DBAPI.SystemObjectScene.fetch(scene.idScene);
+            if (SO) {
+                expect(SO.idScene).toEqual(scene.idScene);
+                expect(SO.Scene).toBeTruthy();
+                if (SO.Scene) {
+                    expect(SO.Scene).toMatchObject(scene);
+                    expect(scene).toMatchObject(SO.Scene);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectStakeholder.fetch', async () => {
+        let SO: DBAPI.SystemObjectStakeholder | null = null;
+        if (stakeholder) {
+            SO = await DBAPI.SystemObjectStakeholder.fetch(stakeholder.idStakeholder);
+            if (SO) {
+                expect(SO.idStakeholder).toEqual(stakeholder.idStakeholder);
+                expect(SO.Stakeholder).toBeTruthy();
+                if (SO.Stakeholder) {
+                    expect(SO.Stakeholder).toMatchObject(stakeholder);
+                    expect(stakeholder).toMatchObject(SO.Stakeholder);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectSubject.fetch', async () => {
+        let SO: DBAPI.SystemObjectSubject | null = null;
+        if (subject) {
+            SO = await DBAPI.SystemObjectSubject.fetch(subject.idSubject);
+            if (SO) {
+                expect(SO.idSubject).toEqual(subject.idSubject);
+                expect(SO.Subject).toBeTruthy();
+                if (SO.Subject) {
+                    expect(SO.Subject).toMatchObject(subject);
+                    expect(subject).toMatchObject(SO.Subject);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectUnit.fetch', async () => {
+        let SO: DBAPI.SystemObjectUnit | null = null;
+        if (unit) {
+            SO = await DBAPI.SystemObjectUnit.fetch(unit.idUnit);
+            if (SO) {
+                expect(SO.idUnit).toEqual(unit.idUnit);
+                expect(SO.Unit).toBeTruthy();
+                if (SO.Unit) {
+                    expect(SO.Unit).toMatchObject(unit);
+                    expect(unit).toMatchObject(SO.Unit);
+                }
+            }
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch SystemObjectWorkflow.fetch', async () => {
+        let SO: DBAPI.SystemObjectWorkflow | null = null;
         if (workflow) {
-            SO = await DBAPI.Workflow.fetchSystemObjectAndWorkflow(workflow.idWorkflow);
+            SO = await DBAPI.SystemObjectWorkflow.fetch(workflow.idWorkflow);
             if (SO) {
                 expect(SO.idWorkflow).toEqual(workflow.idWorkflow);
                 expect(SO.Workflow).toBeTruthy();
@@ -2160,30 +2049,10 @@ describe('DB Fetch SystemObject Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: WorkflowStep.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
+    test('DB Fetch SystemObjectWorkflowStep.fetch', async () => {
+        let SO: DBAPI.SystemObjectWorkflowStep | null = null;
         if (workflowStep) {
-            SO = await workflowStep.fetchSystemObject();
-            if (SO)
-                expect(SO.idWorkflowStep).toEqual(workflowStep.idWorkflowStep);
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: SystemObject.fetchFromWorkflowStepID', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (workflowStep) {
-            SO = await DBAPI.SystemObject.fetchFromWorkflowStepID(workflowStep.idWorkflowStep);
-            if (SO)
-                expect(SO.idWorkflowStep).toEqual(workflowStep.idWorkflowStep);
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: WorkflowStep.fetchSystemObjectAndWorkflowStep', async () => {
-        let SO: SystemObject & { WorkflowStep: WorkflowStep | null} | null = null;
-        if (workflowStep) {
-            SO = await DBAPI.WorkflowStep.fetchSystemObjectAndWorkflowStep(workflowStep.idWorkflowStep);
+            SO = await DBAPI.SystemObjectWorkflowStep.fetch(workflowStep.idWorkflowStep);
             if (SO) {
                 expect(SO.idWorkflowStep).toEqual(workflowStep.idWorkflowStep);
                 expect(SO.WorkflowStep).toBeTruthy();
@@ -2198,14 +2067,164 @@ describe('DB Fetch SystemObject Test Suite', () => {
 });
 
 // *******************************************************************
+// DB Fetch *.fetchSystemObject Test Suite
+// *******************************************************************
+describe('DB Fetch *.fetchSystemObject Test Suite', () => {
+    test('DB Fetch Actor.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (actorWithUnit) {
+            SO = await actorWithUnit.fetchSystemObject();
+            if (SO)
+                expect(SO.idActor).toEqual(actorWithUnit.idActor);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Asset.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (assetThumbnail) {
+            SO = await assetThumbnail.fetchSystemObject();
+            if (SO)
+                expect(SO.idAsset).toEqual(assetThumbnail.idAsset);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (assetVersion) {
+            SO = await assetVersion.fetchSystemObject();
+            if (SO)
+                expect(SO.idAssetVersion).toEqual(assetVersion.idAssetVersion);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch CaptureData.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (captureData) {
+            SO = await captureData.fetchSystemObject();
+            if (SO)
+                expect(SO.idCaptureData).toEqual(captureData.idCaptureData);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch IntermediaryFile.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (intermediaryFile) {
+            SO = await intermediaryFile.fetchSystemObject();
+            if (SO)
+                expect(SO.idIntermediaryFile).toEqual(intermediaryFile.idIntermediaryFile);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Item.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (item) {
+            SO = await item.fetchSystemObject();
+            if (SO)
+                expect(SO.idItem).toEqual(item.idItem);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Model.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (model) {
+            SO = await model.fetchSystemObject();
+            if (SO)
+                expect(SO.idModel).toEqual(model.idModel);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Project.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (project) {
+            SO = await project.fetchSystemObject();
+            if (SO)
+                expect(SO.idProject).toEqual(project.idProject);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch ProjectDocumentation.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (projectDocumentation) {
+            SO = await projectDocumentation.fetchSystemObject();
+            if (SO)
+                expect(SO.idProjectDocumentation).toEqual(projectDocumentation.idProjectDocumentation);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Scene.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (scene) {
+            SO = await scene.fetchSystemObject();
+            if (SO)
+                expect(SO.idScene).toEqual(scene.idScene);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Stakeholder.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (stakeholder) {
+            SO = await stakeholder.fetchSystemObject();
+            if (SO)
+                expect(SO.idStakeholder).toEqual(stakeholder.idStakeholder);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Subject.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (subject) {
+            SO = await subject.fetchSystemObject();
+            if (SO)
+                expect(SO.idSubject).toEqual(subject.idSubject);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Unit.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (unit) {
+            SO = await unit.fetchSystemObject();
+            if (SO)
+                expect(SO.idUnit).toEqual(unit.idUnit);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Workflow.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (workflow) {
+            SO = await workflow.fetchSystemObject();
+            if (SO)
+                expect(SO.idWorkflow).toEqual(workflow.idWorkflow);
+        }
+        expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch WorkflowStep.fetchSystemObject', async () => {
+        let SO: DBAPI.SystemObject | null = null;
+        if (workflowStep) {
+            SO = await workflowStep.fetchSystemObject();
+            if (SO)
+                expect(SO.idWorkflowStep).toEqual(workflowStep.idWorkflowStep);
+        }
+        expect(SO).toBeTruthy();
+    });
+});
+
+// *******************************************************************
 // DB Fetch SystemObject Pair Test Suite
 // *******************************************************************
 describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject with Invalid SystemObject ID', async () => {
-        const SYOP: DBAPI.SystemObjectAndPairs | null = await DBAPI.SystemObject.fetchPairedObject(-1);
-        expect(SYOP).toBeNull();
-    });
-
     let SOActor: DBAPI.SystemObject | null = null;
     let SOAsset: DBAPI.SystemObject | null = null;
     let SOAssetVersion: DBAPI.SystemObject | null = null;
@@ -2256,11 +2275,16 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SOWorkflowStep).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for Actor', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch with Invalid SystemObject ID', async () => {
+        const SYOP: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(-1);
+        expect(SYOP).toBeNull();
+    });
+
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Actor', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOActor && actorWithUnit) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOActor.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOActor.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Actor).toBeTruthy();
                 expect(SYOP.Actor).toMatchObject(actorWithUnit);
@@ -2271,11 +2295,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for Asset', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Asset', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOAsset && assetThumbnail) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOAsset.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOAsset.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Asset).toBeTruthy();
                 expect(SYOP.Asset).toMatchObject(assetThumbnail);
@@ -2286,11 +2310,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for AssetVersion', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for AssetVersion', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOAssetVersion && assetVersion) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOAssetVersion.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOAssetVersion.idSystemObject);
             if (SYOP) {
                 expect(SYOP.AssetVersion).toBeTruthy();
                 expect(SYOP.AssetVersion).toMatchObject(assetVersion);
@@ -2301,11 +2325,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for CaptureData', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for CaptureData', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOCaptureData && captureData) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOCaptureData.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOCaptureData.idSystemObject);
             if (SYOP) {
                 expect(SYOP.CaptureData).toBeTruthy();
                 expect(SYOP.CaptureData).toMatchObject(captureData);
@@ -2316,11 +2340,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for IntermediaryFile', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for IntermediaryFile', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOIntermediaryFile && intermediaryFile) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOIntermediaryFile.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOIntermediaryFile.idSystemObject);
             if (SYOP) {
                 expect(SYOP.IntermediaryFile).toBeTruthy();
                 expect(SYOP.IntermediaryFile).toMatchObject(intermediaryFile);
@@ -2331,11 +2355,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for Item', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Item', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOItem && item) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOItem.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOItem.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Item).toBeTruthy();
                 expect(SYOP.Item).toMatchObject(item);
@@ -2346,11 +2370,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for Model', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Model', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOModel && model) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOModel.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOModel.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Model).toBeTruthy();
                 expect(SYOP.Model).toMatchObject(model);
@@ -2361,11 +2385,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for Project', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Project', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOProject && project) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOProject.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOProject.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Project).toBeTruthy();
                 expect(SYOP.Project).toMatchObject(project);
@@ -2376,11 +2400,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for ProjectDocumentation', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for ProjectDocumentation', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOProjectDocumentation && projectDocumentation) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOProjectDocumentation.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOProjectDocumentation.idSystemObject);
             if (SYOP) {
                 expect(SYOP.ProjectDocumentation).toBeTruthy();
                 expect(SYOP.ProjectDocumentation).toMatchObject(projectDocumentation);
@@ -2391,11 +2415,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for Scene', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Scene', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOScene && scene) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOScene.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOScene.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Scene).toBeTruthy();
                 expect(SYOP.Scene).toMatchObject(scene);
@@ -2406,11 +2430,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for Stakeholder', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Stakeholder', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOStakeholder && stakeholder) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOStakeholder.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOStakeholder.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Stakeholder).toBeTruthy();
                 expect(SYOP.Stakeholder).toMatchObject(stakeholder);
@@ -2421,11 +2445,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for Subject', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Subject', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOSubject && subject) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOSubject.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOSubject.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Subject).toBeTruthy();
                 expect(SYOP.Subject).toMatchObject(subject);
@@ -2436,11 +2460,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for Unit', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Unit', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOUnit && unit) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOUnit.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOUnit.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Unit).toBeTruthy();
                 expect(SYOP.Unit).toMatchObject(unit);
@@ -2451,11 +2475,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for Workflow', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Workflow', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOWorkflow && workflow) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOWorkflow.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOWorkflow.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Workflow).toBeTruthy();
                 expect(SYOP.Workflow).toMatchObject(workflow);
@@ -2466,11 +2490,11 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SYOP).toBeTruthy();
     });
 
-    test('DB Fetch SystemObject: SystemObject.fetchPairedObject for WorkflowStep', async () => {
-        let SYOP: DBAPI.SystemObjectAndPairs | null = null;
+    test('DB Fetch SystemObject: SystemObjectPairs.fetch for WorkflowStep', async () => {
+        let SYOP: DBAPI.SystemObjectPairs | null = null;
 
         if (SOWorkflowStep && workflowStep) {
-            SYOP = await DBAPI.SystemObject.fetchPairedObject(SOWorkflowStep.idSystemObject);
+            SYOP = await DBAPI.SystemObjectPairs.fetch(SOWorkflowStep.idSystemObject);
             if (SYOP) {
                 expect(SYOP.WorkflowStep).toBeTruthy();
                 expect(SYOP.WorkflowStep).toMatchObject(workflowStep);
@@ -2614,10 +2638,10 @@ describe('DB Fetch Xref Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch Xref: SystemObject.fetchMasterSystemObjectAndPairFromXref', async () => {
-        let SO: DBAPI.SystemObjectAndPairs[] | null = null;
+    test('DB Fetch Xref: SystemObjectPairs.fetchMasterFromXref', async () => {
+        let SO: DBAPI.SystemObjectPairs[] | null = null;
         if (systemObjectSubject && systemObjectScene) {
-            SO = await DBAPI.SystemObject.fetchMasterSystemObjectAndPairFromXref(systemObjectScene.idSystemObject);
+            SO = await DBAPI.SystemObjectPairs.fetchMasterFromXref(systemObjectScene.idSystemObject);
             if (SO) {
                 expect(SO.length).toBe(1);
                 if (SO.length == 1) {
@@ -2630,10 +2654,10 @@ describe('DB Fetch Xref Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 
-    test('DB Fetch Xref: SystemObject.fetchDerivedSystemObjectAndPairFromXref', async () => {
-        let SO: DBAPI.SystemObjectAndPairs[] | null = null;
+    test('DB Fetch Xref: SystemObjectPairs.fetchDerivedFromXref', async () => {
+        let SO: DBAPI.SystemObjectPairs[] | null = null;
         if (systemObjectAsset && systemObjectScene && systemObjectSubject) {
-            SO = await DBAPI.SystemObject.fetchDerivedSystemObjectAndPairFromXref(systemObjectSubject.idSystemObject);
+            SO = await DBAPI.SystemObjectPairs.fetchDerivedFromXref(systemObjectSubject.idSystemObject);
             if (SO) {
                 expect(SO.length).toBe(2);
                 if (SO.length == 2) {
@@ -2758,6 +2782,9 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Actor.update', async () => {
         let bUpdated: boolean = false;
         if (actorWithOutUnit && unit2) {
+            const SOOld: DBAPI.SystemObject | null = await actorWithOutUnit.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             const updatedName: string = 'Updated Test ActorName';
             actorWithOutUnit.IndividualName = updatedName;
             actorWithOutUnit.idUnit = unit2.idUnit;
@@ -2768,6 +2795,11 @@ describe('DB Update Test Suite', () => {
             if (actorFetch) {
                 expect(actorFetch.IndividualName).toBe(updatedName);
                 expect(actorFetch.idUnit).toBe(unit2.idUnit);
+
+                const SONew: DBAPI.SystemObject | null = await actorFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
             }
         }
         expect(bUpdated).toBeTruthy();
@@ -2776,13 +2808,23 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Asset.update', async () => {
         let bUpdated: boolean = false;
         if (assetThumbnail && assetGroup2) {
+            const SOOld: DBAPI.SystemObject | null = await assetThumbnail.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             assetThumbnail.idAssetGroup = assetGroup2.idAssetGroup;
             bUpdated = await assetThumbnail.update();
 
             const assetFetch: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetThumbnail.idAsset);
             expect(assetFetch).toBeTruthy();
-            if (assetFetch)
+            if (assetFetch) {
                 expect(assetFetch.idAssetGroup).toBe(assetGroup2.idAssetGroup);
+
+                const SONew: DBAPI.SystemObject | null = await assetFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
+
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -2803,13 +2845,22 @@ describe('DB Update Test Suite', () => {
     test('DB Update: AssetVersion.update', async () => {
         let bUpdated: boolean = false;
         if (assetVersion && assetWithoutAG) {
+            const SOOld: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             assetVersion.idAsset = assetWithoutAG.idAsset;
             bUpdated            = await assetVersion.update();
 
             const assetVersionFetch: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(assetVersion.idAssetVersion);
             expect(assetVersionFetch).toBeTruthy();
-            if (assetVersionFetch)
+            if (assetVersionFetch) {
                 expect(assetVersionFetch.idAsset).toBe(assetWithoutAG.idAsset);
+
+                const SONew: DBAPI.SystemObject | null = await assetVersionFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -2817,13 +2868,22 @@ describe('DB Update Test Suite', () => {
     test('DB Update: CaptureData.update', async () => {
         let bUpdated: boolean = false;
         if (captureData && assetWithoutAG) {
+            const SOOld: DBAPI.SystemObject | null = await captureData.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             captureData.idAssetThumbnail = assetWithoutAG.idAsset;
             bUpdated = await captureData.update();
 
             const captureDataFetch: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetch(captureData.idCaptureData);
             expect(captureDataFetch).toBeTruthy();
-            if (captureDataFetch)
+            if (captureDataFetch) {
                 expect(captureDataFetch.idAssetThumbnail).toBe(assetWithoutAG.idAsset);
+
+                const SONew: DBAPI.SystemObject | null = await captureDataFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -2902,13 +2962,22 @@ describe('DB Update Test Suite', () => {
     test('DB Update: IntermediaryFile.update', async () => {
         let bUpdated: boolean = false;
         if (intermediaryFile && assetWithoutAG) {
+            const SOOld: DBAPI.SystemObject | null = await intermediaryFile.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             intermediaryFile.idAsset = assetWithoutAG.idAsset;
             bUpdated = await intermediaryFile.update();
 
             const intermediaryFileFetch: DBAPI.IntermediaryFile | null = await DBAPI.IntermediaryFile.fetch(intermediaryFile.idIntermediaryFile);
             expect(intermediaryFileFetch).toBeTruthy();
-            if (intermediaryFileFetch)
+            if (intermediaryFileFetch) {
                 expect(intermediaryFileFetch.idAsset).toBe(assetWithoutAG.idAsset);
+
+                const SONew: DBAPI.SystemObject | null = await intermediaryFileFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -2916,6 +2985,9 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Item.update', async () => {
         let bUpdated: boolean = false;
         if (item && assetWithoutAG) {
+            const SOOld: DBAPI.SystemObject | null = await item.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             const updatedName: string = 'Updated Test Item';
             item.Name = updatedName;
             item.idAssetThumbnail = assetWithoutAG.idAsset;
@@ -2926,6 +2998,11 @@ describe('DB Update Test Suite', () => {
             if (itemFetch) {
                 expect(itemFetch.Name).toBe(updatedName);
                 expect(itemFetch.idAssetThumbnail).toBe(assetWithoutAG.idAsset);
+
+                const SONew: DBAPI.SystemObject | null = await itemFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
             }
         }
         expect(bUpdated).toBeTruthy();
@@ -2977,13 +3054,22 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Model.update', async () => {
         let bUpdated: boolean = false;
         if (modelNulls && assetThumbnail) {
+            const SOOld: DBAPI.SystemObject | null = await modelNulls.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             modelNulls.idAssetThumbnail = assetThumbnail.idAsset;
             bUpdated = await modelNulls.update();
 
             const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
             expect(modelFetch).toBeTruthy();
-            if (modelFetch)
+            if (modelFetch) {
                 expect(modelFetch.idAssetThumbnail).toBe(assetThumbnail.idAsset);
+
+                const SONew: DBAPI.SystemObject | null = await modelFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3081,14 +3167,23 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Project.update', async () => {
         let bUpdated: boolean = false;
         if (project) {
+            const SOOld: DBAPI.SystemObject | null = await project.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             const updatedName: string = 'Updated Test Project Name';
             project.Name = updatedName;
             bUpdated = await project.update();
 
             const projectFetch: DBAPI.Project | null = await DBAPI.Project.fetch(project.idProject);
             expect(projectFetch).toBeTruthy();
-            if (projectFetch)
+            if (projectFetch) {
                 expect(projectFetch.Name).toBe(updatedName);
+
+                const SONew: DBAPI.SystemObject | null = await projectFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3096,14 +3191,23 @@ describe('DB Update Test Suite', () => {
     test('DB Update: ProjectDocumentation.update', async () => {
         let bUpdated: boolean = false;
         if (projectDocumentation) {
+            const SOOld: DBAPI.SystemObject | null = await projectDocumentation.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             const updatedName: string = 'Updated Test Access Action';
             projectDocumentation.Name   = updatedName;
             bUpdated            = await projectDocumentation.update();
 
             const projectDocumentationFetch: DBAPI.ProjectDocumentation | null = await DBAPI.ProjectDocumentation.fetch(projectDocumentation.idProjectDocumentation);
             expect(projectDocumentationFetch).toBeTruthy();
-            if (projectDocumentationFetch)
+            if (projectDocumentationFetch) {
                 expect(projectDocumentationFetch.Name).toBe(updatedName);
+
+                const SONew: DBAPI.SystemObject | null = await projectDocumentationFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3111,13 +3215,23 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Scene.update', async () => {
         let bUpdated: boolean = false;
         if (sceneNulls && assetThumbnail) {
+            const SOOld: DBAPI.SystemObject | null = await sceneNulls.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             sceneNulls.idAssetThumbnail = assetThumbnail.idAsset;
             bUpdated = await sceneNulls.update();
 
             const sceneFetch: DBAPI.Scene | null = await DBAPI.Scene.fetch(sceneNulls.idScene);
             expect(sceneFetch).toBeTruthy();
-            if (sceneFetch)
+            if (sceneFetch) {
                 expect(sceneFetch.idAssetThumbnail).toBe(assetThumbnail.idAsset);
+
+                const SONew: DBAPI.SystemObject | null = await sceneFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3125,14 +3239,23 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Stakeholder.update', async () => {
         let bUpdated: boolean = false;
         if (stakeholder) {
+            const SOOld: DBAPI.SystemObject | null = await stakeholder.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             const updatedEmail: string = 'abba@dabbadoo.com';
             stakeholder.EmailAddress = updatedEmail;
             bUpdated = await stakeholder.update();
 
             const stakeholderFetch: DBAPI.Stakeholder | null = await DBAPI.Stakeholder.fetch(stakeholder.idStakeholder);
             expect(stakeholderFetch).toBeTruthy();
-            if (stakeholderFetch)
+            if (stakeholderFetch) {
                 expect(stakeholderFetch.EmailAddress).toBe(updatedEmail);
+
+                const SONew: DBAPI.SystemObject | null = await stakeholderFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3140,13 +3263,22 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Subject.update', async () => {
         let bUpdated: boolean = false;
         if (subjectNulls && assetThumbnail) {
+            const SOOld: DBAPI.SystemObject | null = await subjectNulls.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             subjectNulls.idAssetThumbnail = assetThumbnail.idAsset;
             bUpdated = await subjectNulls.update();
 
             const subjectFetch: DBAPI.Subject | null = await DBAPI.Subject.fetch(subjectNulls.idSubject);
             expect(subjectFetch).toBeTruthy();
-            if (subjectFetch)
+            if (subjectFetch) {
                 expect(subjectFetch.idAssetThumbnail).toBe(assetThumbnail.idAsset);
+
+                const SONew: DBAPI.SystemObject | null = await subjectFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3183,14 +3315,23 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Unit.update', async () => {
         let bUpdated: boolean = false;
         if (unit) {
+            const SOOld: DBAPI.SystemObject | null = await unit.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             const updatedName: string = 'Updated Test Unit';
             unit.Name = updatedName;
             bUpdated  = await unit.update();
 
             const unitFetch: DBAPI.Unit | null = await DBAPI.Unit.fetch(unit.idUnit);
             expect(unitFetch).toBeTruthy();
-            if (unitFetch)
+            if (unitFetch) {
                 expect(unitFetch.Name).toBe(updatedName);
+
+                const SONew: DBAPI.SystemObject | null = await unitFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3273,13 +3414,22 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Workflow.update', async () => {
         let bUpdated: boolean = false;
         if (workflow && project2) {
+            const SOOld: DBAPI.SystemObject | null = await workflow.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             workflow.idProject = project2.idProject;
             bUpdated = await workflow.update();
 
             const workflowFetch: DBAPI.Workflow | null = await DBAPI.Workflow.fetch(workflow.idWorkflow);
             expect(workflowFetch).toBeTruthy();
-            if (workflowFetch)
+            if (workflowFetch) {
                 expect(workflowFetch.idProject).toBe(project2.idProject);
+
+                const SONew: DBAPI.SystemObject | null = await workflowFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3287,13 +3437,22 @@ describe('DB Update Test Suite', () => {
     test('DB Update: WorkflowStep.update', async () => {
         let bUpdated: boolean = false;
         if (workflowStep && workflowNulls) {
+            const SOOld: DBAPI.SystemObject | null = await workflowStep.fetchSystemObject();
+            expect(SOOld).toBeTruthy();
+
             workflowStep.idWorkflow = workflowNulls.idWorkflow;
             bUpdated = await workflowStep.update();
 
             const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
             expect(workflowStepFetch).toBeTruthy();
-            if (workflowStepFetch)
+            if (workflowStepFetch) {
                 expect(workflowStepFetch.idWorkflow).toBe(workflowNulls.idWorkflow);
+
+                const SONew: DBAPI.SystemObject | null = await workflowStepFetch.fetchSystemObject();
+                expect(SONew).toBeTruthy();
+                if (SOOld && SONew)
+                    expect(SOOld).toMatchObject(SONew);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });

@@ -1,7 +1,6 @@
 /**
  * Type resolver for AssetGroup
  */
-import { AssetGroup } from '@prisma/client';
 import { Parent  } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 

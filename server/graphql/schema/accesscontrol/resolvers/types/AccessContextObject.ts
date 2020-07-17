@@ -1,21 +1,15 @@
 /**
  * Type resolver for AccessContextObject
  */
-import { AccessContext, SystemObject } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
 
 const AccessContextObject = {
-    AccessContext: async (parent: Parent, _: Args, context: Context): Promise<AccessContext | null> => {
-        const { idAccessContextObject } = parent;
-        const { prisma } = context;
-
-        return prisma.accessContextObject.findOne({ where: { idAccessContextObject } }).AccessContext();
+    AccessContext: async (parent: Parent): Promise<DBAPI.AccessContext | null> => {
+        return await DBAPI.AccessContext.fetch(parent.idAccessContext);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idAccessContextObject } = parent;
-        const { prisma } = context;
-
-        return prisma.accessContextObject.findOne({ where: { idAccessContextObject } }).SystemObject();
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetch(parent.idSystemObject);
     }
 };
 

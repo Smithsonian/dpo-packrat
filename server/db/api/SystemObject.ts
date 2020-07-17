@@ -4,23 +4,6 @@ import { DBConnectionFactory, WorkflowStep } from '..';
 import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export type SystemObjectAndPairs = P.SystemObject
-& { Actor: P.Actor | null}
-& { Asset: P.Asset | null}
-& { AssetVersion: P.AssetVersion | null}
-& { CaptureData: P.CaptureData | null}
-& { IntermediaryFile: P.IntermediaryFile | null}
-& { Item: P.Item | null}
-& { Model: P.Model | null}
-& { Project: P.Project | null}
-& { ProjectDocumentation: P.ProjectDocumentation | null}
-& { Scene: P.Scene | null}
-& { Stakeholder: P.Stakeholder | null}
-& { Subject: P.Subject | null}
-& { Unit: P.Unit | null}
-& { Workflow: P.Workflow | null}
-& { WorkflowStep: P.WorkflowStep | null};
-
 export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.SystemObject {
     idActor!: number | null;
     idAsset!: number | null;
@@ -64,34 +47,6 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         }
     }
 
-    static async fetchPairedObject(idSystemObject: number): Promise<SystemObjectAndPairs | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({
-                where: { idSystemObject, },
-                include: {
-                    Actor: true,
-                    Asset: true,
-                    AssetVersion: true,
-                    CaptureData: true,
-                    IntermediaryFile: true,
-                    Item: true,
-                    Model: true,
-                    Project: true,
-                    ProjectDocumentation: true,
-                    Scene: true,
-                    Stakeholder: true,
-                    Subject: true,
-                    Unit: true,
-                    Workflow: true,
-                    WorkflowStep: true
-                },
-            });
-        } catch (error) {
-            LOG.logger.error('DBAPI.SystemObject.fetchPairedObject', error);
-            return null;
-        }
-    }
-
     static async fetchDerivedFromXref(idSystemObjectMaster: number): Promise<SystemObject[] | null> {
         try {
             return DBO.CopyArray<P.SystemObject, SystemObject>(
@@ -108,38 +63,6 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         }
     }
 
-    static async fetchDerivedSystemObjectAndPairFromXref(idSystemObjectMaster: number): Promise<SystemObjectAndPairs[] | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findMany({
-                where: {
-                    SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived: {
-                        some: { idSystemObjectMaster },
-                    },
-                },
-                include: {
-                    Actor: true,
-                    Asset: true,
-                    AssetVersion: true,
-                    CaptureData: true,
-                    IntermediaryFile: true,
-                    Item: true,
-                    Model: true,
-                    Project: true,
-                    ProjectDocumentation: true,
-                    Scene: true,
-                    Stakeholder: true,
-                    Subject: true,
-                    Unit: true,
-                    Workflow: true,
-                    WorkflowStep: true
-                },
-            });
-        } catch (error) {
-            LOG.logger.error('DBAPI.SystemObject.fetchDerivedSystemObjectAndPairFromXref', error);
-            return null;
-        }
-    }
-
     static async fetchMasterFromXref(idSystemObjectDerived: number): Promise<SystemObject[] | null> {
         try {
             return DBO.CopyArray<P.SystemObject, SystemObject>(
@@ -152,38 +75,6 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
                 }), SystemObject);
         } catch (error) {
             LOG.logger.error('DBAPI.SystemObject.fetchMasterFromXref', error);
-            return null;
-        }
-    }
-
-    static async fetchMasterSystemObjectAndPairFromXref(idSystemObjectDerived: number): Promise<SystemObjectAndPairs[] | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findMany({
-                where: {
-                    SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster: {
-                        some: { idSystemObjectDerived },
-                    },
-                },
-                include: {
-                    Actor: true,
-                    Asset: true,
-                    AssetVersion: true,
-                    CaptureData: true,
-                    IntermediaryFile: true,
-                    Item: true,
-                    Model: true,
-                    Project: true,
-                    ProjectDocumentation: true,
-                    Scene: true,
-                    Stakeholder: true,
-                    Subject: true,
-                    Unit: true,
-                    Workflow: true,
-                    WorkflowStep: true
-                },
-            });
-        } catch (error) {
-            LOG.logger.error('DBAPI.SystemObject.fetchMasterSystemObjectAndPairFromXref', error);
             return null;
         }
     }

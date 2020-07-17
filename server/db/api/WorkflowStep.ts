@@ -100,15 +100,6 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
         }
     }
 
-    static async fetchSystemObjectAndWorkflowStep(idWorkflowStep: number): Promise<SystemObjectBase & { WorkflowStep: WorkflowStepBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflowStep, }, include: { WorkflowStep: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.WorkflowStep.fetchSystemObjectAndWorkflowStep', error);
-            return null;
-        }
-    }
-
     static async fetchFromUser(idUserOwner: number): Promise<WorkflowStep[] | null> {
         try {
             return DBO.CopyArray<WorkflowStepBase, WorkflowStep>(

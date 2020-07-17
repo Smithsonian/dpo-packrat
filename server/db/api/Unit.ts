@@ -70,13 +70,4 @@ export class Unit extends DBO.DBObject<UnitBase> implements UnitBase {
             return null;
         }
     }
-
-    static async fetchSystemObjectAndUnit(idUnit: number): Promise<SystemObjectBase & { Unit: UnitBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit, }, include: { Unit: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.Unit.fetchSystemObjectAndUnit', error);
-            return null;
-        }
-    }
 }

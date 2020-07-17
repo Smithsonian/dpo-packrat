@@ -75,15 +75,6 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
         }
     }
 
-    static async fetchSystemObjectAndSubject(idSubject: number): Promise<SystemObjectBase & { Subject: SubjectBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject, }, include: { Subject: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.Subject.fetchSystemObjectAndSubject', error);
-            return null;
-        }
-    }
-
     static async fetchFromUnit(idUnit: number): Promise<Subject[] | null> {
         try {
             return DBO.CopyArray<SubjectBase, Subject>(

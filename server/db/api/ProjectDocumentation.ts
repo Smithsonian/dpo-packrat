@@ -72,15 +72,6 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
         }
     }
 
-    static async fetchSystemObjectAndProjectDocumentation(idProjectDocumentation: number): Promise<SystemObjectBase & { ProjectDocumentation: ProjectDocumentationBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, include: { ProjectDocumentation: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.ProjectDocumentation.fetchSystemObjectAndProjectDocumentation', error);
-            return null;
-        }
-    }
-
     static async fetchFromProject(idProject: number): Promise<ProjectDocumentation[] | null> {
         try {
             return DBO.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(

@@ -82,15 +82,6 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
         }
     }
 
-    static async fetchSystemObjectAndAssetVersion(idAssetVersion: number): Promise<SystemObjectBase & { AssetVersion: AssetVersionBase | null } | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAssetVersion, }, include: { AssetVersion: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.AssetVersion.fetchSystemObjectAndAssetVersion', error);
-            return null;
-        }
-    }
-
     static async fetchFromAsset(idAsset: number): Promise<AssetVersion[] | null> {
         try {
             return DBO.CopyArray<AssetVersionBase, AssetVersion>(

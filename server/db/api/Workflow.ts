@@ -78,15 +78,6 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
         }
     }
 
-    static async fetchSystemObjectAndWorkflow(idWorkflow: number): Promise<SystemObjectBase & { Workflow: WorkflowBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflow, }, include: { Workflow: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.Workflow.fetchSystemObjectAndWorkflow', error);
-            return null;
-        }
-    }
-
     static async fetchFromProject(idProject: number): Promise<Workflow[] | null> {
         try {
             return DBO.CopyArray<WorkflowBase, Workflow>(

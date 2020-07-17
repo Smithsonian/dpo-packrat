@@ -71,15 +71,6 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
         }
     }
 
-    static async fetchSystemObjectAndAsset(idAsset: number): Promise<SystemObjectBase & { Asset: AssetBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.Asset.fetchSystemObjectAndAssetID', error);
-            return null;
-        }
-    }
-
     static async fetchFromAssetGroup(idAssetGroup: number): Promise<Asset[] | null> {
         try {
             return DBO.CopyArray<AssetBase, Asset>(
