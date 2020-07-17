@@ -1,79 +1,110 @@
 /* eslint-disable camelcase */
-import { PrismaClient, AssetVersion, SystemObject } from '@prisma/client';
+import { AssetVersion as AssetVersionBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { DBConnectionFactory, SystemObject } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createAssetVersion(prisma: PrismaClient, assetVersion: AssetVersion): Promise<AssetVersion | null> {
-    let createSystemObject: AssetVersion;
-    const { idAsset, idUserCreator, DateCreated, StorageLocation, StorageChecksum, StorageSize } = assetVersion;
-    try {
-        createSystemObject = await prisma.assetVersion.create({
-            data: {
-                Asset:              { connect: { idAsset }, },
-                User:               { connect: { idUser: idUserCreator }, },
-                DateCreated,
-                StorageLocation,
-                StorageChecksum,
-                StorageSize,
-                SystemObject:       { create: { Retired: false }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createAssetVersion', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements AssetVersionBase {
+    idAssetVersion!: number;
+    DateCreated!: Date;
+    idAsset!: number;
+    idUserCreator!: number;
+    StorageChecksum!: string;
+    StorageLocation!: string;
+    StorageSize!: number;
 
-export async function fetchAssetVersion(prisma: PrismaClient, idAssetVersion: number): Promise<AssetVersion | null> {
-    try {
-        return await prisma.assetVersion.findOne({ where: { idAssetVersion, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAssetVersion', error);
-        return null;
+    constructor(input: AssetVersionBase) {
+        super(input);
     }
-}
 
-export async function fetchSystemObjectForAssetVersion(prisma: PrismaClient, sysObj: AssetVersion): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idAssetVersion: sysObj.idAssetVersion, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForAssetVersion', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { DateCreated, idAsset, idUserCreator, StorageChecksum, StorageLocation, StorageSize } = this;
+            ({ idAssetVersion: this.idAssetVersion, DateCreated: this.DateCreated, idAsset: this.idAsset,
+                idUserCreator: this.idUserCreator, StorageChecksum: this.StorageChecksum,
+                StorageLocation: this.StorageLocation, StorageSize: this.StorageSize } =
+                await DBConnectionFactory.prisma.assetVersion.create({
+                    data: {
+                        Asset:              { connect: { idAsset }, },
+                        User:               { connect: { idUser: idUserCreator }, },
+                        DateCreated,
+                        StorageLocation,
+                        StorageChecksum,
+                        StorageSize,
+                        SystemObject:       { create: { Retired: false }, },
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.AssetVersion.create', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectForAssetVersionID(prisma: PrismaClient, idAssetVersion: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idAssetVersion, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForAssetVersionID', error);
-        return null;
+    async update(): Promise<boolean> {
+        try {
+            const { idAssetVersion, DateCreated, idAsset, idUserCreator, StorageChecksum, StorageLocation, StorageSize } = this;
+            return await DBConnectionFactory.prisma.assetVersion.update({
+                where: { idAssetVersion, },
+                data: {
+                    Asset:              { connect: { idAsset }, },
+                    User:               { connect: { idUser: idUserCreator }, },
+                    DateCreated,
+                    StorageLocation,
+                    StorageChecksum,
+                    StorageSize,
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.AssetVersion.update', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectAndAssetVersion(prisma: PrismaClient, idAssetVersion: number): Promise<SystemObject & { AssetVersion: AssetVersion | null } | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idAssetVersion, }, include: { AssetVersion: true, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectAndAssetVersion', error);
-        return null;
+    async fetchSystemObject(): Promise<SystemObject | null> {
+        try {
+            const { idAssetVersion } = this;
+            return DBO.CopyObject<SystemObjectBase, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAssetVersion, }, }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.AssetVersion.fetchSystemObject', error);
+            return null;
+        }
     }
-}
 
-export async function fetchAssetVersionFromAsset(prisma: PrismaClient, idAsset: number): Promise<AssetVersion[] | null> {
-    try {
-        return await prisma.assetVersion.findMany({ where: { idAsset } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAssetVersionFromAsset', error);
-        return null;
+    static async fetch(idAssetVersion: number): Promise<AssetVersion | null> {
+        if (!idAssetVersion)
+            return null;
+        try {
+            return DBO.CopyObject<AssetVersionBase, AssetVersion>(
+                await DBConnectionFactory.prisma.assetVersion.findOne({ where: { idAssetVersion, }, }), AssetVersion);
+        } catch (error) {
+            LOG.logger.error('DBAPI.AssetVersion.fetch', error);
+            return null;
+        }
     }
-}
 
-export async function fetchAssetVersionFromUser(prisma: PrismaClient, idUserCreator: number): Promise<AssetVersion[] | null> {
-    try {
-        return await prisma.assetVersion.findMany({ where: { idUserCreator } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchAssetVersionFromUser', error);
-        return null;
+    static async fetchFromAsset(idAsset: number): Promise<AssetVersion[] | null> {
+        if (!idAsset)
+            return null;
+        try {
+            return DBO.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBConnectionFactory.prisma.assetVersion.findMany({ where: { idAsset } }), AssetVersion);
+        } catch (error) {
+            LOG.logger.error('DBAPI.AssetVersion.fetchFromAsset', error);
+            return null;
+        }
+    }
+
+    static async fetchFromUser(idUserCreator: number): Promise<AssetVersion[] | null> {
+        if (!idUserCreator)
+            return null;
+        try {
+            return DBO.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBConnectionFactory.prisma.assetVersion.findMany({ where: { idUserCreator } }), AssetVersion);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Asset.fetchFromUser', error);
+            return null;
+        }
     }
 }

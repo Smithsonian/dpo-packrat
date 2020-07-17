@@ -1,11 +1,10 @@
 import { CreateUserResult, MutationCreateUserArgs } from '../../../../../types/graphql';
-import { Parent, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
-export default async function createUser(_: Parent, args: MutationCreateUserArgs, context: Context): Promise<CreateUserResult> {
+export default async function createUser(_: Parent, args: MutationCreateUserArgs): Promise<CreateUserResult> {
     const { input } = args;
     const { Name, EmailAddress, SecurityID } = input;
-    const { prisma } = context;
 
     const userArgs = {
         idUser: 0,
@@ -19,7 +18,7 @@ export default async function createUser(_: Parent, args: MutationCreateUserArgs
         EmailSettings: 0
     };
 
-    const User = await DBAPI.createUser(prisma, userArgs);
-
+    const User = new DBAPI.User(userArgs);
+    await User.create();
     return { User };
 }

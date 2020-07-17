@@ -1,16 +1,12 @@
 /**
  * Type resolver for Vocabulary
  */
-import { Vocabulary, VocabularySet } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const Vocabulary = {
-    VocabularySet: async (parent: Parent, _: Args, context: Context): Promise<VocabularySet | null> => {
-        const { idVocabularySet } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchVocabularySet(prisma, idVocabularySet);
+    VocabularySet: async (parent: Parent): Promise<DBAPI.VocabularySet | null> => {
+        return await DBAPI.VocabularySet.fetch(parent.idVocabularySet);
     }
 };
 

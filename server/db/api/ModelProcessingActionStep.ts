@@ -1,39 +1,76 @@
 /* eslint-disable camelcase */
-import { PrismaClient, ModelProcessingActionStep } from '@prisma/client';
+import { ModelProcessingActionStep as ModelProcessingActionStepBase } from '@prisma/client';
+import { DBConnectionFactory } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createModelProcessingActionStep(prisma: PrismaClient, modelProcessingActionStep: ModelProcessingActionStep): Promise<ModelProcessingActionStep | null> {
-    let createSystemObject: ModelProcessingActionStep;
-    const { idModelProcessingAction, idVActionMethod, Description } = modelProcessingActionStep;
-    try {
-        createSystemObject = await prisma.modelProcessingActionStep.create({
-            data: {
-                ModelProcessingAction:  { connect: { idModelProcessingAction }, },
-                Vocabulary:             { connect: { idVocabulary: idVActionMethod }, },
-                Description,
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createModelProcessingActionStep', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActionStepBase> implements ModelProcessingActionStepBase {
+    idModelProcessingActionStep!: number;
+    Description!: string;
+    idModelProcessingAction!: number;
+    idVActionMethod!: number;
 
-export async function fetchModelProcessingActionStep(prisma: PrismaClient, idModelProcessingActionStep: number): Promise<ModelProcessingActionStep | null> {
-    try {
-        return await prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchModelProcessingActionStep', error);
-        return null;
+    constructor(input: ModelProcessingActionStepBase) {
+        super(input);
     }
-}
 
-export async function fetchModelProcessingActionStepFromModelProcessingAction(prisma: PrismaClient, idModelProcessingAction: number): Promise<ModelProcessingActionStep[] | null> {
-    try {
-        return await prisma.modelProcessingActionStep.findMany({ where: { idModelProcessingAction } });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchModelProcessingActionStepFromModelProcessingAction', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { idModelProcessingAction, idVActionMethod, Description } = this;
+            ({ idModelProcessingActionStep: this.idModelProcessingActionStep, idModelProcessingAction: this.idModelProcessingAction,
+                idVActionMethod: this.idVActionMethod, Description: this.Description } =
+                await DBConnectionFactory.prisma.modelProcessingActionStep.create({
+                    data: {
+                        ModelProcessingAction:  { connect: { idModelProcessingAction }, },
+                        Vocabulary:             { connect: { idVocabulary: idVActionMethod }, },
+                        Description,
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelProcessingActionStep.create', error);
+            return false;
+        }
+    }
+
+    async update(): Promise<boolean> {
+        try {
+            const { idModelProcessingActionStep, idModelProcessingAction, idVActionMethod, Description } = this;
+            return await DBConnectionFactory.prisma.modelProcessingActionStep.update({
+                where: { idModelProcessingActionStep, },
+                data: {
+                    ModelProcessingAction:  { connect: { idModelProcessingAction }, },
+                    Vocabulary:             { connect: { idVocabulary: idVActionMethod }, },
+                    Description,
+                },
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelProcessingActionStep.update', error);
+            return false;
+        }
+    }
+
+    static async fetch(idModelProcessingActionStep: number): Promise<ModelProcessingActionStep | null> {
+        if (!idModelProcessingActionStep)
+            return null;
+        try {
+            return DBO.CopyObject<ModelProcessingActionStepBase, ModelProcessingActionStep>(
+                await DBConnectionFactory.prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep, }, }), ModelProcessingActionStep);
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelProcessingActionStep.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromModelProcessingAction(idModelProcessingAction: number): Promise<ModelProcessingActionStep[] | null> {
+        if (!idModelProcessingAction)
+            return null;
+        try {
+            return DBO.CopyArray<ModelProcessingActionStepBase, ModelProcessingActionStep>(
+                await DBConnectionFactory.prisma.modelProcessingActionStep.findMany({ where: { idModelProcessingAction } }), ModelProcessingActionStep);
+        } catch (error) {
+            LOG.logger.error('DBAPI.ModelProcessingActionStep.fetchFromModelProcessingAction', error);
+            return null;
+        }
     }
 }

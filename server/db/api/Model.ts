@@ -1,78 +1,104 @@
 /* eslint-disable camelcase */
-import { PrismaClient, Model, Scene, SystemObject } from '@prisma/client';
+import { Model as ModelBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { DBConnectionFactory, SystemObject } from '..';
+import * as DBO from '../api/DBObject';
 import * as LOG from '../../utils/logger';
 
-export async function createModel(prisma: PrismaClient, model: Model): Promise<Model | null> {
-    let createSystemObject: Model;
-    const { DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits, idVPurpose, idAssetThumbnail } = model;
-    try {
-        createSystemObject = await prisma.model.create({
-            data: {
-                DateCreated,
-                Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
-                Master,
-                Authoritative,
-                Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality }, },
-                Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
-                Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
-                Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                SystemObject:   { create: { Retired: false }, },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.createModel', error);
-        return null;
-    }
-    return createSystemObject;
-}
+export class Model extends DBO.DBObject<ModelBase> implements ModelBase {
+    idModel!: number;
+    Authoritative!: boolean;
+    DateCreated!: Date;
+    idAssetThumbnail!: number | null;
+    idVCreationMethod!: number;
+    idVModality!: number;
+    idVPurpose!: number;
+    idVUnits!: number;
+    Master!: boolean;
 
-export async function fetchModel(prisma: PrismaClient, idModel: number): Promise<Model | null> {
-    try {
-        return await prisma.model.findOne({ where: { idModel, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchModel', error);
-        return null;
+    constructor(input: ModelBase) {
+        super(input);
     }
-}
 
-export async function fetchSystemObjectForModel(prisma: PrismaClient, sysObj: Model): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idModel: sysObj.idModel, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForModel', error);
-        return null;
+    async create(): Promise<boolean> {
+        try {
+            const { DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits, idVPurpose, idAssetThumbnail } = this;
+            ({ idModel: this.idModel, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
+                Master: this.Master, Authoritative: this.Authoritative, idVModality: this.idVModality,
+                idVUnits: this.idVUnits, idVPurpose: this.idVPurpose, idAssetThumbnail: this.idAssetThumbnail } =
+                await DBConnectionFactory.prisma.model.create({
+                    data: {
+                        DateCreated,
+                        Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
+                        Master,
+                        Authoritative,
+                        Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality }, },
+                        Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
+                        Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
+                        Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                        SystemObject:   { create: { Retired: false }, },
+                    },
+                }));
+            return true;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Model.create', error);
+            return false;
+        }
     }
-}
 
-export async function fetchSystemObjectForModelID(prisma: PrismaClient, idModel: number): Promise<SystemObject | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idModel, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectForModelID', error);
-        return null;
-    }
-}
-
-export async function fetchSystemObjectAndModel(prisma: PrismaClient, idModel: number): Promise<SystemObject & { Model: Model | null} | null> {
-    try {
-        return await prisma.systemObject.findOne({ where: { idModel, }, include: { Model: true, }, });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSystemObjectAndModel', error);
-        return null;
-    }
-}
-
-export async function fetchSceneFromXref(prisma: PrismaClient, idModel: number): Promise<Scene[] | null> {
-    try {
-        return await prisma.scene.findMany({
-            where: {
-                ModelSceneXref: {
-                    some: { idModel },
+    async update(): Promise<boolean> {
+        try {
+            const { idModel, DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits, idVPurpose, idAssetThumbnail } = this;
+            return await DBConnectionFactory.prisma.model.update({
+                where: { idModel, },
+                data: {
+                    DateCreated,
+                    Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
+                    Master,
+                    Authoritative,
+                    Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality }, },
+                    Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
+                    Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
+                    Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
                 },
-            },
-        });
-    } catch (error) {
-        LOG.logger.error('DBAPI.fetchSceneFromXref', error);
-        return null;
+            }) ? true : false;
+        } catch (error) {
+            LOG.logger.error('DBAPI.Model.update', error);
+            return false;
+        }
+    }
+
+    async fetchSystemObject(): Promise<SystemObject | null> {
+        try {
+            const { idModel } = this;
+            return DBO.CopyObject<SystemObjectBase, SystemObject>(
+                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idModel, }, }), SystemObject);
+        } catch (error) {
+            LOG.logger.error('DBAPI.model.fetchSystemObject', error);
+            return null;
+        }
+    }
+
+    static async fetch(idModel: number): Promise<Model | null> {
+        if (!idModel)
+            return null;
+        try {
+            return DBO.CopyObject<ModelBase, Model>(
+                await DBConnectionFactory.prisma.model.findOne({ where: { idModel, }, }), Model);
+        } catch (error) {
+            LOG.logger.error('DBAPI.Model.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromXref(idScene: number): Promise<Model[] | null> {
+        if (!idScene)
+            return null;
+        try {
+            return DBO.CopyArray<ModelBase, Model>(
+                await DBConnectionFactory.prisma.model.findMany({ where: { ModelSceneXref: { some: { idScene }, }, }, }), Model);
+        } catch (error) {
+            LOG.logger.error('DBAPI.fetchModelFromXref', error);
+            return null;
+        }
     }
 }

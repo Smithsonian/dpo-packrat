@@ -1,40 +1,24 @@
 /**
  * Type resolver for WorkflowStep
  */
-import { User, Vocabulary, Workflow, SystemObject, WorkflowStepSystemObjectXref } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const WorkflowStep = {
-    User: async (parent: Parent, _: Args, context: Context): Promise<User | null> => {
-        const { idUserOwner } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchUser(prisma, idUserOwner);
+    User: async (parent: Parent): Promise<DBAPI.User | null> => {
+        return await DBAPI.User.fetch(parent.idUserOwner);
     },
-    VWorkflowStepType: async (parent: Parent, _: Args, context: Context): Promise<Vocabulary | null> => {
-        const { idVWorkflowStepType } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.Vocabulary.fetch(prisma, idVWorkflowStepType);
+    VWorkflowStepType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVWorkflowStepType);
     },
-    Workflow: async (parent: Parent, _: Args, context: Context): Promise<Workflow | null> => {
-        const { idWorkflow } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchWorkflow(prisma, idWorkflow);
+    Workflow: async (parent: Parent): Promise<DBAPI.Workflow | null> => {
+        return await DBAPI.Workflow.fetch(parent.idWorkflow);
     },
-    SystemObject: async (parent: Parent, _: Args, context: Context): Promise<SystemObject | null> => {
-        const { idWorkflowStep } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchSystemObjectFromWorkflowStep(prisma, idWorkflowStep);
+    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetchFromWorkflowStepID(parent.idWorkflowStep);
     },
-    WorkflowStepSystemObjectXref: async (parent: Parent, _: Args, context: Context): Promise<WorkflowStepSystemObjectXref[] | null> => {
-        const { idWorkflowStep } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchWorkflowStepSystemObjectXrefFromWorkflowStep(prisma, idWorkflowStep);
+    WorkflowStepSystemObjectXref: async (parent: Parent): Promise<DBAPI.WorkflowStepSystemObjectXref[] | null> => {
+        return await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep(parent.idWorkflowStep);
     }
 };
 

@@ -1,8 +1,8 @@
 import { CreateCaptureDataResult, MutationCreateCaptureDataArgs } from '../../../../../types/graphql';
-import { Parent, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
-export default async function CreateCaptureData(_: Parent, args: MutationCreateCaptureDataArgs, context: Context): Promise<CreateCaptureDataResult> {
+export default async function CreateCaptureData(_: Parent, args: MutationCreateCaptureDataArgs): Promise<CreateCaptureDataResult> {
     const { input } = args;
     const {
         idVCaptureMethod,
@@ -21,7 +21,6 @@ export default async function CreateCaptureData(_: Parent, args: MutationCreateC
         idVLightSourceType,
         idVClusterType
     } = input;
-    const { prisma } = context;
 
     const captureDataArgs = {
         idCaptureData: 0,
@@ -42,7 +41,8 @@ export default async function CreateCaptureData(_: Parent, args: MutationCreateC
         idVClusterType: idVClusterType || null
     };
 
-    const CaptureData = await DBAPI.createCaptureData(prisma, captureDataArgs);
+    const CaptureData = new DBAPI.CaptureData(captureDataArgs);
+    await CaptureData.create();
 
     return { CaptureData };
 }

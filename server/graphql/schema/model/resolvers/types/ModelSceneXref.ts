@@ -1,22 +1,15 @@
 /**
  * Type resolver for ModelSceneXref
  */
-import { Model, Scene } from '@prisma/client';
-import { Parent, Args, Context } from '../../../../../types/resolvers';
+import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const ModelSceneXref = {
-    Model: async (parent: Parent, _: Args, context: Context): Promise<Model | null> => {
-        const { idModel } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchModel(prisma, idModel);
+    Model: async (parent: Parent): Promise<DBAPI.Model | null> => {
+        return await DBAPI.Model.fetch(parent.idModel);
     },
-    Scene: async (parent: Parent, _: Args, context: Context): Promise<Scene | null> => {
-        const { idScene } = parent;
-        const { prisma } = context;
-
-        return await DBAPI.fetchScene(prisma, idScene);
+    Scene: async (parent: Parent): Promise<DBAPI.Scene | null> => {
+        return await DBAPI.Scene.fetch(parent.idScene);
     }
 };
 
