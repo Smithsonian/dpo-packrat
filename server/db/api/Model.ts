@@ -88,15 +88,6 @@ export class Model extends DBO.DBObject<ModelBase> implements ModelBase {
         }
     }
 
-    static async fetchSystemObjectAndModel(idModel: number): Promise<SystemObjectBase & { Model: ModelBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idModel, }, include: { Model: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.Model.fetchSystemObjectAndModel', error);
-            return null;
-        }
-    }
-
     static async fetchFromXref(idScene: number): Promise<Model[] | null> {
         try {
             return DBO.CopyArray<ModelBase, Model>(

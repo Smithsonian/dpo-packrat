@@ -81,13 +81,4 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
             return null;
         }
     }
-
-    static async fetchSystemObjectAndStakeholder(idStakeholder: number): Promise<SystemObjectBase & { Stakeholder: StakeholderBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder, }, include: { Stakeholder: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.Stakeholder.fetchSystemObjectAndStakeholder', error);
-            return null;
-        }
-    }
 }

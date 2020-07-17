@@ -117,15 +117,6 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
         }
     }
 
-    static async fetchSystemObjectAndCaptureData(idCaptureData: number): Promise<SystemObjectBase & { CaptureData: CaptureDataBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idCaptureData, }, include: { CaptureData: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.CaptureData.fetchSystemObjectAndCaptureData', error);
-            return null;
-        }
-    }
-
     static async fetchFromXref(idCaptureDataGroup: number): Promise<CaptureData[] | null> {
         try {
             return DBO.CopyArray<CaptureDataBase, CaptureData>(

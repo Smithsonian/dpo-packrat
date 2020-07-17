@@ -64,13 +64,4 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
             return null;
         }
     }
-
-    static async fetchSystemObjectAndProject(idProject: number): Promise<SystemObjectBase & { Project: ProjectBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject, }, include: { Project: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.Project.fetchSystemObjectAndProject', error);
-            return null;
-        }
-    }
 }

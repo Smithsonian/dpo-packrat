@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { PrismaClient } from '@prisma/client';
 import { GraphQLResolveInfo } from 'graphql';
 
 type Scalars = {
@@ -15,9 +14,5 @@ export type Parent = {
 } | any;
 
 export type Args = { input?: any };
-
-export type Context = {
-    prisma: PrismaClient;
-};
 
 export type Info = GraphQLResolveInfo;

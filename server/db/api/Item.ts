@@ -78,15 +78,6 @@ export class Item extends DBO.DBObject<ItemBase> implements ItemBase {
         }
     }
 
-    static async fetchSystemObjectAndItem(idItem: number): Promise<SystemObjectBase & { Item: ItemBase | null} | null> {
-        try {
-            return await DBConnectionFactory.prisma.systemObject.findOne({ where: { idItem, }, include: { Item: true, }, });
-        } catch (error) {
-            LOG.logger.error('DBAPI.Item.fetchSystemObjectAndItem', error);
-            return null;
-        }
-    }
-
     static async fetchFromSubject(idSubject: number): Promise<Item[] | null> {
         try {
             return DBO.CopyArray<ItemBase, Item>(

@@ -3,7 +3,6 @@
  * This test suite utils helps with setting up jest environment
  * for testing graphql api
  */
-import { PrismaClient } from '@prisma/client';
 import GraphQLApi from '../../../graphql';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
@@ -22,7 +21,6 @@ import {
 } from '../../../types/graphql';
 
 class TestSuiteUtils {
-    prisma!: PrismaClient;
     graphQLApi!: GraphQLApi;
 
     setupJest = (): void => {
@@ -37,10 +35,7 @@ class TestSuiteUtils {
         LOG.logger.info('GraphQL Test Suite');
         LOG.logger.info(`GraphQL Tests writing logs to ${path.resolve(logPath)}`);
 
-        this.prisma = DBAPI.DBConnectionFactory.prisma;
-
-        const context = { prisma: this.prisma };
-        this.graphQLApi = new GraphQLApi({ context });
+        this.graphQLApi = new GraphQLApi();
     };
 
     private afterAll = async (done: () => void): Promise<void> => {

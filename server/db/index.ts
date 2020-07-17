@@ -38,6 +38,7 @@ export * from './api/Scene';
 export * from './api/Stakeholder';
 export * from './api/Subject';
 export * from './api/SystemObject';
+export * from './api/SystemObjectPairs';
 export * from './api/SystemObjectVersion';
 export * from './api/SystemObjectXref';
 export * from './api/Unit';
