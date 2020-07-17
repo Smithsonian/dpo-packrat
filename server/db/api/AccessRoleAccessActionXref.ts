@@ -25,7 +25,7 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
                     }
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRoleAccessActionXref.create', error);
             return false;
         }
@@ -40,8 +40,8 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
                     AccessRole:     { connect: { idAccessRole }, },
                     AccessAction:   { connect: { idAccessAction }, },
                 }
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRoleAccessActionXref.update', error);
             return false;
         }
@@ -53,7 +53,7 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
         try {
             return DBO.CopyObject<AccessRoleAccessActionXrefBase, AccessRoleAccessActionXref>(
                 await DBConnectionFactory.prisma.accessRoleAccessActionXref.findOne({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRoleAccessActionXref.fetch', error);
             return null;
         }

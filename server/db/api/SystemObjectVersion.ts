@@ -25,7 +25,7 @@ export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> i
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectVersion.create', error);
             return false;
         }
@@ -40,8 +40,8 @@ export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> i
                     SystemObject: { connect: { idSystemObject }, },
                     PublishedState,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectVersion.update', error);
             return false;
         }
@@ -53,7 +53,7 @@ export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> i
         try {
             return DBO.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBConnectionFactory.prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectVersion.fetch', error);
             return null;
         }
@@ -65,7 +65,7 @@ export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> i
         try {
             return DBO.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBConnectionFactory.prisma.systemObjectVersion.findMany({ where: { idSystemObject } }), SystemObjectVersion);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectVersion.fetchFromSystemObject', error);
             return null;
         }

@@ -12,8 +12,17 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
     idSystemObject!: number | null;
     idUserCreator!: number | null;
 
+    private idSystemObjectOrig!: number | null;
+    private idUserCreatorOrig!: number | null;
+
     constructor(input: LicenseAssignmentBase) {
         super(input);
+        this.updateCachedValues();
+    }
+
+    private updateCachedValues(): void {
+        this.idSystemObjectOrig = this.idSystemObject;
+        this.idUserCreatorOrig = this.idUserCreator;
     }
 
     async create(): Promise<boolean> {
@@ -30,8 +39,9 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
                         SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : undefined
                     },
                 }));
+            this.updateCachedValues();
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.LicenseAssignment.create', error);
             return false;
         }
@@ -39,18 +49,21 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
 
     async update(): Promise<boolean> {
         try {
-            const { idLicenseAssignment, idLicense, idUserCreator, DateStart, DateEnd, idSystemObject } = this;
-            return await DBConnectionFactory.prisma.licenseAssignment.update({
+            const { idLicenseAssignment, idLicense, idUserCreator, DateStart, DateEnd, idSystemObject,
+                idSystemObjectOrig, idUserCreatorOrig } = this;
+            const retValue: boolean = await DBConnectionFactory.prisma.licenseAssignment.update({
                 where: { idLicenseAssignment, },
                 data: {
                     License:        { connect: { idLicense }, },
-                    User:           idUserCreator ? { connect: { idUser: idUserCreator }, } : undefined,
+                    User:           idUserCreator ? { connect: { idUser: idUserCreator }, } : idUserCreatorOrig ? { disconnect: true, } : undefined,
                     DateStart,
                     DateEnd,
-                    SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : undefined
+                    SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+            this.updateCachedValues();
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.LicenseAssignment.update', error);
             return false;
         }
@@ -62,7 +75,7 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
         try {
             return DBO.CopyObject<LicenseAssignmentBase, LicenseAssignment>(
                 await DBConnectionFactory.prisma.licenseAssignment.findOne({ where: { idLicenseAssignment, }, }), LicenseAssignment);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.LicenseAssignment.fetch', error);
             return null;
         }
@@ -74,7 +87,7 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
         try {
             return DBO.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
                 await DBConnectionFactory.prisma.licenseAssignment.findMany({ where: { idLicense } }), LicenseAssignment);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.LicenseAssignment.fetchFromLicense', error);
             return null;
         }
@@ -86,7 +99,7 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
         try {
             return DBO.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
                 await DBConnectionFactory.prisma.licenseAssignment.findMany({ where: { idUserCreator } }), LicenseAssignment);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.LicenseAssignment.fetchFromUser', error);
             return null;
         }
@@ -98,7 +111,7 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
         try {
             return DBO.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
                 await DBConnectionFactory.prisma.licenseAssignment.findMany({ where: { idSystemObject } }), LicenseAssignment);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.LicenseAssignment.fetchFromSystemObject', error);
             return null;
         }

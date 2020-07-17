@@ -25,7 +25,7 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
                     }
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.create', error);
             return false;
         }
@@ -40,8 +40,8 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
                     AccessContext: { connect: { idAccessContext }, },
                     SystemObject:  { connect: { idSystemObject }, },
                 }
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.update', error);
             return false;
         }
@@ -53,7 +53,7 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
         try {
             return DBO.CopyObject<AccessContextObjectBase, AccessContextObject>(
                 await DBConnectionFactory.prisma.accessContextObject.findOne({ where: { idAccessContextObject, }, }), AccessContextObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.fetch', error);
             return null;
         }
@@ -65,7 +65,7 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
         try {
             return DBO.CopyArray<AccessContextObjectBase, AccessContextObject>(
                 await DBConnectionFactory.prisma.accessContextObject.findMany({ where: { idAccessContext } }), AccessContextObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.fetchFromAccessContext', error);
             return null;
         }
@@ -77,7 +77,7 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
         try {
             return DBO.CopyArray<AccessContextObjectBase, AccessContextObject>(
                 await DBConnectionFactory.prisma.accessContextObject.findMany({ where: { idSystemObject } }), AccessContextObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.fetchFromSystemObject', error);
             return null;
         }

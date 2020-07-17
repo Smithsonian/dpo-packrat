@@ -27,7 +27,7 @@ export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements Acce
                     }
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessPolicy.create', error);
             return false;
         }
@@ -43,8 +43,8 @@ export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements Acce
                     AccessRole:     { connect: { idAccessRole }, },
                     AccessContext:  { connect: { idAccessContext }, },
                 }
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessPolicy.update', error);
             return false;
         }
@@ -56,7 +56,7 @@ export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements Acce
         try {
             return DBO.CopyObject<AccessPolicyBase, AccessPolicy>(
                 await DBConnectionFactory.prisma.accessPolicy.findOne({ where: { idAccessPolicy, }, }), AccessPolicy);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessPolicy.fetch', error);
             return null;
         }
@@ -68,7 +68,7 @@ export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements Acce
         try {
             return DBO.CopyArray<AccessPolicyBase, AccessPolicy>(
                 await DBConnectionFactory.prisma.accessPolicy.findMany({ where: { idAccessContext } }), AccessPolicy);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessPolicy.fetchFromAccessContext', error);
             return null;
         }
@@ -80,7 +80,7 @@ export class AccessPolicy extends DBO.DBObject<AccessPolicyBase> implements Acce
         try {
             return DBO.CopyArray<AccessPolicyBase, AccessPolicy>(
                 await DBConnectionFactory.prisma.accessPolicy.findMany({ where: { idUser } }), AccessPolicy);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessPolicy.fetchFromUser', error);
             return null;
         }

@@ -24,7 +24,7 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
                     }
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessAction.create', error);
             return false;
         }
@@ -36,8 +36,8 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
             return await DBConnectionFactory.prisma.accessAction.update({
                 where: { idAccessAction, },
                 data: { Name, SortOrder, },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessAction.update', error);
             return false;
         }
@@ -49,7 +49,7 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
         try {
             return DBO.CopyObject<AccessActionBase, AccessAction>(
                 await DBConnectionFactory.prisma.accessAction.findOne({ where: { idAccessAction, }, }), AccessAction);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessAction.fetch', error);
             return null;
         }
@@ -67,7 +67,7 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
                         },
                     },
                 }), AccessAction);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessAction.fetchFromXref', error);
             return null;
         }

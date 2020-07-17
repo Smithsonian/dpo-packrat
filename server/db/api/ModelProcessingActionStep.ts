@@ -27,7 +27,7 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.create', error);
             return false;
         }
@@ -43,8 +43,8 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
                     Vocabulary:             { connect: { idVocabulary: idVActionMethod }, },
                     Description,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.update', error);
             return false;
         }
@@ -56,7 +56,7 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
         try {
             return DBO.CopyObject<ModelProcessingActionStepBase, ModelProcessingActionStep>(
                 await DBConnectionFactory.prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep, }, }), ModelProcessingActionStep);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.fetch', error);
             return null;
         }
@@ -68,7 +68,7 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
         try {
             return DBO.CopyArray<ModelProcessingActionStepBase, ModelProcessingActionStep>(
                 await DBConnectionFactory.prisma.modelProcessingActionStep.findMany({ where: { idModelProcessingAction } }), ModelProcessingActionStep);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.fetchFromModelProcessingAction', error);
             return null;
         }

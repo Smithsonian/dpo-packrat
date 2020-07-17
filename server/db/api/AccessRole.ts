@@ -19,7 +19,7 @@ export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRo
                 data: { Name, }
             }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRole.create', error);
             return false;
         }
@@ -31,8 +31,8 @@ export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRo
             return await DBConnectionFactory.prisma.accessRole.update({
                 where: { idAccessRole, },
                 data: { Name, },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRole.update', error);
             return false;
         }
@@ -44,7 +44,7 @@ export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRo
         try {
             return DBO.CopyObject<AccessRoleBase, AccessRole>(
                 await DBConnectionFactory.prisma.accessRole.findOne({ where: { idAccessRole, }, }), AccessRole);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRole.fetch', error);
             return null;
         }
@@ -62,7 +62,7 @@ export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRo
                         },
                     },
                 }), AccessRole);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRole.fetchFromXref', error);
             return null;
         }

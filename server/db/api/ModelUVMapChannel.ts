@@ -28,7 +28,7 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.create', error);
             return false;
         }
@@ -44,8 +44,8 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
                     ChannelPosition, ChannelWidth,
                     Vocabulary: { connect: { idVocabulary: idVUVMapType }, },
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.update', error);
             return false;
         }
@@ -57,7 +57,7 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
         try {
             return DBO.CopyObject<ModelUVMapChannelBase, ModelUVMapChannel>(
                 await DBConnectionFactory.prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel, }, }), ModelUVMapChannel);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.fetch', error);
             return null;
         }
@@ -69,7 +69,7 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
         try {
             return DBO.CopyArray<ModelUVMapChannelBase, ModelUVMapChannel>(
                 await DBConnectionFactory.prisma.modelUVMapChannel.findMany({ where: { idModelUVMapFile } }), ModelUVMapChannel);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.fetchFromModelUVMapFile', error);
             return null;
         }

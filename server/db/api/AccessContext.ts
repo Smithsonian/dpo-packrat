@@ -26,7 +26,7 @@ export class AccessContext extends DBO.DBObject<AccessContextBase> implements Ac
                     data: { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene, }
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContext.create', error);
             return false;
         }
@@ -38,8 +38,8 @@ export class AccessContext extends DBO.DBObject<AccessContextBase> implements Ac
             return await DBConnectionFactory.prisma.accessContext.update({
                 where: { idAccessContext, },
                 data: { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene }
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContext.update', error);
             return false;
         }
@@ -51,7 +51,7 @@ export class AccessContext extends DBO.DBObject<AccessContextBase> implements Ac
         try {
             return DBO.CopyObject<AccessContextBase, AccessContext>(
                 await DBConnectionFactory.prisma.accessContext.findOne({ where: { idAccessContext, }, }), AccessContext);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContext.fetch', error);
             return null;
         }

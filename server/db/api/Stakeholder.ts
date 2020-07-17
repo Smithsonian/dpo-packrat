@@ -35,7 +35,7 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Stakeholder.create', error);
             return false;
         }
@@ -54,8 +54,8 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
                     PhoneNumberOffice,
                     MailingAddress,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Stakeholder.update', error);
             return false;
         }
@@ -66,7 +66,7 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
             const { idStakeholder } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.stakeholder.fetchSystemObject', error);
             return null;
         }
@@ -78,7 +78,7 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
         try {
             return DBO.CopyObject<StakeholderBase, Stakeholder>(
                 await DBConnectionFactory.prisma.stakeholder.findOne({ where: { idStakeholder, }, }), Stakeholder);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Stakeholder.fetch', error);
             return null;
         }

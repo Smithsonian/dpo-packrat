@@ -25,7 +25,7 @@ export class SystemObjectXref extends DBO.DBObject<SystemObjectXrefBase> impleme
                     }
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectXref.create', error);
             return false;
         }
@@ -40,8 +40,8 @@ export class SystemObjectXref extends DBO.DBObject<SystemObjectXrefBase> impleme
                     SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster:  { connect: { idSystemObject: idSystemObjectMaster }, },
                     SystemObject_SystemObjectToSystemObjectXref_idSystemObjectDerived: { connect: { idSystemObject: idSystemObjectDerived }, },
                 }
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectXref.update', error);
             return false;
         }
@@ -53,7 +53,7 @@ export class SystemObjectXref extends DBO.DBObject<SystemObjectXrefBase> impleme
         try {
             return DBO.CopyObject<SystemObjectXrefBase, SystemObjectXref>(
                 await DBConnectionFactory.prisma.systemObjectXref.findOne({ where: { idSystemObjectXref, }, }), SystemObjectXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectXref.fetch', error);
             return null;
         }

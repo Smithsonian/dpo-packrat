@@ -15,7 +15,7 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
         try {
             ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBConnectionFactory.prisma.captureDataGroup.create({ data: { } }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.create', error);
             return false;
         }
@@ -27,8 +27,8 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
             return await DBConnectionFactory.prisma.captureDataGroup.update({
                 where: { idCaptureDataGroup, },
                 data: { },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.update', error);
             return false;
         }
@@ -40,7 +40,7 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
         try {
             return DBO.CopyObject<CaptureDataGroupBase, CaptureDataGroup>(
                 await DBConnectionFactory.prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.fetch', error);
             return null;
         }
@@ -58,7 +58,7 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
                         },
                     },
                 }), CaptureDataGroup);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.fetchFromXref', error);
             return null;
         }

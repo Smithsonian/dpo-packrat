@@ -19,7 +19,7 @@ export class License extends DBO.DBObject<LicenseBase> implements LicenseBase {
             ({ idLicense: this.idLicense, Description: this.Description, Name: this.Name } =
                 await DBConnectionFactory.prisma.license.create({ data: { Name, Description }, }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.License.create', error);
             return false;
         }
@@ -31,8 +31,8 @@ export class License extends DBO.DBObject<LicenseBase> implements LicenseBase {
             return await DBConnectionFactory.prisma.license.update({
                 where: { idLicense, },
                 data: { Name, Description, },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.License.update', error);
             return false;
         }
@@ -44,7 +44,7 @@ export class License extends DBO.DBObject<LicenseBase> implements LicenseBase {
         try {
             return DBO.CopyObject<LicenseBase, License>(
                 await DBConnectionFactory.prisma.license.findOne({ where: { idLicense, }, }), License);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.License.fetch', error);
             return null;
         }

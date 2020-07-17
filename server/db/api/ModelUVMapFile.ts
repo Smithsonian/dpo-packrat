@@ -27,7 +27,7 @@ export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements 
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapFile.create', error);
             return false;
         }
@@ -43,8 +43,8 @@ export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements 
                     Asset:              { connect: { idAsset }, },
                     UVMapEdgeLength,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapFile.update', error);
             return false;
         }
@@ -56,7 +56,7 @@ export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements 
         try {
             return DBO.CopyObject<ModelUVMapFileBase, ModelUVMapFile>(
                 await DBConnectionFactory.prisma.modelUVMapFile.findOne({ where: { idModelUVMapFile, }, }), ModelUVMapFile);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapFile.fetch', error);
             return null;
         }
@@ -68,7 +68,7 @@ export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements 
         try {
             return DBO.CopyArray<ModelUVMapFileBase, ModelUVMapFile>(
                 await DBConnectionFactory.prisma.modelUVMapFile.findMany({ where: { idModelGeometryFile } }), ModelUVMapFile);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapFile.fetchFromModelGeometryFile', error);
             return null;
         }

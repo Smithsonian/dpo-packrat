@@ -24,7 +24,7 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.VocabularySet.create', error);
             return false;
         }
@@ -39,8 +39,8 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
                     Name,
                     SystemMaintained
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.VocabularySet.update', error);
             return false;
         }
@@ -52,7 +52,7 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
         try {
             return DBO.CopyObject<VocabularySetBase, VocabularySet>(
                 await DBConnectionFactory.prisma.vocabularySet.findOne({ where: { idVocabularySet, }, }), VocabularySet);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.VocabularySet.fetch', error);
             return null;
         }

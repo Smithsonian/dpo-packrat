@@ -10,8 +10,15 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
     FilePath!: string;
     idAssetGroup!: number | null;
 
+    private idAssetGroupOrig!: number | null;
+
     constructor(input: AssetBase) {
         super(input);
+        this.updateCachedValues();
+    }
+
+    private updateCachedValues(): void {
+        this.idAssetGroupOrig = this.idAssetGroup;
     }
 
     async create(): Promise<boolean> {
@@ -26,8 +33,9 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
+            this.updateCachedValues();
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.create', error);
             return false;
         }
@@ -35,16 +43,18 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
 
     async update(): Promise<boolean> {
         try {
-            const { idAsset, FileName, FilePath, idAssetGroup } = this;
-            return await DBConnectionFactory.prisma.asset.update({
+            const { idAsset, FileName, FilePath, idAssetGroup, idAssetGroupOrig } = this;
+            const retValue: boolean = await DBConnectionFactory.prisma.asset.update({
                 where: { idAsset, },
                 data: {
                     FileName,
                     FilePath,
-                    AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : undefined,
+                    AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : idAssetGroupOrig ? { disconnect: true, } : undefined,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+            this.updateCachedValues();
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.update', error);
             return false;
         }
@@ -55,7 +65,7 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
             const { idAsset } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchSystemObject', error);
             return null;
         }
@@ -67,7 +77,7 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
         try {
             return DBO.CopyObject<AssetBase, Asset>(
                 await DBConnectionFactory.prisma.asset.findOne({ where: { idAsset, }, }), Asset);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetch', error);
             return null;
         }
@@ -79,7 +89,7 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
         try {
             return DBO.CopyArray<AssetBase, Asset>(
                 await DBConnectionFactory.prisma.asset.findMany({ where: { idAssetGroup } }), Asset);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchFromAssetGroup', error);
             return null;
         }
