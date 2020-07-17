@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { AccessRole as AccessRoleBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -12,7 +13,9 @@ export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRo
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Name } = this;
             ({ idAccessRole: this.idAccessRole, Name: this.Name } = await DBConnectionFactory.prisma.accessRole.create({
@@ -25,7 +28,7 @@ export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRo
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessRole, Name } = this;
             return await DBConnectionFactory.prisma.accessRole.update({

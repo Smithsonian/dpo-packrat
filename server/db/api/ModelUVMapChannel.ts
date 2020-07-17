@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { ModelUVMapChannel as ModelUVMapChannelBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -15,7 +16,9 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idModelUVMapFile, ChannelPosition, ChannelWidth, idVUVMapType } = this;
             ({ idModelUVMapChannel: this.idModelUVMapChannel, idModelUVMapFile: this.idModelUVMapFile,
@@ -34,7 +37,7 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelUVMapChannel, idModelUVMapFile, ChannelPosition, ChannelWidth, idVUVMapType } = this;
             return await DBConnectionFactory.prisma.modelUVMapChannel.update({

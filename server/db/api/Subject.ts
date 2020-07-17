@@ -16,15 +16,14 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
 
     constructor(input: SubjectBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idAssetThumbnailOrig = this.idAssetThumbnail;
         this.idGeoLocationOrig = this.idGeoLocation;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idUnit, idAssetThumbnail, idGeoLocation, Name } = this;
             ({ idSubject: this.idSubject, idUnit: this.idUnit, idAssetThumbnail: this.idAssetThumbnail,
@@ -38,7 +37,6 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.create', error);
@@ -46,7 +44,7 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idSubject, idUnit, idAssetThumbnail, idGeoLocation, Name, idAssetThumbnailOrig, idGeoLocationOrig } = this;
             const retValue: boolean = await DBConnectionFactory.prisma.subject.update({
@@ -58,7 +56,6 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
                     Name,
                 },
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.update', error);

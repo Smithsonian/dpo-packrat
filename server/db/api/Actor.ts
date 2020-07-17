@@ -14,14 +14,13 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
 
     constructor(input: ActorBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idUnitOrig = this.idUnit;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idUnit, IndividualName, OrganizationName } = this;
             ({ idActor: this.idActor, idUnit: this.idUnit, IndividualName: this.IndividualName, OrganizationName: this.OrganizationName } =
@@ -33,7 +32,6 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
                         SystemObject:       { create: { Retired: false }, },
                     }
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.create', error);
@@ -41,7 +39,7 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idActor, idUnit, IndividualName, OrganizationName, idUnitOrig } = this;
             const retValue: boolean = await DBConnectionFactory.prisma.actor.update({
@@ -52,7 +50,6 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
                     Unit:               idUnit ? { connect: { idUnit }, } : idUnitOrig ? { disconnect: true, } : undefined,
                 }
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.update', error);

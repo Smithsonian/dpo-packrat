@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { Stakeholder as StakeholderBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { DBConnectionFactory, SystemObject } from '..';
 import * as DBO from '../api/DBObject';
@@ -17,7 +18,9 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { IndividualName, OrganizationName, EmailAddress, PhoneNumberMobile, PhoneNumberOffice, MailingAddress } = this;
             ({ idStakeholder: this.idStakeholder, IndividualName: this.IndividualName, OrganizationName: this.OrganizationName,
@@ -41,7 +44,7 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idStakeholder, IndividualName, OrganizationName, EmailAddress, PhoneNumberMobile, PhoneNumberOffice, MailingAddress } = this;
             return await DBConnectionFactory.prisma.stakeholder.update({

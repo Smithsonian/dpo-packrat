@@ -21,17 +21,16 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
 
     constructor(input: MetadataBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idAssetValueOrig = this.idAssetValue;
         this.idSystemObjectOrig = this.idSystemObject;
         this.idUserOrig = this.idUser;
         this.idVMetadataSourceOrig = this.idVMetadataSource;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Name, ValueShort, ValueExtended, idAssetValue, idUser, idVMetadataSource, idSystemObject } = this;
             ({ idMetadata: this.idMetadata, Name: this.Name, ValueShort: this.ValueShort,
@@ -48,7 +47,6 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
                         SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : undefined,
                     },
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.create', error);
@@ -56,7 +54,7 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idMetadata, Name, ValueShort, ValueExtended, idAssetValue, idUser, idVMetadataSource, idSystemObject,
                 idAssetValueOrig, idUserOrig, idVMetadataSourceOrig, idSystemObjectOrig } = this;
@@ -72,7 +70,6 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
                     SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
                 },
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.update', error);

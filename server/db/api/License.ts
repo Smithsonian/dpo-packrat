@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { License as LicenseBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -13,7 +14,9 @@ export class License extends DBO.DBObject<LicenseBase> implements LicenseBase {
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Description, Name } = this;
             ({ idLicense: this.idLicense, Description: this.Description, Name: this.Name } =
@@ -25,7 +28,7 @@ export class License extends DBO.DBObject<LicenseBase> implements LicenseBase {
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idLicense, Name, Description } = this;
             return await DBConnectionFactory.prisma.license.update({

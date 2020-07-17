@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { AssetVersion as AssetVersionBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { DBConnectionFactory, SystemObject } from '..';
 import * as DBO from '../api/DBObject';
@@ -17,7 +18,9 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { DateCreated, idAsset, idUserCreator, StorageChecksum, StorageLocation, StorageSize } = this;
             ({ idAssetVersion: this.idAssetVersion, DateCreated: this.DateCreated, idAsset: this.idAsset,
@@ -41,7 +44,7 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idAssetVersion, DateCreated, idAsset, idUserCreator, StorageChecksum, StorageLocation, StorageSize } = this;
             return await DBConnectionFactory.prisma.assetVersion.update({

@@ -17,15 +17,14 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
 
     constructor(input: LicenseAssignmentBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idSystemObjectOrig = this.idSystemObject;
         this.idUserCreatorOrig = this.idUserCreator;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idLicense, idUserCreator, DateStart, DateEnd, idSystemObject } = this;
             ({ idLicenseAssignment: this.idLicenseAssignment, idUserCreator: this.idUserCreator,
@@ -39,7 +38,6 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
                         SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : undefined
                     },
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.LicenseAssignment.create', error);
@@ -47,7 +45,7 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idLicenseAssignment, idLicense, idUserCreator, DateStart, DateEnd, idSystemObject,
                 idSystemObjectOrig, idUserCreatorOrig } = this;
@@ -61,7 +59,6 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
                     SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
                 },
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.LicenseAssignment.update', error);

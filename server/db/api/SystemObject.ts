@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import * as P from '@prisma/client';
 import { DBConnectionFactory, WorkflowStep } from '..';
 import * as DBO from '../api/DBObject';
@@ -27,13 +28,15 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         super(input);
     }
 
+    protected updateCachedValues(): void { }
+
     // NO EXPLICIT METHODS FOR CREATING OR UPDATING SYSTEMOBJECT DIRECTLY.
     // This is done via create* and update* methods of the objects linked to SystemObject
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         throw new ReferenceError('DBAPI.SystemObject.create() should never be called; used the explict create methods of objects linked to SystemObject');
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         throw new ReferenceError('DBAPI.SystemObject.update() should never be called; used the explict update methods of objects linked to SystemObject');
     }
 

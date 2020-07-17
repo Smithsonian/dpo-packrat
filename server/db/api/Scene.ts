@@ -15,14 +15,13 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
 
     constructor(input: SceneBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idAssetThumbnailOrig = this.idAssetThumbnail;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
             ({ idScene: this.idScene, Name: this.Name, idAssetThumbnail: this.idAssetThumbnail,
@@ -36,7 +35,6 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
                         SystemObject:       { create: { Retired: false }, },
                     },
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Scene.create', error);
@@ -44,7 +42,7 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd, idAssetThumbnailOrig } = this;
             const retValue: boolean = await DBConnectionFactory.prisma.scene.update({
@@ -56,7 +54,6 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
                     HasBeenQCd,
                 },
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Scene.update', error);

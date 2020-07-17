@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { Project as ProjectBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { DBConnectionFactory, SystemObject } from '..';
 import * as DBO from '../api/DBObject';
@@ -13,7 +14,9 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Name, Description } = this;
             ({ idProject: this.idProject, Name: this.Name, Description: this.Description } =
@@ -31,7 +34,7 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idProject, Name, Description } = this;
             return await DBConnectionFactory.prisma.project.update({

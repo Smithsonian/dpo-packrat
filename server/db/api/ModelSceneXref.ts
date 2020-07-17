@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { ModelSceneXref as ModelSceneXrefBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -20,7 +21,9 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idModel, idScene, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             ({ idModelSceneXref: this.idModelSceneXref, idModel: this.idModel, idScene: this.idScene, TS0: this.TS0,
@@ -39,7 +42,7 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelSceneXref, idModel, idScene, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             return await DBConnectionFactory.prisma.modelSceneXref.update({

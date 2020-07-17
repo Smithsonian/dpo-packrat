@@ -14,14 +14,13 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
 
     constructor(input: AssetBase) {
         super(input);
-        this.updateCachedValues();
     }
 
-    private updateCachedValues(): void {
+    protected updateCachedValues(): void {
         this.idAssetGroupOrig = this.idAssetGroup;
     }
 
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         try {
             const { FileName, FilePath, idAssetGroup } = this;
             ({ idAsset: this.idAsset, FileName: this.FileName, FilePath: this.FilePath, idAssetGroup: this.idAssetGroup } =
@@ -33,7 +32,6 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
-            this.updateCachedValues();
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.create', error);
@@ -41,7 +39,7 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idAsset, FileName, FilePath, idAssetGroup, idAssetGroupOrig } = this;
             const retValue: boolean = await DBConnectionFactory.prisma.asset.update({
@@ -52,7 +50,6 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
                     AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : idAssetGroupOrig ? { disconnect: true, } : undefined,
                 },
             }) ? true : /* istanbul ignore next */ false;
-            this.updateCachedValues();
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.update', error);

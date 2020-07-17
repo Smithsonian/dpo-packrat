@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { CaptureDataGroup as CaptureDataGroupBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -11,7 +12,9 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBConnectionFactory.prisma.captureDataGroup.create({ data: { } }));
             return true;
@@ -21,7 +24,7 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureDataGroup } = this;
             return await DBConnectionFactory.prisma.captureDataGroup.update({

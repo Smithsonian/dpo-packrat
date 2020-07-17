@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { UserPersonalizationSystemObject as UserPersonalizationSystemObjectBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -14,7 +15,9 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idUser, idSystemObject, Personalization } = this;
             ({ idUserPersonalizationSystemObject: this.idUserPersonalizationSystemObject, idUser: this.idUser,
@@ -33,7 +36,7 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idUserPersonalizationSystemObject, idUser, idSystemObject, Personalization } = this;
             return await DBConnectionFactory.prisma.userPersonalizationSystemObject.update({

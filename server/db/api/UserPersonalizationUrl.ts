@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { UserPersonalizationUrl as UserPersonalizationUrlBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -14,7 +15,9 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idUser, URL, Personalization } = this;
             ({ idUserPersonalizationUrl: this.idUserPersonalizationUrl, idUser: this.idUser,
@@ -33,7 +36,7 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idUserPersonalizationUrl, idUser, URL, Personalization } = this;
             return await DBConnectionFactory.prisma.userPersonalizationUrl.update({
