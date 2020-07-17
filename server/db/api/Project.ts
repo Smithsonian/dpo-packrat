@@ -56,6 +56,8 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
     }
 
     static async fetch(idProject: number): Promise<Project | null> {
+        if (!idProject)
+            return null;
         try {
             return DBO.CopyObject<ProjectBase, Project>(
                 await DBConnectionFactory.prisma.project.findOne({ where: { idProject, }, }), Project);

@@ -67,6 +67,8 @@ export class User extends DBO.DBObject<UserBase> implements UserBase {
     }
 
     static async fetch(idUser: number): Promise<User | null> {
+        if (!idUser)
+            return null;
         try {
             return DBO.CopyObject<UserBase, User>(
                 await DBConnectionFactory.prisma.user.findOne({ where: { idUser, }, }), User);

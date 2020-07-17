@@ -50,6 +50,8 @@ export class GeoLocation extends DBO.DBObject<GeoLocationBase> implements GeoLoc
     }
 
     static async fetch(idGeoLocation: number): Promise<GeoLocation | null> {
+        if (!idGeoLocation)
+            return null;
         try {
             return DBO.CopyObject<GeoLocationBase, GeoLocation>(
                 await DBConnectionFactory.prisma.geoLocation.findOne({ where: { idGeoLocation, }, }), GeoLocation);
@@ -58,37 +60,4 @@ export class GeoLocation extends DBO.DBObject<GeoLocationBase> implements GeoLoc
             return null;
         }
     }
-
-/*
-    static async fetchFromXref(idAccessRole: number): Promise<GeoLocation[] | null> {
-        try {
-            return DBO.CopyArray<GeoLocationBase, GeoLocation>(
-                await DBConnectionFactory.prisma.geoLocation.findMany({
-                    where: {
-                        AccessRoleGeoLocationXref: {
-                            some: { idAccessRole },
-                        },
-                    },
-                }), GeoLocation);
-        } catch (error) {
-            LOG.logger.error('DBAPI.GeoLocation.fetchFromXref', error);
-            return null;
-        }
-    }
-
-    test('DB Update: GeoLocation.update', async () => {
-        let bUpdated: boolean = false;
-        if (geoLocation) {
-            const updatedName: string = 'Updated Test Access Action';
-            geoLocation.Name   = updatedName;
-            bUpdated            = await geoLocation.update();
-
-            const geoLocationFetch: DBAPI.GeoLocation | null = await DBAPI.GeoLocation.fetch(geoLocation.idGeoLocation);
-            expect(geoLocationFetch).toBeTruthy();
-            if (geoLocationFetch)
-                expect(geoLocationFetch.Name).toBe(updatedName);
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-*/
 }

@@ -57,6 +57,8 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
     }
 
     static async fetch(idLicenseAssignment: number): Promise<LicenseAssignment | null> {
+        if (!idLicenseAssignment)
+            return null;
         try {
             return DBO.CopyObject<LicenseAssignmentBase, LicenseAssignment>(
                 await DBConnectionFactory.prisma.licenseAssignment.findOne({ where: { idLicenseAssignment, }, }), LicenseAssignment);
@@ -67,6 +69,8 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
     }
 
     static async fetchFromLicense(idLicense: number): Promise<LicenseAssignment[] | null> {
+        if (!idLicense)
+            return null;
         try {
             return DBO.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
                 await DBConnectionFactory.prisma.licenseAssignment.findMany({ where: { idLicense } }), LicenseAssignment);
@@ -77,6 +81,8 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
     }
 
     static async fetchFromUser(idUserCreator: number): Promise<LicenseAssignment[] | null> {
+        if (!idUserCreator)
+            return null;
         try {
             return DBO.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
                 await DBConnectionFactory.prisma.licenseAssignment.findMany({ where: { idUserCreator } }), LicenseAssignment);
@@ -87,6 +93,8 @@ export class LicenseAssignment extends DBO.DBObject<LicenseAssignmentBase> imple
     }
 
     static async fetchFromSystemObject(idSystemObject: number): Promise<LicenseAssignment[] | null> {
+        if (!idSystemObject)
+            return null;
         try {
             return DBO.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
                 await DBConnectionFactory.prisma.licenseAssignment.findMany({ where: { idSystemObject } }), LicenseAssignment);

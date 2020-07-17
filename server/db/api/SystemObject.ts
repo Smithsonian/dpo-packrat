@@ -38,6 +38,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetch(idSystemObject: number): Promise<SystemObject | null> {
+        if (!idSystemObject)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSystemObject, }, }), SystemObject);
@@ -48,6 +50,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchDerivedFromXref(idSystemObjectMaster: number): Promise<SystemObject[] | null> {
+        if (!idSystemObjectMaster)
+            return null;
         try {
             return DBO.CopyArray<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findMany({
@@ -64,6 +68,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchMasterFromXref(idSystemObjectDerived: number): Promise<SystemObject[] | null> {
+        if (!idSystemObjectDerived)
+            return null;
         try {
             return DBO.CopyArray<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findMany({
@@ -80,6 +86,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchWorkflowStepFromXref(idSystemObject: number): Promise<WorkflowStep[] | null> {
+        if (!idSystemObject)
+            return null;
         try {
             return DBO.CopyArray<P.WorkflowStep, WorkflowStep>(
                 await DBConnectionFactory.prisma.workflowStep.findMany({
@@ -96,6 +104,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromActorID(idActor: number): Promise<SystemObject | null> {
+        if (!idActor)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor } }), SystemObject);
@@ -106,6 +116,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromAssetID(idAsset: number): Promise<SystemObject | null> {
+        if (!idAsset)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset } }), SystemObject);
@@ -116,6 +128,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromAssetVersionID(idAssetVersion: number): Promise<SystemObject | null> {
+        if (!idAssetVersion)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAssetVersion } }), SystemObject);
@@ -126,6 +140,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromCaptureDataID(idCaptureData: number): Promise<SystemObject | null> {
+        if (!idCaptureData)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idCaptureData } }), SystemObject);
@@ -136,6 +152,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromIntermediaryFileID(idIntermediaryFile: number): Promise<SystemObject | null> {
+        if (!idIntermediaryFile)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile } }), SystemObject);
@@ -146,6 +164,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromItemID(idItem: number): Promise<SystemObject | null> {
+        if (!idItem)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idItem } }), SystemObject);
@@ -156,6 +176,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromModelID(idModel: number): Promise<SystemObject | null> {
+        if (!idModel)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idModel } }), SystemObject);
@@ -166,6 +188,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromProjectID(idProject: number): Promise<SystemObject | null> {
+        if (!idProject)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject } }), SystemObject);
@@ -176,6 +200,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromProjectDocumentationID(idProjectDocumentation: number): Promise<SystemObject | null> {
+        if (!idProjectDocumentation)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation } }), SystemObject);
@@ -186,6 +212,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromSceneID(idScene: number): Promise<SystemObject | null> {
+        if (!idScene)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene } }), SystemObject);
@@ -196,6 +224,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromStakeholderID(idStakeholder: number): Promise<SystemObject | null> {
+        if (!idStakeholder)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder } }), SystemObject);
@@ -206,6 +236,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromSubjectID(idSubject: number): Promise<SystemObject | null> {
+        if (!idSubject)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject } }), SystemObject);
@@ -216,6 +248,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromUnitID(idUnit: number): Promise<SystemObject | null> {
+        if (!idUnit)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit } }), SystemObject);
@@ -226,6 +260,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromWorkflowID(idWorkflow: number): Promise<SystemObject | null> {
+        if (!idWorkflow)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflow } }), SystemObject);
@@ -236,6 +272,8 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async fetchFromWorkflowStepID(idWorkflowStep: number): Promise<SystemObject | null> {
+        if (!idWorkflowStep)
+            return null;
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflowStep } }), SystemObject);

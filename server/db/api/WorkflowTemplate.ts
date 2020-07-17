@@ -38,6 +38,8 @@ export class WorkflowTemplate extends DBO.DBObject<WorkflowTemplateBase> impleme
     }
 
     static async fetch(idWorkflowTemplate: number): Promise<WorkflowTemplate | null> {
+        if (!idWorkflowTemplate)
+            return null;
         try {
             return DBO.CopyObject<WorkflowTemplateBase, WorkflowTemplate>(
                 await DBConnectionFactory.prisma.workflowTemplate.findOne({ where: { idWorkflowTemplate, }, }), WorkflowTemplate);

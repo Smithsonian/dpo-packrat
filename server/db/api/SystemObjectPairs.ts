@@ -48,6 +48,8 @@ export class SystemObjectActor extends SystemObject implements SystemObjectActor
     }
 
     static async fetch(idActor: number): Promise<SystemObjectActor | null> {
+        if (!idActor)
+            return null;
         try {
             const SOPair: SystemObjectActorBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor, }, include: { Actor: true, }, });
@@ -68,6 +70,8 @@ export class SystemObjectAsset extends SystemObject implements SystemObjectAsset
     }
 
     static async fetch(idAsset: number): Promise<SystemObjectAsset | null> {
+        if (!idAsset)
+            return null;
         try {
             const SOPair: SystemObjectAssetBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
@@ -88,6 +92,8 @@ export class SystemObjectAssetVersion extends SystemObject implements SystemObje
     }
 
     static async fetch(idAssetVersion: number): Promise<SystemObjectAssetVersion | null> {
+        if (!idAssetVersion)
+            return null;
         try {
             const SOPair: SystemObjectAssetVersionBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAssetVersion, }, include: { AssetVersion: true, }, });
@@ -108,6 +114,8 @@ export class SystemObjectCaptureData extends SystemObject implements SystemObjec
     }
 
     static async fetch(idCaptureData: number): Promise<SystemObjectCaptureData | null> {
+        if (!idCaptureData)
+            return null;
         try {
             const SOPair: SystemObjectCaptureDataBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idCaptureData, }, include: { CaptureData: true, }, });
@@ -128,6 +136,8 @@ export class SystemObjectIntermediaryFile extends SystemObject implements System
     }
 
     static async fetch(idIntermediaryFile: number): Promise<SystemObjectIntermediaryFile | null> {
+        if (!idIntermediaryFile)
+            return null;
         try {
             const SOPair: SystemObjectIntermediaryFileBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, include: { IntermediaryFile: true, }, });
@@ -148,6 +158,8 @@ export class SystemObjectItem extends SystemObject implements SystemObjectItemBa
     }
 
     static async fetch(idItem: number): Promise<SystemObjectItem | null> {
+        if (!idItem)
+            return null;
         try {
             const SOPair: SystemObjectItemBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idItem, }, include: { Item: true, }, });
@@ -168,6 +180,8 @@ export class SystemObjectModel extends SystemObject implements SystemObjectModel
     }
 
     static async fetch(idModel: number): Promise<SystemObjectModel | null> {
+        if (!idModel)
+            return null;
         try {
             const SOPair: SystemObjectModelBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idModel, }, include: { Model: true, }, });
@@ -188,6 +202,8 @@ export class SystemObjectProject extends SystemObject implements SystemObjectPro
     }
 
     static async fetch(idProject: number): Promise<SystemObjectProject | null> {
+        if (!idProject)
+            return null;
         try {
             const SOPair: SystemObjectProjectBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject, }, include: { Project: true, }, });
@@ -208,6 +224,8 @@ export class SystemObjectProjectDocumentation extends SystemObject implements Sy
     }
 
     static async fetch(idProjectDocumentation: number): Promise<SystemObjectProjectDocumentation | null> {
+        if (!idProjectDocumentation)
+            return null;
         try {
             const SOPair: SystemObjectProjectDocumentationBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, include: { ProjectDocumentation: true, }, });
@@ -228,6 +246,8 @@ export class SystemObjectScene extends SystemObject implements SystemObjectScene
     }
 
     static async fetch(idScene: number): Promise<SystemObjectScene | null> {
+        if (!idScene)
+            return null;
         try {
             const SOPair: SystemObjectSceneBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene, }, include: { Scene: true, }, });
@@ -248,6 +268,8 @@ export class SystemObjectStakeholder extends SystemObject implements SystemObjec
     }
 
     static async fetch(idStakeholder: number): Promise<SystemObjectStakeholder | null> {
+        if (!idStakeholder)
+            return null;
         try {
             const SOPair: SystemObjectStakeholderBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder, }, include: { Stakeholder: true, }, });
@@ -268,6 +290,8 @@ export class SystemObjectSubject extends SystemObject implements SystemObjectSub
     }
 
     static async fetch(idSubject: number): Promise<SystemObjectSubject | null> {
+        if (!idSubject)
+            return null;
         try {
             const SOPair: SystemObjectSubjectBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject, }, include: { Subject: true, }, });
@@ -288,6 +312,8 @@ export class SystemObjectUnit extends SystemObject implements SystemObjectUnitBa
     }
 
     static async fetch(idUnit: number): Promise<SystemObjectUnit | null> {
+        if (!idUnit)
+            return null;
         try {
             const SOPair: SystemObjectUnitBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit, }, include: { Unit: true, }, });
@@ -308,6 +334,8 @@ export class SystemObjectWorkflow extends SystemObject implements SystemObjectWo
     }
 
     static async fetch(idWorkflow: number): Promise<SystemObjectWorkflow | null> {
+        if (!idWorkflow)
+            return null;
         try {
             const SOPair: SystemObjectWorkflowBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflow, }, include: { Workflow: true, }, });
@@ -328,6 +356,8 @@ export class SystemObjectWorkflowStep extends SystemObject implements SystemObje
     }
 
     static async fetch(idWorkflowStep: number): Promise<SystemObjectWorkflowStep | null> {
+        if (!idWorkflowStep)
+            return null;
         try {
             const SOPair: SystemObjectWorkflowStepBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflowStep, }, include: { WorkflowStep: true, }, });
@@ -376,6 +406,8 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
     }
 
     static async fetch(idSystemObject: number): Promise<SystemObjectPairs | null> {
+        if (!idSystemObject)
+            return null;
         try {
             const SOAPB: SystemObjectPairsBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({
@@ -406,6 +438,8 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
     }
 
     static async fetchDerivedFromXref(idSystemObjectMaster: number): Promise<SystemObjectPairs[] | null> {
+        if (!idSystemObjectMaster)
+            return null;
         try {
             return DBO.CopyArray<SystemObjectPairsBase, SystemObjectPairs>(
                 await DBConnectionFactory.prisma.systemObject.findMany({
@@ -439,6 +473,8 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
     }
 
     static async fetchMasterFromXref(idSystemObjectDerived: number): Promise<SystemObjectPairs[] | null> {
+        if (!idSystemObjectDerived)
+            return null;
         try {
             return DBO.CopyArray<SystemObjectPairsBase, SystemObjectPairs>(
                 await DBConnectionFactory.prisma.systemObject.findMany({

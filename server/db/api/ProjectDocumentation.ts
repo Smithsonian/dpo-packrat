@@ -63,6 +63,8 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
     }
 
     static async fetch(idProjectDocumentation: number): Promise<ProjectDocumentation | null> {
+        if (!idProjectDocumentation)
+            return null;
         try {
             return DBO.CopyObject<ProjectDocumentationBase, ProjectDocumentation>(
                 await DBConnectionFactory.prisma.projectDocumentation.findOne({ where: { idProjectDocumentation, }, }), ProjectDocumentation);
@@ -73,6 +75,8 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
     }
 
     static async fetchFromProject(idProject: number): Promise<ProjectDocumentation[] | null> {
+        if (!idProject)
+            return null;
         try {
             return DBO.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(
                 await DBConnectionFactory.prisma.projectDocumentation.findMany({ where: { idProject } }), ProjectDocumentation);

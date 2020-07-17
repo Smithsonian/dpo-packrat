@@ -51,6 +51,8 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
     }
 
     static async fetch(idUserPersonalizationUrl: number): Promise<UserPersonalizationUrl | null> {
+        if (!idUserPersonalizationUrl)
+            return null;
         try {
             return DBO.CopyObject<UserPersonalizationUrlBase, UserPersonalizationUrl>(
                 await DBConnectionFactory.prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
@@ -61,6 +63,8 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
     }
 
     static async fetchFromUser(idUser: number): Promise<UserPersonalizationUrl[] | null> {
+        if (!idUser)
+            return null;
         try {
             return DBO.CopyArray<UserPersonalizationUrlBase, UserPersonalizationUrl>(
                 await DBConnectionFactory.prisma.userPersonalizationUrl.findMany({ where: { idUser } }), UserPersonalizationUrl);

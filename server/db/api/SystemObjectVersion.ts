@@ -48,6 +48,8 @@ export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> i
     }
 
     static async fetch(idSystemObjectVersion: number): Promise<SystemObjectVersion | null> {
+        if (!idSystemObjectVersion)
+            return null;
         try {
             return DBO.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBConnectionFactory.prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
@@ -58,6 +60,8 @@ export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> i
     }
 
     static async fetchFromSystemObject(idSystemObject: number): Promise<SystemObjectVersion[] | null> {
+        if (!idSystemObject)
+            return null;
         try {
             return DBO.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBConnectionFactory.prisma.systemObjectVersion.findMany({ where: { idSystemObject } }), SystemObjectVersion);

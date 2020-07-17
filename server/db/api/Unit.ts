@@ -62,6 +62,8 @@ export class Unit extends DBO.DBObject<UnitBase> implements UnitBase {
     }
 
     static async fetch(idUnit: number): Promise<Unit | null> {
+        if (!idUnit)
+            return null;
         try {
             return DBO.CopyObject<UnitBase, Unit>(
                 await DBConnectionFactory.prisma.unit.findOne({ where: { idUnit, }, }), Unit);

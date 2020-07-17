@@ -46,6 +46,8 @@ export class AccessContext extends DBO.DBObject<AccessContextBase> implements Ac
     }
 
     static async fetch(idAccessContext: number): Promise<AccessContext | null> {
+        if (!idAccessContext)
+            return null;
         try {
             return DBO.CopyObject<AccessContextBase, AccessContext>(
                 await DBConnectionFactory.prisma.accessContext.findOne({ where: { idAccessContext, }, }), AccessContext);

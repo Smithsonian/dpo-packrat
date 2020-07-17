@@ -59,6 +59,8 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
     }
 
     static async fetch(idIntermediaryFile: number): Promise<IntermediaryFile | null> {
+        if (!idIntermediaryFile)
+            return null;
         try {
             return DBO.CopyObject<IntermediaryFileBase, IntermediaryFile>(
                 await DBConnectionFactory.prisma.intermediaryFile.findOne({ where: { idIntermediaryFile, }, }), IntermediaryFile);

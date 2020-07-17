@@ -75,6 +75,8 @@ export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> imple
     }
 
     static async fetch(idModelGeometryFile: number): Promise<ModelGeometryFile | null> {
+        if (!idModelGeometryFile)
+            return null;
         try {
             return DBO.CopyObject<ModelGeometryFileBase, ModelGeometryFile>(
                 await DBConnectionFactory.prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile, }, }), ModelGeometryFile);
@@ -85,6 +87,8 @@ export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> imple
     }
 
     static async fetchFromModel(idModel: number): Promise<ModelGeometryFile[] | null> {
+        if (!idModel)
+            return null;
         try {
             return DBO.CopyArray<ModelGeometryFileBase, ModelGeometryFile>(
                 await DBConnectionFactory.prisma.modelGeometryFile.findMany({ where: { idModel } }), ModelGeometryFile);

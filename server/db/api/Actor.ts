@@ -62,6 +62,8 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
     }
 
     static async fetch(idActor: number): Promise<Actor | null> {
+        if (!idActor)
+            return null;
         try {
             return DBO.CopyObject<ActorBase, Actor>(
                 await DBConnectionFactory.prisma.actor.findOne({ where: { idActor, }, }), Actor);
@@ -72,6 +74,8 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
     }
 
     static async fetchFromUnit(idUnit: number): Promise<Actor[] | null> {
+        if (!idUnit)
+            return null;
         try {
             return DBO.CopyArray<ActorBase, Actor>(
                 await DBConnectionFactory.prisma.actor.findMany({ where: { idUnit } }), Actor);

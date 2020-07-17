@@ -73,6 +73,8 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
     }
 
     static async fetch(idStakeholder: number): Promise<Stakeholder | null> {
+        if (!idStakeholder)
+            return null;
         try {
             return DBO.CopyObject<StakeholderBase, Stakeholder>(
                 await DBConnectionFactory.prisma.stakeholder.findOne({ where: { idStakeholder, }, }), Stakeholder);

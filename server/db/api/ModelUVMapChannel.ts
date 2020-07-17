@@ -52,6 +52,8 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
     }
 
     static async fetch(idModelUVMapChannel: number): Promise<ModelUVMapChannel | null> {
+        if (!idModelUVMapChannel)
+            return null;
         try {
             return DBO.CopyObject<ModelUVMapChannelBase, ModelUVMapChannel>(
                 await DBConnectionFactory.prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel, }, }), ModelUVMapChannel);
@@ -62,6 +64,8 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
     }
 
     static async fetchFromModelUVMapFile(idModelUVMapFile: number): Promise<ModelUVMapChannel[] | null> {
+        if (!idModelUVMapFile)
+            return null;
         try {
             return DBO.CopyArray<ModelUVMapChannelBase, ModelUVMapChannel>(
                 await DBConnectionFactory.prisma.modelUVMapChannel.findMany({ where: { idModelUVMapFile } }), ModelUVMapChannel);

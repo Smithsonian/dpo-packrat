@@ -48,6 +48,8 @@ export class CaptureDataGroupCaptureDataXref extends DBO.DBObject<CaptureDataGro
     }
 
     static async fetch(idCaptureDataGroupCaptureDataXref: number): Promise<CaptureDataGroupCaptureDataXref | null> {
+        if (!idCaptureDataGroupCaptureDataXref)
+            return null;
         try {
             return DBO.CopyObject<CaptureDataGroupCaptureDataXrefBase, CaptureDataGroupCaptureDataXref>(
                 await DBConnectionFactory.prisma.captureDataGroupCaptureDataXref.findOne({ where: { idCaptureDataGroupCaptureDataXref, }, }),

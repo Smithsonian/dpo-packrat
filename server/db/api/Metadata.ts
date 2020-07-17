@@ -64,6 +64,8 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
     }
 
     static async fetch(idMetadata: number): Promise<Metadata | null> {
+        if (!idMetadata)
+            return null;
         try {
             return DBO.CopyObject<MetadataBase, Metadata>(
                 await DBConnectionFactory.prisma.metadata.findOne({ where: { idMetadata, }, }), Metadata);
@@ -74,6 +76,8 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
     }
 
     static async fetchFromUser(idUser: number): Promise<Metadata[] | null> {
+        if (!idUser)
+            return null;
         try {
             return DBO.CopyArray<MetadataBase, Metadata>(
                 await DBConnectionFactory.prisma.metadata.findMany({ where: { idUser } }), Metadata);
@@ -84,6 +88,8 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
     }
 
     static async fetchFromSystemObject(idSystemObject: number): Promise<Metadata[] | null> {
+        if (!idSystemObject)
+            return null;
         try {
             return DBO.CopyArray<MetadataBase, Metadata>(
                 await DBConnectionFactory.prisma.metadata.findMany({ where: { idSystemObject } }), Metadata);

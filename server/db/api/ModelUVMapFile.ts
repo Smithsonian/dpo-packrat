@@ -51,6 +51,8 @@ export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements 
     }
 
     static async fetch(idModelUVMapFile: number): Promise<ModelUVMapFile | null> {
+        if (!idModelUVMapFile)
+            return null;
         try {
             return DBO.CopyObject<ModelUVMapFileBase, ModelUVMapFile>(
                 await DBConnectionFactory.prisma.modelUVMapFile.findOne({ where: { idModelUVMapFile, }, }), ModelUVMapFile);
@@ -61,6 +63,8 @@ export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements 
     }
 
     static async fetchFromModelGeometryFile(idModelGeometryFile: number): Promise<ModelUVMapFile[] | null> {
+        if (!idModelGeometryFile)
+            return null;
         try {
             return DBO.CopyArray<ModelUVMapFileBase, ModelUVMapFile>(
                 await DBConnectionFactory.prisma.modelUVMapFile.findMany({ where: { idModelGeometryFile } }), ModelUVMapFile);
