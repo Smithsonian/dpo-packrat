@@ -31,7 +31,7 @@ export class ModelProcessingAction extends DBO.DBObject<ModelProcessingActionBas
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingAction.create', error);
             return false;
         }
@@ -49,8 +49,8 @@ export class ModelProcessingAction extends DBO.DBObject<ModelProcessingActionBas
                     ToolsUsed,
                     Description,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingAction.update', error);
             return false;
         }
@@ -62,7 +62,7 @@ export class ModelProcessingAction extends DBO.DBObject<ModelProcessingActionBas
         try {
             return DBO.CopyObject<ModelProcessingActionBase, ModelProcessingAction>(
                 await DBConnectionFactory.prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction, }, }), ModelProcessingAction);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingAction.fetch', error);
             return null;
         }
@@ -74,7 +74,7 @@ export class ModelProcessingAction extends DBO.DBObject<ModelProcessingActionBas
         try {
             return DBO.CopyArray<ModelProcessingActionBase, ModelProcessingAction>(
                 await DBConnectionFactory.prisma.modelProcessingAction.findMany({ where: { idModel } }), ModelProcessingAction);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingAction.fetchFromModel', error);
             return null;
         }

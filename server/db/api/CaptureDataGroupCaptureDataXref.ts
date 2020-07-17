@@ -25,7 +25,7 @@ export class CaptureDataGroupCaptureDataXref extends DBO.DBObject<CaptureDataGro
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroupCaptureDataXref.create', error);
             return false;
         }
@@ -40,8 +40,8 @@ export class CaptureDataGroupCaptureDataXref extends DBO.DBObject<CaptureDataGro
                     CaptureDataGroup:   { connect: { idCaptureDataGroup }, },
                     CaptureData:        { connect: { idCaptureData }, }
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroupCaptureDataXref.update', error);
             return false;
         }
@@ -54,7 +54,7 @@ export class CaptureDataGroupCaptureDataXref extends DBO.DBObject<CaptureDataGro
             return DBO.CopyObject<CaptureDataGroupCaptureDataXrefBase, CaptureDataGroupCaptureDataXref>(
                 await DBConnectionFactory.prisma.captureDataGroupCaptureDataXref.findOne({ where: { idCaptureDataGroupCaptureDataXref, }, }),
                 CaptureDataGroupCaptureDataXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroupCaptureDataXref.fetch', error);
             return null;
         }

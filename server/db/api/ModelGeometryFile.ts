@@ -48,7 +48,7 @@ export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> imple
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelGeometryFile.create', error);
             return false;
         }
@@ -67,8 +67,8 @@ export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> imple
                     Roughness, Metalness, PointCount, FaceCount, IsWatertight, HasNormals, HasVertexColor, HasUVSpace,
                     BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelGeometryFile.update', error);
             return false;
         }
@@ -80,7 +80,7 @@ export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> imple
         try {
             return DBO.CopyObject<ModelGeometryFileBase, ModelGeometryFile>(
                 await DBConnectionFactory.prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile, }, }), ModelGeometryFile);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelGeometryFile.fetch', error);
             return null;
         }
@@ -92,7 +92,7 @@ export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> imple
         try {
             return DBO.CopyArray<ModelGeometryFileBase, ModelGeometryFile>(
                 await DBConnectionFactory.prisma.modelGeometryFile.findMany({ where: { idModel } }), ModelGeometryFile);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelGeometryFile.fetchFromModel', error);
             return null;
         }

@@ -25,7 +25,7 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
                     }
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Project.create', error);
             return false;
         }
@@ -37,8 +37,8 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
             return await DBConnectionFactory.prisma.project.update({
                 where: { idProject, },
                 data: { Name, Description, },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Project.update', error);
             return false;
         }
@@ -49,7 +49,7 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
             const { idProject } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.project.fetchSystemObject', error);
             return null;
         }
@@ -61,7 +61,7 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
         try {
             return DBO.CopyObject<ProjectBase, Project>(
                 await DBConnectionFactory.prisma.project.findOne({ where: { idProject, }, }), Project);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Project.fetch', error);
             return null;
         }

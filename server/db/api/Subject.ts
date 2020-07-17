@@ -11,8 +11,17 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
     idUnit!: number;
     Name!: string;
 
+    private idAssetThumbnailOrig!: number | null;
+    private idGeoLocationOrig!: number | null;
+
     constructor(input: SubjectBase) {
         super(input);
+        this.updateCachedValues();
+    }
+
+    private updateCachedValues(): void {
+        this.idAssetThumbnailOrig = this.idAssetThumbnail;
+        this.idGeoLocationOrig = this.idGeoLocation;
     }
 
     async create(): Promise<boolean> {
@@ -29,8 +38,9 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
+            this.updateCachedValues();
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.create', error);
             return false;
         }
@@ -38,17 +48,19 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
 
     async update(): Promise<boolean> {
         try {
-            const { idSubject, idUnit, idAssetThumbnail, idGeoLocation, Name } = this;
-            return await DBConnectionFactory.prisma.subject.update({
+            const { idSubject, idUnit, idAssetThumbnail, idGeoLocation, Name, idAssetThumbnailOrig, idGeoLocationOrig } = this;
+            const retValue: boolean = await DBConnectionFactory.prisma.subject.update({
                 where: { idSubject, },
                 data: {
                     Unit:           { connect: { idUnit }, },
-                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                    GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
+                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
+                    GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : idGeoLocationOrig ? { disconnect: true, } : undefined,
                     Name,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+            this.updateCachedValues();
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.update', error);
             return false;
         }
@@ -59,7 +71,7 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
             const { idSubject } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.subject.fetchSystemObject', error);
             return null;
         }
@@ -71,7 +83,7 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
         try {
             return DBO.CopyObject<SubjectBase, Subject>(
                 await DBConnectionFactory.prisma.subject.findOne({ where: { idSubject, }, }), Subject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.fetch', error);
             return null;
         }
@@ -83,7 +95,7 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
         try {
             return DBO.CopyArray<SubjectBase, Subject>(
                 await DBConnectionFactory.prisma.subject.findMany({ where: { idUnit } }), Subject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.fetchFromUnit', error);
             return null;
         }

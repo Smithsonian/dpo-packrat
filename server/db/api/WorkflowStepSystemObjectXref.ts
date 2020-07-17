@@ -27,7 +27,7 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.create', error);
             return false;
         }
@@ -43,8 +43,8 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
                     SystemObject: { connect: { idSystemObject }, },
                     Input
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.update', error);
             return false;
         }
@@ -56,7 +56,7 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
         try {
             return DBO.CopyObject<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
                 await DBConnectionFactory.prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref, }, }), WorkflowStepSystemObjectXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetch', error);
             return null;
         }
@@ -68,7 +68,7 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
         try {
             return DBO.CopyArray<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
                 await DBConnectionFactory.prisma.workflowStepSystemObjectXref.findMany({ where: { idWorkflowStep } }), WorkflowStepSystemObjectXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep', error);
             return null;
         }

@@ -33,7 +33,7 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.create', error);
             return false;
         }
@@ -49,8 +49,8 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
                     Scene:  { connect: { idScene }, },
                     TS0, TS1, TS2, R0, R1, R2, R3,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.update', error);
             return false;
         }
@@ -62,7 +62,7 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
         try {
             return DBO.CopyObject<ModelSceneXrefBase, ModelSceneXref>(
                 await DBConnectionFactory.prisma.modelSceneXref.findOne({ where: { idModelSceneXref, }, }), ModelSceneXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.fetch', error);
             return null;
         }
@@ -74,7 +74,7 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
         try {
             return DBO.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBConnectionFactory.prisma.modelSceneXref.findMany({ where: { idScene } }), ModelSceneXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.fetchFromScene', error);
             return null;
         }
@@ -86,7 +86,7 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
         try {
             return DBO.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBConnectionFactory.prisma.modelSceneXref.findMany({ where: { idModel } }), ModelSceneXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.fetchFromModel', error);
             return null;
         }

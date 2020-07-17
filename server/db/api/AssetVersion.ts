@@ -35,7 +35,7 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetVersion.create', error);
             return false;
         }
@@ -54,8 +54,8 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
                     StorageChecksum,
                     StorageSize,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetVersion.update', error);
             return false;
         }
@@ -66,7 +66,7 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
             const { idAssetVersion } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAssetVersion, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetVersion.fetchSystemObject', error);
             return null;
         }
@@ -78,7 +78,7 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
         try {
             return DBO.CopyObject<AssetVersionBase, AssetVersion>(
                 await DBConnectionFactory.prisma.assetVersion.findOne({ where: { idAssetVersion, }, }), AssetVersion);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetVersion.fetch', error);
             return null;
         }
@@ -90,7 +90,7 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
         try {
             return DBO.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBConnectionFactory.prisma.assetVersion.findMany({ where: { idAsset } }), AssetVersion);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetVersion.fetchFromAsset', error);
             return null;
         }
@@ -102,7 +102,7 @@ export class AssetVersion extends DBO.DBObject<AssetVersionBase> implements Asse
         try {
             return DBO.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBConnectionFactory.prisma.assetVersion.findMany({ where: { idUserCreator } }), AssetVersion);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchFromUser', error);
             return null;
         }

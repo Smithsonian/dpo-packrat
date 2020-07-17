@@ -27,7 +27,7 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationUrl.create', error);
             return false;
         }
@@ -43,8 +43,8 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
                     URL,
                     Personalization,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationUrl.update', error);
             return false;
         }
@@ -56,7 +56,7 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
         try {
             return DBO.CopyObject<UserPersonalizationUrlBase, UserPersonalizationUrl>(
                 await DBConnectionFactory.prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationUrl.fetch', error);
             return null;
         }
@@ -68,7 +68,7 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
         try {
             return DBO.CopyArray<UserPersonalizationUrlBase, UserPersonalizationUrl>(
                 await DBConnectionFactory.prisma.userPersonalizationUrl.findMany({ where: { idUser } }), UserPersonalizationUrl);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationUrl.fetchFromUser', error);
             return null;
         }

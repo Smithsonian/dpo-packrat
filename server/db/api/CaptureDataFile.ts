@@ -29,7 +29,7 @@ export class CaptureDataFile extends DBO.DBObject<CaptureDataFileBase> implement
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataFile.create', error);
             return false;
         }
@@ -46,8 +46,8 @@ export class CaptureDataFile extends DBO.DBObject<CaptureDataFileBase> implement
                     Vocabulary:     { connect: { idVocabulary: idVVariantType }, },
                     CompressedMultipleFiles
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataFile.update', error);
             return false;
         }
@@ -59,7 +59,7 @@ export class CaptureDataFile extends DBO.DBObject<CaptureDataFileBase> implement
         try {
             return DBO.CopyObject<CaptureDataFileBase, CaptureDataFile>(
                 await DBConnectionFactory.prisma.captureDataFile.findOne({ where: { idCaptureDataFile, }, }), CaptureDataFile);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataFile.fetch', error);
             return null;
         }
@@ -71,7 +71,7 @@ export class CaptureDataFile extends DBO.DBObject<CaptureDataFileBase> implement
         try {
             return DBO.CopyArray<CaptureDataFileBase, CaptureDataFile>(
                 await DBConnectionFactory.prisma.captureDataFile.findMany({ where: { idCaptureData } }), CaptureDataFile);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataFile.fetchFromCaptureData', error);
             return null;
         }

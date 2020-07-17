@@ -38,7 +38,7 @@ export class User extends DBO.DBObject<UserBase> implements UserBase {
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.User.create', error);
             return false;
         }
@@ -59,8 +59,8 @@ export class User extends DBO.DBObject<UserBase> implements UserBase {
                     WorkflowNotificationTime,
                     EmailSettings
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.User.update', error);
             return false;
         }
@@ -72,7 +72,7 @@ export class User extends DBO.DBObject<UserBase> implements UserBase {
         try {
             return DBO.CopyObject<UserBase, User>(
                 await DBConnectionFactory.prisma.user.findOne({ where: { idUser, }, }), User);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.User.fetch', error);
             return null;
         }

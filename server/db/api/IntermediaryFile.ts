@@ -25,7 +25,7 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.IntermediaryFile.create', error);
             return false;
         }
@@ -40,8 +40,8 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
                     Asset:          { connect: { idAsset }, },
                     DateCreated,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.IntermediaryFile.update', error);
             return false;
         }
@@ -52,7 +52,7 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
             const { idIntermediaryFile } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.intermediaryFile.fetchSystemObject', error);
             return null;
         }
@@ -64,7 +64,7 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
         try {
             return DBO.CopyObject<IntermediaryFileBase, IntermediaryFile>(
                 await DBConnectionFactory.prisma.intermediaryFile.findOne({ where: { idIntermediaryFile, }, }), IntermediaryFile);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.IntermediaryFile.fetch', error);
             return null;
         }

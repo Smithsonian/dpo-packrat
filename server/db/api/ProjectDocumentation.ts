@@ -28,7 +28,7 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.create', error);
             return false;
         }
@@ -44,8 +44,8 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
                     Name,
                     Description,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.update', error);
             return false;
         }
@@ -56,7 +56,7 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
             const { idProjectDocumentation } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.projectDocumentation.fetchSystemObject', error);
             return null;
         }
@@ -68,7 +68,7 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
         try {
             return DBO.CopyObject<ProjectDocumentationBase, ProjectDocumentation>(
                 await DBConnectionFactory.prisma.projectDocumentation.findOne({ where: { idProjectDocumentation, }, }), ProjectDocumentation);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.fetch', error);
             return null;
         }
@@ -80,7 +80,7 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
         try {
             return DBO.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(
                 await DBConnectionFactory.prisma.projectDocumentation.findMany({ where: { idProject } }), ProjectDocumentation);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.fetchFromProject', error);
             return null;
         }

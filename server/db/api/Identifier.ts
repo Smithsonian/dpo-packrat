@@ -10,8 +10,15 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
     idSystemObject!: number | null;
     idVIdentifierType!: number;
 
+    private idSystemObjectOrig!: number | null;
+
     constructor(input: IdentifierBase) {
         super(input);
+        this.updateCachedValues();
+    }
+
+    private updateCachedValues(): void {
+        this.idSystemObjectOrig = this.idSystemObject;
     }
 
     async create(): Promise<boolean> {
@@ -26,8 +33,9 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
                         SystemObject: idSystemObject ? { connect: { idSystemObject }, } : undefined,
                     },
                 }));
+            this.updateCachedValues();
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Identifier.create', error);
             return false;
         }
@@ -35,16 +43,18 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
 
     async update(): Promise<boolean> {
         try {
-            const { idIdentifier, IdentifierValue, idVIdentifierType, idSystemObject } = this;
-            return await DBConnectionFactory.prisma.identifier.update({
+            const { idIdentifier, IdentifierValue, idVIdentifierType, idSystemObject, idSystemObjectOrig } = this;
+            const retValue: boolean = await DBConnectionFactory.prisma.identifier.update({
                 where: { idIdentifier, },
                 data: {
                     IdentifierValue,
                     Vocabulary: { connect: { idVocabulary: idVIdentifierType }, },
-                    SystemObject: idSystemObject ? { connect: { idSystemObject }, } : undefined,
+                    SystemObject: idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+            this.updateCachedValues();
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Identifier.update', error);
             return false;
         }
@@ -56,7 +66,7 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
         try {
             return DBO.CopyObject<IdentifierBase, Identifier>(
                 await DBConnectionFactory.prisma.identifier.findOne({ where: { idIdentifier, }, }), Identifier);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Identifier.fetch', error);
             return null;
         }
@@ -68,7 +78,7 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
         try {
             return DBO.CopyArray<IdentifierBase, Identifier>(
                 await DBConnectionFactory.prisma.identifier.findMany({ where: { idSystemObject } }), Identifier);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Identifier.fetchFromSystemObject', error);
             return null;
         }

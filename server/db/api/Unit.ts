@@ -27,7 +27,7 @@ export class Unit extends DBO.DBObject<UnitBase> implements UnitBase {
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.create', error);
             return false;
         }
@@ -43,8 +43,8 @@ export class Unit extends DBO.DBObject<UnitBase> implements UnitBase {
                     Abbreviation,
                     ARKPrefix,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.update', error);
             return false;
         }
@@ -55,7 +55,7 @@ export class Unit extends DBO.DBObject<UnitBase> implements UnitBase {
             const { idUnit } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.unit.fetchSystemObject', error);
             return null;
         }
@@ -67,7 +67,7 @@ export class Unit extends DBO.DBObject<UnitBase> implements UnitBase {
         try {
             return DBO.CopyObject<UnitBase, Unit>(
                 await DBConnectionFactory.prisma.unit.findOne({ where: { idUnit, }, }), Unit);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.fetch', error);
             return null;
         }
