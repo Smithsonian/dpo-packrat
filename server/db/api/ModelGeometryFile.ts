@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { ModelGeometryFile as ModelGeometryFileBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> implements ModelGeometryFileBase {
+export class ModelGeometryFile extends DBC.DBObject<ModelGeometryFileBase> implements ModelGeometryFileBase {
     idModelGeometryFile!: number;
     BoundingBoxP1X!: number | null;
     BoundingBoxP1Y!: number | null;
@@ -41,7 +40,7 @@ export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> imple
                 HasNormals: this.HasNormals, HasVertexColor: this.HasVertexColor, HasUVSpace: this.HasUVSpace,
                 BoundingBoxP1X: this.BoundingBoxP1X, BoundingBoxP1Y: this.BoundingBoxP1Y, BoundingBoxP1Z: this.BoundingBoxP1Z,
                 BoundingBoxP2X: this.BoundingBoxP2X, BoundingBoxP2Y: this.BoundingBoxP2Y, BoundingBoxP2Z: this.BoundingBoxP2Z } =
-                await DBConnectionFactory.prisma.modelGeometryFile.create({
+                await DBC.DBConnectionFactory.prisma.modelGeometryFile.create({
                     data: {
                         Model:          { connect: { idModel }, },
                         Asset:          { connect: { idAsset }, },
@@ -61,7 +60,7 @@ export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> imple
         try {
             const { idModelGeometryFile, idModel, idAsset, idVModelFileType, Roughness, Metalness, PointCount, FaceCount, IsWatertight, HasNormals, HasVertexColor, HasUVSpace,
                 BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z } = this;
-            return await DBConnectionFactory.prisma.modelGeometryFile.update({
+            return await DBC.DBConnectionFactory.prisma.modelGeometryFile.update({
                 where: { idModelGeometryFile, },
                 data: {
                     Model:          { connect: { idModel }, },
@@ -81,8 +80,8 @@ export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> imple
         if (!idModelGeometryFile)
             return null;
         try {
-            return DBO.CopyObject<ModelGeometryFileBase, ModelGeometryFile>(
-                await DBConnectionFactory.prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile, }, }), ModelGeometryFile);
+            return DBC.CopyObject<ModelGeometryFileBase, ModelGeometryFile>(
+                await DBC.DBConnectionFactory.prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile, }, }), ModelGeometryFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelGeometryFile.fetch', error);
             return null;
@@ -93,8 +92,8 @@ export class ModelGeometryFile extends DBO.DBObject<ModelGeometryFileBase> imple
         if (!idModel)
             return null;
         try {
-            return DBO.CopyArray<ModelGeometryFileBase, ModelGeometryFile>(
-                await DBConnectionFactory.prisma.modelGeometryFile.findMany({ where: { idModel } }), ModelGeometryFile);
+            return DBC.CopyArray<ModelGeometryFileBase, ModelGeometryFile>(
+                await DBC.DBConnectionFactory.prisma.modelGeometryFile.findMany({ where: { idModel } }), ModelGeometryFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelGeometryFile.fetchFromModel', error);
             return null;

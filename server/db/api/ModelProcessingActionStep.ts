@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { ModelProcessingActionStep as ModelProcessingActionStepBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActionStepBase> implements ModelProcessingActionStepBase {
+export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActionStepBase> implements ModelProcessingActionStepBase {
     idModelProcessingActionStep!: number;
     Description!: string;
     idModelProcessingAction!: number;
@@ -22,7 +21,7 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
             const { idModelProcessingAction, idVActionMethod, Description } = this;
             ({ idModelProcessingActionStep: this.idModelProcessingActionStep, idModelProcessingAction: this.idModelProcessingAction,
                 idVActionMethod: this.idVActionMethod, Description: this.Description } =
-                await DBConnectionFactory.prisma.modelProcessingActionStep.create({
+                await DBC.DBConnectionFactory.prisma.modelProcessingActionStep.create({
                     data: {
                         ModelProcessingAction:  { connect: { idModelProcessingAction }, },
                         Vocabulary:             { connect: { idVocabulary: idVActionMethod }, },
@@ -39,7 +38,7 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelProcessingActionStep, idModelProcessingAction, idVActionMethod, Description } = this;
-            return await DBConnectionFactory.prisma.modelProcessingActionStep.update({
+            return await DBC.DBConnectionFactory.prisma.modelProcessingActionStep.update({
                 where: { idModelProcessingActionStep, },
                 data: {
                     ModelProcessingAction:  { connect: { idModelProcessingAction }, },
@@ -57,8 +56,8 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
         if (!idModelProcessingActionStep)
             return null;
         try {
-            return DBO.CopyObject<ModelProcessingActionStepBase, ModelProcessingActionStep>(
-                await DBConnectionFactory.prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep, }, }), ModelProcessingActionStep);
+            return DBC.CopyObject<ModelProcessingActionStepBase, ModelProcessingActionStep>(
+                await DBC.DBConnectionFactory.prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep, }, }), ModelProcessingActionStep);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.fetch', error);
             return null;
@@ -69,8 +68,8 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
         if (!idModelProcessingAction)
             return null;
         try {
-            return DBO.CopyArray<ModelProcessingActionStepBase, ModelProcessingActionStep>(
-                await DBConnectionFactory.prisma.modelProcessingActionStep.findMany({ where: { idModelProcessingAction } }), ModelProcessingActionStep);
+            return DBC.CopyArray<ModelProcessingActionStepBase, ModelProcessingActionStep>(
+                await DBC.DBConnectionFactory.prisma.modelProcessingActionStep.findMany({ where: { idModelProcessingAction } }), ModelProcessingActionStep);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.fetchFromModelProcessingAction', error);
             return null;

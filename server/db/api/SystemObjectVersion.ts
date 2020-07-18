@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { SystemObjectVersion as SystemObjectVersionBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> implements SystemObjectVersionBase {
+export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> implements SystemObjectVersionBase {
     idSystemObjectVersion!: number;
     idSystemObject!: number;
     PublishedState!: number;
@@ -21,7 +20,7 @@ export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> i
             const { idSystemObject, PublishedState } = this;
             ({ idSystemObjectVersion: this.idSystemObjectVersion, idSystemObject: this.idSystemObject,
                 PublishedState: this.PublishedState } =
-                await DBConnectionFactory.prisma.systemObjectVersion.create({
+                await DBC.DBConnectionFactory.prisma.systemObjectVersion.create({
                     data: {
                         SystemObject: { connect: { idSystemObject }, },
                         PublishedState,
@@ -37,7 +36,7 @@ export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> i
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idSystemObjectVersion, idSystemObject, PublishedState } = this;
-            return await DBConnectionFactory.prisma.systemObjectVersion.update({
+            return await DBC.DBConnectionFactory.prisma.systemObjectVersion.update({
                 where: { idSystemObjectVersion, },
                 data: {
                     SystemObject: { connect: { idSystemObject }, },
@@ -54,8 +53,8 @@ export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> i
         if (!idSystemObjectVersion)
             return null;
         try {
-            return DBO.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
-                await DBConnectionFactory.prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
+            return DBC.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
+                await DBC.DBConnectionFactory.prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectVersion.fetch', error);
             return null;
@@ -66,8 +65,8 @@ export class SystemObjectVersion extends DBO.DBObject<SystemObjectVersionBase> i
         if (!idSystemObject)
             return null;
         try {
-            return DBO.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
-                await DBConnectionFactory.prisma.systemObjectVersion.findMany({ where: { idSystemObject } }), SystemObjectVersion);
+            return DBC.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
+                await DBC.DBConnectionFactory.prisma.systemObjectVersion.findMany({ where: { idSystemObject } }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectVersion.fetchFromSystemObject', error);
             return null;

@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { SystemObjectXref as SystemObjectXrefBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class SystemObjectXref extends DBO.DBObject<SystemObjectXrefBase> implements SystemObjectXrefBase {
+export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> implements SystemObjectXrefBase {
     idSystemObjectXref!: number;
     idSystemObjectDerived!: number;
     idSystemObjectMaster!: number;
@@ -21,7 +20,7 @@ export class SystemObjectXref extends DBO.DBObject<SystemObjectXrefBase> impleme
             const { idSystemObjectMaster, idSystemObjectDerived } = this;
             ({ idSystemObjectXref: this.idSystemObjectXref, idSystemObjectMaster: this.idSystemObjectMaster,
                 idSystemObjectDerived: this.idSystemObjectDerived } =
-                await DBConnectionFactory.prisma.systemObjectXref.create({
+                await DBC.DBConnectionFactory.prisma.systemObjectXref.create({
                     data: {
                         SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster:  { connect: { idSystemObject: idSystemObjectMaster }, },
                         SystemObject_SystemObjectToSystemObjectXref_idSystemObjectDerived: { connect: { idSystemObject: idSystemObjectDerived }, },
@@ -37,7 +36,7 @@ export class SystemObjectXref extends DBO.DBObject<SystemObjectXrefBase> impleme
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idSystemObjectXref, idSystemObjectMaster, idSystemObjectDerived } = this;
-            return await DBConnectionFactory.prisma.systemObjectXref.update({
+            return await DBC.DBConnectionFactory.prisma.systemObjectXref.update({
                 where: { idSystemObjectXref, },
                 data: {
                     SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster:  { connect: { idSystemObject: idSystemObjectMaster }, },
@@ -54,8 +53,8 @@ export class SystemObjectXref extends DBO.DBObject<SystemObjectXrefBase> impleme
         if (!idSystemObjectXref)
             return null;
         try {
-            return DBO.CopyObject<SystemObjectXrefBase, SystemObjectXref>(
-                await DBConnectionFactory.prisma.systemObjectXref.findOne({ where: { idSystemObjectXref, }, }), SystemObjectXref);
+            return DBC.CopyObject<SystemObjectXrefBase, SystemObjectXref>(
+                await DBC.DBConnectionFactory.prisma.systemObjectXref.findOne({ where: { idSystemObjectXref, }, }), SystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectXref.fetch', error);
             return null;

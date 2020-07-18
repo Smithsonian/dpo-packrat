@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { UserPersonalizationUrl as UserPersonalizationUrlBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlBase> implements UserPersonalizationUrlBase {
+export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlBase> implements UserPersonalizationUrlBase {
     idUserPersonalizationUrl!: number;
     idUser!: number;
     Personalization!: string;
@@ -22,7 +21,7 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
             const { idUser, URL, Personalization } = this;
             ({ idUserPersonalizationUrl: this.idUserPersonalizationUrl, idUser: this.idUser,
                 URL: this.URL, Personalization: this.Personalization } =
-                await DBConnectionFactory.prisma.userPersonalizationUrl.create({
+                await DBC.DBConnectionFactory.prisma.userPersonalizationUrl.create({
                     data: {
                         User:   { connect: { idUser }, },
                         URL,
@@ -39,7 +38,7 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idUserPersonalizationUrl, idUser, URL, Personalization } = this;
-            return await DBConnectionFactory.prisma.userPersonalizationUrl.update({
+            return await DBC.DBConnectionFactory.prisma.userPersonalizationUrl.update({
                 where: { idUserPersonalizationUrl, },
                 data: {
                     User:   { connect: { idUser }, },
@@ -57,8 +56,8 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
         if (!idUserPersonalizationUrl)
             return null;
         try {
-            return DBO.CopyObject<UserPersonalizationUrlBase, UserPersonalizationUrl>(
-                await DBConnectionFactory.prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
+            return DBC.CopyObject<UserPersonalizationUrlBase, UserPersonalizationUrl>(
+                await DBC.DBConnectionFactory.prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationUrl.fetch', error);
             return null;
@@ -69,8 +68,8 @@ export class UserPersonalizationUrl extends DBO.DBObject<UserPersonalizationUrlB
         if (!idUser)
             return null;
         try {
-            return DBO.CopyArray<UserPersonalizationUrlBase, UserPersonalizationUrl>(
-                await DBConnectionFactory.prisma.userPersonalizationUrl.findMany({ where: { idUser } }), UserPersonalizationUrl);
+            return DBC.CopyArray<UserPersonalizationUrlBase, UserPersonalizationUrl>(
+                await DBC.DBConnectionFactory.prisma.userPersonalizationUrl.findMany({ where: { idUser } }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationUrl.fetchFromUser', error);
             return null;
