@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import * as P from '@prisma/client';
 import { DBConnectionFactory, WorkflowStep } from '..';
 import * as DBO from '../api/DBObject';
@@ -27,13 +28,15 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         super(input);
     }
 
+    protected updateCachedValues(): void { }
+
     // NO EXPLICIT METHODS FOR CREATING OR UPDATING SYSTEMOBJECT DIRECTLY.
     // This is done via create* and update* methods of the objects linked to SystemObject
-    async create(): Promise<boolean> {
+    protected async createWorker(): Promise<boolean> {
         throw new ReferenceError('DBAPI.SystemObject.create() should never be called; used the explict create methods of objects linked to SystemObject');
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         throw new ReferenceError('DBAPI.SystemObject.update() should never be called; used the explict update methods of objects linked to SystemObject');
     }
 
@@ -43,7 +46,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSystemObject, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetch', error);
             return null;
         }
@@ -61,7 +64,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
                         },
                     },
                 }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchDerivedFromXref', error);
             return null;
         }
@@ -79,7 +82,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
                         },
                     },
                 }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchMasterFromXref', error);
             return null;
         }
@@ -97,7 +100,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
                         },
                     },
                 }), WorkflowStep);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchWorkflowStepFromXref', error);
             return null;
         }
@@ -109,7 +112,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromActor', error);
             return null;
         }
@@ -121,7 +124,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromAsset', error);
             return null;
         }
@@ -133,7 +136,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAssetVersion } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromAssetVersion', error);
             return null;
         }
@@ -145,7 +148,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idCaptureData } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromCaptureData', error);
             return null;
         }
@@ -157,7 +160,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromIntermediaryFile', error);
             return null;
         }
@@ -169,7 +172,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idItem } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromItem', error);
             return null;
         }
@@ -181,7 +184,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idModel } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromModel', error);
             return null;
         }
@@ -193,7 +196,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromProject', error);
             return null;
         }
@@ -205,7 +208,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromProjectDocumentation', error);
             return null;
         }
@@ -217,7 +220,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromScene', error);
             return null;
         }
@@ -229,7 +232,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromStakeholder', error);
             return null;
         }
@@ -241,7 +244,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromSubject', error);
             return null;
         }
@@ -253,7 +256,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromUnit', error);
             return null;
         }
@@ -265,7 +268,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflow } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromWorkflow', error);
             return null;
         }
@@ -277,7 +280,7 @@ export class SystemObject extends DBO.DBObject<P.SystemObject> implements P.Syst
         try {
             return DBO.CopyObject<P.SystemObject, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflowStep } }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromWorkflowStep', error);
             return null;
         }

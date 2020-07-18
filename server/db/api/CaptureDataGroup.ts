@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { CaptureDataGroup as CaptureDataGroupBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -11,24 +12,26 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBConnectionFactory.prisma.captureDataGroup.create({ data: { } }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureDataGroup } = this;
             return await DBConnectionFactory.prisma.captureDataGroup.update({
                 where: { idCaptureDataGroup, },
                 data: { },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.update', error);
             return false;
         }
@@ -40,7 +43,7 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
         try {
             return DBO.CopyObject<CaptureDataGroupBase, CaptureDataGroup>(
                 await DBConnectionFactory.prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.fetch', error);
             return null;
         }
@@ -58,7 +61,7 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
                         },
                     },
                 }), CaptureDataGroup);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.fetchFromXref', error);
             return null;
         }

@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { VocabularySet as VocabularySetBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -13,7 +14,9 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Name, SystemMaintained } = this;
             ({ idVocabularySet: this.idVocabularySet, Name: this.Name, SystemMaintained: this.SystemMaintained } =
@@ -24,13 +27,13 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.VocabularySet.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idVocabularySet, Name, SystemMaintained } = this;
             return await DBConnectionFactory.prisma.vocabularySet.update({
@@ -39,8 +42,8 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
                     Name,
                     SystemMaintained
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.VocabularySet.update', error);
             return false;
         }
@@ -52,7 +55,7 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
         try {
             return DBO.CopyObject<VocabularySetBase, VocabularySet>(
                 await DBConnectionFactory.prisma.vocabularySet.findOne({ where: { idVocabularySet, }, }), VocabularySet);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.VocabularySet.fetch', error);
             return null;
         }

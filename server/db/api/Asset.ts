@@ -10,11 +10,17 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
     FilePath!: string;
     idAssetGroup!: number | null;
 
+    private idAssetGroupOrig!: number | null;
+
     constructor(input: AssetBase) {
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void {
+        this.idAssetGroupOrig = this.idAssetGroup;
+    }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { FileName, FilePath, idAssetGroup } = this;
             ({ idAsset: this.idAsset, FileName: this.FileName, FilePath: this.FilePath, idAssetGroup: this.idAssetGroup } =
@@ -27,24 +33,25 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAsset, FileName, FilePath, idAssetGroup } = this;
-            return await DBConnectionFactory.prisma.asset.update({
+            const { idAsset, FileName, FilePath, idAssetGroup, idAssetGroupOrig } = this;
+            const retValue: boolean = await DBConnectionFactory.prisma.asset.update({
                 where: { idAsset, },
                 data: {
                     FileName,
                     FilePath,
-                    AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : undefined,
+                    AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : idAssetGroupOrig ? { disconnect: true, } : undefined,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.update', error);
             return false;
         }
@@ -55,7 +62,7 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
             const { idAsset } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchSystemObject', error);
             return null;
         }
@@ -67,7 +74,7 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
         try {
             return DBO.CopyObject<AssetBase, Asset>(
                 await DBConnectionFactory.prisma.asset.findOne({ where: { idAsset, }, }), Asset);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetch', error);
             return null;
         }
@@ -79,7 +86,7 @@ export class Asset extends DBO.DBObject<AssetBase> implements AssetBase {
         try {
             return DBO.CopyArray<AssetBase, Asset>(
                 await DBConnectionFactory.prisma.asset.findMany({ where: { idAssetGroup } }), Asset);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchFromAssetGroup', error);
             return null;
         }

@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { UserPersonalizationSystemObject as UserPersonalizationSystemObjectBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -14,7 +15,9 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idUser, idSystemObject, Personalization } = this;
             ({ idUserPersonalizationSystemObject: this.idUserPersonalizationSystemObject, idUser: this.idUser,
@@ -27,13 +30,13 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationSystemObject.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idUserPersonalizationSystemObject, idUser, idSystemObject, Personalization } = this;
             return await DBConnectionFactory.prisma.userPersonalizationSystemObject.update({
@@ -43,8 +46,8 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
                     SystemObject:   { connect: { idSystemObject }, },
                     Personalization,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationSystemObject.update', error);
             return false;
         }
@@ -56,7 +59,7 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
         try {
             return DBO.CopyObject<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBConnectionFactory.prisma.userPersonalizationSystemObject.findOne({ where: { idUserPersonalizationSystemObject, }, }), UserPersonalizationSystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationSystemObject.fetch', error);
             return null;
         }
@@ -68,7 +71,7 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
         try {
             return DBO.CopyArray<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBConnectionFactory.prisma.userPersonalizationSystemObject.findMany({ where: { idUser } }), UserPersonalizationSystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationSystemObject.fetchFromUser', error);
             return null;
         }
@@ -80,7 +83,7 @@ export class UserPersonalizationSystemObject extends DBO.DBObject<UserPersonaliz
         try {
             return DBO.CopyArray<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBConnectionFactory.prisma.userPersonalizationSystemObject.findMany({ where: { idSystemObject } }), UserPersonalizationSystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationSystemObject.fetchFromSystemObject', error);
             return null;
         }

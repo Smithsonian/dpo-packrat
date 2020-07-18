@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { WorkflowStepSystemObjectXref as WorkflowStepSystemObjectXrefBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -14,7 +15,9 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idWorkflowStep, idSystemObject, Input } = this;
             ({ idWorkflowStepSystemObjectXref: this.idWorkflowStepSystemObjectXref, idWorkflowStep: this.idWorkflowStep,
@@ -27,13 +30,13 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflowStepSystemObjectXref, idWorkflowStep, idSystemObject, Input } = this;
             return await DBConnectionFactory.prisma.workflowStepSystemObjectXref.update({
@@ -43,8 +46,8 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
                     SystemObject: { connect: { idSystemObject }, },
                     Input
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.update', error);
             return false;
         }
@@ -56,7 +59,7 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
         try {
             return DBO.CopyObject<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
                 await DBConnectionFactory.prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref, }, }), WorkflowStepSystemObjectXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetch', error);
             return null;
         }
@@ -68,7 +71,7 @@ export class WorkflowStepSystemObjectXref extends DBO.DBObject<WorkflowStepSyste
         try {
             return DBO.CopyArray<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
                 await DBConnectionFactory.prisma.workflowStepSystemObjectXref.findMany({ where: { idWorkflowStep } }), WorkflowStepSystemObjectXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep', error);
             return null;
         }

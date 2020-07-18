@@ -10,11 +10,17 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
     IndividualName!: string | null;
     OrganizationName!: string | null;
 
+    private idUnitOrig!: number | null;
+
     constructor(input: ActorBase) {
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void {
+        this.idUnitOrig = this.idUnit;
+    }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idUnit, IndividualName, OrganizationName } = this;
             ({ idActor: this.idActor, idUnit: this.idUnit, IndividualName: this.IndividualName, OrganizationName: this.OrganizationName } =
@@ -27,24 +33,25 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
                     }
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
-            const { idActor, idUnit, IndividualName, OrganizationName } = this;
-            return await DBConnectionFactory.prisma.actor.update({
+            const { idActor, idUnit, IndividualName, OrganizationName, idUnitOrig } = this;
+            const retValue: boolean = await DBConnectionFactory.prisma.actor.update({
                 where: { idActor, },
                 data: {
                     IndividualName,
                     OrganizationName,
-                    Unit:               idUnit ? { connect: { idUnit }, } : undefined,
+                    Unit:               idUnit ? { connect: { idUnit }, } : idUnitOrig ? { disconnect: true, } : undefined,
                 }
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.update', error);
             return false;
         }
@@ -55,7 +62,7 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
             const { idActor } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.fetchSystemObject', error);
             return null;
         }
@@ -67,7 +74,7 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
         try {
             return DBO.CopyObject<ActorBase, Actor>(
                 await DBConnectionFactory.prisma.actor.findOne({ where: { idActor, }, }), Actor);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.fetch', error);
             return null;
         }
@@ -79,7 +86,7 @@ export class Actor extends DBO.DBObject<ActorBase> implements ActorBase {
         try {
             return DBO.CopyArray<ActorBase, Actor>(
                 await DBConnectionFactory.prisma.actor.findMany({ where: { idUnit } }), Actor);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.fetchFromUnit', error);
             return null;
         }

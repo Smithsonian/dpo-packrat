@@ -11,11 +11,17 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
     IsOriented!: boolean;
     Name!: string;
 
+    private idAssetThumbnailOrig!: number | null;
+
     constructor(input: SceneBase) {
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void {
+        this.idAssetThumbnailOrig = this.idAssetThumbnail;
+    }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
             ({ idScene: this.idScene, Name: this.Name, idAssetThumbnail: this.idAssetThumbnail,
@@ -30,25 +36,26 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Scene.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
-            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
-            return await DBConnectionFactory.prisma.scene.update({
+            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd, idAssetThumbnailOrig } = this;
+            const retValue: boolean = await DBConnectionFactory.prisma.scene.update({
                 where: { idScene, },
                 data: {
                     Name,
-                    Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                    Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
                     IsOriented,
                     HasBeenQCd,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Scene.update', error);
             return false;
         }
@@ -59,7 +66,7 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
             const { idScene } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.scene.fetchSystemObject', error);
             return null;
         }
@@ -71,7 +78,7 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
         try {
             return DBO.CopyObject<SceneBase, Scene>(
                 await DBConnectionFactory.prisma.scene.findOne({ where: { idScene, }, }), Scene);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Scene.fetch', error);
             return null;
         }
@@ -83,7 +90,7 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
         try {
             return DBO.CopyArray<SceneBase, Scene>(
                 await DBConnectionFactory.prisma.scene.findMany({ where: { ModelSceneXref: { some: { idModel }, }, }, }), Scene);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.fetchSceneFromXref', error);
             return null;
         }

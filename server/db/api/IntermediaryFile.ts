@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { IntermediaryFile as IntermediaryFileBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { DBConnectionFactory, SystemObject } from '..';
 import * as DBO from '../api/DBObject';
@@ -13,7 +14,9 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idAsset, DateCreated } = this;
             ({ idIntermediaryFile: this.idIntermediaryFile, idAsset: this.idAsset, DateCreated: this.DateCreated } =
@@ -25,13 +28,13 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.IntermediaryFile.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idIntermediaryFile, idAsset, DateCreated } = this;
             return await DBConnectionFactory.prisma.intermediaryFile.update({
@@ -40,8 +43,8 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
                     Asset:          { connect: { idAsset }, },
                     DateCreated,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.IntermediaryFile.update', error);
             return false;
         }
@@ -52,7 +55,7 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
             const { idIntermediaryFile } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.intermediaryFile.fetchSystemObject', error);
             return null;
         }
@@ -64,7 +67,7 @@ export class IntermediaryFile extends DBO.DBObject<IntermediaryFileBase> impleme
         try {
             return DBO.CopyObject<IntermediaryFileBase, IntermediaryFile>(
                 await DBConnectionFactory.prisma.intermediaryFile.findOne({ where: { idIntermediaryFile, }, }), IntermediaryFile);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.IntermediaryFile.fetch', error);
             return null;
         }

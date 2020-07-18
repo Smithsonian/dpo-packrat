@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { WorkflowTemplate as WorkflowTemplateBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -12,26 +13,28 @@ export class WorkflowTemplate extends DBO.DBObject<WorkflowTemplateBase> impleme
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Name } = this;
             ({ idWorkflowTemplate: this.idWorkflowTemplate, Name: this.Name } =
                 await DBConnectionFactory.prisma.workflowTemplate.create({ data: { Name, } }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowTemplate.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflowTemplate, Name } = this;
             return await DBConnectionFactory.prisma.workflowTemplate.update({
                 where: { idWorkflowTemplate, },
                 data: { Name, },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowTemplate.update', error);
             return false;
         }
@@ -43,7 +46,7 @@ export class WorkflowTemplate extends DBO.DBObject<WorkflowTemplateBase> impleme
         try {
             return DBO.CopyObject<WorkflowTemplateBase, WorkflowTemplate>(
                 await DBConnectionFactory.prisma.workflowTemplate.findOne({ where: { idWorkflowTemplate, }, }), WorkflowTemplate);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowTemplate.fetch', error);
             return null;
         }

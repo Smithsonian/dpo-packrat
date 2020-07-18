@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { AccessRoleAccessActionXref as AccessRoleAccessActionXrefBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -13,7 +14,9 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idAccessRole, idAccessAction } = this;
             ({ idAccessRoleAccessActionXref: this.idAccessRoleAccessActionXref,
@@ -25,13 +28,13 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
                     }
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRoleAccessActionXref.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessRoleAccessActionXref, idAccessRole, idAccessAction } = this;
             return await DBConnectionFactory.prisma.accessRoleAccessActionXref.update({
@@ -40,8 +43,8 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
                     AccessRole:     { connect: { idAccessRole }, },
                     AccessAction:   { connect: { idAccessAction }, },
                 }
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRoleAccessActionXref.update', error);
             return false;
         }
@@ -53,7 +56,7 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
         try {
             return DBO.CopyObject<AccessRoleAccessActionXrefBase, AccessRoleAccessActionXref>(
                 await DBConnectionFactory.prisma.accessRoleAccessActionXref.findOne({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRoleAccessActionXref.fetch', error);
             return null;
         }
