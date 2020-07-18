@@ -1,8 +1,22 @@
 export abstract class DBObject<T> {
-    abstract async create(): Promise<boolean>;
-    abstract async update(): Promise<boolean>;
+    protected abstract async createWorker(): Promise<boolean>;
+    protected abstract async updateWorker(): Promise<boolean>;
+    protected abstract updateCachedValues(): void;
+
     constructor(input: T) {
         Object.assign(this, input);
+        this.updateCachedValues();
+    }
+
+    async create(): Promise<boolean> {
+        const retVal: boolean = await this.createWorker();
+        this.updateCachedValues();
+        return retVal;
+    }
+    async update(): Promise<boolean> {
+        const retVal: boolean = await this.updateWorker();
+        this.updateCachedValues();
+        return retVal;
     }
 }
 

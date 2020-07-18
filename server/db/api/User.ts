@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { User as UserBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -19,7 +20,9 @@ export class User extends DBO.DBObject<UserBase> implements UserBase {
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Name, EmailAddress, SecurityID, Active, DateActivated, DateDisabled, WorkflowNotificationTime, EmailSettings } = this;
             ({ idUser: this.idUser, Name: this.Name, EmailAddress: this.EmailAddress, SecurityID: this.SecurityID,
@@ -38,13 +41,13 @@ export class User extends DBO.DBObject<UserBase> implements UserBase {
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.User.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idUser, Name, EmailAddress, SecurityID, Active, DateActivated, DateDisabled, WorkflowNotificationTime, EmailSettings } = this;
             return await DBConnectionFactory.prisma.user.update({
@@ -59,8 +62,8 @@ export class User extends DBO.DBObject<UserBase> implements UserBase {
                     WorkflowNotificationTime,
                     EmailSettings
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.User.update', error);
             return false;
         }
@@ -72,7 +75,7 @@ export class User extends DBO.DBObject<UserBase> implements UserBase {
         try {
             return DBO.CopyObject<UserBase, User>(
                 await DBConnectionFactory.prisma.user.findOne({ where: { idUser, }, }), User);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.User.fetch', error);
             return null;
         }

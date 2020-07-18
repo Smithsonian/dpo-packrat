@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { WorkflowStep as WorkflowStepBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { DBConnectionFactory, SystemObject } from '..';
 import * as DBO from '../api/DBObject';
@@ -17,7 +18,9 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { DateCompleted, DateCreated, idUserOwner, idVWorkflowStepType, idWorkflow, State } = this;
             ({ idWorkflowStep: this.idWorkflowStep, DateCompleted: this.DateCompleted, DateCreated: this.DateCreated,
@@ -35,13 +38,13 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflowStep, DateCompleted, DateCreated, idUserOwner, idVWorkflowStepType, idWorkflow, State } = this;
             return await DBConnectionFactory.prisma.workflowStep.update({
@@ -54,8 +57,8 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
                     DateCreated,
                     DateCompleted,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.update', error);
             return false;
         }
@@ -67,7 +70,7 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
         try {
             return DBO.CopyObject<WorkflowStepBase, WorkflowStep>(
                 await DBConnectionFactory.prisma.workflowStep.findOne({ where: { idWorkflowStep, }, }), WorkflowStep);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetch', error);
             return null;
         }
@@ -79,7 +82,7 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne(
                     { where: { idWorkflowStep, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetchSystemObject', error);
             return null;
         }
@@ -96,7 +99,7 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
                         },
                     },
                 }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetchSystemObjectFromXref', error);
             return null;
         }
@@ -108,7 +111,7 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
         try {
             return DBO.CopyArray<WorkflowStepBase, WorkflowStep>(
                 await DBConnectionFactory.prisma.workflowStep.findMany({ where: { idUserOwner } }), WorkflowStep);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetchFromUser', error);
             return null;
         }
@@ -120,7 +123,7 @@ export class WorkflowStep extends DBO.DBObject<WorkflowStepBase> implements Work
         try {
             return DBO.CopyArray<WorkflowStepBase, WorkflowStep>(
                 await DBConnectionFactory.prisma.workflowStep.findMany({ where: { idWorkflow } }), WorkflowStep);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetchFromWorkflow', error);
             return null;
         }

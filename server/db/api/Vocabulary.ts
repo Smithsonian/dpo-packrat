@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { Vocabulary as VocabularyBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -13,7 +14,9 @@ export class Vocabulary extends DBO.DBObject<VocabularyBase> implements Vocabula
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idVocabularySet, SortOrder } = this;
             ({ idVocabulary: this.idVocabulary, idVocabularySet: this.idVocabularySet, SortOrder: this.SortOrder } =
@@ -24,13 +27,13 @@ export class Vocabulary extends DBO.DBObject<VocabularyBase> implements Vocabula
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Vocabulary.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idVocabulary, idVocabularySet, SortOrder } = this;
             return await DBConnectionFactory.prisma.vocabulary.update({
@@ -39,8 +42,8 @@ export class Vocabulary extends DBO.DBObject<VocabularyBase> implements Vocabula
                     VocabularySet: { connect: { idVocabularySet }, },
                     SortOrder
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Vocabulary.update', error);
             return false;
         }
@@ -52,7 +55,7 @@ export class Vocabulary extends DBO.DBObject<VocabularyBase> implements Vocabula
         try {
             return DBO.CopyObject<VocabularyBase, Vocabulary>(
                 await DBConnectionFactory.prisma.vocabulary.findOne({ where: { idVocabulary, }, }), Vocabulary);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Vocabulary.fetch', error);
             return null;
         }
@@ -64,7 +67,7 @@ export class Vocabulary extends DBO.DBObject<VocabularyBase> implements Vocabula
         try {
             return DBO.CopyArray<VocabularyBase, Vocabulary>(
                 await DBConnectionFactory.prisma.vocabulary.findMany({ where: { idVocabularySet } }), Vocabulary);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Vocabulary.fetchFromVocabularySet', error);
             return null;
         }

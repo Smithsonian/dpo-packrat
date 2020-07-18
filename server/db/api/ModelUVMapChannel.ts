@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { ModelUVMapChannel as ModelUVMapChannelBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -15,7 +16,9 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idModelUVMapFile, ChannelPosition, ChannelWidth, idVUVMapType } = this;
             ({ idModelUVMapChannel: this.idModelUVMapChannel, idModelUVMapFile: this.idModelUVMapFile,
@@ -28,13 +31,13 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelUVMapChannel, idModelUVMapFile, ChannelPosition, ChannelWidth, idVUVMapType } = this;
             return await DBConnectionFactory.prisma.modelUVMapChannel.update({
@@ -44,8 +47,8 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
                     ChannelPosition, ChannelWidth,
                     Vocabulary: { connect: { idVocabulary: idVUVMapType }, },
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.update', error);
             return false;
         }
@@ -57,7 +60,7 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
         try {
             return DBO.CopyObject<ModelUVMapChannelBase, ModelUVMapChannel>(
                 await DBConnectionFactory.prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel, }, }), ModelUVMapChannel);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.fetch', error);
             return null;
         }
@@ -69,7 +72,7 @@ export class ModelUVMapChannel extends DBO.DBObject<ModelUVMapChannelBase> imple
         try {
             return DBO.CopyArray<ModelUVMapChannelBase, ModelUVMapChannel>(
                 await DBConnectionFactory.prisma.modelUVMapChannel.findMany({ where: { idModelUVMapFile } }), ModelUVMapChannel);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.fetchFromModelUVMapFile', error);
             return null;
         }

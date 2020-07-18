@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { ModelProcessingActionStep as ModelProcessingActionStepBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -14,7 +15,9 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idModelProcessingAction, idVActionMethod, Description } = this;
             ({ idModelProcessingActionStep: this.idModelProcessingActionStep, idModelProcessingAction: this.idModelProcessingAction,
@@ -27,13 +30,13 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelProcessingActionStep, idModelProcessingAction, idVActionMethod, Description } = this;
             return await DBConnectionFactory.prisma.modelProcessingActionStep.update({
@@ -43,8 +46,8 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
                     Vocabulary:             { connect: { idVocabulary: idVActionMethod }, },
                     Description,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.update', error);
             return false;
         }
@@ -56,7 +59,7 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
         try {
             return DBO.CopyObject<ModelProcessingActionStepBase, ModelProcessingActionStep>(
                 await DBConnectionFactory.prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep, }, }), ModelProcessingActionStep);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.fetch', error);
             return null;
         }
@@ -68,7 +71,7 @@ export class ModelProcessingActionStep extends DBO.DBObject<ModelProcessingActio
         try {
             return DBO.CopyArray<ModelProcessingActionStepBase, ModelProcessingActionStep>(
                 await DBConnectionFactory.prisma.modelProcessingActionStep.findMany({ where: { idModelProcessingAction } }), ModelProcessingActionStep);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.fetchFromModelProcessingAction', error);
             return null;
         }

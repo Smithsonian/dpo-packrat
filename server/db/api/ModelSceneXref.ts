@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { ModelSceneXref as ModelSceneXrefBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -20,7 +21,9 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idModel, idScene, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             ({ idModelSceneXref: this.idModelSceneXref, idModel: this.idModel, idScene: this.idScene, TS0: this.TS0,
@@ -33,13 +36,13 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelSceneXref, idModel, idScene, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             return await DBConnectionFactory.prisma.modelSceneXref.update({
@@ -49,8 +52,8 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
                     Scene:  { connect: { idScene }, },
                     TS0, TS1, TS2, R0, R1, R2, R3,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.update', error);
             return false;
         }
@@ -62,7 +65,7 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
         try {
             return DBO.CopyObject<ModelSceneXrefBase, ModelSceneXref>(
                 await DBConnectionFactory.prisma.modelSceneXref.findOne({ where: { idModelSceneXref, }, }), ModelSceneXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.fetch', error);
             return null;
         }
@@ -74,7 +77,7 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
         try {
             return DBO.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBConnectionFactory.prisma.modelSceneXref.findMany({ where: { idScene } }), ModelSceneXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.fetchFromScene', error);
             return null;
         }
@@ -86,7 +89,7 @@ export class ModelSceneXref extends DBO.DBObject<ModelSceneXrefBase> implements 
         try {
             return DBO.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBConnectionFactory.prisma.modelSceneXref.findMany({ where: { idModel } }), ModelSceneXref);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.fetchFromModel', error);
             return null;
         }

@@ -22,11 +22,27 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
     ItemArrangementFieldID!: number | null;
     ItemPositionFieldID!: number | null;
 
+    private idAssetThumbnailOrig!: number | null;
+    private idVBackgroundRemovalMethodOrig!: number | null;
+    private idVClusterTypeOrig!: number | null;
+    private idVFocusTypeOrig!: number | null;
+    private idVItemPositionTypeOrig!: number | null;
+    private idVLightSourceTypeOrig!: number | null;
+
     constructor(input: CaptureDataBase) {
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void {
+        this.idAssetThumbnailOrig = this.idAssetThumbnail;
+        this.idVBackgroundRemovalMethodOrig = this.idVBackgroundRemovalMethod;
+        this.idVClusterTypeOrig = this.idVClusterType;
+        this.idVFocusTypeOrig = this.idVFocusType;
+        this.idVItemPositionTypeOrig = this.idVItemPositionType;
+        this.idVLightSourceTypeOrig = this.idVLightSourceType;
+    }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { idVCaptureMethod, idVCaptureDatasetType, DateCaptured, Description, CaptureDatasetFieldID, idVItemPositionType,
                 ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
@@ -59,18 +75,19 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idVCaptureMethod, idVCaptureDatasetType, DateCaptured, Description, CaptureDatasetFieldID, idVItemPositionType,
                 ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
-                ClusterGeometryFieldID, CameraSettingsUniform, idAssetThumbnail } = this;
-            return await DBConnectionFactory.prisma.captureData.update({
+                ClusterGeometryFieldID, CameraSettingsUniform, idAssetThumbnail, idAssetThumbnailOrig, idVBackgroundRemovalMethodOrig,
+                idVClusterTypeOrig, idVFocusTypeOrig, idVItemPositionTypeOrig, idVLightSourceTypeOrig } = this;
+            const retValue: boolean = await DBConnectionFactory.prisma.captureData.update({
                 where: { idCaptureData, },
                 data: {
                     Vocabulary_CaptureData_idVCaptureMethodToVocabulary:            { connect: { idVocabulary: idVCaptureMethod }, },
@@ -78,19 +95,20 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
                     DateCaptured,
                     Description,
                     CaptureDatasetFieldID,
-                    Vocabulary_CaptureData_idVItemPositionTypeToVocabulary:         idVItemPositionType ? { connect: { idVocabulary: idVItemPositionType }, } : undefined,
+                    Vocabulary_CaptureData_idVItemPositionTypeToVocabulary:         idVItemPositionType ? { connect: { idVocabulary: idVItemPositionType }, } : idVItemPositionTypeOrig ? { disconnect: true, } : undefined,
                     ItemPositionFieldID,
                     ItemArrangementFieldID,
-                    Vocabulary_CaptureData_idVFocusTypeToVocabulary:                idVFocusType ? { connect: { idVocabulary: idVFocusType }, } : undefined,
-                    Vocabulary_CaptureData_idVLightSourceTypeToVocabulary:          idVLightSourceType ? { connect: { idVocabulary: idVLightSourceType }, } : undefined,
-                    Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary:  idVBackgroundRemovalMethod ? { connect: { idVocabulary: idVBackgroundRemovalMethod }, } : undefined,
-                    Vocabulary_CaptureData_idVClusterTypeToVocabulary:              idVClusterType ? { connect: { idVocabulary: idVClusterType }, } : undefined,
+                    Vocabulary_CaptureData_idVFocusTypeToVocabulary:                idVFocusType ? { connect: { idVocabulary: idVFocusType }, } : idVFocusTypeOrig ? { disconnect: true, } : undefined,
+                    Vocabulary_CaptureData_idVLightSourceTypeToVocabulary:          idVLightSourceType ? { connect: { idVocabulary: idVLightSourceType }, } : idVLightSourceTypeOrig ? { disconnect: true, } : undefined,
+                    Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary:  idVBackgroundRemovalMethod ? { connect: { idVocabulary: idVBackgroundRemovalMethod }, } : idVBackgroundRemovalMethodOrig ? { disconnect: true, } : undefined,
+                    Vocabulary_CaptureData_idVClusterTypeToVocabulary:              idVClusterType ? { connect: { idVocabulary: idVClusterType }, } : idVClusterTypeOrig ? { disconnect: true, } : undefined,
                     ClusterGeometryFieldID,
                     CameraSettingsUniform,
-                    Asset:                                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                    Asset:                                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.update', error);
             return false;
         }
@@ -101,7 +119,7 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
             const { idCaptureData } = this;
             return DBO.CopyObject<SystemObjectBase, SystemObject>(
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idCaptureData, }, }), SystemObject);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetchSystemObject', error);
             return null;
         }
@@ -113,7 +131,7 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
         try {
             return DBO.CopyObject<CaptureDataBase, CaptureData>(
                 await DBConnectionFactory.prisma.captureData.findOne({ where: { idCaptureData, }, }), CaptureData);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetch', error);
             return null;
         }
@@ -131,7 +149,7 @@ export class CaptureData extends DBO.DBObject<CaptureDataBase> implements Captur
                         },
                     },
                 }), CaptureData);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetchFromXref', error);
             return null;
         }

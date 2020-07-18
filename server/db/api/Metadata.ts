@@ -14,11 +14,23 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
     ValueExtended!: string | null;
     ValueShort!: string | null;
 
+    private idAssetValueOrig!: number | null;
+    private idSystemObjectOrig!: number | null;
+    private idUserOrig!: number | null;
+    private idVMetadataSourceOrig!: number | null;
+
     constructor(input: MetadataBase) {
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void {
+        this.idAssetValueOrig = this.idAssetValue;
+        this.idSystemObjectOrig = this.idSystemObject;
+        this.idUserOrig = this.idUser;
+        this.idVMetadataSourceOrig = this.idVMetadataSource;
+    }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Name, ValueShort, ValueExtended, idAssetValue, idUser, idVMetadataSource, idSystemObject } = this;
             ({ idMetadata: this.idMetadata, Name: this.Name, ValueShort: this.ValueShort,
@@ -36,28 +48,30 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
                     },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
-            const { idMetadata, Name, ValueShort, ValueExtended, idAssetValue, idUser, idVMetadataSource, idSystemObject } = this;
-            return await DBConnectionFactory.prisma.metadata.update({
+            const { idMetadata, Name, ValueShort, ValueExtended, idAssetValue, idUser, idVMetadataSource, idSystemObject,
+                idAssetValueOrig, idUserOrig, idVMetadataSourceOrig, idSystemObjectOrig } = this;
+            const retValue: boolean = await DBConnectionFactory.prisma.metadata.update({
                 where: { idMetadata, },
                 data: {
                     Name,
                     ValueShort:     ValueShort          ? ValueShort : undefined,
                     ValueExtended:  ValueExtended       ? ValueExtended : undefined,
-                    Asset:          idAssetValue        ? { connect: { idAsset: idAssetValue }, } : undefined,
-                    User:           idUser              ? { connect: { idUser }, } : undefined,
-                    Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : undefined,
-                    SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : undefined,
+                    Asset:          idAssetValue        ? { connect: { idAsset: idAssetValue }, } : idAssetValueOrig ? { disconnect: true, } : undefined,
+                    User:           idUser              ? { connect: { idUser }, } : idUserOrig ? { disconnect: true, } : undefined,
+                    Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : idVMetadataSourceOrig ? { disconnect: true, } : undefined,
+                    SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
                 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.update', error);
             return false;
         }
@@ -69,7 +83,7 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
         try {
             return DBO.CopyObject<MetadataBase, Metadata>(
                 await DBConnectionFactory.prisma.metadata.findOne({ where: { idMetadata, }, }), Metadata);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.fetch', error);
             return null;
         }
@@ -81,7 +95,7 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
         try {
             return DBO.CopyArray<MetadataBase, Metadata>(
                 await DBConnectionFactory.prisma.metadata.findMany({ where: { idUser } }), Metadata);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.fetchFromUser', error);
             return null;
         }
@@ -93,7 +107,7 @@ export class Metadata extends DBO.DBObject<MetadataBase> implements MetadataBase
         try {
             return DBO.CopyArray<MetadataBase, Metadata>(
                 await DBConnectionFactory.prisma.metadata.findMany({ where: { idSystemObject } }), Metadata);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.fetchFromSystemObject', error);
             return null;
         }

@@ -44,7 +44,7 @@ export class SystemObjectActor extends SystemObject implements SystemObjectActor
 
     constructor(input: SystemObjectActorBase) {
         super(input);
-        this.Actor = (input.Actor) ? new Actor(input.Actor) : null;
+        this.Actor = (input.Actor) ? new Actor(input.Actor) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idActor: number): Promise<SystemObjectActor | null> {
@@ -54,7 +54,7 @@ export class SystemObjectActor extends SystemObject implements SystemObjectActor
             const SOPair: SystemObjectActorBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor, }, include: { Actor: true, }, });
             return SOPair ? new SystemObjectActor(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectActor.fetch', error);
             return null;
         }
@@ -66,7 +66,7 @@ export class SystemObjectAsset extends SystemObject implements SystemObjectAsset
 
     constructor(input: SystemObjectAssetBase) {
         super(input);
-        this.Asset = (input.Asset) ? new Asset(input.Asset) : null;
+        this.Asset = (input.Asset) ? new Asset(input.Asset) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idAsset: number): Promise<SystemObjectAsset | null> {
@@ -76,7 +76,7 @@ export class SystemObjectAsset extends SystemObject implements SystemObjectAsset
             const SOPair: SystemObjectAssetBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
             return SOPair ? new SystemObjectAsset(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectAsset.fetch', error);
             return null;
         }
@@ -88,7 +88,7 @@ export class SystemObjectAssetVersion extends SystemObject implements SystemObje
 
     constructor(input: SystemObjectAssetVersionBase) {
         super(input);
-        this.AssetVersion = (input.AssetVersion) ? new AssetVersion(input.AssetVersion) : null;
+        this.AssetVersion = (input.AssetVersion) ? new AssetVersion(input.AssetVersion) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idAssetVersion: number): Promise<SystemObjectAssetVersion | null> {
@@ -98,7 +98,7 @@ export class SystemObjectAssetVersion extends SystemObject implements SystemObje
             const SOPair: SystemObjectAssetVersionBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idAssetVersion, }, include: { AssetVersion: true, }, });
             return SOPair ? new SystemObjectAssetVersion(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectAssetVersion.fetch', error);
             return null;
         }
@@ -110,7 +110,7 @@ export class SystemObjectCaptureData extends SystemObject implements SystemObjec
 
     constructor(input: SystemObjectCaptureDataBase) {
         super(input);
-        this.CaptureData = (input.CaptureData) ? new CaptureData(input.CaptureData) : null;
+        this.CaptureData = (input.CaptureData) ? new CaptureData(input.CaptureData) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idCaptureData: number): Promise<SystemObjectCaptureData | null> {
@@ -120,7 +120,7 @@ export class SystemObjectCaptureData extends SystemObject implements SystemObjec
             const SOPair: SystemObjectCaptureDataBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idCaptureData, }, include: { CaptureData: true, }, });
             return SOPair ? new SystemObjectCaptureData(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectCaptureData.fetch', error);
             return null;
         }
@@ -132,7 +132,7 @@ export class SystemObjectIntermediaryFile extends SystemObject implements System
 
     constructor(input: SystemObjectIntermediaryFileBase) {
         super(input);
-        this.IntermediaryFile = (input.IntermediaryFile) ? new IntermediaryFile(input.IntermediaryFile) : null;
+        this.IntermediaryFile = (input.IntermediaryFile) ? new IntermediaryFile(input.IntermediaryFile) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idIntermediaryFile: number): Promise<SystemObjectIntermediaryFile | null> {
@@ -142,7 +142,7 @@ export class SystemObjectIntermediaryFile extends SystemObject implements System
             const SOPair: SystemObjectIntermediaryFileBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, include: { IntermediaryFile: true, }, });
             return SOPair ? new SystemObjectIntermediaryFile(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectIntermediaryFile.fetch', error);
             return null;
         }
@@ -154,7 +154,7 @@ export class SystemObjectItem extends SystemObject implements SystemObjectItemBa
 
     constructor(input: SystemObjectItemBase) {
         super(input);
-        this.Item = (input.Item) ? new Item(input.Item) : null;
+        this.Item = (input.Item) ? new Item(input.Item) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idItem: number): Promise<SystemObjectItem | null> {
@@ -164,7 +164,7 @@ export class SystemObjectItem extends SystemObject implements SystemObjectItemBa
             const SOPair: SystemObjectItemBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idItem, }, include: { Item: true, }, });
             return SOPair ? new SystemObjectItem(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectItem.fetch', error);
             return null;
         }
@@ -176,7 +176,7 @@ export class SystemObjectModel extends SystemObject implements SystemObjectModel
 
     constructor(input: SystemObjectModelBase) {
         super(input);
-        this.Model = (input.Model) ? new Model(input.Model) : null;
+        this.Model = (input.Model) ? new Model(input.Model) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idModel: number): Promise<SystemObjectModel | null> {
@@ -186,7 +186,7 @@ export class SystemObjectModel extends SystemObject implements SystemObjectModel
             const SOPair: SystemObjectModelBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idModel, }, include: { Model: true, }, });
             return SOPair ? new SystemObjectModel(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectModel.fetch', error);
             return null;
         }
@@ -198,7 +198,7 @@ export class SystemObjectProject extends SystemObject implements SystemObjectPro
 
     constructor(input: SystemObjectProjectBase) {
         super(input);
-        this.Project = (input.Project) ? new Project(input.Project) : null;
+        this.Project = (input.Project) ? new Project(input.Project) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idProject: number): Promise<SystemObjectProject | null> {
@@ -208,7 +208,7 @@ export class SystemObjectProject extends SystemObject implements SystemObjectPro
             const SOPair: SystemObjectProjectBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject, }, include: { Project: true, }, });
             return SOPair ? new SystemObjectProject(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectProject.fetch', error);
             return null;
         }
@@ -220,7 +220,7 @@ export class SystemObjectProjectDocumentation extends SystemObject implements Sy
 
     constructor(input: SystemObjectProjectDocumentationBase) {
         super(input);
-        this.ProjectDocumentation = (input.ProjectDocumentation) ? new ProjectDocumentation(input.ProjectDocumentation) : null;
+        this.ProjectDocumentation = (input.ProjectDocumentation) ? new ProjectDocumentation(input.ProjectDocumentation) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idProjectDocumentation: number): Promise<SystemObjectProjectDocumentation | null> {
@@ -230,7 +230,7 @@ export class SystemObjectProjectDocumentation extends SystemObject implements Sy
             const SOPair: SystemObjectProjectDocumentationBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, include: { ProjectDocumentation: true, }, });
             return SOPair ? new SystemObjectProjectDocumentation(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectProjectDocumentation.fetch', error);
             return null;
         }
@@ -242,7 +242,7 @@ export class SystemObjectScene extends SystemObject implements SystemObjectScene
 
     constructor(input: SystemObjectSceneBase) {
         super(input);
-        this.Scene = (input.Scene) ? new Scene(input.Scene) : null;
+        this.Scene = (input.Scene) ? new Scene(input.Scene) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idScene: number): Promise<SystemObjectScene | null> {
@@ -252,7 +252,7 @@ export class SystemObjectScene extends SystemObject implements SystemObjectScene
             const SOPair: SystemObjectSceneBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene, }, include: { Scene: true, }, });
             return SOPair ? new SystemObjectScene(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectScene.fetch', error);
             return null;
         }
@@ -264,7 +264,7 @@ export class SystemObjectStakeholder extends SystemObject implements SystemObjec
 
     constructor(input: SystemObjectStakeholderBase) {
         super(input);
-        this.Stakeholder = (input.Stakeholder) ? new Stakeholder(input.Stakeholder) : null;
+        this.Stakeholder = (input.Stakeholder) ? new Stakeholder(input.Stakeholder) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idStakeholder: number): Promise<SystemObjectStakeholder | null> {
@@ -274,7 +274,7 @@ export class SystemObjectStakeholder extends SystemObject implements SystemObjec
             const SOPair: SystemObjectStakeholderBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder, }, include: { Stakeholder: true, }, });
             return SOPair ? new SystemObjectStakeholder(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectStakeholder.fetch', error);
             return null;
         }
@@ -286,7 +286,7 @@ export class SystemObjectSubject extends SystemObject implements SystemObjectSub
 
     constructor(input: SystemObjectSubjectBase) {
         super(input);
-        this.Subject = (input.Subject) ? new Subject(input.Subject) : null;
+        this.Subject = (input.Subject) ? new Subject(input.Subject) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idSubject: number): Promise<SystemObjectSubject | null> {
@@ -296,7 +296,7 @@ export class SystemObjectSubject extends SystemObject implements SystemObjectSub
             const SOPair: SystemObjectSubjectBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject, }, include: { Subject: true, }, });
             return SOPair ? new SystemObjectSubject(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectSubject.fetch', error);
             return null;
         }
@@ -308,7 +308,7 @@ export class SystemObjectUnit extends SystemObject implements SystemObjectUnitBa
 
     constructor(input: SystemObjectUnitBase) {
         super(input);
-        this.Unit = (input.Unit) ? new Unit(input.Unit) : null;
+        this.Unit = (input.Unit) ? new Unit(input.Unit) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idUnit: number): Promise<SystemObjectUnit | null> {
@@ -318,7 +318,7 @@ export class SystemObjectUnit extends SystemObject implements SystemObjectUnitBa
             const SOPair: SystemObjectUnitBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit, }, include: { Unit: true, }, });
             return SOPair ? new SystemObjectUnit(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectUnit.fetch', error);
             return null;
         }
@@ -330,7 +330,7 @@ export class SystemObjectWorkflow extends SystemObject implements SystemObjectWo
 
     constructor(input: SystemObjectWorkflowBase) {
         super(input);
-        this.Workflow = (input.Workflow) ? new Workflow(input.Workflow) : null;
+        this.Workflow = (input.Workflow) ? new Workflow(input.Workflow) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idWorkflow: number): Promise<SystemObjectWorkflow | null> {
@@ -340,7 +340,7 @@ export class SystemObjectWorkflow extends SystemObject implements SystemObjectWo
             const SOPair: SystemObjectWorkflowBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflow, }, include: { Workflow: true, }, });
             return SOPair ? new SystemObjectWorkflow(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectWorkflow.fetch', error);
             return null;
         }
@@ -352,7 +352,7 @@ export class SystemObjectWorkflowStep extends SystemObject implements SystemObje
 
     constructor(input: SystemObjectWorkflowStepBase) {
         super(input);
-        this.WorkflowStep = (input.WorkflowStep) ? new WorkflowStep(input.WorkflowStep) : null;
+        this.WorkflowStep = (input.WorkflowStep) ? new WorkflowStep(input.WorkflowStep) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idWorkflowStep: number): Promise<SystemObjectWorkflowStep | null> {
@@ -362,7 +362,7 @@ export class SystemObjectWorkflowStep extends SystemObject implements SystemObje
             const SOPair: SystemObjectWorkflowStepBase | null =
                 await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflowStep, }, include: { WorkflowStep: true, }, });
             return SOPair ? new SystemObjectWorkflowStep(SOPair) : null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectWorkflowStep.fetch', error);
             return null;
         }
@@ -431,7 +431,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     },
                 });
             return (SOAPB ? new SystemObjectPairs(SOAPB) : null);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectAndPairs.fetch', error);
             return null;
         }
@@ -466,7 +466,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                         WorkflowStep: true
                     },
                 }), SystemObjectPairs);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectAndPairs.fetchDerivedFromXref', error);
             return null;
         }
@@ -501,7 +501,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                         WorkflowStep: true
                     },
                 }), SystemObjectPairs);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectAndPairs.fetchMasterFromXref', error);
             return null;
         }

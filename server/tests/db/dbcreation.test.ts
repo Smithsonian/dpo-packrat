@@ -1,6 +1,7 @@
 import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 import * as path from 'path';
+import * as DBO from '../../db/api/DBObject';
 
 beforeAll(() => {
     const logPath: string = './logs';
@@ -2805,6 +2806,35 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: Actor.update disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (actorWithOutUnit) {
+            actorWithOutUnit.idUnit = null;
+            bUpdated = await actorWithOutUnit.update();
+
+            const actorFetch: DBAPI.Actor | null = await DBAPI.Actor.fetch(actorWithOutUnit.idActor);
+            expect(actorFetch).toBeTruthy();
+            if (actorFetch)
+                expect(actorFetch.idUnit).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Actor.update disconnect already null', async () => {
+        let bUpdated: boolean = false;
+        if (actorWithOutUnit) {
+            expect(actorWithOutUnit.idUnit).toBeNull();
+            actorWithOutUnit.idUnit = null;
+            bUpdated = await actorWithOutUnit.update();
+
+            const actorFetch: DBAPI.Actor | null = await DBAPI.Actor.fetch(actorWithOutUnit.idActor);
+            expect(actorFetch).toBeTruthy();
+            if (actorFetch)
+                expect(actorFetch.idUnit).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: Asset.update', async () => {
         let bUpdated: boolean = false;
         if (assetThumbnail && assetGroup2) {
@@ -2825,6 +2855,34 @@ describe('DB Update Test Suite', () => {
                     expect(SOOld).toMatchObject(SONew);
             }
 
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Asset.update disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (assetThumbnail) {
+            assetThumbnail.idAssetGroup = null;
+            bUpdated = await assetThumbnail.update();
+
+            const assetFetch: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetThumbnail.idAsset);
+            expect(assetFetch).toBeTruthy();
+            if (assetFetch)
+                expect(assetFetch.idAssetGroup).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Asset.update disconnect already null', async () => {
+        let bUpdated: boolean = false;
+        if (assetThumbnail) {
+            expect(assetThumbnail.idAssetGroup).toBeNull();
+            bUpdated = await assetThumbnail.update();
+
+            const assetFetch: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetThumbnail.idAsset);
+            expect(assetFetch).toBeTruthy();
+            if (assetFetch)
+                expect(assetFetch.idAssetGroup).toBeNull();
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -2888,6 +2946,52 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: CaptureData.update partial disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (captureData) {
+            captureData.idAssetThumbnail = null;
+            captureData.idVBackgroundRemovalMethod = null;
+            bUpdated = await captureData.update();
+
+            const captureDataFetch: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetch(captureData.idCaptureData);
+            expect(captureDataFetch).toBeTruthy();
+            if (captureDataFetch) {
+                expect(captureDataFetch.idAssetThumbnail).toBeNull();
+                expect(captureDataFetch.idVBackgroundRemovalMethod).toBeNull();
+                expect(captureDataFetch.idVClusterType).not.toBeNull();
+                expect(captureDataFetch.idVFocusType).not.toBeNull();
+                expect(captureDataFetch.idVItemPositionType).not.toBeNull();
+                expect(captureDataFetch.idVLightSourceType).not.toBeNull();
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: CaptureData.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (captureData) {
+            captureData.idAssetThumbnail = null;
+            captureData.idVBackgroundRemovalMethod = null;
+            captureData.idVClusterType = null;
+            captureData.idVFocusType = null;
+            captureData.idVItemPositionType = null;
+            captureData.idVLightSourceType = null;
+            bUpdated = await captureData.update();
+
+            const captureDataFetch: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetch(captureData.idCaptureData);
+            expect(captureDataFetch).toBeTruthy();
+            if (captureDataFetch) {
+                expect(captureDataFetch.idAssetThumbnail).toBeNull();
+                expect(captureDataFetch.idVBackgroundRemovalMethod).toBeNull();
+                expect(captureDataFetch.idVClusterType).toBeNull();
+                expect(captureDataFetch.idVFocusType).toBeNull();
+                expect(captureDataFetch.idVItemPositionType).toBeNull();
+                expect(captureDataFetch.idVLightSourceType).toBeNull();
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: CaptureDataFile.update', async () => {
         let bUpdated: boolean = false;
         if (captureDataFile && assetWithoutAG) {
@@ -2943,7 +3047,6 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
-
     test('DB Update: Identifier.update', async () => {
         let bUpdated: boolean = false;
         if (identifier) {
@@ -2955,6 +3058,34 @@ describe('DB Update Test Suite', () => {
             expect(identifierFetch).toBeTruthy();
             if (identifierFetch)
                 expect(identifierFetch.IdentifierValue).toBe(updatedValue);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Identifier.update disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (identifier) {
+            identifier.idSystemObject = null;
+            bUpdated = await identifier.update();
+
+            const identifierFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifier.idIdentifier);
+            expect(identifierFetch).toBeTruthy();
+            if (identifierFetch)
+                expect(identifierFetch.idSystemObject).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Identifier.update disconnect already null', async () => {
+        let bUpdated: boolean = false;
+        if (identifier) {
+            expect(identifier.idSystemObject).toBeNull();
+            bUpdated = await identifier.update();
+
+            const identifierFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifier.idIdentifier);
+            expect(identifierFetch).toBeTruthy();
+            if (identifierFetch)
+                expect(identifierFetch.idSystemObject).toBeNull();
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3008,6 +3139,37 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: Item.update partial disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (item) {
+            item.idAssetThumbnail = null;
+            bUpdated = await item.update();
+
+            const itemFetch: DBAPI.Item | null = await DBAPI.Item.fetch(item.idItem);
+            expect(itemFetch).toBeTruthy();
+            if (itemFetch)
+                expect(itemFetch.idAssetThumbnail).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Item.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (item) {
+            expect(item.idAssetThumbnail).toBeNull();
+            item.idGeoLocation = null;
+            bUpdated = await item.update();
+
+            const itemFetch: DBAPI.Item | null = await DBAPI.Item.fetch(item.idItem);
+            expect(itemFetch).toBeTruthy();
+            if (itemFetch) {
+                expect(itemFetch.idAssetThumbnail).toBeNull();
+                expect(itemFetch.idGeoLocation).toBeNull();
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: License.update', async () => {
         let bUpdated: boolean = false;
         if (license) {
@@ -3037,6 +3199,35 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: LicenseAssignment.update partial disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (licenseAssignment) {
+            licenseAssignment.idUserCreator = null;
+            bUpdated = await licenseAssignment.update();
+
+            const licenseAssignmentFetch: DBAPI.LicenseAssignment | null = await DBAPI.LicenseAssignment.fetch(licenseAssignment.idLicenseAssignment);
+            expect(licenseAssignmentFetch).toBeTruthy();
+            if (licenseAssignmentFetch)
+                expect(licenseAssignmentFetch.idUserCreator).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: LicenseAssignment.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (licenseAssignment) {
+            expect(licenseAssignment.idUserCreator).toBeNull();
+            licenseAssignment.idSystemObject = null;
+            bUpdated = await licenseAssignment.update();
+
+            const licenseAssignmentFetch: DBAPI.LicenseAssignment | null = await DBAPI.LicenseAssignment.fetch(licenseAssignment.idLicenseAssignment);
+            expect(licenseAssignmentFetch).toBeTruthy();
+            if (licenseAssignmentFetch)
+                expect(licenseAssignmentFetch.idSystemObject).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: Metadata.update', async () => {
         let bUpdated: boolean = false;
         if (metadataNull && assetThumbnail) {
@@ -3047,6 +3238,46 @@ describe('DB Update Test Suite', () => {
             expect(metadataFetch).toBeTruthy();
             if (metadataFetch)
                 expect(metadataFetch.idAssetValue).toBe(assetThumbnail.idAsset);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Metadata.update disconnect partial', async () => {
+        let bUpdated: boolean = false;
+        if (metadata) {
+            metadata.idAssetValue = null;
+            metadata.idUser = null;
+            bUpdated = await metadata.update();
+
+            const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadata.idMetadata);
+            expect(metadataFetch).toBeTruthy();
+            if (metadataFetch) {
+                expect(metadataFetch.idAssetValue).toBeNull();
+                expect(metadataFetch.idUser).toBeNull();
+                expect(metadataFetch.idVMetadataSource).not.toBeNull();
+                expect(metadataFetch.idSystemObject).not.toBeNull();
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Metadata.update disconnect full', async () => {
+        let bUpdated: boolean = false;
+        if (metadata) {
+            metadata.idAssetValue = null;
+            metadata.idUser = null;
+            metadata.idVMetadataSource = null;
+            metadata.idSystemObject = null;
+            bUpdated = await metadata.update();
+
+            const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadata.idMetadata);
+            expect(metadataFetch).toBeTruthy();
+            if (metadataFetch) {
+                expect(metadataFetch.idAssetValue).toBeNull();
+                expect(metadataFetch.idUser).toBeNull();
+                expect(metadataFetch.idVMetadataSource).toBeNull();
+                expect(metadataFetch.idSystemObject).toBeNull();
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3070,6 +3301,34 @@ describe('DB Update Test Suite', () => {
                 if (SOOld && SONew)
                     expect(SOOld).toMatchObject(SONew);
             }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Model.update disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (modelNulls) {
+            modelNulls.idAssetThumbnail = null;
+            bUpdated = await modelNulls.update();
+
+            const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
+            expect(modelFetch).toBeTruthy();
+            if (modelFetch)
+                expect(modelFetch.idAssetThumbnail).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Model.update disconnect null', async () => {
+        let bUpdated: boolean = false;
+        if (modelNulls) {
+            expect(modelNulls.idAssetThumbnail).toBeNull();
+            bUpdated = await modelNulls.update();
+
+            const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
+            expect(modelFetch).toBeTruthy();
+            if (modelFetch)
+                expect(modelFetch.idAssetThumbnail).toBeNull();
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3236,6 +3495,34 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: Scene.update disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (sceneNulls) {
+            sceneNulls.idAssetThumbnail = null;
+            bUpdated = await sceneNulls.update();
+
+            const sceneFetch: DBAPI.Scene | null = await DBAPI.Scene.fetch(sceneNulls.idScene);
+            expect(sceneFetch).toBeTruthy();
+            if (sceneFetch)
+                expect(sceneFetch.idAssetThumbnail).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Scene.update disconnect null', async () => {
+        let bUpdated: boolean = false;
+        if (sceneNulls) {
+            expect(sceneNulls.idAssetThumbnail).toBeNull();
+            bUpdated = await sceneNulls.update();
+
+            const sceneFetch: DBAPI.Scene | null = await DBAPI.Scene.fetch(sceneNulls.idScene);
+            expect(sceneFetch).toBeTruthy();
+            if (sceneFetch)
+                expect(sceneFetch.idAssetThumbnail).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: Stakeholder.update', async () => {
         let bUpdated: boolean = false;
         if (stakeholder) {
@@ -3279,6 +3566,35 @@ describe('DB Update Test Suite', () => {
                 if (SOOld && SONew)
                     expect(SOOld).toMatchObject(SONew);
             }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Subject.update partial disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (subject) {
+            subject.idAssetThumbnail = null;
+            bUpdated = await subject.update();
+
+            const subjectFetch: DBAPI.Subject | null = await DBAPI.Subject.fetch(subject.idSubject);
+            expect(subjectFetch).toBeTruthy();
+            if (subjectFetch)
+                expect(subjectFetch.idAssetThumbnail).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Subject.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (subject) {
+            expect(subject.idAssetThumbnail).toBeNull();
+            subject.idGeoLocation = null;
+            bUpdated = await subject.update();
+
+            const subjectFetch: DBAPI.Subject | null = await DBAPI.Subject.fetch(subject.idSubject);
+            expect(subjectFetch).toBeTruthy();
+            if (subjectFetch)
+                expect(subjectFetch.idGeoLocation).toBeNull();
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3434,6 +3750,35 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: Workflow.update partial disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (workflow) {
+            workflow.idProject = null;
+            bUpdated = await workflow.update();
+
+            const workflowFetch: DBAPI.Workflow | null = await DBAPI.Workflow.fetch(workflow.idWorkflow);
+            expect(workflowFetch).toBeTruthy();
+            if (workflowFetch)
+                expect(workflowFetch.idProject).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Workflow.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (workflow) {
+            expect(workflow.idProject).toBeNull();
+            workflow.idUserInitiator = null;
+            bUpdated = await workflow.update();
+
+            const workflowFetch: DBAPI.Workflow | null = await DBAPI.Workflow.fetch(workflow.idWorkflow);
+            expect(workflowFetch).toBeTruthy();
+            if (workflowFetch)
+                expect(workflowFetch.idUserInitiator).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: WorkflowStep.update', async () => {
         let bUpdated: boolean = false;
         if (workflowStep && workflowNulls) {
@@ -3485,5 +3830,179 @@ describe('DB Update Test Suite', () => {
                 expect(workflowTemplateFetch.Name).toBe(updatedName);
         }
         expect(bUpdated).toBeTruthy();
+    });
+});
+
+
+describe('DB Null/Zero ID Test', () => {
+    test('DB Null/Zero ID Test', async () => {
+        expect(await DBAPI.AccessAction.fetch(0)).toBeNull();
+        expect(await DBAPI.AccessAction.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.AccessContext.fetch(0)).toBeNull();
+        expect(await DBAPI.AccessContextObject.fetch(0)).toBeNull();
+        expect(await DBAPI.AccessContextObject.fetchFromAccessContext(0)).toBeNull();
+        expect(await DBAPI.AccessContextObject.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.AccessPolicy.fetch(0)).toBeNull();
+        expect(await DBAPI.AccessPolicy.fetchFromAccessContext(0)).toBeNull();
+        expect(await DBAPI.AccessPolicy.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.AccessRole.fetch(0)).toBeNull();
+        expect(await DBAPI.AccessRole.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.AccessRoleAccessActionXref.fetch(0)).toBeNull();
+        expect(await DBAPI.Actor.fetch(0)).toBeNull();
+        expect(await DBAPI.Actor.fetchFromUnit(0)).toBeNull();
+        expect(await DBAPI.Asset.fetch(0)).toBeNull();
+        expect(await DBAPI.Asset.fetchFromAssetGroup(0)).toBeNull();
+        expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.CaptureData.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureData.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.CaptureDataFile.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureDataFile.fetchFromCaptureData(0)).toBeNull();
+        expect(await DBAPI.CaptureDataGroup.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureDataGroup.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.CaptureDataGroupCaptureDataXref.fetch(0)).toBeNull();
+        expect(await DBO.CopyArray<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
+        expect(await DBAPI.GeoLocation.fetch(0)).toBeNull();
+        expect(await DBAPI.Identifier.fetch(0)).toBeNull();
+        expect(await DBAPI.Identifier.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.IntermediaryFile.fetch(0)).toBeNull();
+        expect(await DBAPI.Item.fetch(0)).toBeNull();
+        expect(await DBAPI.Item.fetchFromSubject(0)).toBeNull();
+        expect(await DBAPI.License.fetch(0)).toBeNull();
+        expect(await DBAPI.LicenseAssignment.fetch(0)).toBeNull();
+        expect(await DBAPI.LicenseAssignment.fetchFromLicense(0)).toBeNull();
+        expect(await DBAPI.LicenseAssignment.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.LicenseAssignment.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.Metadata.fetch(0)).toBeNull();
+        expect(await DBAPI.Metadata.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.Metadata.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.Model.fetch(0)).toBeNull();
+        expect(await DBAPI.Model.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.ModelGeometryFile.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelGeometryFile.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelProcessingAction.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelProcessingAction.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelProcessingActionStep.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelProcessingActionStep.fetchFromModelProcessingAction(0)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromScene(0)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelUVMapChannel.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelUVMapChannel.fetchFromModelUVMapFile(0)).toBeNull();
+        expect(await DBAPI.ModelUVMapFile.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelUVMapFile.fetchFromModelGeometryFile(0)).toBeNull();
+        expect(await DBAPI.Project.fetch(0)).toBeNull();
+        expect(await DBAPI.ProjectDocumentation.fetch(0)).toBeNull();
+        expect(await DBAPI.ProjectDocumentation.fetchFromProject(0)).toBeNull();
+        expect(await DBAPI.Scene.fetch(0)).toBeNull();
+        expect(await DBAPI.Scene.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
+        expect(await DBAPI.Subject.fetch(0)).toBeNull();
+        expect(await DBAPI.Subject.fetchFromUnit(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchDerivedFromXref(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchMasterFromXref(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchWorkflowStepFromXref(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromActorID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromAssetID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromAssetVersionID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromCaptureDataID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromIntermediaryFileID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromItemID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromModelID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromProjectID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromProjectDocumentationID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromSceneID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromStakeholderID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromSubjectID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromWorkflowID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromWorkflowStepID(0)).toBeNull();
+
+        expect(await DBAPI.SystemObjectActor.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectAsset.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectAssetVersion.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectCaptureData.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectIntermediaryFile.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectItem.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectModel.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectProject.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectProjectDocumentation.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectScene.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectStakeholder.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectSubject.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectUnit.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectWorkflow.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectWorkflowStep.fetch(0)).toBeNull();
+
+        expect(await DBAPI.SystemObjectActor.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectAsset.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectAssetVersion.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectCaptureData.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectIntermediaryFile.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectItem.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectModel.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectProject.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectProjectDocumentation.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectScene.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectStakeholder.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectSubject.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectUnit.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectWorkflow.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectWorkflowStep.fetch(-1)).toBeNull();
+
+        expect(await DBAPI.SystemObjectPairs.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectPairs.fetchDerivedFromXref(0)).toBeNull();
+        expect(await DBAPI.SystemObjectPairs.fetchMasterFromXref(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersion.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersion.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.SystemObjectXref.fetch(0)).toBeNull();
+        expect(await DBAPI.Unit.fetch(0)).toBeNull();
+        expect(await DBAPI.User.fetch(0)).toBeNull();
+        expect(await DBAPI.UserPersonalizationSystemObject.fetch(0)).toBeNull();
+        expect(await DBAPI.UserPersonalizationSystemObject.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.UserPersonalizationSystemObject.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.UserPersonalizationUrl.fetch(0)).toBeNull();
+        expect(await DBAPI.UserPersonalizationUrl.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.Vocabulary.fetch(0)).toBeNull();
+        expect(await DBAPI.Vocabulary.fetchFromVocabularySet(0)).toBeNull();
+        expect(await DBAPI.VocabularySet.fetch(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetch(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetchFromProject(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetchFromWorkflowTemplate(0)).toBeNull();
+        expect(await DBAPI.WorkflowStep.fetch(0)).toBeNull();
+        expect(await DBAPI.WorkflowStep.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.WorkflowStep.fetchFromWorkflow(0)).toBeNull();
+        expect(await DBAPI.WorkflowStepSystemObjectXref.fetch(0)).toBeNull();
+        expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep(0)).toBeNull();
+        expect(await DBAPI.WorkflowTemplate.fetch(0)).toBeNull();
+
+        const SO: DBAPI.SystemObject = new DBAPI.SystemObject({
+            idActor: 0,
+            idAsset: 0,
+            idAssetVersion: 0,
+            idCaptureData: 0,
+            idIntermediaryFile: 0,
+            idItem: 0,
+            idModel: 0,
+            idProject: 0,
+            idProjectDocumentation: 0,
+            idScene: 0,
+            idStakeholder: 0,
+            idSubject: 0,
+            idSystemObject: 0,
+            idUnit: 0,
+            idWorkflow: 0,
+            idWorkflowStep: 0,
+            Retired: false,
+        });
+
+        await expect(SO.create()).rejects.toThrow('DBAPI.SystemObject.create() should never be called');
+        await expect(SO.update()).rejects.toThrow('DBAPI.SystemObject.update() should never be called');
+
+        // expect(async () => { await SO.create();}).resolves.toThrow('DBAPI.SystemObject.create() should never be called');
+        // expect(async () => { await SO.update();}).resolves.toThrow('DBAPI.SystemObject.update() should never be called');
     });
 });

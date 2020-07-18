@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { GeoLocation as GeoLocationBase } from '@prisma/client';
 import { DBConnectionFactory } from '..';
 import * as DBO from '../api/DBObject';
@@ -21,7 +22,9 @@ export class GeoLocation extends DBO.DBObject<GeoLocationBase> implements GeoLoc
         super(input);
     }
 
-    async create(): Promise<boolean> {
+    protected updateCachedValues(): void { }
+
+    protected async createWorker(): Promise<boolean> {
         try {
             const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             ({ idGeoLocation: this.idGeoLocation, Latitude: this.Latitude, Longitude: this.Longitude, Altitude: this.Altitude,
@@ -30,20 +33,20 @@ export class GeoLocation extends DBO.DBObject<GeoLocationBase> implements GeoLoc
                     data: { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 },
                 }));
             return true;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.GeoLocation.create', error);
             return false;
         }
     }
 
-    async update(): Promise<boolean> {
+    protected async updateWorker(): Promise<boolean> {
         try {
             const { idGeoLocation, Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             return await DBConnectionFactory.prisma.geoLocation.update({
                 where: { idGeoLocation, },
                 data: { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 },
-            }) ? true : false;
-        } catch (error) {
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.GeoLocation.update', error);
             return false;
         }
@@ -55,7 +58,7 @@ export class GeoLocation extends DBO.DBObject<GeoLocationBase> implements GeoLoc
         try {
             return DBO.CopyObject<GeoLocationBase, GeoLocation>(
                 await DBConnectionFactory.prisma.geoLocation.findOne({ where: { idGeoLocation, }, }), GeoLocation);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.GeoLocation.fetch', error);
             return null;
         }
