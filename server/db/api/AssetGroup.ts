@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { AssetGroup as AssetGroupBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class AssetGroup extends DBO.DBObject<AssetGroupBase> implements AssetGroupBase {
+export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGroupBase {
     idAssetGroup!: number;
 
     constructor(input: AssetGroupBase) {
@@ -16,7 +15,7 @@ export class AssetGroup extends DBO.DBObject<AssetGroupBase> implements AssetGro
 
     protected async createWorker(): Promise<boolean> {
         try {
-            ({ idAssetGroup: this.idAssetGroup } = await DBConnectionFactory.prisma.assetGroup.create({ data: { } }));
+            ({ idAssetGroup: this.idAssetGroup } = await DBC.DBConnectionFactory.prisma.assetGroup.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetGroup.create', error);
@@ -27,7 +26,7 @@ export class AssetGroup extends DBO.DBObject<AssetGroupBase> implements AssetGro
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAssetGroup } = this;
-            return await DBConnectionFactory.prisma.assetGroup.update({
+            return await DBC.DBConnectionFactory.prisma.assetGroup.update({
                 where: { idAssetGroup, },
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
@@ -41,8 +40,8 @@ export class AssetGroup extends DBO.DBObject<AssetGroupBase> implements AssetGro
         if (!idAssetGroup)
             return null;
         try {
-            return DBO.CopyObject<AssetGroupBase, AssetGroup>(
-                await DBConnectionFactory.prisma.assetGroup.findOne({ where: { idAssetGroup, }, }), AssetGroup);
+            return DBC.CopyObject<AssetGroupBase, AssetGroup>(
+                await DBC.DBConnectionFactory.prisma.assetGroup.findOne({ where: { idAssetGroup, }, }), AssetGroup);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetGroup.fetch', error);
             return null;

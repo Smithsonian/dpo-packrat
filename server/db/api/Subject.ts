@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Subject as SubjectBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { DBConnectionFactory, SystemObject } from '..';
-import * as DBO from '../api/DBObject';
+import { SystemObject } from '..';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
+export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase {
     idSubject!: number;
     idAssetThumbnail!: number | null;
     idGeoLocation!: number | null;
@@ -28,7 +28,7 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
             const { idUnit, idAssetThumbnail, idGeoLocation, Name } = this;
             ({ idSubject: this.idSubject, idUnit: this.idUnit, idAssetThumbnail: this.idAssetThumbnail,
                 idGeoLocation: this.idGeoLocation, Name: this.Name } =
-                await DBConnectionFactory.prisma.subject.create({
+                await DBC.DBConnectionFactory.prisma.subject.create({
                     data: {
                         Unit:           { connect: { idUnit }, },
                         Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
@@ -47,7 +47,7 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idSubject, idUnit, idAssetThumbnail, idGeoLocation, Name, idAssetThumbnailOrig, idGeoLocationOrig } = this;
-            const retValue: boolean = await DBConnectionFactory.prisma.subject.update({
+            const retValue: boolean = await DBC.DBConnectionFactory.prisma.subject.update({
                 where: { idSubject, },
                 data: {
                     Unit:           { connect: { idUnit }, },
@@ -66,8 +66,8 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
     async fetchSystemObject(): Promise<SystemObject | null> {
         try {
             const { idSubject } = this;
-            return DBO.CopyObject<SystemObjectBase, SystemObject>(
-                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject, }, }), SystemObject);
+            return DBC.CopyObject<SystemObjectBase, SystemObject>(
+                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.subject.fetchSystemObject', error);
             return null;
@@ -78,8 +78,8 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
         if (!idSubject)
             return null;
         try {
-            return DBO.CopyObject<SubjectBase, Subject>(
-                await DBConnectionFactory.prisma.subject.findOne({ where: { idSubject, }, }), Subject);
+            return DBC.CopyObject<SubjectBase, Subject>(
+                await DBC.DBConnectionFactory.prisma.subject.findOne({ where: { idSubject, }, }), Subject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.fetch', error);
             return null;
@@ -90,8 +90,8 @@ export class Subject extends DBO.DBObject<SubjectBase> implements SubjectBase {
         if (!idUnit)
             return null;
         try {
-            return DBO.CopyArray<SubjectBase, Subject>(
-                await DBConnectionFactory.prisma.subject.findMany({ where: { idUnit } }), Subject);
+            return DBC.CopyArray<SubjectBase, Subject>(
+                await DBC.DBConnectionFactory.prisma.subject.findMany({ where: { idUnit } }), Subject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.fetchFromUnit', error);
             return null;

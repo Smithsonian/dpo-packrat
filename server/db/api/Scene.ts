@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Scene as SceneBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { DBConnectionFactory, SystemObject } from '..';
-import * as DBO from '../api/DBObject';
+import { SystemObject } from '..';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
+export class Scene extends DBC.DBObject<SceneBase> implements SceneBase {
     idScene!: number;
     HasBeenQCd!: boolean;
     idAssetThumbnail!: number | null;
@@ -26,7 +26,7 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
             const { Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
             ({ idScene: this.idScene, Name: this.Name, idAssetThumbnail: this.idAssetThumbnail,
                 IsOriented: this.IsOriented, HasBeenQCd: this.HasBeenQCd } =
-                await DBConnectionFactory.prisma.scene.create({
+                await DBC.DBConnectionFactory.prisma.scene.create({
                     data: {
                         Name,
                         Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
@@ -45,7 +45,7 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd, idAssetThumbnailOrig } = this;
-            const retValue: boolean = await DBConnectionFactory.prisma.scene.update({
+            const retValue: boolean = await DBC.DBConnectionFactory.prisma.scene.update({
                 where: { idScene, },
                 data: {
                     Name,
@@ -64,8 +64,8 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
     async fetchSystemObject(): Promise<SystemObject | null> {
         try {
             const { idScene } = this;
-            return DBO.CopyObject<SystemObjectBase, SystemObject>(
-                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene, }, }), SystemObject);
+            return DBC.CopyObject<SystemObjectBase, SystemObject>(
+                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.scene.fetchSystemObject', error);
             return null;
@@ -76,8 +76,8 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
         if (!idScene)
             return null;
         try {
-            return DBO.CopyObject<SceneBase, Scene>(
-                await DBConnectionFactory.prisma.scene.findOne({ where: { idScene, }, }), Scene);
+            return DBC.CopyObject<SceneBase, Scene>(
+                await DBC.DBConnectionFactory.prisma.scene.findOne({ where: { idScene, }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Scene.fetch', error);
             return null;
@@ -88,8 +88,8 @@ export class Scene extends DBO.DBObject<SceneBase> implements SceneBase {
         if (!idModel)
             return null;
         try {
-            return DBO.CopyArray<SceneBase, Scene>(
-                await DBConnectionFactory.prisma.scene.findMany({ where: { ModelSceneXref: { some: { idModel }, }, }, }), Scene);
+            return DBC.CopyArray<SceneBase, Scene>(
+                await DBC.DBConnectionFactory.prisma.scene.findMany({ where: { ModelSceneXref: { some: { idModel }, }, }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.fetchSceneFromXref', error);
             return null;

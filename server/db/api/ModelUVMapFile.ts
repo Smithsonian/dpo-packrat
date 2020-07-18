@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { ModelUVMapFile as ModelUVMapFileBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements ModelUVMapFileBase {
+export class ModelUVMapFile extends DBC.DBObject<ModelUVMapFileBase> implements ModelUVMapFileBase {
     idModelUVMapFile!: number;
     idAsset!: number;
     idModelGeometryFile!: number;
@@ -22,7 +21,7 @@ export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements 
             const { idModelGeometryFile, idAsset, UVMapEdgeLength } = this;
             ({ idModelUVMapFile: this.idModelUVMapFile, idModelGeometryFile: this.idModelGeometryFile,
                 idAsset: this.idAsset, UVMapEdgeLength: this.UVMapEdgeLength } =
-                await DBConnectionFactory.prisma.modelUVMapFile.create({
+                await DBC.DBConnectionFactory.prisma.modelUVMapFile.create({
                     data: {
                         ModelGeometryFile:  { connect: { idModelGeometryFile }, },
                         Asset:              { connect: { idAsset }, },
@@ -39,7 +38,7 @@ export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements 
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelUVMapFile, idModelGeometryFile, idAsset, UVMapEdgeLength } = this;
-            return await DBConnectionFactory.prisma.modelUVMapFile.update({
+            return await DBC.DBConnectionFactory.prisma.modelUVMapFile.update({
                 where: { idModelUVMapFile, },
                 data: {
                     ModelGeometryFile:  { connect: { idModelGeometryFile }, },
@@ -57,8 +56,8 @@ export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements 
         if (!idModelUVMapFile)
             return null;
         try {
-            return DBO.CopyObject<ModelUVMapFileBase, ModelUVMapFile>(
-                await DBConnectionFactory.prisma.modelUVMapFile.findOne({ where: { idModelUVMapFile, }, }), ModelUVMapFile);
+            return DBC.CopyObject<ModelUVMapFileBase, ModelUVMapFile>(
+                await DBC.DBConnectionFactory.prisma.modelUVMapFile.findOne({ where: { idModelUVMapFile, }, }), ModelUVMapFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapFile.fetch', error);
             return null;
@@ -69,8 +68,8 @@ export class ModelUVMapFile extends DBO.DBObject<ModelUVMapFileBase> implements 
         if (!idModelGeometryFile)
             return null;
         try {
-            return DBO.CopyArray<ModelUVMapFileBase, ModelUVMapFile>(
-                await DBConnectionFactory.prisma.modelUVMapFile.findMany({ where: { idModelGeometryFile } }), ModelUVMapFile);
+            return DBC.CopyArray<ModelUVMapFileBase, ModelUVMapFile>(
+                await DBC.DBConnectionFactory.prisma.modelUVMapFile.findMany({ where: { idModelGeometryFile } }), ModelUVMapFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapFile.fetchFromModelGeometryFile', error);
             return null;

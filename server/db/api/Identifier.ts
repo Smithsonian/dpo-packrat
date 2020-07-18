@@ -1,10 +1,9 @@
 /* eslint-disable camelcase */
 import { Identifier as IdentifierBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Identifier extends DBO.DBObject<IdentifierBase> implements IdentifierBase {
+export class Identifier extends DBC.DBObject<IdentifierBase> implements IdentifierBase {
     idIdentifier!: number;
     IdentifierValue!: string;
     idSystemObject!: number | null;
@@ -25,7 +24,7 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
             const { IdentifierValue, idVIdentifierType, idSystemObject } = this;
             ({ idIdentifier: this.idIdentifier, IdentifierValue: this.IdentifierValue,
                 idVIdentifierType: this.idVIdentifierType, idSystemObject: this.idSystemObject } =
-                await DBConnectionFactory.prisma.identifier.create({
+                await DBC.DBConnectionFactory.prisma.identifier.create({
                     data: {
                         IdentifierValue,
                         Vocabulary: { connect: { idVocabulary: idVIdentifierType }, },
@@ -42,7 +41,7 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idIdentifier, IdentifierValue, idVIdentifierType, idSystemObject, idSystemObjectOrig } = this;
-            const retValue: boolean = await DBConnectionFactory.prisma.identifier.update({
+            const retValue: boolean = await DBC.DBConnectionFactory.prisma.identifier.update({
                 where: { idIdentifier, },
                 data: {
                     IdentifierValue,
@@ -61,8 +60,8 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
         if (!idIdentifier)
             return null;
         try {
-            return DBO.CopyObject<IdentifierBase, Identifier>(
-                await DBConnectionFactory.prisma.identifier.findOne({ where: { idIdentifier, }, }), Identifier);
+            return DBC.CopyObject<IdentifierBase, Identifier>(
+                await DBC.DBConnectionFactory.prisma.identifier.findOne({ where: { idIdentifier, }, }), Identifier);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Identifier.fetch', error);
             return null;
@@ -73,8 +72,8 @@ export class Identifier extends DBO.DBObject<IdentifierBase> implements Identifi
         if (!idSystemObject)
             return null;
         try {
-            return DBO.CopyArray<IdentifierBase, Identifier>(
-                await DBConnectionFactory.prisma.identifier.findMany({ where: { idSystemObject } }), Identifier);
+            return DBC.CopyArray<IdentifierBase, Identifier>(
+                await DBC.DBConnectionFactory.prisma.identifier.findMany({ where: { idSystemObject } }), Identifier);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Identifier.fetchFromSystemObject', error);
             return null;
