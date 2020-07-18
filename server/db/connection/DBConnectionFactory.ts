@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { PrismaClient, } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 export class DBConnectionFactory {
     private static dbConnectionFactory: DBConnectionFactory;

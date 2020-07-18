@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Workflow as WorkflowBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { DBConnectionFactory, SystemObject } from '..';
-import * as DBO from '../api/DBObject';
+import { SystemObject } from '..';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase {
+export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase {
     idWorkflow!: number;
     DateInitiated!: Date;
     DateUpdated!: Date;
@@ -29,7 +29,7 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
             const { idWorkflowTemplate, idProject, idUserInitiator, DateInitiated, DateUpdated } = this;
             ({ idWorkflow: this.idWorkflow, idWorkflowTemplate: this.idWorkflowTemplate, idProject: this.idProject,
                 idUserInitiator: this.idUserInitiator, DateInitiated: this.DateInitiated, DateUpdated: this.DateUpdated } =
-                await DBConnectionFactory.prisma.workflow.create({
+                await DBC.DBConnectionFactory.prisma.workflow.create({
                     data: {
                         WorkflowTemplate:   { connect: { idWorkflowTemplate }, },
                         Project:            idProject ? { connect: { idProject }, } : undefined,
@@ -50,7 +50,7 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
         try {
             const { idWorkflow, idWorkflowTemplate, idProject, idUserInitiator, DateInitiated,
                 DateUpdated, idProjectOrig, idUserInitiatorOrig } = this;
-            const retValue: boolean = await DBConnectionFactory.prisma.workflow.update({
+            const retValue: boolean = await DBC.DBConnectionFactory.prisma.workflow.update({
                 where: { idWorkflow, },
                 data: {
                     WorkflowTemplate:   { connect: { idWorkflowTemplate }, },
@@ -70,8 +70,8 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
     async fetchSystemObject(): Promise<SystemObject | null> {
         try {
             const { idWorkflow } = this;
-            return DBO.CopyObject<SystemObjectBase, SystemObject>(
-                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflow, }, }), SystemObject);
+            return DBC.CopyObject<SystemObjectBase, SystemObject>(
+                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflow, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.workflow.fetchSystemObject', error);
             return null;
@@ -82,8 +82,8 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
         if (!idWorkflow)
             return null;
         try {
-            return DBO.CopyObject<WorkflowBase, Workflow>(
-                await DBConnectionFactory.prisma.workflow.findOne({ where: { idWorkflow, }, }), Workflow);
+            return DBC.CopyObject<WorkflowBase, Workflow>(
+                await DBC.DBConnectionFactory.prisma.workflow.findOne({ where: { idWorkflow, }, }), Workflow);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.fetch', error);
             return null;
@@ -94,8 +94,8 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
         if (!idProject)
             return null;
         try {
-            return DBO.CopyArray<WorkflowBase, Workflow>(
-                await DBConnectionFactory.prisma.workflow.findMany({ where: { idProject } }), Workflow);
+            return DBC.CopyArray<WorkflowBase, Workflow>(
+                await DBC.DBConnectionFactory.prisma.workflow.findMany({ where: { idProject } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.fetchFromProject', error);
             return null;
@@ -106,8 +106,8 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
         if (!idUserInitiator)
             return null;
         try {
-            return DBO.CopyArray<WorkflowBase, Workflow>(
-                await DBConnectionFactory.prisma.workflow.findMany({ where: { idUserInitiator } }), Workflow);
+            return DBC.CopyArray<WorkflowBase, Workflow>(
+                await DBC.DBConnectionFactory.prisma.workflow.findMany({ where: { idUserInitiator } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.fetchFromUser', error);
             return null;
@@ -118,8 +118,8 @@ export class Workflow extends DBO.DBObject<WorkflowBase> implements WorkflowBase
         if (!idWorkflowTemplate)
             return null;
         try {
-            return DBO.CopyArray<WorkflowBase, Workflow>(
-                await DBConnectionFactory.prisma.workflow.findMany({ where: { idWorkflowTemplate } }), Workflow);
+            return DBC.CopyArray<WorkflowBase, Workflow>(
+                await DBC.DBConnectionFactory.prisma.workflow.findMany({ where: { idWorkflowTemplate } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.fetchFromWorkflowTemplate', error);
             return null;
