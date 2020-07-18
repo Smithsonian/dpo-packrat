@@ -1,11 +1,11 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { ProjectDocumentation as ProjectDocumentationBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { DBConnectionFactory, SystemObject } from '..';
-import * as DBO from '../api/DBObject';
+import { SystemObject } from '..';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase> implements ProjectDocumentationBase {
+export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase> implements ProjectDocumentationBase {
     idProjectDocumentation!: number;
     Description!: string;
     idProject!: number;
@@ -22,7 +22,7 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
             const { idProject, Name, Description } = this;
             ({ idProjectDocumentation: this.idProjectDocumentation, idProject: this.idProject,
                 Name: this.Name, Description: this.Description } =
-                await DBConnectionFactory.prisma.projectDocumentation.create({
+                await DBC.DBConnectionFactory.prisma.projectDocumentation.create({
                     data: {
                         Project:        { connect: { idProject }, },
                         Name,
@@ -40,7 +40,7 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idProjectDocumentation, idProject, Name, Description } = this;
-            return await DBConnectionFactory.prisma.projectDocumentation.update({
+            return await DBC.DBConnectionFactory.prisma.projectDocumentation.update({
                 where: { idProjectDocumentation, },
                 data: {
                     Project:        { connect: { idProject }, },
@@ -57,8 +57,8 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
     async fetchSystemObject(): Promise<SystemObject | null> {
         try {
             const { idProjectDocumentation } = this;
-            return DBO.CopyObject<SystemObjectBase, SystemObject>(
-                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, }), SystemObject);
+            return DBC.CopyObject<SystemObjectBase, SystemObject>(
+                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.projectDocumentation.fetchSystemObject', error);
             return null;
@@ -69,8 +69,8 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
         if (!idProjectDocumentation)
             return null;
         try {
-            return DBO.CopyObject<ProjectDocumentationBase, ProjectDocumentation>(
-                await DBConnectionFactory.prisma.projectDocumentation.findOne({ where: { idProjectDocumentation, }, }), ProjectDocumentation);
+            return DBC.CopyObject<ProjectDocumentationBase, ProjectDocumentation>(
+                await DBC.DBConnectionFactory.prisma.projectDocumentation.findOne({ where: { idProjectDocumentation, }, }), ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.fetch', error);
             return null;
@@ -81,8 +81,8 @@ export class ProjectDocumentation extends DBO.DBObject<ProjectDocumentationBase>
         if (!idProject)
             return null;
         try {
-            return DBO.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(
-                await DBConnectionFactory.prisma.projectDocumentation.findMany({ where: { idProject } }), ProjectDocumentation);
+            return DBC.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(
+                await DBC.DBConnectionFactory.prisma.projectDocumentation.findMany({ where: { idProject } }), ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.fetchFromProject', error);
             return null;

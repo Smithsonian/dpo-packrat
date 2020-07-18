@@ -5,7 +5,7 @@
  */
 import GraphQLApi from '../../../graphql';
 import * as LOG from '../../../utils/logger';
-import * as DBAPI from '../../../db';
+import * as DBC from '../../../db/connection';
 import * as path from 'path';
 import {
     CreateUserInput,
@@ -39,7 +39,7 @@ class TestSuiteUtils {
     };
 
     private afterAll = async (done: () => void): Promise<void> => {
-        await DBAPI.DBConnectionFactory.disconnect();
+        await DBC.DBConnectionFactory.disconnect();
         done();
     };
 

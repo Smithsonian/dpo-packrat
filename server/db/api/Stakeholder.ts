@@ -1,11 +1,11 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { Stakeholder as StakeholderBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { DBConnectionFactory, SystemObject } from '..';
-import * as DBO from '../api/DBObject';
+import { SystemObject } from '..';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Stakeholder extends DBO.DBObject<StakeholderBase> implements StakeholderBase {
+export class Stakeholder extends DBC.DBObject<StakeholderBase> implements StakeholderBase {
     idStakeholder!: number;
     EmailAddress!: string | null;
     IndividualName!: string;
@@ -26,7 +26,7 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
             ({ idStakeholder: this.idStakeholder, IndividualName: this.IndividualName, OrganizationName: this.OrganizationName,
                 EmailAddress: this.EmailAddress, PhoneNumberMobile: this.PhoneNumberMobile, PhoneNumberOffice: this.PhoneNumberOffice,
                 MailingAddress: this.MailingAddress } =
-                await DBConnectionFactory.prisma.stakeholder.create({
+                await DBC.DBConnectionFactory.prisma.stakeholder.create({
                     data: {
                         IndividualName,
                         OrganizationName,
@@ -47,7 +47,7 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idStakeholder, IndividualName, OrganizationName, EmailAddress, PhoneNumberMobile, PhoneNumberOffice, MailingAddress } = this;
-            return await DBConnectionFactory.prisma.stakeholder.update({
+            return await DBC.DBConnectionFactory.prisma.stakeholder.update({
                 where: { idStakeholder, },
                 data: {
                     IndividualName,
@@ -67,8 +67,8 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
     async fetchSystemObject(): Promise<SystemObject | null> {
         try {
             const { idStakeholder } = this;
-            return DBO.CopyObject<SystemObjectBase, SystemObject>(
-                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder, }, }), SystemObject);
+            return DBC.CopyObject<SystemObjectBase, SystemObject>(
+                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.stakeholder.fetchSystemObject', error);
             return null;
@@ -79,8 +79,8 @@ export class Stakeholder extends DBO.DBObject<StakeholderBase> implements Stakeh
         if (!idStakeholder)
             return null;
         try {
-            return DBO.CopyObject<StakeholderBase, Stakeholder>(
-                await DBConnectionFactory.prisma.stakeholder.findOne({ where: { idStakeholder, }, }), Stakeholder);
+            return DBC.CopyObject<StakeholderBase, Stakeholder>(
+                await DBC.DBConnectionFactory.prisma.stakeholder.findOne({ where: { idStakeholder, }, }), Stakeholder);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Stakeholder.fetch', error);
             return null;

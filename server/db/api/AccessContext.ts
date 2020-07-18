@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { AccessContext as AccessContextBase }from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class AccessContext extends DBO.DBObject<AccessContextBase> implements AccessContextBase {
+export class AccessContext extends DBC.DBObject<AccessContextBase> implements AccessContextBase {
     Authoritative!: boolean;
     CaptureData!: boolean;
     Global!: boolean;
@@ -25,7 +24,7 @@ export class AccessContext extends DBO.DBObject<AccessContextBase> implements Ac
             const { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene } = this;
             ({ idAccessContext: this.idAccessContext, Authoritative: this.Authoritative, CaptureData: this.CaptureData,
                 Global: this.Global, IntermediaryFile: this.IntermediaryFile, Model: this.Model, Scene: this.Scene } =
-                await DBConnectionFactory.prisma.accessContext.create({
+                await DBC.DBConnectionFactory.prisma.accessContext.create({
                     data: { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene, }
                 }));
             return true;
@@ -38,7 +37,7 @@ export class AccessContext extends DBO.DBObject<AccessContextBase> implements Ac
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessContext, Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene } = this;
-            return await DBConnectionFactory.prisma.accessContext.update({
+            return await DBC.DBConnectionFactory.prisma.accessContext.update({
                 where: { idAccessContext, },
                 data: { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene }
             }) ? true : /* istanbul ignore next */ false;
@@ -52,8 +51,8 @@ export class AccessContext extends DBO.DBObject<AccessContextBase> implements Ac
         if (!idAccessContext)
             return null;
         try {
-            return DBO.CopyObject<AccessContextBase, AccessContext>(
-                await DBConnectionFactory.prisma.accessContext.findOne({ where: { idAccessContext, }, }), AccessContext);
+            return DBC.CopyObject<AccessContextBase, AccessContext>(
+                await DBC.DBConnectionFactory.prisma.accessContext.findOne({ where: { idAccessContext, }, }), AccessContext);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContext.fetch', error);
             return null;

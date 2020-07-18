@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { AccessRole as AccessRoleBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRoleBase {
+export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRoleBase {
     idAccessRole!: number;
     Name!: string;
 
@@ -18,7 +17,7 @@ export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRo
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name } = this;
-            ({ idAccessRole: this.idAccessRole, Name: this.Name } = await DBConnectionFactory.prisma.accessRole.create({
+            ({ idAccessRole: this.idAccessRole, Name: this.Name } = await DBC.DBConnectionFactory.prisma.accessRole.create({
                 data: { Name, }
             }));
             return true;
@@ -31,7 +30,7 @@ export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRo
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessRole, Name } = this;
-            return await DBConnectionFactory.prisma.accessRole.update({
+            return await DBC.DBConnectionFactory.prisma.accessRole.update({
                 where: { idAccessRole, },
                 data: { Name, },
             }) ? true : /* istanbul ignore next */ false;
@@ -45,8 +44,8 @@ export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRo
         if (!idAccessRole)
             return null;
         try {
-            return DBO.CopyObject<AccessRoleBase, AccessRole>(
-                await DBConnectionFactory.prisma.accessRole.findOne({ where: { idAccessRole, }, }), AccessRole);
+            return DBC.CopyObject<AccessRoleBase, AccessRole>(
+                await DBC.DBConnectionFactory.prisma.accessRole.findOne({ where: { idAccessRole, }, }), AccessRole);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRole.fetch', error);
             return null;
@@ -57,8 +56,8 @@ export class AccessRole extends DBO.DBObject<AccessRoleBase> implements AccessRo
         if (!idAccessAction)
             return null;
         try {
-            return DBO.CopyArray<AccessRoleBase, AccessRole>(
-                await DBConnectionFactory.prisma.accessRole.findMany({
+            return DBC.CopyArray<AccessRoleBase, AccessRole>(
+                await DBC.DBConnectionFactory.prisma.accessRole.findMany({
                     where: {
                         AccessRoleAccessActionXref: {
                             some: { idAccessAction },
