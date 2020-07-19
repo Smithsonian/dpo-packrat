@@ -1161,15 +1161,21 @@ describe('DB Fetch By ID Test Suite', () => {
         if (accessContext) {
             accessContextObjectFetch = await DBAPI.AccessContextObject.fetchFromAccessContext(accessContext.idAccessContext);
             if (accessContextObjectFetch) {
-                expect(accessContextObjectFetch).toMatchObject([accessContextObject]);
-                expect([accessContextObject]).toMatchObject(accessContextObjectFetch);
+                expect(accessContextObjectFetch).toEqual(expect.arrayContaining([accessContextObject]));
             }
         }
         expect(accessContextObjectFetch).toBeTruthy();
     });
 
     test('DB Fetch AccessContext: AccessContextObject.fetchFromSystemObject', async () => {
-        // TODO: system object fetch test
+        let accessContextObjectFetch: DBAPI.AccessContextObject[] | null = null;
+        if (systemObjectScene) {
+            accessContextObjectFetch = await DBAPI.AccessContextObject.fetchFromSystemObject(systemObjectScene.idSystemObject);
+            if (accessContextObjectFetch) {
+                expect(accessContextObjectFetch).toEqual(expect.arrayContaining([accessContextObject]));
+            }
+        }
+        expect(accessContextObjectFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: AccessPolicy', async () => {
@@ -1189,8 +1195,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (accessContext) {
             accessPolicyFetch = await DBAPI.AccessPolicy.fetchFromAccessContext(accessContext.idAccessContext);
             if (accessPolicyFetch) {
-                expect(accessPolicyFetch).toMatchObject([accessPolicy]);
-                expect([accessPolicy]).toMatchObject(accessPolicyFetch);
+                expect(accessPolicyFetch).toEqual(expect.arrayContaining([accessPolicy]));
             }
         }
         expect(accessPolicyFetch).toBeTruthy();
@@ -1201,8 +1206,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (user) {
             accessPolicyFetch = await DBAPI.AccessPolicy.fetchFromUser(user.idUser);
             if (accessPolicyFetch) {
-                expect(accessPolicyFetch).toMatchObject([accessPolicy]);
-                expect([accessPolicy]).toMatchObject(accessPolicyFetch);
+                expect(accessPolicyFetch).toEqual(expect.arrayContaining([accessPolicy]));
             }
         }
         expect(accessPolicyFetch).toBeTruthy();
@@ -1249,8 +1253,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (unit) {
             actorFetch = await DBAPI.Actor.fetchFromUnit(unit.idUnit);
             if (actorFetch) {
-                expect(actorFetch).toMatchObject([actorWithUnit]);
-                expect([actorWithUnit]).toMatchObject(actorFetch);
+                expect(actorFetch).toEqual(expect.arrayContaining([actorWithUnit]));
             }
         }
         expect(actorFetch).toBeTruthy();
@@ -1285,8 +1288,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetGroup) {
             assetFetch = await DBAPI.Asset.fetchFromAssetGroup(assetGroup.idAssetGroup);
             if (assetFetch) {
-                expect(assetFetch).toMatchObject([assetThumbnail]);
-                expect([assetThumbnail]).toMatchObject(assetFetch);
+                expect(assetFetch).toEqual(expect.arrayContaining([assetThumbnail]));
             }
         }
         expect(assetFetch).toBeTruthy();
@@ -1309,8 +1311,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toMatchObject([assetVersion]);
-                expect([assetVersion]).toMatchObject(assetVersionFetch);
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -1321,8 +1322,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (user) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromUser(user.idUser);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toMatchObject([assetVersion]);
-                expect([assetVersion]).toMatchObject(assetVersionFetch);
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -1357,8 +1357,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (captureData) {
             captureDataFileFetch = await DBAPI.CaptureDataFile.fetchFromCaptureData(captureData.idCaptureData);
             if (captureDataFileFetch) {
-                expect(captureDataFileFetch).toMatchObject([captureDataFile]);
-                expect([captureDataFile]).toMatchObject(captureDataFileFetch);
+                expect(captureDataFileFetch).toEqual(expect.arrayContaining([captureDataFile]));
             }
         }
         expect(captureDataFile).toBeTruthy();
@@ -1413,7 +1412,14 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch Identifier: Identifier.fetchFromSystemObject', async () => {
-        // TODO: system object fetch test
+        let identifierFetch: DBAPI.Identifier[] | null = null;
+        if (systemObjectSubject) {
+            identifierFetch = await DBAPI.Identifier.fetchFromSystemObject(systemObjectSubject.idSystemObject);
+            if (identifierFetch) {
+                expect(identifierFetch).toEqual(expect.arrayContaining([identifier]));
+            }
+        }
+        expect(identifierFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: IntermediaryFile', async () => {
@@ -1495,15 +1501,21 @@ describe('DB Fetch By ID Test Suite', () => {
         if (user) {
             licenseAssignmentFetch = await DBAPI.LicenseAssignment.fetchFromUser(user.idUser);
             if (licenseAssignmentFetch) {
-                expect(licenseAssignmentFetch).toMatchObject([licenseAssignment]);
-                expect([licenseAssignment]).toMatchObject(licenseAssignmentFetch);
+                expect(licenseAssignmentFetch).toEqual(expect.arrayContaining([licenseAssignment]));
             }
         }
         expect(licenseAssignmentFetch).toBeTruthy();
     });
 
     test('DB Fetch LicenseAssignment: LicenseAssignment.fetchFromSystemObject', async () => {
-        // TODO: system object fetch test
+        let licenseAssignmentFetch: DBAPI.LicenseAssignment[] | null = null;
+        if (systemObjectSubject) {
+            licenseAssignmentFetch = await DBAPI.LicenseAssignment.fetchFromSystemObject(systemObjectSubject.idSystemObject);
+            if (licenseAssignmentFetch) {
+                expect(licenseAssignmentFetch).toEqual(expect.arrayContaining([licenseAssignment]));
+            }
+        }
+        expect(licenseAssignmentFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: Metadata', async () => {
@@ -1523,15 +1535,21 @@ describe('DB Fetch By ID Test Suite', () => {
         if (user) {
             metadataFetch = await DBAPI.Metadata.fetchFromUser(user.idUser);
             if (metadataFetch) {
-                expect(metadataFetch).toMatchObject([metadata]);
-                expect([metadata]).toMatchObject(metadataFetch);
+                expect(metadataFetch).toEqual(expect.arrayContaining([metadata]));
             }
         }
         expect(metadataFetch).toBeTruthy();
     });
 
     test('DB Fetch Metadata: Metadata.fetchFromSystemObject', async () => {
-        // TODO: system object test
+        let metadataFetch: DBAPI.Metadata[] | null = null;
+        if (systemObjectScene) {
+            metadataFetch = await DBAPI.Metadata.fetchFromSystemObject(systemObjectScene.idSystemObject);
+            if (metadataFetch) {
+                expect(metadataFetch).toEqual(expect.arrayContaining([metadata]));
+            }
+        }
+        expect(metadataFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: Model', async () => {
@@ -1588,8 +1606,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (model) {
             modelProcessingActionFetch = await DBAPI.ModelProcessingAction.fetchFromModel(model.idModel);
             if (modelProcessingActionFetch) {
-                expect(modelProcessingActionFetch).toMatchObject([modelProcessingAction]);
-                expect([modelProcessingAction]).toMatchObject(modelProcessingActionFetch);
+                expect(modelProcessingActionFetch).toEqual(expect.arrayContaining([modelProcessingAction]));
             }
         }
         expect(modelProcessingActionFetch).toBeTruthy();
@@ -1612,8 +1629,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (modelProcessingAction) {
             modelProcessingActionStepFetch = await DBAPI.ModelProcessingActionStep.fetchFromModelProcessingAction(modelProcessingAction.idModelProcessingAction);
             if (modelProcessingActionStepFetch) {
-                expect(modelProcessingActionStepFetch).toMatchObject([modelProcessingActionStep]);
-                expect([modelProcessingActionStep]).toMatchObject(modelProcessingActionStepFetch);
+                expect(modelProcessingActionStepFetch).toEqual(expect.arrayContaining([modelProcessingActionStep]));
             }
         }
         expect(modelProcessingActionStepFetch).toBeTruthy();
@@ -1649,8 +1665,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (scene) {
             modelSceneXrefFetch = await DBAPI.ModelSceneXref.fetchFromScene(scene.idScene);
             if (modelSceneXrefFetch) {
-                expect(modelSceneXrefFetch).toMatchObject([modelSceneXref]);
-                expect([modelSceneXref]).toMatchObject(modelSceneXrefFetch);
+                expect(modelSceneXrefFetch).toEqual(expect.arrayContaining([modelSceneXref]));
             }
         }
         expect(modelSceneXrefFetch).toBeTruthy();
@@ -1673,8 +1688,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (modelUVMapFile) {
             modelUVMapChannelFetch = await DBAPI.ModelUVMapChannel.fetchFromModelUVMapFile(modelUVMapFile.idModelUVMapFile);
             if (modelUVMapChannelFetch) {
-                expect(modelUVMapChannelFetch).toMatchObject([modelUVMapChannel]);
-                expect([modelUVMapChannel]).toMatchObject(modelUVMapChannelFetch);
+                expect(modelUVMapChannelFetch).toEqual(expect.arrayContaining([modelUVMapChannel]));
             }
         }
         expect(modelUVMapChannelFetch).toBeTruthy();
@@ -1697,8 +1711,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (modelGeometryFile) {
             modelUVMapFileFetch = await DBAPI.ModelUVMapFile.fetchFromModelGeometryFile(modelGeometryFile.idModelGeometryFile);
             if (modelUVMapFileFetch) {
-                expect(modelUVMapFileFetch).toMatchObject([modelUVMapFile]);
-                expect([modelUVMapFile]).toMatchObject(modelUVMapFileFetch);
+                expect(modelUVMapFileFetch).toEqual(expect.arrayContaining([modelUVMapFile]));
             }
         }
         expect(modelUVMapFileFetch).toBeTruthy();
@@ -1733,8 +1746,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (project) {
             projectDocumentationFetch = await DBAPI.ProjectDocumentation.fetchFromProject(project.idProject);
             if (projectDocumentationFetch) {
-                expect(projectDocumentationFetch).toMatchObject([projectDocumentation]);
-                expect([projectDocumentation]).toMatchObject(projectDocumentationFetch);
+                expect(projectDocumentationFetch).toEqual(expect.arrayContaining([projectDocumentation]));
             }
         }
         expect(projectDocumentationFetch).toBeTruthy();
@@ -1802,7 +1814,14 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch SystemObjectVersion: SystemObjectVersion.fetchFromSystemObject', async () => {
-        // TODO: system object fetch test
+        let systemObjectVersionFetch: DBAPI.SystemObjectVersion[] | null = null;
+        if (systemObjectScene) {
+            systemObjectVersionFetch = await DBAPI.SystemObjectVersion.fetchFromSystemObject(systemObjectScene.idSystemObject);
+            if (systemObjectVersionFetch) {
+                expect(systemObjectVersionFetch).toEqual(expect.arrayContaining([systemObjectVersion]));
+            }
+        }
+        expect(systemObjectVersionFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: SystemObjectXref', async () => {
@@ -1858,15 +1877,21 @@ describe('DB Fetch By ID Test Suite', () => {
         if (user) {
             userPersonalizationSystemObjectFetch = await DBAPI.UserPersonalizationSystemObject.fetchFromUser(user.idUser);
             if (userPersonalizationSystemObjectFetch) {
-                expect(userPersonalizationSystemObjectFetch).toMatchObject([userPersonalizationSystemObject]);
-                expect([userPersonalizationSystemObject]).toMatchObject(userPersonalizationSystemObjectFetch);
+                expect(userPersonalizationSystemObjectFetch).toEqual(expect.arrayContaining([userPersonalizationSystemObject]));
             }
         }
         expect(userPersonalizationSystemObjectFetch).toBeTruthy();
     });
 
     test('DB Fetch UserPersonalizationSystemObject: UserPersonalizationSystemObject.fetchFromSystemObject', async () => {
-        // TODO: system object fetch test
+        let userPersonalizationSystemObjectFetch: DBAPI.UserPersonalizationSystemObject[] | null = null;
+        if (systemObjectSubject) {
+            userPersonalizationSystemObjectFetch = await DBAPI.UserPersonalizationSystemObject.fetchFromSystemObject(systemObjectSubject.idSystemObject);
+            if (userPersonalizationSystemObjectFetch) {
+                expect(userPersonalizationSystemObjectFetch).toEqual(expect.arrayContaining([userPersonalizationSystemObject]));
+            }
+        }
+        expect(userPersonalizationSystemObjectFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: UserPersonalizationUrl', async () => {
@@ -1886,8 +1911,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (user) {
             userPersonalizationUrlFetch = await DBAPI.UserPersonalizationUrl.fetchFromUser(user.idUser);
             if (userPersonalizationUrlFetch) {
-                expect(userPersonalizationUrlFetch).toMatchObject([userPersonalizationUrl]);
-                expect([userPersonalizationUrl]).toMatchObject(userPersonalizationUrlFetch);
+                expect(userPersonalizationUrlFetch).toEqual(expect.arrayContaining([userPersonalizationUrl]));
             }
         }
         expect(userPersonalizationUrlFetch).toBeTruthy();
@@ -1910,8 +1934,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (vocabularySet) {
             vocabularyFetch = await DBAPI.Vocabulary.fetchFromVocabularySet(vocabularySet.idVocabularySet);
             if (vocabularyFetch) {
-                expect(vocabularyFetch).toMatchObject([vocabulary]);
-                expect([vocabulary]).toMatchObject(vocabularyFetch);
+                expect(vocabularyFetch).toEqual(expect.arrayContaining([vocabulary]));
             }
         }
         expect(vocabularyFetch).toBeTruthy();
@@ -1946,8 +1969,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (project) {
             workflowFetch = await DBAPI.Workflow.fetchFromProject(project.idProject);
             if (workflowFetch) {
-                expect(workflowFetch).toMatchObject([workflow]);
-                expect([workflow]).toMatchObject(workflowFetch);
+                expect(workflowFetch).toEqual(expect.arrayContaining([workflow]));
             }
         }
         expect(workflowFetch).toBeTruthy();
@@ -1958,8 +1980,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (user) {
             workflowFetch = await DBAPI.Workflow.fetchFromUser(user.idUser);
             if (workflowFetch) {
-                expect(workflowFetch).toMatchObject([workflow]);
-                expect([workflow]).toMatchObject(workflowFetch);
+                expect(workflowFetch).toEqual(expect.arrayContaining([workflow]));
             }
         }
         expect(workflowFetch).toBeTruthy();
@@ -1995,8 +2016,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (user) {
             workflowStepFetch = await DBAPI.WorkflowStep.fetchFromUser(user.idUser);
             if (workflowStepFetch) {
-                expect(workflowStepFetch).toMatchObject([workflowStep]);
-                expect([workflowStep]).toMatchObject(workflowStepFetch);
+                expect(workflowStepFetch).toEqual(expect.arrayContaining([workflowStep]));
             }
         }
         expect(workflowStepFetch).toBeTruthy();
@@ -2007,8 +2027,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (workflow) {
             workflowStepFetch = await DBAPI.WorkflowStep.fetchFromWorkflow(workflow.idWorkflow);
             if (workflowStepFetch) {
-                expect(workflowStepFetch).toMatchObject([workflowStep]);
-                expect([workflowStep]).toMatchObject(workflowStepFetch);
+                expect(workflowStepFetch).toEqual(expect.arrayContaining([workflowStep]));
             }
         }
         expect(workflowStepFetch).toBeTruthy();
