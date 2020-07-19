@@ -1199,7 +1199,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch By ID: AccessPolicy.fetchFromUser', async () => {
         let accessPolicyFetch: DBAPI.AccessPolicy[] | null = null;
         if (user) {
-            accessPolicyFetch = await DBAPI.AccessPolicy.fetchFromUser(user?.idUser);
+            accessPolicyFetch = await DBAPI.AccessPolicy.fetchFromUser(user.idUser);
             if (accessPolicyFetch) {
                 expect(accessPolicyFetch).toMatchObject([accessPolicy]);
                 expect([accessPolicy]).toMatchObject(accessPolicyFetch);
@@ -1446,8 +1446,7 @@ describe('DB Fetch By ID Test Suite', () => {
             itemFetch = await DBAPI.Item.fetchFromSubject(subject.idSubject);
             if (itemFetch) {
                 if (item) {
-                    expect(itemFetch[0]).toMatchObject(item);
-                    expect(item).toMatchObject(itemFetch[0]);
+                    expect(itemFetch).toEqual(expect.arrayContaining([item]));
                 }
             }
         }
@@ -1484,8 +1483,7 @@ describe('DB Fetch By ID Test Suite', () => {
             licenseAssignmentFetch = await DBAPI.LicenseAssignment.fetchFromLicense(license.idLicense);
             if (licenseAssignmentFetch) {
                 if (licenseAssignment) {
-                    expect(licenseAssignmentFetch[0]).toMatchObject(licenseAssignment);
-                    expect(licenseAssignment).toMatchObject(licenseAssignmentFetch[0]);
+                    expect(licenseAssignmentFetch).toEqual(expect.arrayContaining([licenseAssignment]));
                 }
             }
         }
@@ -1566,8 +1564,7 @@ describe('DB Fetch By ID Test Suite', () => {
             modelGeometryFileFetch = await DBAPI.ModelGeometryFile.fetchFromModel(model.idModel);
             if (modelGeometryFileFetch) {
                 if (modelGeometryFile) {
-                    expect(modelGeometryFileFetch[0]).toMatchObject(modelGeometryFile);
-                    expect(modelGeometryFile).toMatchObject(modelGeometryFileFetch[0]);
+                    expect(modelGeometryFileFetch).toEqual(expect.arrayContaining([modelGeometryFile]));
                 }
             }
         }
@@ -1640,8 +1637,7 @@ describe('DB Fetch By ID Test Suite', () => {
             modelSceneXrefFetch = await DBAPI.ModelSceneXref.fetchFromModel(model.idModel);
             if (modelSceneXrefFetch) {
                 if (modelSceneXref) {
-                    expect(modelSceneXrefFetch[0]).toMatchObject(modelSceneXref);
-                    expect(modelSceneXref).toMatchObject(modelSceneXrefFetch[0]);
+                    expect(modelSceneXrefFetch).toEqual(expect.arrayContaining([modelSceneXref]));
                 }
             }
         }
@@ -1786,8 +1782,7 @@ describe('DB Fetch By ID Test Suite', () => {
             subjectFetch = await DBAPI.Subject.fetchFromUnit(unit.idUnit);
             if (subjectFetch) {
                 if (subject) {
-                    expect(subjectFetch[0]).toMatchObject(subject);
-                    expect(subject).toMatchObject(subjectFetch[0]);
+                    expect(subjectFetch).toEqual(expect.arrayContaining([subject]));
                 }
             }
         }
@@ -1976,8 +1971,7 @@ describe('DB Fetch By ID Test Suite', () => {
             workflowFetch = await DBAPI.Workflow.fetchFromWorkflowTemplate(workflowTemplate.idWorkflowTemplate);
             if (workflowFetch) {
                 if (workflow) {
-                    expect(workflowFetch[0]).toMatchObject(workflow);
-                    expect(workflow).toMatchObject(workflowFetch[0]);
+                    expect(workflowFetch).toEqual(expect.arrayContaining([workflow]));
                 }
             }
         }
@@ -2038,8 +2032,7 @@ describe('DB Fetch By ID Test Suite', () => {
             workflowStepSystemObjectXrefFetch = await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep(workflowStep.idWorkflowStep);
             if (workflowStepSystemObjectXrefFetch) {
                 if (workflowStepSystemObjectXref) {
-                    expect(workflowStepSystemObjectXrefFetch[0]).toMatchObject(workflowStepSystemObjectXref);
-                    expect(workflowStepSystemObjectXref).toMatchObject(workflowStepSystemObjectXrefFetch[0]);
+                    expect(workflowStepSystemObjectXrefFetch).toEqual(expect.arrayContaining([workflowStepSystemObjectXref]));
                 }
             }
         }
