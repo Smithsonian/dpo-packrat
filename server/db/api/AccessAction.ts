@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { AccessAction as AccessActionBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class AccessAction extends DBO.DBObject<AccessActionBase> implements AccessActionBase {
+export class AccessAction extends DBC.DBObject<AccessActionBase> implements AccessActionBase {
     idAccessAction!: number;
     Name!: string;
     SortOrder!: number;
@@ -20,7 +19,7 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
         try {
             const { Name, SortOrder } = this;
             ({ idAccessAction: this.idAccessAction, Name: this.Name, SortOrder: this.SortOrder } =
-                await DBConnectionFactory.prisma.accessAction.create({
+                await DBC.DBConnectionFactory.prisma.accessAction.create({
                     data: {
                         Name,
                         SortOrder,
@@ -36,7 +35,7 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessAction, Name, SortOrder } = this;
-            return await DBConnectionFactory.prisma.accessAction.update({
+            return await DBC.DBConnectionFactory.prisma.accessAction.update({
                 where: { idAccessAction, },
                 data: { Name, SortOrder, },
             }) ? true : /* istanbul ignore next */ false;
@@ -50,8 +49,8 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
         if (!idAccessAction)
             return null;
         try {
-            return DBO.CopyObject<AccessActionBase, AccessAction>(
-                await DBConnectionFactory.prisma.accessAction.findOne({ where: { idAccessAction, }, }), AccessAction);
+            return DBC.CopyObject<AccessActionBase, AccessAction>(
+                await DBC.DBConnectionFactory.prisma.accessAction.findOne({ where: { idAccessAction, }, }), AccessAction);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessAction.fetch', error);
             return null;
@@ -62,8 +61,8 @@ export class AccessAction extends DBO.DBObject<AccessActionBase> implements Acce
         if (!idAccessRole)
             return null;
         try {
-            return DBO.CopyArray<AccessActionBase, AccessAction>(
-                await DBConnectionFactory.prisma.accessAction.findMany({
+            return DBC.CopyArray<AccessActionBase, AccessAction>(
+                await DBC.DBConnectionFactory.prisma.accessAction.findMany({
                     where: {
                         AccessRoleAccessActionXref: {
                             some: { idAccessRole },

@@ -1,7 +1,7 @@
 import * as DBAPI from '../../db';
+import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
 import * as path from 'path';
-import * as DBO from '../../db/api/DBObject';
 
 beforeAll(() => {
     const logPath: string = './logs';
@@ -12,7 +12,7 @@ beforeAll(() => {
 });
 
 afterAll(async done => {
-    await DBAPI.DBConnectionFactory.disconnect();
+    await DBC.DBConnectionFactory.disconnect();
     done();
 });
 
@@ -4234,6 +4234,43 @@ describe('DB Update Test Suite', () => {
         }
         expect(bUpdated).toBeTruthy();
     });
+
+    /*
+    // This test code shows a potential issue with how Prisma handles updating of optional foreign key relationships
+    // To use prisma correctly, we need to know the state of the object in the database so that the DB API method calls
+    // passes either "{ disconnect: true, }" or "undefined".  This is a problem.  I'm seeking help from the Prisma team on this.
+    test('DB Update: Two object disconnect', async () => {
+        if (unit) {
+            const actorSource: DBAPI.Actor | null = new DBAPI.Actor({
+                IndividualName: 'Test Actor Name',
+                OrganizationName: 'Test Actor Org',
+                idUnit:  unit.idUnit,
+                idActor: 0
+            });
+            expect(await actorSource.create()).toBeTruthy();
+
+            const actorCopy1: DBAPI.Actor | null = await DBAPI.Actor.fetch(actorSource.idActor);
+            const actorCopy2: DBAPI.Actor | null = await DBAPI.Actor.fetch(actorSource.idActor);
+
+            if (actorCopy1) {
+                actorCopy1.idUnit = null;
+                expect(await actorCopy1.update()).toBeTruthy();
+                const actorFetch: DBAPI.Actor | null = await DBAPI.Actor.fetch(actorCopy1.idActor);
+                expect(actorFetch).not.toBeNull();
+                if (actorFetch)
+                    expect(actorFetch.idUnit).toBeNull();
+            }
+            if (actorCopy2) {
+                actorCopy2.idUnit = null;
+                expect(await actorCopy2.update()).not.toBeTruthy(); // actorCopy1.update() above disconnected the actor from the unit; this call fails
+                // const actorFetch: DBAPI.Actor | null = await DBAPI.Actor.fetch(actorCopy2.idActor);
+                // expect(actorFetch).not.toBeNull();
+                // if (actorFetch)
+                //     expect(actorFetch.idUnit).toBeNull();
+            }
+        }
+    });
+    */
 });
 
 
@@ -4266,7 +4303,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.CaptureDataGroup.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureDataGroup.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.CaptureDataGroupCaptureDataXref.fetch(0)).toBeNull();
-        expect(await DBO.CopyArray<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
+        expect(await DBC.CopyArray<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
         expect(await DBAPI.GeoLocation.fetch(0)).toBeNull();
         expect(await DBAPI.Identifier.fetch(0)).toBeNull();
         expect(await DBAPI.Identifier.fetchFromSystemObject(0)).toBeNull();
@@ -4404,8 +4441,5 @@ describe('DB Null/Zero ID Test', () => {
 
         await expect(SO.create()).rejects.toThrow('DBAPI.SystemObject.create() should never be called');
         await expect(SO.update()).rejects.toThrow('DBAPI.SystemObject.update() should never be called');
-
-        // expect(async () => { await SO.create();}).resolves.toThrow('DBAPI.SystemObject.create() should never be called');
-        // expect(async () => { await SO.update();}).resolves.toThrow('DBAPI.SystemObject.update() should never be called');
     });
 });

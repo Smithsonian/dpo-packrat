@@ -17,7 +17,6 @@ export * from './api/CaptureData';
 export * from './api/CaptureDataGroup';
 export * from './api/CaptureDataFile';
 export * from './api/CaptureDataGroupCaptureDataXref';
-export * from './api/DBConnectionFactory';
 export * from './api/GeoLocation';
 export * from './api/Identifier';
 export * from './api/IntermediaryFile';

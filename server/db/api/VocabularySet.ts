@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { VocabularySet as VocabularySetBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements VocabularySetBase {
+export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements VocabularySetBase {
     idVocabularySet!: number;
     Name!: string;
     SystemMaintained!: boolean;
@@ -20,7 +19,7 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
         try {
             const { Name, SystemMaintained } = this;
             ({ idVocabularySet: this.idVocabularySet, Name: this.Name, SystemMaintained: this.SystemMaintained } =
-                await DBConnectionFactory.prisma.vocabularySet.create({
+                await DBC.DBConnectionFactory.prisma.vocabularySet.create({
                     data: {
                         Name,
                         SystemMaintained
@@ -36,7 +35,7 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idVocabularySet, Name, SystemMaintained } = this;
-            return await DBConnectionFactory.prisma.vocabularySet.update({
+            return await DBC.DBConnectionFactory.prisma.vocabularySet.update({
                 where: { idVocabularySet, },
                 data: {
                     Name,
@@ -53,8 +52,8 @@ export class VocabularySet extends DBO.DBObject<VocabularySetBase> implements Vo
         if (!idVocabularySet)
             return null;
         try {
-            return DBO.CopyObject<VocabularySetBase, VocabularySet>(
-                await DBConnectionFactory.prisma.vocabularySet.findOne({ where: { idVocabularySet, }, }), VocabularySet);
+            return DBC.CopyObject<VocabularySetBase, VocabularySet>(
+                await DBC.DBConnectionFactory.prisma.vocabularySet.findOne({ where: { idVocabularySet, }, }), VocabularySet);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.VocabularySet.fetch', error);
             return null;

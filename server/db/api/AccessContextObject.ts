@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { AccessContextObject as AccessContextObjectBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> implements AccessContextObjectBase {
+export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> implements AccessContextObjectBase {
     idAccessContext!: number;
     idAccessContextObject!: number;
     idSystemObject!: number;
@@ -21,7 +20,7 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
             const { idAccessContext, idSystemObject } = this;
             ({ idAccessContextObject: this.idAccessContextObject, idAccessContext: this.idAccessContext,
                 idSystemObject: this.idSystemObject } =
-                await DBConnectionFactory.prisma.accessContextObject.create({
+                await DBC.DBConnectionFactory.prisma.accessContextObject.create({
                     data: {
                         AccessContext: { connect: { idAccessContext }, },
                         SystemObject:  { connect: { idSystemObject }, },
@@ -37,7 +36,7 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessContextObject, idAccessContext, idSystemObject } = this;
-            return await DBConnectionFactory.prisma.accessContextObject.update({
+            return await DBC.DBConnectionFactory.prisma.accessContextObject.update({
                 where: { idAccessContextObject, },
                 data: {
                     AccessContext: { connect: { idAccessContext }, },
@@ -54,8 +53,8 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
         if (!idAccessContextObject)
             return null;
         try {
-            return DBO.CopyObject<AccessContextObjectBase, AccessContextObject>(
-                await DBConnectionFactory.prisma.accessContextObject.findOne({ where: { idAccessContextObject, }, }), AccessContextObject);
+            return DBC.CopyObject<AccessContextObjectBase, AccessContextObject>(
+                await DBC.DBConnectionFactory.prisma.accessContextObject.findOne({ where: { idAccessContextObject, }, }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.fetch', error);
             return null;
@@ -66,8 +65,8 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
         if (!idAccessContext)
             return null;
         try {
-            return DBO.CopyArray<AccessContextObjectBase, AccessContextObject>(
-                await DBConnectionFactory.prisma.accessContextObject.findMany({ where: { idAccessContext } }), AccessContextObject);
+            return DBC.CopyArray<AccessContextObjectBase, AccessContextObject>(
+                await DBC.DBConnectionFactory.prisma.accessContextObject.findMany({ where: { idAccessContext } }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.fetchFromAccessContext', error);
             return null;
@@ -78,8 +77,8 @@ export class AccessContextObject extends DBO.DBObject<AccessContextObjectBase> i
         if (!idSystemObject)
             return null;
         try {
-            return DBO.CopyArray<AccessContextObjectBase, AccessContextObject>(
-                await DBConnectionFactory.prisma.accessContextObject.findMany({ where: { idSystemObject } }), AccessContextObject);
+            return DBC.CopyArray<AccessContextObjectBase, AccessContextObject>(
+                await DBC.DBConnectionFactory.prisma.accessContextObject.findMany({ where: { idSystemObject } }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.fetchFromSystemObject', error);
             return null;
