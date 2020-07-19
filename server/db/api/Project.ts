@@ -1,11 +1,11 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { Project as ProjectBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { DBConnectionFactory, SystemObject } from '..';
-import * as DBO from '../api/DBObject';
+import { SystemObject } from '..';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
+export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
     idProject!: number;
     Name!: string;
     Description!: string | null;
@@ -20,7 +20,7 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
         try {
             const { Name, Description } = this;
             ({ idProject: this.idProject, Name: this.Name, Description: this.Description } =
-                await DBConnectionFactory.prisma.project.create({
+                await DBC.DBConnectionFactory.prisma.project.create({
                     data: {
                         Name,
                         Description,
@@ -37,7 +37,7 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idProject, Name, Description } = this;
-            return await DBConnectionFactory.prisma.project.update({
+            return await DBC.DBConnectionFactory.prisma.project.update({
                 where: { idProject, },
                 data: { Name, Description, },
             }) ? true : /* istanbul ignore next */ false;
@@ -50,8 +50,8 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
     async fetchSystemObject(): Promise<SystemObject | null> {
         try {
             const { idProject } = this;
-            return DBO.CopyObject<SystemObjectBase, SystemObject>(
-                await DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject, }, }), SystemObject);
+            return DBC.CopyObject<SystemObjectBase, SystemObject>(
+                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.project.fetchSystemObject', error);
             return null;
@@ -62,8 +62,8 @@ export class Project extends DBO.DBObject<ProjectBase> implements ProjectBase {
         if (!idProject)
             return null;
         try {
-            return DBO.CopyObject<ProjectBase, Project>(
-                await DBConnectionFactory.prisma.project.findOne({ where: { idProject, }, }), Project);
+            return DBC.CopyObject<ProjectBase, Project>(
+                await DBC.DBConnectionFactory.prisma.project.findOne({ where: { idProject, }, }), Project);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Project.fetch', error);
             return null;

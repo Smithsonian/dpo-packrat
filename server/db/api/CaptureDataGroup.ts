@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { CaptureDataGroup as CaptureDataGroupBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> implements CaptureDataGroupBase {
+export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> implements CaptureDataGroupBase {
     idCaptureDataGroup!: number;
 
     constructor(input: CaptureDataGroupBase) {
@@ -16,7 +15,7 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
 
     protected async createWorker(): Promise<boolean> {
         try {
-            ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBConnectionFactory.prisma.captureDataGroup.create({ data: { } }));
+            ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBC.DBConnectionFactory.prisma.captureDataGroup.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.create', error);
@@ -27,7 +26,7 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureDataGroup } = this;
-            return await DBConnectionFactory.prisma.captureDataGroup.update({
+            return await DBC.DBConnectionFactory.prisma.captureDataGroup.update({
                 where: { idCaptureDataGroup, },
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
@@ -41,8 +40,8 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
         if (!idCaptureDataGroup)
             return null;
         try {
-            return DBO.CopyObject<CaptureDataGroupBase, CaptureDataGroup>(
-                await DBConnectionFactory.prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
+            return DBC.CopyObject<CaptureDataGroupBase, CaptureDataGroup>(
+                await DBC.DBConnectionFactory.prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.fetch', error);
             return null;
@@ -53,8 +52,8 @@ export class CaptureDataGroup extends DBO.DBObject<CaptureDataGroupBase> impleme
         if (!idCaptureData)
             return null;
         try {
-            return DBO.CopyArray<CaptureDataGroupBase, CaptureDataGroup>(
-                await DBConnectionFactory.prisma.captureDataGroup.findMany({
+            return DBC.CopyArray<CaptureDataGroupBase, CaptureDataGroup>(
+                await DBC.DBConnectionFactory.prisma.captureDataGroup.findMany({
                     where: {
                         CaptureDataGroupCaptureDataXref: {
                             some: { idCaptureData },

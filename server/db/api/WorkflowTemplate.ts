@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { WorkflowTemplate as WorkflowTemplateBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class WorkflowTemplate extends DBO.DBObject<WorkflowTemplateBase> implements WorkflowTemplateBase {
+export class WorkflowTemplate extends DBC.DBObject<WorkflowTemplateBase> implements WorkflowTemplateBase {
     idWorkflowTemplate!: number;
     Name!: string;
 
@@ -19,7 +18,7 @@ export class WorkflowTemplate extends DBO.DBObject<WorkflowTemplateBase> impleme
         try {
             const { Name } = this;
             ({ idWorkflowTemplate: this.idWorkflowTemplate, Name: this.Name } =
-                await DBConnectionFactory.prisma.workflowTemplate.create({ data: { Name, } }));
+                await DBC.DBConnectionFactory.prisma.workflowTemplate.create({ data: { Name, } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowTemplate.create', error);
@@ -30,7 +29,7 @@ export class WorkflowTemplate extends DBO.DBObject<WorkflowTemplateBase> impleme
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflowTemplate, Name } = this;
-            return await DBConnectionFactory.prisma.workflowTemplate.update({
+            return await DBC.DBConnectionFactory.prisma.workflowTemplate.update({
                 where: { idWorkflowTemplate, },
                 data: { Name, },
             }) ? true : /* istanbul ignore next */ false;
@@ -44,8 +43,8 @@ export class WorkflowTemplate extends DBO.DBObject<WorkflowTemplateBase> impleme
         if (!idWorkflowTemplate)
             return null;
         try {
-            return DBO.CopyObject<WorkflowTemplateBase, WorkflowTemplate>(
-                await DBConnectionFactory.prisma.workflowTemplate.findOne({ where: { idWorkflowTemplate, }, }), WorkflowTemplate);
+            return DBC.CopyObject<WorkflowTemplateBase, WorkflowTemplate>(
+                await DBC.DBConnectionFactory.prisma.workflowTemplate.findOne({ where: { idWorkflowTemplate, }, }), WorkflowTemplate);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowTemplate.fetch', error);
             return null;

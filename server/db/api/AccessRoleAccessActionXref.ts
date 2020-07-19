@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { AccessRoleAccessActionXref as AccessRoleAccessActionXrefBase } from '@prisma/client';
-import { DBConnectionFactory } from '..';
-import * as DBO from '../api/DBObject';
+import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessActionXrefBase> implements AccessRoleAccessActionXrefBase {
+export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessActionXrefBase> implements AccessRoleAccessActionXrefBase {
     idAccessAction!: number;
     idAccessRole!: number;
     idAccessRoleAccessActionXref!: number;
@@ -21,7 +20,7 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
             const { idAccessRole, idAccessAction } = this;
             ({ idAccessRoleAccessActionXref: this.idAccessRoleAccessActionXref,
                 idAccessRole: this.idAccessRole, idAccessAction: this.idAccessAction } =
-                await DBConnectionFactory.prisma.accessRoleAccessActionXref.create({
+                await DBC.DBConnectionFactory.prisma.accessRoleAccessActionXref.create({
                     data: {
                         AccessRole:     { connect: { idAccessRole }, },
                         AccessAction:   { connect: { idAccessAction }, },
@@ -37,7 +36,7 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessRoleAccessActionXref, idAccessRole, idAccessAction } = this;
-            return await DBConnectionFactory.prisma.accessRoleAccessActionXref.update({
+            return await DBC.DBConnectionFactory.prisma.accessRoleAccessActionXref.update({
                 where: { idAccessRoleAccessActionXref, },
                 data: {
                     AccessRole:     { connect: { idAccessRole }, },
@@ -54,8 +53,8 @@ export class AccessRoleAccessActionXref extends DBO.DBObject<AccessRoleAccessAct
         if (!idAccessRoleAccessActionXref)
             return null;
         try {
-            return DBO.CopyObject<AccessRoleAccessActionXrefBase, AccessRoleAccessActionXref>(
-                await DBConnectionFactory.prisma.accessRoleAccessActionXref.findOne({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
+            return DBC.CopyObject<AccessRoleAccessActionXrefBase, AccessRoleAccessActionXref>(
+                await DBC.DBConnectionFactory.prisma.accessRoleAccessActionXref.findOne({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRoleAccessActionXref.fetch', error);
             return null;
