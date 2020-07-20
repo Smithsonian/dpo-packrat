@@ -83,10 +83,11 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `idUserCreator` int(11) NOT NULL,
   `DateCreated` datetime NOT NULL,
   `StorageLocation` varchar(512) NOT NULL,
-  `StorageChecksum` varchar(32) NOT NULL,
+  `StorageChecksum` varchar(128) NOT NULL,
   `StorageSize` bigint(20) NOT NULL DEFAULT 0,
   PRIMARY KEY (`idAssetVersion`),
-  KEY `AssetVersion_idAsset_DateCreated` (`idAsset`,`DateCreated`)
+  KEY `AssetVersion_idAsset_DateCreated` (`idAsset`,`DateCreated`),
+  KEY `AssetVersion_StorageChecksum` (`StorageChecksum`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `CaptureData` (
@@ -418,7 +419,8 @@ CREATE TABLE IF NOT EXISTS `User` (
   `DateDisabled` datetime DEFAULT NULL,
   `WorkflowNotificationTime` time DEFAULT NULL,
   `EmailSettings` int(11) DEFAULT NULL,
-  PRIMARY KEY (`idUser`)
+  PRIMARY KEY (`idUser`),
+  KEY `user_EmailAddress` (`EmailAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `UserPersonalizationSystemObject` (
@@ -444,6 +446,7 @@ CREATE TABLE IF NOT EXISTS `Vocabulary` (
   `idVocabulary` int(11) NOT NULL AUTO_INCREMENT,
   `idVocabularySet` int(11) NOT NULL,
   `SortOrder` int(11) NOT NULL,
+  `Term` varchar(255) NOT NULL,
   PRIMARY KEY (`idVocabulary`),
   KEY `Vocabulary_idVocabulySet_SortOrder` (`idVocabularySet`,`SortOrder`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

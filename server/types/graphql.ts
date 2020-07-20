@@ -550,6 +550,7 @@ export type Vocabulary = {
     idVocabulary: Scalars['Int'];
     idVocabularySet: Scalars['Int'];
     SortOrder: Scalars['Int'];
+    Term: Scalars['String'];
     VocabularySet?: Maybe<VocabularySet>;
     CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
     Identifier?: Maybe<Array<Maybe<Identifier>>>;
@@ -966,6 +967,7 @@ export type CreateUserResult = {
 export type CreateVocabularyInput = {
     idVocabularySet: Scalars['Int'];
     SortOrder: Scalars['Int'];
+    Term: Scalars['String'];
 };
 
 export type CreateVocabularyResult = {

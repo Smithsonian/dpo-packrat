@@ -54,7 +54,8 @@ class TestSuiteUtils {
     createVocabularyInput = (idVocabularySet: number): CreateVocabularyInput => {
         return {
             idVocabularySet,
-            SortOrder: 0
+            SortOrder: 0,
+            Term: 'Test Vocabulary'
         };
     };
 
