@@ -7,9 +7,15 @@
 import * as path from 'path';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { ApolloServer, ApolloServerExpressConfig } from 'apollo-server-express';
-import { schema } from './graphql';
+import { ApolloServer } from 'apollo-server-express';
+import { serverOptions } from './graphql';
 import * as LOG from './utils/logger';
+import bodyParser from 'body-parser';
+
+import session from 'express-session';
+import { passport, authCorsConfig, sessionConfig, AuthRouter } from './auth';
+
+import cookieParser from 'cookie-parser';
 
 const logPath: string = './logs';
 LOG.configureLogger(logPath);
@@ -18,16 +24,20 @@ LOG.logger.info('Packrat Server Initialized');
 LOG.logger.info(`Packrat writing logs to ${path.resolve(logPath)}`);
 
 const app = express();
-app.use(cors());
-
 const PORT = 4000;
 
-const serverOptions: ApolloServerExpressConfig = {
-    schema
-};
+app.use(cors(authCorsConfig));
+app.use(bodyParser());
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
+app.use(session(sessionConfig));
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use('/auth', AuthRouter);
 
 const server = new ApolloServer(serverOptions);
-server.applyMiddleware({ app });
+server.applyMiddleware({ app, cors: false });
 
 app.listen(PORT, () => {
     console.log('GraphQL Server is running');
