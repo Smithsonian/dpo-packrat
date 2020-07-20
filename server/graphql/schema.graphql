@@ -4,7 +4,7 @@ type AccessAction {
   idAccessAction: Int!
   Name: String!
   SortOrder: Int!
-  AccessRoleAccessActionXref: [AccessRoleAccessActionXref]
+  AccessRole: [AccessRole]
 }
 
 type AccessContext {
@@ -40,16 +40,7 @@ type AccessPolicy {
 type AccessRole {
   idAccessRole: Int!
   Name: String!
-  AccessPolicy: [AccessPolicy]
-  AccessRoleAccessActionXref: [AccessRoleAccessActionXref]
-}
-
-type AccessRoleAccessActionXref {
-  idAccessRoleAccessActionXref: Int!
-  idAccessAction: Int!
-  idAccessRole: Int!
-  AccessAction: AccessAction
-  AccessRole: AccessRole
+  AccessAction: [AccessAction]
 }
 
 type Asset {
@@ -59,16 +50,6 @@ type Asset {
   idAssetGroup: Int
   AssetGroup: AssetGroup
   AssetVersion: [AssetVersion]
-  CaptureData: [CaptureData]
-  CaptureDataFile: [CaptureDataFile]
-  IntermediaryFile: [IntermediaryFile]
-  Item: [Item]
-  Metadata: [Metadata]
-  Model: [Model]
-  ModelGeometryFile: [ModelGeometryFile]
-  ModelUVMapFile: [ModelUVMapFile]
-  Scene: [Scene]
-  Subject: [Subject]
   SystemObject: SystemObject
 }
 
@@ -107,7 +88,7 @@ type CaptureData {
   idVLightSourceType: Int
   ItemArrangementFieldID: Int
   ItemPositionFieldID: Int
-  Asset: Asset
+  AssetThumbnail: Asset
   VBackgroundRemovalMethod: Vocabulary
   VCaptureDatasetType: Vocabulary
   VCaptureMethod: Vocabulary
@@ -116,7 +97,7 @@ type CaptureData {
   VItemPositionType: Vocabulary
   VLightSourceType: Vocabulary
   CaptureDataFile: [CaptureDataFile]
-  CaptureDataGroupCaptureDataXref: [CaptureDataGroupCaptureDataXref]
+  CaptureDataGroup: [CaptureDataGroup]
   SystemObject: SystemObject
 }
 
@@ -128,20 +109,12 @@ type CaptureDataFile {
   idVVariantType: Int!
   Asset: Asset
   CaptureData: CaptureData
-  Vocabulary: Vocabulary
+  VVariantType: Vocabulary
 }
 
 type CaptureDataGroup {
   idCaptureDataGroup: Int!
-  CaptureDataGroupCaptureDataXref: [CaptureDataGroupCaptureDataXref]
-}
-
-type CaptureDataGroupCaptureDataXref {
-  idCaptureData: Int!
-  idCaptureDataGroup: Int!
-  idCaptureDataGroupCaptureDataXref: Int!
-  CaptureData: CaptureData
-  CaptureDataGroup: CaptureDataGroup
+  CaptureData: [CaptureData]
 }
 
 type License {
@@ -160,7 +133,7 @@ type LicenseAssignment {
   idUserCreator: Int
   License: License
   SystemObject: SystemObject
-  User: User
+  UserCreator: User
 }
 
 type Model {
@@ -173,7 +146,7 @@ type Model {
   idVPurpose: Int!
   idVUnits: Int!
   Master: Boolean!
-  Asset: Asset
+  AssetThumbnail: Asset
   VCreationMethod: Vocabulary
   VModality: Vocabulary
   VPurpose: Vocabulary
@@ -205,7 +178,7 @@ type ModelGeometryFile {
   Roughness: Float
   Asset: Asset
   Model: Model
-  Vocabulary: Vocabulary
+  VModelFileType: Vocabulary
   ModelUVMapFile: [ModelUVMapFile]
 }
 
@@ -227,7 +200,7 @@ type ModelProcessingActionStep {
   idModelProcessingAction: Int!
   idVActionMethod: Int!
   ModelProcessingAction: ModelProcessingAction
-  Vocabulary: Vocabulary
+  VActionMethod: Vocabulary
 }
 
 type ModelSceneXref {
@@ -252,7 +225,7 @@ type ModelUVMapChannel {
   idModelUVMapFile: Int!
   idVUVMapType: Int!
   ModelUVMapFile: ModelUVMapFile
-  Vocabulary: Vocabulary
+  VUVMapType: Vocabulary
 }
 
 type ModelUVMapFile {
@@ -271,7 +244,7 @@ type Scene {
   idAssetThumbnail: Int
   IsOriented: Boolean!
   Name: String!
-  Asset: Asset
+  AssetThumbnail: Asset
   ModelSceneXref: [ModelSceneXref]
   SystemObject: SystemObject
 }
@@ -282,7 +255,6 @@ type Actor {
   IndividualName: String
   OrganizationName: String
   Unit: Unit
-  ModelProcessingAction: [ModelProcessingAction]
   SystemObject: SystemObject
 }
 
@@ -332,10 +304,10 @@ type SystemObject {
   LicenseAssignment: [LicenseAssignment]
   Metadata: [Metadata]
   SystemObjectVersion: [SystemObjectVersion]
-  SystemObjectDerived: [SystemObjectXref]
-  SystemObjectMaster: [SystemObjectXref]
+  SystemObjectDerived: [SystemObject]
+  SystemObjectMaster: [SystemObject]
   UserPersonalizationSystemObject: [UserPersonalizationSystemObject]
-  WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]!
+  WorkflowStepXref: [WorkflowStep]
 }
 
 type SystemObjectVersion {
@@ -345,21 +317,13 @@ type SystemObjectVersion {
   SystemObject: SystemObject
 }
 
-type SystemObjectXref {
-  idSystemObjectXref: Int!
-  idSystemObjectDerived: Int!
-  idSystemObjectMaster: Int!
-  SystemObjectDerived: SystemObject
-  SystemObjectMaster: SystemObject
-}
-
 type Identifier {
   idIdentifier: Int!
   IdentifierValue: String!
   idSystemObject: Int
   idVIdentifierType: Int
   SystemObject: SystemObject
-  Vocabulary: Vocabulary
+  VIdentifierType: Vocabulary
 }
 
 type Metadata {
@@ -371,10 +335,10 @@ type Metadata {
   idVMetadataSource: Int
   ValueExtended: String
   ValueShort: String
-  Asset: Asset
+  AssetValue: Asset
   SystemObject: SystemObject
   User: User
-  Vocabulary: Vocabulary
+  VMetadataSource: Vocabulary
 }
 
 type Unit {
@@ -428,15 +392,13 @@ type GeoLocation {
   TS0: Float
   TS1: Float
   TS2: Float
-  Item: [Item]
-  Subject: [Subject]
 }
 
 type Subject {
   idSubject: Int!
   idUnit: Int!
   Name: String!
-  Asset: Asset
+  AssetThumbnail: Asset
   idAssetThumbnail: Int
   idGeoLocation: Int
   GeoLocation: GeoLocation
@@ -452,7 +414,7 @@ type Item {
   Name: String!
   idAssetThumbnail: Int
   idGeoLocation: Int
-  Asset: Asset
+  AssetThumbnail: Asset
   GeoLocation: GeoLocation
   Subject: Subject
   SystemObject: SystemObject
@@ -500,13 +462,6 @@ type Vocabulary {
   idVocabularySet: Int!
   SortOrder: Int!
   VocabularySet: VocabularySet
-  CaptureDataFile: [CaptureDataFile]
-  Identifier: [Identifier]
-  Metadata: [Metadata]
-  ModelGeometryFile: [ModelGeometryFile]
-  ModelProcessingActionStep: [ModelProcessingActionStep]
-  ModelUVMapChannel: [ModelUVMapChannel]
-  WorkflowStep: [WorkflowStep]
 }
 
 type VocabularySet {
@@ -524,7 +479,7 @@ type Workflow {
   idProject: Int
   idUserInitiator: Int
   Project: Project
-  User: User
+  UserInitiator: User
   WorkflowTemplate: WorkflowTemplate
   SystemObject: SystemObject
   WorkflowStep: [WorkflowStep]
@@ -539,16 +494,16 @@ type WorkflowStep {
   State: Int!
   DateCompleted: DateTime
   User: User
-  Vocabulary: Vocabulary
+  VWorkflowStepType: Vocabulary
   Workflow: Workflow
   SystemObject: SystemObject
   WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]
 }
 
 type WorkflowStepSystemObjectXref {
+  idWorkflowStepSystemObjectXref: Int!
   idSystemObject: Int!
   idWorkflowStep: Int!
-  idWorkflowStepSystemObjectXref: Int!
   Input: Boolean!
   SystemObject: SystemObject
   WorkflowStep: WorkflowStep
