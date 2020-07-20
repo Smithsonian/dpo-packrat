@@ -4,7 +4,7 @@ import { LocalStrategy } from './strategies';
 passport.use(LocalStrategy);
 
 passport.serializeUser((user, done) => {
-    // @ts-ignore
+    // @ts-ignore //FIXME: serializer
     done(null, user.id);
 });
 
