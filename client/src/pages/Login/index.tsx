@@ -1,6 +1,8 @@
 import React from 'react';
 import { Box, Typography, Container, TextField, Button, Icon } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import { useHistory } from 'react-router-dom';
+import { Routes } from '../../constants';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -33,12 +35,32 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 
 function Login(): React.ReactElement {
     const classes = useStyles();
+    const history = useHistory();
 
     const InputProps = {
         classes: {
             input: classes.textFiledInput
         },
         disableUnderline: true
+    };
+
+    const onLogin = async () => {
+        // TODO: refactor this with backend url
+        const { success } = await fetch('http://localhost:4000/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({
+                username: 'random-user',
+                password: 'random-password'
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        }).then(res => res.json());
+
+        if (success) {
+            history.push(Routes.DASHBOARD);
+        }
     };
 
     return (
@@ -65,7 +87,7 @@ function Login(): React.ReactElement {
                         placeholder='password'
                         InputProps={InputProps}
                     />
-                    <Button className={classes.loginButton} variant='outlined' color='primary' endIcon={<Icon>login</Icon>}>
+                    <Button onClick={onLogin} className={classes.loginButton} variant='outlined' color='primary' endIcon={<Icon>login</Icon>}>
                         Login
                     </Button>
                 </Box>
