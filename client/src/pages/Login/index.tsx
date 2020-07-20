@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, Container, TextField, Button, Icon } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router-dom';
 import { Routes } from '../../constants';
+import API from '../../api';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -37,26 +38,18 @@ function Login(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
 
+    const [email, setEmail] = useState('sample@si.edu');
+    const [password, setPassword] = useState('sample-password');
+
     const InputProps = {
         classes: {
             input: classes.textFiledInput
         },
         disableUnderline: true
     };
-
+    
     const onLogin = async () => {
-        // TODO: refactor this with backend url
-        const { success } = await fetch('http://localhost:4000/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({
-                username: 'random-user',
-                password: 'random-password'
-            }),
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        }).then(res => res.json());
+        const { success } = await API.login(email, password);
 
         if (success) {
             history.push(Routes.DASHBOARD);
@@ -70,6 +63,8 @@ function Login(): React.ReactElement {
                 <Typography className={classes.loginSubtitle} variant='subtitle1'>Welcome to packrat</Typography>
                 <Box display='flex' flexDirection='column'>
                     <TextField
+                        value={email}
+                        onChange={({ target }) => setEmail(target.value)}
                         className={classes.textFields}
                         required
                         focused
@@ -79,6 +74,8 @@ function Login(): React.ReactElement {
                         InputProps={InputProps}
                     />
                     <TextField
+                        value={password}
+                        onChange={({ target }) => setPassword(target.value)}
                         className={classes.textFields}
                         required
                         focused

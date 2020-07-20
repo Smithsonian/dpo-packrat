@@ -3,6 +3,7 @@ import { Box, Typography, Button, Icon } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router-dom';
 import { Routes } from '../../constants';
+import API from '../../api';
 
 const useStyles = makeStyles(({ spacing }) => ({
     container: {
@@ -22,12 +23,7 @@ function Dashboard(): React.ReactElement {
     const history = useHistory();
 
     const onLogout = async () => {
-        const { success } = await fetch('http://localhost:4000/auth/logout', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        }).then(res => res.json());
+        const { success } = await API.logout();
 
         if (success) {
             history.push(Routes.LOGIN);
