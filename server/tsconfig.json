@@ -8,6 +8,7 @@
     "rootDir": ".",
     "outDir": "build",
     "declaration": true,
+    "skipLibCheck": true
   },
   "include": [
     "**/*",
