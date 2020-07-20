@@ -41,11 +41,18 @@
     "@dpo-packrat/common": "1.0.0",
     "@prisma/client": "^2.0.0",
     "@types/express": "^4.17.6",
+    "@types/passport": "^1.0.4",
+    "@types/passport-local": "^1.0.33",
     "apollo-server-express": "^2.14.2",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "express-session": "^1.17.1",
     "graphql": "^15.0.0",
-    "graphql-tools": "^6.0.7"
+    "graphql-tools": "^6.0.7",
+    "passport": "^0.4.1",
+    "passport-local": "^1.0.0"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "1.15.1",
