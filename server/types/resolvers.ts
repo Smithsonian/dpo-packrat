@@ -16,7 +16,7 @@ export type Parent = {
 
 export type Args = { input?: any };
 
-export type Context = { 
+export type Context = {
     user: User | undefined,
     isAuthenticated: boolean
 };

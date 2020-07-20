@@ -47,7 +47,7 @@ function Login(): React.ReactElement {
         },
         disableUnderline: true
     };
-    
+
     const onLogin = async () => {
         const { success } = await API.login(email, password);
 
@@ -84,7 +84,13 @@ function Login(): React.ReactElement {
                         placeholder='password'
                         InputProps={InputProps}
                     />
-                    <Button onClick={onLogin} className={classes.loginButton} variant='outlined' color='primary' endIcon={<Icon>login</Icon>}>
+                    <Button
+                        onClick={onLogin}
+                        className={classes.loginButton}
+                        variant='outlined'
+                        color='primary'
+                        endIcon={<Icon>login</Icon>}
+                    >
                         Login
                     </Button>
                 </Box>
