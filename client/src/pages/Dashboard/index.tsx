@@ -33,7 +33,13 @@ function Dashboard(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Typography color='textPrimary' variant='h4'>Dashboard</Typography>
-            <Button onClick={onLogout} className={classes.logoutButton} variant='outlined' color='primary' endIcon={<Icon>logout</Icon>}>
+            <Button
+                onClick={onLogout}
+                className={classes.logoutButton}
+                variant='outlined'
+                color='primary'
+                endIcon={<Icon>logout</Icon>}
+            >
                 Logout
             </Button>
         </Box>
