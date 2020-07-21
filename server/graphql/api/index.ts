@@ -59,6 +59,7 @@ import {
 
 // Queries
 import getUser from './queries/user/getUser';
+import getCurrentUser from './queries/user/getCurrentUser';
 import getAccessPolicy from './queries/accesscontrol/getAccessPolicy';
 import getAsset from './queries/asset/getAsset';
 import getCaptureData from './queries/capturedata/getCaptureData';
@@ -83,9 +84,11 @@ import createItem from './mutations/unit/createItem';
 import createSubject from './mutations/unit/createSubject';
 import createVocabulary from './mutations/vocabulary/createVocabulary';
 import createVocabularySet from './mutations/vocabulary/createVocabularySet';
+import { Context } from '../../types/resolvers';
 
 const allQueries = {
     getUser,
+    getCurrentUser,
     getAccessPolicy,
     getAsset,
     getCaptureData,
@@ -113,12 +116,12 @@ const allQueries = {
 type GraphQLRequest = {
     query?: string;
     variables: any;
-    context?: Object;
+    context?: Context;
     operationName: string;
 };
 
 class GraphQLApi {
-    async getUser(input: GetUserInput, context?: Object): Promise<GetUserResult> {
+    async getUser(input: GetUserInput, context?: Context): Promise<GetUserResult> {
         const operationName = 'getUser';
         const variables = { input };
         return this.graphqlRequest({
@@ -128,7 +131,17 @@ class GraphQLApi {
         });
     }
 
-    async createUser(input: CreateUserInput, context?: Object): Promise<CreateUserResult> {
+    async getCurrentUser(context: Context): Promise<GetUserResult> {
+        const operationName = 'getCurrentUser';
+        const variables = {};
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async createUser(input: CreateUserInput, context?: Context): Promise<CreateUserResult> {
         const operationName = 'createUser';
         const variables = { input };
         return this.graphqlRequest({
@@ -138,7 +151,7 @@ class GraphQLApi {
         });
     }
 
-    async getAccessPolicy(input: GetAccessPolicyInput, context?: Object): Promise<GetAccessPolicyResult> {
+    async getAccessPolicy(input: GetAccessPolicyInput, context?: Context): Promise<GetAccessPolicyResult> {
         const operationName = 'getAccessPolicy';
         const variables = { input };
         return this.graphqlRequest({
@@ -148,7 +161,7 @@ class GraphQLApi {
         });
     }
 
-    async getAsset(input: GetAssetInput, context?: Object): Promise<GetAssetResult> {
+    async getAsset(input: GetAssetInput, context?: Context): Promise<GetAssetResult> {
         const operationName = 'getAsset';
         const variables = { input };
         return this.graphqlRequest({
@@ -158,7 +171,7 @@ class GraphQLApi {
         });
     }
 
-    async getCaptureData(input: GetCaptureDataInput, context?: Object): Promise<GetCaptureDataResult> {
+    async getCaptureData(input: GetCaptureDataInput, context?: Context): Promise<GetCaptureDataResult> {
         const operationName = 'getCaptureData';
         const variables = { input };
         return this.graphqlRequest({
@@ -168,7 +181,7 @@ class GraphQLApi {
         });
     }
 
-    async createCaptureData(input: CreateCaptureDataInput, context?: Object): Promise<CreateCaptureDataResult> {
+    async createCaptureData(input: CreateCaptureDataInput, context?: Context): Promise<CreateCaptureDataResult> {
         const operationName = 'createCaptureData';
         const variables = { input };
         return this.graphqlRequest({
@@ -178,7 +191,7 @@ class GraphQLApi {
         });
     }
 
-    async getLicense(input: GetLicenseInput, context?: Object): Promise<GetLicenseResult> {
+    async getLicense(input: GetLicenseInput, context?: Context): Promise<GetLicenseResult> {
         const operationName = 'getLicense';
         const variables = { input };
         return this.graphqlRequest({
@@ -188,7 +201,7 @@ class GraphQLApi {
         });
     }
 
-    async getModel(input: GetModelInput, context?: Object): Promise<GetModelResult> {
+    async getModel(input: GetModelInput, context?: Context): Promise<GetModelResult> {
         const operationName = 'getModel';
         const variables = { input };
         return this.graphqlRequest({
@@ -198,7 +211,7 @@ class GraphQLApi {
         });
     }
 
-    async createModel(input: CreateModelInput, context?: Object): Promise<CreateModelResult> {
+    async createModel(input: CreateModelInput, context?: Context): Promise<CreateModelResult> {
         const operationName = 'createModel';
         const variables = { input };
         return this.graphqlRequest({
@@ -208,7 +221,7 @@ class GraphQLApi {
         });
     }
 
-    async getScene(input: GetSceneInput, context?: Object): Promise<GetSceneResult> {
+    async getScene(input: GetSceneInput, context?: Context): Promise<GetSceneResult> {
         const operationName = 'getScene';
         const variables = { input };
         return this.graphqlRequest({
@@ -218,7 +231,7 @@ class GraphQLApi {
         });
     }
 
-    async createScene(input: CreateSceneInput, context?: Object): Promise<CreateSceneResult> {
+    async createScene(input: CreateSceneInput, context?: Context): Promise<CreateSceneResult> {
         const operationName = 'createScene';
         const variables = { input };
         return this.graphqlRequest({
@@ -228,7 +241,7 @@ class GraphQLApi {
         });
     }
 
-    async getUnit(input: GetUnitInput, context?: Object): Promise<GetUnitResult> {
+    async getUnit(input: GetUnitInput, context?: Context): Promise<GetUnitResult> {
         const operationName = 'getUnit';
         const variables = { input };
         return this.graphqlRequest({
@@ -238,7 +251,7 @@ class GraphQLApi {
         });
     }
 
-    async createUnit(input: CreateUnitInput, context?: Object): Promise<CreateUnitResult> {
+    async createUnit(input: CreateUnitInput, context?: Context): Promise<CreateUnitResult> {
         const operationName = 'createUnit';
         const variables = { input };
         return this.graphqlRequest({
@@ -248,7 +261,7 @@ class GraphQLApi {
         });
     }
 
-    async getProject(input: GetProjectInput, context?: Object): Promise<GetProjectResult> {
+    async getProject(input: GetProjectInput, context?: Context): Promise<GetProjectResult> {
         const operationName = 'getProject';
         const variables = { input };
         return this.graphqlRequest({
@@ -258,7 +271,7 @@ class GraphQLApi {
         });
     }
 
-    async createProject(input: CreateProjectInput, context?: Object): Promise<CreateProjectResult> {
+    async createProject(input: CreateProjectInput, context?: Context): Promise<CreateProjectResult> {
         const operationName = 'createProject';
         const variables = { input };
         return this.graphqlRequest({
@@ -268,7 +281,7 @@ class GraphQLApi {
         });
     }
 
-    async getItem(input: GetItemInput, context?: Object): Promise<GetItemResult> {
+    async getItem(input: GetItemInput, context?: Context): Promise<GetItemResult> {
         const operationName = 'getItem';
         const variables = { input };
         return this.graphqlRequest({
@@ -278,7 +291,7 @@ class GraphQLApi {
         });
     }
 
-    async createItem(input: CreateItemInput, context?: Object): Promise<CreateItemResult> {
+    async createItem(input: CreateItemInput, context?: Context): Promise<CreateItemResult> {
         const operationName = 'createItem';
         const variables = { input };
         return this.graphqlRequest({
@@ -288,7 +301,7 @@ class GraphQLApi {
         });
     }
 
-    async getSubject(input: GetSubjectInput, context?: Object): Promise<GetSubjectResult> {
+    async getSubject(input: GetSubjectInput, context?: Context): Promise<GetSubjectResult> {
         const operationName = 'getSubject';
         const variables = { input };
         return this.graphqlRequest({
@@ -298,7 +311,7 @@ class GraphQLApi {
         });
     }
 
-    async createSubject(input: CreateSubjectInput, context?: Object): Promise<CreateSubjectResult> {
+    async createSubject(input: CreateSubjectInput, context?: Context): Promise<CreateSubjectResult> {
         const operationName = 'createSubject';
         const variables = { input };
         return this.graphqlRequest({
@@ -308,7 +321,7 @@ class GraphQLApi {
         });
     }
 
-    async getVocabulary(input: GetVocabularyInput, context?: Object): Promise<GetVocabularyResult> {
+    async getVocabulary(input: GetVocabularyInput, context?: Context): Promise<GetVocabularyResult> {
         const operationName = 'getVocabulary';
         const variables = { input };
         return this.graphqlRequest({
@@ -318,7 +331,7 @@ class GraphQLApi {
         });
     }
 
-    async createVocabulary(input: CreateVocabularyInput, context?: Object): Promise<CreateVocabularyResult> {
+    async createVocabulary(input: CreateVocabularyInput, context?: Context): Promise<CreateVocabularyResult> {
         const operationName = 'createVocabulary';
         const variables = { input };
         return this.graphqlRequest({
@@ -328,7 +341,7 @@ class GraphQLApi {
         });
     }
 
-    async createVocabularySet(input: CreateVocabularySetInput, context?: Object): Promise<CreateVocabularySetResult> {
+    async createVocabularySet(input: CreateVocabularySetInput, context?: Context): Promise<CreateVocabularySetResult> {
         const operationName = 'createVocabularySet';
         const variables = { input };
         return this.graphqlRequest({
@@ -338,7 +351,7 @@ class GraphQLApi {
         });
     }
 
-    async getWorkflow(input: GetWorkflowInput, context?: Object): Promise<GetWorkflowResult> {
+    async getWorkflow(input: GetWorkflowInput, context?: Context): Promise<GetWorkflowResult> {
         const operationName = 'getWorkflow';
         const variables = { input };
         return this.graphqlRequest({

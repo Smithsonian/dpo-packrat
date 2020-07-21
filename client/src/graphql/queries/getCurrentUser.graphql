@@ -5,6 +5,11 @@ query getCurrentUser {
             Name
             Active
             DateActivated
+            DateDisabled
+            EmailAddress
+            EmailSettings
+            SecurityID
+            WorkflowNotificationTime
         }
     }
 }
