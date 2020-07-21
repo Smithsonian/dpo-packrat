@@ -6,6 +6,7 @@ import * as DBAPI from '../db';
 passport.use(LocalStrategy);
 
 passport.serializeUser((user: User, done) => {
+    if (!user) return done('Invalid user');
     done(null, user.idUser);
 });
 

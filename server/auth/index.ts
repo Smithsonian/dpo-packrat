@@ -30,7 +30,7 @@ const Store = MemoryStore(session);
 
 const sessionConfig = {
     cookie: { maxAge, expires: new Date(maxAge) }, // 24hrs expiration time
-    secret: SESSION_SECRET, // TODO: turn this into env
+    secret: SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
     store: new Store({

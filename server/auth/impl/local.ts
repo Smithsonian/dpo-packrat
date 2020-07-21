@@ -16,7 +16,7 @@ const verifyFunction = async (email: string, password: string, done) => {
     if (!user.Active) {
         return done('User is not active', null);
     }
-    // TODO: This check would be removed moving forward
+    // TODO: password is same as email (to be removed/updated)
     if (password !== user.EmailAddress) {
         return done('Invalid password for user', null);
     }
