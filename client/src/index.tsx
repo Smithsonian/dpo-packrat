@@ -11,6 +11,8 @@ import { Routes } from './constants';
 import { apolloClient } from './graphql';
 import { AppContextProvider, AppContext } from './context';
 import { getAuthenticatedUser } from './utils/auth';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
@@ -35,16 +37,16 @@ function AppRouter(): React.ReactElement {
                     <CircularProgress color='primary' size={30} />
                 </Box>
             ) : (
-                <>
-                    <Route exact path={[Routes.HOME, Routes.LOGIN, Routes.ABOUT]} component={Header} />
-                    <Switch>
-                        <PublicRoute exact path={Routes.HOME} component={Home} />
-                        <PrivateRoute exact path={Routes.DASHBOARD} component={Dashboard} />
-                        <PublicRoute restricted exact path={Routes.LOGIN} component={Login} />
-                        <PublicRoute exact path={Routes.ABOUT} component={About} />
-                    </Switch>
-                </>
-            )}
+                    <>
+                        <Route exact path={[Routes.HOME, Routes.LOGIN, Routes.ABOUT]} component={Header} />
+                        <Switch>
+                            <PublicRoute exact path={Routes.HOME} component={Home} />
+                            <PrivateRoute exact path={Routes.DASHBOARD} component={Dashboard} />
+                            <PublicRoute restricted exact path={Routes.LOGIN} component={Login} />
+                            <PublicRoute exact path={Routes.ABOUT} component={About} />
+                        </Switch>
+                    </>
+                )}
         </Router>
     );
 }
@@ -55,6 +57,14 @@ function App(): React.ReactElement {
             <AppContextProvider>
                 <ThemeProvider theme={theme}>
                     <AppRouter />
+                    <ToastContainer
+                        position='bottom-right'
+                        autoClose={4000}
+                        closeOnClick
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                    />
                 </ThemeProvider>
             </AppContextProvider>
         </ApolloProvider>

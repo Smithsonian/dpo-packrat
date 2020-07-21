@@ -6,6 +6,8 @@ import { Routes } from '../../constants';
 import API from '../../api';
 import { getAuthenticatedUser } from '../../utils/auth';
 import { AppContext } from '../../context';
+import { toast } from 'react-toastify';
+import { requiredFieldsValidator } from '../../utils/validation';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -37,7 +39,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 }));
 
 function Login(): React.ReactElement {
-    const { user, updateUser } = useContext(AppContext);
+    const { updateUser } = useContext(AppContext);
     const classes = useStyles();
     const history = useHistory();
 
@@ -51,15 +53,23 @@ function Login(): React.ReactElement {
         disableUnderline: true
     };
 
-    const onLogin = async () => {
-        const { success } = await API.login(email, password);
+    const onLogin = async (): Promise<void> => {
+        const fields = { email, password };
+        const { isValid, invalidField } = requiredFieldsValidator(fields);
+
+        if (!isValid) {
+            toast.warn(`${invalidField} is required`);
+            return;
+        }
+
+        const { success, message } = await API.login(email, password);
 
         if (success) {
             const authenticatedUser = await getAuthenticatedUser();
-            console.log(user);
-            console.log(authenticatedUser);
             updateUser(authenticatedUser);
             history.push(Routes.DASHBOARD);
+        } else {
+            toast.error(message);
         }
     };
 
