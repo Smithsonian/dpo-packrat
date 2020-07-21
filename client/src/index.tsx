@@ -11,7 +11,7 @@ import { Routes } from './constants';
 import { apolloClient } from './graphql';
 import { AppContextProvider, AppContext } from './context';
 import { getAuthenticatedUser } from './utils/auth';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, Slide } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function AppRouter(): React.ReactElement {
@@ -58,6 +58,7 @@ function App(): React.ReactElement {
                 <ThemeProvider theme={theme}>
                     <AppRouter />
                     <ToastContainer
+                        transition={Slide}
                         position='bottom-right'
                         autoClose={4000}
                         closeOnClick
