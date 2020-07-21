@@ -13,6 +13,8 @@ beforeAll(() => {
 
 afterAll(async done => {
     await DBC.DBConnectionFactory.disconnect();
+    await DBC.DBConnectionFactory.disconnect(); // second time to test disconnecting after already being disconnected!
+    LOG.getRequestLogger(); // added for full test coverage!
     done();
 });
 
@@ -221,6 +223,7 @@ describe('DB Creation Test Suite', () => {
             vocabulary = new DBAPI.Vocabulary({
                 idVocabularySet: vocabularySet.idVocabularySet,
                 SortOrder: 0,
+                Term: 'Test Vocabulary',
                 idVocabulary: 0
             });
         expect(vocabulary).toBeTruthy();
@@ -3414,6 +3417,21 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: CaptureData.update when null', async () => {
+        let bUpdated: boolean = false;
+        if (captureData) {
+            const updated: string = 'Updated CaptureData Description 2';
+            captureData.Description = updated;
+            bUpdated = await captureData.update();
+
+            const captureDataFetch: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetch(captureData.idCaptureData);
+            expect(captureDataFetch).toBeTruthy();
+            if (captureDataFetch)
+                expect(captureDataFetch.Description).toEqual(updated);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: CaptureDataFile.update', async () => {
         let bUpdated: boolean = false;
         if (captureDataFile && assetWithoutAG) {
@@ -3592,6 +3610,22 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: Item.update when null', async () => {
+        let bUpdated: boolean = false;
+        if (item) {
+            expect(item.idAssetThumbnail).toBeNull();
+            const updated: string = 'Updated Item Name 2';
+            item.Name = updated;
+            bUpdated = await item.update();
+
+            const itemFetch: DBAPI.Item | null = await DBAPI.Item.fetch(item.idItem);
+            expect(itemFetch).toBeTruthy();
+            if (itemFetch)
+                expect(itemFetch.Name).toEqual(updated);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: License.update', async () => {
         let bUpdated: boolean = false;
         if (license) {
@@ -3652,14 +3686,17 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: Metadata.update', async () => {
         let bUpdated: boolean = false;
-        if (metadataNull && assetThumbnail) {
+        if (metadataNull && assetThumbnail && user) {
             metadataNull.idAssetValue = assetThumbnail.idAsset;
+            metadataNull.idUser = user.idUser;
             bUpdated = await metadataNull.update();
 
             const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadataNull.idMetadata);
             expect(metadataFetch).toBeTruthy();
-            if (metadataFetch)
+            if (metadataFetch) {
                 expect(metadataFetch.idAssetValue).toBe(assetThumbnail.idAsset);
+                expect(metadataFetch.idUser).toEqual(user.idUser);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -3700,6 +3737,21 @@ describe('DB Update Test Suite', () => {
                 expect(metadataFetch.idVMetadataSource).toBeNull();
                 expect(metadataFetch.idSystemObject).toBeNull();
             }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Metadata.update when null', async () => {
+        let bUpdated: boolean = false;
+        if (metadata) {
+            const updated: string = 'Test Metadata Name Update';
+            metadata.Name = updated;
+            bUpdated = await metadata.update();
+
+            const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadata.idMetadata);
+            expect(metadataFetch).toBeTruthy();
+            if (metadataFetch)
+                expect(metadataFetch.Name).toEqual(updated);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -4201,6 +4253,23 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: Workflow.update when null', async () => {
+        let bUpdated: boolean = false;
+        if (workflow) {
+            expect(workflow.idProject).toBeNull();
+            const updated: Date = new Date();
+            updated.setMilliseconds(0); // remove this component, which is not stored in the DB
+            workflow.DateUpdated = updated;
+            bUpdated = await workflow.update();
+
+            const workflowFetch: DBAPI.Workflow | null = await DBAPI.Workflow.fetch(workflow.idWorkflow);
+            expect(workflowFetch).toBeTruthy();
+            if (workflowFetch)
+                expect(workflowFetch.DateUpdated).toEqual(updated);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: WorkflowStep.update', async () => {
         let bUpdated: boolean = false;
         if (workflowStep && workflowNulls) {
@@ -4323,6 +4392,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.CaptureDataGroup.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.CaptureDataGroupCaptureDataXref.fetch(0)).toBeNull();
         expect(await DBC.CopyArray<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
+        expect(await DBC.CopyObject<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
         expect(await DBAPI.GeoLocation.fetch(0)).toBeNull();
         expect(await DBAPI.Identifier.fetch(0)).toBeNull();
         expect(await DBAPI.Identifier.fetchFromSystemObject(0)).toBeNull();
@@ -4376,6 +4446,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObject.fetchFromSceneID(0)).toBeNull();
         expect(await DBAPI.SystemObject.fetchFromStakeholderID(0)).toBeNull();
         expect(await DBAPI.SystemObject.fetchFromSubjectID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromUnitID(0)).toBeNull();
         expect(await DBAPI.SystemObject.fetchFromWorkflowID(0)).toBeNull();
         expect(await DBAPI.SystemObject.fetchFromWorkflowStepID(0)).toBeNull();
 

@@ -8,6 +8,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
     idVocabulary!: number;
     idVocabularySet!: number;
     SortOrder!: number;
+    Term!: string;
 
     constructor(input: VocabularyBase) {
         super(input);
@@ -17,12 +18,13 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idVocabularySet, SortOrder } = this;
-            ({ idVocabulary: this.idVocabulary, idVocabularySet: this.idVocabularySet, SortOrder: this.SortOrder } =
+            const { idVocabularySet, SortOrder, Term } = this;
+            ({ idVocabulary: this.idVocabulary, idVocabularySet: this.idVocabularySet, SortOrder: this.SortOrder, Term: this.Term } =
                 await DBC.DBConnectionFactory.prisma.vocabulary.create({
                     data: {
                         VocabularySet: { connect: { idVocabularySet }, },
-                        SortOrder
+                        SortOrder,
+                        Term
                     },
                 }));
             return true;
@@ -34,12 +36,13 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idVocabulary, idVocabularySet, SortOrder } = this;
+            const { idVocabulary, idVocabularySet, SortOrder, Term } = this;
             return await DBC.DBConnectionFactory.prisma.vocabulary.update({
                 where: { idVocabulary, },
                 data: {
                     VocabularySet: { connect: { idVocabularySet }, },
-                    SortOrder
+                    SortOrder,
+                    Term
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {

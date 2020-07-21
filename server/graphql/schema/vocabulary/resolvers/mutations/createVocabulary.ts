@@ -4,12 +4,13 @@ import * as DBAPI from '../../../../../db';
 
 export default async function createVocabulary(_: Parent, args: MutationCreateVocabularyArgs): Promise<CreateVocabularyResult> {
     const { input } = args;
-    const { idVocabularySet, SortOrder } = input;
+    const { idVocabularySet, SortOrder, Term } = input;
 
     const vocabularyArgs = {
         idVocabulary: 0,
         idVocabularySet,
-        SortOrder
+        SortOrder,
+        Term
     };
 
     const Vocabulary = new DBAPI.Vocabulary(vocabularyArgs);

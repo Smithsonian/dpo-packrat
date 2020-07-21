@@ -124,6 +124,7 @@ model AssetVersion {
   User            User          @relation(fields: [idUserCreator], references: [idUser])
   SystemObject    SystemObject?
 
+  @@index([StorageChecksum], name: "AssetVersion_StorageChecksum")
   @@index([idAsset, DateCreated], name: "AssetVersion_idAsset_DateCreated")
   @@index([idUserCreator], name: "fk_assetversion_user1")
 }
@@ -594,6 +595,8 @@ model User {
   UserPersonalizationUrl          UserPersonalizationUrl[]
   Workflow                        Workflow[]
   WorkflowStep                    WorkflowStep[]
+
+  @@index([EmailAddress], name: "user_EmailAddress")
 }
 
 model UserPersonalizationSystemObject {
@@ -623,6 +626,7 @@ model Vocabulary {
   idVocabulary                                                   Int                         @default(autoincrement()) @id
   idVocabularySet                                                Int
   SortOrder                                                      Int
+  Term                                                           String
   VocabularySet                                                  VocabularySet               @relation(fields: [idVocabularySet], references: [idVocabularySet])
   CaptureData_CaptureData_idVBackgroundRemovalMethodToVocabulary CaptureData[]               @relation("CaptureData_idVBackgroundRemovalMethodToVocabulary")
   CaptureData_CaptureData_idVCaptureDatasetTypeToVocabulary      CaptureData[]               @relation("CaptureData_idVCaptureDatasetTypeToVocabulary")

@@ -795,6 +795,7 @@ type CreateUserResult {
 input CreateVocabularyInput {
   idVocabularySet: Int!
   SortOrder: Int!
+  Term: String!
 }
 
 type CreateVocabularyResult {
