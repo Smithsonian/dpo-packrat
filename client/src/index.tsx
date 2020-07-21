@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import './global/root.css';
 import { Home, Login, About, Dashboard } from './pages';
 import { Header, PrivateRoute, PublicRoute } from './components';
-import { ThemeProvider } from '@material-ui/core';
+import { ThemeProvider, CircularProgress, Box } from '@material-ui/core';
 import theme from './theme';
 import { Routes } from './constants';
 import { apolloClient } from './graphql';
@@ -30,7 +30,11 @@ function AppRouter(): React.ReactElement {
 
     return (
         <Router>
-            {!loading ? (
+            {loading ? (
+                <Box display='flex' flex={1} alignItems='center' justifyContent='center'>
+                    <CircularProgress color='primary' size={30} />
+                </Box>
+            ) : (
                 <>
                     <Route exact path={[Routes.HOME, Routes.LOGIN, Routes.ABOUT]} component={Header} />
                     <Switch>
@@ -40,7 +44,7 @@ function AppRouter(): React.ReactElement {
                         <PublicRoute exact path={Routes.ABOUT} component={About} />
                     </Switch>
                 </>
-            ) : null}
+            )}
         </Router>
     );
 }

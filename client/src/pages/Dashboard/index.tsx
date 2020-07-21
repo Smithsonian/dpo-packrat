@@ -20,7 +20,7 @@ const useStyles = makeStyles(({ spacing }) => ({
 }));
 
 function Dashboard(): React.ReactElement {
-    const { updateUser } = useContext(AppContext);
+    const { user, updateUser } = useContext(AppContext);
     const classes = useStyles();
     const history = useHistory();
 
@@ -36,6 +36,7 @@ function Dashboard(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Typography color='textPrimary' variant='h4'>Dashboard</Typography>
+            <Typography color='textPrimary' variant='body1'>Welcome, {user?.Name}</Typography>
             <Button
                 onClick={onLogout}
                 className={classes.logoutButton}
