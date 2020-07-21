@@ -1,13 +1,16 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import passport from './passport';
 
 const AuthRouter = express.Router();
 
-AuthRouter.post('/login', passport.authenticate('local'), (request: Request, response: Response) => {
-    if (!request['user']) {
-        response.send({ success: false });
-    }
-    response.send({ success: true });
+AuthRouter.post('/login', (request: Request, response: Response, next: NextFunction) => {
+    passport.authenticate('local', (error, user) => {
+        if (error) return response.send({ success: false, message: error });
+        return request.logIn(user, error => {
+            if (error) return next(error);
+            return response.send({ success: true });
+        });
+    })(request, response, next);
 });
 
 AuthRouter.get('/logout', (request: Request, response: Response) => {

@@ -10,15 +10,15 @@ const verifyFunction = async (email: string, password: string, done) => {
     const user = await DBAPI.User.fetchByEmail(email);
 
     if (!user) {
-        throw new Error('User does not exists');
+        return done('User does not exist', null);
     }
 
     if (!user.Active) {
-        throw new Error('User is not active');
+        return done('User is not active', null);
     }
     // TODO: This check would be removed moving forward
     if (password !== user.EmailAddress) {
-        throw new Error('Invalid password for user');
+        return done('Invalid password for user', null);
     }
 
     done(null, user);

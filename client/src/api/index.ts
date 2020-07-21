@@ -5,6 +5,7 @@ enum API_ROUTES {
 
 export type AuthResponseType = {
     success: boolean;
+    message?: string;
 };
 
 export default class API {
