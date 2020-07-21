@@ -11,9 +11,7 @@ import { ApolloServer } from 'apollo-server-express';
 import { serverOptions } from './graphql';
 import * as LOG from './utils/logger';
 import bodyParser from 'body-parser';
-
-import session from 'express-session';
-import { passport, authCorsConfig, sessionConfig, AuthRouter } from './auth';
+import { passport, authCorsConfig, authSession, AuthRouter } from './auth';
 
 import cookieParser from 'cookie-parser';
 
@@ -27,10 +25,10 @@ const app = express();
 const PORT = 4000;
 
 app.use(cors(authCorsConfig));
-app.use(bodyParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true }));
-app.use(session(sessionConfig));
+app.use(authSession);
 app.use(passport.initialize());
 app.use(passport.session());
 
