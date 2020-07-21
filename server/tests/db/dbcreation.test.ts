@@ -1863,6 +1863,17 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(userFetch).toBeTruthy();
     });
 
+    test('DB Fetch By EmailAddress: User', async () => {
+        let userFetch: DBAPI.User | null = null;
+        if (user) {
+            userFetch = await DBAPI.User.fetchByEmail(user.EmailAddress);
+            if (userFetch) {
+                expect(userFetch).toMatchObject(user);
+            }
+        }
+        expect(userFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: UserPersonalizationSystemObject', async () => {
         let userPersonalizationSystemObjectFetch: DBAPI.UserPersonalizationSystemObject | null = null;
         if (userPersonalizationSystemObject) {
