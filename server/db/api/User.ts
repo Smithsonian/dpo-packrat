@@ -79,4 +79,14 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
             return null;
         }
     }
+
+    static async fetchByEmail(EmailAddress: string): Promise<User | null> {
+        try {
+            return DBC.CopyObject<UserBase, User>(
+                await DBC.DBConnectionFactory.prisma.user.findOne({ where: { EmailAddress, }, }), User);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.User.fetchByEmail', error);
+            return null;
+        }
+    }
 }
