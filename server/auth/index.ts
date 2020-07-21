@@ -3,8 +3,14 @@ import AuthRouter from './router';
 import session from 'express-session';
 import MemoryStore from 'memorystore';
 
+const { CLIENT_ENDPOINT, SESSION_SECRET } = process.env;
+
+if (!CLIENT_ENDPOINT) {
+    throw new Error('CLIENT_ENDPOINT was not provided to cors config');
+}
+
 const authCorsConfig = {
-    origin: 'http://localhost:3000', // TODO: turn this into env
+    origin: CLIENT_ENDPOINT,
     credentials: true
 };
 
@@ -13,6 +19,10 @@ const authCorsConfig = {
  * https://www.npmjs.com/package/express-mysql-session
  */
 
+if (!SESSION_SECRET) {
+    throw new Error('SESSION_SECRET was not provided to sessions config');
+}
+
 const maxAge = Date.now() + 24 * 60 * 60 * 1000;
 const checkPeriod = 24 * 60 * 60;
 
@@ -20,7 +30,7 @@ const Store = MemoryStore(session);
 
 const sessionConfig = {
     cookie: { maxAge, expires: new Date(maxAge) }, // 24hrs expiration time
-    secret: 'test', // TODO: turn this into env
+    secret: SESSION_SECRET, // TODO: turn this into env
     resave: true,
     saveUninitialized: true,
     store: new Store({

@@ -37,16 +37,16 @@ function AppRouter(): React.ReactElement {
                     <CircularProgress color='primary' size={30} />
                 </Box>
             ) : (
-                    <>
-                        <Route exact path={[Routes.HOME, Routes.LOGIN, Routes.ABOUT]} component={Header} />
-                        <Switch>
-                            <PublicRoute exact path={Routes.HOME} component={Home} />
-                            <PrivateRoute exact path={Routes.DASHBOARD} component={Dashboard} />
-                            <PublicRoute restricted exact path={Routes.LOGIN} component={Login} />
-                            <PublicRoute exact path={Routes.ABOUT} component={About} />
-                        </Switch>
-                    </>
-                )}
+                <React.Fragment>
+                    <Route exact path={[Routes.HOME, Routes.LOGIN, Routes.ABOUT]} component={Header} />
+                    <Switch>
+                        <PublicRoute exact path={Routes.HOME} component={Home} />
+                        <PrivateRoute exact path={Routes.DASHBOARD} component={Dashboard} />
+                        <PublicRoute restricted exact path={Routes.LOGIN} component={Login} />
+                        <PublicRoute exact path={Routes.ABOUT} component={About} />
+                    </Switch>
+                </React.Fragment>
+            )}
         </Router>
     );
 }
