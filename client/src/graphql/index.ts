@@ -17,5 +17,7 @@ function configureApolloClient(): ApolloClient<unknown> {
     return client;
 }
 
-export { configureApolloClient };
+const apolloClient = configureApolloClient();
+
+export { apolloClient };
 export * from './queries';
