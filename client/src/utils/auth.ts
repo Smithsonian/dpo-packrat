@@ -8,8 +8,12 @@ export async function getAuthenticatedUser(): Promise<User | null> {
         fetchPolicy: 'network-only'
     };
 
-    const { data } = await apolloClient.query(queryOptions);
-    const { getCurrentUser } = data;
+    try {
+        const { data } = await apolloClient.query(queryOptions);
+        const { getCurrentUser } = data;
 
-    return getCurrentUser.User;
+        return getCurrentUser.User;
+    } catch {
+        return null;
+    }
 }

@@ -62,13 +62,17 @@ function Login(): React.ReactElement {
             return;
         }
 
-        const { success, message } = await API.login(email, password);
+        try {
+            const { success, message } = await API.login(email, password);
 
-        if (success) {
-            const authenticatedUser = await getAuthenticatedUser();
-            updateUser(authenticatedUser);
-            history.push(Routes.DASHBOARD);
-        } else {
+            if (success) {
+                const authenticatedUser = await getAuthenticatedUser();
+                updateUser(authenticatedUser);
+                history.push(Routes.DASHBOARD);
+            } else {
+                toast.error(message);
+            }
+        } catch ({ message }) {
             toast.error(message);
         }
     };
