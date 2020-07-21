@@ -11,5 +11,7 @@ export default async function getCurrentUser(_: Parent, __: never, context: Cont
     const { idUser } = user;
 
     const User = await DBAPI.User.fetch(idUser);
+    console.log('authenticated', isAuthenticated);
+    console.log(User);
     return { User };
 }

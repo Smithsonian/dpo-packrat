@@ -1,0 +1,10 @@
+query getCurrentUser {
+    getCurrentUser {
+        User {
+            idUser
+            Name
+            Active
+            DateActivated
+        }
+    }
+}
