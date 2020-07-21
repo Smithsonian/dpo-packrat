@@ -1,17 +1,17 @@
 import passport from 'passport';
 import { LocalStrategy } from './strategies';
+import { User } from '../types/graphql';
+import * as DBAPI from '../db';
 
 passport.use(LocalStrategy);
 
-passport.serializeUser((user, done) => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore //FIXME: serializer (depends on verify function)
-    done(null, user.id);
+passport.serializeUser((user: User, done) => {
+    done(null, user.idUser);
 });
 
-passport.deserializeUser((id, done) => {
-    // TODO: de serialize user here
-    done(null, { id });
+passport.deserializeUser(async (id: number, done) => {
+    const user = await DBAPI.User.fetch(id);
+    done(null, user);
 });
 
 export default passport;

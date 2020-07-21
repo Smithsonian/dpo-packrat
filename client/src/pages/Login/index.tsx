@@ -38,8 +38,8 @@ function Login(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
 
-    const [email, setEmail] = useState('sample@si.edu');
-    const [password, setPassword] = useState('sample-password');
+    const [email, setEmail] = useState('test@si.edu');
+    const [password, setPassword] = useState('test@si.edu');
 
     const InputProps = {
         classes: {
