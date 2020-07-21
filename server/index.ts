@@ -34,10 +34,10 @@ app.use(passport.session());
 
 app.use('/auth', AuthRouter);
 
-const server = new ApolloServer(serverOptions);
-server.applyMiddleware({ app, cors: false });
+const graphQLServer = new ApolloServer(serverOptions);
+graphQLServer.applyMiddleware({ app, cors: false });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log('GraphQL Server is running');
 });
 
@@ -47,3 +47,5 @@ app.get('/logtest', (_: Request, response: Response) => {
     log.error('Logger Error Test', new Error());
     response.send('Got Here');
 });
+
+export { app, server };
