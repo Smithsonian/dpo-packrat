@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Box, Typography, Button, Icon } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router-dom';
 import { Routes } from '../../constants';
 import API from '../../api';
+import { AppContext } from '../../context';
 
 const useStyles = makeStyles(({ spacing }) => ({
     container: {
@@ -19,6 +20,7 @@ const useStyles = makeStyles(({ spacing }) => ({
 }));
 
 function Dashboard(): React.ReactElement {
+    const { updateUser } = useContext(AppContext);
     const classes = useStyles();
     const history = useHistory();
 
@@ -26,6 +28,7 @@ function Dashboard(): React.ReactElement {
         const { success } = await API.logout();
 
         if (success) {
+            updateUser(null);
             history.push(Routes.LOGIN);
         }
     };
