@@ -12,6 +12,10 @@ const verifyFunction = async (email: string, password: string, done) => {
     if (!user) {
         throw new Error('User does not exists');
     }
+
+    if (!user.Active) {
+        throw new Error('User is not active');
+    }
     // TODO: This check would be removed moving forward
     if (password !== user.EmailAddress) {
         throw new Error('Invalid password for user');
