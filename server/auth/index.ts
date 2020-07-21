@@ -1,4 +1,4 @@
-import passport from './passport';
+import passport from './interface';
 import AuthRouter from './router';
 import session from 'express-session';
 import MemoryStore from 'memorystore';

@@ -1,5 +1,5 @@
 import passport from 'passport';
-import { LocalStrategy } from './strategies';
+import { LocalStrategy } from './impl';
 import { User } from '../types/graphql';
 import * as DBAPI from '../db';
 
