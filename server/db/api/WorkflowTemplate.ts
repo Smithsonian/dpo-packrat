@@ -18,7 +18,7 @@ export class WorkflowTemplate extends DBC.DBObject<WorkflowTemplateBase> impleme
         try {
             const { Name } = this;
             ({ idWorkflowTemplate: this.idWorkflowTemplate, Name: this.Name } =
-                await DBC.DBConnectionFactory.prisma.workflowTemplate.create({ data: { Name, } }));
+                await DBC.DBConnection.prisma.workflowTemplate.create({ data: { Name, } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowTemplate.create', error);
@@ -29,7 +29,7 @@ export class WorkflowTemplate extends DBC.DBObject<WorkflowTemplateBase> impleme
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflowTemplate, Name } = this;
-            return await DBC.DBConnectionFactory.prisma.workflowTemplate.update({
+            return await DBC.DBConnection.prisma.workflowTemplate.update({
                 where: { idWorkflowTemplate, },
                 data: { Name, },
             }) ? true : /* istanbul ignore next */ false;
@@ -44,7 +44,7 @@ export class WorkflowTemplate extends DBC.DBObject<WorkflowTemplateBase> impleme
             return null;
         try {
             return DBC.CopyObject<WorkflowTemplateBase, WorkflowTemplate>(
-                await DBC.DBConnectionFactory.prisma.workflowTemplate.findOne({ where: { idWorkflowTemplate, }, }), WorkflowTemplate);
+                await DBC.DBConnection.prisma.workflowTemplate.findOne({ where: { idWorkflowTemplate, }, }), WorkflowTemplate);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowTemplate.fetch', error);
             return null;

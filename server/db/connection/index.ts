@@ -1,2 +1,2 @@
-export * from './DBConnectionFactory';
+export * from './DBConnection';
 export * from './DBObject';

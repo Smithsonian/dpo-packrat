@@ -19,7 +19,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
         try {
             const { Name, SystemMaintained } = this;
             ({ idVocabularySet: this.idVocabularySet, Name: this.Name, SystemMaintained: this.SystemMaintained } =
-                await DBC.DBConnectionFactory.prisma.vocabularySet.create({
+                await DBC.DBConnection.prisma.vocabularySet.create({
                     data: {
                         Name,
                         SystemMaintained
@@ -35,7 +35,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idVocabularySet, Name, SystemMaintained } = this;
-            return await DBC.DBConnectionFactory.prisma.vocabularySet.update({
+            return await DBC.DBConnection.prisma.vocabularySet.update({
                 where: { idVocabularySet, },
                 data: {
                     Name,
@@ -53,7 +53,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
             return null;
         try {
             return DBC.CopyObject<VocabularySetBase, VocabularySet>(
-                await DBC.DBConnectionFactory.prisma.vocabularySet.findOne({ where: { idVocabularySet, }, }), VocabularySet);
+                await DBC.DBConnection.prisma.vocabularySet.findOne({ where: { idVocabularySet, }, }), VocabularySet);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.VocabularySet.fetch', error);
             return null;

@@ -15,7 +15,7 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
 
     protected async createWorker(): Promise<boolean> {
         try {
-            ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBC.DBConnectionFactory.prisma.captureDataGroup.create({ data: { } }));
+            ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBC.DBConnection.prisma.captureDataGroup.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.create', error);
@@ -26,7 +26,7 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureDataGroup } = this;
-            return await DBC.DBConnectionFactory.prisma.captureDataGroup.update({
+            return await DBC.DBConnection.prisma.captureDataGroup.update({
                 where: { idCaptureDataGroup, },
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
@@ -41,7 +41,7 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
             return null;
         try {
             return DBC.CopyObject<CaptureDataGroupBase, CaptureDataGroup>(
-                await DBC.DBConnectionFactory.prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
+                await DBC.DBConnection.prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.fetch', error);
             return null;
@@ -53,7 +53,7 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
             return null;
         try {
             return DBC.CopyArray<CaptureDataGroupBase, CaptureDataGroup>(
-                await DBC.DBConnectionFactory.prisma.captureDataGroup.findMany({
+                await DBC.DBConnection.prisma.captureDataGroup.findMany({
                     where: {
                         CaptureDataGroupCaptureDataXref: {
                             some: { idCaptureData },

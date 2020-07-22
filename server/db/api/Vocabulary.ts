@@ -20,7 +20,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
         try {
             const { idVocabularySet, SortOrder, Term } = this;
             ({ idVocabulary: this.idVocabulary, idVocabularySet: this.idVocabularySet, SortOrder: this.SortOrder, Term: this.Term } =
-                await DBC.DBConnectionFactory.prisma.vocabulary.create({
+                await DBC.DBConnection.prisma.vocabulary.create({
                     data: {
                         VocabularySet: { connect: { idVocabularySet }, },
                         SortOrder,
@@ -37,7 +37,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idVocabulary, idVocabularySet, SortOrder, Term } = this;
-            return await DBC.DBConnectionFactory.prisma.vocabulary.update({
+            return await DBC.DBConnection.prisma.vocabulary.update({
                 where: { idVocabulary, },
                 data: {
                     VocabularySet: { connect: { idVocabularySet }, },
@@ -56,7 +56,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return null;
         try {
             return DBC.CopyObject<VocabularyBase, Vocabulary>(
-                await DBC.DBConnectionFactory.prisma.vocabulary.findOne({ where: { idVocabulary, }, }), Vocabulary);
+                await DBC.DBConnection.prisma.vocabulary.findOne({ where: { idVocabulary, }, }), Vocabulary);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Vocabulary.fetch', error);
             return null;
@@ -68,7 +68,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return null;
         try {
             return DBC.CopyArray<VocabularyBase, Vocabulary>(
-                await DBC.DBConnectionFactory.prisma.vocabulary.findMany({ where: { idVocabularySet } }), Vocabulary);
+                await DBC.DBConnection.prisma.vocabulary.findMany({ where: { idVocabularySet } }), Vocabulary);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Vocabulary.fetchFromVocabularySet', error);
             return null;

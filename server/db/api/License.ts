@@ -19,7 +19,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
         try {
             const { Description, Name } = this;
             ({ idLicense: this.idLicense, Description: this.Description, Name: this.Name } =
-                await DBC.DBConnectionFactory.prisma.license.create({ data: { Name, Description }, }));
+                await DBC.DBConnection.prisma.license.create({ data: { Name, Description }, }));
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.License.create', error);
@@ -30,7 +30,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idLicense, Name, Description } = this;
-            return await DBC.DBConnectionFactory.prisma.license.update({
+            return await DBC.DBConnection.prisma.license.update({
                 where: { idLicense, },
                 data: { Name, Description, },
             }) ? true : /* istanbul ignore next */ false;
@@ -45,7 +45,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
             return null;
         try {
             return DBC.CopyObject<LicenseBase, License>(
-                await DBC.DBConnectionFactory.prisma.license.findOne({ where: { idLicense, }, }), License);
+                await DBC.DBConnection.prisma.license.findOne({ where: { idLicense, }, }), License);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.License.fetch', error);
             return null;
