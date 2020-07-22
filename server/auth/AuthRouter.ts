@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { passport } from './index';
+import { passport } from './framework';
 import Config from '../config';
 
 const AuthRouter = express.Router();

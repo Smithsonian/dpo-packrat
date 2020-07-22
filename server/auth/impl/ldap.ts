@@ -1,6 +1,6 @@
-import { Auth, VerifiedUser } from '../types';
+import { IAuth, VerifiedUser } from '../interface';
 
-class LDAPAuth implements Auth {
+class LDAPAuth implements IAuth {
     async verifyUser(email: string, password: string): Promise<VerifiedUser> {
         // TODO: implement verify user for LDAP
         email;

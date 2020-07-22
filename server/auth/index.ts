@@ -1,5 +1,5 @@
-import passport from './passport';
-import AuthRouter from './router';
+import { passport } from './framework';
+import AuthRouter from './AuthRouter';
 import session from 'express-session';
 import MemoryStore from 'memorystore';
 import Config from '../config';

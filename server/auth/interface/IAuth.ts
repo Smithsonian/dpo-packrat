@@ -1,12 +1,12 @@
-import { User } from '../../types/graphql';
+import { User } from '../../db';
 
 type VerifiedUser = {
     user: User | null;
     error: string | null;
 };
 
-interface Auth {
+interface IAuth {
     verifyUser: (email: string, password: string) => Promise<VerifiedUser>;
 }
 
-export { Auth, VerifiedUser };
+export { IAuth as default, VerifiedUser };
