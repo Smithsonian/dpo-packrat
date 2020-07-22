@@ -1,15 +1,15 @@
 import PassportLocal from 'passport-local';
 import passport from 'passport';
-import { User } from '../types/graphql';
-import * as DBAPI from '../db';
-import { AuthFactory, Auth, VerifiedUser } from './interface';
+import { User } from '../../db';
+import * as DBAPI from '../../db';
+import { AuthFactory, IAuth, VerifiedUser } from '../interface';
 
 const options = {
     usernameField: 'email'
 };
 
 const verifyFunction = async (email: string, password: string, done) => {
-    const auth: Auth = AuthFactory.getInstance();
+    const auth: IAuth = AuthFactory.getInstance();
     const { user, error }: VerifiedUser = await auth.verifyUser(email, password);
 
     if (error) {

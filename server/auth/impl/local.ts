@@ -1,7 +1,7 @@
-import * as DBAPI from '../../../db';
-import { Auth, VerifiedUser } from '../types';
+import * as DBAPI from '../../db';
+import { IAuth, VerifiedUser } from '../interface';
 
-class LocalAuth implements Auth {
+class LocalAuth implements IAuth {
     async verifyUser(email: string, password: string): Promise<VerifiedUser> {
         const user = await DBAPI.User.fetchByEmail(email);
 
