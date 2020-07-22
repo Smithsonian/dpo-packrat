@@ -17,7 +17,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name } = this;
-            ({ idAccessRole: this.idAccessRole, Name: this.Name } = await DBC.DBConnectionFactory.prisma.accessRole.create({
+            ({ idAccessRole: this.idAccessRole, Name: this.Name } = await DBC.DBConnection.prisma.accessRole.create({
                 data: { Name, }
             }));
             return true;
@@ -30,7 +30,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessRole, Name } = this;
-            return await DBC.DBConnectionFactory.prisma.accessRole.update({
+            return await DBC.DBConnection.prisma.accessRole.update({
                 where: { idAccessRole, },
                 data: { Name, },
             }) ? true : /* istanbul ignore next */ false;
@@ -45,7 +45,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
             return null;
         try {
             return DBC.CopyObject<AccessRoleBase, AccessRole>(
-                await DBC.DBConnectionFactory.prisma.accessRole.findOne({ where: { idAccessRole, }, }), AccessRole);
+                await DBC.DBConnection.prisma.accessRole.findOne({ where: { idAccessRole, }, }), AccessRole);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRole.fetch', error);
             return null;
@@ -57,7 +57,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
             return null;
         try {
             return DBC.CopyArray<AccessRoleBase, AccessRole>(
-                await DBC.DBConnectionFactory.prisma.accessRole.findMany({
+                await DBC.DBConnection.prisma.accessRole.findMany({
                     where: {
                         AccessRoleAccessActionXref: {
                             some: { idAccessAction },

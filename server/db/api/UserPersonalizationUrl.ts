@@ -21,7 +21,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
             const { idUser, URL, Personalization } = this;
             ({ idUserPersonalizationUrl: this.idUserPersonalizationUrl, idUser: this.idUser,
                 URL: this.URL, Personalization: this.Personalization } =
-                await DBC.DBConnectionFactory.prisma.userPersonalizationUrl.create({
+                await DBC.DBConnection.prisma.userPersonalizationUrl.create({
                     data: {
                         User:   { connect: { idUser }, },
                         URL,
@@ -38,7 +38,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idUserPersonalizationUrl, idUser, URL, Personalization } = this;
-            return await DBC.DBConnectionFactory.prisma.userPersonalizationUrl.update({
+            return await DBC.DBConnection.prisma.userPersonalizationUrl.update({
                 where: { idUserPersonalizationUrl, },
                 data: {
                     User:   { connect: { idUser }, },
@@ -57,7 +57,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
             return null;
         try {
             return DBC.CopyObject<UserPersonalizationUrlBase, UserPersonalizationUrl>(
-                await DBC.DBConnectionFactory.prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
+                await DBC.DBConnection.prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationUrl.fetch', error);
             return null;
@@ -69,7 +69,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
             return null;
         try {
             return DBC.CopyArray<UserPersonalizationUrlBase, UserPersonalizationUrl>(
-                await DBC.DBConnectionFactory.prisma.userPersonalizationUrl.findMany({ where: { idUser } }), UserPersonalizationUrl);
+                await DBC.DBConnection.prisma.userPersonalizationUrl.findMany({ where: { idUser } }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationUrl.fetchFromUser', error);
             return null;

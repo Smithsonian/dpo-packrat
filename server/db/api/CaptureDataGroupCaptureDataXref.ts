@@ -20,7 +20,7 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
             const { idCaptureData, idCaptureDataGroup } = this;
             ({ idCaptureDataGroupCaptureDataXref: this.idCaptureDataGroupCaptureDataXref, idCaptureData: this.idCaptureData,
                 idCaptureDataGroup: this.idCaptureDataGroup } =
-                await DBC.DBConnectionFactory.prisma.captureDataGroupCaptureDataXref.create({
+                await DBC.DBConnection.prisma.captureDataGroupCaptureDataXref.create({
                     data: {
                         CaptureDataGroup:   { connect: { idCaptureDataGroup }, },
                         CaptureData:        { connect: { idCaptureData }, }
@@ -36,7 +36,7 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureDataGroupCaptureDataXref, idCaptureData, idCaptureDataGroup } = this;
-            return await DBC.DBConnectionFactory.prisma.captureDataGroupCaptureDataXref.update({
+            return await DBC.DBConnection.prisma.captureDataGroupCaptureDataXref.update({
                 where: { idCaptureDataGroupCaptureDataXref, },
                 data: {
                     CaptureDataGroup:   { connect: { idCaptureDataGroup }, },
@@ -54,7 +54,7 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
             return null;
         try {
             return DBC.CopyObject<CaptureDataGroupCaptureDataXrefBase, CaptureDataGroupCaptureDataXref>(
-                await DBC.DBConnectionFactory.prisma.captureDataGroupCaptureDataXref.findOne({ where: { idCaptureDataGroupCaptureDataXref, }, }),
+                await DBC.DBConnection.prisma.captureDataGroupCaptureDataXref.findOne({ where: { idCaptureDataGroupCaptureDataXref, }, }),
                 CaptureDataGroupCaptureDataXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroupCaptureDataXref.fetch', error);

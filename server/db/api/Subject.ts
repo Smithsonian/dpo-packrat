@@ -28,7 +28,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase {
             const { idUnit, idAssetThumbnail, idGeoLocation, Name } = this;
             ({ idSubject: this.idSubject, idUnit: this.idUnit, idAssetThumbnail: this.idAssetThumbnail,
                 idGeoLocation: this.idGeoLocation, Name: this.Name } =
-                await DBC.DBConnectionFactory.prisma.subject.create({
+                await DBC.DBConnection.prisma.subject.create({
                     data: {
                         Unit:           { connect: { idUnit }, },
                         Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
@@ -47,7 +47,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idSubject, idUnit, idAssetThumbnail, idGeoLocation, Name, idAssetThumbnailOrig, idGeoLocationOrig } = this;
-            const retValue: boolean = await DBC.DBConnectionFactory.prisma.subject.update({
+            const retValue: boolean = await DBC.DBConnection.prisma.subject.update({
                 where: { idSubject, },
                 data: {
                     Unit:           { connect: { idUnit }, },
@@ -67,7 +67,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase {
         try {
             const { idSubject } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idSubject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.subject.fetchSystemObject', error);
             return null;
@@ -79,7 +79,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase {
             return null;
         try {
             return DBC.CopyObject<SubjectBase, Subject>(
-                await DBC.DBConnectionFactory.prisma.subject.findOne({ where: { idSubject, }, }), Subject);
+                await DBC.DBConnection.prisma.subject.findOne({ where: { idSubject, }, }), Subject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.fetch', error);
             return null;
@@ -91,7 +91,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase {
             return null;
         try {
             return DBC.CopyArray<SubjectBase, Subject>(
-                await DBC.DBConnectionFactory.prisma.subject.findMany({ where: { idUnit } }), Subject);
+                await DBC.DBConnection.prisma.subject.findMany({ where: { idUnit } }), Subject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.fetchFromUnit', error);
             return null;

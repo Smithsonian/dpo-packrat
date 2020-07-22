@@ -21,7 +21,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase {
         try {
             const { Name, Abbreviation, ARKPrefix } = this;
             ({ idUnit: this.idUnit, Name: this.Name, Abbreviation: this.Abbreviation, ARKPrefix: this.ARKPrefix } =
-                await DBC.DBConnectionFactory.prisma.unit.create({
+                await DBC.DBConnection.prisma.unit.create({
                     data: {
                         Name,
                         Abbreviation,
@@ -39,7 +39,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idUnit, Name, Abbreviation, ARKPrefix } = this;
-            return await DBC.DBConnectionFactory.prisma.unit.update({
+            return await DBC.DBConnection.prisma.unit.update({
                 where: { idUnit, },
                 data: {
                     Name,
@@ -57,7 +57,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase {
         try {
             const { idUnit } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idUnit, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.unit.fetchSystemObject', error);
             return null;
@@ -69,7 +69,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase {
             return null;
         try {
             return DBC.CopyObject<UnitBase, Unit>(
-                await DBC.DBConnectionFactory.prisma.unit.findOne({ where: { idUnit, }, }), Unit);
+                await DBC.DBConnection.prisma.unit.findOne({ where: { idUnit, }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.fetch', error);
             return null;

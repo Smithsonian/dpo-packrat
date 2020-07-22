@@ -23,7 +23,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
             const { idModel, idActor, DateProcessed, ToolsUsed, Description } = this;
             ({ idModelProcessingAction: this.idModelProcessingAction, idModel: this.idModel, idActor: this.idActor,
                 DateProcessed: this.DateProcessed, ToolsUsed: this.ToolsUsed, Description: this.Description } =
-                await DBC.DBConnectionFactory.prisma.modelProcessingAction.create({
+                await DBC.DBConnection.prisma.modelProcessingAction.create({
                     data: {
                         Model:          { connect: { idModel }, },
                         Actor:          { connect: { idActor }, },
@@ -42,7 +42,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelProcessingAction, idModel, idActor, DateProcessed, ToolsUsed, Description } = this;
-            return await DBC.DBConnectionFactory.prisma.modelProcessingAction.update({
+            return await DBC.DBConnection.prisma.modelProcessingAction.update({
                 where: { idModelProcessingAction, },
                 data: {
                     Model:          { connect: { idModel }, },
@@ -63,7 +63,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
             return null;
         try {
             return DBC.CopyObject<ModelProcessingActionBase, ModelProcessingAction>(
-                await DBC.DBConnectionFactory.prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction, }, }), ModelProcessingAction);
+                await DBC.DBConnection.prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction, }, }), ModelProcessingAction);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingAction.fetch', error);
             return null;
@@ -75,7 +75,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
             return null;
         try {
             return DBC.CopyArray<ModelProcessingActionBase, ModelProcessingAction>(
-                await DBC.DBConnectionFactory.prisma.modelProcessingAction.findMany({ where: { idModel } }), ModelProcessingAction);
+                await DBC.DBConnection.prisma.modelProcessingAction.findMany({ where: { idModel } }), ModelProcessingAction);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingAction.fetchFromModel', error);
             return null;

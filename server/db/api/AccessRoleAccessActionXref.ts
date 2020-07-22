@@ -20,7 +20,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
             const { idAccessRole, idAccessAction } = this;
             ({ idAccessRoleAccessActionXref: this.idAccessRoleAccessActionXref,
                 idAccessRole: this.idAccessRole, idAccessAction: this.idAccessAction } =
-                await DBC.DBConnectionFactory.prisma.accessRoleAccessActionXref.create({
+                await DBC.DBConnection.prisma.accessRoleAccessActionXref.create({
                     data: {
                         AccessRole:     { connect: { idAccessRole }, },
                         AccessAction:   { connect: { idAccessAction }, },
@@ -36,7 +36,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessRoleAccessActionXref, idAccessRole, idAccessAction } = this;
-            return await DBC.DBConnectionFactory.prisma.accessRoleAccessActionXref.update({
+            return await DBC.DBConnection.prisma.accessRoleAccessActionXref.update({
                 where: { idAccessRoleAccessActionXref, },
                 data: {
                     AccessRole:     { connect: { idAccessRole }, },
@@ -54,7 +54,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
             return null;
         try {
             return DBC.CopyObject<AccessRoleAccessActionXrefBase, AccessRoleAccessActionXref>(
-                await DBC.DBConnectionFactory.prisma.accessRoleAccessActionXref.findOne({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
+                await DBC.DBConnection.prisma.accessRoleAccessActionXref.findOne({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRoleAccessActionXref.fetch', error);
             return null;

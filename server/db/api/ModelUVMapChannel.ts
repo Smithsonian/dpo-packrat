@@ -22,7 +22,7 @@ export class ModelUVMapChannel extends DBC.DBObject<ModelUVMapChannelBase> imple
             const { idModelUVMapFile, ChannelPosition, ChannelWidth, idVUVMapType } = this;
             ({ idModelUVMapChannel: this.idModelUVMapChannel, idModelUVMapFile: this.idModelUVMapFile,
                 ChannelPosition: this.ChannelPosition, ChannelWidth: this.ChannelWidth, idVUVMapType: this.idVUVMapType } =
-                await DBC.DBConnectionFactory.prisma.modelUVMapChannel.create({
+                await DBC.DBConnection.prisma.modelUVMapChannel.create({
                     data: {
                         ModelUVMapFile:  { connect: { idModelUVMapFile }, },
                         ChannelPosition, ChannelWidth,
@@ -39,7 +39,7 @@ export class ModelUVMapChannel extends DBC.DBObject<ModelUVMapChannelBase> imple
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelUVMapChannel, idModelUVMapFile, ChannelPosition, ChannelWidth, idVUVMapType } = this;
-            return await DBC.DBConnectionFactory.prisma.modelUVMapChannel.update({
+            return await DBC.DBConnection.prisma.modelUVMapChannel.update({
                 where: { idModelUVMapChannel, },
                 data: {
                     ModelUVMapFile:  { connect: { idModelUVMapFile }, },
@@ -58,7 +58,7 @@ export class ModelUVMapChannel extends DBC.DBObject<ModelUVMapChannelBase> imple
             return null;
         try {
             return DBC.CopyObject<ModelUVMapChannelBase, ModelUVMapChannel>(
-                await DBC.DBConnectionFactory.prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel, }, }), ModelUVMapChannel);
+                await DBC.DBConnection.prisma.modelUVMapChannel.findOne({ where: { idModelUVMapChannel, }, }), ModelUVMapChannel);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.fetch', error);
             return null;
@@ -70,7 +70,7 @@ export class ModelUVMapChannel extends DBC.DBObject<ModelUVMapChannelBase> imple
             return null;
         try {
             return DBC.CopyArray<ModelUVMapChannelBase, ModelUVMapChannel>(
-                await DBC.DBConnectionFactory.prisma.modelUVMapChannel.findMany({ where: { idModelUVMapFile } }), ModelUVMapChannel);
+                await DBC.DBConnection.prisma.modelUVMapChannel.findMany({ where: { idModelUVMapFile } }), ModelUVMapChannel);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.fetchFromModelUVMapFile', error);
             return null;
