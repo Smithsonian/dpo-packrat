@@ -21,7 +21,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
             const { idWorkflowStep, idSystemObject, Input } = this;
             ({ idWorkflowStepSystemObjectXref: this.idWorkflowStepSystemObjectXref, idWorkflowStep: this.idWorkflowStep,
                 idSystemObject: this.idSystemObject, Input: this.Input } =
-                await DBC.DBConnectionFactory.prisma.workflowStepSystemObjectXref.create({
+                await DBC.DBConnection.prisma.workflowStepSystemObjectXref.create({
                     data: {
                         WorkflowStep: { connect: { idWorkflowStep }, },
                         SystemObject: { connect: { idSystemObject }, },
@@ -38,7 +38,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflowStepSystemObjectXref, idWorkflowStep, idSystemObject, Input } = this;
-            return await DBC.DBConnectionFactory.prisma.workflowStepSystemObjectXref.update({
+            return await DBC.DBConnection.prisma.workflowStepSystemObjectXref.update({
                 where: { idWorkflowStepSystemObjectXref, },
                 data: {
                     WorkflowStep: { connect: { idWorkflowStep }, },
@@ -57,7 +57,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
             return null;
         try {
             return DBC.CopyObject<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
-                await DBC.DBConnectionFactory.prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref, }, }), WorkflowStepSystemObjectXref);
+                await DBC.DBConnection.prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref, }, }), WorkflowStepSystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetch', error);
             return null;
@@ -69,7 +69,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
             return null;
         try {
             return DBC.CopyArray<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
-                await DBC.DBConnectionFactory.prisma.workflowStepSystemObjectXref.findMany({ where: { idWorkflowStep } }), WorkflowStepSystemObjectXref);
+                await DBC.DBConnection.prisma.workflowStepSystemObjectXref.findMany({ where: { idWorkflowStep } }), WorkflowStepSystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep', error);
             return null;

@@ -27,7 +27,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             const { idModel, idScene, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             ({ idModelSceneXref: this.idModelSceneXref, idModel: this.idModel, idScene: this.idScene, TS0: this.TS0,
                 TS1: this.TS1, TS2: this.TS2, R0: this.R0, R1: this.R1, R2: this.R2, R3: this.R3 } =
-                await DBC.DBConnectionFactory.prisma.modelSceneXref.create({
+                await DBC.DBConnection.prisma.modelSceneXref.create({
                     data: {
                         Model:  { connect: { idModel }, },
                         Scene:  { connect: { idScene }, },
@@ -44,7 +44,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelSceneXref, idModel, idScene, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
-            return await DBC.DBConnectionFactory.prisma.modelSceneXref.update({
+            return await DBC.DBConnection.prisma.modelSceneXref.update({
                 where: { idModelSceneXref, },
                 data: {
                     Model:  { connect: { idModel }, },
@@ -63,7 +63,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return null;
         try {
             return DBC.CopyObject<ModelSceneXrefBase, ModelSceneXref>(
-                await DBC.DBConnectionFactory.prisma.modelSceneXref.findOne({ where: { idModelSceneXref, }, }), ModelSceneXref);
+                await DBC.DBConnection.prisma.modelSceneXref.findOne({ where: { idModelSceneXref, }, }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.fetch', error);
             return null;
@@ -75,7 +75,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return null;
         try {
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
-                await DBC.DBConnectionFactory.prisma.modelSceneXref.findMany({ where: { idScene } }), ModelSceneXref);
+                await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idScene } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.fetchFromScene', error);
             return null;
@@ -87,7 +87,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return null;
         try {
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
-                await DBC.DBConnectionFactory.prisma.modelSceneXref.findMany({ where: { idModel } }), ModelSceneXref);
+                await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.fetchFromModel', error);
             return null;

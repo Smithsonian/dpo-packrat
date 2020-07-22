@@ -21,7 +21,7 @@ export class ModelUVMapFile extends DBC.DBObject<ModelUVMapFileBase> implements 
             const { idModelGeometryFile, idAsset, UVMapEdgeLength } = this;
             ({ idModelUVMapFile: this.idModelUVMapFile, idModelGeometryFile: this.idModelGeometryFile,
                 idAsset: this.idAsset, UVMapEdgeLength: this.UVMapEdgeLength } =
-                await DBC.DBConnectionFactory.prisma.modelUVMapFile.create({
+                await DBC.DBConnection.prisma.modelUVMapFile.create({
                     data: {
                         ModelGeometryFile:  { connect: { idModelGeometryFile }, },
                         Asset:              { connect: { idAsset }, },
@@ -38,7 +38,7 @@ export class ModelUVMapFile extends DBC.DBObject<ModelUVMapFileBase> implements 
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelUVMapFile, idModelGeometryFile, idAsset, UVMapEdgeLength } = this;
-            return await DBC.DBConnectionFactory.prisma.modelUVMapFile.update({
+            return await DBC.DBConnection.prisma.modelUVMapFile.update({
                 where: { idModelUVMapFile, },
                 data: {
                     ModelGeometryFile:  { connect: { idModelGeometryFile }, },
@@ -57,7 +57,7 @@ export class ModelUVMapFile extends DBC.DBObject<ModelUVMapFileBase> implements 
             return null;
         try {
             return DBC.CopyObject<ModelUVMapFileBase, ModelUVMapFile>(
-                await DBC.DBConnectionFactory.prisma.modelUVMapFile.findOne({ where: { idModelUVMapFile, }, }), ModelUVMapFile);
+                await DBC.DBConnection.prisma.modelUVMapFile.findOne({ where: { idModelUVMapFile, }, }), ModelUVMapFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapFile.fetch', error);
             return null;
@@ -69,7 +69,7 @@ export class ModelUVMapFile extends DBC.DBObject<ModelUVMapFileBase> implements 
             return null;
         try {
             return DBC.CopyArray<ModelUVMapFileBase, ModelUVMapFile>(
-                await DBC.DBConnectionFactory.prisma.modelUVMapFile.findMany({ where: { idModelGeometryFile } }), ModelUVMapFile);
+                await DBC.DBConnection.prisma.modelUVMapFile.findMany({ where: { idModelGeometryFile } }), ModelUVMapFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapFile.fetchFromModelGeometryFile', error);
             return null;

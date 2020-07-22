@@ -20,7 +20,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
         try {
             const { Name, Description } = this;
             ({ idProject: this.idProject, Name: this.Name, Description: this.Description } =
-                await DBC.DBConnectionFactory.prisma.project.create({
+                await DBC.DBConnection.prisma.project.create({
                     data: {
                         Name,
                         Description,
@@ -37,7 +37,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idProject, Name, Description } = this;
-            return await DBC.DBConnectionFactory.prisma.project.update({
+            return await DBC.DBConnection.prisma.project.update({
                 where: { idProject, },
                 data: { Name, Description, },
             }) ? true : /* istanbul ignore next */ false;
@@ -51,7 +51,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
         try {
             const { idProject } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idProject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.project.fetchSystemObject', error);
             return null;
@@ -63,7 +63,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
             return null;
         try {
             return DBC.CopyObject<ProjectBase, Project>(
-                await DBC.DBConnectionFactory.prisma.project.findOne({ where: { idProject, }, }), Project);
+                await DBC.DBConnection.prisma.project.findOne({ where: { idProject, }, }), Project);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Project.fetch', error);
             return null;

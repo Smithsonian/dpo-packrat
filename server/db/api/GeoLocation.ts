@@ -28,7 +28,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
             const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             ({ idGeoLocation: this.idGeoLocation, Latitude: this.Latitude, Longitude: this.Longitude, Altitude: this.Altitude,
                 TS0: this.TS0, TS1: this.TS1, TS2: this.TS2, R0: this.R0, R1: this.R1, R2: this.R2, R3: this.R3 } =
-                await DBC.DBConnectionFactory.prisma.geoLocation.create({
+                await DBC.DBConnection.prisma.geoLocation.create({
                     data: { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 },
                 }));
             return true;
@@ -41,7 +41,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idGeoLocation, Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
-            return await DBC.DBConnectionFactory.prisma.geoLocation.update({
+            return await DBC.DBConnection.prisma.geoLocation.update({
                 where: { idGeoLocation, },
                 data: { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 },
             }) ? true : /* istanbul ignore next */ false;
@@ -56,7 +56,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
             return null;
         try {
             return DBC.CopyObject<GeoLocationBase, GeoLocation>(
-                await DBC.DBConnectionFactory.prisma.geoLocation.findOne({ where: { idGeoLocation, }, }), GeoLocation);
+                await DBC.DBConnection.prisma.geoLocation.findOne({ where: { idGeoLocation, }, }), GeoLocation);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.GeoLocation.fetch', error);
             return null;

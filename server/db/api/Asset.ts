@@ -24,7 +24,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
         try {
             const { FileName, FilePath, idAssetGroup } = this;
             ({ idAsset: this.idAsset, FileName: this.FileName, FilePath: this.FilePath, idAssetGroup: this.idAssetGroup } =
-                await DBC.DBConnectionFactory.prisma.asset.create({
+                await DBC.DBConnection.prisma.asset.create({
                     data: {
                         FileName,
                         FilePath,
@@ -42,7 +42,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAsset, FileName, FilePath, idAssetGroup, idAssetGroupOrig } = this;
-            const retValue: boolean = await DBC.DBConnectionFactory.prisma.asset.update({
+            const retValue: boolean = await DBC.DBConnection.prisma.asset.update({
                 where: { idAsset, },
                 data: {
                     FileName,
@@ -61,7 +61,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
         try {
             const { idAsset } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAsset, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchSystemObject', error);
             return null;
@@ -73,7 +73,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
             return null;
         try {
             return DBC.CopyObject<AssetBase, Asset>(
-                await DBC.DBConnectionFactory.prisma.asset.findOne({ where: { idAsset, }, }), Asset);
+                await DBC.DBConnection.prisma.asset.findOne({ where: { idAsset, }, }), Asset);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetch', error);
             return null;
@@ -85,7 +85,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
             return null;
         try {
             return DBC.CopyArray<AssetBase, Asset>(
-                await DBC.DBConnectionFactory.prisma.asset.findMany({ where: { idAssetGroup } }), Asset);
+                await DBC.DBConnection.prisma.asset.findMany({ where: { idAssetGroup } }), Asset);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchFromAssetGroup', error);
             return null;

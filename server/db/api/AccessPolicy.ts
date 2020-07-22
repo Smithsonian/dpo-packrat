@@ -21,7 +21,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
             const { idUser, idAccessRole, idAccessContext } = this;
             ({ idAccessPolicy: this.idAccessPolicy, idUser: this.idUser,
                 idAccessRole: this.idAccessRole, idAccessContext: this.idAccessContext } =
-                await DBC.DBConnectionFactory.prisma.accessPolicy.create({
+                await DBC.DBConnection.prisma.accessPolicy.create({
                     data: {
                         User:           { connect: { idUser }, },
                         AccessRole:     { connect: { idAccessRole }, },
@@ -38,7 +38,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessPolicy, idUser, idAccessRole, idAccessContext } = this;
-            return await DBC.DBConnectionFactory.prisma.accessPolicy.update({
+            return await DBC.DBConnection.prisma.accessPolicy.update({
                 where: { idAccessPolicy, },
                 data: {
                     User:           { connect: { idUser }, },
@@ -57,7 +57,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
             return null;
         try {
             return DBC.CopyObject<AccessPolicyBase, AccessPolicy>(
-                await DBC.DBConnectionFactory.prisma.accessPolicy.findOne({ where: { idAccessPolicy, }, }), AccessPolicy);
+                await DBC.DBConnection.prisma.accessPolicy.findOne({ where: { idAccessPolicy, }, }), AccessPolicy);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessPolicy.fetch', error);
             return null;
@@ -69,7 +69,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
             return null;
         try {
             return DBC.CopyArray<AccessPolicyBase, AccessPolicy>(
-                await DBC.DBConnectionFactory.prisma.accessPolicy.findMany({ where: { idAccessContext } }), AccessPolicy);
+                await DBC.DBConnection.prisma.accessPolicy.findMany({ where: { idAccessContext } }), AccessPolicy);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessPolicy.fetchFromAccessContext', error);
             return null;
@@ -81,7 +81,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
             return null;
         try {
             return DBC.CopyArray<AccessPolicyBase, AccessPolicy>(
-                await DBC.DBConnectionFactory.prisma.accessPolicy.findMany({ where: { idUser } }), AccessPolicy);
+                await DBC.DBConnection.prisma.accessPolicy.findMany({ where: { idUser } }), AccessPolicy);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessPolicy.fetchFromUser', error);
             return null;
