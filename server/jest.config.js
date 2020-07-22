@@ -4,5 +4,5 @@ module.exports = {
     testEnvironment: 'node',
     testMatch: ['**/tests/db/**/?(*.)+(test).ts', '**/tests/graphql/graphql.test.ts', '**/tests/auth/**'],
     testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/build/'],
-    setupFiles: ['<rootDir>/.jest/setEnvVars.ts']
+    setupFiles: ['<rootDir>/tests/setEnvVars.ts']
 };
