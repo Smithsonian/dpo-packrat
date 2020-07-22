@@ -1,4 +1,4 @@
-import LocalStrategy from './local';
-import LDAPStrategy from './ldap';
+import LocalAuth from './local';
+import LDAPAuth from './ldap';
 
-export { LocalStrategy, LDAPStrategy };
+export { LocalAuth, LDAPAuth };
