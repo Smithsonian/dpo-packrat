@@ -19,20 +19,20 @@ model AccessAction {
 }
 
 model AccessContext {
+  idAccessContext     Int                   @default(autoincrement()) @id
+  Global              Boolean
   Authoritative       Boolean
   CaptureData         Boolean
-  Global              Boolean
-  idAccessContext     Int                   @default(autoincrement()) @id
-  IntermediaryFile    Boolean
   Model               Boolean
   Scene               Boolean
+  IntermediaryFile    Boolean
   AccessContextObject AccessContextObject[]
   AccessPolicy        AccessPolicy[]
 }
 
 model AccessContextObject {
-  idAccessContext       Int
   idAccessContextObject Int           @default(autoincrement()) @id
+  idAccessContext       Int
   idSystemObject        Int
   AccessContext         AccessContext @relation(fields: [idAccessContext], references: [idAccessContext])
   SystemObject          SystemObject  @relation(fields: [idSystemObject], references: [idSystemObject])
@@ -42,10 +42,10 @@ model AccessContextObject {
 }
 
 model AccessPolicy {
-  idAccessContext Int
   idAccessPolicy  Int           @default(autoincrement()) @id
-  idAccessRole    Int
   idUser          Int
+  idAccessRole    Int
+  idAccessContext Int
   AccessContext   AccessContext @relation(fields: [idAccessContext], references: [idAccessContext])
   AccessRole      AccessRole    @relation(fields: [idAccessRole], references: [idAccessRole])
   User            User          @relation(fields: [idUser], references: [idUser])
@@ -63,9 +63,9 @@ model AccessRole {
 }
 
 model AccessRoleAccessActionXref {
-  idAccessAction               Int
-  idAccessRole                 Int
   idAccessRoleAccessActionXref Int          @default(autoincrement()) @id
+  idAccessRole                 Int
+  idAccessAction               Int
   AccessAction                 AccessAction @relation(fields: [idAccessAction], references: [idAccessAction])
   AccessRole                   AccessRole   @relation(fields: [idAccessRole], references: [idAccessRole])
 
@@ -75,9 +75,9 @@ model AccessRoleAccessActionXref {
 
 model Actor {
   idActor               Int                     @default(autoincrement()) @id
-  idUnit                Int?
   IndividualName        String?
   OrganizationName      String?
+  idUnit                Int?
   Unit                  Unit?                   @relation(fields: [idUnit], references: [idUnit])
   ModelProcessingAction ModelProcessingAction[]
   SystemObject          SystemObject?
@@ -86,9 +86,9 @@ model Actor {
 }
 
 model Asset {
+  idAsset           Int                 @default(autoincrement()) @id
   FileName          String
   FilePath          String
-  idAsset           Int                 @default(autoincrement()) @id
   idAssetGroup      Int?
   AssetGroup        AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
   AssetVersion      AssetVersion[]
@@ -113,12 +113,12 @@ model AssetGroup {
 }
 
 model AssetVersion {
-  DateCreated     DateTime
-  idAsset         Int
   idAssetVersion  Int           @default(autoincrement()) @id
+  idAsset         Int
   idUserCreator   Int
-  StorageChecksum String
+  DateCreated     DateTime
   StorageLocation String
+  StorageChecksum String
   StorageSize     Int           @default(0)
   Asset           Asset         @relation(fields: [idAsset], references: [idAsset])
   User            User          @relation(fields: [idUserCreator], references: [idUser])
@@ -130,22 +130,22 @@ model AssetVersion {
 }
 
 model CaptureData {
-  CameraSettingsUniform                                         Boolean?
-  CaptureDatasetFieldID                                         Int?
-  ClusterGeometryFieldID                                        Int?
+  idCaptureData                                                 Int                               @default(autoincrement()) @id
+  idVCaptureMethod                                              Int
+  idVCaptureDatasetType                                         Int
   DateCaptured                                                  DateTime
   Description                                                   String
-  idAssetThumbnail                                              Int?
-  idCaptureData                                                 Int                               @default(autoincrement()) @id
-  idVBackgroundRemovalMethod                                    Int?
-  idVCaptureDatasetType                                         Int
-  idVCaptureMethod                                              Int
-  idVClusterType                                                Int?
-  idVFocusType                                                  Int?
+  CaptureDatasetFieldID                                         Int?
   idVItemPositionType                                           Int?
-  idVLightSourceType                                            Int?
-  ItemArrangementFieldID                                        Int?
   ItemPositionFieldID                                           Int?
+  ItemArrangementFieldID                                        Int?
+  idVFocusType                                                  Int?
+  idVLightSourceType                                            Int?
+  idVBackgroundRemovalMethod                                    Int?
+  idVClusterType                                                Int?
+  ClusterGeometryFieldID                                        Int?
+  CameraSettingsUniform                                         Boolean?
+  idAssetThumbnail                                              Int?
   Asset                                                         Asset?                            @relation(fields: [idAssetThumbnail], references: [idAsset])
   Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary Vocabulary?                       @relation("CaptureData_idVBackgroundRemovalMethodToVocabulary", fields: [idVBackgroundRemovalMethod], references: [idVocabulary])
   Vocabulary_CaptureData_idVCaptureDatasetTypeToVocabulary      Vocabulary                        @relation("CaptureData_idVCaptureDatasetTypeToVocabulary", fields: [idVCaptureDatasetType], references: [idVocabulary])
@@ -169,11 +169,11 @@ model CaptureData {
 }
 
 model CaptureDataFile {
-  CompressedMultipleFiles Boolean
-  idAsset                 Int
-  idCaptureData           Int
   idCaptureDataFile       Int         @default(autoincrement()) @id
+  idCaptureData           Int
+  idAsset                 Int
   idVVariantType          Int
+  CompressedMultipleFiles Boolean
   Asset                   Asset       @relation(fields: [idAsset], references: [idAsset])
   CaptureData             CaptureData @relation(fields: [idCaptureData], references: [idCaptureData])
   Vocabulary              Vocabulary  @relation(fields: [idVVariantType], references: [idVocabulary])
@@ -189,9 +189,9 @@ model CaptureDataGroup {
 }
 
 model CaptureDataGroupCaptureDataXref {
-  idCaptureData                     Int
-  idCaptureDataGroup                Int
   idCaptureDataGroupCaptureDataXref Int              @default(autoincrement()) @id
+  idCaptureDataGroup                Int
+  idCaptureData                     Int
   CaptureData                       CaptureData      @relation(fields: [idCaptureData], references: [idCaptureData])
   CaptureDataGroup                  CaptureDataGroup @relation(fields: [idCaptureDataGroup], references: [idCaptureDataGroup])
 
@@ -200,26 +200,26 @@ model CaptureDataGroupCaptureDataXref {
 }
 
 model GeoLocation {
-  Altitude      Float?
   idGeoLocation Int       @default(autoincrement()) @id
   Latitude      Float?
   Longitude     Float?
+  Altitude      Float?
+  TS0           Float?
+  TS1           Float?
+  TS2           Float?
   R0            Float?
   R1            Float?
   R2            Float?
   R3            Float?
-  TS0           Float?
-  TS1           Float?
-  TS2           Float?
   Item          Item[]
   Subject       Subject[]
 }
 
 model Identifier {
-  IdentifierValue   String
   idIdentifier      Int           @default(autoincrement()) @id
-  idSystemObject    Int?
+  IdentifierValue   String
   idVIdentifierType Int
+  idSystemObject    Int?
   SystemObject      SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
   Vocabulary        Vocabulary    @relation(fields: [idVIdentifierType], references: [idVocabulary])
 
@@ -229,9 +229,9 @@ model Identifier {
 }
 
 model IntermediaryFile {
-  DateCreated        DateTime
-  idAsset            Int
   idIntermediaryFile Int           @default(autoincrement()) @id
+  idAsset            Int
+  DateCreated        DateTime
   Asset              Asset         @relation(fields: [idAsset], references: [idAsset])
   SystemObject       SystemObject?
 
@@ -239,12 +239,12 @@ model IntermediaryFile {
 }
 
 model Item {
-  EntireSubject    Boolean
-  idAssetThumbnail Int?
-  idGeoLocation    Int?
   idItem           Int           @default(autoincrement()) @id
   idSubject        Int
+  idAssetThumbnail Int?
+  idGeoLocation    Int?
   Name             String
+  EntireSubject    Boolean
   Asset            Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset])
   GeoLocation      GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation])
   Subject          Subject       @relation(fields: [idSubject], references: [idSubject])
@@ -256,19 +256,19 @@ model Item {
 }
 
 model License {
-  Description       String
   idLicense         Int                 @default(autoincrement()) @id
   Name              String
+  Description       String
   LicenseAssignment LicenseAssignment[]
 }
 
 model LicenseAssignment {
-  DateEnd             DateTime?
-  DateStart           DateTime?
-  idLicense           Int
   idLicenseAssignment Int           @default(autoincrement()) @id
-  idSystemObject      Int?
+  idLicense           Int
   idUserCreator       Int?
+  DateStart           DateTime?
+  DateEnd             DateTime?
+  idSystemObject      Int?
   License             License       @relation(fields: [idLicense], references: [idLicense])
   SystemObject        SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
   User                User?         @relation(fields: [idUserCreator], references: [idUser])
@@ -279,14 +279,14 @@ model LicenseAssignment {
 }
 
 model Metadata {
-  idAssetValue      Int?
   idMetadata        Int           @default(autoincrement()) @id
-  idSystemObject    Int?
+  Name              String
+  ValueShort        String?
+  ValueExtended     String?
+  idAssetValue      Int?
   idUser            Int?
   idVMetadataSource Int?
-  Name              String
-  ValueExtended     String?
-  ValueShort        String?
+  idSystemObject    Int?
   Asset             Asset?        @relation(fields: [idAssetValue], references: [idAsset])
   SystemObject      SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
   User              User?         @relation(fields: [idUser], references: [idUser])
@@ -300,15 +300,15 @@ model Metadata {
 }
 
 model Model {
-  Authoritative                                  Boolean
-  DateCreated                                    DateTime
-  idAssetThumbnail                               Int?
   idModel                                        Int                     @default(autoincrement()) @id
+  DateCreated                                    DateTime
   idVCreationMethod                              Int
-  idVModality                                    Int
-  idVPurpose                                     Int
-  idVUnits                                       Int
   Master                                         Boolean
+  Authoritative                                  Boolean
+  idVModality                                    Int
+  idVUnits                                       Int
+  idVPurpose                                     Int
+  idAssetThumbnail                               Int?
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset])
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary              @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary])
   Vocabulary_Model_idVModalityToVocabulary       Vocabulary              @relation("Model_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary])
@@ -327,24 +327,24 @@ model Model {
 }
 
 model ModelGeometryFile {
+  idModelGeometryFile Int              @default(autoincrement()) @id
+  idModel             Int
+  idAsset             Int
+  idVModelFileType    Int
+  Roughness           Float?
+  Metalness           Float?
+  PointCount          Int?
+  FaceCount           Int?
+  IsWatertight        Boolean?
+  HasNormals          Boolean?
+  HasVertexColor      Boolean?
+  HasUVSpace          Boolean?
   BoundingBoxP1X      Float?
   BoundingBoxP1Y      Float?
   BoundingBoxP1Z      Float?
   BoundingBoxP2X      Float?
   BoundingBoxP2Y      Float?
   BoundingBoxP2Z      Float?
-  FaceCount           Int?
-  HasNormals          Boolean?
-  HasUVSpace          Boolean?
-  HasVertexColor      Boolean?
-  idAsset             Int
-  idModel             Int
-  idModelGeometryFile Int              @default(autoincrement()) @id
-  idVModelFileType    Int
-  IsWatertight        Boolean?
-  Metalness           Float?
-  PointCount          Int?
-  Roughness           Float?
   Asset               Asset            @relation(fields: [idAsset], references: [idAsset])
   Model               Model            @relation(fields: [idModel], references: [idModel])
   Vocabulary          Vocabulary       @relation(fields: [idVModelFileType], references: [idVocabulary])
@@ -356,12 +356,12 @@ model ModelGeometryFile {
 }
 
 model ModelProcessingAction {
-  DateProcessed             DateTime
-  Description               String
-  idActor                   Int
-  idModel                   Int
   idModelProcessingAction   Int                         @default(autoincrement()) @id
+  idModel                   Int
+  idActor                   Int
+  DateProcessed             DateTime
   ToolsUsed                 String
+  Description               String
   Actor                     Actor                       @relation(fields: [idActor], references: [idActor])
   Model                     Model                       @relation(fields: [idModel], references: [idModel])
   ModelProcessingActionStep ModelProcessingActionStep[]
@@ -371,10 +371,10 @@ model ModelProcessingAction {
 }
 
 model ModelProcessingActionStep {
-  Description                 String
-  idModelProcessingAction     Int
   idModelProcessingActionStep Int                   @default(autoincrement()) @id
+  idModelProcessingAction     Int
   idVActionMethod             Int
+  Description                 String
   ModelProcessingAction       ModelProcessingAction @relation(fields: [idModelProcessingAction], references: [idModelProcessingAction])
   Vocabulary                  Vocabulary            @relation(fields: [idVActionMethod], references: [idVocabulary])
 
@@ -383,16 +383,16 @@ model ModelProcessingActionStep {
 }
 
 model ModelSceneXref {
-  idModel          Int
   idModelSceneXref Int    @default(autoincrement()) @id
+  idModel          Int
   idScene          Int
+  TS0              Float?
+  TS1              Float?
+  TS2              Float?
   R0               Float?
   R1               Float?
   R2               Float?
   R3               Float?
-  TS0              Float?
-  TS1              Float?
-  TS2              Float?
   Model            Model  @relation(fields: [idModel], references: [idModel])
   Scene            Scene  @relation(fields: [idScene], references: [idScene])
 
@@ -401,10 +401,10 @@ model ModelSceneXref {
 }
 
 model ModelUVMapChannel {
-  ChannelPosition     Int
-  ChannelWidth        Int
   idModelUVMapChannel Int            @default(autoincrement()) @id
   idModelUVMapFile    Int
+  ChannelPosition     Int
+  ChannelWidth        Int
   idVUVMapType        Int
   ModelUVMapFile      ModelUVMapFile @relation(fields: [idModelUVMapFile], references: [idModelUVMapFile])
   Vocabulary          Vocabulary     @relation(fields: [idVUVMapType], references: [idVocabulary])
@@ -414,9 +414,9 @@ model ModelUVMapChannel {
 }
 
 model ModelUVMapFile {
-  idAsset             Int
-  idModelGeometryFile Int
   idModelUVMapFile    Int                 @default(autoincrement()) @id
+  idModelGeometryFile Int
+  idAsset             Int
   UVMapEdgeLength     Int
   Asset               Asset               @relation(fields: [idAsset], references: [idAsset])
   ModelGeometryFile   ModelGeometryFile   @relation(fields: [idModelGeometryFile], references: [idModelGeometryFile])
@@ -427,19 +427,19 @@ model ModelUVMapFile {
 }
 
 model Project {
-  Description          String?
   idProject            Int                    @default(autoincrement()) @id
   Name                 String
+  Description          String?
   ProjectDocumentation ProjectDocumentation[]
   SystemObject         SystemObject?
   Workflow             Workflow[]
 }
 
 model ProjectDocumentation {
-  Description            String
-  idProject              Int
   idProjectDocumentation Int           @default(autoincrement()) @id
+  idProject              Int
   Name                   String
+  Description            String
   Project                Project       @relation(fields: [idProject], references: [idProject])
   SystemObject           SystemObject?
 
@@ -447,11 +447,11 @@ model ProjectDocumentation {
 }
 
 model Scene {
-  HasBeenQCd       Boolean
-  idAssetThumbnail Int?
   idScene          Int              @default(autoincrement()) @id
-  IsOriented       Boolean
   Name             String
+  idAssetThumbnail Int?
+  IsOriented       Boolean
+  HasBeenQCd       Boolean
   Asset            Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
   ModelSceneXref   ModelSceneXref[]
   SystemObject     SystemObject?
@@ -460,21 +460,21 @@ model Scene {
 }
 
 model Stakeholder {
-  EmailAddress      String?
   idStakeholder     Int           @default(autoincrement()) @id
   IndividualName    String
-  MailingAddress    String?
   OrganizationName  String
+  EmailAddress      String?
   PhoneNumberMobile String?
   PhoneNumberOffice String?
+  MailingAddress    String?
   SystemObject      SystemObject?
 }
 
 model Subject {
-  idAssetThumbnail Int?
-  idGeoLocation    Int?
   idSubject        Int           @default(autoincrement()) @id
   idUnit           Int
+  idAssetThumbnail Int?
+  idGeoLocation    Int?
   Name             String
   Asset            Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset])
   GeoLocation      GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation])
@@ -488,20 +488,20 @@ model Subject {
 }
 
 model SystemObject {
-  idActor                                                               Int?                              @unique
-  idAsset                                                               Int?                              @unique
-  idAssetVersion                                                        Int?                              @unique
-  idCaptureData                                                         Int?                              @unique
-  idIntermediaryFile                                                    Int?                              @unique
-  idItem                                                                Int?                              @unique
-  idModel                                                               Int?                              @unique
-  idProject                                                             Int?                              @unique
-  idProjectDocumentation                                                Int?                              @unique
-  idScene                                                               Int?                              @unique
-  idStakeholder                                                         Int?                              @unique
-  idSubject                                                             Int?                              @unique
   idSystemObject                                                        Int                               @default(autoincrement()) @id
   idUnit                                                                Int?                              @unique
+  idProject                                                             Int?                              @unique
+  idSubject                                                             Int?                              @unique
+  idItem                                                                Int?                              @unique
+  idCaptureData                                                         Int?                              @unique
+  idModel                                                               Int?                              @unique
+  idScene                                                               Int?                              @unique
+  idIntermediaryFile                                                    Int?                              @unique
+  idAsset                                                               Int?                              @unique
+  idAssetVersion                                                        Int?                              @unique
+  idProjectDocumentation                                                Int?                              @unique
+  idActor                                                               Int?                              @unique
+  idStakeholder                                                         Int?                              @unique
   idWorkflow                                                            Int?                              @unique
   idWorkflowStep                                                        Int?                              @unique
   Retired                                                               Boolean
@@ -548,8 +548,8 @@ model SystemObject {
 }
 
 model SystemObjectVersion {
-  idSystemObject        Int
   idSystemObjectVersion Int          @default(autoincrement()) @id
+  idSystemObject        Int
   PublishedState        Int
   SystemObject          SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
 
@@ -557,9 +557,9 @@ model SystemObjectVersion {
 }
 
 model SystemObjectXref {
-  idSystemObjectDerived                                             Int
-  idSystemObjectMaster                                              Int
   idSystemObjectXref                                                Int          @default(autoincrement()) @id
+  idSystemObjectMaster                                              Int
+  idSystemObjectDerived                                             Int
   SystemObject_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObject @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived", fields: [idSystemObjectDerived], references: [idSystemObject])
   SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster  SystemObject @relation("SystemObjectToSystemObjectXref_idSystemObjectMaster", fields: [idSystemObjectMaster], references: [idSystemObject])
 
@@ -568,25 +568,25 @@ model SystemObjectXref {
 }
 
 model Unit {
-  Abbreviation String?
-  ARKPrefix    String?
   idUnit       Int           @default(autoincrement()) @id
   Name         String
+  Abbreviation String?
+  ARKPrefix    String?
   Actor        Actor[]
   Subject      Subject[]
   SystemObject SystemObject?
 }
 
 model User {
+  idUser                          Int                               @default(autoincrement()) @id
+  Name                            String
+  EmailAddress                    String
+  SecurityID                      String
   Active                          Boolean
   DateActivated                   DateTime
   DateDisabled                    DateTime?
-  EmailAddress                    String
-  EmailSettings                   Int?
-  idUser                          Int                               @default(autoincrement()) @id
-  Name                            String
-  SecurityID                      String
   WorkflowNotificationTime        DateTime?
+  EmailSettings                   Int?
   AccessPolicy                    AccessPolicy[]
   AssetVersion                    AssetVersion[]
   LicenseAssignment               LicenseAssignment[]
@@ -600,9 +600,9 @@ model User {
 }
 
 model UserPersonalizationSystemObject {
-  idSystemObject                    Int
-  idUser                            Int
   idUserPersonalizationSystemObject Int          @default(autoincrement()) @id
+  idUser                            Int
+  idSystemObject                    Int
   Personalization                   String?
   SystemObject                      SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
   User                              User         @relation(fields: [idUser], references: [idUser])
@@ -613,10 +613,10 @@ model UserPersonalizationSystemObject {
 }
 
 model UserPersonalizationUrl {
-  idUser                   Int
   idUserPersonalizationUrl Int    @default(autoincrement()) @id
-  Personalization          String
+  idUser                   Int
   URL                      String
+  Personalization          String
   User                     User   @relation(fields: [idUser], references: [idUser])
 
   @@index([idUser, URL], name: "UserPersonalizationUrl_idUser_URL")
@@ -658,12 +658,12 @@ model VocabularySet {
 }
 
 model Workflow {
-  DateInitiated      DateTime
-  DateUpdated        DateTime
-  idProject          Int?
-  idUserInitiator    Int?
   idWorkflow         Int              @default(autoincrement()) @id
   idWorkflowTemplate Int
+  idProject          Int?
+  idUserInitiator    Int?
+  DateInitiated      DateTime
+  DateUpdated        DateTime
   Project            Project?         @relation(fields: [idProject], references: [idProject])
   User               User?            @relation(fields: [idUserInitiator], references: [idUser])
   WorkflowTemplate   WorkflowTemplate @relation(fields: [idWorkflowTemplate], references: [idWorkflowTemplate])
@@ -676,13 +676,13 @@ model Workflow {
 }
 
 model WorkflowStep {
-  DateCompleted                DateTime?
-  DateCreated                  DateTime
+  idWorkflowStep               Int                            @default(autoincrement()) @id
+  idWorkflow                   Int
   idUserOwner                  Int
   idVWorkflowStepType          Int
-  idWorkflow                   Int
-  idWorkflowStep               Int                            @default(autoincrement()) @id
   State                        Int
+  DateCreated                  DateTime
+  DateCompleted                DateTime?
   User                         User                           @relation(fields: [idUserOwner], references: [idUser])
   Vocabulary                   Vocabulary                     @relation(fields: [idVWorkflowStepType], references: [idVocabulary])
   Workflow                     Workflow                       @relation(fields: [idWorkflow], references: [idWorkflow])
@@ -697,9 +697,9 @@ model WorkflowStep {
 }
 
 model WorkflowStepSystemObjectXref {
-  idSystemObject                 Int
-  idWorkflowStep                 Int
   idWorkflowStepSystemObjectXref Int          @default(autoincrement()) @id
+  idWorkflowStep                 Int
+  idSystemObject                 Int
   Input                          Boolean
   SystemObject                   SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
   WorkflowStep                   WorkflowStep @relation(fields: [idWorkflowStep], references: [idWorkflowStep])
