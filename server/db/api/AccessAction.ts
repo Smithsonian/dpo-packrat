@@ -19,7 +19,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
         try {
             const { Name, SortOrder } = this;
             ({ idAccessAction: this.idAccessAction, Name: this.Name, SortOrder: this.SortOrder } =
-                await DBC.DBConnectionFactory.prisma.accessAction.create({
+                await DBC.DBConnection.prisma.accessAction.create({
                     data: {
                         Name,
                         SortOrder,
@@ -35,7 +35,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessAction, Name, SortOrder } = this;
-            return await DBC.DBConnectionFactory.prisma.accessAction.update({
+            return await DBC.DBConnection.prisma.accessAction.update({
                 where: { idAccessAction, },
                 data: { Name, SortOrder, },
             }) ? true : /* istanbul ignore next */ false;
@@ -50,7 +50,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
             return null;
         try {
             return DBC.CopyObject<AccessActionBase, AccessAction>(
-                await DBC.DBConnectionFactory.prisma.accessAction.findOne({ where: { idAccessAction, }, }), AccessAction);
+                await DBC.DBConnection.prisma.accessAction.findOne({ where: { idAccessAction, }, }), AccessAction);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessAction.fetch', error);
             return null;
@@ -62,7 +62,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
             return null;
         try {
             return DBC.CopyArray<AccessActionBase, AccessAction>(
-                await DBC.DBConnectionFactory.prisma.accessAction.findMany({
+                await DBC.DBConnection.prisma.accessAction.findMany({
                     where: {
                         AccessRoleAccessActionXref: {
                             some: { idAccessRole },

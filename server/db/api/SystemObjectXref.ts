@@ -20,7 +20,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
             const { idSystemObjectMaster, idSystemObjectDerived } = this;
             ({ idSystemObjectXref: this.idSystemObjectXref, idSystemObjectMaster: this.idSystemObjectMaster,
                 idSystemObjectDerived: this.idSystemObjectDerived } =
-                await DBC.DBConnectionFactory.prisma.systemObjectXref.create({
+                await DBC.DBConnection.prisma.systemObjectXref.create({
                     data: {
                         SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster:  { connect: { idSystemObject: idSystemObjectMaster }, },
                         SystemObject_SystemObjectToSystemObjectXref_idSystemObjectDerived: { connect: { idSystemObject: idSystemObjectDerived }, },
@@ -36,7 +36,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idSystemObjectXref, idSystemObjectMaster, idSystemObjectDerived } = this;
-            return await DBC.DBConnectionFactory.prisma.systemObjectXref.update({
+            return await DBC.DBConnection.prisma.systemObjectXref.update({
                 where: { idSystemObjectXref, },
                 data: {
                     SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster:  { connect: { idSystemObject: idSystemObjectMaster }, },
@@ -54,7 +54,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
             return null;
         try {
             return DBC.CopyObject<SystemObjectXrefBase, SystemObjectXref>(
-                await DBC.DBConnectionFactory.prisma.systemObjectXref.findOne({ where: { idSystemObjectXref, }, }), SystemObjectXref);
+                await DBC.DBConnection.prisma.systemObjectXref.findOne({ where: { idSystemObjectXref, }, }), SystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectXref.fetch', error);
             return null;

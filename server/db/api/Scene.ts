@@ -26,7 +26,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase {
             const { Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
             ({ idScene: this.idScene, Name: this.Name, idAssetThumbnail: this.idAssetThumbnail,
                 IsOriented: this.IsOriented, HasBeenQCd: this.HasBeenQCd } =
-                await DBC.DBConnectionFactory.prisma.scene.create({
+                await DBC.DBConnection.prisma.scene.create({
                     data: {
                         Name,
                         Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
@@ -45,7 +45,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd, idAssetThumbnailOrig } = this;
-            const retValue: boolean = await DBC.DBConnectionFactory.prisma.scene.update({
+            const retValue: boolean = await DBC.DBConnection.prisma.scene.update({
                 where: { idScene, },
                 data: {
                     Name,
@@ -65,7 +65,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase {
         try {
             const { idScene } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idScene, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.scene.fetchSystemObject', error);
             return null;
@@ -77,7 +77,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase {
             return null;
         try {
             return DBC.CopyObject<SceneBase, Scene>(
-                await DBC.DBConnectionFactory.prisma.scene.findOne({ where: { idScene, }, }), Scene);
+                await DBC.DBConnection.prisma.scene.findOne({ where: { idScene, }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Scene.fetch', error);
             return null;
@@ -89,7 +89,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase {
             return null;
         try {
             return DBC.CopyArray<SceneBase, Scene>(
-                await DBC.DBConnectionFactory.prisma.scene.findMany({ where: { ModelSceneXref: { some: { idModel }, }, }, }), Scene);
+                await DBC.DBConnection.prisma.scene.findMany({ where: { ModelSceneXref: { some: { idModel }, }, }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.fetchSceneFromXref', error);
             return null;

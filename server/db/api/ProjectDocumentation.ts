@@ -22,7 +22,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
             const { idProject, Name, Description } = this;
             ({ idProjectDocumentation: this.idProjectDocumentation, idProject: this.idProject,
                 Name: this.Name, Description: this.Description } =
-                await DBC.DBConnectionFactory.prisma.projectDocumentation.create({
+                await DBC.DBConnection.prisma.projectDocumentation.create({
                     data: {
                         Project:        { connect: { idProject }, },
                         Name,
@@ -40,7 +40,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idProjectDocumentation, idProject, Name, Description } = this;
-            return await DBC.DBConnectionFactory.prisma.projectDocumentation.update({
+            return await DBC.DBConnection.prisma.projectDocumentation.update({
                 where: { idProjectDocumentation, },
                 data: {
                     Project:        { connect: { idProject }, },
@@ -58,7 +58,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
         try {
             const { idProjectDocumentation } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.projectDocumentation.fetchSystemObject', error);
             return null;
@@ -70,7 +70,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
             return null;
         try {
             return DBC.CopyObject<ProjectDocumentationBase, ProjectDocumentation>(
-                await DBC.DBConnectionFactory.prisma.projectDocumentation.findOne({ where: { idProjectDocumentation, }, }), ProjectDocumentation);
+                await DBC.DBConnection.prisma.projectDocumentation.findOne({ where: { idProjectDocumentation, }, }), ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.fetch', error);
             return null;
@@ -82,7 +82,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
             return null;
         try {
             return DBC.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(
-                await DBC.DBConnectionFactory.prisma.projectDocumentation.findMany({ where: { idProject } }), ProjectDocumentation);
+                await DBC.DBConnection.prisma.projectDocumentation.findMany({ where: { idProject } }), ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.fetchFromProject', error);
             return null;

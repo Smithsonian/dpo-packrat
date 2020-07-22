@@ -29,7 +29,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             const { idWorkflowTemplate, idProject, idUserInitiator, DateInitiated, DateUpdated } = this;
             ({ idWorkflow: this.idWorkflow, idWorkflowTemplate: this.idWorkflowTemplate, idProject: this.idProject,
                 idUserInitiator: this.idUserInitiator, DateInitiated: this.DateInitiated, DateUpdated: this.DateUpdated } =
-                await DBC.DBConnectionFactory.prisma.workflow.create({
+                await DBC.DBConnection.prisma.workflow.create({
                     data: {
                         WorkflowTemplate:   { connect: { idWorkflowTemplate }, },
                         Project:            idProject ? { connect: { idProject }, } : undefined,
@@ -50,7 +50,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
         try {
             const { idWorkflow, idWorkflowTemplate, idProject, idUserInitiator, DateInitiated,
                 DateUpdated, idProjectOrig, idUserInitiatorOrig } = this;
-            const retValue: boolean = await DBC.DBConnectionFactory.prisma.workflow.update({
+            const retValue: boolean = await DBC.DBConnection.prisma.workflow.update({
                 where: { idWorkflow, },
                 data: {
                     WorkflowTemplate:   { connect: { idWorkflowTemplate }, },
@@ -71,7 +71,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
         try {
             const { idWorkflow } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflow, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflow, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.workflow.fetchSystemObject', error);
             return null;
@@ -83,7 +83,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return null;
         try {
             return DBC.CopyObject<WorkflowBase, Workflow>(
-                await DBC.DBConnectionFactory.prisma.workflow.findOne({ where: { idWorkflow, }, }), Workflow);
+                await DBC.DBConnection.prisma.workflow.findOne({ where: { idWorkflow, }, }), Workflow);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.fetch', error);
             return null;
@@ -95,7 +95,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return null;
         try {
             return DBC.CopyArray<WorkflowBase, Workflow>(
-                await DBC.DBConnectionFactory.prisma.workflow.findMany({ where: { idProject } }), Workflow);
+                await DBC.DBConnection.prisma.workflow.findMany({ where: { idProject } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.fetchFromProject', error);
             return null;
@@ -107,7 +107,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return null;
         try {
             return DBC.CopyArray<WorkflowBase, Workflow>(
-                await DBC.DBConnectionFactory.prisma.workflow.findMany({ where: { idUserInitiator } }), Workflow);
+                await DBC.DBConnection.prisma.workflow.findMany({ where: { idUserInitiator } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.fetchFromUser', error);
             return null;
@@ -119,7 +119,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return null;
         try {
             return DBC.CopyArray<WorkflowBase, Workflow>(
-                await DBC.DBConnectionFactory.prisma.workflow.findMany({ where: { idWorkflowTemplate } }), Workflow);
+                await DBC.DBConnection.prisma.workflow.findMany({ where: { idWorkflowTemplate } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.fetchFromWorkflowTemplate', error);
             return null;

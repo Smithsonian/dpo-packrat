@@ -54,7 +54,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 idVBackgroundRemovalMethod: this.idVBackgroundRemovalMethod, idVClusterType: this.idVClusterType,
                 ClusterGeometryFieldID: this.ClusterGeometryFieldID, CameraSettingsUniform: this.CameraSettingsUniform,
                 idAssetThumbnail: this.idAssetThumbnail } =
-                await DBC.DBConnectionFactory.prisma.captureData.create({
+                await DBC.DBConnection.prisma.captureData.create({
                     data: {
                         Vocabulary_CaptureData_idVCaptureMethodToVocabulary:            { connect: { idVocabulary: idVCaptureMethod }, },
                         Vocabulary_CaptureData_idVCaptureDatasetTypeToVocabulary:       { connect: { idVocabulary: idVCaptureDatasetType }, },
@@ -87,7 +87,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
                 ClusterGeometryFieldID, CameraSettingsUniform, idAssetThumbnail, idAssetThumbnailOrig, idVBackgroundRemovalMethodOrig,
                 idVClusterTypeOrig, idVFocusTypeOrig, idVItemPositionTypeOrig, idVLightSourceTypeOrig } = this;
-            const retValue: boolean = await DBC.DBConnectionFactory.prisma.captureData.update({
+            const retValue: boolean = await DBC.DBConnection.prisma.captureData.update({
                 where: { idCaptureData, },
                 data: {
                     Vocabulary_CaptureData_idVCaptureMethodToVocabulary:            { connect: { idVocabulary: idVCaptureMethod }, },
@@ -118,7 +118,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
         try {
             const { idCaptureData } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idCaptureData, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idCaptureData, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetchSystemObject', error);
             return null;
@@ -130,7 +130,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             return null;
         try {
             return DBC.CopyObject<CaptureDataBase, CaptureData>(
-                await DBC.DBConnectionFactory.prisma.captureData.findOne({ where: { idCaptureData, }, }), CaptureData);
+                await DBC.DBConnection.prisma.captureData.findOne({ where: { idCaptureData, }, }), CaptureData);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetch', error);
             return null;
@@ -142,7 +142,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             return null;
         try {
             return DBC.CopyArray<CaptureDataBase, CaptureData>(
-                await DBC.DBConnectionFactory.prisma.captureData.findMany({
+                await DBC.DBConnection.prisma.captureData.findMany({
                     where: {
                         CaptureDataGroupCaptureDataXref: {
                             some: { idCaptureDataGroup },

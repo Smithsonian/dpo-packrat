@@ -26,7 +26,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
             ({ idStakeholder: this.idStakeholder, IndividualName: this.IndividualName, OrganizationName: this.OrganizationName,
                 EmailAddress: this.EmailAddress, PhoneNumberMobile: this.PhoneNumberMobile, PhoneNumberOffice: this.PhoneNumberOffice,
                 MailingAddress: this.MailingAddress } =
-                await DBC.DBConnectionFactory.prisma.stakeholder.create({
+                await DBC.DBConnection.prisma.stakeholder.create({
                     data: {
                         IndividualName,
                         OrganizationName,
@@ -47,7 +47,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idStakeholder, IndividualName, OrganizationName, EmailAddress, PhoneNumberMobile, PhoneNumberOffice, MailingAddress } = this;
-            return await DBC.DBConnectionFactory.prisma.stakeholder.update({
+            return await DBC.DBConnection.prisma.stakeholder.update({
                 where: { idStakeholder, },
                 data: {
                     IndividualName,
@@ -68,7 +68,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
         try {
             const { idStakeholder } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idStakeholder, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.stakeholder.fetchSystemObject', error);
             return null;
@@ -80,7 +80,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
             return null;
         try {
             return DBC.CopyObject<StakeholderBase, Stakeholder>(
-                await DBC.DBConnectionFactory.prisma.stakeholder.findOne({ where: { idStakeholder, }, }), Stakeholder);
+                await DBC.DBConnection.prisma.stakeholder.findOne({ where: { idStakeholder, }, }), Stakeholder);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Stakeholder.fetch', error);
             return null;

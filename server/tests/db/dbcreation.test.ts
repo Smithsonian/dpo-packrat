@@ -12,8 +12,8 @@ beforeAll(() => {
 });
 
 afterAll(async done => {
-    await DBC.DBConnectionFactory.disconnect();
-    await DBC.DBConnectionFactory.disconnect(); // second time to test disconnecting after already being disconnected!
+    await DBC.DBConnection.disconnect();
+    await DBC.DBConnection.disconnect(); // second time to test disconnecting after already being disconnected!
     LOG.getRequestLogger(); // added for full test coverage!
     done();
 });
