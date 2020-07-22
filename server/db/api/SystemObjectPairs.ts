@@ -52,7 +52,7 @@ export class SystemObjectActor extends SystemObject implements SystemObjectActor
             return null;
         try {
             const SOPair: SystemObjectActorBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor, }, include: { Actor: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idActor, }, include: { Actor: true, }, });
             return SOPair ? new SystemObjectActor(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectActor.fetch', error);
@@ -74,7 +74,7 @@ export class SystemObjectAsset extends SystemObject implements SystemObjectAsset
             return null;
         try {
             const SOPair: SystemObjectAssetBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
             return SOPair ? new SystemObjectAsset(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectAsset.fetch', error);
@@ -96,7 +96,7 @@ export class SystemObjectAssetVersion extends SystemObject implements SystemObje
             return null;
         try {
             const SOPair: SystemObjectAssetVersionBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idAssetVersion, }, include: { AssetVersion: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAssetVersion, }, include: { AssetVersion: true, }, });
             return SOPair ? new SystemObjectAssetVersion(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectAssetVersion.fetch', error);
@@ -118,7 +118,7 @@ export class SystemObjectCaptureData extends SystemObject implements SystemObjec
             return null;
         try {
             const SOPair: SystemObjectCaptureDataBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idCaptureData, }, include: { CaptureData: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idCaptureData, }, include: { CaptureData: true, }, });
             return SOPair ? new SystemObjectCaptureData(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectCaptureData.fetch', error);
@@ -140,7 +140,7 @@ export class SystemObjectIntermediaryFile extends SystemObject implements System
             return null;
         try {
             const SOPair: SystemObjectIntermediaryFileBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, include: { IntermediaryFile: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, include: { IntermediaryFile: true, }, });
             return SOPair ? new SystemObjectIntermediaryFile(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectIntermediaryFile.fetch', error);
@@ -162,7 +162,7 @@ export class SystemObjectItem extends SystemObject implements SystemObjectItemBa
             return null;
         try {
             const SOPair: SystemObjectItemBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idItem, }, include: { Item: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idItem, }, include: { Item: true, }, });
             return SOPair ? new SystemObjectItem(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectItem.fetch', error);
@@ -184,7 +184,7 @@ export class SystemObjectModel extends SystemObject implements SystemObjectModel
             return null;
         try {
             const SOPair: SystemObjectModelBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idModel, }, include: { Model: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idModel, }, include: { Model: true, }, });
             return SOPair ? new SystemObjectModel(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectModel.fetch', error);
@@ -206,7 +206,7 @@ export class SystemObjectProject extends SystemObject implements SystemObjectPro
             return null;
         try {
             const SOPair: SystemObjectProjectBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idProject, }, include: { Project: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idProject, }, include: { Project: true, }, });
             return SOPair ? new SystemObjectProject(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectProject.fetch', error);
@@ -228,7 +228,7 @@ export class SystemObjectProjectDocumentation extends SystemObject implements Sy
             return null;
         try {
             const SOPair: SystemObjectProjectDocumentationBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, include: { ProjectDocumentation: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, include: { ProjectDocumentation: true, }, });
             return SOPair ? new SystemObjectProjectDocumentation(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectProjectDocumentation.fetch', error);
@@ -250,7 +250,7 @@ export class SystemObjectScene extends SystemObject implements SystemObjectScene
             return null;
         try {
             const SOPair: SystemObjectSceneBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idScene, }, include: { Scene: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idScene, }, include: { Scene: true, }, });
             return SOPair ? new SystemObjectScene(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectScene.fetch', error);
@@ -272,7 +272,7 @@ export class SystemObjectStakeholder extends SystemObject implements SystemObjec
             return null;
         try {
             const SOPair: SystemObjectStakeholderBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idStakeholder, }, include: { Stakeholder: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idStakeholder, }, include: { Stakeholder: true, }, });
             return SOPair ? new SystemObjectStakeholder(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectStakeholder.fetch', error);
@@ -294,7 +294,7 @@ export class SystemObjectSubject extends SystemObject implements SystemObjectSub
             return null;
         try {
             const SOPair: SystemObjectSubjectBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idSubject, }, include: { Subject: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idSubject, }, include: { Subject: true, }, });
             return SOPair ? new SystemObjectSubject(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectSubject.fetch', error);
@@ -316,7 +316,7 @@ export class SystemObjectUnit extends SystemObject implements SystemObjectUnitBa
             return null;
         try {
             const SOPair: SystemObjectUnitBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idUnit, }, include: { Unit: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idUnit, }, include: { Unit: true, }, });
             return SOPair ? new SystemObjectUnit(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectUnit.fetch', error);
@@ -338,7 +338,7 @@ export class SystemObjectWorkflow extends SystemObject implements SystemObjectWo
             return null;
         try {
             const SOPair: SystemObjectWorkflowBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflow, }, include: { Workflow: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflow, }, include: { Workflow: true, }, });
             return SOPair ? new SystemObjectWorkflow(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectWorkflow.fetch', error);
@@ -360,7 +360,7 @@ export class SystemObjectWorkflowStep extends SystemObject implements SystemObje
             return null;
         try {
             const SOPair: SystemObjectWorkflowStepBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idWorkflowStep, }, include: { WorkflowStep: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflowStep, }, include: { WorkflowStep: true, }, });
             return SOPair ? new SystemObjectWorkflowStep(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectWorkflowStep.fetch', error);
@@ -410,7 +410,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
             return null;
         try {
             const SOAPB: SystemObjectPairsBase | null =
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({
+                await DBC.DBConnection.prisma.systemObject.findOne({
                     where: { idSystemObject, },
                     include: {
                         Actor: true,
@@ -442,7 +442,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
             return null;
         try {
             return DBC.CopyArray<SystemObjectPairsBase, SystemObjectPairs>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findMany({
+                await DBC.DBConnection.prisma.systemObject.findMany({
                     where: {
                         SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived: {
                             some: { idSystemObjectMaster },
@@ -477,7 +477,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
             return null;
         try {
             return DBC.CopyArray<SystemObjectPairsBase, SystemObjectPairs>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findMany({
+                await DBC.DBConnection.prisma.systemObject.findMany({
                     where: {
                         SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster: {
                             some: { idSystemObjectDerived },

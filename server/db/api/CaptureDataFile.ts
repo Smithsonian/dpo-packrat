@@ -22,7 +22,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             const { idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = this;
             ({ idCaptureDataFile: this.idCaptureDataFile, idCaptureData: this.idCaptureData, idAsset: this.idAsset,
                 idVVariantType: this.idVVariantType, CompressedMultipleFiles: this.CompressedMultipleFiles } =
-                await DBC.DBConnectionFactory.prisma.captureDataFile.create({
+                await DBC.DBConnection.prisma.captureDataFile.create({
                     data: {
                         CaptureData:    { connect: { idCaptureData }, },
                         Asset:          { connect: { idAsset }, },
@@ -40,7 +40,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureDataFile, idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = this;
-            return await DBC.DBConnectionFactory.prisma.captureDataFile.update({
+            return await DBC.DBConnection.prisma.captureDataFile.update({
                 where: { idCaptureDataFile, },
                 data: {
                     CaptureData:    { connect: { idCaptureData }, },
@@ -60,7 +60,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             return null;
         try {
             return DBC.CopyObject<CaptureDataFileBase, CaptureDataFile>(
-                await DBC.DBConnectionFactory.prisma.captureDataFile.findOne({ where: { idCaptureDataFile, }, }), CaptureDataFile);
+                await DBC.DBConnection.prisma.captureDataFile.findOne({ where: { idCaptureDataFile, }, }), CaptureDataFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataFile.fetch', error);
             return null;
@@ -72,7 +72,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             return null;
         try {
             return DBC.CopyArray<CaptureDataFileBase, CaptureDataFile>(
-                await DBC.DBConnectionFactory.prisma.captureDataFile.findMany({ where: { idCaptureData } }), CaptureDataFile);
+                await DBC.DBConnection.prisma.captureDataFile.findMany({ where: { idCaptureData } }), CaptureDataFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataFile.fetchFromCaptureData', error);
             return null;

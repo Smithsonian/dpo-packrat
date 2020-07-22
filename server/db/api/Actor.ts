@@ -24,7 +24,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase {
         try {
             const { idUnit, IndividualName, OrganizationName } = this;
             ({ idActor: this.idActor, idUnit: this.idUnit, IndividualName: this.IndividualName, OrganizationName: this.OrganizationName } =
-                await DBC.DBConnectionFactory.prisma.actor.create({
+                await DBC.DBConnection.prisma.actor.create({
                     data: {
                         IndividualName,
                         OrganizationName,
@@ -42,7 +42,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idActor, idUnit, IndividualName, OrganizationName, idUnitOrig } = this;
-            const retValue: boolean = await DBC.DBConnectionFactory.prisma.actor.update({
+            const retValue: boolean = await DBC.DBConnection.prisma.actor.update({
                 where: { idActor, },
                 data: {
                     IndividualName,
@@ -61,7 +61,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase {
         try {
             const { idActor } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idActor, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idActor, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.fetchSystemObject', error);
             return null;
@@ -73,7 +73,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase {
             return null;
         try {
             return DBC.CopyObject<ActorBase, Actor>(
-                await DBC.DBConnectionFactory.prisma.actor.findOne({ where: { idActor, }, }), Actor);
+                await DBC.DBConnection.prisma.actor.findOne({ where: { idActor, }, }), Actor);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.fetch', error);
             return null;
@@ -85,7 +85,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase {
             return null;
         try {
             return DBC.CopyArray<ActorBase, Actor>(
-                await DBC.DBConnectionFactory.prisma.actor.findMany({ where: { idUnit } }), Actor);
+                await DBC.DBConnection.prisma.actor.findMany({ where: { idUnit } }), Actor);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.fetchFromUnit', error);
             return null;

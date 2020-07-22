@@ -39,7 +39,7 @@ class TestSuiteUtils {
     };
 
     private afterAll = async (done: () => void): Promise<void> => {
-        await DBC.DBConnectionFactory.disconnect();
+        await DBC.DBConnection.disconnect();
         done();
     };
 

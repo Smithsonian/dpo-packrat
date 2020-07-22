@@ -40,7 +40,7 @@ export class ModelGeometryFile extends DBC.DBObject<ModelGeometryFileBase> imple
                 HasNormals: this.HasNormals, HasVertexColor: this.HasVertexColor, HasUVSpace: this.HasUVSpace,
                 BoundingBoxP1X: this.BoundingBoxP1X, BoundingBoxP1Y: this.BoundingBoxP1Y, BoundingBoxP1Z: this.BoundingBoxP1Z,
                 BoundingBoxP2X: this.BoundingBoxP2X, BoundingBoxP2Y: this.BoundingBoxP2Y, BoundingBoxP2Z: this.BoundingBoxP2Z } =
-                await DBC.DBConnectionFactory.prisma.modelGeometryFile.create({
+                await DBC.DBConnection.prisma.modelGeometryFile.create({
                     data: {
                         Model:          { connect: { idModel }, },
                         Asset:          { connect: { idAsset }, },
@@ -60,7 +60,7 @@ export class ModelGeometryFile extends DBC.DBObject<ModelGeometryFileBase> imple
         try {
             const { idModelGeometryFile, idModel, idAsset, idVModelFileType, Roughness, Metalness, PointCount, FaceCount, IsWatertight, HasNormals, HasVertexColor, HasUVSpace,
                 BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z } = this;
-            return await DBC.DBConnectionFactory.prisma.modelGeometryFile.update({
+            return await DBC.DBConnection.prisma.modelGeometryFile.update({
                 where: { idModelGeometryFile, },
                 data: {
                     Model:          { connect: { idModel }, },
@@ -81,7 +81,7 @@ export class ModelGeometryFile extends DBC.DBObject<ModelGeometryFileBase> imple
             return null;
         try {
             return DBC.CopyObject<ModelGeometryFileBase, ModelGeometryFile>(
-                await DBC.DBConnectionFactory.prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile, }, }), ModelGeometryFile);
+                await DBC.DBConnection.prisma.modelGeometryFile.findOne({ where: { idModelGeometryFile, }, }), ModelGeometryFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelGeometryFile.fetch', error);
             return null;
@@ -93,7 +93,7 @@ export class ModelGeometryFile extends DBC.DBObject<ModelGeometryFileBase> imple
             return null;
         try {
             return DBC.CopyArray<ModelGeometryFileBase, ModelGeometryFile>(
-                await DBC.DBConnectionFactory.prisma.modelGeometryFile.findMany({ where: { idModel } }), ModelGeometryFile);
+                await DBC.DBConnection.prisma.modelGeometryFile.findMany({ where: { idModel } }), ModelGeometryFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelGeometryFile.fetchFromModel', error);
             return null;
