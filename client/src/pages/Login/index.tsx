@@ -68,6 +68,7 @@ function Login(): React.ReactElement {
             if (success) {
                 const authenticatedUser = await getAuthenticatedUser();
                 updateUser(authenticatedUser);
+                toast.success('Welcome to Packrat');
                 history.push(Routes.DASHBOARD);
             } else {
                 toast.error(message);

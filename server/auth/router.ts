@@ -1,10 +1,11 @@
 import express, { Request, Response, NextFunction } from 'express';
-import passport from './interface';
+import { passport } from './index';
+import Config from '../config';
 
 const AuthRouter = express.Router();
 
 AuthRouter.post('/login', (request: Request, response: Response, next: NextFunction) => {
-    passport.authenticate('local', (error, user) => {
+    passport.authenticate(Config.auth.type, (error, user) => {
         if (error) return response.send({ success: false, message: error });
         return request.logIn(user, error => {
             if (error) return next(error);
