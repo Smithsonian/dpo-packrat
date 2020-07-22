@@ -1,10 +1,7 @@
-import AuthFactory from './interface';
-import passport from 'passport';
+import passport from './passport';
 import AuthRouter from './router';
 import session from 'express-session';
 import MemoryStore from 'memorystore';
-import * as DBAPI from '../db';
-import { User } from '../types/graphql';
 import Config from '../config';
 
 const { CLIENT_ENDPOINT, SESSION_SECRET } = process.env;
@@ -43,18 +40,5 @@ const sessionConfig = {
 };
 
 const authSession = session(sessionConfig);
-const auth = AuthFactory.getFactory();
-
-passport.use(auth.setup());
-
-passport.serializeUser((user: User, done) => {
-    if (!user) return done('Invalid user');
-    done(null, user.idUser);
-});
-
-passport.deserializeUser(async (id: number, done) => {
-    const user = await DBAPI.User.fetch(id);
-    done(null, user);
-});
 
 export { passport, authCorsConfig, authSession, AuthRouter };
