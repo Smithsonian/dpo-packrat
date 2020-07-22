@@ -1,7 +1,11 @@
-import passport from './interface';
+import AuthFactory from './interface';
+import passport from 'passport';
 import AuthRouter from './router';
 import session from 'express-session';
 import MemoryStore from 'memorystore';
+import * as DBAPI from '../db';
+import { User } from '../types/graphql';
+import Config from '../config';
 
 const { CLIENT_ENDPOINT, SESSION_SECRET } = process.env;
 
@@ -14,30 +18,43 @@ const authCorsConfig = {
     credentials: true
 };
 
+if (!SESSION_SECRET) {
+    throw new Error('SESSION_SECRET was not provided to sessions config');
+}
+
 /**
  * To persist sessions we'll require to store them in our DB
  * https://www.npmjs.com/package/express-mysql-session
  */
 
-if (!SESSION_SECRET) {
-    throw new Error('SESSION_SECRET was not provided to sessions config');
-}
-
-const maxAge = Date.now() + 24 * 60 * 60 * 1000;
-const checkPeriod = 24 * 60 * 60;
-
 const Store = MemoryStore(session);
 
+const { maxAge, checkPeriod, expires } = Config.auth.session;
+
 const sessionConfig = {
-    cookie: { maxAge, expires: new Date(maxAge) }, // 24hrs expiration time
+    cookie: {
+        maxAge,
+        expires
+    },
     secret: SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
-    store: new Store({
-        checkPeriod // prune expired entries every 24h
-    })
+    store: new Store({ checkPeriod })
 };
 
 const authSession = session(sessionConfig);
+const auth = AuthFactory.getFactory();
+
+passport.use(auth.setup());
+
+passport.serializeUser((user: User, done) => {
+    if (!user) return done('Invalid user');
+    done(null, user.idUser);
+});
+
+passport.deserializeUser(async (id: number, done) => {
+    const user = await DBAPI.User.fetch(id);
+    done(null, user);
+});
 
 export { passport, authCorsConfig, authSession, AuthRouter };
