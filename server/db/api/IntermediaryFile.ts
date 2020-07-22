@@ -20,7 +20,7 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
         try {
             const { idAsset, DateCreated } = this;
             ({ idIntermediaryFile: this.idIntermediaryFile, idAsset: this.idAsset, DateCreated: this.DateCreated } =
-                await DBC.DBConnectionFactory.prisma.intermediaryFile.create({
+                await DBC.DBConnection.prisma.intermediaryFile.create({
                     data: {
                         Asset:          { connect: { idAsset }, },
                         DateCreated,
@@ -37,7 +37,7 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idIntermediaryFile, idAsset, DateCreated } = this;
-            return await DBC.DBConnectionFactory.prisma.intermediaryFile.update({
+            return await DBC.DBConnection.prisma.intermediaryFile.update({
                 where: { idIntermediaryFile, },
                 data: {
                     Asset:          { connect: { idAsset }, },
@@ -54,7 +54,7 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
         try {
             const { idIntermediaryFile } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idIntermediaryFile, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.intermediaryFile.fetchSystemObject', error);
             return null;
@@ -66,7 +66,7 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
             return null;
         try {
             return DBC.CopyObject<IntermediaryFileBase, IntermediaryFile>(
-                await DBC.DBConnectionFactory.prisma.intermediaryFile.findOne({ where: { idIntermediaryFile, }, }), IntermediaryFile);
+                await DBC.DBConnection.prisma.intermediaryFile.findOne({ where: { idIntermediaryFile, }, }), IntermediaryFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.IntermediaryFile.fetch', error);
             return null;

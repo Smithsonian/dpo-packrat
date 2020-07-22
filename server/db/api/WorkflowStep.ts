@@ -26,7 +26,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             ({ idWorkflowStep: this.idWorkflowStep, DateCompleted: this.DateCompleted, DateCreated: this.DateCreated,
                 idUserOwner: this.idUserOwner, idVWorkflowStepType: this.idVWorkflowStepType,
                 idWorkflow: this.idWorkflow, State: this.State } =
-                await DBC.DBConnectionFactory.prisma.workflowStep.create({
+                await DBC.DBConnection.prisma.workflowStep.create({
                     data: {
                         Workflow:           { connect: { idWorkflow }, },
                         User:               { connect: { idUser: idUserOwner }, },
@@ -47,7 +47,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflowStep, DateCompleted, DateCreated, idUserOwner, idVWorkflowStepType, idWorkflow, State } = this;
-            return await DBC.DBConnectionFactory.prisma.workflowStep.update({
+            return await DBC.DBConnection.prisma.workflowStep.update({
                 where: { idWorkflowStep, },
                 data: {
                     Workflow:           { connect: { idWorkflow }, },
@@ -69,7 +69,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return null;
         try {
             return DBC.CopyObject<WorkflowStepBase, WorkflowStep>(
-                await DBC.DBConnectionFactory.prisma.workflowStep.findOne({ where: { idWorkflowStep, }, }), WorkflowStep);
+                await DBC.DBConnection.prisma.workflowStep.findOne({ where: { idWorkflowStep, }, }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetch', error);
             return null;
@@ -80,7 +80,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
         try {
             const { idWorkflowStep } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne(
+                await DBC.DBConnection.prisma.systemObject.findOne(
                     { where: { idWorkflowStep, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetchSystemObject', error);
@@ -92,7 +92,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
         try {
             const { idWorkflowStep } = this;
             return DBC.CopyArray<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findMany({
+                await DBC.DBConnection.prisma.systemObject.findMany({
                     where: {
                         WorkflowStepSystemObjectXref: {
                             some: { idWorkflowStep },
@@ -110,7 +110,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return null;
         try {
             return DBC.CopyArray<WorkflowStepBase, WorkflowStep>(
-                await DBC.DBConnectionFactory.prisma.workflowStep.findMany({ where: { idUserOwner } }), WorkflowStep);
+                await DBC.DBConnection.prisma.workflowStep.findMany({ where: { idUserOwner } }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetchFromUser', error);
             return null;
@@ -122,7 +122,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return null;
         try {
             return DBC.CopyArray<WorkflowStepBase, WorkflowStep>(
-                await DBC.DBConnectionFactory.prisma.workflowStep.findMany({ where: { idWorkflow } }), WorkflowStep);
+                await DBC.DBConnection.prisma.workflowStep.findMany({ where: { idWorkflow } }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetchFromWorkflow', error);
             return null;

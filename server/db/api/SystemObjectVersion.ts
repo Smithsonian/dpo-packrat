@@ -20,7 +20,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             const { idSystemObject, PublishedState } = this;
             ({ idSystemObjectVersion: this.idSystemObjectVersion, idSystemObject: this.idSystemObject,
                 PublishedState: this.PublishedState } =
-                await DBC.DBConnectionFactory.prisma.systemObjectVersion.create({
+                await DBC.DBConnection.prisma.systemObjectVersion.create({
                     data: {
                         SystemObject: { connect: { idSystemObject }, },
                         PublishedState,
@@ -36,7 +36,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idSystemObjectVersion, idSystemObject, PublishedState } = this;
-            return await DBC.DBConnectionFactory.prisma.systemObjectVersion.update({
+            return await DBC.DBConnection.prisma.systemObjectVersion.update({
                 where: { idSystemObjectVersion, },
                 data: {
                     SystemObject: { connect: { idSystemObject }, },
@@ -54,7 +54,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return null;
         try {
             return DBC.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
-                await DBC.DBConnectionFactory.prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
+                await DBC.DBConnection.prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectVersion.fetch', error);
             return null;
@@ -66,7 +66,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return null;
         try {
             return DBC.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
-                await DBC.DBConnectionFactory.prisma.systemObjectVersion.findMany({ where: { idSystemObject } }), SystemObjectVersion);
+                await DBC.DBConnection.prisma.systemObjectVersion.findMany({ where: { idSystemObject } }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectVersion.fetchFromSystemObject', error);
             return null;

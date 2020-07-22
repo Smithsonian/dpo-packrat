@@ -35,7 +35,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             ({ idMetadata: this.idMetadata, Name: this.Name, ValueShort: this.ValueShort,
                 ValueExtended: this.ValueExtended, idAssetValue: this.idAssetValue, idUser: this.idUser,
                 idVMetadataSource: this.idVMetadataSource, idSystemObject: this.idSystemObject } =
-                await DBC.DBConnectionFactory.prisma.metadata.create({
+                await DBC.DBConnection.prisma.metadata.create({
                     data: {
                         Name,
                         ValueShort:     ValueShort          ? ValueShort : undefined,
@@ -57,7 +57,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
         try {
             const { idMetadata, Name, ValueShort, ValueExtended, idAssetValue, idUser, idVMetadataSource, idSystemObject,
                 idAssetValueOrig, idUserOrig, idVMetadataSourceOrig, idSystemObjectOrig } = this;
-            const retValue: boolean = await DBC.DBConnectionFactory.prisma.metadata.update({
+            const retValue: boolean = await DBC.DBConnection.prisma.metadata.update({
                 where: { idMetadata, },
                 data: {
                     Name,
@@ -81,7 +81,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return null;
         try {
             return DBC.CopyObject<MetadataBase, Metadata>(
-                await DBC.DBConnectionFactory.prisma.metadata.findOne({ where: { idMetadata, }, }), Metadata);
+                await DBC.DBConnection.prisma.metadata.findOne({ where: { idMetadata, }, }), Metadata);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.fetch', error);
             return null;
@@ -93,7 +93,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return null;
         try {
             return DBC.CopyArray<MetadataBase, Metadata>(
-                await DBC.DBConnectionFactory.prisma.metadata.findMany({ where: { idUser } }), Metadata);
+                await DBC.DBConnection.prisma.metadata.findMany({ where: { idUser } }), Metadata);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.fetchFromUser', error);
             return null;
@@ -105,7 +105,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return null;
         try {
             return DBC.CopyArray<MetadataBase, Metadata>(
-                await DBC.DBConnectionFactory.prisma.metadata.findMany({ where: { idSystemObject } }), Metadata);
+                await DBC.DBConnection.prisma.metadata.findMany({ where: { idSystemObject } }), Metadata);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.fetchFromSystemObject', error);
             return null;

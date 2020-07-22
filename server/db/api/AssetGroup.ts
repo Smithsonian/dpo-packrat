@@ -15,7 +15,7 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
 
     protected async createWorker(): Promise<boolean> {
         try {
-            ({ idAssetGroup: this.idAssetGroup } = await DBC.DBConnectionFactory.prisma.assetGroup.create({ data: { } }));
+            ({ idAssetGroup: this.idAssetGroup } = await DBC.DBConnection.prisma.assetGroup.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetGroup.create', error);
@@ -26,7 +26,7 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAssetGroup } = this;
-            return await DBC.DBConnectionFactory.prisma.assetGroup.update({
+            return await DBC.DBConnection.prisma.assetGroup.update({
                 where: { idAssetGroup, },
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
@@ -41,7 +41,7 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
             return null;
         try {
             return DBC.CopyObject<AssetGroupBase, AssetGroup>(
-                await DBC.DBConnectionFactory.prisma.assetGroup.findOne({ where: { idAssetGroup, }, }), AssetGroup);
+                await DBC.DBConnection.prisma.assetGroup.findOne({ where: { idAssetGroup, }, }), AssetGroup);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetGroup.fetch', error);
             return null;

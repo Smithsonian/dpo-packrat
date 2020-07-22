@@ -20,7 +20,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             const { idAccessContext, idSystemObject } = this;
             ({ idAccessContextObject: this.idAccessContextObject, idAccessContext: this.idAccessContext,
                 idSystemObject: this.idSystemObject } =
-                await DBC.DBConnectionFactory.prisma.accessContextObject.create({
+                await DBC.DBConnection.prisma.accessContextObject.create({
                     data: {
                         AccessContext: { connect: { idAccessContext }, },
                         SystemObject:  { connect: { idSystemObject }, },
@@ -36,7 +36,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessContextObject, idAccessContext, idSystemObject } = this;
-            return await DBC.DBConnectionFactory.prisma.accessContextObject.update({
+            return await DBC.DBConnection.prisma.accessContextObject.update({
                 where: { idAccessContextObject, },
                 data: {
                     AccessContext: { connect: { idAccessContext }, },
@@ -54,7 +54,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             return null;
         try {
             return DBC.CopyObject<AccessContextObjectBase, AccessContextObject>(
-                await DBC.DBConnectionFactory.prisma.accessContextObject.findOne({ where: { idAccessContextObject, }, }), AccessContextObject);
+                await DBC.DBConnection.prisma.accessContextObject.findOne({ where: { idAccessContextObject, }, }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.fetch', error);
             return null;
@@ -66,7 +66,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             return null;
         try {
             return DBC.CopyArray<AccessContextObjectBase, AccessContextObject>(
-                await DBC.DBConnectionFactory.prisma.accessContextObject.findMany({ where: { idAccessContext } }), AccessContextObject);
+                await DBC.DBConnection.prisma.accessContextObject.findMany({ where: { idAccessContext } }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.fetchFromAccessContext', error);
             return null;
@@ -78,7 +78,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             return null;
         try {
             return DBC.CopyArray<AccessContextObjectBase, AccessContextObject>(
-                await DBC.DBConnectionFactory.prisma.accessContextObject.findMany({ where: { idSystemObject } }), AccessContextObject);
+                await DBC.DBConnection.prisma.accessContextObject.findMany({ where: { idSystemObject } }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.fetchFromSystemObject', error);
             return null;

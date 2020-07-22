@@ -31,7 +31,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase {
             ({ idModel: this.idModel, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
                 Master: this.Master, Authoritative: this.Authoritative, idVModality: this.idVModality,
                 idVUnits: this.idVUnits, idVPurpose: this.idVPurpose, idAssetThumbnail: this.idAssetThumbnail } =
-                await DBC.DBConnectionFactory.prisma.model.create({
+                await DBC.DBConnection.prisma.model.create({
                     data: {
                         DateCreated,
                         Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
@@ -55,7 +55,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase {
         try {
             const { idModel, DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits,
                 idVPurpose, idAssetThumbnail, idAssetThumbnailOrig } = this;
-            const retValue: boolean = await DBC.DBConnectionFactory.prisma.model.update({
+            const retValue: boolean = await DBC.DBConnection.prisma.model.update({
                 where: { idModel, },
                 data: {
                     DateCreated,
@@ -79,7 +79,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase {
         try {
             const { idModel } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnectionFactory.prisma.systemObject.findOne({ where: { idModel, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idModel, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.model.fetchSystemObject', error);
             return null;
@@ -91,7 +91,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase {
             return null;
         try {
             return DBC.CopyObject<ModelBase, Model>(
-                await DBC.DBConnectionFactory.prisma.model.findOne({ where: { idModel, }, }), Model);
+                await DBC.DBConnection.prisma.model.findOne({ where: { idModel, }, }), Model);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Model.fetch', error);
             return null;
@@ -103,7 +103,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase {
             return null;
         try {
             return DBC.CopyArray<ModelBase, Model>(
-                await DBC.DBConnectionFactory.prisma.model.findMany({ where: { ModelSceneXref: { some: { idScene }, }, }, }), Model);
+                await DBC.DBConnection.prisma.model.findMany({ where: { ModelSceneXref: { some: { idScene }, }, }, }), Model);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.fetchModelFromXref', error);
             return null;

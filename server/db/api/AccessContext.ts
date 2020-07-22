@@ -24,7 +24,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
             const { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene } = this;
             ({ idAccessContext: this.idAccessContext, Authoritative: this.Authoritative, CaptureData: this.CaptureData,
                 Global: this.Global, IntermediaryFile: this.IntermediaryFile, Model: this.Model, Scene: this.Scene } =
-                await DBC.DBConnectionFactory.prisma.accessContext.create({
+                await DBC.DBConnection.prisma.accessContext.create({
                     data: { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene, }
                 }));
             return true;
@@ -37,7 +37,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAccessContext, Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene } = this;
-            return await DBC.DBConnectionFactory.prisma.accessContext.update({
+            return await DBC.DBConnection.prisma.accessContext.update({
                 where: { idAccessContext, },
                 data: { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene }
             }) ? true : /* istanbul ignore next */ false;
@@ -52,7 +52,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
             return null;
         try {
             return DBC.CopyObject<AccessContextBase, AccessContext>(
-                await DBC.DBConnectionFactory.prisma.accessContext.findOne({ where: { idAccessContext, }, }), AccessContext);
+                await DBC.DBConnection.prisma.accessContext.findOne({ where: { idAccessContext, }, }), AccessContext);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContext.fetch', error);
             return null;
