@@ -3,10 +3,6 @@ import request from 'supertest';
 import * as DBAPI from '../../../db';
 
 describe('Auth implementation: local logout', () => {
-    afterAll(done => {
-        done();
-    });
-
     test('should logout user correctly', async done => {
         const userInput = {
             Name: 'Test User',
