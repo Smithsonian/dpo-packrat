@@ -1,18 +1,30 @@
-import passport from 'passport';
-import { LocalStrategy } from './impl';
+import { Strategy } from 'passport';
+import { LocalAuth, LDAPAuth } from './impl';
 import { User } from '../types/graphql';
-import * as DBAPI from '../db';
+import Config, { AUTH_TYPE } from '../config';
 
-passport.use(LocalStrategy);
+type VerifiedUser = {
+    user: User | null;
+    error: string | null;
+};
 
-passport.serializeUser((user: User, done) => {
-    if (!user) return done('Invalid user');
-    done(null, user.idUser);
-});
+interface Auth {
+    setup: () => Strategy;
+    verifyUser: (email: string, password: string) => Promise<VerifiedUser>;
+}
 
-passport.deserializeUser(async (id: number, done) => {
-    const user = await DBAPI.User.fetch(id);
-    done(null, user);
-});
+class AuthFactory {
+    private static instance: LocalAuth | LDAPAuth;
+    static getFactory(): LocalAuth | LDAPAuth {
+        if (!AuthFactory.instance) {
+            if (Config.auth.type === AUTH_TYPE.LOCAL) {
+                AuthFactory.instance = new LocalAuth();
+            } else if (Config.auth.type === AUTH_TYPE.LDAP) {
+                AuthFactory.instance = new LDAPAuth();
+            }
+        }
+        return AuthFactory.instance;
+    }
+}
 
-export default passport;
+export { AuthFactory as default, Auth, VerifiedUser };
