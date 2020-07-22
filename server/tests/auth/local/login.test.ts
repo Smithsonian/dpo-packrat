@@ -3,6 +3,10 @@ import request from 'supertest';
 import * as DBAPI from '../../../db';
 
 describe('Auth implementation: local login', () => {
+    afterAll(done => {
+        done();
+    });
+
     test('should work with correct user credentials', async done => {
         const userInput = {
             Name: 'Test User',
