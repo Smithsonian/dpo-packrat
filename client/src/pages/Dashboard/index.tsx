@@ -35,8 +35,8 @@ function Dashboard(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <Typography color='textPrimary' variant='h4'>Dashboard</Typography>
-            <Typography color='textPrimary' variant='body1'>Welcome, {user?.Name}</Typography>
+            <Typography color='primary' variant='h4'>Dashboard</Typography>
+            <Typography color='primary' variant='body1'>Welcome, {user?.Name}</Typography>
             <Button
                 onClick={onLogout}
                 className={classes.logoutButton}

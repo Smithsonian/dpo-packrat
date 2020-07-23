@@ -16,7 +16,7 @@ function About(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <Typography color='textPrimary' variant='h4'>About</Typography>
+            <Typography color='primary' variant='h4'>About</Typography>
         </Box>
     );
 }
