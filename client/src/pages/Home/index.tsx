@@ -23,7 +23,7 @@ function Home(): React.ReactElement {
     if (!userLoading && !userError) {
         queryProgress = (
             <>
-                <Typography color='textPrimary' variant='body1'>Server reachable</Typography>
+                <Typography color='primary' variant='body1'>Server reachable</Typography>
                 <Check color='primary' />
             </>
         );
@@ -32,7 +32,7 @@ function Home(): React.ReactElement {
     if (userError) {
         queryProgress = (
             <>
-                <Typography color='textPrimary' variant='body1'>Server unreachable</Typography>
+                <Typography color='primary' variant='body1'>Server unreachable</Typography>
                 <Warning htmlColor='red' />
             </>
         );
@@ -40,7 +40,7 @@ function Home(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <Typography color='textPrimary' variant='h4'>Home</Typography>
+            <Typography color='primary' variant='h4'>Home</Typography>
             {queryProgress}
         </Box>
     );
