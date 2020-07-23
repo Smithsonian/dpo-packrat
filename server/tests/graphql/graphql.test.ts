@@ -3,6 +3,7 @@
  */
 import TestSuiteUtils from './utils';
 import getUserTest from './queries/user/getUser.test';
+import getCurrentUserTest from './queries/user/getCurrentUser.test';
 import getAccessPolicyTest from './queries/accesscontrol/getAccessPolicy.test';
 import getAssetTest from './queries/asset/getAsset.test';
 import getCaptureDataTest from './queries/capturedata/getCaptureData.test';
@@ -37,6 +38,7 @@ describe('GraphQL Test Suite', () => {
     getSceneTest(utils);
     getUnitTest(utils);
     getUserTest(utils);
+    getCurrentUserTest(utils);
     getVocabularyTest(utils);
     getWorkflowTest(utils);
 

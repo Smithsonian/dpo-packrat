@@ -4,17 +4,20 @@ module.exports = {
         ecmaVersion: 2020,
         sourceType: 'module',
         ecmaFeatures: {
-            jsx: true,
-        },
+            jsx: true
+        }
     },
     settings: {
-        'import/parsers': {
-            '@typescript-eslint/parser': ['.ts', '.tsx'],
+        react: {
+            version: '16.13'
         },
+        'import/parsers': {
+            '@typescript-eslint/parser': ['.ts', '.tsx']
+        }
     },
     env: {
         browser: true,
-        node: true,
+        node: true
     },
     plugins: ['react', '@typescript-eslint', 'prettier'],
     extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:react/recommended', 'plugin:import/errors', 'plugin:import/typescript'],
@@ -33,7 +36,7 @@ module.exports = {
         'no-trailing-spaces': 'error',
         '@typescript-eslint/type-annotation-spacing': ['error'],
         'object-curly-spacing': ['error', 'always'],
-        'key-spacing': ['error', { beforeColon: false, mode: "minimum" }],
+        'key-spacing': ['error', { beforeColon: false, mode: 'minimum' }],
         'object-shorthand': ['error', 'always'],
         // JSX RULES
         'jsx-quotes': ['error', 'prefer-single'],
@@ -43,8 +46,8 @@ module.exports = {
         'react/jsx-indent-props': ['error', 4],
         'react/jsx-indent': ['error', 4],
         'react/jsx-max-props-per-line': ['error', { maximum: 4 }],
-        'react/jsx-no-bind': 'error',
+        'react/jsx-no-bind': ['error', { allowArrowFunctions: true }],
         'react/jsx-no-literals': 'off',
-        'react/jsx-space-before-closing': 'error',
-    },
+        'react/jsx-tag-spacing': ['error', { beforeSelfClosing: 'always' }]
+    }
 };
