@@ -3,7 +3,7 @@
 # Lints and Tests code for pull requests
 # Builds after tests pass on push/merge to master or develop branch
 
-name: Lint, Test and Build
+name: CI
 
 on:
   push:
@@ -103,15 +103,19 @@ jobs:
       # Prepares tag for docker images
       - name: Prepare image tag
         id: prepare-tag
-        run: if [ ${{ contains(github.ref, 'master') }} = true ]; then echo "::set-output name=tag::prod"; else echo "::set-output name=tag::dev"; fi
+        run: |
+          if [ ${{ contains(github.ref, 'master') }} = true ]; then stage="prod"; else stage="dev"; fi
+          version=${{ steps.packrat-version.outputs.current-version }}
+          commit=${GITHUB_SHA:0:7}
+          echo "::set-output name=tag::$stage-$version-$commit"
 
-      # Tags images with "image:stage-version" eg. dev:1.0.0
+      # Tags images with "stage-env-version-commit-sha" eg. dev-1.0.0-abcd123
       - name: Tag images
         run: |
-          echo Tagging with ${{ steps.prepare-tag.outputs.tag }}-${{ steps.packrat-version.outputs.current-version }}
-          docker tag packrat-server:latest packrat-server:${{ steps.prepare-tag.outputs.tag }}-${{ steps.packrat-version.outputs.current-version }}
-          docker tag packrat-client:latest packrat-client:${{ steps.prepare-tag.outputs.tag }}-${{ steps.packrat-version.outputs.current-version }}
-          docker tag packrat-proxy:latest packrat-proxy:${{ steps.prepare-tag.outputs.tag }}-${{ steps.packrat-version.outputs.current-version }}
+          echo Tagging with ${{ steps.prepare-tag.outputs.tag }}
+          docker tag packrat-server:latest packrat-server:${{ steps.prepare-tag.outputs.tag }}
+          docker tag packrat-client:latest packrat-client:${{ steps.prepare-tag.outputs.tag }}
+          docker tag packrat-proxy:latest packrat-proxy:${{ steps.prepare-tag.outputs.tag }}
 
       # Runs commands post-build
       - name: Build cleanup
