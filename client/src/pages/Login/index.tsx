@@ -2,14 +2,14 @@ import React, { useContext } from 'react';
 import { Box, Typography, Container, Button, Icon } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router-dom';
-import { Formik, Field } from 'formik';
-import * as Yup from 'yup';
+import { Formik, Field, FormikHelpers } from 'formik';
+import { toast } from 'react-toastify';
+import { TextField } from 'formik-material-ui';
 import { Routes } from '../../constants';
 import API from '../../api';
 import { getAuthenticatedUser } from '../../utils/auth';
 import { AppContext } from '../../context';
-import { toast } from 'react-toastify';
-import { TextField } from 'formik-material-ui';
+import useLoginForm, { ILoginForm } from './hooks/useLoginForm';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -44,20 +44,12 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     }
 }));
 
-const validationSchema = () => Yup.object({
-    email: Yup.string().required('Required'),
-    password: Yup.string().required('Required')
-});
-
 function Login(): React.ReactElement {
     const { updateUser } = useContext(AppContext);
     const classes = useStyles();
     const history = useHistory();
 
-    const initialValues = {
-        email: 'test@si.edu',
-        password: 'test@si.edu'
-    };
+    const { initialValues, loginValidationSchema } = useLoginForm();
 
     const InputProps = {
         classes: {
@@ -66,11 +58,13 @@ function Login(): React.ReactElement {
         disableUnderline: true
     };
 
-    const onLogin = async (values, { setSubmitting }): Promise<void> => {
+    const onLogin = async (values: ILoginForm, actions: FormikHelpers<ILoginForm>): Promise<void> => {
         const { email, password } = values;
+        const { setSubmitting } = actions;
 
         try {
             const { success, message } = await API.login(email, password);
+            setSubmitting(false);
 
             if (success) {
                 const authenticatedUser = await getAuthenticatedUser();
@@ -83,8 +77,6 @@ function Login(): React.ReactElement {
         } catch ({ message }) {
             toast.error(message);
         }
-
-        setSubmitting(false);
     };
 
     return (
@@ -94,7 +86,7 @@ function Login(): React.ReactElement {
                 <Typography className={classes.loginSubtitle} variant='subtitle1'>Welcome to packrat</Typography>
                 <Formik
                     initialValues={initialValues}
-                    validationSchema={validationSchema}
+                    validationSchema={loginValidationSchema}
                     onSubmit={onLogin}
                 >
                     {({ handleSubmit, handleChange, values }) => (
