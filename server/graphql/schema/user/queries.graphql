@@ -1,5 +1,10 @@
 type Query {
+    getCurrentUser: GetCurrentUserResult!
     getUser(input: GetUserInput!): GetUserResult!
+}
+
+type GetCurrentUserResult {
+    User: User
 }
 
 input GetUserInput {
@@ -7,5 +12,5 @@ input GetUserInput {
 }
 
 type GetUserResult {
-    User: User    
+    User: User
 }

@@ -1,0 +1,15 @@
+query getCurrentUser {
+    getCurrentUser {
+        User {
+            idUser
+            Name
+            Active
+            DateActivated
+            DateDisabled
+            EmailAddress
+            EmailSettings
+            SecurityID
+            WorkflowNotificationTime
+        }
+    }
+}

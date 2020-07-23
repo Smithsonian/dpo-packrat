@@ -15,7 +15,7 @@ export type AccessAction = {
     idAccessAction: Scalars['Int'];
     Name: Scalars['String'];
     SortOrder: Scalars['Int'];
-    AccessRoleAccessActionXref?: Maybe<Array<Maybe<AccessRoleAccessActionXref>>>;
+    AccessRole?: Maybe<Array<Maybe<AccessRole>>>;
 };
 
 export type AccessContext = {
@@ -55,17 +55,7 @@ export type AccessRole = {
     __typename?: 'AccessRole';
     idAccessRole: Scalars['Int'];
     Name: Scalars['String'];
-    AccessPolicy?: Maybe<Array<Maybe<AccessPolicy>>>;
-    AccessRoleAccessActionXref?: Maybe<Array<Maybe<AccessRoleAccessActionXref>>>;
-};
-
-export type AccessRoleAccessActionXref = {
-    __typename?: 'AccessRoleAccessActionXref';
-    idAccessRoleAccessActionXref: Scalars['Int'];
-    idAccessAction: Scalars['Int'];
-    idAccessRole: Scalars['Int'];
-    AccessAction?: Maybe<AccessAction>;
-    AccessRole?: Maybe<AccessRole>;
+    AccessAction?: Maybe<Array<Maybe<AccessAction>>>;
 };
 
 export type Asset = {
@@ -76,16 +66,6 @@ export type Asset = {
     idAssetGroup?: Maybe<Scalars['Int']>;
     AssetGroup?: Maybe<AssetGroup>;
     AssetVersion?: Maybe<Array<Maybe<AssetVersion>>>;
-    CaptureData?: Maybe<Array<Maybe<CaptureData>>>;
-    CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
-    IntermediaryFile?: Maybe<Array<Maybe<IntermediaryFile>>>;
-    Item?: Maybe<Array<Maybe<Item>>>;
-    Metadata?: Maybe<Array<Maybe<Metadata>>>;
-    Model?: Maybe<Array<Maybe<Model>>>;
-    ModelGeometryFile?: Maybe<Array<Maybe<ModelGeometryFile>>>;
-    ModelUVMapFile?: Maybe<Array<Maybe<ModelUvMapFile>>>;
-    Scene?: Maybe<Array<Maybe<Scene>>>;
-    Subject?: Maybe<Array<Maybe<Subject>>>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -127,7 +107,7 @@ export type CaptureData = {
     idVLightSourceType?: Maybe<Scalars['Int']>;
     ItemArrangementFieldID?: Maybe<Scalars['Int']>;
     ItemPositionFieldID?: Maybe<Scalars['Int']>;
-    Asset?: Maybe<Asset>;
+    AssetThumbnail?: Maybe<Asset>;
     VBackgroundRemovalMethod?: Maybe<Vocabulary>;
     VCaptureDatasetType?: Maybe<Vocabulary>;
     VCaptureMethod?: Maybe<Vocabulary>;
@@ -136,7 +116,7 @@ export type CaptureData = {
     VItemPositionType?: Maybe<Vocabulary>;
     VLightSourceType?: Maybe<Vocabulary>;
     CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
-    CaptureDataGroupCaptureDataXref?: Maybe<Array<Maybe<CaptureDataGroupCaptureDataXref>>>;
+    CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -149,22 +129,13 @@ export type CaptureDataFile = {
     idVVariantType: Scalars['Int'];
     Asset?: Maybe<Asset>;
     CaptureData?: Maybe<CaptureData>;
-    Vocabulary?: Maybe<Vocabulary>;
+    VVariantType?: Maybe<Vocabulary>;
 };
 
 export type CaptureDataGroup = {
     __typename?: 'CaptureDataGroup';
     idCaptureDataGroup: Scalars['Int'];
-    CaptureDataGroupCaptureDataXref?: Maybe<Array<Maybe<CaptureDataGroupCaptureDataXref>>>;
-};
-
-export type CaptureDataGroupCaptureDataXref = {
-    __typename?: 'CaptureDataGroupCaptureDataXref';
-    idCaptureData: Scalars['Int'];
-    idCaptureDataGroup: Scalars['Int'];
-    idCaptureDataGroupCaptureDataXref: Scalars['Int'];
-    CaptureData?: Maybe<CaptureData>;
-    CaptureDataGroup?: Maybe<CaptureDataGroup>;
+    CaptureData?: Maybe<Array<Maybe<CaptureData>>>;
 };
 
 export type License = {
@@ -185,7 +156,7 @@ export type LicenseAssignment = {
     idUserCreator?: Maybe<Scalars['Int']>;
     License?: Maybe<License>;
     SystemObject?: Maybe<SystemObject>;
-    User?: Maybe<User>;
+    UserCreator?: Maybe<User>;
 };
 
 export type Model = {
@@ -199,7 +170,7 @@ export type Model = {
     idVPurpose: Scalars['Int'];
     idVUnits: Scalars['Int'];
     Master: Scalars['Boolean'];
-    Asset?: Maybe<Asset>;
+    AssetThumbnail?: Maybe<Asset>;
     VCreationMethod?: Maybe<Vocabulary>;
     VModality?: Maybe<Vocabulary>;
     VPurpose?: Maybe<Vocabulary>;
@@ -232,7 +203,7 @@ export type ModelGeometryFile = {
     Roughness?: Maybe<Scalars['Float']>;
     Asset?: Maybe<Asset>;
     Model?: Maybe<Model>;
-    Vocabulary?: Maybe<Vocabulary>;
+    VModelFileType?: Maybe<Vocabulary>;
     ModelUVMapFile?: Maybe<Array<Maybe<ModelUvMapFile>>>;
 };
 
@@ -256,7 +227,7 @@ export type ModelProcessingActionStep = {
     idModelProcessingAction: Scalars['Int'];
     idVActionMethod: Scalars['Int'];
     ModelProcessingAction?: Maybe<ModelProcessingAction>;
-    Vocabulary?: Maybe<Vocabulary>;
+    VActionMethod?: Maybe<Vocabulary>;
 };
 
 export type ModelSceneXref = {
@@ -283,7 +254,7 @@ export type ModelUvMapChannel = {
     idModelUVMapFile: Scalars['Int'];
     idVUVMapType: Scalars['Int'];
     ModelUVMapFile?: Maybe<ModelUvMapFile>;
-    Vocabulary?: Maybe<Vocabulary>;
+    VUVMapType?: Maybe<Vocabulary>;
 };
 
 export type ModelUvMapFile = {
@@ -304,7 +275,7 @@ export type Scene = {
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     IsOriented: Scalars['Boolean'];
     Name: Scalars['String'];
-    Asset?: Maybe<Asset>;
+    AssetThumbnail?: Maybe<Asset>;
     ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
     SystemObject?: Maybe<SystemObject>;
 };
@@ -316,7 +287,6 @@ export type Actor = {
     IndividualName?: Maybe<Scalars['String']>;
     OrganizationName?: Maybe<Scalars['String']>;
     Unit?: Maybe<Unit>;
-    ModelProcessingAction?: Maybe<Array<Maybe<ModelProcessingAction>>>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -368,10 +338,10 @@ export type SystemObject = {
     LicenseAssignment?: Maybe<Array<Maybe<LicenseAssignment>>>;
     Metadata?: Maybe<Array<Maybe<Metadata>>>;
     SystemObjectVersion?: Maybe<Array<Maybe<SystemObjectVersion>>>;
-    SystemObjectDerived?: Maybe<Array<Maybe<SystemObjectXref>>>;
-    SystemObjectMaster?: Maybe<Array<Maybe<SystemObjectXref>>>;
+    SystemObjectDerived?: Maybe<Array<Maybe<SystemObject>>>;
+    SystemObjectMaster?: Maybe<Array<Maybe<SystemObject>>>;
     UserPersonalizationSystemObject?: Maybe<Array<Maybe<UserPersonalizationSystemObject>>>;
-    WorkflowStepSystemObjectXref: Array<Maybe<WorkflowStepSystemObjectXref>>;
+    WorkflowStepXref?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 
 export type SystemObjectVersion = {
@@ -382,15 +352,6 @@ export type SystemObjectVersion = {
     SystemObject?: Maybe<SystemObject>;
 };
 
-export type SystemObjectXref = {
-    __typename?: 'SystemObjectXref';
-    idSystemObjectXref: Scalars['Int'];
-    idSystemObjectDerived: Scalars['Int'];
-    idSystemObjectMaster: Scalars['Int'];
-    SystemObjectDerived?: Maybe<SystemObject>;
-    SystemObjectMaster?: Maybe<SystemObject>;
-};
-
 export type Identifier = {
     __typename?: 'Identifier';
     idIdentifier: Scalars['Int'];
@@ -398,7 +359,7 @@ export type Identifier = {
     idSystemObject?: Maybe<Scalars['Int']>;
     idVIdentifierType?: Maybe<Scalars['Int']>;
     SystemObject?: Maybe<SystemObject>;
-    Vocabulary?: Maybe<Vocabulary>;
+    VIdentifierType?: Maybe<Vocabulary>;
 };
 
 export type Metadata = {
@@ -411,10 +372,10 @@ export type Metadata = {
     idVMetadataSource?: Maybe<Scalars['Int']>;
     ValueExtended?: Maybe<Scalars['String']>;
     ValueShort?: Maybe<Scalars['String']>;
-    Asset?: Maybe<Asset>;
+    AssetValue?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
     User?: Maybe<User>;
-    Vocabulary?: Maybe<Vocabulary>;
+    VMetadataSource?: Maybe<Vocabulary>;
 };
 
 export type Unit = {
@@ -473,8 +434,6 @@ export type GeoLocation = {
     TS0?: Maybe<Scalars['Float']>;
     TS1?: Maybe<Scalars['Float']>;
     TS2?: Maybe<Scalars['Float']>;
-    Item?: Maybe<Array<Maybe<Item>>>;
-    Subject?: Maybe<Array<Maybe<Subject>>>;
 };
 
 export type Subject = {
@@ -482,7 +441,7 @@ export type Subject = {
     idSubject: Scalars['Int'];
     idUnit: Scalars['Int'];
     Name: Scalars['String'];
-    Asset?: Maybe<Asset>;
+    AssetThumbnail?: Maybe<Asset>;
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
     GeoLocation?: Maybe<GeoLocation>;
@@ -499,7 +458,7 @@ export type Item = {
     Name: Scalars['String'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
-    Asset?: Maybe<Asset>;
+    AssetThumbnail?: Maybe<Asset>;
     GeoLocation?: Maybe<GeoLocation>;
     Subject?: Maybe<Subject>;
     SystemObject?: Maybe<SystemObject>;
@@ -552,13 +511,6 @@ export type Vocabulary = {
     SortOrder: Scalars['Int'];
     Term: Scalars['String'];
     VocabularySet?: Maybe<VocabularySet>;
-    CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
-    Identifier?: Maybe<Array<Maybe<Identifier>>>;
-    Metadata?: Maybe<Array<Maybe<Metadata>>>;
-    ModelGeometryFile?: Maybe<Array<Maybe<ModelGeometryFile>>>;
-    ModelProcessingActionStep?: Maybe<Array<Maybe<ModelProcessingActionStep>>>;
-    ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
-    WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 
 export type VocabularySet = {
@@ -578,7 +530,7 @@ export type Workflow = {
     idProject?: Maybe<Scalars['Int']>;
     idUserInitiator?: Maybe<Scalars['Int']>;
     Project?: Maybe<Project>;
-    User?: Maybe<User>;
+    UserInitiator?: Maybe<User>;
     WorkflowTemplate?: Maybe<WorkflowTemplate>;
     SystemObject?: Maybe<SystemObject>;
     WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
@@ -594,7 +546,7 @@ export type WorkflowStep = {
     State: Scalars['Int'];
     DateCompleted?: Maybe<Scalars['DateTime']>;
     User?: Maybe<User>;
-    Vocabulary?: Maybe<Vocabulary>;
+    VWorkflowStepType?: Maybe<Vocabulary>;
     Workflow?: Maybe<Workflow>;
     SystemObject?: Maybe<SystemObject>;
     WorkflowStepSystemObjectXref?: Maybe<Array<Maybe<WorkflowStepSystemObjectXref>>>;
@@ -602,9 +554,9 @@ export type WorkflowStep = {
 
 export type WorkflowStepSystemObjectXref = {
     __typename?: 'WorkflowStepSystemObjectXref';
+    idWorkflowStepSystemObjectXref: Scalars['Int'];
     idSystemObject: Scalars['Int'];
     idWorkflowStep: Scalars['Int'];
-    idWorkflowStepSystemObjectXref: Scalars['Int'];
     Input: Scalars['Boolean'];
     SystemObject?: Maybe<SystemObject>;
     WorkflowStep?: Maybe<WorkflowStep>;
