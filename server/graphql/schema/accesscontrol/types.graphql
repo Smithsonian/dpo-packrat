@@ -1,0 +1,44 @@
+scalar DateTime
+
+type AccessAction {
+    idAccessAction: Int!
+    Name: String!
+    SortOrder: Int!
+    AccessRole: [AccessRole]
+}
+
+type AccessContext {
+    idAccessContext: Int!
+    Authoritative: Boolean!
+    CaptureData: Boolean!
+    Global: Boolean!
+    IntermediaryFile: Boolean!
+    Model: Boolean!
+    Scene: Boolean!
+    AccessContextObject: [AccessContextObject]
+    AccessPolicy: [AccessPolicy]
+}
+
+type AccessContextObject {
+    idAccessContextObject: Int!
+    idAccessContext: Int!
+    idSystemObject: Int!
+    AccessContext: AccessContext
+    SystemObject: SystemObject
+}
+
+type AccessPolicy {
+    idAccessPolicy: Int!
+    idAccessContext: Int!
+    idAccessRole: Int!
+    idUser: Int!
+    AccessContext: AccessContext
+    AccessRole: AccessRole
+    User: User
+}
+
+type AccessRole {
+    idAccessRole: Int!
+    Name: String!
+    AccessAction: [AccessAction]
+}

@@ -1,0 +1,767 @@
+scalar DateTime
+
+type AccessAction {
+  idAccessAction: Int!
+  Name: String!
+  SortOrder: Int!
+  AccessRole: [AccessRole]
+}
+
+type AccessContext {
+  idAccessContext: Int!
+  Authoritative: Boolean!
+  CaptureData: Boolean!
+  Global: Boolean!
+  IntermediaryFile: Boolean!
+  Model: Boolean!
+  Scene: Boolean!
+  AccessContextObject: [AccessContextObject]
+  AccessPolicy: [AccessPolicy]
+}
+
+type AccessContextObject {
+  idAccessContextObject: Int!
+  idAccessContext: Int!
+  idSystemObject: Int!
+  AccessContext: AccessContext
+  SystemObject: SystemObject
+}
+
+type AccessPolicy {
+  idAccessPolicy: Int!
+  idAccessContext: Int!
+  idAccessRole: Int!
+  idUser: Int!
+  AccessContext: AccessContext
+  AccessRole: AccessRole
+  User: User
+}
+
+type AccessRole {
+  idAccessRole: Int!
+  Name: String!
+  AccessAction: [AccessAction]
+}
+
+type Asset {
+  idAsset: Int!
+  FileName: String!
+  FilePath: String!
+  idAssetGroup: Int
+  AssetGroup: AssetGroup
+  AssetVersion: [AssetVersion]
+  SystemObject: SystemObject
+}
+
+type AssetVersion {
+  idAssetVersion: Int!
+  DateCreated: DateTime!
+  idAsset: Int!
+  idUserCreator: Int!
+  StorageChecksum: String!
+  StorageLocation: String!
+  StorageSize: Int!
+  Asset: Asset
+  User: User
+  SystemObject: SystemObject
+}
+
+type AssetGroup {
+  idAssetGroup: Int!
+  Asset: [Asset]
+}
+
+type CaptureData {
+  idCaptureData: Int!
+  DateCaptured: DateTime!
+  Description: String!
+  idVCaptureDatasetType: Int!
+  idVCaptureMethod: Int!
+  CameraSettingsUniform: Boolean
+  CaptureDatasetFieldID: Int
+  ClusterGeometryFieldID: Int
+  idAssetThumbnail: Int
+  idVBackgroundRemovalMethod: Int
+  idVClusterType: Int
+  idVFocusType: Int
+  idVItemPositionType: Int
+  idVLightSourceType: Int
+  ItemArrangementFieldID: Int
+  ItemPositionFieldID: Int
+  AssetThumbnail: Asset
+  VBackgroundRemovalMethod: Vocabulary
+  VCaptureDatasetType: Vocabulary
+  VCaptureMethod: Vocabulary
+  VClusterType: Vocabulary
+  VFocusType: Vocabulary
+  VItemPositionType: Vocabulary
+  VLightSourceType: Vocabulary
+  CaptureDataFile: [CaptureDataFile]
+  CaptureDataGroup: [CaptureDataGroup]
+  SystemObject: SystemObject
+}
+
+type CaptureDataFile {
+  idCaptureDataFile: Int!
+  CompressedMultipleFiles: Boolean!
+  idAsset: Int!
+  idCaptureData: Int!
+  idVVariantType: Int!
+  Asset: Asset
+  CaptureData: CaptureData
+  VVariantType: Vocabulary
+}
+
+type CaptureDataGroup {
+  idCaptureDataGroup: Int!
+  CaptureData: [CaptureData]
+}
+
+type License {
+  idLicense: Int!
+  Description: String!
+  Name: String!
+  LicenseAssignment: [LicenseAssignment]
+}
+
+type LicenseAssignment {
+  idLicenseAssignment: Int!
+  idLicense: Int!
+  DateEnd: DateTime
+  DateStart: DateTime
+  idSystemObject: Int
+  idUserCreator: Int
+  License: License
+  SystemObject: SystemObject
+  UserCreator: User
+}
+
+type Model {
+  idModel: Int!
+  Authoritative: Boolean!
+  DateCreated: DateTime!
+  idAssetThumbnail: Int
+  idVCreationMethod: Int!
+  idVModality: Int!
+  idVPurpose: Int!
+  idVUnits: Int!
+  Master: Boolean!
+  AssetThumbnail: Asset
+  VCreationMethod: Vocabulary
+  VModality: Vocabulary
+  VPurpose: Vocabulary
+  VUnits: Vocabulary
+  ModelGeometryFile: [ModelGeometryFile]
+  ModelProcessingAction: [ModelProcessingAction]
+  ModelSceneXref: [ModelSceneXref]
+  SystemObject: SystemObject
+}
+
+type ModelGeometryFile {
+  idModelGeometryFile: Int!
+  idAsset: Int!
+  idModel: Int!
+  idVModelFileType: Int!
+  BoundingBoxP1X: Float
+  BoundingBoxP1Y: Float
+  BoundingBoxP1Z: Float
+  BoundingBoxP2X: Float
+  BoundingBoxP2Y: Float
+  BoundingBoxP2Z: Float
+  FaceCount: Int
+  HasNormals: Boolean
+  HasUVSpace: Boolean
+  HasVertexColor: Boolean
+  IsWatertight: Boolean
+  Metalness: Float
+  PointCount: Int
+  Roughness: Float
+  Asset: Asset
+  Model: Model
+  VModelFileType: Vocabulary
+  ModelUVMapFile: [ModelUVMapFile]
+}
+
+type ModelProcessingAction {
+  idModelProcessingAction: Int!
+  DateProcessed: DateTime!
+  Description: String!
+  idActor: Int!
+  idModel: Int!
+  ToolsUsed: String!
+  Actor: Actor
+  Model: Model
+  ModelProcessingActionStep: [ModelProcessingActionStep]!
+}
+
+type ModelProcessingActionStep {
+  idModelProcessingActionStep: Int!
+  Description: String!
+  idModelProcessingAction: Int!
+  idVActionMethod: Int!
+  ModelProcessingAction: ModelProcessingAction
+  VActionMethod: Vocabulary
+}
+
+type ModelSceneXref {
+  idModelSceneXref: Int!
+  idModel: Int!
+  idScene: Int!
+  R0: Float
+  R1: Float
+  R2: Float
+  R3: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
+  Model: Model
+  Scene: Scene
+}
+
+type ModelUVMapChannel {
+  idModelUVMapChannel: Int!
+  ChannelPosition: Int!
+  ChannelWidth: Int!
+  idModelUVMapFile: Int!
+  idVUVMapType: Int!
+  ModelUVMapFile: ModelUVMapFile
+  VUVMapType: Vocabulary
+}
+
+type ModelUVMapFile {
+  idModelUVMapFile: Int!
+  idAsset: Int!
+  idModelGeometryFile: Int!
+  UVMapEdgeLength: Int!
+  Asset: Asset
+  ModelGeometryFile: ModelGeometryFile
+  ModelUVMapChannel: [ModelUVMapChannel]
+}
+
+type Scene {
+  idScene: Int!
+  HasBeenQCd: Boolean!
+  idAssetThumbnail: Int
+  IsOriented: Boolean!
+  Name: String!
+  AssetThumbnail: Asset
+  ModelSceneXref: [ModelSceneXref]
+  SystemObject: SystemObject
+}
+
+type Actor {
+  idActor: Int!
+  idUnit: Int
+  IndividualName: String
+  OrganizationName: String
+  Unit: Unit
+  SystemObject: SystemObject
+}
+
+type IntermediaryFile {
+  idIntermediaryFile: Int!
+  DateCreated: DateTime!
+  idAsset: Int!
+  Asset: Asset
+  SystemObject: SystemObject
+}
+
+type SystemObject {
+  idSystemObject: Int!
+  Retired: Boolean!
+  idActor: Int
+  idAsset: Int
+  idAssetVersion: Int
+  idCaptureData: Int
+  idIntermediaryFile: Int
+  idItem: Int
+  idModel: Int
+  idProject: Int
+  idProjectDocumentation: Int
+  idScene: Int
+  idStakeholder: Int
+  idSubject: Int
+  idUnit: Int
+  idWorkflow: Int
+  idWorkflowStep: Int
+  Actor: Actor
+  Asset: Asset
+  AssetVersion: AssetVersion
+  CaptureData: CaptureData
+  IntermediaryFile: IntermediaryFile
+  Item: Item
+  Model: Model
+  Project: Project
+  ProjectDocumentation: ProjectDocumentation
+  Scene: Scene
+  Stakeholder: Stakeholder
+  Subject: Subject
+  Unit: Unit
+  Workflow: Workflow
+  WorkflowStep: WorkflowStep
+  AccessContextObject: [AccessContextObject]
+  Identifier: [Identifier]
+  LicenseAssignment: [LicenseAssignment]
+  Metadata: [Metadata]
+  SystemObjectVersion: [SystemObjectVersion]
+  SystemObjectDerived: [SystemObject]
+  SystemObjectMaster: [SystemObject]
+  UserPersonalizationSystemObject: [UserPersonalizationSystemObject]
+  WorkflowStepXref: [WorkflowStep]
+}
+
+type SystemObjectVersion {
+  idSystemObjectVersion: Int!
+  idSystemObject: Int!
+  PublishedState: Int!
+  SystemObject: SystemObject
+}
+
+type Identifier {
+  idIdentifier: Int!
+  IdentifierValue: String!
+  idSystemObject: Int
+  idVIdentifierType: Int
+  SystemObject: SystemObject
+  VIdentifierType: Vocabulary
+}
+
+type Metadata {
+  idMetadata: Int!
+  Name: String!
+  idAssetValue: Int
+  idSystemObject: Int
+  idUser: Int
+  idVMetadataSource: Int
+  ValueExtended: String
+  ValueShort: String
+  AssetValue: Asset
+  SystemObject: SystemObject
+  User: User
+  VMetadataSource: Vocabulary
+}
+
+type Unit {
+  idUnit: Int!
+  Abbreviation: String
+  ARKPrefix: String
+  Name: String!
+  Actor: [Actor]
+  Subject: [Subject]
+  SystemObject: SystemObject
+}
+
+type Project {
+  idProject: Int!
+  Name: String!
+  Description: String
+  ProjectDocumentation: [ProjectDocumentation]
+  SystemObject: SystemObject
+  Workflow: [Workflow]
+}
+
+type ProjectDocumentation {
+  idProjectDocumentation: Int!
+  Description: String!
+  idProject: Int!
+  Name: String!
+  Project: Project!
+  SystemObject: SystemObject
+}
+
+type Stakeholder {
+  idStakeholder: Int!
+  IndividualName: String!
+  OrganizationName: String!
+  MailingAddress: String
+  EmailAddress: String
+  PhoneNumberMobile: String
+  PhoneNumberOffice: String
+  SystemObject: SystemObject
+}
+
+type GeoLocation {
+  idGeoLocation: Int!
+  Altitude: Float
+  Latitude: Float
+  Longitude: Float
+  R0: Float
+  R1: Float
+  R2: Float
+  R3: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
+}
+
+type Subject {
+  idSubject: Int!
+  idUnit: Int!
+  Name: String!
+  AssetThumbnail: Asset
+  idAssetThumbnail: Int
+  idGeoLocation: Int
+  GeoLocation: GeoLocation
+  Unit: Unit
+  Item: [Item]
+  SystemObject: SystemObject
+}
+
+type Item {
+  idItem: Int!
+  EntireSubject: Boolean!
+  idSubject: Int!
+  Name: String!
+  idAssetThumbnail: Int
+  idGeoLocation: Int
+  AssetThumbnail: Asset
+  GeoLocation: GeoLocation
+  Subject: Subject
+  SystemObject: SystemObject
+}
+
+type User {
+  idUser: Int!
+  Active: Boolean!
+  DateActivated: DateTime!
+  EmailAddress: String!
+  Name: String!
+  SecurityID: String!
+  DateDisabled: DateTime
+  EmailSettings: Int
+  WorkflowNotificationTime: DateTime
+  AccessPolicy: [AccessPolicy]
+  AssetVersion: [AssetVersion]
+  LicenseAssignment: [LicenseAssignment]
+  Metadata: [Metadata]
+  UserPersonalizationSystemObject: [UserPersonalizationSystemObject]
+  UserPersonalizationUrl: [UserPersonalizationUrl]
+  Workflow: [Workflow]
+  WorkflowStep: [WorkflowStep]
+}
+
+type UserPersonalizationSystemObject {
+  idUserPersonalizationSystemObject: Int!
+  idSystemObject: Int!
+  idUser: Int!
+  Personalization: String
+  SystemObject: SystemObject
+  User: User
+}
+
+type UserPersonalizationUrl {
+  idUserPersonalizationUrl: Int!
+  idUser: Int!
+  Personalization: String!
+  URL: String!
+  User: User
+}
+
+type Vocabulary {
+  idVocabulary: Int!
+  idVocabularySet: Int!
+  SortOrder: Int!
+  VocabularySet: VocabularySet
+}
+
+type VocabularySet {
+  idVocabularySet: Int!
+  Name: String!
+  SystemMaintained: Boolean!
+  Vocabulary: [Vocabulary]
+}
+
+type Workflow {
+  idWorkflow: Int!
+  DateInitiated: DateTime!
+  DateUpdated: DateTime!
+  idWorkflowTemplate: Int!
+  idProject: Int
+  idUserInitiator: Int
+  Project: Project
+  UserInitiator: User
+  WorkflowTemplate: WorkflowTemplate
+  SystemObject: SystemObject
+  WorkflowStep: [WorkflowStep]
+}
+
+type WorkflowStep {
+  idWorkflowStep: Int!
+  DateCreated: DateTime!
+  idUserOwner: Int!
+  idVWorkflowStepType: Int!
+  idWorkflow: Int!
+  State: Int!
+  DateCompleted: DateTime
+  User: User
+  VWorkflowStepType: Vocabulary
+  Workflow: Workflow
+  SystemObject: SystemObject
+  WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]
+}
+
+type WorkflowStepSystemObjectXref {
+  idWorkflowStepSystemObjectXref: Int!
+  idSystemObject: Int!
+  idWorkflowStep: Int!
+  Input: Boolean!
+  SystemObject: SystemObject
+  WorkflowStep: WorkflowStep
+}
+
+type WorkflowTemplate {
+  idWorkflowTemplate: Int!
+  Name: String!
+  Workflow: [Workflow]
+}
+
+type Query {
+  getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
+  getAsset(input: GetAssetInput!): GetAssetResult!
+  getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
+  getLicense(input: GetLicenseInput!): GetLicenseResult!
+  getModel(input: GetModelInput!): GetModelResult!
+  getScene(input: GetSceneInput!): GetSceneResult!
+  getUnit(input: GetUnitInput!): GetUnitResult!
+  getProject(input: GetProjectInput!): GetProjectResult!
+  getSubject(input: GetSubjectInput!): GetUnitResult!
+  getItem(input: GetItemInput!): GetItemResult!
+  getUser(input: GetUserInput!): GetUserResult!
+  getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
+  getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
+}
+
+input GetAccessPolicyInput {
+  idAccessPolicy: Int!
+}
+
+type GetAccessPolicyResult {
+  AccessPolicy: AccessPolicy
+}
+
+input GetAssetInput {
+  idAsset: Int!
+}
+
+type GetAssetResult {
+  Asset: Asset
+}
+
+input GetCaptureDataInput {
+  idCaptureData: Int!
+}
+
+type GetCaptureDataResult {
+  CaptureData: CaptureData
+}
+
+input GetLicenseInput {
+  idLicense: Int!
+}
+
+type GetLicenseResult {
+  License: License
+}
+
+input GetModelInput {
+  idModel: Int!
+}
+
+type GetModelResult {
+  Model: Model
+}
+
+input GetSceneInput {
+  idScene: Int!
+}
+
+type GetSceneResult {
+  Scene: Scene
+}
+
+input GetUnitInput {
+  idUnit: Int!
+}
+
+type GetUnitResult {
+  Unit: Unit
+}
+
+input GetProjectInput {
+  idProject: Int!
+}
+
+type GetProjectResult {
+  Project: Project
+}
+
+input GetSubjectInput {
+  idSubject: Int!
+}
+
+type GetSubjectResult {
+  Subject: Subject
+}
+
+input GetItemInput {
+  idItem: Int!
+}
+
+type GetItemResult {
+  Item: Item
+}
+
+input GetUserInput {
+  idUser: Int!
+}
+
+type GetUserResult {
+  User: User
+}
+
+input GetVocabularyInput {
+  idVocabulary: Int!
+}
+
+type GetVocabularyResult {
+  Vocabulary: Vocabulary
+}
+
+input GetWorkflowInput {
+  idWorkflow: Int!
+}
+
+type GetWorkflowResult {
+  Workflow: Workflow
+}
+
+type Mutation {
+  createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
+  createModel(input: CreateModelInput!): CreateModelResult!
+  createScene(input: CreateSceneInput!): CreateSceneResult!
+  createUnit(input: CreateUnitInput!): CreateUnitResult!
+  createProject(input: CreateProjectInput!): CreateProjectResult!
+  createSubject(input: CreateSubjectInput!): CreateSubjectResult!
+  createItem(input: CreateItemInput!): CreateItemResult!
+  createUser(input: CreateUserInput!): CreateUserResult!
+  createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
+  createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
+}
+
+input CreateCaptureDataInput {
+  idVCaptureMethod: Int!
+  idVCaptureDatasetType: Int!
+  DateCaptured: DateTime!
+  Description: String!
+  CaptureDatasetFieldID: Int!
+  ItemPositionFieldID: Int!
+  ItemArrangementFieldID: Int!
+  idVBackgroundRemovalMethod: Int!
+  ClusterGeometryFieldID: Int!
+  CameraSettingsUniform: Boolean!
+  idAssetThumbnail: Int
+  idVItemPositionType: Int
+  idVFocusType: Int
+  idVLightSourceType: Int
+  idVClusterType: Int
+}
+
+type CreateCaptureDataResult {
+  CaptureData: CaptureData
+}
+
+input CreateModelInput {
+  Authoritative: Boolean!
+  idVCreationMethod: Int!
+  idVModality: Int!
+  idVPurpose: Int!
+  idVUnits: Int!
+  Master: Boolean!
+  idAssetThumbnail: Int
+}
+
+type CreateModelResult {
+  Model: Model
+}
+
+input CreateSceneInput {
+  Name: String!
+  HasBeenQCd: Boolean!
+  IsOriented: Boolean!
+  idAssetThumbnail: Int
+}
+
+type CreateSceneResult {
+  Scene: Scene
+}
+
+input CreateUnitInput {
+  Name: String!
+  Abbreviation: String!
+  ARKPrefix: String!
+}
+
+type CreateUnitResult {
+  Unit: Unit
+}
+
+input CreateProjectInput {
+  Name: String!
+  Description: String!
+}
+
+type CreateProjectResult {
+  Project: Project
+}
+
+input CreateSubjectInput {
+  idUnit: Int!
+  Name: String!
+  idAssetThumbnail: Int
+  idGeoLocation: Int
+}
+
+type CreateSubjectResult {
+  Subject: Subject
+}
+
+input CreateItemInput {
+  idSubject: Int!
+  Name: String!
+  EntireSubject: Boolean!
+  idAssetThumbnail: Int
+  idGeoLocation: Int
+}
+
+type CreateItemResult {
+  Item: Item
+}
+
+input CreateUserInput {
+  Name: String!
+  EmailAddress: String!
+  SecurityID: String!
+}
+
+type CreateUserResult {
+  User: User
+}
+
+input CreateVocabularyInput {
+  idVocabularySet: Int!
+  SortOrder: Int!
+  Term: String!
+}
+
+type CreateVocabularyResult {
+  Vocabulary: Vocabulary
+}
+
+input CreateVocabularySetInput {
+  Name: String!
+  SystemMaintained: Boolean!
+}
+
+type CreateVocabularySetResult {
+  VocabularySet: VocabularySet
+}

@@ -1,0 +1,29 @@
+scalar DateTime
+
+type Scene {
+    idScene: Int!
+    HasBeenQCd: Boolean!
+    idAssetThumbnail: Int
+    IsOriented: Boolean!
+    Name: String!
+    AssetThumbnail: Asset
+    ModelSceneXref: [ModelSceneXref]
+    SystemObject: SystemObject
+}
+
+type Actor {
+    idActor: Int!
+    idUnit: Int
+    IndividualName: String
+    OrganizationName: String
+    Unit: Unit
+    SystemObject: SystemObject
+}
+
+type IntermediaryFile {
+    idIntermediaryFile: Int!
+    DateCreated: DateTime!
+    idAsset: Int!
+    Asset: Asset
+    SystemObject: SystemObject
+}

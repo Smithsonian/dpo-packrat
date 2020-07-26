@@ -1,0 +1,15 @@
+scalar DateTime
+
+type Mutation {
+    createUser(input: CreateUserInput!): CreateUserResult!
+}
+
+input CreateUserInput {
+    Name: String!
+    EmailAddress: String!
+    SecurityID: String!
+}
+
+type CreateUserResult {
+    User: User
+}

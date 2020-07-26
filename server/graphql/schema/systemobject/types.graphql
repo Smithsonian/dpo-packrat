@@ -1,0 +1,76 @@
+scalar DateTime
+
+type SystemObject {
+    idSystemObject: Int!
+    Retired: Boolean!
+    idActor: Int
+    idAsset: Int
+    idAssetVersion: Int
+    idCaptureData: Int
+    idIntermediaryFile: Int
+    idItem: Int
+    idModel: Int
+    idProject: Int
+    idProjectDocumentation: Int
+    idScene: Int
+    idStakeholder: Int
+    idSubject: Int
+    idUnit: Int
+    idWorkflow: Int
+    idWorkflowStep: Int
+    Actor: Actor
+    Asset: Asset
+    AssetVersion: AssetVersion
+    CaptureData: CaptureData
+    IntermediaryFile: IntermediaryFile
+    Item: Item
+    Model: Model
+    Project: Project
+    ProjectDocumentation: ProjectDocumentation
+    Scene: Scene
+    Stakeholder: Stakeholder
+    Subject: Subject
+    Unit: Unit
+    Workflow: Workflow
+    WorkflowStep: WorkflowStep
+    AccessContextObject: [AccessContextObject]
+    Identifier: [Identifier]
+    LicenseAssignment: [LicenseAssignment]
+    Metadata: [Metadata]
+    SystemObjectVersion: [SystemObjectVersion]
+    SystemObjectDerived: [SystemObject]
+    SystemObjectMaster: [SystemObject]
+    UserPersonalizationSystemObject: [UserPersonalizationSystemObject]
+    WorkflowStepXref: [WorkflowStep]
+}
+
+type SystemObjectVersion {
+    idSystemObjectVersion: Int!
+    idSystemObject: Int!
+    PublishedState: Int!
+    SystemObject: SystemObject
+}
+
+type Identifier {
+    idIdentifier: Int!
+    IdentifierValue: String!
+    idSystemObject: Int
+    idVIdentifierType: Int
+    SystemObject: SystemObject
+    VIdentifierType: Vocabulary
+}
+
+type Metadata {
+    idMetadata: Int!
+    Name: String!
+    idAssetValue: Int
+    idSystemObject: Int
+    idUser: Int
+    idVMetadataSource: Int
+    ValueExtended: String
+    ValueShort: String
+    AssetValue: Asset
+    SystemObject: SystemObject
+    User: User
+    VMetadataSource: Vocabulary
+}
