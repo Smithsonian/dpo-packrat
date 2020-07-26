@@ -5,6 +5,16 @@ WORKDIR /app
 ADD package.json yarn.lock ./
 # Copy app files
 COPY . .
+
+FROM base AS client-builder
+# Remove server from client build
+RUN rm -rf server
+# Install dependencies (production mode) and build
+RUN yarn install --frozen-lockfile && yarn build
+
+FROM base AS server-builder
+# Remove client from server build
+RUN rm -rf client
 # Install dependencies (production mode) and build
 RUN yarn install --frozen-lockfile && yarn build
 
@@ -12,8 +22,8 @@ RUN yarn install --frozen-lockfile && yarn build
 FROM node:12-alpine AS client
 # Add a work directory
 WORKDIR /app
-# Copy from base builder
-COPY --from=base /app/client/build .
+# Copy from client-builder
+COPY --from=client-builder /app/client/build .
 # Expose port(s)
 EXPOSE 3000
 # Install static file server
@@ -25,9 +35,9 @@ CMD serve -s . -l 3000
 FROM node:12-alpine AS server
 # Add a work directory
 WORKDIR /app
-# Copy from base builder
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/server ./server
+# Copy from server-builder
+COPY --from=server-builder /app/node_modules ./node_modules
+COPY --from=server-builder /app/server ./server
 # Expose port(s)
 EXPOSE 4000
 # Start on excecution
