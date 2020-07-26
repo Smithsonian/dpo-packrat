@@ -38,7 +38,7 @@ const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
         height: 60,
         textDecoration: 'none',
         transition: 'all 400ms linear',
-        color: palette.text.secondary,
+        color: palette.background.default,
         '&:hover': {
             backgroundColor: palette.primary.dark
         }
