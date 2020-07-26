@@ -1,0 +1,715 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../../node_modules/@prisma/client"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+datasource mariasql {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model AccessAction {
+  idAccessAction             Int                          @default(autoincrement()) @id
+  Name                       String
+  SortOrder                  Int
+  AccessRoleAccessActionXref AccessRoleAccessActionXref[]
+
+  @@index([SortOrder], name: "AccessAction_SortOrder")
+}
+
+model AccessContext {
+  idAccessContext     Int                   @default(autoincrement()) @id
+  Global              Boolean
+  Authoritative       Boolean
+  CaptureData         Boolean
+  Model               Boolean
+  Scene               Boolean
+  IntermediaryFile    Boolean
+  AccessContextObject AccessContextObject[]
+  AccessPolicy        AccessPolicy[]
+}
+
+model AccessContextObject {
+  idAccessContextObject Int           @default(autoincrement()) @id
+  idAccessContext       Int
+  idSystemObject        Int
+  AccessContext         AccessContext @relation(fields: [idAccessContext], references: [idAccessContext])
+  SystemObject          SystemObject  @relation(fields: [idSystemObject], references: [idSystemObject])
+
+  @@index([idAccessContext], name: "AccessContextObject_idAccessContext")
+  @@index([idSystemObject], name: "AccessContextObject_idSystemObject")
+}
+
+model AccessPolicy {
+  idAccessPolicy  Int           @default(autoincrement()) @id
+  idUser          Int
+  idAccessRole    Int
+  idAccessContext Int
+  AccessContext   AccessContext @relation(fields: [idAccessContext], references: [idAccessContext])
+  AccessRole      AccessRole    @relation(fields: [idAccessRole], references: [idAccessRole])
+  User            User          @relation(fields: [idUser], references: [idUser])
+
+  @@index([idAccessContext], name: "AccessPolicy_idAccessContext")
+  @@index([idAccessRole], name: "AccessPolicy_idAccessRole")
+  @@index([idUser], name: "AccessPolicy_idUser")
+}
+
+model AccessRole {
+  idAccessRole               Int                          @default(autoincrement()) @id
+  Name                       String
+  AccessPolicy               AccessPolicy[]
+  AccessRoleAccessActionXref AccessRoleAccessActionXref[]
+}
+
+model AccessRoleAccessActionXref {
+  idAccessRoleAccessActionXref Int          @default(autoincrement()) @id
+  idAccessRole                 Int
+  idAccessAction               Int
+  AccessAction                 AccessAction @relation(fields: [idAccessAction], references: [idAccessAction])
+  AccessRole                   AccessRole   @relation(fields: [idAccessRole], references: [idAccessRole])
+
+  @@index([idAccessAction], name: "AccessRoleAccessActionXref_idAccessAction")
+  @@index([idAccessRole], name: "AccessRoleAccessActionXref_idAccessRole")
+}
+
+model Actor {
+  idActor               Int                     @default(autoincrement()) @id
+  IndividualName        String?
+  OrganizationName      String?
+  idUnit                Int?
+  Unit                  Unit?                   @relation(fields: [idUnit], references: [idUnit])
+  ModelProcessingAction ModelProcessingAction[]
+  SystemObject          SystemObject?
+
+  @@index([idUnit], name: "fk_actor_unit_1")
+}
+
+model Asset {
+  idAsset           Int                 @default(autoincrement()) @id
+  FileName          String
+  FilePath          String
+  idAssetGroup      Int?
+  AssetGroup        AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
+  AssetVersion      AssetVersion[]
+  CaptureData       CaptureData[]
+  CaptureDataFile   CaptureDataFile[]
+  IntermediaryFile  IntermediaryFile[]
+  Item              Item[]
+  Metadata          Metadata[]
+  Model             Model[]
+  ModelGeometryFile ModelGeometryFile[]
+  ModelUVMapFile    ModelUVMapFile[]
+  Scene             Scene[]
+  Subject           Subject[]
+  SystemObject      SystemObject?
+
+  @@index([idAssetGroup], name: "Asset_idAssetGroup")
+}
+
+model AssetGroup {
+  idAssetGroup Int     @default(autoincrement()) @id
+  Asset        Asset[]
+}
+
+model AssetVersion {
+  idAssetVersion  Int           @default(autoincrement()) @id
+  idAsset         Int
+  idUserCreator   Int
+  DateCreated     DateTime
+  StorageLocation String
+  StorageChecksum String
+  StorageSize     Int           @default(0)
+  Asset           Asset         @relation(fields: [idAsset], references: [idAsset])
+  User            User          @relation(fields: [idUserCreator], references: [idUser])
+  SystemObject    SystemObject?
+
+  @@index([StorageChecksum], name: "AssetVersion_StorageChecksum")
+  @@index([idAsset, DateCreated], name: "AssetVersion_idAsset_DateCreated")
+  @@index([idUserCreator], name: "fk_assetversion_user1")
+}
+
+model CaptureData {
+  idCaptureData                                                 Int                               @default(autoincrement()) @id
+  idVCaptureMethod                                              Int
+  idVCaptureDatasetType                                         Int
+  DateCaptured                                                  DateTime
+  Description                                                   String
+  CaptureDatasetFieldID                                         Int?
+  idVItemPositionType                                           Int?
+  ItemPositionFieldID                                           Int?
+  ItemArrangementFieldID                                        Int?
+  idVFocusType                                                  Int?
+  idVLightSourceType                                            Int?
+  idVBackgroundRemovalMethod                                    Int?
+  idVClusterType                                                Int?
+  ClusterGeometryFieldID                                        Int?
+  CameraSettingsUniform                                         Boolean?
+  idAssetThumbnail                                              Int?
+  Asset                                                         Asset?                            @relation(fields: [idAssetThumbnail], references: [idAsset])
+  Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary Vocabulary?                       @relation("CaptureData_idVBackgroundRemovalMethodToVocabulary", fields: [idVBackgroundRemovalMethod], references: [idVocabulary])
+  Vocabulary_CaptureData_idVCaptureDatasetTypeToVocabulary      Vocabulary                        @relation("CaptureData_idVCaptureDatasetTypeToVocabulary", fields: [idVCaptureDatasetType], references: [idVocabulary])
+  Vocabulary_CaptureData_idVCaptureMethodToVocabulary           Vocabulary                        @relation("CaptureData_idVCaptureMethodToVocabulary", fields: [idVCaptureMethod], references: [idVocabulary])
+  Vocabulary_CaptureData_idVClusterTypeToVocabulary             Vocabulary?                       @relation("CaptureData_idVClusterTypeToVocabulary", fields: [idVClusterType], references: [idVocabulary])
+  Vocabulary_CaptureData_idVFocusTypeToVocabulary               Vocabulary?                       @relation("CaptureData_idVFocusTypeToVocabulary", fields: [idVFocusType], references: [idVocabulary])
+  Vocabulary_CaptureData_idVItemPositionTypeToVocabulary        Vocabulary?                       @relation("CaptureData_idVItemPositionTypeToVocabulary", fields: [idVItemPositionType], references: [idVocabulary])
+  Vocabulary_CaptureData_idVLightSourceTypeToVocabulary         Vocabulary?                       @relation("CaptureData_idVLightSourceTypeToVocabulary", fields: [idVLightSourceType], references: [idVocabulary])
+  CaptureDataFile                                               CaptureDataFile[]
+  CaptureDataGroupCaptureDataXref                               CaptureDataGroupCaptureDataXref[]
+  SystemObject                                                  SystemObject?
+
+  @@index([idAssetThumbnail], name: "fk_capturedata_asset1")
+  @@index([idVCaptureMethod], name: "fk_capturedata_vocabulary1")
+  @@index([idVCaptureDatasetType], name: "fk_capturedata_vocabulary2")
+  @@index([idVItemPositionType], name: "fk_capturedata_vocabulary3")
+  @@index([idVFocusType], name: "fk_capturedata_vocabulary4")
+  @@index([idVLightSourceType], name: "fk_capturedata_vocabulary5")
+  @@index([idVBackgroundRemovalMethod], name: "fk_capturedata_vocabulary6")
+  @@index([idVClusterType], name: "fk_capturedata_vocabulary7")
+}
+
+model CaptureDataFile {
+  idCaptureDataFile       Int         @default(autoincrement()) @id
+  idCaptureData           Int
+  idAsset                 Int
+  idVVariantType          Int
+  CompressedMultipleFiles Boolean
+  Asset                   Asset       @relation(fields: [idAsset], references: [idAsset])
+  CaptureData             CaptureData @relation(fields: [idCaptureData], references: [idCaptureData])
+  Vocabulary              Vocabulary  @relation(fields: [idVVariantType], references: [idVocabulary])
+
+  @@index([idAsset], name: "CaptureDataFile_idAsset")
+  @@index([idCaptureData], name: "CaptureDataFile_idCaptureData")
+  @@index([idVVariantType], name: "fk_capturedatafile_vocabulary1")
+}
+
+model CaptureDataGroup {
+  idCaptureDataGroup              Int                               @default(autoincrement()) @id
+  CaptureDataGroupCaptureDataXref CaptureDataGroupCaptureDataXref[]
+}
+
+model CaptureDataGroupCaptureDataXref {
+  idCaptureDataGroupCaptureDataXref Int              @default(autoincrement()) @id
+  idCaptureDataGroup                Int
+  idCaptureData                     Int
+  CaptureData                       CaptureData      @relation(fields: [idCaptureData], references: [idCaptureData])
+  CaptureDataGroup                  CaptureDataGroup @relation(fields: [idCaptureDataGroup], references: [idCaptureDataGroup])
+
+  @@index([idCaptureData], name: "CaptureDataGroupCaptureDataXref_idCaptureData")
+  @@index([idCaptureDataGroup], name: "CaptureDataGroupCaptureDataXref_idCaptureDataGroup")
+}
+
+model GeoLocation {
+  idGeoLocation Int       @default(autoincrement()) @id
+  Latitude      Float?
+  Longitude     Float?
+  Altitude      Float?
+  TS0           Float?
+  TS1           Float?
+  TS2           Float?
+  R0            Float?
+  R1            Float?
+  R2            Float?
+  R3            Float?
+  Item          Item[]
+  Subject       Subject[]
+}
+
+model Identifier {
+  idIdentifier      Int           @default(autoincrement()) @id
+  IdentifierValue   String
+  idVIdentifierType Int
+  idSystemObject    Int?
+  SystemObject      SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
+  Vocabulary        Vocabulary    @relation(fields: [idVIdentifierType], references: [idVocabulary])
+
+  @@index([IdentifierValue], name: "Identifier_IdentifierValue")
+  @@index([idSystemObject, idVIdentifierType], name: "Identifier_idSystemObject_idVIdentifierType")
+  @@index([idVIdentifierType, IdentifierValue], name: "Identifier_idVIdentifierType_IdentifierValue")
+}
+
+model IntermediaryFile {
+  idIntermediaryFile Int           @default(autoincrement()) @id
+  idAsset            Int
+  DateCreated        DateTime
+  Asset              Asset         @relation(fields: [idAsset], references: [idAsset])
+  SystemObject       SystemObject?
+
+  @@index([idAsset], name: "fk_intermediaryfile_asset1")
+}
+
+model Item {
+  idItem           Int           @default(autoincrement()) @id
+  idSubject        Int
+  idAssetThumbnail Int?
+  idGeoLocation    Int?
+  Name             String
+  EntireSubject    Boolean
+  Asset            Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset])
+  GeoLocation      GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation])
+  Subject          Subject       @relation(fields: [idSubject], references: [idSubject])
+  SystemObject     SystemObject?
+
+  @@index([idAssetThumbnail], name: "fk_item_asset1")
+  @@index([idGeoLocation], name: "fk_item_geolocation1")
+  @@index([idSubject], name: "fk_item_subject1")
+}
+
+model License {
+  idLicense         Int                 @default(autoincrement()) @id
+  Name              String
+  Description       String
+  LicenseAssignment LicenseAssignment[]
+}
+
+model LicenseAssignment {
+  idLicenseAssignment Int           @default(autoincrement()) @id
+  idLicense           Int
+  idUserCreator       Int?
+  DateStart           DateTime?
+  DateEnd             DateTime?
+  idSystemObject      Int?
+  License             License       @relation(fields: [idLicense], references: [idLicense])
+  SystemObject        SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
+  User                User?         @relation(fields: [idUserCreator], references: [idUser])
+
+  @@index([idSystemObject], name: "LicenseAssignment_idSystemObject")
+  @@index([idLicense], name: "fk_licenseassignment_license1")
+  @@index([idUserCreator], name: "fk_licenseassignment_user1")
+}
+
+model Metadata {
+  idMetadata        Int           @default(autoincrement()) @id
+  Name              String
+  ValueShort        String?
+  ValueExtended     String?
+  idAssetValue      Int?
+  idUser            Int?
+  idVMetadataSource Int?
+  idSystemObject    Int?
+  Asset             Asset?        @relation(fields: [idAssetValue], references: [idAsset])
+  SystemObject      SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
+  User              User?         @relation(fields: [idUser], references: [idUser])
+  Vocabulary        Vocabulary?   @relation(fields: [idVMetadataSource], references: [idVocabulary])
+
+  @@index([Name, ValueShort], name: "Metadata_Name_ValueShort")
+  @@index([idAssetValue], name: "Metadata_idAssetValue")
+  @@index([idSystemObject], name: "Metadata_idSystemObject")
+  @@index([idUser], name: "fk_metadata_user1")
+  @@index([idVMetadataSource], name: "fk_metadata_vocabulary1")
+}
+
+model Model {
+  idModel                                        Int                     @default(autoincrement()) @id
+  DateCreated                                    DateTime
+  idVCreationMethod                              Int
+  Master                                         Boolean
+  Authoritative                                  Boolean
+  idVModality                                    Int
+  idVUnits                                       Int
+  idVPurpose                                     Int
+  idAssetThumbnail                               Int?
+  Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset])
+  Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary              @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary])
+  Vocabulary_Model_idVModalityToVocabulary       Vocabulary              @relation("Model_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary])
+  Vocabulary_Model_idVPurposeToVocabulary        Vocabulary              @relation("Model_idVPurposeToVocabulary", fields: [idVPurpose], references: [idVocabulary])
+  Vocabulary_Model_idVUnitsToVocabulary          Vocabulary              @relation("Model_idVUnitsToVocabulary", fields: [idVUnits], references: [idVocabulary])
+  ModelGeometryFile                              ModelGeometryFile[]
+  ModelProcessingAction                          ModelProcessingAction[]
+  ModelSceneXref                                 ModelSceneXref[]
+  SystemObject                                   SystemObject?
+
+  @@index([idAssetThumbnail], name: "fk_model_asset1")
+  @@index([idVCreationMethod], name: "fk_model_vocabulary1")
+  @@index([idVModality], name: "fk_model_vocabulary2")
+  @@index([idVUnits], name: "fk_model_vocabulary3")
+  @@index([idVPurpose], name: "fk_model_vocabulary4")
+}
+
+model ModelGeometryFile {
+  idModelGeometryFile Int              @default(autoincrement()) @id
+  idModel             Int
+  idAsset             Int
+  idVModelFileType    Int
+  Roughness           Float?
+  Metalness           Float?
+  PointCount          Int?
+  FaceCount           Int?
+  IsWatertight        Boolean?
+  HasNormals          Boolean?
+  HasVertexColor      Boolean?
+  HasUVSpace          Boolean?
+  BoundingBoxP1X      Float?
+  BoundingBoxP1Y      Float?
+  BoundingBoxP1Z      Float?
+  BoundingBoxP2X      Float?
+  BoundingBoxP2Y      Float?
+  BoundingBoxP2Z      Float?
+  Asset               Asset            @relation(fields: [idAsset], references: [idAsset])
+  Model               Model            @relation(fields: [idModel], references: [idModel])
+  Vocabulary          Vocabulary       @relation(fields: [idVModelFileType], references: [idVocabulary])
+  ModelUVMapFile      ModelUVMapFile[]
+
+  @@index([idAsset], name: "ModelGeometryFile_idAsset")
+  @@index([idModel], name: "ModelGeometryFile_idModel")
+  @@index([idVModelFileType], name: "fk_modelgeometryfile_vocabulary1")
+}
+
+model ModelProcessingAction {
+  idModelProcessingAction   Int                         @default(autoincrement()) @id
+  idModel                   Int
+  idActor                   Int
+  DateProcessed             DateTime
+  ToolsUsed                 String
+  Description               String
+  Actor                     Actor                       @relation(fields: [idActor], references: [idActor])
+  Model                     Model                       @relation(fields: [idModel], references: [idModel])
+  ModelProcessingActionStep ModelProcessingActionStep[]
+
+  @@index([idActor], name: "ModelProcessingAction_idActor")
+  @@index([idModel], name: "ModelProcessingAction_idModel")
+}
+
+model ModelProcessingActionStep {
+  idModelProcessingActionStep Int                   @default(autoincrement()) @id
+  idModelProcessingAction     Int
+  idVActionMethod             Int
+  Description                 String
+  ModelProcessingAction       ModelProcessingAction @relation(fields: [idModelProcessingAction], references: [idModelProcessingAction])
+  Vocabulary                  Vocabulary            @relation(fields: [idVActionMethod], references: [idVocabulary])
+
+  @@index([idModelProcessingAction], name: "fk_modelprocessingactionstep_modelprocessingaction1")
+  @@index([idVActionMethod], name: "fk_modelprocessingactionstep_vocabulary1")
+}
+
+model ModelSceneXref {
+  idModelSceneXref Int    @default(autoincrement()) @id
+  idModel          Int
+  idScene          Int
+  TS0              Float?
+  TS1              Float?
+  TS2              Float?
+  R0               Float?
+  R1               Float?
+  R2               Float?
+  R3               Float?
+  Model            Model  @relation(fields: [idModel], references: [idModel])
+  Scene            Scene  @relation(fields: [idScene], references: [idScene])
+
+  @@index([idModel], name: "ModelSceneXref_idModel")
+  @@index([idScene], name: "ModelSceneXref_idScene")
+}
+
+model ModelUVMapChannel {
+  idModelUVMapChannel Int            @default(autoincrement()) @id
+  idModelUVMapFile    Int
+  ChannelPosition     Int
+  ChannelWidth        Int
+  idVUVMapType        Int
+  ModelUVMapFile      ModelUVMapFile @relation(fields: [idModelUVMapFile], references: [idModelUVMapFile])
+  Vocabulary          Vocabulary     @relation(fields: [idVUVMapType], references: [idVocabulary])
+
+  @@index([idModelUVMapFile], name: "ModelUVMapChannel_idModelUVMapFile")
+  @@index([idVUVMapType], name: "fk_modeluvmapchannel_vocabulary1")
+}
+
+model ModelUVMapFile {
+  idModelUVMapFile    Int                 @default(autoincrement()) @id
+  idModelGeometryFile Int
+  idAsset             Int
+  UVMapEdgeLength     Int
+  Asset               Asset               @relation(fields: [idAsset], references: [idAsset])
+  ModelGeometryFile   ModelGeometryFile   @relation(fields: [idModelGeometryFile], references: [idModelGeometryFile])
+  ModelUVMapChannel   ModelUVMapChannel[]
+
+  @@index([idAsset], name: "ModelUVMapFile_idAsset")
+  @@index([idModelGeometryFile], name: "ModelUVMapFile_idModelGeometryFile")
+}
+
+model Project {
+  idProject            Int                    @default(autoincrement()) @id
+  Name                 String
+  Description          String?
+  ProjectDocumentation ProjectDocumentation[]
+  SystemObject         SystemObject?
+  Workflow             Workflow[]
+}
+
+model ProjectDocumentation {
+  idProjectDocumentation Int           @default(autoincrement()) @id
+  idProject              Int
+  Name                   String
+  Description            String
+  Project                Project       @relation(fields: [idProject], references: [idProject])
+  SystemObject           SystemObject?
+
+  @@index([idProject], name: "fk_projectdocumentation_project1")
+}
+
+model Scene {
+  idScene          Int              @default(autoincrement()) @id
+  Name             String
+  idAssetThumbnail Int?
+  IsOriented       Boolean
+  HasBeenQCd       Boolean
+  Asset            Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
+  ModelSceneXref   ModelSceneXref[]
+  SystemObject     SystemObject?
+
+  @@index([idAssetThumbnail], name: "fk_scene_asset1")
+}
+
+model Stakeholder {
+  idStakeholder     Int           @default(autoincrement()) @id
+  IndividualName    String
+  OrganizationName  String
+  EmailAddress      String?
+  PhoneNumberMobile String?
+  PhoneNumberOffice String?
+  MailingAddress    String?
+  SystemObject      SystemObject?
+}
+
+model Subject {
+  idSubject        Int           @default(autoincrement()) @id
+  idUnit           Int
+  idAssetThumbnail Int?
+  idGeoLocation    Int?
+  Name             String
+  Asset            Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset])
+  GeoLocation      GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation])
+  Unit             Unit          @relation(fields: [idUnit], references: [idUnit])
+  Item             Item[]
+  SystemObject     SystemObject?
+
+  @@index([idAssetThumbnail], name: "fk_subject_asset1")
+  @@index([idGeoLocation], name: "fk_subject_geolocation1")
+  @@index([idUnit], name: "fk_subject_unit1")
+}
+
+model SystemObject {
+  idSystemObject                                                        Int                               @default(autoincrement()) @id
+  idUnit                                                                Int?                              @unique
+  idProject                                                             Int?                              @unique
+  idSubject                                                             Int?                              @unique
+  idItem                                                                Int?                              @unique
+  idCaptureData                                                         Int?                              @unique
+  idModel                                                               Int?                              @unique
+  idScene                                                               Int?                              @unique
+  idIntermediaryFile                                                    Int?                              @unique
+  idAsset                                                               Int?                              @unique
+  idAssetVersion                                                        Int?                              @unique
+  idProjectDocumentation                                                Int?                              @unique
+  idActor                                                               Int?                              @unique
+  idStakeholder                                                         Int?                              @unique
+  idWorkflow                                                            Int?                              @unique
+  idWorkflowStep                                                        Int?                              @unique
+  Retired                                                               Boolean
+  Actor                                                                 Actor?                            @relation(fields: [idActor], references: [idActor])
+  Asset                                                                 Asset?                            @relation(fields: [idAsset], references: [idAsset])
+  AssetVersion                                                          AssetVersion?                     @relation(fields: [idAssetVersion], references: [idAssetVersion])
+  CaptureData                                                           CaptureData?                      @relation(fields: [idCaptureData], references: [idCaptureData])
+  IntermediaryFile                                                      IntermediaryFile?                 @relation(fields: [idIntermediaryFile], references: [idIntermediaryFile])
+  Item                                                                  Item?                             @relation(fields: [idItem], references: [idItem])
+  Model                                                                 Model?                            @relation(fields: [idModel], references: [idModel])
+  Project                                                               Project?                          @relation(fields: [idProject], references: [idProject])
+  ProjectDocumentation                                                  ProjectDocumentation?             @relation(fields: [idProjectDocumentation], references: [idProjectDocumentation])
+  Scene                                                                 Scene?                            @relation(fields: [idScene], references: [idScene])
+  Stakeholder                                                           Stakeholder?                      @relation(fields: [idStakeholder], references: [idStakeholder])
+  Subject                                                               Subject?                          @relation(fields: [idSubject], references: [idSubject])
+  Unit                                                                  Unit?                             @relation(fields: [idUnit], references: [idUnit])
+  Workflow                                                              Workflow?                         @relation(fields: [idWorkflow], references: [idWorkflow])
+  WorkflowStep                                                          WorkflowStep?                     @relation(fields: [idWorkflowStep], references: [idWorkflowStep])
+  AccessContextObject                                                   AccessContextObject[]
+  Identifier                                                            Identifier[]
+  LicenseAssignment                                                     LicenseAssignment[]
+  Metadata                                                              Metadata[]
+  SystemObjectVersion                                                   SystemObjectVersion[]
+  SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived")
+  SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster  SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectMaster")
+  UserPersonalizationSystemObject                                       UserPersonalizationSystemObject[]
+  WorkflowStepSystemObjectXref                                          WorkflowStepSystemObjectXref[]
+
+  @@index([idActor], name: "SystemObject_idActor")
+  @@index([idAsset], name: "SystemObject_idAsset")
+  @@index([idAssetVersion], name: "SystemObject_idAssetVersion")
+  @@index([idCaptureData], name: "SystemObject_idCaptureData")
+  @@index([idIntermediaryFile], name: "SystemObject_idIntermediaryFile")
+  @@index([idItem], name: "SystemObject_idItem")
+  @@index([idModel], name: "SystemObject_idModel")
+  @@index([idProject], name: "SystemObject_idProject")
+  @@index([idProjectDocumentation], name: "SystemObject_idProjectDocumentation")
+  @@index([idScene], name: "SystemObject_idScene")
+  @@index([idStakeholder], name: "SystemObject_idStakeholder")
+  @@index([idSubject], name: "SystemObject_idSubject")
+  @@index([idUnit], name: "SystemObject_idUnit")
+  @@index([idWorkflow], name: "SystemObject_idWorkflow")
+  @@index([idWorkflowStep], name: "SystemObject_idWorkflowStep")
+}
+
+model SystemObjectVersion {
+  idSystemObjectVersion Int          @default(autoincrement()) @id
+  idSystemObject        Int
+  PublishedState        Int
+  SystemObject          SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
+
+  @@index([idSystemObject, idSystemObjectVersion], name: "ObjectVersion_idSystemObject_idObjectVersion")
+}
+
+model SystemObjectXref {
+  idSystemObjectXref                                                Int          @default(autoincrement()) @id
+  idSystemObjectMaster                                              Int
+  idSystemObjectDerived                                             Int
+  SystemObject_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObject @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived", fields: [idSystemObjectDerived], references: [idSystemObject])
+  SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster  SystemObject @relation("SystemObjectToSystemObjectXref_idSystemObjectMaster", fields: [idSystemObjectMaster], references: [idSystemObject])
+
+  @@index([idSystemObjectDerived], name: "SystemObjectXref_idSystemObjectDerived")
+  @@index([idSystemObjectMaster], name: "SystemObjectXref_idSystemObjectMaster")
+}
+
+model Unit {
+  idUnit       Int           @default(autoincrement()) @id
+  Name         String
+  Abbreviation String?
+  ARKPrefix    String?
+  Actor        Actor[]
+  Subject      Subject[]
+  SystemObject SystemObject?
+}
+
+model User {
+  idUser                          Int                               @default(autoincrement()) @id
+  Name                            String
+  EmailAddress                    String
+  SecurityID                      String
+  Active                          Boolean
+  DateActivated                   DateTime
+  DateDisabled                    DateTime?
+  WorkflowNotificationTime        DateTime?
+  EmailSettings                   Int?
+  AccessPolicy                    AccessPolicy[]
+  AssetVersion                    AssetVersion[]
+  LicenseAssignment               LicenseAssignment[]
+  Metadata                        Metadata[]
+  UserPersonalizationSystemObject UserPersonalizationSystemObject[]
+  UserPersonalizationUrl          UserPersonalizationUrl[]
+  Workflow                        Workflow[]
+  WorkflowStep                    WorkflowStep[]
+
+  @@index([EmailAddress], name: "user_EmailAddress")
+}
+
+model UserPersonalizationSystemObject {
+  idUserPersonalizationSystemObject Int          @default(autoincrement()) @id
+  idUser                            Int
+  idSystemObject                    Int
+  Personalization                   String?
+  SystemObject                      SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
+  User                              User         @relation(fields: [idUser], references: [idUser])
+
+  @@index([idUser], name: "UserPersonalizationObject_idUser")
+  @@index([idUser, idSystemObject], name: "UserPersonalizationObject_idUser_idSystemObject")
+  @@index([idSystemObject], name: "fk_userpersonalizationsystemobject_systemobject1")
+}
+
+model UserPersonalizationUrl {
+  idUserPersonalizationUrl Int    @default(autoincrement()) @id
+  idUser                   Int
+  URL                      String
+  Personalization          String
+  User                     User   @relation(fields: [idUser], references: [idUser])
+
+  @@index([idUser, URL], name: "UserPersonalizationUrl_idUser_URL")
+}
+
+model Vocabulary {
+  idVocabulary                                                   Int                         @default(autoincrement()) @id
+  idVocabularySet                                                Int
+  SortOrder                                                      Int
+  Term                                                           String
+  VocabularySet                                                  VocabularySet               @relation(fields: [idVocabularySet], references: [idVocabularySet])
+  CaptureData_CaptureData_idVBackgroundRemovalMethodToVocabulary CaptureData[]               @relation("CaptureData_idVBackgroundRemovalMethodToVocabulary")
+  CaptureData_CaptureData_idVCaptureDatasetTypeToVocabulary      CaptureData[]               @relation("CaptureData_idVCaptureDatasetTypeToVocabulary")
+  CaptureData_CaptureData_idVCaptureMethodToVocabulary           CaptureData[]               @relation("CaptureData_idVCaptureMethodToVocabulary")
+  CaptureData_CaptureData_idVClusterTypeToVocabulary             CaptureData[]               @relation("CaptureData_idVClusterTypeToVocabulary")
+  CaptureData_CaptureData_idVFocusTypeToVocabulary               CaptureData[]               @relation("CaptureData_idVFocusTypeToVocabulary")
+  CaptureData_CaptureData_idVItemPositionTypeToVocabulary        CaptureData[]               @relation("CaptureData_idVItemPositionTypeToVocabulary")
+  CaptureData_CaptureData_idVLightSourceTypeToVocabulary         CaptureData[]               @relation("CaptureData_idVLightSourceTypeToVocabulary")
+  CaptureDataFile                                                CaptureDataFile[]
+  Identifier                                                     Identifier[]
+  Metadata                                                       Metadata[]
+  Model_Model_idVCreationMethodToVocabulary                      Model[]                     @relation("Model_idVCreationMethodToVocabulary")
+  Model_Model_idVModalityToVocabulary                            Model[]                     @relation("Model_idVModalityToVocabulary")
+  Model_Model_idVPurposeToVocabulary                             Model[]                     @relation("Model_idVPurposeToVocabulary")
+  Model_Model_idVUnitsToVocabulary                               Model[]                     @relation("Model_idVUnitsToVocabulary")
+  ModelGeometryFile                                              ModelGeometryFile[]
+  ModelProcessingActionStep                                      ModelProcessingActionStep[]
+  ModelUVMapChannel                                              ModelUVMapChannel[]
+  WorkflowStep                                                   WorkflowStep[]
+
+  @@index([idVocabularySet, SortOrder], name: "Vocabulary_idVocabulySet_SortOrder")
+}
+
+model VocabularySet {
+  idVocabularySet  Int          @default(autoincrement()) @id
+  Name             String
+  SystemMaintained Boolean
+  Vocabulary       Vocabulary[]
+}
+
+model Workflow {
+  idWorkflow         Int              @default(autoincrement()) @id
+  idWorkflowTemplate Int
+  idProject          Int?
+  idUserInitiator    Int?
+  DateInitiated      DateTime
+  DateUpdated        DateTime
+  Project            Project?         @relation(fields: [idProject], references: [idProject])
+  User               User?            @relation(fields: [idUserInitiator], references: [idUser])
+  WorkflowTemplate   WorkflowTemplate @relation(fields: [idWorkflowTemplate], references: [idWorkflowTemplate])
+  SystemObject       SystemObject?
+  WorkflowStep       WorkflowStep[]
+
+  @@index([idProject], name: "Workflow_idProject")
+  @@index([idUserInitiator], name: "Workflow_idUserInitiator")
+  @@index([idWorkflowTemplate], name: "fk_workflow_workflowtemplate1")
+}
+
+model WorkflowStep {
+  idWorkflowStep               Int                            @default(autoincrement()) @id
+  idWorkflow                   Int
+  idUserOwner                  Int
+  idVWorkflowStepType          Int
+  State                        Int
+  DateCreated                  DateTime
+  DateCompleted                DateTime?
+  User                         User                           @relation(fields: [idUserOwner], references: [idUser])
+  Vocabulary                   Vocabulary                     @relation(fields: [idVWorkflowStepType], references: [idVocabulary])
+  Workflow                     Workflow                       @relation(fields: [idWorkflow], references: [idWorkflow])
+  SystemObject                 SystemObject?
+  WorkflowStepSystemObjectXref WorkflowStepSystemObjectXref[]
+
+  @@index([State, idWorkflow], name: "WorkflowStep_State_idWorkflow")
+  @@index([idUserOwner], name: "WorkflowStep_idUserOwner")
+  @@index([idWorkflow, DateCompleted], name: "WorkflowStep_idWorkflow_DateCompleted")
+  @@index([idWorkflow, DateCreated], name: "WorkflowStep_idWorkflow_DateCreated")
+  @@index([idVWorkflowStepType], name: "fk_workflowstep_vocabulary1")
+}
+
+model WorkflowStepSystemObjectXref {
+  idWorkflowStepSystemObjectXref Int          @default(autoincrement()) @id
+  idWorkflowStep                 Int
+  idSystemObject                 Int
+  Input                          Boolean
+  SystemObject                   SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
+  WorkflowStep                   WorkflowStep @relation(fields: [idWorkflowStep], references: [idWorkflowStep])
+
+  @@index([idSystemObject, Input], name: "WorkflowStepSystemObjectXref_idSystemObject_Input")
+  @@index([idWorkflowStep, Input], name: "WorkflowStepSystemObjectXref_idWorkflowStep_Input")
+}
+
+model WorkflowTemplate {
+  idWorkflowTemplate Int        @default(autoincrement()) @id
+  Name               String
+  Workflow           Workflow[]
+}

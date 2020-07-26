@@ -1,0 +1,38 @@
+scalar DateTime
+
+type User {
+    idUser: Int!
+    Active: Boolean!
+    DateActivated: DateTime!
+    EmailAddress: String!
+    Name: String!
+    SecurityID: String!
+    DateDisabled: DateTime
+    EmailSettings: Int
+    WorkflowNotificationTime: DateTime
+    AccessPolicy: [AccessPolicy]
+    AssetVersion: [AssetVersion]
+    LicenseAssignment: [LicenseAssignment]
+    Metadata: [Metadata]
+    UserPersonalizationSystemObject: [UserPersonalizationSystemObject]
+    UserPersonalizationUrl: [UserPersonalizationUrl]
+    Workflow: [Workflow]
+    WorkflowStep: [WorkflowStep]
+}
+
+type UserPersonalizationSystemObject {
+    idUserPersonalizationSystemObject: Int!
+    idSystemObject: Int!
+    idUser: Int!
+    Personalization: String
+    SystemObject: SystemObject
+    User: User
+}
+
+type UserPersonalizationUrl {
+    idUserPersonalizationUrl: Int!
+    idUser: Int!
+    Personalization: String!
+    URL: String!
+    User: User
+}

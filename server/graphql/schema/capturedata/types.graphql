@@ -1,0 +1,47 @@
+scalar DateTime
+
+type CaptureData {
+    idCaptureData: Int!
+    DateCaptured: DateTime!
+    Description: String!
+    idVCaptureDatasetType: Int!
+    idVCaptureMethod: Int!
+    CameraSettingsUniform: Boolean
+    CaptureDatasetFieldID: Int
+    ClusterGeometryFieldID: Int
+    idAssetThumbnail: Int
+    idVBackgroundRemovalMethod: Int
+    idVClusterType: Int
+    idVFocusType: Int
+    idVItemPositionType: Int
+    idVLightSourceType: Int
+    ItemArrangementFieldID: Int
+    ItemPositionFieldID: Int
+    AssetThumbnail: Asset
+    VBackgroundRemovalMethod: Vocabulary
+    VCaptureDatasetType: Vocabulary
+    VCaptureMethod: Vocabulary
+    VClusterType: Vocabulary
+    VFocusType: Vocabulary
+    VItemPositionType: Vocabulary
+    VLightSourceType: Vocabulary
+    CaptureDataFile: [CaptureDataFile]
+    CaptureDataGroup: [CaptureDataGroup]
+    SystemObject: SystemObject
+}
+
+type CaptureDataFile {
+    idCaptureDataFile: Int!
+    CompressedMultipleFiles: Boolean!
+    idAsset: Int!
+    idCaptureData: Int!
+    idVVariantType: Int!
+    Asset: Asset
+    CaptureData: CaptureData
+    VVariantType: Vocabulary
+}
+
+type CaptureDataGroup {
+    idCaptureDataGroup: Int!
+    CaptureData: [CaptureData]
+}

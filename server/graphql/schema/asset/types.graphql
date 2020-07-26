@@ -1,0 +1,29 @@
+scalar DateTime
+
+type Asset {
+    idAsset: Int!
+    FileName: String!
+    FilePath: String!
+    idAssetGroup: Int
+    AssetGroup: AssetGroup
+    AssetVersion: [AssetVersion]
+    SystemObject: SystemObject
+}
+
+type AssetVersion {
+    idAssetVersion: Int!
+    DateCreated: DateTime!
+    idAsset: Int!
+    idUserCreator: Int!
+    StorageChecksum: String!
+    StorageLocation: String!
+    StorageSize: Int!
+    Asset: Asset
+    User: User
+    SystemObject: SystemObject
+}
+
+type AssetGroup {
+    idAssetGroup: Int!
+    Asset: [Asset]
+}

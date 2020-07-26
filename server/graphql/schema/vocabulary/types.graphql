@@ -1,0 +1,13 @@
+type Vocabulary {
+    idVocabulary: Int!
+    idVocabularySet: Int!
+    SortOrder: Int!
+    VocabularySet: VocabularySet
+}
+
+type VocabularySet {
+    idVocabularySet: Int!
+    Name: String!
+    SystemMaintained: Boolean!
+    Vocabulary: [Vocabulary]
+}

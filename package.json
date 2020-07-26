@@ -1,0 +1,78 @@
+{
+  "name": "dpo-packrat",
+  "version": "0.3.2",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Data Repository and Workflow Management for 3D data captures, models, and scenes",
+  "homepage": "https://github.com/Smithsonian/dpo-packrat#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Smithsonian/dpo-packrat.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Smithsonian/dpo-packrat/issues"
+  },
+  "contributors": [
+    {
+      "name": "Jon Tyson",
+      "url": "https://github.com/jahjedtieson"
+    },
+    {
+      "name": "Karan Pratap Singh",
+      "url": "https://github.com/karanpratapsingh"
+    }
+  ],
+  "scripts": {
+    "start:client": "yarn workspace @dpo-packrat/client start",
+    "start:server": "yarn workspace @dpo-packrat/server start",
+    "start:common": "yarn workspace @dpo-packrat/common start",
+    "log:client": "docker logs -f packrat-client",
+    "log:server": "docker logs -f packrat-server",
+    "start:client:prod": "yarn workspace @dpo-packrat/client start:prod",
+    "start:server:prod": "yarn workspace @dpo-packrat/server start:prod",
+    "dev": "docker-compose -f docker-compose.dev.yml up -d",
+    "prod": "docker-compose -f docker-compose.prod.yml up -d",
+    "dev:rebuild": "docker-compose -f docker-compose.dev.yml up --build",
+    "prod:rebuild": "docker-compose -f docker-compose.prod.yml up --build",
+    "build": "lerna run build",
+    "clean": "lerna run clean && rm -rf node_modules/",
+    "clean:docker": "docker-compose -f docker-compose.dev.yml down && docker system prune -f",
+    "generate:server:prisma": "yarn workspace @dpo-packrat/server generate:prisma",
+    "postinstall": "lerna run postinstall",
+    "lint": "yarn eslint --ext .js,.jsx,.ts,.tsx .",
+    "lint:fix": "yarn prettier --write . && yarn lint --fix",
+    "test": "yarn workspaces run test"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.6",
+    "@typescript-eslint/eslint-plugin": "^3.0.2",
+    "@typescript-eslint/parser": "^3.0.2",
+    "@typescript-eslint/typescript-estree": "3.3.0",
+    "concurrently": "^5.2.0",
+    "copyfiles": "^2.3.0",
+    "eslint": "^6.6.0",
+    "eslint-plugin-import": "^2.21.2",
+    "eslint-plugin-prettier": "^3.1.3",
+    "eslint-plugin-react": "^7.20.3",
+    "husky": "^4.2.5",
+    "lerna": "3.22.0",
+    "nodemon": "^2.0.4",
+    "prettier": "^2.0.5",
+    "typescript": "^3.9.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint"
+    }
+  },
+  "workspaces": {
+    "nohoist": [
+      "@dpo-packrat/client/*"
+    ],
+    "packages": [
+      "client",
+      "server",
+      "common"
+    ]
+  }
+}

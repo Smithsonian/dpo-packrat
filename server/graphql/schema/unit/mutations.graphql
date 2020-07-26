@@ -1,0 +1,48 @@
+type Mutation {
+    createUnit(input: CreateUnitInput!): CreateUnitResult!
+    createProject(input: CreateProjectInput!): CreateProjectResult!
+    createSubject(input: CreateSubjectInput!): CreateSubjectResult!
+    createItem(input: CreateItemInput!): CreateItemResult!
+}
+
+input CreateUnitInput {
+    Name: String!
+    Abbreviation: String!
+    ARKPrefix: String!
+}
+
+type CreateUnitResult {
+    Unit: Unit
+}
+
+input CreateProjectInput {
+    Name: String!
+    Description: String!
+}
+
+type CreateProjectResult {
+    Project: Project
+}
+
+input CreateSubjectInput {
+    idUnit: Int!
+    Name: String!
+    idAssetThumbnail: Int
+    idGeoLocation: Int
+}
+
+type CreateSubjectResult {
+    Subject: Subject
+}
+
+input CreateItemInput {
+    idSubject: Int!
+    Name: String!
+    EntireSubject: Boolean!
+    idAssetThumbnail: Int
+    idGeoLocation: Int
+}
+
+type CreateItemResult {
+    Item: Item
+}

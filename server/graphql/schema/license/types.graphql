@@ -1,0 +1,20 @@
+scalar DateTime
+
+type License {
+    idLicense: Int!
+    Description: String!
+    Name: String!
+    LicenseAssignment: [LicenseAssignment]
+}
+
+type LicenseAssignment {
+    idLicenseAssignment: Int!
+    idLicense: Int!
+    DateEnd: DateTime
+    DateStart: DateTime
+    idSystemObject: Int
+    idUserCreator: Int
+    License: License
+    SystemObject: SystemObject
+    UserCreator: User
+}
