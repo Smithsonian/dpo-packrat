@@ -2,8 +2,9 @@ import React from 'react';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import IngestionSidebar from './components/IngestionSidebar';
-import { useRouteMatch, Route, Redirect } from 'react-router';
+import { useRouteMatch, Redirect } from 'react-router';
 import { resolveRoute, resolveSubRoute, HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE } from '../../constants';
+import { PrivateRoute } from '../../components';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -18,13 +19,13 @@ function Ingestion(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <Route exact path={path}>
+            <PrivateRoute exact path={path}>
                 <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.FILES)} />
-            </Route>
+            </PrivateRoute>
 
-            <Route path={resolveRoute(INGESTION_ROUTE.TYPE)}>
+            <PrivateRoute path={resolveRoute(INGESTION_ROUTE.TYPE)}>
                 <IngestionSidebar />
-                <Route
+                <PrivateRoute
                     exact
                     path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.FILES)}
                     component={() => (
@@ -32,7 +33,7 @@ function Ingestion(): React.ReactElement {
                     )}
                 />
 
-                <Route
+                <PrivateRoute
                     exact
                     path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_ITEM)}
                     component={() => (
@@ -40,14 +41,14 @@ function Ingestion(): React.ReactElement {
                     )}
                 />
 
-                <Route
+                <PrivateRoute
                     exact
                     path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)}
                     component={() => (
                         <Typography variant='subtitle1'>Metadata</Typography>
                     )}
                 />
-            </Route>
+            </PrivateRoute>
 
         </Box>
     );
