@@ -8,15 +8,25 @@ import { ROUTES } from '../../../constants';
 import { AppContext } from '../../../context';
 
 interface PrivateRouteProps {
-    component: React.ComponentType<unknown>
+    component?: React.ComponentType<unknown>;
+    children?: unknown;
 }
 
-function PrivateRoute({ component: Component, ...rest }: PrivateRouteProps & RouteProps): React.ReactElement {
+function PrivateRoute({ component: Component, children, ...rest }: PrivateRouteProps & RouteProps): React.ReactElement {
     const { user } = useContext(AppContext);
 
-    const render = props => (
-        user ? <Component {...props} /> : <Redirect to={ROUTES.LOGIN} />
-    );
+    const render = props => {
+
+        if (!user) {
+            return <Redirect to={ROUTES.LOGIN} />;
+        } else {
+            if (Component) {
+                return <Component {...props} />;
+            } else {
+                return children;
+            }
+        }
+    };
 
     return <Route {...rest} render={render} />;
 }
