@@ -1,14 +1,14 @@
-import React, { useContext } from 'react';
 import { Box, Container, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { Link } from 'react-router-dom';
-import { Routes } from '../../../constants';
+import React, { useContext } from 'react';
+import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
 import { MdSecurity } from 'react-icons/md';
-import { Colors } from '../../../theme';
-import { IoIosSearch, IoIosNotifications, IoIosLogOut } from 'react-icons/io';
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import API from '../../../api';
+import { Routes } from '../../../constants';
 import { AppContext } from '../../../context';
+import { Colors } from '../../../theme';
 
 const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
     container: {
@@ -48,11 +48,15 @@ function Header(): React.ReactElement {
     const history = useHistory();
 
     const onLogout = async () => {
-        const { success } = await API.logout();
+        try {
+            const { success } = await API.logout();
 
-        if (success) {
-            updateUser(null);
-            history.push(Routes.LOGIN);
+            if (success) {
+                updateUser(null);
+                history.push(Routes.LOGIN);
+            }
+        } catch {
+            toast.error('Failed to logout');
         }
     };
 

@@ -1,9 +1,9 @@
-import React from 'react';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { DASHBOARD_TYPES } from '../../../constants';
-import { FaChartLine, FaClipboardList, FaFileUpload, FaClipboardCheck, FaCog } from 'react-icons/fa';
+import React from 'react';
+import { FaChartLine, FaClipboardCheck, FaClipboardList, FaCog, FaFileUpload } from 'react-icons/fa';
 import { MdInsertChart } from 'react-icons/md';
+import { DASHBOARD_TYPES } from '../../../constants';
 import { Colors } from '../../../theme';
 import { colorWithOpacity } from '../../../theme/colors';
 

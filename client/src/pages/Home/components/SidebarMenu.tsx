@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
 import { Box, Grid } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import SidebarMenuOption, { SidebarMenuOptionProps } from './SidebarMenuOption';
+import React, { useState } from 'react';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { useHistory } from 'react-router';
 import { DASHBOARD_TYPES } from '../../../constants';
 import { Colors } from '../../../theme';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { colorWithOpacity } from '../../../theme/colors';
-import { useHistory } from 'react-router';
+import SidebarMenuOption, { SidebarMenuOptionProps } from './SidebarMenuOption';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
@@ -16,13 +16,12 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     menuOptions: {
         display: 'flex',
-        flex: 1,
-        margin: '12px 0px'
+        flex: 1
     },
     bottomOptions: {
         display: 'flex',
         justifyContent: 'flex-end',
-        padding: 20
+        padding: spacing(2)
     },
     anchor: {
         display: 'flex',

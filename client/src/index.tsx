@@ -1,18 +1,18 @@
-import React, { useEffect, useContext, useState, useCallback } from 'react';
-import ReactDOM from 'react-dom';
 import { ApolloProvider } from '@apollo/react-hooks';
+import { Box, CircularProgress, ThemeProvider } from '@material-ui/core';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
-import './global/root.css';
-import { Home, Login, About } from './pages';
-import { PrivateRoute, PublicRoute } from './components';
-import { ThemeProvider, CircularProgress, Box } from '@material-ui/core';
-import theme from './theme';
-import { Routes } from './constants';
-import { apolloClient } from './graphql';
-import { AppContextProvider, AppContext } from './context';
-import { getAuthenticatedUser } from './utils/auth';
-import { ToastContainer, Slide } from 'react-toastify';
+import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { PrivateRoute, PublicRoute } from './components';
+import { Routes } from './constants';
+import { AppContext, AppContextProvider } from './context';
+import './global/root.css';
+import { apolloClient } from './graphql';
+import { About, Home, Login } from './pages';
+import theme from './theme';
+import { getAuthenticatedUser } from './utils/auth';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);

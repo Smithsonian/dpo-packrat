@@ -10,6 +10,11 @@ import { Header } from '../../components';
 const useStyles = makeStyles(() => ({
     container: {
         display: 'flex',
+        flexDirection: 'column',
+        flex: 1
+    },
+    content: {
+        display: 'flex',
         flex: 1
     }
 }));
@@ -23,8 +28,10 @@ function Home(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Header />
-            <SidebarMenu isExpanded={isExpanded} onToggle={onToggle} />
-            <Route exact path={resolveRoute(DASHBOARD_TYPES.INGESTION)} component={Ingestion} />
+            <Box className={classes.content}>
+                <SidebarMenu isExpanded={isExpanded} onToggle={onToggle} />
+                <Route exact path={resolveRoute(DASHBOARD_TYPES.INGESTION)} component={Ingestion} />
+            </Box>
         </Box>
     );
 }
