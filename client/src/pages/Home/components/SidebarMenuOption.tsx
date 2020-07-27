@@ -74,8 +74,8 @@ function SidebarMenuOption(props: SidebarMenuOptionProps): React.ReactElement {
                 <MenuOptionIcon type={type} color={color} />
             </Box>
             {isExpanded && <Box className={classes.detailsContainer}>
-                <Typography className={classes.title} variant='subtitle1'>{title}</Typography>
-                <Typography className={classes.subtitle} variant='body2'>{subtitle}</Typography>
+                <Typography className={classes.title} variant='body1'>{title}</Typography>
+                <Typography className={classes.subtitle} variant='caption'>{subtitle}</Typography>
             </Box>}
         </Box>
     );
