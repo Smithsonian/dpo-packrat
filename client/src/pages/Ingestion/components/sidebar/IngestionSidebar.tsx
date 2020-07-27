@@ -2,7 +2,7 @@ import { Box, Grid, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
-import { INGESTION_ROUTE } from '../../../constants';
+import { INGESTION_ROUTE } from '../../../../constants';
 import IngestionSidebarOption, { IngestionSidebarOptionProps } from './IngestionSidebarOption';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
