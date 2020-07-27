@@ -83,7 +83,7 @@ function Login(): React.ReactElement {
         <Box className={classes.container}>
             <Container maxWidth='xs'>
                 <Typography className={classes.loginTitle} variant='h4' color='primary'>Login</Typography>
-                <Typography className={classes.loginSubtitle} variant='subtitle1'>Welcome to packrat</Typography>
+                <Typography className={classes.loginSubtitle} variant='body1'>Welcome to packrat</Typography>
                 <Formik
                     initialValues={initialValues}
                     validationSchema={loginValidationSchema}
@@ -109,7 +109,6 @@ function Login(): React.ReactElement {
                                 name='password'
                                 label='Password'
                                 type='password'
-                                disabled
                                 placeholder='password'
                                 InputProps={InputProps}
                                 component={TextField}
