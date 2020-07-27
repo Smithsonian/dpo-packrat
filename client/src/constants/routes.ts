@@ -1,19 +1,25 @@
-export enum Routes {
+export enum ROUTES {
     HOME = '/:type',
     LOGIN = '/login',
     ABOUT = '/about',
     DASHBOARD = '/dashboard'
 }
 
-export enum DASHBOARD_TYPES {
+export enum DASHBOARD_ROUTES {
     DASHBOARD = 'dashboard',
-    REPOSITORY = 'repository',
+    REPOSITORY = 'repository/:step',
     INGESTION = 'ingestion',
     WORKFLOW = 'workflow',
     REPORTING = 'reporting',
     ADMIN = 'admin'
 }
 
-export function resolveRoute(route: Routes | DASHBOARD_TYPES): string {
+export enum INGESTION_ROUTES {
+    FILES = 'files',
+    SUBJECT_ITEM = 'subject_item',
+    METADATA = 'metadata'
+}
+
+export function resolveRoute(route: ROUTES | DASHBOARD_ROUTES): string {
     return `/${route}`;
 }

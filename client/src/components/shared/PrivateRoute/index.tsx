@@ -4,7 +4,7 @@
  */
 import React, { useContext } from 'react';
 import { Route, Redirect, RouteProps } from 'react-router-dom';
-import { Routes } from '../../../constants';
+import { ROUTES } from '../../../constants';
 import { AppContext } from '../../../context';
 
 interface PrivateRouteProps {
@@ -15,7 +15,7 @@ function PrivateRoute({ component: Component, ...rest }: PrivateRouteProps & Rou
     const { user } = useContext(AppContext);
 
     const render = props => (
-        user ? <Component {...props} /> : <Redirect to={Routes.LOGIN} />
+        user ? <Component {...props} /> : <Redirect to={ROUTES.LOGIN} />
     );
 
     return <Route {...rest} render={render} />;

@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useHistory } from 'react-router';
-import { DASHBOARD_TYPES } from '../../../constants';
+import { DASHBOARD_ROUTES } from '../../../constants';
 import { Colors } from '../../../theme';
 import { colorWithOpacity } from '../../../theme/colors';
 import SidebarMenuOption, { SidebarMenuOptionProps } from './SidebarMenuOption';
@@ -44,12 +44,12 @@ interface SidebarMenuProps {
 
 function SidebarMenu(props: SidebarMenuProps): React.ReactElement {
     const { isExpanded, onToggle } = props;
-    const [selectedOption, setSelectedOption] = useState(DASHBOARD_TYPES.DASHBOARD);
+    const [selectedOption, setSelectedOption] = useState(DASHBOARD_ROUTES.DASHBOARD);
 
     const classes = useStyles();
     const history = useHistory();
 
-    const onSelect = (type: DASHBOARD_TYPES): void => {
+    const onSelect = (type: DASHBOARD_ROUTES): void => {
         history.push(type);
         setSelectedOption(type);
     };
@@ -57,54 +57,54 @@ function SidebarMenu(props: SidebarMenuProps): React.ReactElement {
     const Options: SidebarMenuOptionProps[] = [
         {
             title: 'Dashboard',
-            type: DASHBOARD_TYPES.DASHBOARD,
+            type: DASHBOARD_ROUTES.DASHBOARD,
             color: Colors.sidebarOptions.dashboard,
             isExpanded,
-            isSelected: selectedOption === DASHBOARD_TYPES.DASHBOARD,
+            isSelected: selectedOption === DASHBOARD_ROUTES.DASHBOARD,
             onSelect,
         },
         {
             title: 'Repository',
             subtitle: '314k assets',
-            type: DASHBOARD_TYPES.REPOSITORY,
+            type: DASHBOARD_ROUTES.REPOSITORY,
             color: Colors.sidebarOptions.repository,
             isExpanded,
-            isSelected: selectedOption === DASHBOARD_TYPES.REPOSITORY,
+            isSelected: selectedOption === DASHBOARD_ROUTES.REPOSITORY,
             onSelect,
         },
         {
             title: 'Ingestion',
             subtitle: '12 assets today',
-            type: DASHBOARD_TYPES.INGESTION,
+            type: DASHBOARD_ROUTES.INGESTION,
             color: Colors.sidebarOptions.ingestion,
             isExpanded,
-            isSelected: selectedOption === DASHBOARD_TYPES.INGESTION,
+            isSelected: selectedOption === DASHBOARD_ROUTES.INGESTION,
             onSelect,
         },
         {
             title: 'Workflow',
             subtitle: '6 open tasks',
-            type: DASHBOARD_TYPES.WORKFLOW,
+            type: DASHBOARD_ROUTES.WORKFLOW,
             color: Colors.sidebarOptions.workflow,
             isExpanded,
-            isSelected: selectedOption === DASHBOARD_TYPES.WORKFLOW,
+            isSelected: selectedOption === DASHBOARD_ROUTES.WORKFLOW,
             onSelect,
         },
         {
             title: 'Reporting',
-            type: DASHBOARD_TYPES.REPORTING,
+            type: DASHBOARD_ROUTES.REPORTING,
             color: Colors.sidebarOptions.reporting,
             isExpanded,
-            isSelected: selectedOption === DASHBOARD_TYPES.REPORTING,
+            isSelected: selectedOption === DASHBOARD_ROUTES.REPORTING,
             onSelect,
 
         },
         {
             title: 'Admin',
-            type: DASHBOARD_TYPES.ADMIN,
+            type: DASHBOARD_ROUTES.ADMIN,
             color: Colors.sidebarOptions.admin,
             isExpanded,
-            isSelected: selectedOption === DASHBOARD_TYPES.ADMIN,
+            isSelected: selectedOption === DASHBOARD_ROUTES.ADMIN,
             onSelect,
         }
     ];
