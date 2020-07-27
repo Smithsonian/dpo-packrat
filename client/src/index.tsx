@@ -6,7 +6,7 @@ import { BrowserRouter as Router, Switch } from 'react-router-dom';
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { PrivateRoute, PublicRoute } from './components';
-import { Routes } from './constants';
+import { ROUTES } from './constants';
 import { AppContext, AppContextProvider } from './context';
 import './global/root.css';
 import { apolloClient } from './graphql';
@@ -39,9 +39,9 @@ function AppRouter(): React.ReactElement {
             ) : (
                 <React.Fragment>
                     <Switch>
-                        <PublicRoute restricted exact path={Routes.LOGIN} component={Login} />
-                        <PublicRoute exact path={Routes.ABOUT} component={About} />
-                        <PrivateRoute exact path={Routes.HOME} component={Home} />
+                        <PublicRoute restricted exact path={ROUTES.LOGIN} component={Login} />
+                        <PublicRoute exact path={ROUTES.ABOUT} component={About} />
+                        <PrivateRoute exact path={ROUTES.HOME} component={Home} />
                     </Switch>
                 </React.Fragment>
             )}

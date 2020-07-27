@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { Formik, Field, FormikHelpers } from 'formik';
 import { toast } from 'react-toastify';
 import { TextField } from 'formik-material-ui';
-import { Routes } from '../../constants';
+import { ROUTES } from '../../constants';
 import API from '../../api';
 import { getAuthenticatedUser } from '../../utils/auth';
 import { AppContext } from '../../context';
@@ -70,7 +70,7 @@ function Login(): React.ReactElement {
                 const authenticatedUser = await getAuthenticatedUser();
                 updateUser(authenticatedUser);
                 toast.success('Welcome to Packrat');
-                history.push(Routes.DASHBOARD);
+                history.push(ROUTES.DASHBOARD);
             } else {
                 toast.error(message);
             }

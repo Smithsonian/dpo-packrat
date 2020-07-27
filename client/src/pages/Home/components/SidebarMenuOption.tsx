@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { FaChartLine, FaClipboardCheck, FaClipboardList, FaCog, FaFileUpload } from 'react-icons/fa';
 import { MdInsertChart } from 'react-icons/md';
-import { DASHBOARD_TYPES } from '../../../constants';
+import { DASHBOARD_ROUTES } from '../../../constants';
 import { Colors } from '../../../theme';
 import { colorWithOpacity } from '../../../theme/colors';
 
@@ -56,10 +56,10 @@ export interface SidebarMenuOptionProps {
     title: string;
     subtitle?: string;
     color: string;
-    type: DASHBOARD_TYPES;
+    type: DASHBOARD_ROUTES;
     isExpanded: boolean;
     isSelected: boolean;
-    onSelect: (type: DASHBOARD_TYPES) => void;
+    onSelect: (type: DASHBOARD_ROUTES) => void;
 }
 
 function SidebarMenuOption(props: SidebarMenuOptionProps): React.ReactElement {
@@ -83,28 +83,28 @@ function SidebarMenuOption(props: SidebarMenuOptionProps): React.ReactElement {
 }
 
 interface MenuOptionIconProps {
-    type: DASHBOARD_TYPES;
+    type: DASHBOARD_ROUTES;
     color: string;
 }
 
 function MenuOptionIcon({ type, color }: MenuOptionIconProps) {
     switch (type) {
-        case DASHBOARD_TYPES.DASHBOARD:
+        case DASHBOARD_ROUTES.DASHBOARD:
             return <FaChartLine size={20} color={color} />;
 
-        case DASHBOARD_TYPES.REPOSITORY:
+        case DASHBOARD_ROUTES.REPOSITORY:
             return <FaClipboardList size={20} color={color} />;
 
-        case DASHBOARD_TYPES.INGESTION:
+        case DASHBOARD_ROUTES.INGESTION:
             return <FaFileUpload size={20} color={color} />;
 
-        case DASHBOARD_TYPES.WORKFLOW:
+        case DASHBOARD_ROUTES.WORKFLOW:
             return <FaClipboardCheck size={20} color={color} />;
 
-        case DASHBOARD_TYPES.REPORTING:
+        case DASHBOARD_ROUTES.REPORTING:
             return <MdInsertChart size={20} color={color} />;
 
-        case DASHBOARD_TYPES.ADMIN:
+        case DASHBOARD_ROUTES.ADMIN:
             return <FaCog size={20} color={color} />;
 
         default:

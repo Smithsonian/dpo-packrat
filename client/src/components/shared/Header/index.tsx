@@ -6,7 +6,7 @@ import { MdSecurity } from 'react-icons/md';
 import { Link, useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import API from '../../../api';
-import { Routes } from '../../../constants';
+import { ROUTES } from '../../../constants';
 import { AppContext } from '../../../context';
 import { Colors } from '../../../theme';
 
@@ -53,7 +53,7 @@ function Header(): React.ReactElement {
 
             if (success) {
                 updateUser(null);
-                history.push(Routes.LOGIN);
+                history.push(ROUTES.LOGIN);
             }
         } catch {
             toast.error('Failed to logout');
@@ -62,7 +62,7 @@ function Header(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <Link className={classes.logo} to={Routes.HOME}>
+            <Link className={classes.logo} to={ROUTES.HOME}>
                 <MdSecurity size={30} color={Colors.defaults.white} />
             </Link>
             <Typography color='inherit' variant='body2'>{user?.Name || 'Jon Blundell'}</Typography>
