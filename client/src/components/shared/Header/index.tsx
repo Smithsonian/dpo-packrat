@@ -1,4 +1,4 @@
-import { Box, Container, Typography } from '@material-ui/core';
+import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useContext } from 'react';
 import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
@@ -6,7 +6,7 @@ import { MdSecurity } from 'react-icons/md';
 import { Link, useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import API from '../../../api';
-import { ROUTES } from '../../../constants';
+import { ROUTES, HOME_ROUTES, resolveRoute } from '../../../constants';
 import { AppContext } from '../../../context';
 import { Colors } from '../../../theme';
 
@@ -36,7 +36,7 @@ const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        margin: spacing(1),
+        marginLeft: spacing(2),
         transition: 'all 250ms ease-in',
         cursor: 'pointer'
     }
@@ -62,11 +62,11 @@ function Header(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <Link className={classes.logo} to={ROUTES.HOME}>
+            <Link className={classes.logo} to={resolveRoute(HOME_ROUTES.DASHBOARD)}>
                 <MdSecurity size={30} color={Colors.defaults.white} />
             </Link>
             <Typography color='inherit' variant='body2'>{user?.Name || 'Jon Blundell'}</Typography>
-            <Container className={classes.navOptionsContainer}>
+            <Box className={classes.navOptionsContainer}>
                 <NavOption>
                     <IoIosSearch size={25} color={Colors.defaults.white} />
                 </NavOption>
@@ -76,7 +76,7 @@ function Header(): React.ReactElement {
                 <NavOption onClick={onLogout}>
                     <IoIosLogOut size={25} color={Colors.defaults.white} />
                 </NavOption>
-            </Container>
+            </Box>
         </Box>
     );
 }
