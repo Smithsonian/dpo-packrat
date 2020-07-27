@@ -1,10 +1,13 @@
-import React from 'react';
-import { Box, Typography } from '@material-ui/core';
+import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import IngestionSidebar from './components/IngestionSidebar';
-import { useRouteMatch, Redirect } from 'react-router';
-import { resolveRoute, resolveSubRoute, HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE } from '../../constants';
+import React from 'react';
+import { Redirect, useRouteMatch } from 'react-router';
 import { PrivateRoute } from '../../components';
+import { HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
+import Files from './components/Files';
+import SubjectItem from './components/SubjectItem';
+import Metadata from './components/Metadata';
+import IngestionSidebar from './components/sidebar/IngestionSidebar';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -28,25 +31,19 @@ function Ingestion(): React.ReactElement {
                 <PrivateRoute
                     exact
                     path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.FILES)}
-                    component={() => (
-                        <Typography variant='subtitle1'>Files</Typography>
-                    )}
+                    component={Files}
                 />
 
                 <PrivateRoute
                     exact
                     path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_ITEM)}
-                    component={() => (
-                        <Typography variant='subtitle1'>Subject</Typography>
-                    )}
+                    component={SubjectItem}
                 />
 
                 <PrivateRoute
                     exact
                     path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)}
-                    component={() => (
-                        <Typography variant='subtitle1'>Metadata</Typography>
-                    )}
+                    component={Metadata}
                 />
             </PrivateRoute>
 

@@ -1,8 +1,8 @@
 import { Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
-import { INGESTION_ROUTES_TYPE } from '../../../constants';
-import { Colors } from '../../../theme';
+import { INGESTION_ROUTES_TYPE } from '../../../../constants';
+import { Colors } from '../../../../theme';
 import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles(({ palette }) => ({
