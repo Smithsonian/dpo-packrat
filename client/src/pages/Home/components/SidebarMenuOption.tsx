@@ -3,9 +3,10 @@ import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { FaChartLine, FaClipboardCheck, FaClipboardList, FaCog, FaFileUpload } from 'react-icons/fa';
 import { MdInsertChart } from 'react-icons/md';
-import { DASHBOARD_ROUTES } from '../../../constants';
+import { HOME_ROUTES, resolveRoute } from '../../../constants';
 import { Colors } from '../../../theme';
 import { colorWithOpacity } from '../../../theme/colors';
+import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles(({ palette, spacing, typography }) => ({
     container: {
@@ -56,21 +57,18 @@ export interface SidebarMenuOptionProps {
     title: string;
     subtitle?: string;
     color: string;
-    type: DASHBOARD_ROUTES;
+    type: HOME_ROUTES;
     isExpanded: boolean;
     isSelected: boolean;
-    onSelect: (type: DASHBOARD_ROUTES) => void;
 }
 
 function SidebarMenuOption(props: SidebarMenuOptionProps): React.ReactElement {
-    const { title, subtitle, color, type, isExpanded, onSelect } = props;
+    const { title, subtitle, color, type, isExpanded } = props;
 
     const classes = useStyles(props);
 
-    const onClick = () => onSelect(type);
-
     return (
-        <Box className={classes.container} onClick={onClick}>
+        <Link className={classes.container} to={resolveRoute(type)}>
             <Box className={classes.iconContainer}>
                 <MenuOptionIcon type={type} color={color} />
             </Box>
@@ -78,33 +76,33 @@ function SidebarMenuOption(props: SidebarMenuOptionProps): React.ReactElement {
                 <Typography className={classes.title} variant='body1'>{title}</Typography>
                 <Typography className={classes.subtitle} variant='caption'>{subtitle}</Typography>
             </Box>}
-        </Box>
+        </Link>
     );
 }
 
 interface MenuOptionIconProps {
-    type: DASHBOARD_ROUTES;
+    type: HOME_ROUTES;
     color: string;
 }
 
 function MenuOptionIcon({ type, color }: MenuOptionIconProps) {
     switch (type) {
-        case DASHBOARD_ROUTES.DASHBOARD:
+        case HOME_ROUTES.DASHBOARD:
             return <FaChartLine size={20} color={color} />;
 
-        case DASHBOARD_ROUTES.REPOSITORY:
+        case HOME_ROUTES.REPOSITORY:
             return <FaClipboardList size={20} color={color} />;
 
-        case DASHBOARD_ROUTES.INGESTION:
+        case HOME_ROUTES.INGESTION:
             return <FaFileUpload size={20} color={color} />;
 
-        case DASHBOARD_ROUTES.WORKFLOW:
+        case HOME_ROUTES.WORKFLOW:
             return <FaClipboardCheck size={20} color={color} />;
 
-        case DASHBOARD_ROUTES.REPORTING:
+        case HOME_ROUTES.REPORTING:
             return <MdInsertChart size={20} color={color} />;
 
-        case DASHBOARD_ROUTES.ADMIN:
+        case HOME_ROUTES.ADMIN:
             return <FaCog size={20} color={color} />;
 
         default:

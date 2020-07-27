@@ -16,7 +16,7 @@ function PublicRoute({ component: Component, restricted = false, ...rest }: Publ
     const { user } = useContext(AppContext);
 
     const render = props => (
-        !!user && restricted ? <Redirect to={ROUTES.DASHBOARD} /> : <Component {...props} />
+        !!user && restricted ? <Redirect to={ROUTES.HOME} /> : <Component {...props} />
     );
 
     return <Route {...rest} render={render} />;

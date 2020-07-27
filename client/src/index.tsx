@@ -41,7 +41,7 @@ function AppRouter(): React.ReactElement {
                     <Switch>
                         <PublicRoute restricted exact path={ROUTES.LOGIN} component={Login} />
                         <PublicRoute exact path={ROUTES.ABOUT} component={About} />
-                        <PrivateRoute exact path={ROUTES.HOME} component={Home} />
+                        <PrivateRoute path={ROUTES.HOME} component={Home} />
                     </Switch>
                 </React.Fragment>
             )}
