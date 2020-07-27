@@ -1,10 +1,10 @@
 import React, { useEffect, useContext, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { ApolloProvider } from '@apollo/react-hooks';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Switch } from 'react-router-dom';
 import './global/root.css';
-import { Home, Login, About, Dashboard } from './pages';
-import { Header, PrivateRoute, PublicRoute } from './components';
+import { Home, Login, About } from './pages';
+import { PrivateRoute, PublicRoute } from './components';
 import { ThemeProvider, CircularProgress, Box } from '@material-ui/core';
 import theme from './theme';
 import { Routes } from './constants';
@@ -38,12 +38,10 @@ function AppRouter(): React.ReactElement {
                 </Box>
             ) : (
                 <React.Fragment>
-                    <Route exact path={[Routes.HOME, Routes.LOGIN, Routes.ABOUT]} component={Header} />
                     <Switch>
-                        <PublicRoute exact path={Routes.HOME} component={Home} />
-                        <PrivateRoute exact path={Routes.DASHBOARD} component={Dashboard} />
                         <PublicRoute restricted exact path={Routes.LOGIN} component={Login} />
                         <PublicRoute exact path={Routes.ABOUT} component={About} />
+                        <PrivateRoute exact path={Routes.HOME} component={Home} />
                     </Switch>
                 </React.Fragment>
             )}

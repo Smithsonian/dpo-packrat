@@ -3,8 +3,9 @@ import { Box, } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import SidebarMenu from './components/SidebarMenu';
 import { Route } from 'react-router';
-import { DASHBOARD_TYPES, getRoute } from '../../constants';
+import { DASHBOARD_TYPES, resolveRoute } from '../../constants';
 import Ingestion from '../Ingestion';
+import { Header } from '../../components';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -21,8 +22,9 @@ function Home(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
+            <Header />
             <SidebarMenu isExpanded={isExpanded} onToggle={onToggle} />
-            <Route exact path={getRoute(DASHBOARD_TYPES.INGESTION)} component={Ingestion} />
+            <Route exact path={resolveRoute(DASHBOARD_TYPES.INGESTION)} component={Ingestion} />
         </Box>
     );
 }
