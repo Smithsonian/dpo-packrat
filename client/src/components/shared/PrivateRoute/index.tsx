@@ -4,8 +4,8 @@
  */
 import React, { useContext } from 'react';
 import { Route, Redirect, RouteProps } from 'react-router-dom';
-import { Routes } from '../../constants';
-import { AppContext } from '../../context';
+import { Routes } from '../../../constants';
+import { AppContext } from '../../../context';
 
 interface PrivateRouteProps {
     component: React.ComponentType<unknown>

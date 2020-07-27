@@ -1,6 +1,6 @@
 export enum Routes {
     HOME = '/:type',
-    LOGIN = '/auth/login',
+    LOGIN = '/login',
     ABOUT = '/about',
     DASHBOARD = '/dashboard'
 }
@@ -14,6 +14,6 @@ export enum DASHBOARD_TYPES {
     ADMIN = 'admin'
 }
 
-export function getRoute(route: Routes | DASHBOARD_TYPES): string {
+export function resolveRoute(route: Routes | DASHBOARD_TYPES): string {
     return `/${route}`;
 }

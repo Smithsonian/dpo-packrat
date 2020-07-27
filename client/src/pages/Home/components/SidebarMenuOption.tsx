@@ -7,7 +7,7 @@ import { MdInsertChart } from 'react-icons/md';
 import { Colors } from '../../../theme';
 import { colorWithOpacity } from '../../../theme/colors';
 
-const useStyles = makeStyles(({ palette, spacing }) => ({
+const useStyles = makeStyles(({ palette, spacing, typography }) => ({
     container: {
         display: 'flex',
         alignItems: 'center',
@@ -48,6 +48,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     subtitle: {
         whiteSpace: 'nowrap',
         color: palette.primary.contrastText,
+        fontWeight: typography.fontWeightLight
     },
 }));
 
