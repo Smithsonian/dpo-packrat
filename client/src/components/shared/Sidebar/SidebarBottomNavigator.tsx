@@ -11,7 +11,7 @@ const useStyles = makeStyles(({ palette }) => ({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 20,
+        padding: '20px 40px',
         background: palette.background.paper
     },
     navButton: {
