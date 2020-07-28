@@ -86,7 +86,7 @@ type NavOptionProps = {
     onClick?: () => void;
 };
 
-function NavOption(props: NavOptionProps) {
+function NavOption(props: NavOptionProps): React.ReactElement {
     const { onClick, children } = props;
     const classes = useStyles();
 

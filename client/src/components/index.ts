@@ -5,6 +5,7 @@
 import Header from './shared/Header';
 import PrivateRoute from './shared/PrivateRoute';
 import PublicRoute from './shared/PublicRoute';
+import LoadingButton from './controls/LoadingButton';
 
 export * from './shared/Sidebar';
-export { Header, PrivateRoute, PublicRoute };
+export { Header, PrivateRoute, PublicRoute, LoadingButton };
