@@ -1,6 +1,1 @@
-export enum Routes {
-    HOME = '/',
-    LOGIN = '/login',
-    ABOUT = '/about',
-    DASHBOARD = '/dashboard'
-}
+export * from './routes';
