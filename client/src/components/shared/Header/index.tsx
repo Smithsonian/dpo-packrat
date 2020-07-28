@@ -65,7 +65,7 @@ function Header(): React.ReactElement {
             <Link className={classes.logo} to={resolveRoute(HOME_ROUTES.DASHBOARD)}>
                 <MdSecurity size={30} color={Colors.defaults.white} />
             </Link>
-            <Typography color='inherit' variant='body2'>{user?.Name || 'Jon Blundell'}</Typography>
+            <Typography color='inherit' variant='body2'>{user?.Name}</Typography>
             <Box className={classes.navOptionsContainer}>
                 <NavOption>
                     <IoIosSearch size={25} color={Colors.defaults.white} />
