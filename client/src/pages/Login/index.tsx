@@ -1,14 +1,15 @@
-import React, { useContext } from 'react';
-import { Box, Typography, Container, Button, Icon } from '@material-ui/core';
+import { Box, Container, Icon, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { useHistory } from 'react-router-dom';
-import { Formik, Field, FormikHelpers } from 'formik';
-import { toast } from 'react-toastify';
+import { Field, Formik, FormikHelpers } from 'formik';
 import { TextField } from 'formik-material-ui';
-import { ROUTES } from '../../constants';
+import React, { useContext } from 'react';
+import { useHistory } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import API from '../../api';
-import { getAuthenticatedUser } from '../../utils/auth';
+import { LoadingButton } from '../../components';
+import { ROUTES } from '../../constants';
 import { AppContext } from '../../context';
+import { getAuthenticatedUser } from '../../utils/auth';
 import useLoginForm, { ILoginForm } from './hooks/useLoginForm';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
@@ -34,6 +35,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         marginTop: spacing(2)
     },
     loginButton: {
+        height: 40,
         marginTop: spacing(5)
     },
     textFiledInput: {
@@ -89,7 +91,7 @@ function Login(): React.ReactElement {
                     validationSchema={loginValidationSchema}
                     onSubmit={onLogin}
                 >
-                    {({ handleSubmit, handleChange, values }) => (
+                    {({ handleSubmit, handleChange, values, isSubmitting }) => (
                         <form className={classes.loginForm} onSubmit={handleSubmit}>
                             <Field
                                 value={values.email}
@@ -113,15 +115,16 @@ function Login(): React.ReactElement {
                                 InputProps={InputProps}
                                 component={TextField}
                             />
-                            <Button
+                            <LoadingButton
                                 type='submit'
                                 className={classes.loginButton}
                                 variant='outlined'
                                 color='primary'
-                                endIcon={<Icon>login</Icon>}
+                                endIcon={!isSubmitting && <Icon>login</Icon>}
+                                loading={isSubmitting}
                             >
                                 Login
-                            </Button>
+                            </LoadingButton>
                         </form>
                     )}
                 </Formik>
