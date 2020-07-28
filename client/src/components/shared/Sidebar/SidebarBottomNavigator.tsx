@@ -15,6 +15,7 @@ const useStyles = makeStyles(({ palette }) => ({
         background: palette.background.paper
     },
     navButton: {
+        minWidth: 100,
         color: Colors.defaults.white
     },
     link: {
