@@ -9,7 +9,7 @@ function LoadingButton(props: LoadingButtonProps): React.ReactElement {
     const { loading, size, ...rest } = props;
 
     return (
-        <Button {...rest} >
+        <Button {...rest}>
             {!loading && props.children}
             {loading && <CircularProgress color='inherit' size={size || 20} />}
         </Button>
