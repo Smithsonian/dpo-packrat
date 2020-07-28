@@ -44,7 +44,6 @@ function Ingestion(): React.ReactElement {
                 <SidebarMenu
                     title='INGESTION'
                     paramIdentifier={INGESTION_PARAMS_TYPE.STEP}
-                    initialRoute={INGESTION_ROUTE.ROUTES.FILES}
                     options={options}
                 >
                     <PrivateRoute
