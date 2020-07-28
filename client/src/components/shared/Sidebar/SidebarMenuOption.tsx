@@ -1,8 +1,8 @@
 import { Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
-import { INGESTION_ROUTES_TYPE } from '../../../../constants';
-import { Colors } from '../../../../theme';
+import { INGESTION_ROUTES_TYPE } from '../../../constants';
+import { Colors } from '../../../theme';
 import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -17,8 +17,8 @@ const useStyles = makeStyles(({ palette }) => ({
         overflow: 'hidden',
         borderRadius: 10,
         marginTop: 2,
-        color: ({ isSelected }: IngestionSidebarOptionProps) => isSelected ? palette.primary.main : palette.primary.dark,
-        backgroundColor: ({ isSelected }: IngestionSidebarOptionProps) => isSelected ? palette.primary.light : Colors.defaults.white,
+        color: ({ isSelected }: SidebarMenuOptionProps) => isSelected ? palette.primary.main : palette.primary.dark,
+        backgroundColor: ({ isSelected }: SidebarMenuOptionProps) => isSelected ? palette.primary.light : Colors.defaults.white,
         '&:hover': {
             cursor: 'pointer',
             color: palette.primary.main,
@@ -27,13 +27,15 @@ const useStyles = makeStyles(({ palette }) => ({
     },
 }));
 
-export interface IngestionSidebarOptionProps {
+export type SidebarRouteTypes = INGESTION_ROUTES_TYPE;
+
+export interface SidebarMenuOptionProps {
     label: string;
-    type: INGESTION_ROUTES_TYPE;
+    type: SidebarRouteTypes;
     isSelected: boolean;
 }
 
-function IngestionSidebarOption(props: IngestionSidebarOptionProps): React.ReactElement {
+function SidebarMenuOption(props: SidebarMenuOptionProps): React.ReactElement {
     const { label, type } = props;
 
     const classes = useStyles(props);
@@ -45,4 +47,4 @@ function IngestionSidebarOption(props: IngestionSidebarOptionProps): React.React
     );
 }
 
-export default IngestionSidebarOption;
+export default SidebarMenuOption;

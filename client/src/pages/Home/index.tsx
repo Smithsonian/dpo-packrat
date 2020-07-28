@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import SidebarMenu from './components/SidebarMenu';
+import SidePanel from './components/SidePanel';
 import { Redirect, useRouteMatch } from 'react-router';
 import Ingestion from '../Ingestion';
 import { Header, PrivateRoute } from '../../components';
@@ -34,7 +34,7 @@ function Home(): React.ReactElement {
             <PrivateRoute path={HOME_ROUTE.TYPE}>
                 <Header />
                 <Box className={classes.content}>
-                    <SidebarMenu isExpanded={isExpanded} onToggle={onToggle} />
+                    <SidePanel isExpanded={isExpanded} onToggle={onToggle} />
                     <PrivateRoute path={resolveRoute(HOME_ROUTES.INGESTION)} component={Ingestion} />
                 </Box>
             </PrivateRoute>
