@@ -14,11 +14,11 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
         alignItems: 'center',
         justifyContent: 'flex-start',
         padding: '0.8rem 1.25rem',
-        width: ({ isExpanded }: SidebarMenuOptionProps) => isExpanded ? 200 : 50,
+        width: ({ isExpanded }: SidePanelOptionProps) => isExpanded ? 200 : 50,
         transition: 'all 250ms ease-in',
         textDecoration: 'none',
         overflow: 'hidden',
-        backgroundColor: ({ isSelected }: SidebarMenuOptionProps) => isSelected ? colorWithOpacity(palette.primary.light, 33) : palette.primary.dark,
+        backgroundColor: ({ isSelected }: SidePanelOptionProps) => isSelected ? colorWithOpacity(palette.primary.light, 33) : palette.primary.dark,
         '&:hover': {
             cursor: 'pointer',
             backgroundColor: colorWithOpacity(palette.primary.light, 33)
@@ -30,7 +30,7 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
         justifyContent: 'center',
         padding: 8,
         borderRadius: 10,
-        backgroundColor: ({ color }: SidebarMenuOptionProps) => colorWithOpacity(color, 33),
+        backgroundColor: ({ color }: SidePanelOptionProps) => colorWithOpacity(color, 33),
         minHeight: 32,
         minWidth: 32
     },
@@ -53,7 +53,7 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
     },
 }));
 
-export interface SidebarMenuOptionProps {
+export interface SidePanelOptionProps {
     title: string;
     subtitle?: string;
     color: string;
@@ -62,7 +62,7 @@ export interface SidebarMenuOptionProps {
     isSelected: boolean;
 }
 
-function SidebarMenuOption(props: SidebarMenuOptionProps): React.ReactElement {
+function SidePanelOption(props: SidePanelOptionProps): React.ReactElement {
     const { title, subtitle, color, type, isExpanded } = props;
 
     const classes = useStyles(props);
@@ -110,4 +110,4 @@ function MenuOptionIcon({ type, color }: MenuOptionIconProps) {
     }
 }
 
-export default SidebarMenuOption;
+export default SidePanelOption;

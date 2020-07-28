@@ -2,12 +2,11 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { Redirect, useRouteMatch } from 'react-router';
-import { PrivateRoute } from '../../components';
+import { PrivateRoute, SidebarMenu, SidebarOption } from '../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
 import Files from './components/Files';
-import SubjectItem from './components/SubjectItem';
 import Metadata from './components/Metadata';
-import IngestionSidebar from './components/sidebar/IngestionSidebar';
+import SubjectItem from './components/SubjectItem';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -20,6 +19,21 @@ function Ingestion(): React.ReactElement {
     const classes = useStyles();
     const { path } = useRouteMatch();
 
+    const options: SidebarOption[] = [
+        {
+            label: 'Files',
+            type: INGESTION_ROUTE.ROUTES.FILES
+        },
+        {
+            label: 'Subject & Item',
+            type: INGESTION_ROUTE.ROUTES.SUBJECT_ITEM
+        },
+        {
+            label: 'Metadata',
+            type: INGESTION_ROUTE.ROUTES.METADATA
+        }
+    ];
+
     return (
         <Box className={classes.container}>
             <PrivateRoute exact path={path}>
@@ -27,24 +41,29 @@ function Ingestion(): React.ReactElement {
             </PrivateRoute>
 
             <PrivateRoute path={resolveRoute(INGESTION_ROUTE.TYPE)}>
-                <IngestionSidebar />
-                <PrivateRoute
-                    exact
-                    path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.FILES)}
-                    component={Files}
-                />
+                <SidebarMenu
+                    title='INGESTION'
+                    initialRoute={INGESTION_ROUTE.ROUTES.FILES}
+                    options={options}
+                >
+                    <PrivateRoute
+                        exact
+                        path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.FILES)}
+                        component={Files}
+                    />
 
-                <PrivateRoute
-                    exact
-                    path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_ITEM)}
-                    component={SubjectItem}
-                />
+                    <PrivateRoute
+                        exact
+                        path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.SUBJECT_ITEM)}
+                        component={SubjectItem}
+                    />
 
-                <PrivateRoute
-                    exact
-                    path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)}
-                    component={Metadata}
-                />
+                    <PrivateRoute
+                        exact
+                        path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.METADATA)}
+                        component={Metadata}
+                    />
+                </SidebarMenu>
             </PrivateRoute>
 
         </Box>

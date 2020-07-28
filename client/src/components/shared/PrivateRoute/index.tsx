@@ -17,7 +17,7 @@ function PrivateRoute({ component: Component, children, ...rest }: PrivateRouteP
 
     const render = props => {
 
-        if (!user) {
+        if (user) {
             return <Redirect to={ROUTES.LOGIN} />;
         } else {
             if (Component) {

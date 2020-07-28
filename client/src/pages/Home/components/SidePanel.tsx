@@ -6,7 +6,7 @@ import { useParams } from 'react-router';
 import { HOME_ROUTES } from '../../../constants';
 import { Colors } from '../../../theme';
 import { colorWithOpacity } from '../../../theme/colors';
-import SidebarMenuOption, { SidebarMenuOptionProps } from './SidebarMenuOption';
+import SidePanelOption, { SidePanelOptionProps } from './SidePanelOption';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
@@ -37,12 +37,12 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     }
 }));
 
-interface SidebarMenuProps {
+interface SidePanelProps {
     isExpanded: boolean;
     onToggle: () => void;
 }
 
-function SidebarMenu(props: SidebarMenuProps): React.ReactElement {
+function SidePanel(props: SidePanelProps): React.ReactElement {
     const { isExpanded, onToggle } = props;
     const [selectedOption, setSelectedOption] = useState(HOME_ROUTES.INGESTION);
 
@@ -54,7 +54,7 @@ function SidebarMenu(props: SidebarMenuProps): React.ReactElement {
 
     const classes = useStyles();
 
-    const Options: SidebarMenuOptionProps[] = [
+    const Options: SidePanelOptionProps[] = [
         {
             title: 'Dashboard',
             type: HOME_ROUTES.DASHBOARD,
@@ -106,7 +106,7 @@ function SidebarMenu(props: SidebarMenuProps): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Grid container className={classes.menuOptions} direction='column'>
-                {Options.map((props, index) => <SidebarMenuOption key={index} {...props} />)}
+                {Options.map((props, index) => <SidePanelOption key={index} {...props} />)}
             </Grid>
             <Box display='flex' flex={1} />
             <Box className={classes.bottomOptions}>
@@ -128,4 +128,4 @@ function SidebarMenu(props: SidebarMenuProps): React.ReactElement {
     );
 }
 
-export default SidebarMenu;
+export default SidePanel;
