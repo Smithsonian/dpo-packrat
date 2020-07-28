@@ -44,9 +44,9 @@ interface SidePanelProps {
 
 function SidePanel(props: SidePanelProps): React.ReactElement {
     const { isExpanded, onToggle } = props;
-    const [selectedOption, setSelectedOption] = useState(HOME_ROUTES.INGESTION);
-
     const { type } = useParams();
+
+    const [selectedOption, setSelectedOption] = useState(type || HOME_ROUTES.INGESTION);
 
     useEffect(() => {
         setSelectedOption(type);

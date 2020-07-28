@@ -30,17 +30,17 @@ export type SidebarOption = {
 interface SidebarMenuProps {
     title: string;
     paramIdentifier: string;
-    initialRoute: SidebarRouteTypes;
+    initialRoute?: SidebarRouteTypes;
     options: SidebarOption[];
     children: React.ReactElement[];
 }
 
 export function SidebarMenu(props: SidebarMenuProps): React.ReactElement {
-    const { title, initialRoute, children, options, paramIdentifier } = props;
-    const [selectedOption, setSelectedOption] = useState(initialRoute);
+    const { title, children, initialRoute, options, paramIdentifier } = props;
+    const param = useParams()[paramIdentifier];
+    const [selectedOption, setSelectedOption] = useState(initialRoute || param);
 
     const classes = useStyles();
-    const param = useParams()[paramIdentifier];
 
     useEffect(() => {
         setSelectedOption(param);
