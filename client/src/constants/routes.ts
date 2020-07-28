@@ -24,8 +24,13 @@ export enum INGESTION_ROUTES_TYPE {
     METADATA = 'metadata'
 }
 
+export enum INGESTION_PARAMS_TYPE {
+    STEP = 'step'
+}
+
 export const INGESTION_ROUTE = {
     TYPE: 'ingestion/:step',
+    PARAMS: INGESTION_PARAMS_TYPE,
     ROUTES: INGESTION_ROUTES_TYPE
 };
 

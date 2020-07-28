@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { Redirect, useRouteMatch } from 'react-router';
 import { PrivateRoute, SidebarMenu, SidebarOption } from '../../components';
-import { HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
+import { HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, INGESTION_PARAMS_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
 import Files from './components/Files';
 import Metadata from './components/Metadata';
 import SubjectItem from './components/SubjectItem';
@@ -43,6 +43,7 @@ function Ingestion(): React.ReactElement {
             <PrivateRoute path={resolveRoute(INGESTION_ROUTE.TYPE)}>
                 <SidebarMenu
                     title='INGESTION'
+                    paramIdentifier={INGESTION_PARAMS_TYPE.STEP}
                     initialRoute={INGESTION_ROUTE.ROUTES.FILES}
                     options={options}
                 >
@@ -65,7 +66,6 @@ function Ingestion(): React.ReactElement {
                     />
                 </SidebarMenu>
             </PrivateRoute>
-
         </Box>
     );
 }
