@@ -37,8 +37,6 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
     const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading } = props;
     const classes = useStyles();
 
-    console.log('Render');
-
     let leftButton = (
         <LoadingButton
             className={classes.navButton}
