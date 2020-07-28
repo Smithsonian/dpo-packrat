@@ -6,12 +6,12 @@ type LoadingButtonProps = ButtonProps & {
 };
 
 function LoadingButton(props: LoadingButtonProps): React.ReactElement {
-    const { loading, size, children } = props;
+    const { loading, size, ...rest } = props;
 
     return (
-        <Button {...props}>
-            {!loading && children}
-            {loading && <CircularProgress size={size || 10} />}
+        <Button {...rest} >
+            {!loading && props.children}
+            {loading && <CircularProgress color='inherit' size={size || 20} />}
         </Button>
     );
 }
