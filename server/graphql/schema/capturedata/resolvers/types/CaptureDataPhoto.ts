@@ -5,6 +5,9 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const CaptureDataPhoto = {
+    CaptureData: async (parent: Parent): Promise<DBAPI.CaptureData | null> => {
+        return await DBAPI.CaptureData.fetch(parent.idCaptureData);
+    },
     VCaptureDatasetType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
         return await DBAPI.Vocabulary.fetch(parent.idVCaptureDatasetType);
     },

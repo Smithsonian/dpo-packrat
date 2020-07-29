@@ -136,6 +136,7 @@ export type CaptureDataPhoto = {
     idVLightSourceType?: Maybe<Scalars['Int']>;
     ItemArrangementFieldID?: Maybe<Scalars['Int']>;
     ItemPositionFieldID?: Maybe<Scalars['Int']>;
+    CaptureData?: Maybe<CaptureData>;
     VBackgroundRemovalMethod?: Maybe<Vocabulary>;
     VCaptureDatasetType?: Maybe<Vocabulary>;
     VClusterType?: Maybe<Vocabulary>;
