@@ -5,10 +5,10 @@ import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
 import { MdSecurity } from 'react-icons/md';
 import { Link, useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import API from '../../../api';
-import { ROUTES, HOME_ROUTES, resolveRoute } from '../../../constants';
-import { AppContext } from '../../../context';
-import { Colors } from '../../../theme';
+import API from '../../api';
+import { ROUTES, HOME_ROUTES, resolveRoute } from '../../constants';
+import { AppContext } from '../../context';
+import { Colors } from '../../theme';
 
 const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
     container: {
