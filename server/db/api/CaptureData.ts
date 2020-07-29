@@ -6,28 +6,12 @@ import * as LOG from '../../utils/logger';
 
 export class CaptureData extends DBC.DBObject<CaptureDataBase> implements CaptureDataBase {
     idCaptureData!: number;
-    CameraSettingsUniform!: boolean | null;
-    CaptureDatasetFieldID!: number | null;
-    ClusterGeometryFieldID!: number | null;
+    idVCaptureMethod!: number;
     DateCaptured!: Date;
     Description!: string;
     idAssetThumbnail!: number | null;
-    idVBackgroundRemovalMethod!: number | null;
-    idVCaptureDatasetType!: number;
-    idVCaptureMethod!: number;
-    idVClusterType!: number | null;
-    idVFocusType!: number | null;
-    idVItemPositionType!: number | null;
-    idVLightSourceType!: number | null;
-    ItemArrangementFieldID!: number | null;
-    ItemPositionFieldID!: number | null;
 
     private idAssetThumbnailOrig!: number | null;
-    private idVBackgroundRemovalMethodOrig!: number | null;
-    private idVClusterTypeOrig!: number | null;
-    private idVFocusTypeOrig!: number | null;
-    private idVItemPositionTypeOrig!: number | null;
-    private idVLightSourceTypeOrig!: number | null;
 
     constructor(input: CaptureDataBase) {
         super(input);
@@ -35,43 +19,20 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
 
     protected updateCachedValues(): void {
         this.idAssetThumbnailOrig = this.idAssetThumbnail;
-        this.idVBackgroundRemovalMethodOrig = this.idVBackgroundRemovalMethod;
-        this.idVClusterTypeOrig = this.idVClusterType;
-        this.idVFocusTypeOrig = this.idVFocusType;
-        this.idVItemPositionTypeOrig = this.idVItemPositionType;
-        this.idVLightSourceTypeOrig = this.idVLightSourceType;
     }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idVCaptureMethod, idVCaptureDatasetType, DateCaptured, Description, CaptureDatasetFieldID, idVItemPositionType,
-                ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
-                ClusterGeometryFieldID, CameraSettingsUniform, idAssetThumbnail } = this;
-            ({ idCaptureData: this.idCaptureData, idVCaptureMethod: this.idVCaptureMethod, idVCaptureDatasetType: this.idVCaptureDatasetType,
-                DateCaptured: this.DateCaptured, Description: this.Description, CaptureDatasetFieldID: this.CaptureDatasetFieldID,
-                idVItemPositionType: this.idVItemPositionType, ItemPositionFieldID: this.ItemPositionFieldID,
-                ItemArrangementFieldID: this.ItemArrangementFieldID, idVFocusType: this.idVFocusType, idVLightSourceType: this.idVLightSourceType,
-                idVBackgroundRemovalMethod: this.idVBackgroundRemovalMethod, idVClusterType: this.idVClusterType,
-                ClusterGeometryFieldID: this.ClusterGeometryFieldID, CameraSettingsUniform: this.CameraSettingsUniform,
-                idAssetThumbnail: this.idAssetThumbnail } =
+            const { idVCaptureMethod, DateCaptured, Description, idAssetThumbnail } = this;
+            ({ idCaptureData: this.idCaptureData, idVCaptureMethod: this.idVCaptureMethod,
+                DateCaptured: this.DateCaptured, Description: this.Description, idAssetThumbnail: this.idAssetThumbnail } =
                 await DBC.DBConnection.prisma.captureData.create({
                     data: {
-                        Vocabulary_CaptureData_idVCaptureMethodToVocabulary:            { connect: { idVocabulary: idVCaptureMethod }, },
-                        Vocabulary_CaptureData_idVCaptureDatasetTypeToVocabulary:       { connect: { idVocabulary: idVCaptureDatasetType }, },
+                        Vocabulary:     { connect: { idVocabulary: idVCaptureMethod }, },
                         DateCaptured,
                         Description,
-                        CaptureDatasetFieldID,
-                        Vocabulary_CaptureData_idVItemPositionTypeToVocabulary:         idVItemPositionType ? { connect: { idVocabulary: idVItemPositionType }, } : undefined,
-                        ItemPositionFieldID,
-                        ItemArrangementFieldID,
-                        Vocabulary_CaptureData_idVFocusTypeToVocabulary:                idVFocusType ? { connect: { idVocabulary: idVFocusType }, } : undefined,
-                        Vocabulary_CaptureData_idVLightSourceTypeToVocabulary:          idVLightSourceType ? { connect: { idVocabulary: idVLightSourceType }, } : undefined,
-                        Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary:  idVBackgroundRemovalMethod ? { connect: { idVocabulary: idVBackgroundRemovalMethod }, } : undefined,
-                        Vocabulary_CaptureData_idVClusterTypeToVocabulary:              idVClusterType ? { connect: { idVocabulary: idVClusterType }, } : undefined,
-                        ClusterGeometryFieldID,
-                        CameraSettingsUniform,
-                        Asset:                                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                        SystemObject:                                                   { create: { Retired: false }, },
+                        Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                        SystemObject:   { create: { Retired: false }, },
                     },
                 }));
             return true;
@@ -83,28 +44,14 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idCaptureData, idVCaptureMethod, idVCaptureDatasetType, DateCaptured, Description, CaptureDatasetFieldID, idVItemPositionType,
-                ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
-                ClusterGeometryFieldID, CameraSettingsUniform, idAssetThumbnail, idAssetThumbnailOrig, idVBackgroundRemovalMethodOrig,
-                idVClusterTypeOrig, idVFocusTypeOrig, idVItemPositionTypeOrig, idVLightSourceTypeOrig } = this;
+            const { idCaptureData, idVCaptureMethod, DateCaptured, Description, idAssetThumbnail, idAssetThumbnailOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.captureData.update({
                 where: { idCaptureData, },
                 data: {
-                    Vocabulary_CaptureData_idVCaptureMethodToVocabulary:            { connect: { idVocabulary: idVCaptureMethod }, },
-                    Vocabulary_CaptureData_idVCaptureDatasetTypeToVocabulary:       { connect: { idVocabulary: idVCaptureDatasetType }, },
+                    Vocabulary:     { connect: { idVocabulary: idVCaptureMethod }, },
                     DateCaptured,
                     Description,
-                    CaptureDatasetFieldID,
-                    Vocabulary_CaptureData_idVItemPositionTypeToVocabulary:         idVItemPositionType ? { connect: { idVocabulary: idVItemPositionType }, } : idVItemPositionTypeOrig ? { disconnect: true, } : undefined,
-                    ItemPositionFieldID,
-                    ItemArrangementFieldID,
-                    Vocabulary_CaptureData_idVFocusTypeToVocabulary:                idVFocusType ? { connect: { idVocabulary: idVFocusType }, } : idVFocusTypeOrig ? { disconnect: true, } : undefined,
-                    Vocabulary_CaptureData_idVLightSourceTypeToVocabulary:          idVLightSourceType ? { connect: { idVocabulary: idVLightSourceType }, } : idVLightSourceTypeOrig ? { disconnect: true, } : undefined,
-                    Vocabulary_CaptureData_idVBackgroundRemovalMethodToVocabulary:  idVBackgroundRemovalMethod ? { connect: { idVocabulary: idVBackgroundRemovalMethod }, } : idVBackgroundRemovalMethodOrig ? { disconnect: true, } : undefined,
-                    Vocabulary_CaptureData_idVClusterTypeToVocabulary:              idVClusterType ? { connect: { idVocabulary: idVClusterType }, } : idVClusterTypeOrig ? { disconnect: true, } : undefined,
-                    ClusterGeometryFieldID,
-                    CameraSettingsUniform,
-                    Asset:                                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
+                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -133,6 +80,19 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 await DBC.DBConnection.prisma.captureData.findOne({ where: { idCaptureData, }, }), CaptureData);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchFromCaptureDataPhoto(idCaptureDataPhoto: number): Promise<CaptureData | null> {
+        if (!idCaptureDataPhoto)
+            return null;
+        try {
+            const retValue: CaptureData[] | null = DBC.CopyArray<CaptureDataBase, CaptureData>(
+                await DBC.DBConnection.prisma.captureData.findMany({ where: { CaptureDataPhoto: { some: { idCaptureDataPhoto, }, }, }, }), CaptureData);
+            return (retValue && retValue.length > 0) ? retValue[0] : /* istanbul ignore next */ null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.CaptureData.fetchFromCaptureDataPhoto', error);
             return null;
         }
     }

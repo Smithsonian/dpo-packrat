@@ -1,4 +1,4 @@
-import { CreateCaptureDataInput, CreateVocabularySetInput, CreateVocabularyInput } from '../../../../types/graphql';
+import { CreateCaptureDataInput, CreateVocabularySetInput, CreateVocabularyInput, CreateCaptureDataPhotoInput } from '../../../../types/graphql';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
 
@@ -7,12 +7,14 @@ const createCaptureDataTest = (utils: TestSuiteUtils): void => {
     let createVocabularyInput: (idVocabularySet: number) => CreateVocabularyInput;
     let createVocabularySetInput: () => CreateVocabularySetInput;
     let createCaptureDataInput: (idVocabulary: number) => CreateCaptureDataInput;
+    let createCaptureDataPhotoInput: (idCaptureData: number, idVocabulary: number) => CreateCaptureDataPhotoInput;
 
     beforeAll(() => {
         graphQLApi = utils.graphQLApi;
         createVocabularyInput = utils.createVocabularyInput;
         createVocabularySetInput = utils.createVocabularySetInput;
         createCaptureDataInput = utils.createCaptureDataInput;
+        createCaptureDataPhotoInput = utils.createCaptureDataPhotoInput;
     });
 
     describe('Mutation: createCaptureData', () => {
@@ -30,6 +32,12 @@ const createCaptureDataTest = (utils: TestSuiteUtils): void => {
                     const captureData: CreateCaptureDataInput = createCaptureDataInput(Vocabulary.idVocabulary);
                     const { CaptureData } = await graphQLApi.createCaptureData(captureData);
                     expect(CaptureData).toBeTruthy();
+
+                    if (CaptureData) {
+                        const captureDataPhoto: CreateCaptureDataPhotoInput = createCaptureDataPhotoInput(CaptureData.idCaptureData, Vocabulary.idVocabulary);
+                        const { CaptureDataPhoto } = await graphQLApi.createCaptureDataPhoto(captureDataPhoto);
+                        expect(CaptureDataPhoto).toBeTruthy();
+                    }
                 }
             }
         });

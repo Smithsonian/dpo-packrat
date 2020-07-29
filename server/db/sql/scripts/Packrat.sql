@@ -93,19 +93,8 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
 CREATE TABLE IF NOT EXISTS `CaptureData` (
   `idCaptureData` int(11) NOT NULL AUTO_INCREMENT,
   `idVCaptureMethod` int(11) NOT NULL,
-  `idVCaptureDatasetType` int(11) NOT NULL,
   `DateCaptured` datetime NOT NULL,
   `Description` varchar(8000) NOT NULL,
-  `CaptureDatasetFieldID` int(11) DEFAULT NULL,
-  `idVItemPositionType` int(11) DEFAULT NULL,
-  `ItemPositionFieldID` int(11) DEFAULT NULL,
-  `ItemArrangementFieldID` int(11) DEFAULT NULL,
-  `idVFocusType` int(11) DEFAULT NULL,
-  `idVLightSourceType` int(11) DEFAULT NULL,
-  `idVBackgroundRemovalMethod` int(11) DEFAULT NULL,
-  `idVClusterType` int(11) DEFAULT NULL,
-  `ClusterGeometryFieldID` int(11) DEFAULT NULL,
-  `CameraSettingsUniform` boolean DEFAULT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
   PRIMARY KEY (`idCaptureData`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -133,6 +122,23 @@ CREATE TABLE IF NOT EXISTS `CaptureDataGroupCaptureDataXref` (
   PRIMARY KEY (`idCaptureDataGroupCaptureDataXref`),
   KEY `CaptureDataGroupCaptureDataXref_idCaptureDataGroup` (`idCaptureDataGroup`),
   KEY `CaptureDataGroupCaptureDataXref_idCaptureData` (`idCaptureData`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `CaptureDataPhoto` (
+  `idCaptureDataPhoto` int(11) NOT NULL AUTO_INCREMENT,
+  `idCaptureData` int(11) NOT NULL,
+  `idVCaptureDatasetType` int(11) NOT NULL,
+  `CaptureDatasetFieldID` int(11) DEFAULT NULL,
+  `idVItemPositionType` int(11) DEFAULT NULL,
+  `ItemPositionFieldID` int(11) DEFAULT NULL,
+  `ItemArrangementFieldID` int(11) DEFAULT NULL,
+  `idVFocusType` int(11) DEFAULT NULL,
+  `idVLightSourceType` int(11) DEFAULT NULL,
+  `idVBackgroundRemovalMethod` int(11) DEFAULT NULL,
+  `idVClusterType` int(11) DEFAULT NULL,
+  `ClusterGeometryFieldID` int(11) DEFAULT NULL,
+  `CameraSettingsUniform` boolean DEFAULT NULL,
+  PRIMARY KEY (`idCaptureDataPhoto`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `GeoLocation` (
@@ -170,12 +176,41 @@ CREATE TABLE IF NOT EXISTS `IntermediaryFile` (
 
 CREATE TABLE IF NOT EXISTS `Item` (
   `idItem` int(11) NOT NULL AUTO_INCREMENT,
-  `idSubject` int(11) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
   `idGeoLocation` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
   `EntireSubject` boolean NOT NULL,
   PRIMARY KEY (`idItem`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `Job` (
+  `idJob` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  PRIMARY KEY (`idJob`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `JobTask` (
+  `idJobTask` int(11) NOT NULL AUTO_INCREMENT,
+  `idJob` int(11) NOT NULL,
+  `idVJobType` int(11) NOT NULL,
+  `State` varchar(255) NULL,
+  `Step` varchar(255) NULL,
+  `Error` varchar(255) NULL,
+  `Parameters` text NULL,
+  `Report` text NULL,
+  PRIMARY KEY (`idJobTask`),
+  KEY `JobTask_idJob` (`idJob`),
+  KEY `JobTask_idVJobType_idJob` (`idVJobType`, `idJob`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `JobTaskCook` (
+  `idJobTaskCook` int(11) NOT NULL AUTO_INCREMENT,
+  `idJobTask` int(11) NOT NULL,
+  `JobID` varchar(32) NOT NULL,
+  `RecipeID` varchar(32) NOT NULL,
+  PRIMARY KEY (`idJobTaskCook`),
+  KEY `JobTaskCook_idJobTask` (`idJobTask`),
+  KEY `JobTaskCook_JobID` (`JobID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `License` (
@@ -575,36 +610,6 @@ ADD CONSTRAINT `fk_capturedata_vocabulary1`
   REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_capturedata_vocabulary2`
-  FOREIGN KEY (`idVCaptureDatasetType`)
-  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_capturedata_vocabulary3`
-  FOREIGN KEY (`idVItemPositionType`)
-  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_capturedata_vocabulary4`
-  FOREIGN KEY (`idVFocusType`)
-  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_capturedata_vocabulary5`
-  FOREIGN KEY (`idVLightSourceType`)
-  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_capturedata_vocabulary6`
-  FOREIGN KEY (`idVBackgroundRemovalMethod`)
-  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_capturedata_vocabulary7`
-  FOREIGN KEY (`idVClusterType`)
-  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedata_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
   REFERENCES `Packrat`.`Asset` (`idAsset`)
@@ -640,6 +645,43 @@ ADD CONSTRAINT `fk_capturedatagroupcapturedataxref_capturedata1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
+ALTER TABLE `Packrat`.`CaptureDataPhoto` 
+ADD CONSTRAINT `fk_capturedataphoto_capturedata1`
+  FOREIGN KEY (`idCaptureData`)
+  REFERENCES `Packrat`.`CaptureData` (`idCaptureData`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedataphoto_vocabulary1`
+  FOREIGN KEY (`idVCaptureDatasetType`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedataphoto_vocabulary2`
+  FOREIGN KEY (`idVItemPositionType`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedataphoto_vocabulary3`
+  FOREIGN KEY (`idVFocusType`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedataphoto_vocabulary4`
+  FOREIGN KEY (`idVLightSourceType`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedataphoto_vocabulary5`
+  FOREIGN KEY (`idVBackgroundRemovalMethod`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedataphoto_vocabulary6`
+  FOREIGN KEY (`idVClusterType`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
 ALTER TABLE `Packrat`.`Identifier` 
 ADD CONSTRAINT `fk_identifier_systemobject1`
   FOREIGN KEY (`idSystemObject`)
@@ -660,11 +702,6 @@ ADD CONSTRAINT `fk_intermediaryfile_asset1`
   ON UPDATE NO ACTION;
 
 ALTER TABLE `Packrat`.`Item` 
-ADD CONSTRAINT `fk_item_subject1`
-  FOREIGN KEY (`idSubject`)
-  REFERENCES `Packrat`.`Subject` (`idSubject`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_item_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
   REFERENCES `Packrat`.`Asset` (`idAsset`)
@@ -673,6 +710,25 @@ ADD CONSTRAINT `fk_item_asset1`
 ADD CONSTRAINT `fk_item_geolocation1`
   FOREIGN KEY (`idGeoLocation`)
   REFERENCES `Packrat`.`GeoLocation` (`idGeoLocation`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `Packrat`.`JobTask` 
+ADD CONSTRAINT `fk_jobtask_job1`
+  FOREIGN KEY (`idJob`)
+  REFERENCES `Packrat`.`Job` (`idJob`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_jobtask_vocabulary1`
+  FOREIGN KEY (`idVJobType`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `Packrat`.`JobTaskCook` 
+ADD CONSTRAINT `fk_jobtaskcook_jobtask1`
+  FOREIGN KEY (`idJobTask`)
+  REFERENCES `Packrat`.`JobTask` (`idJobTask`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

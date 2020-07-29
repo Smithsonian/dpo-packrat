@@ -6,39 +6,17 @@ export default async function CreateCaptureData(_: Parent, args: MutationCreateC
     const { input } = args;
     const {
         idVCaptureMethod,
-        idVCaptureDatasetType,
         DateCaptured,
         Description,
-        CaptureDatasetFieldID,
-        ItemPositionFieldID,
-        ItemArrangementFieldID,
-        idVBackgroundRemovalMethod,
-        ClusterGeometryFieldID,
-        CameraSettingsUniform,
-        idAssetThumbnail,
-        idVItemPositionType,
-        idVFocusType,
-        idVLightSourceType,
-        idVClusterType
+        idAssetThumbnail
     } = input;
 
     const captureDataArgs = {
         idCaptureData: 0,
         idVCaptureMethod,
-        idVCaptureDatasetType,
         DateCaptured,
         Description,
-        CaptureDatasetFieldID,
-        ItemPositionFieldID,
-        ItemArrangementFieldID,
-        idVBackgroundRemovalMethod,
-        ClusterGeometryFieldID,
-        CameraSettingsUniform,
-        idAssetThumbnail: idAssetThumbnail || null,
-        idVItemPositionType: idVItemPositionType || null,
-        idVFocusType: idVFocusType || null,
-        idVLightSourceType: idVLightSourceType || null,
-        idVClusterType: idVClusterType || null
+        idAssetThumbnail: idAssetThumbnail || null
     };
 
     const CaptureData = new DBAPI.CaptureData(captureDataArgs);
