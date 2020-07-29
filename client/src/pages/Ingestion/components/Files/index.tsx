@@ -1,20 +1,48 @@
 import React from 'react';
-import { Box, Typography } from '@material-ui/core';
+import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { resolveRoute, HOME_ROUTES, resolveSubRoute, INGESTION_ROUTE } from '../../../../constants';
 import { SidebarBottomNavigator } from '../../../../components';
 
-const useStyles = makeStyles(() => ({
+import { Colors } from '../../../../theme';
+import FileUploadList from './FileUploadList';
+import IngestionFilesPicker from './IngestionFilesPicker';
+
+const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
         display: 'flex',
-        flex: 1,
         flexDirection: 'column'
     },
     content: {
         display: 'flex',
         flex: 1,
+        flexDirection: 'column',
+        padding: '40px 0px 0px 40px'
+    },
+    fileDrop: {
+        display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        height: '30vh',
+        width: '40vw',
+        border: `1px dashed ${palette.primary.main}`,
+        borderRadius: 10,
+        backgroundColor: palette.primary.light
+    },
+    uploadIcon: {
+        color: palette.primary.main
+    },
+    uploadTitle: {
+        margin: '2% 0px',
+        fontSize: '1.2em',
+        fontWeight: typography.fontWeightMedium
+    },
+    uploadButton: {
+        width: 120,
+        fontSize: typography.caption.fontSize,
+        marginTop: spacing(1),
+        color: Colors.defaults.white
     },
 }));
 
@@ -24,7 +52,8 @@ function Files(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
-                <Typography variant='subtitle1'>Files</Typography>
+                <IngestionFilesPicker />
+                <FileUploadList />
             </Box>
             <SidebarBottomNavigator
                 leftLabel='Cancel'
