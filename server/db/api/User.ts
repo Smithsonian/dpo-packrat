@@ -80,9 +80,9 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
         }
     }
 
-    static async fetchByEmail(EmailAddress: string): Promise<User | null> {
+    static async fetchByEmail(EmailAddress: string): Promise<User[] | null> {
         try {
-            return DBC.CopyObject<UserBase, User>(await DBC.DBConnection.prisma.user.findOne({ where: { EmailAddress, }, }), User);
+            return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({ where: { EmailAddress, }, }), User);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.User.fetchByEmail', error);
             return null;

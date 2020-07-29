@@ -36,7 +36,6 @@ type CreateSubjectResult {
 }
 
 input CreateItemInput {
-    idSubject: Int!
     Name: String!
     EntireSubject: Boolean!
     idAssetThumbnail: Int

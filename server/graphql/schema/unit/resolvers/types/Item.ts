@@ -5,9 +5,6 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const Item = {
-    Subject: async (parent: Parent): Promise<DBAPI.Subject | null> => {
-        return await DBAPI.Subject.fetch(parent.idSubject);
-    },
     AssetThumbnail: async (parent: Parent): Promise<DBAPI.Asset | null> => {
         return await DBAPI.Asset.fetch(parent.idAssetThumbnail);
     },
