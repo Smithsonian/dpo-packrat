@@ -3,15 +3,23 @@ import { IAuth, VerifiedUser } from '../interface';
 
 class LocalAuth implements IAuth {
     async verifyUser(email: string, password: string): Promise<VerifiedUser> {
-        const user = await DBAPI.User.fetchByEmail(email);
+        const users: DBAPI.User[] | null = await DBAPI.User.fetchByEmail(email);
 
-        if (!user) {
+        if (!users) {
             return {
-                user,
+                user: null,
                 error: 'User does not exist'
             };
         }
 
+        if (users.length != 1) {
+            return {
+                user: null,
+                error: 'Multiple users exist for specified email address'
+            };
+        }
+
+        const user: DBAPI.User = users[0];
         if (!user.Active) {
             return {
                 user,

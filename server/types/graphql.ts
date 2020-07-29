@@ -94,27 +94,10 @@ export type CaptureData = {
     idCaptureData: Scalars['Int'];
     DateCaptured: Scalars['DateTime'];
     Description: Scalars['String'];
-    idVCaptureDatasetType: Scalars['Int'];
     idVCaptureMethod: Scalars['Int'];
-    CameraSettingsUniform?: Maybe<Scalars['Boolean']>;
-    CaptureDatasetFieldID?: Maybe<Scalars['Int']>;
-    ClusterGeometryFieldID?: Maybe<Scalars['Int']>;
     idAssetThumbnail?: Maybe<Scalars['Int']>;
-    idVBackgroundRemovalMethod?: Maybe<Scalars['Int']>;
-    idVClusterType?: Maybe<Scalars['Int']>;
-    idVFocusType?: Maybe<Scalars['Int']>;
-    idVItemPositionType?: Maybe<Scalars['Int']>;
-    idVLightSourceType?: Maybe<Scalars['Int']>;
-    ItemArrangementFieldID?: Maybe<Scalars['Int']>;
-    ItemPositionFieldID?: Maybe<Scalars['Int']>;
     AssetThumbnail?: Maybe<Asset>;
-    VBackgroundRemovalMethod?: Maybe<Vocabulary>;
-    VCaptureDatasetType?: Maybe<Vocabulary>;
     VCaptureMethod?: Maybe<Vocabulary>;
-    VClusterType?: Maybe<Vocabulary>;
-    VFocusType?: Maybe<Vocabulary>;
-    VItemPositionType?: Maybe<Vocabulary>;
-    VLightSourceType?: Maybe<Vocabulary>;
     CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
     CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
     SystemObject?: Maybe<SystemObject>;
@@ -136,6 +119,29 @@ export type CaptureDataGroup = {
     __typename?: 'CaptureDataGroup';
     idCaptureDataGroup: Scalars['Int'];
     CaptureData?: Maybe<Array<Maybe<CaptureData>>>;
+};
+
+export type CaptureDataPhoto = {
+    __typename?: 'CaptureDataPhoto';
+    idCaptureDataPhoto: Scalars['Int'];
+    idCaptureData: Scalars['Int'];
+    idVCaptureDatasetType: Scalars['Int'];
+    CameraSettingsUniform?: Maybe<Scalars['Boolean']>;
+    CaptureDatasetFieldID?: Maybe<Scalars['Int']>;
+    ClusterGeometryFieldID?: Maybe<Scalars['Int']>;
+    idVBackgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    idVClusterType?: Maybe<Scalars['Int']>;
+    idVFocusType?: Maybe<Scalars['Int']>;
+    idVItemPositionType?: Maybe<Scalars['Int']>;
+    idVLightSourceType?: Maybe<Scalars['Int']>;
+    ItemArrangementFieldID?: Maybe<Scalars['Int']>;
+    ItemPositionFieldID?: Maybe<Scalars['Int']>;
+    VBackgroundRemovalMethod?: Maybe<Vocabulary>;
+    VCaptureDatasetType?: Maybe<Vocabulary>;
+    VClusterType?: Maybe<Vocabulary>;
+    VFocusType?: Maybe<Vocabulary>;
+    VItemPositionType?: Maybe<Vocabulary>;
+    VLightSourceType?: Maybe<Vocabulary>;
 };
 
 export type License = {
@@ -454,13 +460,11 @@ export type Item = {
     __typename?: 'Item';
     idItem: Scalars['Int'];
     EntireSubject: Scalars['Boolean'];
-    idSubject: Scalars['Int'];
     Name: Scalars['String'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
     AssetThumbnail?: Maybe<Asset>;
     GeoLocation?: Maybe<GeoLocation>;
-    Subject?: Maybe<Subject>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -574,6 +578,7 @@ export type Query = {
     getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
     getCaptureData: GetCaptureDataResult;
+    getCaptureDataPhoto: GetCaptureDataPhotoResult;
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
     getScene: GetSceneResult;
@@ -596,6 +601,10 @@ export type QueryGetAssetArgs = {
 
 export type QueryGetCaptureDataArgs = {
     input: GetCaptureDataInput;
+};
+
+export type QueryGetCaptureDataPhotoArgs = {
+    input: GetCaptureDataPhotoInput;
 };
 
 export type QueryGetLicenseArgs = {
@@ -660,9 +669,18 @@ export type GetCaptureDataInput = {
     idCaptureData: Scalars['Int'];
 };
 
+export type GetCaptureDataPhotoInput = {
+    idCaptureDataPhoto: Scalars['Int'];
+};
+
 export type GetCaptureDataResult = {
     __typename?: 'GetCaptureDataResult';
     CaptureData?: Maybe<CaptureData>;
+};
+
+export type GetCaptureDataPhotoResult = {
+    __typename?: 'GetCaptureDataPhotoResult';
+    CaptureDataPhoto?: Maybe<CaptureDataPhoto>;
 };
 
 export type GetLicenseInput = {
@@ -758,6 +776,7 @@ export type GetWorkflowResult = {
 export type Mutation = {
     __typename?: 'Mutation';
     createCaptureData: CreateCaptureDataResult;
+    createCaptureDataPhoto: CreateCaptureDataPhotoResult;
     createModel: CreateModelResult;
     createScene: CreateSceneResult;
     createUnit: CreateUnitResult;
@@ -771,6 +790,10 @@ export type Mutation = {
 
 export type MutationCreateCaptureDataArgs = {
     input: CreateCaptureDataInput;
+};
+
+export type MutationCreateCaptureDataPhotoArgs = {
+    input: CreateCaptureDataPhotoInput;
 };
 
 export type MutationCreateModelArgs = {
@@ -811,16 +834,20 @@ export type MutationCreateVocabularySetArgs = {
 
 export type CreateCaptureDataInput = {
     idVCaptureMethod: Scalars['Int'];
-    idVCaptureDatasetType: Scalars['Int'];
     DateCaptured: Scalars['DateTime'];
     Description: Scalars['String'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+};
+
+export type CreateCaptureDataPhotoInput = {
+    idCaptureData: Scalars['Int'];
+    idVCaptureDatasetType: Scalars['Int'];
     CaptureDatasetFieldID: Scalars['Int'];
     ItemPositionFieldID: Scalars['Int'];
     ItemArrangementFieldID: Scalars['Int'];
     idVBackgroundRemovalMethod: Scalars['Int'];
     ClusterGeometryFieldID: Scalars['Int'];
     CameraSettingsUniform: Scalars['Boolean'];
-    idAssetThumbnail?: Maybe<Scalars['Int']>;
     idVItemPositionType?: Maybe<Scalars['Int']>;
     idVFocusType?: Maybe<Scalars['Int']>;
     idVLightSourceType?: Maybe<Scalars['Int']>;
@@ -830,6 +857,11 @@ export type CreateCaptureDataInput = {
 export type CreateCaptureDataResult = {
     __typename?: 'CreateCaptureDataResult';
     CaptureData?: Maybe<CaptureData>;
+};
+
+export type CreateCaptureDataPhotoResult = {
+    __typename?: 'CreateCaptureDataPhotoResult';
+    CaptureDataPhoto?: Maybe<CaptureDataPhoto>;
 };
 
 export type CreateModelInput = {
@@ -893,7 +925,6 @@ export type CreateSubjectResult = {
 };
 
 export type CreateItemInput = {
-    idSubject: Scalars['Int'];
     Name: Scalars['String'];
     EntireSubject: Scalars['Boolean'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;

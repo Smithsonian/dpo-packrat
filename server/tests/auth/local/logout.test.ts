@@ -4,9 +4,10 @@ import * as DBAPI from '../../../db';
 
 describe('Auth implementation: local logout', () => {
     test('should logout user correctly', async done => {
+        const randomNumber: number = Math.random() * 100000000;
         const userInput = {
             Name: 'Test User',
-            EmailAddress: 'test@si.edu',
+            EmailAddress: 'test-' + randomNumber + '@si.edu',
             SecurityID: 'SECURITY_ID',
             Active: true,
             DateActivated: new Date(),
