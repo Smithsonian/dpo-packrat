@@ -78,7 +78,7 @@ import getWorkflow from './queries/workflow/getWorkflow';
 // Mutations
 import createUser from './mutations/user/createUser';
 import createCaptureData from './mutations/capturedata/createCaptureData';
-import createCaptureDataPhoto from './mutations/capturedata/createCaptureData';
+import createCaptureDataPhoto from './mutations/capturedata/createCaptureDataPhoto';
 import createModel from './mutations/model/createModel';
 import createScene from './mutations/scene/createScene';
 import createUnit from './mutations/unit/createUnit';
