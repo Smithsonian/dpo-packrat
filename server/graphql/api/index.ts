@@ -39,6 +39,8 @@ import {
     CreateUserResult,
     CreateCaptureDataInput,
     CreateCaptureDataResult,
+    CreateCaptureDataPhotoInput,
+    CreateCaptureDataPhotoResult,
     CreateModelInput,
     CreateModelResult,
     CreateSceneInput,
@@ -76,6 +78,7 @@ import getWorkflow from './queries/workflow/getWorkflow';
 // Mutations
 import createUser from './mutations/user/createUser';
 import createCaptureData from './mutations/capturedata/createCaptureData';
+import createCaptureDataPhoto from './mutations/capturedata/createCaptureDataPhoto';
 import createModel from './mutations/model/createModel';
 import createScene from './mutations/scene/createScene';
 import createUnit from './mutations/unit/createUnit';
@@ -103,6 +106,7 @@ const allQueries = {
     getWorkflow,
     createUser,
     createCaptureData,
+    createCaptureDataPhoto,
     createModel,
     createScene,
     createUnit,
@@ -183,6 +187,16 @@ class GraphQLApi {
 
     async createCaptureData(input: CreateCaptureDataInput, context?: Context): Promise<CreateCaptureDataResult> {
         const operationName = 'createCaptureData';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async createCaptureDataPhoto(input: CreateCaptureDataPhotoInput, context?: Context): Promise<CreateCaptureDataPhotoResult> {
+        const operationName = 'createCaptureDataPhoto';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

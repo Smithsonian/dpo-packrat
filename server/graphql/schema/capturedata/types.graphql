@@ -4,27 +4,10 @@ type CaptureData {
     idCaptureData: Int!
     DateCaptured: DateTime!
     Description: String!
-    idVCaptureDatasetType: Int!
     idVCaptureMethod: Int!
-    CameraSettingsUniform: Boolean
-    CaptureDatasetFieldID: Int
-    ClusterGeometryFieldID: Int
     idAssetThumbnail: Int
-    idVBackgroundRemovalMethod: Int
-    idVClusterType: Int
-    idVFocusType: Int
-    idVItemPositionType: Int
-    idVLightSourceType: Int
-    ItemArrangementFieldID: Int
-    ItemPositionFieldID: Int
     AssetThumbnail: Asset
-    VBackgroundRemovalMethod: Vocabulary
-    VCaptureDatasetType: Vocabulary
     VCaptureMethod: Vocabulary
-    VClusterType: Vocabulary
-    VFocusType: Vocabulary
-    VItemPositionType: Vocabulary
-    VLightSourceType: Vocabulary
     CaptureDataFile: [CaptureDataFile]
     CaptureDataGroup: [CaptureDataGroup]
     SystemObject: SystemObject
@@ -44,4 +27,26 @@ type CaptureDataFile {
 type CaptureDataGroup {
     idCaptureDataGroup: Int!
     CaptureData: [CaptureData]
+}
+
+type CaptureDataPhoto {
+    idCaptureDataPhoto: Int!
+    idCaptureData: Int!
+    idVCaptureDatasetType: Int!
+    CameraSettingsUniform: Boolean
+    CaptureDatasetFieldID: Int
+    ClusterGeometryFieldID: Int
+    idVBackgroundRemovalMethod: Int
+    idVClusterType: Int
+    idVFocusType: Int
+    idVItemPositionType: Int
+    idVLightSourceType: Int
+    ItemArrangementFieldID: Int
+    ItemPositionFieldID: Int
+    VBackgroundRemovalMethod: Vocabulary
+    VCaptureDatasetType: Vocabulary
+    VClusterType: Vocabulary
+    VFocusType: Vocabulary
+    VItemPositionType: Vocabulary
+    VLightSourceType: Vocabulary
 }
