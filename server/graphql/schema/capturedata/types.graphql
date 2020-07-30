@@ -43,6 +43,7 @@ type CaptureDataPhoto {
     idVLightSourceType: Int
     ItemArrangementFieldID: Int
     ItemPositionFieldID: Int
+    CaptureData: CaptureData
     VBackgroundRemovalMethod: Vocabulary
     VCaptureDatasetType: Vocabulary
     VClusterType: Vocabulary
