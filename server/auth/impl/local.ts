@@ -12,7 +12,7 @@ class LocalAuth implements IAuth {
             };
         }
 
-        if (users.length != 1) {
+        if (users.length !== 1) {
             return {
                 user: null,
                 error: 'Multiple users exist for specified email address'
