@@ -20,7 +20,14 @@ module.exports = {
         node: true
     },
     plugins: ['react', '@typescript-eslint', 'prettier'],
-    extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:react/recommended', 'plugin:import/errors', 'plugin:import/typescript'],
+    extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
+        'plugin:react/recommended',
+        'plugin:import/errors',
+        'plugin:import/typescript',
+        'plugin:react-hooks/recommended'
+    ],
     rules: {
         // JS/TS RULES
         quotes: ['error', 'single'],
@@ -48,6 +55,7 @@ module.exports = {
         'react/jsx-max-props-per-line': ['error', { maximum: 4 }],
         'react/jsx-no-bind': ['error', { allowArrowFunctions: true }],
         'react/jsx-no-literals': 'off',
-        'react/jsx-tag-spacing': ['error', { beforeSelfClosing: 'always' }]
+        'react/jsx-tag-spacing': ['error', { beforeSelfClosing: 'always' }],
+        // 'react-hooks/exhaustive-deps': 'off'
     }
 };
