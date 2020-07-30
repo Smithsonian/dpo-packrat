@@ -40,6 +40,7 @@
     "customize-cra": "^1.0.0",
     "formik": "^2.1.5",
     "formik-material-ui": "^2.0.1",
+    "framer-motion": "^2.3.0",
     "graphql": "^15.3.0",
     "graphql.macro": "^1.4.2",
     "react": "^16.13.1",

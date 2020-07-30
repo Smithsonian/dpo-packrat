@@ -5,6 +5,7 @@ import { colorWithOpacity } from '../../../../theme/colors';
 import { AppContext, TRANSFER_ACTIONS, INGESTION_TRANSFER_STATUS, FileId, IngestionFile, IngestionDispatchAction } from '../../../../context';
 import FileUploadListItem from './FileUploadListItem';
 import { toast } from 'react-toastify';
+import { AnimatePresence } from 'framer-motion';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -77,17 +78,18 @@ function FileUploadList(): React.ReactElement {
         const progress = transfer.progress.get(id) || 0;
 
         return (
-            <FileUploadListItem
-                key={index}
-                id={id}
-                name={name}
-                size={size}
-                uploading={uploading}
-                complete={complete}
-                failed={hasFailed}
-                progress={progress}
-                onRemove={onRemove}
-            />
+            <AnimatePresence key={index}>
+                <FileUploadListItem
+                    id={id}
+                    name={name}
+                    size={size}
+                    uploading={uploading}
+                    complete={complete}
+                    failed={hasFailed}
+                    progress={progress}
+                    onRemove={onRemove}
+                />
+            </AnimatePresence>
         );
     };
 

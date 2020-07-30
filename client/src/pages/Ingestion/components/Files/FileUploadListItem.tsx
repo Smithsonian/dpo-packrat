@@ -6,6 +6,7 @@ import { IoIosCloseCircle, IoMdCheckmark } from 'react-icons/io';
 import { colorWithOpacity } from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
 import { FileId } from '../../../../context';
+import { motion } from 'framer-motion';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
@@ -98,8 +99,18 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
 
     const uploadStatus = uploading ? 'Uploading...' : complete ? 'Complete' : failed ? 'Failed' : 'Ready';
 
+    const variants = {
+        visible: { opacity: 1, y: 0 },
+        hidden: { opacity: 0.25, y: 20 },
+    };
+
     return (
-        <Box className={classes.container}>
+        <motion.div
+            className={classes.container}
+            variants={variants}
+            initial='hidden'
+            animate='visible'
+        >
             <div className={classes.item}>
                 <Box className={classes.details}>
                     <Box>
@@ -117,7 +128,7 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
                 </Box>
             </div>
             <Box className={classes.progress} />
-        </Box>
+        </motion.div>
     );
 }
 
