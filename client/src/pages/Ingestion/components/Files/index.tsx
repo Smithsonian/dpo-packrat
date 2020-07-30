@@ -7,7 +7,7 @@ import { SidebarBottomNavigator } from '../../../../components';
 import { Colors } from '../../../../theme';
 import FileUploadList from './FileUploadList';
 import IngestionFilesPicker from './IngestionFilesPicker';
-import { KeepAlive } from 'react-keep-alive';
+import KeepAlive from 'react-activation';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -51,7 +51,7 @@ function Files(): React.ReactElement {
     const classes = useStyles();
 
     return (
-        <KeepAlive name='IngestionFilesPicker'>
+        <KeepAlive>
             <Box className={classes.container}>
                 <Box className={classes.content}>
                     <IngestionFilesPicker />
@@ -64,8 +64,7 @@ function Files(): React.ReactElement {
                     rightRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM)}
                 />
             </Box>
-        </KeepAlive>
-
+        </KeepAlive >
     );
 }
 

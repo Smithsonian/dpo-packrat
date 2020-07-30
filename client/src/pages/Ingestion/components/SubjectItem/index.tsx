@@ -25,7 +25,6 @@ function SubjectItem(): React.ReactElement {
         <Box className={classes.container}>
             <Box className={classes.content}>
                 <Typography variant='subtitle1'>Subject and Item</Typography>
-                <input />
             </Box>
             <SidebarBottomNavigator
                 leftLabel='Previous'

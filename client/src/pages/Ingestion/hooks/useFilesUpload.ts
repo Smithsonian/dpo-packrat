@@ -20,7 +20,7 @@ const mockApi = {
 
                 ingestionDispatch(uploadProgressAction);
 
-                const error = progress === Math.floor(Math.random() * (52 - 49) + 49);
+                const error = progress === Math.floor(Math.random() * (55 - 49) + 49);
 
                 if (error) {
                     clearInterval(timer);
