@@ -5,7 +5,7 @@ export enum INGESTION_TRANSFER_STATUS {
     PROCESSING = 'PROCESSING'
 }
 
-export type FileId = number;
+export type FileId = string;
 
 export type IngestionFile = {
     id: FileId;
@@ -56,7 +56,51 @@ const ingestionState: Ingestion = {
     }
 };
 
-const ingestionReducer = (state: Ingestion, action): Ingestion => {
+export type IngestionDispatchAction = LOAD | SUBMIT | START_NEXT | FILE_UPLOADED | UPLOAD_PROGRESS | UPLOAD_COMPLETE | UPLOAD_ERROR | REMOVE_FILE;
+
+type LOAD = {
+    type: TRANSFER_ACTIONS.LOAD;
+    files: IngestionFile[];
+};
+
+type SUBMIT = {
+    type: TRANSFER_ACTIONS.SUBMIT;
+    pending: IngestionFile[];
+    failed: Map<FileId, IngestionFile>;
+};
+
+type START_NEXT = {
+    type: TRANSFER_ACTIONS.START_NEXT;
+    current: IngestionFile;
+};
+
+type FILE_UPLOADED = {
+    type: TRANSFER_ACTIONS.FILE_UPLOADED;
+    previous: IngestionFile;
+};
+
+type UPLOAD_PROGRESS = {
+    type: TRANSFER_ACTIONS.UPLOAD_PROGRESS;
+    id: FileId;
+    progress: number;
+};
+
+type UPLOAD_COMPLETE = {
+    type: TRANSFER_ACTIONS.UPLOAD_COMPLETE;
+};
+
+type UPLOAD_ERROR = {
+    type: TRANSFER_ACTIONS.UPLOAD_ERROR;
+    previous: IngestionFile;
+};
+
+type REMOVE_FILE = {
+    type: TRANSFER_ACTIONS.REMOVE_FILE;
+    id: FileId;
+    failed: Map<FileId, IngestionFile>;
+};
+
+const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
     const { transfer } = state;
     const { files, pending, uploaded, failed, progress } = transfer;
 
@@ -146,17 +190,6 @@ const ingestionReducer = (state: Ingestion, action): Ingestion => {
         default:
             return state;
     }
-};
-
-type IngestionDispatchAction = {
-    type: TRANSFER_ACTIONS;
-    id?: FileId;
-    files?: IngestionFile[];
-    pending?: IngestionFile[];
-    failed?: Map<FileId, IngestionFile>;
-    current?: IngestionFile | null;
-    previous?: IngestionFile | null;
-    progress?: number;
 };
 
 export type IngestionDispatch = Dispatch<IngestionDispatchAction>;

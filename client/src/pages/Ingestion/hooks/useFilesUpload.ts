@@ -1,17 +1,24 @@
 import { useCallback, useEffect, useContext } from 'react';
 import { toast } from 'react-toastify';
 import { AppContext } from '../../../context';
-import { TRANSFER_ACTIONS, IngestionFile, IngestionDispatch, FileId } from '../../../context/ingestion';
+import { TRANSFER_ACTIONS, IngestionFile, IngestionDispatch, FileId, IngestionDispatchAction } from '../../../context';
 import lodash from 'lodash';
 
 const mockApi = {
-    uploadFile(id: number, dispatch: IngestionDispatch) {
+    uploadFile(id: string, ingestionDispatch: IngestionDispatch) {
         // mocks 10s upload each
         return new Promise((resolve, reject) => {
             let progress: number = 0;
             const timer = setInterval(() => {
                 progress += 25;
-                dispatch({ type: TRANSFER_ACTIONS.UPLOAD_PROGRESS, id, progress });
+
+                const uploadProgressAction: IngestionDispatchAction = {
+                    type: TRANSFER_ACTIONS.UPLOAD_PROGRESS,
+                    id,
+                    progress
+                };
+
+                ingestionDispatch(uploadProgressAction);
 
                 const error = progress === Math.floor(Math.random() * (52 - 49) + 49);
 
@@ -35,8 +42,8 @@ interface UseFilesUpload {
 }
 
 const useFilesUpload = (): UseFilesUpload => {
-    const { ingestion: state, ingestionDispatch: dispatch } = useContext(AppContext);
-    const { files, pending, current, uploading, uploaded, failed } = state.transfer;
+    const { ingestion, ingestionDispatch } = useContext(AppContext);
+    const { files, pending, current, uploading, uploaded, failed } = ingestion.transfer;
 
     const onSubmit = useCallback(
         (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -56,29 +63,35 @@ const useFilesUpload = (): UseFilesUpload => {
                     return !uploaded.has(id);
                 });
 
-                dispatch({ type: TRANSFER_ACTIONS.SUBMIT, pending, failed: failedUploads });
+                const submitAction: IngestionDispatchAction = {
+                    type: TRANSFER_ACTIONS.SUBMIT,
+                    pending,
+                    failed: failedUploads
+                };
+
+                ingestionDispatch(submitAction);
             } else {
                 toast.warn('You do not have any files loaded.');
             }
         },
-        [uploading, files, uploaded, failed, dispatch]
+        [uploading, files, uploaded, failed, ingestionDispatch]
     );
 
     const onChange = (acceptedFiles: File[]): void => {
         if (acceptedFiles.length) {
             let ingestionFiles: IngestionFile[] = [];
             acceptedFiles.forEach((file: File): void => {
-                const alreadyContains = !!lodash.find(files, { id: file.size });
+                const id = file.name;
+                const alreadyContains = !!lodash.find(files, { id });
 
                 if (!alreadyContains) {
-                    const id = file.size; // TODO: hash this
                     const blob = window.URL.createObjectURL(file);
-
                     const ingestionFile = {
                         id,
                         data: file,
                         blob
                     };
+
                     ingestionFiles.push(ingestionFile);
                 } else {
                     toast.info(`${file.name} was already loaded`);
@@ -86,7 +99,13 @@ const useFilesUpload = (): UseFilesUpload => {
             });
 
             ingestionFiles = lodash.concat(files, ingestionFiles);
-            dispatch({ type: TRANSFER_ACTIONS.LOAD, files: ingestionFiles });
+
+            const loadAction: IngestionDispatchAction = {
+                type: TRANSFER_ACTIONS.LOAD,
+                files: ingestionFiles
+            };
+
+            ingestionDispatch(loadAction);
         }
     };
 
@@ -95,27 +114,41 @@ const useFilesUpload = (): UseFilesUpload => {
         if (!isEmpty) {
             if (current) {
                 mockApi
-                    .uploadFile(current.id, dispatch)
+                    .uploadFile(current.id, ingestionDispatch)
                     .then(() => {
-                        dispatch({ type: TRANSFER_ACTIONS.FILE_UPLOADED, previous: current });
+                        const uploadedAction: IngestionDispatchAction = {
+                            type: TRANSFER_ACTIONS.FILE_UPLOADED,
+                            previous: current
+                        };
+
+                        ingestionDispatch(uploadedAction);
                     })
                     .catch(error => {
                         console.error(error);
-                        dispatch({ type: TRANSFER_ACTIONS.UPLOAD_ERROR, previous: current });
+                        const errorAction: IngestionDispatchAction = {
+                            type: TRANSFER_ACTIONS.UPLOAD_ERROR,
+                            previous: current
+                        };
+
+                        ingestionDispatch(errorAction);
                     });
             } else if (!current) {
                 const current = pending[0];
-                dispatch({ type: TRANSFER_ACTIONS.START_NEXT, current });
+                ingestionDispatch({ type: TRANSFER_ACTIONS.START_NEXT, current });
             }
         }
-    }, [current, pending, dispatch]);
+    }, [current, pending, ingestionDispatch]);
 
     useEffect(() => {
         const isEmpty = !pending.length;
         if (isEmpty && uploading) {
-            dispatch({ type: TRANSFER_ACTIONS.UPLOAD_COMPLETE });
+            const completeAction: IngestionDispatchAction = {
+                type: TRANSFER_ACTIONS.UPLOAD_COMPLETE
+            };
+
+            ingestionDispatch(completeAction);
         }
-    }, [pending.length, uploading, dispatch]);
+    }, [pending.length, uploading, ingestionDispatch]);
 
     return {
         onSubmit,

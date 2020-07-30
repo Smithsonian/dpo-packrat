@@ -1,8 +1,8 @@
-import React, { useContext } from 'react';
+import React, { useContext, useCallback } from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { colorWithOpacity } from '../../../../theme/colors';
-import { AppContext, TRANSFER_ACTIONS, INGESTION_TRANSFER_STATUS, FileId, IngestionFile } from '../../../../context';
+import { AppContext, TRANSFER_ACTIONS, INGESTION_TRANSFER_STATUS, FileId, IngestionFile, IngestionDispatchAction } from '../../../../context';
 import FileUploadListItem from './FileUploadListItem';
 import { toast } from 'react-toastify';
 
@@ -51,40 +51,49 @@ function FileUploadList(): React.ReactElement {
     const { transfer } = ingestion;
     const { files, current, uploaded, failed, status } = transfer;
 
+    const onRemove = useCallback((id: FileId): void => {
+        if (status !== INGESTION_TRANSFER_STATUS.PROCESSING) {
+            const failedUploads = new Map<FileId, IngestionFile>(failed);
+            if (failedUploads.has(id)) {
+                failedUploads.delete(id);
+            }
+
+            const loadAction: IngestionDispatchAction = {
+                type: TRANSFER_ACTIONS.REMOVE_FILE,
+                id,
+                failed: failedUploads
+            };
+
+            ingestionDispatch(loadAction);
+        } else {
+            toast.info('Please wait for current uploads to be finished');
+        }
+    }, [status, failed, ingestionDispatch]);
+
+    const getFileList = ({ id, data: { name, size } }: IngestionFile, index: number) => {
+        const uploading = current?.id === id ?? false;
+        const complete = uploaded.has(id);
+        const hasFailed = failed.has(id);
+        const progress = transfer.progress.get(id) || 0;
+
+        return (
+            <FileUploadListItem
+                key={index}
+                id={id}
+                name={name}
+                size={size}
+                uploading={uploading}
+                complete={complete}
+                failed={hasFailed}
+                progress={progress}
+                onRemove={onRemove}
+            />
+        );
+    };
+
     return (
         <Box className={classes.container}>
-            {files.map(({ id, data: { name, size } }, index) => {
-                const uploading = current?.id === id ?? false;
-                const complete = uploaded.has(id);
-                const failure = failed.has(id);
-                const progress = transfer.progress.get(id) || 0;
-
-                const onRemove = (id: number): void => {
-                    if (status !== INGESTION_TRANSFER_STATUS.PROCESSING) {
-                        const failedUploads = new Map<FileId, IngestionFile>(failed);
-                        if (failedUploads.has(id)) {
-                            failedUploads.delete(id);
-                        }
-
-                        ingestionDispatch({ type: TRANSFER_ACTIONS.REMOVE_FILE, id, failed: failedUploads });
-                    } else {
-                        toast.info('Please wait for current uploads to be finished');
-                    }
-                };
-
-                return (
-                    <FileUploadListItem
-                        key={index}
-                        name={name}
-                        size={size}
-                        uploading={uploading}
-                        complete={complete}
-                        failure={failure}
-                        progress={progress}
-                        onRemove={onRemove}
-                    />
-                );
-            })}
+            {files.map(getFileList)}
         </Box>
     );
 }

@@ -5,32 +5,46 @@ import { makeStyles } from '@material-ui/core/styles';
 import { IoIosCloseCircle, IoMdCheckmark } from 'react-icons/io';
 import { colorWithOpacity } from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
+import { FileId } from '../../../../context';
 
-const useStyles = makeStyles(({ palette }) => ({
-    item: {
+const useStyles = makeStyles(({ palette, typography }) => ({
+    container: {
         position: 'relative',
         display: 'flex',
-        minHeight: 50,
+        minHeight: 70,
         alignItems: 'center',
-        backgroundColor: ({ complete }: FileUploadListItemProps) => complete ? colorWithOpacity(palette.success.light, 66) : colorWithOpacity(palette.primary.light, 66),
+        backgroundColor: ({ complete }: FileUploadListItemProps) => complete ? 'transparent' : colorWithOpacity(palette.primary.light, 66),
         marginBottom: 10,
         borderRadius: 5,
         zIndex: 10,
         overflow: 'hidden'
     },
-    itemName: {
+    item: {
         display: 'flex',
-        flex: 2,
-        zIndex: 'inherit',
-        marginLeft: 20
-    },
-    itemSize: {
-        display: 'flex',
-        flex: 1,
-        color: palette.grey[600],
+        width: '100%',
         zIndex: 'inherit'
     },
-    itemOptions: {
+    details: {
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 2,
+        zIndex: 'inherit',
+        padding: '10px 0px',
+        marginLeft: 20
+    },
+    name: {
+        fontWeight: typography.fontWeightMedium,
+        zIndex: 'inherit'
+    },
+    status: {
+        display: 'flex',
+        width: 100,
+    },
+    caption: {
+        color: palette.grey[700],
+        zIndex: 'inherit'
+    },
+    options: {
         display: 'flex',
         flex: 1,
         alignItems: 'center',
@@ -40,10 +54,9 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     progress: {
         position: 'absolute',
-        display: ({ complete }: FileUploadListItemProps) => complete ? 'none' : 'flex',
+        height: '100%',
         width: ({ progress }: FileUploadListItemProps) => `${progress}%`,
-        height: 50,
-        backgroundColor: ({ failure }: FileUploadListItemProps) => failure ? colorWithOpacity(palette.error.light, 66) : colorWithOpacity(palette.success.light, 66),
+        backgroundColor: ({ failed }: FileUploadListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : colorWithOpacity(palette.success.light, 66),
         zIndex: 5,
         top: 0,
         left: 0,
@@ -54,44 +67,52 @@ const useStyles = makeStyles(({ palette }) => ({
 }));
 
 interface FileUploadListItemProps {
+    id: FileId;
     name: string;
     size: number;
     uploading: boolean;
     complete: boolean;
     progress: number;
-    failure: boolean;
-    onRemove: (id: number) => void;
+    failed: boolean;
+    onRemove: (id: FileId) => void;
 }
 
 function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement {
-    const { name, size, complete, uploading, onRemove } = props;
+    const { id, name, size, complete, failed, uploading, onRemove } = props;
     const classes = useStyles(props);
 
-    let options: React.ReactElement = <IoMdCheckmark size={20} color={green[500]} />;
+    let options: React.ReactElement = <IoMdCheckmark size={24} color={green[500]} />;
 
     if (!complete) {
         options = (
             <>
                 {
                     uploading ?
-                        <CircularProgress color='primary' size={16} />
+                        <CircularProgress color='primary' size={20} />
                         :
-                        <IoIosCloseCircle onClick={() => onRemove(size)} size={20} color={red[500]} />
+                        <IoIosCloseCircle onClick={() => onRemove(id)} size={24} color={red[500]} />
                 }
             </>
         );
     }
 
+    const uploadStatus = uploading ? 'Uploading...' : complete ? 'Complete' : failed ? 'Failed' : 'Ready';
+
     return (
-        <Box className={classes.item}>
-            <div style={{ display: 'flex', width: '100%', zIndex: 'inherit' }}>
-                <Box className={classes.itemName}>
-                    <Typography variant='caption'>{name}</Typography>
+        <Box className={classes.container}>
+            <div className={classes.item}>
+                <Box className={classes.details}>
+                    <Box>
+                        <Typography className={classes.name} variant='caption'>{name}</Typography>
+                    </Box>
+                    <Box display='flex'>
+                        <Box className={classes.status}>
+                            <Typography className={classes.caption} variant='caption'>{uploadStatus}</Typography>
+                        </Box>
+                        <Typography className={classes.caption} variant='caption'>{formatBytes(size)}</Typography>
+                    </Box>
                 </Box>
-                <Box className={classes.itemSize}>
-                    <Typography variant='caption'>{formatBytes(size)}</Typography>
-                </Box>
-                <Box className={classes.itemOptions}>
+                <Box className={classes.options}>
                     {options}
                 </Box>
             </div>
