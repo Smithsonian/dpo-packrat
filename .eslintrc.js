@@ -45,6 +45,7 @@ module.exports = {
         'object-curly-spacing': ['error', 'always'],
         'key-spacing': ['error', { beforeColon: false, mode: 'minimum' }],
         'object-shorthand': ['error', 'always'],
+        '@typescript-eslint/no-var-requires': 'off',
         // JSX RULES
         'jsx-quotes': ['error', 'prefer-single'],
         'react/jsx-boolean-value': 'error',
@@ -56,6 +57,5 @@ module.exports = {
         'react/jsx-no-bind': ['error', { allowArrowFunctions: true }],
         'react/jsx-no-literals': 'off',
         'react/jsx-tag-spacing': ['error', { beforeSelfClosing: 'always' }],
-        // 'react-hooks/exhaustive-deps': 'off'
     }
 };
