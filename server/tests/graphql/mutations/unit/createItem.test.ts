@@ -6,7 +6,7 @@ const createItemTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
     let createUnitInput: () => CreateUnitInput;
     let createSubjectInput: (idUnit: number) => CreateSubjectInput;
-    let createItemInput: (idSubject: number) => CreateItemInput;
+    let createItemInput: () => CreateItemInput;
 
     beforeAll(() => {
         graphQLApi = utils.graphQLApi;
@@ -24,13 +24,11 @@ const createItemTest = (utils: TestSuiteUtils): void => {
                 const subjectArgs: CreateSubjectInput = createSubjectInput(Unit.idUnit);
                 const { Subject } = await graphQLApi.createSubject(subjectArgs);
                 expect(Subject).toBeTruthy();
-
-                if (Subject) {
-                    const itemArgs: CreateItemInput = createItemInput(Subject.idSubject);
-                    const { Item } = await graphQLApi.createItem(itemArgs);
-                    expect(Item).toBeTruthy();
-                }
             }
+
+            const itemArgs: CreateItemInput = createItemInput();
+            const { Item } = await graphQLApi.createItem(itemArgs);
+            expect(Item).toBeTruthy();
         });
     });
 };

@@ -17,7 +17,8 @@ import {
     CreateProjectInput,
     CreateSceneInput,
     CreateModelInput,
-    CreateCaptureDataInput
+    CreateCaptureDataInput,
+    CreateCaptureDataPhotoInput
 } from '../../../types/graphql';
 
 class TestSuiteUtils {
@@ -81,9 +82,8 @@ class TestSuiteUtils {
         };
     };
 
-    createItemInput = (idSubject: number): CreateItemInput => {
+    createItemInput = (): CreateItemInput => {
         return {
-            idSubject,
             Name: 'Test Item',
             EntireSubject: true
         };
@@ -118,9 +118,15 @@ class TestSuiteUtils {
     createCaptureDataInput = (idVocabulary: number): CreateCaptureDataInput => {
         return {
             idVCaptureMethod: idVocabulary,
-            idVCaptureDatasetType: idVocabulary,
             DateCaptured: new Date(),
-            Description: 'Test Description',
+            Description: 'Test Description'
+        };
+    };
+
+    createCaptureDataPhotoInput = (idCaptureData: number, idVocabulary: number): CreateCaptureDataPhotoInput => {
+        return {
+            idCaptureData,
+            idVCaptureDatasetType: idVocabulary,
             CaptureDatasetFieldID: 0,
             ItemPositionFieldID: 0,
             ItemArrangementFieldID: 0,

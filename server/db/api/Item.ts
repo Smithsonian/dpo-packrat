@@ -9,7 +9,6 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase {
     EntireSubject!: boolean;
     idAssetThumbnail!: number | null;
     idGeoLocation!: number | null;
-    idSubject!: number;
     Name!: string;
 
     private idAssetThumbnailOrig!: number | null;
@@ -26,12 +25,11 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase {
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idSubject, idAssetThumbnail, idGeoLocation, Name, EntireSubject } = this;
+            const { idAssetThumbnail, idGeoLocation, Name, EntireSubject } = this;
             ({ idItem: this.idItem, EntireSubject: this.EntireSubject, idAssetThumbnail: this.idAssetThumbnail,
-                idGeoLocation: this.idGeoLocation, idSubject: this.idSubject, Name: this.Name } =
+                idGeoLocation: this.idGeoLocation, Name: this.Name } =
                 await DBC.DBConnection.prisma.item.create({
                     data: {
-                        Subject:        { connect: { idSubject }, },
                         Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
                         GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
                         Name,
@@ -48,11 +46,10 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase {
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idItem, idSubject, idAssetThumbnail, idGeoLocation, Name, EntireSubject, idAssetThumbnailOrig, idGeoLocationOrig } = this;
+            const { idItem, idAssetThumbnail, idGeoLocation, Name, EntireSubject, idAssetThumbnailOrig, idGeoLocationOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.item.update({
                 where: { idItem, },
                 data: {
-                    Subject:        { connect: { idSubject }, },
                     Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
                     GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : idGeoLocationOrig ? { disconnect: true, } : undefined,
                     Name,
@@ -93,8 +90,27 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase {
         if (!idSubject)
             return null;
         try {
+            const SOSubject: SystemObject | null = await SystemObject.fetchFromSubjectID(idSubject);
+            if (!SOSubject)
+                return null;
             return DBC.CopyArray<ItemBase, Item>(
-                await DBC.DBConnection.prisma.item.findMany({ where: { idSubject } }), Item);
+                await DBC.DBConnection.prisma.item.findMany({
+                    where: {
+                        SystemObject: {
+                            AND: [ {
+                                idItem: {
+                                    not: null,
+                                },
+                            }, {
+                                SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived: {
+                                    some: {
+                                        idSystemObjectMaster: SOSubject.idSystemObject,
+                                    },
+                                },
+                            } ],
+                        },
+                    },
+                }), Item);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Item.fetchFromSubject', error);
             return null;
