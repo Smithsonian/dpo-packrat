@@ -61,7 +61,7 @@ const useFilesUpload = (): UseFilesUpload => {
                 toast.warn('You do not have any files loaded.');
             }
         },
-        [uploading, files, uploaded, failed]
+        [uploading, files, uploaded, failed, dispatch]
     );
 
     const onChange = (acceptedFiles: File[]): void => {
@@ -108,14 +108,14 @@ const useFilesUpload = (): UseFilesUpload => {
                 dispatch({ type: TRANSFER_ACTIONS.START_NEXT, current });
             }
         }
-    }, [current, pending]);
+    }, [current, pending, dispatch]);
 
     useEffect(() => {
         const isEmpty = !pending.length;
         if (isEmpty && uploading) {
             dispatch({ type: TRANSFER_ACTIONS.UPLOAD_COMPLETE });
         }
-    }, [pending.length, uploading]);
+    }, [pending.length, uploading, dispatch]);
 
     return {
         onSubmit,

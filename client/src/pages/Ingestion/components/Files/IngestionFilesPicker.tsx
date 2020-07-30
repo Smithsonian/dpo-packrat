@@ -41,7 +41,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 function IngestionFilesPicker(): React.ReactElement {
     const classes = useStyles();
     const { ingestion } = useContext(AppContext);
-    const { transfer: { files, uploading } } = ingestion;
+    const { transfer: { uploading, failed } } = ingestion;
 
     const { onChange, onSubmit } = useFilesUpload();
 
@@ -61,7 +61,9 @@ function IngestionFilesPicker(): React.ReactElement {
         if (filesAllowed) {
             onChange(acceptedFiles);
         }
-    }, [files]);
+    }, [onChange]);
+
+    const hasError = !!failed.size;
 
     return (
         <Dropzone noClick noDrag={uploading} onDrop={onDrop}>
@@ -88,7 +90,7 @@ function IngestionFilesPicker(): React.ReactElement {
                         onClick={onSubmit}
                         disableElevation
                     >
-                        {uploading ? 'Uploading...' : 'Upload'}
+                        {uploading ? 'Uploading...' : hasError ? 'Retry' : 'Upload'}
                     </Button>
                 </div>
             )}
