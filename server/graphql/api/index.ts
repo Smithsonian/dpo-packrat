@@ -17,6 +17,8 @@ import {
     GetAssetResult,
     GetCaptureDataInput,
     GetCaptureDataResult,
+    GetCaptureDataPhotoInput,
+    GetCaptureDataPhotoResult,
     GetLicenseInput,
     GetLicenseResult,
     GetModelInput,
@@ -39,6 +41,8 @@ import {
     CreateUserResult,
     CreateCaptureDataInput,
     CreateCaptureDataResult,
+    CreateCaptureDataPhotoInput,
+    CreateCaptureDataPhotoResult,
     CreateModelInput,
     CreateModelResult,
     CreateSceneInput,
@@ -63,6 +67,7 @@ import getCurrentUser from './queries/user/getCurrentUser';
 import getAccessPolicy from './queries/accesscontrol/getAccessPolicy';
 import getAsset from './queries/asset/getAsset';
 import getCaptureData from './queries/capturedata/getCaptureData';
+import getCaptureDataPhoto from './queries/capturedata/getCaptureDataPhoto';
 import getLicense from './queries/license/getLicense';
 import getModel from './queries/model/getModel';
 import getScene from './queries/scene/getScene';
@@ -76,6 +81,7 @@ import getWorkflow from './queries/workflow/getWorkflow';
 // Mutations
 import createUser from './mutations/user/createUser';
 import createCaptureData from './mutations/capturedata/createCaptureData';
+import createCaptureDataPhoto from './mutations/capturedata/createCaptureDataPhoto';
 import createModel from './mutations/model/createModel';
 import createScene from './mutations/scene/createScene';
 import createUnit from './mutations/unit/createUnit';
@@ -92,6 +98,7 @@ const allQueries = {
     getAccessPolicy,
     getAsset,
     getCaptureData,
+    getCaptureDataPhoto,
     getLicense,
     getModel,
     getScene,
@@ -103,6 +110,7 @@ const allQueries = {
     getWorkflow,
     createUser,
     createCaptureData,
+    createCaptureDataPhoto,
     createModel,
     createScene,
     createUnit,
@@ -181,8 +189,28 @@ class GraphQLApi {
         });
     }
 
+    async getCaptureDataPhoto(input: GetCaptureDataPhotoInput, context?: Context): Promise<GetCaptureDataPhotoResult> {
+        const operationName = 'getCaptureDataPhoto';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
     async createCaptureData(input: CreateCaptureDataInput, context?: Context): Promise<CreateCaptureDataResult> {
         const operationName = 'createCaptureData';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async createCaptureDataPhoto(input: CreateCaptureDataPhotoInput, context?: Context): Promise<CreateCaptureDataPhotoResult> {
+        const operationName = 'createCaptureDataPhoto';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
