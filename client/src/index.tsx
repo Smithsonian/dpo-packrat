@@ -13,6 +13,7 @@ import { apolloClient } from './graphql';
 import { About, Home, Login } from './pages';
 import theme from './theme';
 import { getAuthenticatedUser } from './utils/auth';
+import { Provider as KeepAliveProvider, KeepAlive } from 'react-keep-alive';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
@@ -43,19 +44,28 @@ function AppRouter(): React.ReactElement {
 
     return (
         <Router>
-            {loading ? (
-                <Box display='flex' flex={1} alignItems='center' justifyContent='center'>
-                    <CircularProgress color='primary' size={30} />
-                </Box>
-            ) : (
-                <React.Fragment>
-                    <Switch>
-                        <PublicRoute restricted exact path={ROUTES.LOGIN} component={Login} />
-                        <PublicRoute exact path={ROUTES.ABOUT} component={About} />
-                        <PrivateRoute path={ROUTES.HOME} component={Home} />
-                    </Switch>
-                </React.Fragment>
-            )}
+            <KeepAliveProvider>
+
+                {loading ? (
+                    <Box display='flex' flex={1} alignItems='center' justifyContent='center'>
+                        <CircularProgress color='primary' size={30} />
+                    </Box>
+                ) : (
+                    <React.Fragment>
+                        <Switch>
+                            <PublicRoute restricted exact path={ROUTES.LOGIN} component={Login} />
+                            <PublicRoute exact path={ROUTES.ABOUT} component={About} />
+                            <PrivateRoute path={ROUTES.HOME}>
+                                <KeepAlive name='Home'>
+                                    <Home />
+                                </KeepAlive>
+                            </PrivateRoute>
+                        </Switch>
+                    </React.Fragment>
+
+                )}
+
+            </KeepAliveProvider>
         </Router>
     );
 }

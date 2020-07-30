@@ -7,6 +7,7 @@ import { SidebarBottomNavigator } from '../../../../components';
 import { Colors } from '../../../../theme';
 import FileUploadList from './FileUploadList';
 import IngestionFilesPicker from './IngestionFilesPicker';
+import { KeepAlive } from 'react-keep-alive';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -50,18 +51,21 @@ function Files(): React.ReactElement {
     const classes = useStyles();
 
     return (
-        <Box className={classes.container}>
-            <Box className={classes.content}>
-                <IngestionFilesPicker />
-                <FileUploadList />
+        <KeepAlive name='IngestionFilesPicker'>
+            <Box className={classes.container}>
+                <Box className={classes.content}>
+                    <IngestionFilesPicker />
+                    <FileUploadList />
+                </Box>
+                <SidebarBottomNavigator
+                    leftLabel='Cancel'
+                    leftRoute={resolveRoute(HOME_ROUTES.DASHBOARD)}
+                    rightLabel='Next'
+                    rightRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM)}
+                />
             </Box>
-            <SidebarBottomNavigator
-                leftLabel='Cancel'
-                leftRoute={resolveRoute(HOME_ROUTES.DASHBOARD)}
-                rightLabel='Next'
-                rightRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM)}
-            />
-        </Box>
+        </KeepAlive>
+
     );
 }
 
