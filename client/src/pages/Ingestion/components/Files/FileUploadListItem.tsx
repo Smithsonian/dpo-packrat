@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography } from '@material-ui/core';
+import { Box, Typography, CircularProgress } from '@material-ui/core';
+import { green, red } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 import { IoIosCloseCircle, IoMdCheckmark } from 'react-icons/io';
 import { colorWithOpacity } from '../../../../theme/colors';
@@ -15,7 +16,7 @@ const useStyles = makeStyles(({ palette }) => ({
         marginBottom: 10,
         borderRadius: 5,
         zIndex: 10,
-        overflow: 'hidden',
+        overflow: 'hidden'
     },
     itemName: {
         display: 'flex',
@@ -32,22 +33,23 @@ const useStyles = makeStyles(({ palette }) => ({
     itemOptions: {
         display: 'flex',
         flex: 1,
+        alignItems: 'center',
         justifyContent: 'flex-end',
-        color: ({ complete }: FileUploadListItemProps) => complete ? palette.success.main : palette.error.main,
         zIndex: 'inherit',
         marginRight: 20
     },
     progress: {
         position: 'absolute',
-        width: ({ uploading, progress }: FileUploadListItemProps) => uploading ? `${progress}%` : 0,
+        display: ({ complete }: FileUploadListItemProps) => complete ? 'none' : 'flex',
+        width: ({ progress }: FileUploadListItemProps) => `${progress}%`,
         height: 50,
-        backgroundColor: colorWithOpacity(palette.success.light, 66),
+        backgroundColor: ({ failure }: FileUploadListItemProps) => failure ? colorWithOpacity(palette.error.light, 66) : colorWithOpacity(palette.success.light, 66),
         zIndex: 5,
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        transition: 'width 200ms linear'
+        transition: 'all 200ms linear'
     }
 }));
 
@@ -57,11 +59,28 @@ interface FileUploadListItemProps {
     uploading: boolean;
     complete: boolean;
     progress: number;
+    failure: boolean;
+    onRemove: (id: number) => void;
 }
 
 function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement {
-    const { name, size, complete } = props;
+    const { name, size, complete, uploading, onRemove } = props;
     const classes = useStyles(props);
+
+    let options: React.ReactElement = <IoMdCheckmark size={20} color={green[500]} />;
+
+    if (!complete) {
+        options = (
+            <>
+                {
+                    uploading ?
+                        <CircularProgress color='primary' size={16} />
+                        :
+                        <IoIosCloseCircle onClick={() => onRemove(size)} size={20} color={red[500]} />
+                }
+            </>
+        );
+    }
 
     return (
         <Box className={classes.item}>
@@ -73,11 +92,7 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
                     <Typography variant='caption'>{formatBytes(size)}</Typography>
                 </Box>
                 <Box className={classes.itemOptions}>
-                    {complete ?
-                        <IoMdCheckmark size={20} />
-                        :
-                        <IoIosCloseCircle onClick={() => alert('TODO: not implemented yet')} size={20} />
-                    }
+                    {options}
                 </Box>
             </div>
             <Box className={classes.progress} />

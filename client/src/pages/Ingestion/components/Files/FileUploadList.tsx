@@ -2,8 +2,9 @@ import React, { useContext } from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { colorWithOpacity } from '../../../../theme/colors';
-import { AppContext } from '../../../../context';
+import { AppContext, TRANSFER_ACTIONS, INGESTION_TRANSFER_STATUS, FileId, IngestionFile } from '../../../../context';
 import FileUploadListItem from './FileUploadListItem';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -46,15 +47,30 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
 
 function FileUploadList(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion } = useContext(AppContext);
+    const { ingestion, ingestionDispatch } = useContext(AppContext);
     const { transfer } = ingestion;
-    const { files, next, uploaded, progress } = transfer;
+    const { files, current, uploaded, failed, status } = transfer;
 
     return (
         <Box className={classes.container}>
-            {files.map(({ id, file: { name, size } }, index) => {
-                const uploading = next?.id === id ?? false;
-                const complete = !!uploaded[id];
+            {files.map(({ id, data: { name, size } }, index) => {
+                const uploading = current?.id === id ?? false;
+                const complete = uploaded.has(id);
+                const failure = failed.has(id);
+                const progress = transfer.progress.get(id) || 0;
+
+                const onRemove = (id: number): void => {
+                    if (status !== INGESTION_TRANSFER_STATUS.PROCESSING) {
+                        const failedUploads = new Map<FileId, IngestionFile>(failed);
+                        if (failedUploads.has(id)) {
+                            failedUploads.delete(id);
+                        }
+
+                        ingestionDispatch({ type: TRANSFER_ACTIONS.REMOVE_FILE, id, failed: failedUploads });
+                    } else {
+                        toast.info('Please wait for current uploads to be finished');
+                    }
+                };
 
                 return (
                     <FileUploadListItem
@@ -63,7 +79,9 @@ function FileUploadList(): React.ReactElement {
                         size={size}
                         uploading={uploading}
                         complete={complete}
+                        failure={failure}
                         progress={progress}
+                        onRemove={onRemove}
                     />
                 );
             })}
