@@ -2,7 +2,9 @@ import { useReducer, Dispatch } from 'react';
 
 export enum INGESTION_TRANSFER_STATUS {
     IDLE = 'IDLE',
-    PROCESSING = 'PROCESSING'
+    PROCESSING = 'PROCESSING',
+    FINISHED = 'FINISHED',
+    ERROR = 'ERROR'
 }
 
 export type FileId = string;
@@ -102,7 +104,7 @@ type REMOVE_FILE = {
 
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
     const { transfer } = state;
-    const { files, pending, uploaded, failed, progress } = transfer;
+    const { files, pending, uploaded, failed, progress, status } = transfer;
 
     switch (action.type) {
         case INGESTION_ACTION.TRANSFER.LOAD:
@@ -162,7 +164,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                     ...transfer,
                     current: null,
                     uploading: false,
-                    status: INGESTION_TRANSFER_STATUS.IDLE
+                    status: status === INGESTION_TRANSFER_STATUS.ERROR ? INGESTION_TRANSFER_STATUS.ERROR : INGESTION_TRANSFER_STATUS.FINISHED
                 }
             };
 
@@ -173,7 +175,8 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                     ...transfer,
                     current: null,
                     pending: pending.slice(1),
-                    failed: failed.set(action.previous.id, action.previous)
+                    failed: failed.set(action.previous.id, action.previous),
+                    status: INGESTION_TRANSFER_STATUS.ERROR
                 }
             };
 

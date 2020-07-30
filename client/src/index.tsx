@@ -3,11 +3,11 @@ import { Box, CircularProgress, ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
-import { Slide, ToastContainer } from 'react-toastify';
+import { Slide, toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { PrivateRoute, PublicRoute } from './components';
 import { ROUTES } from './constants';
-import { AppContext, AppContextProvider } from './context';
+import { AppContext, AppContextProvider, INGESTION_TRANSFER_STATUS } from './context';
 import './global/root.css';
 import { apolloClient } from './graphql';
 import { About, Home, Login } from './pages';
@@ -16,7 +16,8 @@ import { getAuthenticatedUser } from './utils/auth';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
-    const { user, updateUser } = useContext(AppContext);
+    const { user, updateUser, ingestion } = useContext(AppContext);
+    const { transfer: { status, uploading } } = ingestion;
 
     const initialize = useCallback(async () => {
         if (!user) {
@@ -29,6 +30,16 @@ function AppRouter(): React.ReactElement {
     useEffect(() => {
         initialize();
     }, [initialize]);
+
+    useEffect(() => {
+        if (!uploading) {
+            if (status === INGESTION_TRANSFER_STATUS.FINISHED) {
+                toast.success('Successfully uploaded files');
+            } else if (status === INGESTION_TRANSFER_STATUS.ERROR) {
+                toast.error('Some of the uploads have failed');
+            }
+        }
+    }, [status, uploading]);
 
     return (
         <Router>
