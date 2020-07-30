@@ -114,6 +114,7 @@ type CaptureDataPhoto {
   idVLightSourceType: Int
   ItemArrangementFieldID: Int
   ItemPositionFieldID: Int
+  CaptureData: CaptureData
   VBackgroundRemovalMethod: Vocabulary
   VCaptureDatasetType: Vocabulary
   VClusterType: Vocabulary
@@ -522,6 +523,7 @@ type Query {
   getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
+  getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
@@ -556,6 +558,14 @@ input GetCaptureDataInput {
 
 type GetCaptureDataResult {
   CaptureData: CaptureData
+}
+
+input GetCaptureDataPhotoInput {
+  idCaptureDataPhoto: Int!
+}
+
+type GetCaptureDataPhotoResult {
+  CaptureDataPhoto: CaptureDataPhoto
 }
 
 input GetLicenseInput {

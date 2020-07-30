@@ -7,6 +7,7 @@ import getCurrentUserTest from './queries/user/getCurrentUser.test';
 import getAccessPolicyTest from './queries/accesscontrol/getAccessPolicy.test';
 import getAssetTest from './queries/asset/getAsset.test';
 import getCaptureDataTest from './queries/capturedata/getCaptureData.test';
+import getCaptureDataPhotoTest from './queries/capturedata/getCaptureDataPhoto.test';
 import getLicenseTest from './queries/license/getLicense.test';
 import getModelTest from './queries/model/getModel.test';
 import getSceneTest from './queries/scene/getScene.test';
@@ -33,6 +34,7 @@ describe('GraphQL Test Suite', () => {
     getAccessPolicyTest(utils);
     getAssetTest(utils);
     getCaptureDataTest(utils);
+    getCaptureDataPhotoTest(utils);
     getLicenseTest(utils);
     getModelTest(utils);
     getSceneTest(utils);

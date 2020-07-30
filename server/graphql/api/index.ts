@@ -17,6 +17,8 @@ import {
     GetAssetResult,
     GetCaptureDataInput,
     GetCaptureDataResult,
+    GetCaptureDataPhotoInput,
+    GetCaptureDataPhotoResult,
     GetLicenseInput,
     GetLicenseResult,
     GetModelInput,
@@ -65,6 +67,7 @@ import getCurrentUser from './queries/user/getCurrentUser';
 import getAccessPolicy from './queries/accesscontrol/getAccessPolicy';
 import getAsset from './queries/asset/getAsset';
 import getCaptureData from './queries/capturedata/getCaptureData';
+import getCaptureDataPhoto from './queries/capturedata/getCaptureDataPhoto';
 import getLicense from './queries/license/getLicense';
 import getModel from './queries/model/getModel';
 import getScene from './queries/scene/getScene';
@@ -95,6 +98,7 @@ const allQueries = {
     getAccessPolicy,
     getAsset,
     getCaptureData,
+    getCaptureDataPhoto,
     getLicense,
     getModel,
     getScene,
@@ -177,6 +181,16 @@ class GraphQLApi {
 
     async getCaptureData(input: GetCaptureDataInput, context?: Context): Promise<GetCaptureDataResult> {
         const operationName = 'getCaptureData';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getCaptureDataPhoto(input: GetCaptureDataPhotoInput, context?: Context): Promise<GetCaptureDataPhotoResult> {
+        const operationName = 'getCaptureDataPhoto';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
