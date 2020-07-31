@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory';
 import ApolloClient from 'apollo-client';
 import { createUploadLink } from 'apollo-upload-client';
@@ -31,14 +32,14 @@ const apolloClient = configureApolloClient();
 
 interface IApolloUploader {
     mutation: DocumentNode;
-    variables: any;
+    variables: unknown;
     useUpload: boolean;
     onProgress: (event: ProgressEvent) => void;
-    onAbortPossible: (abortHandler: AbortController) => void;
+    onAbort: (abortHandler: AbortController) => void;
 }
 
-const apolloUploader = (options: IApolloUploader) => {
-    const { mutation, variables, useUpload, onProgress, onAbortPossible } = options;
+const apolloUploader = (options: IApolloUploader): Promise<any> => {
+    const { mutation, variables, useUpload, onProgress, onAbort } = options;
 
     return apolloClient.mutate({
         mutation,
@@ -47,7 +48,7 @@ const apolloUploader = (options: IApolloUploader) => {
             fetchOptions: {
                 useUpload,
                 onProgress,
-                onAbortPossible
+                onAbort
             }
         }
     });

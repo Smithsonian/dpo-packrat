@@ -11,8 +11,7 @@ export type FileId = string;
 
 export type IngestionFile = {
     id: FileId;
-    data: File;
-    blob: string;
+    file: File;
 };
 
 type IngestionTransfer = {
