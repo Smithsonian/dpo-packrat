@@ -28,7 +28,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     details: {
         display: 'flex',
         flexDirection: 'column',
-        flex: 2,
+        flex: 3,
         zIndex: 'inherit',
         padding: '10px 0px',
         marginLeft: 20
@@ -79,7 +79,7 @@ interface FileUploadListItemProps {
 }
 
 function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement {
-    const { id, name, size, complete, failed, uploading, onRemove } = props;
+    const { id, name, size, complete, progress, failed, uploading, onRemove } = props;
     const classes = useStyles(props);
 
     let options: React.ReactElement = <IoMdCheckmark size={24} color={green[500]} />;
@@ -120,7 +120,14 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
                         <Box className={classes.status}>
                             <Typography className={classes.caption} variant='caption'>{uploadStatus}</Typography>
                         </Box>
-                        <Typography className={classes.caption} variant='caption'>{formatBytes(size)}</Typography>
+                        <Box className={classes.status}>
+                            <Typography className={classes.caption} variant='caption'>{formatBytes(size)}</Typography>
+                        </Box>
+                        {uploading && (
+                            <Box className={classes.status}>
+                                <Typography className={classes.caption} variant='caption'>{progress}%</Typography>
+                            </Box>
+                        )}
                     </Box>
                 </Box>
                 <Box className={classes.options}>

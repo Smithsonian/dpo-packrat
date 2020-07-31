@@ -96,15 +96,18 @@ const useFilesUpload = (): UseFilesUpload => {
                     useUpload: true,
                     onProgress: (event: ProgressEvent) => {
                         const { loaded, total } = event;
-                        const progress = (loaded / total) * 100;
+                        const progress = Math.floor((loaded / total) * 100);
+                        const updateProgress = !(progress % 5);
 
-                        const uploadProgressAction: IngestionDispatchAction = {
-                            type: TRANSFER_ACTIONS.UPLOAD_PROGRESS,
-                            id,
-                            progress
-                        };
+                        if (updateProgress) {
+                            const uploadProgressAction: IngestionDispatchAction = {
+                                type: TRANSFER_ACTIONS.UPLOAD_PROGRESS,
+                                id,
+                                progress
+                            };
 
-                        ingestionDispatch(uploadProgressAction);
+                            ingestionDispatch(uploadProgressAction);
+                        }
                     },
                     onAbort: () => null
                 })
