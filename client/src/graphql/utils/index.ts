@@ -17,6 +17,7 @@ const parseHeaders = (rawHeaders: any) => {
 const uploadFetch = (url: string, options: any): any =>
     new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
         xhr.onload = () => {
             const opts: any = {
                 status: xhr.status,
@@ -54,5 +55,9 @@ export const apolloFetch = (uri: any, options: any): any => {
     if (options.useUpload) {
         return uploadFetch(uri, options);
     }
-    return fetch(uri, options);
+
+    return fetch(uri, {
+        ...options,
+        credentials: 'include'
+    });
 };
