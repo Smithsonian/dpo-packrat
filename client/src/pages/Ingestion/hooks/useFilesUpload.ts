@@ -3,7 +3,8 @@ import { toast } from 'react-toastify';
 import { AppContext } from '../../../context';
 import { TRANSFER_ACTIONS, IngestionFile, FileId, IngestionDispatchAction } from '../../../context';
 import lodash from 'lodash';
-import { MUTATION_UPLOAD_FILE, apolloUploader } from '../../../graphql';
+import { MUTATION_CAPTURE_DATA_UPLOAD, apolloUploader } from '../../../graphql';
+import { UPLOAD_STATUS } from '../../../constants';
 
 interface UseFilesUpload {
     onChange: (acceptedFiles: File[]) => void;
@@ -55,12 +56,7 @@ const useFilesUpload = (): UseFilesUpload => {
                 const alreadyContains = !!lodash.find(files, { id });
 
                 if (!alreadyContains) {
-                    const blob = window.URL.createObjectURL(file);
-                    const ingestionFile = {
-                        id,
-                        data: file,
-                        blob
-                    };
+                    const ingestionFile = { id, file };
 
                     ingestionFiles.push(ingestionFile);
                 } else {
@@ -83,12 +79,20 @@ const useFilesUpload = (): UseFilesUpload => {
         const isEmpty = !pending.length;
         if (!isEmpty) {
             if (current) {
-                const { id, data } = current;
+                const uploadedAction: IngestionDispatchAction = {
+                    type: TRANSFER_ACTIONS.FILE_UPLOADED,
+                    previous: current
+                };
+
+                const errorAction: IngestionDispatchAction = {
+                    type: TRANSFER_ACTIONS.UPLOAD_ERROR,
+                    previous: current
+                };
+
+                const { id, file } = current;
                 apolloUploader({
-                    mutation: MUTATION_UPLOAD_FILE,
-                    variables: {
-                        file: data
-                    },
+                    mutation: MUTATION_CAPTURE_DATA_UPLOAD,
+                    variables: { file },
                     useUpload: true,
                     onProgress: (event: ProgressEvent) => {
                         const { loaded, total } = event;
@@ -102,25 +106,18 @@ const useFilesUpload = (): UseFilesUpload => {
 
                         ingestionDispatch(uploadProgressAction);
                     },
-                    onAbortPossible: (abortHandler: AbortController) => {
-                        console.log(abortHandler);
-                    }
+                    onAbort: () => null
                 })
-                    .then(() => {
-                        const uploadedAction: IngestionDispatchAction = {
-                            type: TRANSFER_ACTIONS.FILE_UPLOADED,
-                            previous: current
-                        };
+                    .then(({ data }) => {
+                        const { captureDataUpload } = data;
 
-                        ingestionDispatch(uploadedAction);
+                        if (captureDataUpload.status === UPLOAD_STATUS.SUCCESS) {
+                            ingestionDispatch(uploadedAction);
+                        } else {
+                            ingestionDispatch(errorAction);
+                        }
                     })
-                    .catch(error => {
-                        console.error(error);
-                        const errorAction: IngestionDispatchAction = {
-                            type: TRANSFER_ACTIONS.UPLOAD_ERROR,
-                            previous: current
-                        };
-
+                    .catch(() => {
                         ingestionDispatch(errorAction);
                     });
             } else if (!current) {

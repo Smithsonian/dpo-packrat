@@ -43,7 +43,7 @@ const uploadFetch = (url: string, options: any): any =>
             xhr.upload.onprogress = options.onProgress;
         }
 
-        options.onAbortPossible(() => {
+        options.onAbort(() => {
             xhr.abort();
         });
 

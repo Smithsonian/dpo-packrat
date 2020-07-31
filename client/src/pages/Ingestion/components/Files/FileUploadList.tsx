@@ -71,7 +71,7 @@ function FileUploadList(): React.ReactElement {
         }
     }, [status, failed, ingestionDispatch]);
 
-    const getFileList = ({ id, data: { name, size } }: IngestionFile, index: number) => {
+    const getFileList = ({ id, file: { name, size } }: IngestionFile, index: number) => {
         const uploading = current?.id === id ?? false;
         const complete = uploaded.has(id);
         const hasFailed = failed.has(id);

@@ -1,0 +1,5 @@
+mutation captureDataUpload($file: Upload!) {
+    captureDataUpload(file: $file) {
+        status
+    }
+}
