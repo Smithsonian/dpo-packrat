@@ -26,8 +26,8 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         color: palette.primary.main
     },
     title: {
-        margin: '2% 0px',
-        fontSize: '1.2em',
+        margin: '1% 0px',
+        fontSize: '1em',
         fontWeight: typography.fontWeightMedium
     },
     button: {
@@ -72,7 +72,7 @@ function IngestionFilesPicker(): React.ReactElement {
                     <BsCloudUpload className={classes.icon} size='25%' />
                     <input {...getInputProps()} />
                     <Typography className={classes.title}>Drag and drop files here</Typography>
-                    <Typography>or</Typography>
+                    <Typography variant='caption'>or</Typography>
                     <Button
                         className={classes.button}
                         color='primary'

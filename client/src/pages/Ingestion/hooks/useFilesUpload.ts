@@ -1,40 +1,9 @@
 import { useCallback, useEffect, useContext } from 'react';
 import { toast } from 'react-toastify';
 import { AppContext } from '../../../context';
-import { TRANSFER_ACTIONS, IngestionFile, IngestionDispatch, FileId, IngestionDispatchAction } from '../../../context';
+import { TRANSFER_ACTIONS, IngestionFile, FileId, IngestionDispatchAction } from '../../../context';
 import lodash from 'lodash';
-
-const mockApi = {
-    uploadFile(id: string, ingestionDispatch: IngestionDispatch) {
-        // mocks 10s upload each
-        return new Promise((resolve, reject) => {
-            let progress: number = 0;
-            const timer = setInterval(() => {
-                progress += 25;
-
-                const uploadProgressAction: IngestionDispatchAction = {
-                    type: TRANSFER_ACTIONS.UPLOAD_PROGRESS,
-                    id,
-                    progress
-                };
-
-                ingestionDispatch(uploadProgressAction);
-
-                const error = progress === Math.floor(Math.random() * (55 - 49) + 49);
-
-                if (error) {
-                    clearInterval(timer);
-                    return reject('Random Error');
-                }
-
-                if (progress === 100) {
-                    clearInterval(timer);
-                    return resolve();
-                }
-            }, 500);
-        });
-    }
-};
+import { MUTATION_UPLOAD_FILE, apolloUploader } from '../../../graphql';
 
 interface UseFilesUpload {
     onChange: (acceptedFiles: File[]) => void;
@@ -48,6 +17,7 @@ const useFilesUpload = (): UseFilesUpload => {
     const onSubmit = useCallback(
         (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
             event.preventDefault();
+
             if (uploading) {
                 toast.info('Uploading files please wait...');
                 return;
@@ -113,8 +83,29 @@ const useFilesUpload = (): UseFilesUpload => {
         const isEmpty = !pending.length;
         if (!isEmpty) {
             if (current) {
-                mockApi
-                    .uploadFile(current.id, ingestionDispatch)
+                const { id, data } = current;
+                apolloUploader({
+                    mutation: MUTATION_UPLOAD_FILE,
+                    variables: {
+                        file: data
+                    },
+                    useUpload: true,
+                    onProgress: (event: ProgressEvent) => {
+                        const { loaded, total } = event;
+                        const progress = (loaded / total) * 100;
+
+                        const uploadProgressAction: IngestionDispatchAction = {
+                            type: TRANSFER_ACTIONS.UPLOAD_PROGRESS,
+                            id,
+                            progress
+                        };
+
+                        ingestionDispatch(uploadProgressAction);
+                    },
+                    onAbortPossible: (abortHandler: AbortController) => {
+                        console.log(abortHandler);
+                    }
+                })
                     .then(() => {
                         const uploadedAction: IngestionDispatchAction = {
                             type: TRANSFER_ACTIONS.FILE_UPLOADED,
