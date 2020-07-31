@@ -8,6 +8,7 @@ export type Scalars = {
     Int: number;
     Float: number;
     DateTime: any;
+    Upload: any;
 };
 
 export type AccessAction = {
@@ -461,11 +462,13 @@ export type Item = {
     __typename?: 'Item';
     idItem: Scalars['Int'];
     EntireSubject: Scalars['Boolean'];
+    idSubject: Scalars['Int'];
     Name: Scalars['String'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
     AssetThumbnail?: Maybe<Asset>;
     GeoLocation?: Maybe<GeoLocation>;
+    Subject?: Maybe<Subject>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -514,7 +517,6 @@ export type Vocabulary = {
     idVocabulary: Scalars['Int'];
     idVocabularySet: Scalars['Int'];
     SortOrder: Scalars['Int'];
-    Term: Scalars['String'];
     VocabularySet?: Maybe<VocabularySet>;
 };
 
@@ -587,6 +589,7 @@ export type Query = {
     getProject: GetProjectResult;
     getSubject: GetUnitResult;
     getItem: GetItemResult;
+    getCurrentUser: GetCurrentUserResult;
     getUser: GetUserResult;
     getVocabulary: GetVocabularyResult;
     getWorkflow: GetWorkflowResult;
@@ -670,13 +673,13 @@ export type GetCaptureDataInput = {
     idCaptureData: Scalars['Int'];
 };
 
-export type GetCaptureDataPhotoInput = {
-    idCaptureDataPhoto: Scalars['Int'];
-};
-
 export type GetCaptureDataResult = {
     __typename?: 'GetCaptureDataResult';
     CaptureData?: Maybe<CaptureData>;
+};
+
+export type GetCaptureDataPhotoInput = {
+    idCaptureDataPhoto: Scalars['Int'];
 };
 
 export type GetCaptureDataPhotoResult = {
@@ -747,6 +750,11 @@ export type GetItemResult = {
     Item?: Maybe<Item>;
 };
 
+export type GetCurrentUserResult = {
+    __typename?: 'GetCurrentUserResult';
+    User?: Maybe<User>;
+};
+
 export type GetUserInput = {
     idUser: Scalars['Int'];
 };
@@ -778,6 +786,7 @@ export type Mutation = {
     __typename?: 'Mutation';
     createCaptureData: CreateCaptureDataResult;
     createCaptureDataPhoto: CreateCaptureDataPhotoResult;
+    captureDataUpload: CaptureDataUploadResult;
     createModel: CreateModelResult;
     createScene: CreateSceneResult;
     createUnit: CreateUnitResult;
@@ -795,6 +804,10 @@ export type MutationCreateCaptureDataArgs = {
 
 export type MutationCreateCaptureDataPhotoArgs = {
     input: CreateCaptureDataPhotoInput;
+};
+
+export type MutationCaptureDataUploadArgs = {
+    file: Scalars['Upload'];
 };
 
 export type MutationCreateModelArgs = {
@@ -833,11 +846,26 @@ export type MutationCreateVocabularySetArgs = {
     input: CreateVocabularySetInput;
 };
 
+export enum UploadStatus {
+    Success = 'SUCCESS',
+    Failed = 'FAILED'
+}
+
+export type CaptureDataUploadResult = {
+    __typename?: 'CaptureDataUploadResult';
+    status: UploadStatus;
+};
+
 export type CreateCaptureDataInput = {
     idVCaptureMethod: Scalars['Int'];
     DateCaptured: Scalars['DateTime'];
     Description: Scalars['String'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
+};
+
+export type CreateCaptureDataResult = {
+    __typename?: 'CreateCaptureDataResult';
+    CaptureData?: Maybe<CaptureData>;
 };
 
 export type CreateCaptureDataPhotoInput = {
@@ -853,11 +881,6 @@ export type CreateCaptureDataPhotoInput = {
     idVFocusType?: Maybe<Scalars['Int']>;
     idVLightSourceType?: Maybe<Scalars['Int']>;
     idVClusterType?: Maybe<Scalars['Int']>;
-};
-
-export type CreateCaptureDataResult = {
-    __typename?: 'CreateCaptureDataResult';
-    CaptureData?: Maybe<CaptureData>;
 };
 
 export type CreateCaptureDataPhotoResult = {

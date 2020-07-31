@@ -416,11 +416,13 @@ type Subject {
 type Item {
   idItem: Int!
   EntireSubject: Boolean!
+  idSubject: Int!
   Name: String!
   idAssetThumbnail: Int
   idGeoLocation: Int
   AssetThumbnail: Asset
   GeoLocation: GeoLocation
+  Subject: Subject
   SystemObject: SystemObject
 }
 
@@ -531,6 +533,7 @@ type Query {
   getProject(input: GetProjectInput!): GetProjectResult!
   getSubject(input: GetSubjectInput!): GetUnitResult!
   getItem(input: GetItemInput!): GetItemResult!
+  getCurrentUser: GetCurrentUserResult!
   getUser(input: GetUserInput!): GetUserResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
@@ -624,6 +627,10 @@ type GetItemResult {
   Item: Item
 }
 
+type GetCurrentUserResult {
+  User: User
+}
+
 input GetUserInput {
   idUser: Int!
 }
@@ -648,9 +655,12 @@ type GetWorkflowResult {
   Workflow: Workflow
 }
 
+scalar Upload
+
 type Mutation {
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
+  captureDataUpload(file: Upload!): CaptureDataUploadResult!
   createModel(input: CreateModelInput!): CreateModelResult!
   createScene(input: CreateSceneInput!): CreateSceneResult!
   createUnit(input: CreateUnitInput!): CreateUnitResult!
@@ -662,11 +672,24 @@ type Mutation {
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
 }
 
+enum UploadStatus {
+  SUCCESS
+  FAILED
+}
+
+type CaptureDataUploadResult {
+  status: UploadStatus!
+}
+
 input CreateCaptureDataInput {
   idVCaptureMethod: Int!
   DateCaptured: DateTime!
   Description: String!
   idAssetThumbnail: Int
+}
+
+type CreateCaptureDataResult {
+  CaptureData: CaptureData
 }
 
 input CreateCaptureDataPhotoInput {
@@ -682,10 +705,6 @@ input CreateCaptureDataPhotoInput {
   idVFocusType: Int
   idVLightSourceType: Int
   idVClusterType: Int
-}
-
-type CreateCaptureDataResult {
-  CaptureData: CaptureData
 }
 
 type CreateCaptureDataPhotoResult {
