@@ -84,10 +84,11 @@ const useFilesUpload = (): UseFilesUpload => {
                     previous: current
                 };
 
-                const errorAction: IngestionDispatchAction = {
+                const errorAction = (error: string): IngestionDispatchAction => ({
                     type: TRANSFER_ACTIONS.UPLOAD_ERROR,
+                    error,
                     previous: current
-                };
+                });
 
                 const { id, file } = current;
                 apolloUploader({
@@ -117,11 +118,13 @@ const useFilesUpload = (): UseFilesUpload => {
                         if (captureDataUpload.status === UPLOAD_STATUS.SUCCESS) {
                             ingestionDispatch(uploadedAction);
                         } else {
-                            ingestionDispatch(errorAction);
+                            const error = `Upload failed for ${file.name}`;
+                            ingestionDispatch(errorAction(error));
                         }
                     })
-                    .catch(() => {
-                        ingestionDispatch(errorAction);
+                    .catch(error => {
+                        const message = error.message.replace('GraphQL error:', '');
+                        ingestionDispatch(errorAction(message));
                     });
             } else if (!current) {
                 const current = pending[0];
