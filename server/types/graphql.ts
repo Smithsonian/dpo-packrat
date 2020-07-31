@@ -462,7 +462,6 @@ export type Item = {
     __typename?: 'Item';
     idItem: Scalars['Int'];
     EntireSubject: Scalars['Boolean'];
-    idSubject: Scalars['Int'];
     Name: Scalars['String'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
