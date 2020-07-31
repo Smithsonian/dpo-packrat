@@ -21,6 +21,7 @@ type IngestionTransfer = {
     uploaded: Map<FileId, IngestionFile>;
     failed: Map<FileId, IngestionFile>;
     uploading: boolean;
+    error: string | null;
     progress: Map<FileId, number>;
     status: INGESTION_TRANSFER_STATUS;
 };
@@ -52,6 +53,7 @@ const ingestionState: Ingestion = {
         uploading: false,
         progress: new Map<FileId, number>(),
         uploaded: new Map<FileId, IngestionFile>(),
+        error: null,
         failed: new Map<FileId, IngestionFile>(),
         status: INGESTION_TRANSFER_STATUS.IDLE
     }
@@ -92,6 +94,7 @@ type UPLOAD_COMPLETE = {
 
 type UPLOAD_ERROR = {
     type: TRANSFER_ACTIONS.UPLOAD_ERROR;
+    error: string;
     previous: IngestionFile;
 };
 
@@ -123,6 +126,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                     uploading: true,
                     pending: action.pending,
                     failed: action.failed,
+                    error: null,
                     status: INGESTION_TRANSFER_STATUS.PROCESSING
                 }
             };
@@ -175,6 +179,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                     current: null,
                     pending: pending.slice(1),
                     failed: failed.set(action.previous.id, action.previous),
+                    error: action.error,
                     status: INGESTION_TRANSFER_STATUS.ERROR
                 }
             };

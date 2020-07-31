@@ -18,7 +18,7 @@ import { AliveScope } from 'react-activation';
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
     const { user, updateUser, ingestion } = useContext(AppContext);
-    const { transfer: { status, uploading } } = ingestion;
+    const { transfer: { status, uploading, error } } = ingestion;
 
     const initialize = useCallback(async () => {
         if (!user) {
@@ -31,6 +31,12 @@ function AppRouter(): React.ReactElement {
     useEffect(() => {
         initialize();
     }, [initialize]);
+
+    useEffect(() => {
+        if (error && uploading) {
+            toast.error(error);
+        }
+    }, [error, uploading]);
 
     useEffect(() => {
         if (!uploading) {
