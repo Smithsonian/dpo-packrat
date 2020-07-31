@@ -7,17 +7,25 @@ import FileUploadListItem from './FileUploadListItem';
 import { toast } from 'react-toastify';
 import { AnimatePresence } from 'framer-motion';
 
-const useStyles = makeStyles(({ palette, breakpoints }) => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
+        flex: 1,
         flexDirection: 'column',
         marginTop: 20,
-        flex: 1,
         maxHeight: '40vh',
         width: '40vw',
-        overflow: 'scroll',
-        [breakpoints.up('lg')]: {
-            maxHeight: '50vh',
+        overflow: 'auto',
+        '&::-webkit-scrollbar': {
+            '-webkit-appearance': 'none'
+        },
+        '&::-webkit-scrollbar:vertical': {
+            width: 12
+        },
+        '&::-webkit-scrollbar-thumb': {
+            borderRadius: 8,
+            border: '2px solid white',
+            backgroundColor: palette.text.disabled
         }
     },
     item: {
