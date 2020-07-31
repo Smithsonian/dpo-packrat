@@ -1,6 +1,6 @@
 import { apolloClient, QUERY_GET_CURRENT_USER } from '../graphql';
 import { User } from '../types/graphql';
-import { QueryOptions } from 'apollo-boost';
+import { QueryOptions } from 'apollo-client';
 
 export async function getAuthenticatedUser(): Promise<User | null> {
     const queryOptions: QueryOptions = {
