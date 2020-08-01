@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useContext } from 'react';
 import { toast } from 'react-toastify';
-import { AppContext } from '../../../context';
+import { AppContext, AssetType } from '../../../context';
 import { TRANSFER_ACTIONS, IngestionFile, FileId, IngestionDispatchAction } from '../../../context';
 import lodash from 'lodash';
-import { MUTATION_CAPTURE_DATA_UPLOAD, apolloUploader } from '../../../graphql';
+import { MUTATION_UPLOAD_ASSET, apolloUploader } from '../../../graphql';
 import { UPLOAD_STATUS } from '../../../constants';
 
 interface UseFilesUpload {
@@ -54,9 +54,10 @@ const useFilesUpload = (): UseFilesUpload => {
             acceptedFiles.forEach((file: File): void => {
                 const id = file.name;
                 const alreadyContains = !!lodash.find(files, { id });
+                const type = AssetType.Diconde;
 
                 if (!alreadyContains) {
-                    const ingestionFile = { id, file };
+                    const ingestionFile = { id, file, type };
 
                     ingestionFiles.push(ingestionFile);
                 } else {
@@ -78,6 +79,7 @@ const useFilesUpload = (): UseFilesUpload => {
     useEffect(() => {
         const isEmpty = !pending.length;
         if (!isEmpty) {
+            // check queue status here
             if (current) {
                 const uploadedAction: IngestionDispatchAction = {
                     type: TRANSFER_ACTIONS.FILE_UPLOADED,
@@ -90,10 +92,11 @@ const useFilesUpload = (): UseFilesUpload => {
                     previous: current
                 });
 
-                const { id, file } = current;
+                const { id, file, type } = current;
+
                 apolloUploader({
-                    mutation: MUTATION_CAPTURE_DATA_UPLOAD,
-                    variables: { file },
+                    mutation: MUTATION_UPLOAD_ASSET,
+                    variables: { file, type },
                     useUpload: true,
                     onProgress: (event: ProgressEvent) => {
                         const { loaded, total } = event;
@@ -113,9 +116,9 @@ const useFilesUpload = (): UseFilesUpload => {
                     onAbort: () => null
                 })
                     .then(({ data }) => {
-                        const { captureDataUpload } = data;
+                        const { uploadAsset } = data;
 
-                        if (captureDataUpload.status === UPLOAD_STATUS.SUCCESS) {
+                        if (uploadAsset.status === UPLOAD_STATUS.SUCCESS) {
                             ingestionDispatch(uploadedAction);
                         } else {
                             const error = `Upload failed for ${file.name}`;

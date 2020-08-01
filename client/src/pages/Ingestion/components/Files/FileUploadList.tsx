@@ -2,7 +2,7 @@ import React, { useContext, useCallback } from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { colorWithOpacity } from '../../../../theme/colors';
-import { AppContext, TRANSFER_ACTIONS, INGESTION_TRANSFER_STATUS, FileId, IngestionFile, IngestionDispatchAction } from '../../../../context';
+import { AppContext, TRANSFER_ACTIONS, INGESTION_TRANSFER_STATUS, FileId, IngestionFile, IngestionDispatchAction, AssetType } from '../../../../context';
 import FileUploadListItem from './FileUploadListItem';
 import { toast } from 'react-toastify';
 import { AnimatePresence } from 'framer-motion';
@@ -14,7 +14,7 @@ const useStyles = makeStyles(({ palette }) => ({
         flexDirection: 'column',
         marginTop: 20,
         maxHeight: '40vh',
-        width: '40vw',
+        width: '50vw',
         overflow: 'auto',
         '&::-webkit-scrollbar': {
             '-webkit-appearance': 'none'
@@ -60,6 +60,16 @@ function FileUploadList(): React.ReactElement {
     const { transfer } = ingestion;
     const { files, current, uploaded, failed, status } = transfer;
 
+    const onChangeType = useCallback((id: FileId, type: AssetType): void => {
+        const changeAssetTypeAction: IngestionDispatchAction = {
+            type: TRANSFER_ACTIONS.CHANGE_ASSET_TYPE,
+            id,
+            assetType: type
+        };
+
+        ingestionDispatch(changeAssetTypeAction);
+    }, [ingestionDispatch]);
+
     const onRemove = useCallback((id: FileId): void => {
         if (status !== INGESTION_TRANSFER_STATUS.PROCESSING) {
             const failedUploads = new Map<FileId, IngestionFile>(failed);
@@ -79,7 +89,7 @@ function FileUploadList(): React.ReactElement {
         }
     }, [status, failed, ingestionDispatch]);
 
-    const getFileList = ({ id, file: { name, size } }: IngestionFile, index: number) => {
+    const getFileList = ({ id, file: { name, size }, type }: IngestionFile, index: number) => {
         const uploading = current?.id === id ?? false;
         const complete = uploaded.has(id);
         const hasFailed = failed.has(id);
@@ -91,10 +101,12 @@ function FileUploadList(): React.ReactElement {
                     id={id}
                     name={name}
                     size={size}
+                    type={type}
                     uploading={uploading}
                     complete={complete}
                     failed={hasFailed}
                     progress={progress}
+                    onChangeType={onChangeType}
                     onRemove={onRemove}
                 />
             </AnimatePresence>
