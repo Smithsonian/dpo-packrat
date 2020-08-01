@@ -14,8 +14,8 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         display: 'flex',
         minHeight: 70,
         alignItems: 'center',
-        backgroundColor: ({ complete }: FileUploadListItemProps) => complete ? 'transparent' : colorWithOpacity(palette.primary.light, 66),
-        marginBottom: 10,
+        backgroundColor: ({ complete }: FileUploadListItemProps) => complete ? colorWithOpacity(palette.success.light, 66) : palette.background.paper,
+        marginTop: 10,
         borderRadius: 5,
         zIndex: 10,
         overflow: 'hidden'
@@ -28,15 +28,10 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     details: {
         display: 'flex',
         flexDirection: 'column',
-        flex: 3,
+        flex: 2,
         zIndex: 'inherit',
         padding: '10px 0px',
         marginLeft: 20
-    },
-    type: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
     },
     name: {
         fontWeight: typography.fontWeightMedium,
@@ -47,8 +42,33 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         width: 100,
     },
     caption: {
-        color: palette.grey[700],
+        fontWeight: typography.fontWeightRegular,
+        color: palette.primary.main,
         zIndex: 'inherit'
+    },
+    size: {
+        display: 'flex',
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0px 10px',
+    },
+    sizeText: {
+        fontWeight: typography.fontWeightRegular,
+        color: palette.primary.main,
+        zIndex: 'inherit'
+    },
+    type: {
+        display: 'flex',
+        flex: 2,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    typeSelect: {
+        width: '80%',
+        padding: '0px 10px',
+        borderRadius: 5,
+        border: `1px solid ${colorWithOpacity(palette.primary.main, 66)}`
     },
     options: {
         display: 'flex',
@@ -62,7 +82,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         position: 'absolute',
         height: '100%',
         width: ({ progress }: FileUploadListItemProps) => `${progress}%`,
-        backgroundColor: ({ failed }: FileUploadListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : colorWithOpacity(palette.success.light, 66),
+        backgroundColor: ({ complete, failed }: FileUploadListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? 'transparent' : colorWithOpacity(palette.secondary.light, 66),
         zIndex: 5,
         top: 0,
         left: 0,
@@ -118,7 +138,7 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
             initial='hidden'
             animate='visible'
         >
-            <div className={classes.item}>
+            <Box className={classes.item}>
                 <Box className={classes.details}>
                     <Box>
                         <Typography className={classes.name} variant='caption'>{name}</Typography>
@@ -127,9 +147,6 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
                         <Box className={classes.status}>
                             <Typography className={classes.caption} variant='caption'>{uploadStatus}</Typography>
                         </Box>
-                        <Box className={classes.status}>
-                            <Typography className={classes.caption} variant='caption'>{formatBytes(size)}</Typography>
-                        </Box>
                         {uploading && (
                             <Box className={classes.status}>
                                 <Typography className={classes.caption} variant='caption'>{progress}%</Typography>
@@ -137,9 +154,13 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
                         )}
                     </Box>
                 </Box>
+                <Box className={classes.size}>
+                    <Typography className={classes.sizeText} variant='body1'>{formatBytes(size)}</Typography>
+                </Box>
                 <Box className={classes.type}>
                     <Select
                         value={type}
+                        className={classes.typeSelect}
                         disabled={uploading || complete}
                         onChange={({ target: { value } }) => onChangeType(id, value as AssetType)}
                         disableUnderline
@@ -150,7 +171,7 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
                 <Box className={classes.options}>
                     {options}
                 </Box>
-            </div>
+            </Box>
             <Box className={classes.progress} />
         </motion.div>
     );

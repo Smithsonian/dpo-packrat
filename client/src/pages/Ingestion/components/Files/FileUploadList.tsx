@@ -1,13 +1,13 @@
 import React, { useContext, useCallback } from 'react';
-import { Box } from '@material-ui/core';
+import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { colorWithOpacity } from '../../../../theme/colors';
 import { AppContext, TRANSFER_ACTIONS, INGESTION_TRANSFER_STATUS, FileId, IngestionFile, IngestionDispatchAction, AssetType } from '../../../../context';
 import FileUploadListItem from './FileUploadListItem';
 import { toast } from 'react-toastify';
 import { AnimatePresence } from 'framer-motion';
+import { FieldType } from '../../../../components';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -28,29 +28,42 @@ const useStyles = makeStyles(({ palette }) => ({
             backgroundColor: palette.text.disabled
         }
     },
-    item: {
+    header: {
         display: 'flex',
-        padding: '0px 20px',
-        minHeight: 50,
         alignItems: 'center',
-        backgroundColor: colorWithOpacity(palette.primary.light, 66),
-        marginBottom: 10,
+        height: 50,
+        width: '100%',
         borderRadius: 5,
+        background: palette.background.paper,
     },
-    itemName: {
+    fileDetails: {
         display: 'flex',
         flex: 2,
+        paddingLeft: 20
     },
-    itemSize: {
+    size: {
         display: 'flex',
         flex: 1,
-        color: palette.grey[600]
     },
-    itemOptions: {
+    assetType: {
         display: 'flex',
-        flex: 1,
-        justifyContent: 'flex-end',
-        color: palette.error.main
+        flex: 2
+    },
+    label: {
+        color: palette.primary.contrastText,
+        fontWeight: typography.fontWeightRegular
+    },
+    list: {
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        minHeight: 70,
+        width: '100%',
+    },
+    emptyListLabel: {
+        textAlign: 'center',
+        color: palette.grey[500],
+        fontStyle: 'italic'
     },
 }));
 
@@ -115,8 +128,29 @@ function FileUploadList(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            {files.map(getFileList)}
+            <FieldType required>
+                <>
+                    <Box className={classes.header}>
+                        <Box className={classes.fileDetails}>
+                            <Typography className={classes.label} variant='body1'>Filename</Typography>
+                        </Box>
+                        <Box className={classes.size}>
+                            <Typography className={classes.label} variant='body1'>Size</Typography>
+                        </Box>
+                        <Box className={classes.assetType}>
+                            <Typography className={classes.label} variant='body1'>Asset Type</Typography>
+                        </Box>
+                    </Box>
+                    <Box className={classes.list}>
+                        {!files.length && (
+                            <Typography className={classes.emptyListLabel} variant='body1'>No files loaded yet</Typography>
+                        )}
+                        {files.map(getFileList)}
+                    </Box>
+                </>
+            </FieldType>
         </Box>
+
     );
 }
 
