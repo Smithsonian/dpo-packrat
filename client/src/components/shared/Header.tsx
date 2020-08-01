@@ -2,30 +2,27 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useContext } from 'react';
 import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
-import { MdSecurity } from 'react-icons/md';
 import { Link, useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import API from '../../api';
 import { ROUTES, HOME_ROUTES, resolveRoute } from '../../constants';
 import { AppContext } from '../../context';
 import { Colors } from '../../theme';
+import Logo from '../../assets/images/logo-packrat.square.png';
 
-const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'flex',
         height: 60,
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: `0px ${spacing(2)}px`,
+        padding: '0px 1.5rem',
         background: palette.primary.main,
-        color: Colors.defaults.white,
-        [breakpoints.down('xs')]: {
-            padding: `0px ${spacing(2)}px`,
-        }
+        color: Colors.defaults.white
     },
     logo: {
         cursor: 'pointer',
-        paddingRight: spacing(2)
+        paddingRight: spacing(2),
     },
     navOptionsContainer: {
         display: 'flex',
@@ -63,7 +60,7 @@ function Header(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Link className={classes.logo} to={resolveRoute(HOME_ROUTES.DASHBOARD)}>
-                <MdSecurity size={30} color={Colors.defaults.white} />
+                <img style={{ height: 30, width: 30 }} src={Logo} alt='packrat' />
             </Link>
             <Typography color='inherit' variant='body2'>{user?.Name}</Typography>
             <Box className={classes.navOptionsContainer}>
