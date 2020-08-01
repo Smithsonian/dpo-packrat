@@ -1,4 +1,5 @@
 import { useReducer, Dispatch } from 'react';
+import lodash from 'lodash';
 
 export enum INGESTION_TRANSFER_STATUS {
     IDLE = 'IDLE',
@@ -9,9 +10,15 @@ export enum INGESTION_TRANSFER_STATUS {
 
 export type FileId = string;
 
+export enum AssetType {
+    Diconde = 'Diconde',
+    Photogrammetry = 'Photogrammetry'
+}
+
 export type IngestionFile = {
     id: FileId;
     file: File;
+    type: AssetType;
 };
 
 type IngestionTransfer = {
@@ -38,7 +45,8 @@ export enum TRANSFER_ACTIONS {
     UPLOAD_PROGRESS = 'UPLOAD_PROGRESS',
     UPLOAD_ERROR = 'UPLOAD_ERROR',
     UPLOAD_COMPLETE = 'UPLOAD_COMPLETE',
-    REMOVE_FILE = 'REMOVE_FILE'
+    REMOVE_FILE = 'REMOVE_FILE',
+    CHANGE_ASSET_TYPE = 'CHANGE_ASSET_TYPE'
 }
 
 const INGESTION_ACTION = {
@@ -59,7 +67,7 @@ const ingestionState: Ingestion = {
     }
 };
 
-export type IngestionDispatchAction = LOAD | SUBMIT | START_NEXT | FILE_UPLOADED | UPLOAD_PROGRESS | UPLOAD_COMPLETE | UPLOAD_ERROR | REMOVE_FILE;
+export type IngestionDispatchAction = LOAD | SUBMIT | START_NEXT | FILE_UPLOADED | UPLOAD_PROGRESS | UPLOAD_COMPLETE | UPLOAD_ERROR | REMOVE_FILE | CHANGE_ASSET_TYPE;
 
 type LOAD = {
     type: TRANSFER_ACTIONS.LOAD;
@@ -102,6 +110,12 @@ type REMOVE_FILE = {
     type: TRANSFER_ACTIONS.REMOVE_FILE;
     id: FileId;
     failed: Map<FileId, IngestionFile>;
+};
+
+type CHANGE_ASSET_TYPE = {
+    type: TRANSFER_ACTIONS.CHANGE_ASSET_TYPE;
+    id: FileId;
+    assetType: AssetType;
 };
 
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
@@ -191,6 +205,19 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                     ...transfer,
                     files: files.filter(({ id }) => id !== action.id),
                     failed: action.failed
+                }
+            };
+
+        case INGESTION_ACTION.TRANSFER.CHANGE_ASSET_TYPE:
+            return {
+                ...state,
+                transfer: {
+                    ...transfer,
+                    files: lodash.forEach(files, file => {
+                        if (file.id === action.id) {
+                            lodash.set(file, 'type', action.assetType);
+                        }
+                    })
                 }
             };
 

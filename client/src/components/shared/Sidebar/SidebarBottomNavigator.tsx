@@ -11,7 +11,7 @@ const useStyles = makeStyles(({ palette }) => ({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
-        width: '40vw',
+        width: '50vw',
         padding: '20px 0px',
         marginLeft: 40,
         background: palette.background.paper

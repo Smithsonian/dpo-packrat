@@ -1,11 +1,11 @@
 import React from 'react';
-import { Box, Typography, CircularProgress } from '@material-ui/core';
+import { Box, Typography, CircularProgress, Select, MenuItem } from '@material-ui/core';
 import { green, red } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 import { IoIosCloseCircle, IoMdCheckmark } from 'react-icons/io';
 import { colorWithOpacity } from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
-import { FileId } from '../../../../context';
+import { FileId, AssetType } from '../../../../context';
 import { motion } from 'framer-motion';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -32,6 +32,11 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         zIndex: 'inherit',
         padding: '10px 0px',
         marginLeft: 20
+    },
+    type: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     name: {
         fontWeight: typography.fontWeightMedium,
@@ -75,11 +80,13 @@ interface FileUploadListItemProps {
     complete: boolean;
     progress: number;
     failed: boolean;
+    type: AssetType;
+    onChangeType: (id: FileId, type: AssetType) => void;
     onRemove: (id: FileId) => void;
 }
 
 function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement {
-    const { id, name, size, complete, progress, failed, uploading, onRemove } = props;
+    const { id, name, size, type, complete, progress, failed, uploading, onChangeType, onRemove } = props;
     const classes = useStyles(props);
 
     let options: React.ReactElement = <IoMdCheckmark size={24} color={green[500]} />;
@@ -129,6 +136,16 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
                             </Box>
                         )}
                     </Box>
+                </Box>
+                <Box className={classes.type}>
+                    <Select
+                        value={type}
+                        disabled={uploading || complete}
+                        onChange={({ target: { value } }) => onChangeType(id, value as AssetType)}
+                        disableUnderline
+                    >
+                        {Object.keys(AssetType).map((type, index) => <MenuItem key={index} value={type}>{type}</MenuItem>)}
+                    </Select>
                 </Box>
                 <Box className={classes.options}>
                     {options}
