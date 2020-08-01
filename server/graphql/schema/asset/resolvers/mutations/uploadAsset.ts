@@ -1,4 +1,4 @@
-import { MutationCaptureDataUploadArgs, CaptureDataUploadResult, UploadStatus } from '../../../../../types/graphql';
+import { MutationUploadAssetArgs, UploadAssetResult, UploadStatus } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import { ReadStream, createWriteStream, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
@@ -10,7 +10,7 @@ interface ApolloFile {
     createReadStream: () => ReadStream;
 }
 
-export default async function captureDataUpload(_: Parent, args: MutationCaptureDataUploadArgs): Promise<CaptureDataUploadResult | void> {
+export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs): Promise<UploadAssetResult | void> {
     const { filename, createReadStream }: ApolloFile = await args.file;
 
     const fileStream = createReadStream();

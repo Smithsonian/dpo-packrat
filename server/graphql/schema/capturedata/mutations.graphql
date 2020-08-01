@@ -4,16 +4,6 @@ scalar Upload
 type Mutation {
     createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
     createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
-    captureDataUpload(file: Upload!): CaptureDataUploadResult!
-}
-
-enum UploadStatus {
-    SUCCESS
-    FAILED
-}
-
-type CaptureDataUploadResult {
-    status: UploadStatus!
 }
 
 input CreateCaptureDataInput {

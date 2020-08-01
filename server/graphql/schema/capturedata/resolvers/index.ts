@@ -6,7 +6,6 @@ import getCaptureData from './queries/getCaptureData';
 import getCaptureDataPhoto from './queries/getCaptureDataPhoto';
 import createCaptureData from './mutations/createCaptureData';
 import createCaptureDataPhoto from './mutations/createCaptureDataPhoto';
-import captureDataUpload from './mutations/captureDataUpload';
 
 const resolvers = {
     Query: {
@@ -15,8 +14,7 @@ const resolvers = {
     },
     Mutation: {
         createCaptureData,
-        createCaptureDataPhoto,
-        captureDataUpload
+        createCaptureDataPhoto
     },
     CaptureData,
     CaptureDataFile,
