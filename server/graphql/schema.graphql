@@ -656,10 +656,15 @@ type GetWorkflowResult {
 
 scalar Upload
 
+enum AssetType {
+  Diconde
+  Photogrammetry
+}
+
 type Mutation {
+  uploadAsset(file: Upload!, type: AssetType!): UploadAssetResult!
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
-  captureDataUpload(file: Upload!): CaptureDataUploadResult!
   createModel(input: CreateModelInput!): CreateModelResult!
   createScene(input: CreateSceneInput!): CreateSceneResult!
   createUnit(input: CreateUnitInput!): CreateUnitResult!
@@ -676,7 +681,7 @@ enum UploadStatus {
   FAILED
 }
 
-type CaptureDataUploadResult {
+type UploadAssetResult {
   status: UploadStatus!
 }
 

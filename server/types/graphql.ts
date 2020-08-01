@@ -781,11 +781,16 @@ export type GetWorkflowResult = {
     Workflow?: Maybe<Workflow>;
 };
 
+export enum AssetType {
+    Diconde = 'Diconde',
+    Photogrammetry = 'Photogrammetry'
+}
+
 export type Mutation = {
     __typename?: 'Mutation';
+    uploadAsset: UploadAssetResult;
     createCaptureData: CreateCaptureDataResult;
     createCaptureDataPhoto: CreateCaptureDataPhotoResult;
-    captureDataUpload: CaptureDataUploadResult;
     createModel: CreateModelResult;
     createScene: CreateSceneResult;
     createUnit: CreateUnitResult;
@@ -797,16 +802,17 @@ export type Mutation = {
     createVocabularySet: CreateVocabularySetResult;
 };
 
+export type MutationUploadAssetArgs = {
+    file: Scalars['Upload'];
+    type: AssetType;
+};
+
 export type MutationCreateCaptureDataArgs = {
     input: CreateCaptureDataInput;
 };
 
 export type MutationCreateCaptureDataPhotoArgs = {
     input: CreateCaptureDataPhotoInput;
-};
-
-export type MutationCaptureDataUploadArgs = {
-    file: Scalars['Upload'];
 };
 
 export type MutationCreateModelArgs = {
@@ -850,8 +856,8 @@ export enum UploadStatus {
     Failed = 'FAILED'
 }
 
-export type CaptureDataUploadResult = {
-    __typename?: 'CaptureDataUploadResult';
+export type UploadAssetResult = {
+    __typename?: 'UploadAssetResult';
     status: UploadStatus;
 };
 

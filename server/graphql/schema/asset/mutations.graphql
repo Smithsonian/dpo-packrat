@@ -1,0 +1,19 @@
+scalar Upload
+
+enum AssetType {
+    Diconde
+    Photogrammetry
+}
+
+type Mutation {
+    uploadAsset(file: Upload!, type: AssetType!): UploadAssetResult!
+}
+
+enum UploadStatus {
+    SUCCESS
+    FAILED
+}
+
+type UploadAssetResult {
+    status: UploadStatus!
+}

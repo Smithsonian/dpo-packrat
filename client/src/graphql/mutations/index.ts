@@ -1,5 +1,5 @@
 import { loader } from 'graphql.macro';
 
-const MUTATION_CAPTURE_DATA_UPLOAD = loader('./captureDataUpload.graphql');
+const MUTATION_UPLOAD_ASSET = loader('./uploadAsset.graphql');
 
-export { MUTATION_CAPTURE_DATA_UPLOAD };
+export { MUTATION_UPLOAD_ASSET };
