@@ -15,6 +15,7 @@ const palette = {
         main: '#F8D00D',
     }
 };
+
 const breakpoints = createBreakpoints({});
 
 const overrides = createTypographyOverrides(breakpoints);
