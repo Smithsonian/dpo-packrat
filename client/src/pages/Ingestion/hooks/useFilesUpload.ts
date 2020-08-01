@@ -80,6 +80,7 @@ const useFilesUpload = (): UseFilesUpload => {
         const isEmpty = !pending.length;
         if (!isEmpty) {
             // check queue status here
+
             if (current) {
                 const uploadedAction: IngestionDispatchAction = {
                     type: TRANSFER_ACTIONS.FILE_UPLOADED,
@@ -113,7 +114,14 @@ const useFilesUpload = (): UseFilesUpload => {
                             ingestionDispatch(uploadProgressAction);
                         }
                     },
-                    onAbort: () => null
+                    onAbort: (abort: () => void) => {
+                        const setAbortAction: IngestionDispatchAction = {
+                            type: TRANSFER_ACTIONS.SET_ABORT_HANDLER,
+                            abort
+                        };
+
+                        ingestionDispatch(setAbortAction);
+                    }
                 })
                     .then(({ data }) => {
                         const { uploadAsset } = data;

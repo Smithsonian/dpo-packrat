@@ -3,7 +3,6 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { AppContext, TRANSFER_ACTIONS, INGESTION_TRANSFER_STATUS, FileId, IngestionFile, IngestionDispatchAction, AssetType } from '../../../../context';
 import FileUploadListItem from './FileUploadListItem';
-import { toast } from 'react-toastify';
 import { AnimatePresence } from 'framer-motion';
 import { FieldType } from '../../../../components';
 
@@ -71,7 +70,7 @@ function FileUploadList(): React.ReactElement {
     const classes = useStyles();
     const { ingestion, ingestionDispatch } = useContext(AppContext);
     const { transfer } = ingestion;
-    const { files, current, uploaded, failed, status } = transfer;
+    const { files, current, uploaded, progress, abort, failed, status } = transfer;
 
     const onChangeType = useCallback((id: FileId, type: AssetType): void => {
         const changeAssetTypeAction: IngestionDispatchAction = {
@@ -83,24 +82,61 @@ function FileUploadList(): React.ReactElement {
         ingestionDispatch(changeAssetTypeAction);
     }, [ingestionDispatch]);
 
-    const onRemove = useCallback((id: FileId): void => {
+    const onRetry = useCallback((id: FileId): void => {
         if (status !== INGESTION_TRANSFER_STATUS.PROCESSING) {
             const failedUploads = new Map<FileId, IngestionFile>(failed);
+            const uploadProgress = new Map<FileId, number>(progress);
+
             if (failedUploads.has(id)) {
                 failedUploads.delete(id);
+            }
+
+            if (uploadProgress.has(id)) {
+                uploadProgress.delete(id);
             }
 
             const loadAction: IngestionDispatchAction = {
                 type: TRANSFER_ACTIONS.REMOVE_FILE,
                 id,
+                progress: uploadProgress,
                 failed: failedUploads
             };
 
             ingestionDispatch(loadAction);
         } else {
-            toast.info('Please wait for current uploads to be finished');
+            if (abort) {
+                abort();
+            }
         }
-    }, [status, failed, ingestionDispatch]);
+    }, [status, failed, abort, progress, ingestionDispatch]);
+
+    const onRemove = useCallback((id: FileId): void => {
+        if (status !== INGESTION_TRANSFER_STATUS.PROCESSING) {
+            const failedUploads = new Map<FileId, IngestionFile>(failed);
+            const uploadProgress = new Map<FileId, number>(progress);
+
+            if (failedUploads.has(id)) {
+                failedUploads.delete(id);
+            }
+
+            if (uploadProgress.has(id)) {
+                uploadProgress.delete(id);
+            }
+
+            const loadAction: IngestionDispatchAction = {
+                type: TRANSFER_ACTIONS.REMOVE_FILE,
+                id,
+                progress: uploadProgress,
+                failed: failedUploads
+            };
+
+            ingestionDispatch(loadAction);
+        } else {
+            if (abort) {
+                abort();
+            }
+        }
+    }, [status, failed, abort, progress, ingestionDispatch]);
 
     const getFileList = ({ id, file: { name, size }, type }: IngestionFile, index: number) => {
         const uploading = current?.id === id ?? false;
@@ -120,6 +156,7 @@ function FileUploadList(): React.ReactElement {
                     failed={hasFailed}
                     progress={progress}
                     onChangeType={onChangeType}
+                    onRetry={onRetry}
                     onRemove={onRemove}
                 />
             </AnimatePresence>

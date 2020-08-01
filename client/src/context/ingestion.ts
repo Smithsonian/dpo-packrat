@@ -31,6 +31,7 @@ type IngestionTransfer = {
     error: string | null;
     progress: Map<FileId, number>;
     status: INGESTION_TRANSFER_STATUS;
+    abort: null | (() => void);
 };
 
 export type Ingestion = {
@@ -46,7 +47,8 @@ export enum TRANSFER_ACTIONS {
     UPLOAD_ERROR = 'UPLOAD_ERROR',
     UPLOAD_COMPLETE = 'UPLOAD_COMPLETE',
     REMOVE_FILE = 'REMOVE_FILE',
-    CHANGE_ASSET_TYPE = 'CHANGE_ASSET_TYPE'
+    CHANGE_ASSET_TYPE = 'CHANGE_ASSET_TYPE',
+    SET_ABORT_HANDLER = 'SET_ABORT_HANDLER'
 }
 
 const INGESTION_ACTION = {
@@ -63,11 +65,22 @@ const ingestionState: Ingestion = {
         uploaded: new Map<FileId, IngestionFile>(),
         error: null,
         failed: new Map<FileId, IngestionFile>(),
-        status: INGESTION_TRANSFER_STATUS.IDLE
+        status: INGESTION_TRANSFER_STATUS.IDLE,
+        abort: null
     }
 };
 
-export type IngestionDispatchAction = LOAD | SUBMIT | START_NEXT | FILE_UPLOADED | UPLOAD_PROGRESS | UPLOAD_COMPLETE | UPLOAD_ERROR | REMOVE_FILE | CHANGE_ASSET_TYPE;
+export type IngestionDispatchAction =
+    | LOAD
+    | SUBMIT
+    | START_NEXT
+    | FILE_UPLOADED
+    | UPLOAD_PROGRESS
+    | UPLOAD_COMPLETE
+    | UPLOAD_ERROR
+    | REMOVE_FILE
+    | CHANGE_ASSET_TYPE
+    | SET_ABORT_HANDLER;
 
 type LOAD = {
     type: TRANSFER_ACTIONS.LOAD;
@@ -83,6 +96,11 @@ type SUBMIT = {
 type START_NEXT = {
     type: TRANSFER_ACTIONS.START_NEXT;
     current: IngestionFile;
+};
+
+type SET_ABORT_HANDLER = {
+    type: TRANSFER_ACTIONS.SET_ABORT_HANDLER;
+    abort: null | (() => void);
 };
 
 type FILE_UPLOADED = {
@@ -109,6 +127,7 @@ type UPLOAD_ERROR = {
 type REMOVE_FILE = {
     type: TRANSFER_ACTIONS.REMOVE_FILE;
     id: FileId;
+    progress: Map<FileId, number>;
     failed: Map<FileId, IngestionFile>;
 };
 
@@ -154,6 +173,15 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 }
             };
 
+        case INGESTION_ACTION.TRANSFER.SET_ABORT_HANDLER:
+            return {
+                ...state,
+                transfer: {
+                    ...transfer,
+                    abort: action.abort
+                }
+            };
+
         case INGESTION_ACTION.TRANSFER.FILE_UPLOADED:
             return {
                 ...state,
@@ -191,6 +219,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 transfer: {
                     ...transfer,
                     current: null,
+                    abort: null,
                     pending: pending.slice(1),
                     failed: failed.set(action.previous.id, action.previous),
                     error: action.error,
@@ -203,6 +232,8 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 ...state,
                 transfer: {
                     ...transfer,
+                    abort: null,
+                    progress: action.progress,
                     files: files.filter(({ id }) => id !== action.id),
                     failed: action.failed
                 }
