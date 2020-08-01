@@ -35,7 +35,7 @@ interface IApolloUploader {
     variables: unknown;
     useUpload: boolean;
     onProgress: (event: ProgressEvent) => void;
-    onAbort: (abortHandler: AbortController) => void;
+    onAbort: (abortHandler: () => void) => void;
 }
 
 const apolloUploader = (options: IApolloUploader): Promise<any> => {

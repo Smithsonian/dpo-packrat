@@ -46,6 +46,7 @@ const uploadFetch = (url: string, options: any): any =>
 
         options.onAbort(() => {
             xhr.abort();
+            reject(new TypeError('Upload cancelled'));
         });
 
         xhr.send(options.body);

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Box, Typography, CircularProgress, Select, MenuItem } from '@material-ui/core';
-import { green, red } from '@material-ui/core/colors';
+import { Box, Typography, Select, MenuItem } from '@material-ui/core';
+import { green, red, yellow } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 import { IoIosCloseCircle, IoMdCheckmark } from 'react-icons/io';
+import { FaRedo } from 'react-icons/fa';
 import { colorWithOpacity } from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
 import { FileId, AssetType } from '../../../../context';
@@ -76,7 +77,10 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         alignItems: 'center',
         justifyContent: 'flex-end',
         zIndex: 'inherit',
-        marginRight: 20
+    },
+    option: {
+        cursor: 'pointer',
+        marginRight: 10,
     },
     progress: {
         position: 'absolute',
@@ -102,6 +106,7 @@ interface FileUploadListItemProps {
     failed: boolean;
     type: AssetType;
     onChangeType: (id: FileId, type: AssetType) => void;
+    onRetry: (id: FileId) => void;
     onRemove: (id: FileId) => void;
 }
 
@@ -109,17 +114,13 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
     const { id, name, size, type, complete, progress, failed, uploading, onChangeType, onRemove } = props;
     const classes = useStyles(props);
 
-    let options: React.ReactElement = <IoMdCheckmark size={24} color={green[500]} />;
+    let options: React.ReactElement = <IoMdCheckmark className={classes.option} size={24} color={green[500]} />;
 
     if (!complete) {
         options = (
             <>
-                {
-                    uploading ?
-                        <CircularProgress color='primary' size={20} />
-                        :
-                        <IoIosCloseCircle onClick={() => onRemove(id)} size={24} color={red[500]} />
-                }
+                {failed && <FaRedo className={classes.option} onClick={() => onRemove(id)} size={20} color={yellow[600]} />}
+                <IoIosCloseCircle className={classes.option} onClick={() => onRemove(id)} size={24} color={red[500]} />
             </>
         );
     }
@@ -147,7 +148,7 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
                         <Box className={classes.status}>
                             <Typography className={classes.caption} variant='caption'>{uploadStatus}</Typography>
                         </Box>
-                        {uploading && (
+                        {(uploading || failed) && (
                             <Box className={classes.status}>
                                 <Typography className={classes.caption} variant='caption'>{progress}%</Typography>
                             </Box>
