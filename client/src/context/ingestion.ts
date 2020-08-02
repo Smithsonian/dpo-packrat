@@ -1,12 +1,18 @@
 import { useReducer, Dispatch } from 'react';
 import lodash from 'lodash';
 
-export enum INGESTION_TRANSFER_STATUS {
-    IDLE = 'IDLE',
-    PROCESSING = 'PROCESSING',
-    FINISHED = 'FINISHED',
-    ERROR = 'ERROR'
+export enum IngestionUploadStatus {
+    SUCCESS = 'SUCCESS',
+    FAILED = 'FAILED'
 }
+
+export type IngestionUploadResponse = {
+    data: {
+        uploadAsset: {
+            status: IngestionUploadStatus;
+        };
+    };
+};
 
 export type FileId = string;
 
@@ -15,235 +21,230 @@ export enum AssetType {
     Photogrammetry = 'Photogrammetry'
 }
 
+export enum FileUploadStatus {
+    READY = 'READY',
+    UPLOADING = 'UPLOADING',
+    SUCCESS = 'SUCCESS',
+    CANCELLED = 'CANCELLED',
+    FAILED = 'FAILED'
+}
+
 export type IngestionFile = {
     id: FileId;
     file: File;
     type: AssetType;
+    status: FileUploadStatus;
+    progress: number;
+    cancel: (() => void) | null;
 };
 
-type IngestionTransfer = {
+type IngestionUploads = {
     files: IngestionFile[];
-    pending: IngestionFile[];
-    current: IngestionFile | null;
-    uploaded: Map<FileId, IngestionFile>;
-    failed: Map<FileId, IngestionFile>;
-    uploading: boolean;
-    error: string | null;
-    progress: Map<FileId, number>;
-    status: INGESTION_TRANSFER_STATUS;
-    abort: null | (() => void);
 };
 
 export type Ingestion = {
-    transfer: IngestionTransfer;
+    uploads: IngestionUploads;
 };
 
-export enum TRANSFER_ACTIONS {
+export enum UPLOAD_ACTIONS {
     LOAD = 'LOAD',
-    SUBMIT = 'SUBMIT',
-    START_NEXT = 'START_NEXT',
-    FILE_UPLOADED = 'FILE_UPLOADED',
-    UPLOAD_PROGRESS = 'UPLOAD_PROGRESS',
-    UPLOAD_ERROR = 'UPLOAD_ERROR',
-    UPLOAD_COMPLETE = 'UPLOAD_COMPLETE',
-    REMOVE_FILE = 'REMOVE_FILE',
-    CHANGE_ASSET_TYPE = 'CHANGE_ASSET_TYPE',
-    SET_ABORT_HANDLER = 'SET_ABORT_HANDLER'
+    START = 'START',
+    FAILED = 'FAILED',
+    PROGRESS = 'PROGRESS',
+    CANCELLED = 'CANCELLED',
+    RETRY = 'RETRY',
+    SUCCESS = 'SUCCESS',
+    REMOVE = 'REMOVE',
+    SET_CANCEL_HANDLER = 'SET_CANCEL_HANDLER',
+    SET_ASSET_TYPE = 'SET_ASSET_TYPE'
 }
 
 const INGESTION_ACTION = {
-    TRANSFER: TRANSFER_ACTIONS
+    UPLOAD: UPLOAD_ACTIONS
 };
 
 const ingestionState: Ingestion = {
-    transfer: {
-        files: [],
-        pending: [],
-        current: null,
-        uploading: false,
-        progress: new Map<FileId, number>(),
-        uploaded: new Map<FileId, IngestionFile>(),
-        error: null,
-        failed: new Map<FileId, IngestionFile>(),
-        status: INGESTION_TRANSFER_STATUS.IDLE,
-        abort: null
+    uploads: {
+        files: []
     }
 };
 
-export type IngestionDispatchAction =
-    | LOAD
-    | SUBMIT
-    | START_NEXT
-    | FILE_UPLOADED
-    | UPLOAD_PROGRESS
-    | UPLOAD_COMPLETE
-    | UPLOAD_ERROR
-    | REMOVE_FILE
-    | CHANGE_ASSET_TYPE
-    | SET_ABORT_HANDLER;
+export type IngestionDispatchAction = LOAD | START | FAILED | PROGRESS | CANCELLED | SUCCESS | REMOVE | SET_CANCEL_HANDLER | SET_ASSET_TYPE | RETRY;
 
 type LOAD = {
-    type: TRANSFER_ACTIONS.LOAD;
+    type: UPLOAD_ACTIONS.LOAD;
     files: IngestionFile[];
 };
 
-type SUBMIT = {
-    type: TRANSFER_ACTIONS.SUBMIT;
-    pending: IngestionFile[];
-    failed: Map<FileId, IngestionFile>;
+type START = {
+    type: UPLOAD_ACTIONS.START;
+    id: FileId;
 };
 
-type START_NEXT = {
-    type: TRANSFER_ACTIONS.START_NEXT;
-    current: IngestionFile;
+type FAILED = {
+    type: UPLOAD_ACTIONS.FAILED;
+    id: FileId;
 };
 
-type SET_ABORT_HANDLER = {
-    type: TRANSFER_ACTIONS.SET_ABORT_HANDLER;
-    abort: null | (() => void);
-};
-
-type FILE_UPLOADED = {
-    type: TRANSFER_ACTIONS.FILE_UPLOADED;
-    previous: IngestionFile;
-};
-
-type UPLOAD_PROGRESS = {
-    type: TRANSFER_ACTIONS.UPLOAD_PROGRESS;
+type PROGRESS = {
+    type: UPLOAD_ACTIONS.PROGRESS;
     id: FileId;
     progress: number;
 };
 
-type UPLOAD_COMPLETE = {
-    type: TRANSFER_ACTIONS.UPLOAD_COMPLETE;
-};
-
-type UPLOAD_ERROR = {
-    type: TRANSFER_ACTIONS.UPLOAD_ERROR;
-    error: string;
-    previous: IngestionFile;
-};
-
-type REMOVE_FILE = {
-    type: TRANSFER_ACTIONS.REMOVE_FILE;
+type CANCELLED = {
+    type: UPLOAD_ACTIONS.CANCELLED;
     id: FileId;
-    progress: Map<FileId, number>;
-    failed: Map<FileId, IngestionFile>;
 };
 
-type CHANGE_ASSET_TYPE = {
-    type: TRANSFER_ACTIONS.CHANGE_ASSET_TYPE;
+type SUCCESS = {
+    type: UPLOAD_ACTIONS.SUCCESS;
+    id: FileId;
+};
+
+type RETRY = {
+    type: UPLOAD_ACTIONS.RETRY;
+    id: FileId;
+};
+
+type REMOVE = {
+    type: UPLOAD_ACTIONS.REMOVE;
+    id: FileId;
+};
+
+type SET_CANCEL_HANDLER = {
+    type: UPLOAD_ACTIONS.SET_CANCEL_HANDLER;
+    id: FileId;
+    cancel: (() => void) | null;
+};
+
+type SET_ASSET_TYPE = {
+    type: UPLOAD_ACTIONS.SET_ASSET_TYPE;
     id: FileId;
     assetType: AssetType;
 };
 
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
-    const { transfer } = state;
-    const { files, pending, uploaded, failed, progress, status } = transfer;
-
+    const { uploads } = state;
+    const { files } = uploads;
+    console.log(action.type);
     switch (action.type) {
-        case INGESTION_ACTION.TRANSFER.LOAD:
+        case INGESTION_ACTION.UPLOAD.LOAD:
             return {
                 ...state,
-                transfer: {
-                    ...transfer,
-                    files: action.files
+                uploads: {
+                    ...uploads,
+                    files: lodash.concat(files, action.files)
                 }
             };
 
-        case INGESTION_ACTION.TRANSFER.SUBMIT:
+        case INGESTION_ACTION.UPLOAD.START:
             return {
                 ...state,
-                transfer: {
-                    ...transfer,
-                    uploading: true,
-                    pending: action.pending,
-                    failed: action.failed,
-                    error: null,
-                    status: INGESTION_TRANSFER_STATUS.PROCESSING
+                uploads: {
+                    ...uploads,
+                    files: lodash.forEach(files, file => {
+                        if (file.id === action.id) {
+                            lodash.set(file, 'progress', 0);
+                            lodash.set(file, 'status', FileUploadStatus.UPLOADING);
+                        }
+                    })
                 }
             };
 
-        case INGESTION_ACTION.TRANSFER.START_NEXT:
+        case INGESTION_ACTION.UPLOAD.FAILED:
             return {
                 ...state,
-                transfer: {
-                    ...transfer,
-                    current: action.current
+                uploads: {
+                    ...uploads,
+                    files: lodash.forEach(files, file => {
+                        if (file.id === action.id) {
+                            lodash.set(file, 'status', FileUploadStatus.FAILED);
+                        }
+                    })
                 }
             };
 
-        case INGESTION_ACTION.TRANSFER.SET_ABORT_HANDLER:
+        case INGESTION_ACTION.UPLOAD.PROGRESS:
             return {
                 ...state,
-                transfer: {
-                    ...transfer,
-                    abort: action.abort
+                uploads: {
+                    files: lodash.forEach(files, file => {
+                        if (file.id === action.id) {
+                            lodash.set(file, 'progress', action.progress);
+                        }
+                    })
                 }
             };
 
-        case INGESTION_ACTION.TRANSFER.FILE_UPLOADED:
+        case INGESTION_ACTION.UPLOAD.CANCELLED:
             return {
                 ...state,
-                transfer: {
-                    ...transfer,
-                    current: null,
-                    pending: pending.slice(1),
-                    uploaded: uploaded.set(action.previous.id, action.previous)
+                uploads: {
+                    ...uploads,
+                    files: lodash.forEach(files, file => {
+                        if (file.id === action.id) {
+                            lodash.set(file, 'status', FileUploadStatus.CANCELLED);
+                        }
+                    })
                 }
             };
 
-        case INGESTION_ACTION.TRANSFER.UPLOAD_PROGRESS:
+        case INGESTION_ACTION.UPLOAD.SUCCESS:
             return {
                 ...state,
-                transfer: {
-                    ...transfer,
-                    progress: progress.set(action.id, action.progress)
+                uploads: {
+                    ...uploads,
+                    files: lodash.forEach(files, file => {
+                        if (file.id === action.id) {
+                            lodash.set(file, 'status', FileUploadStatus.SUCCESS);
+                        }
+                    })
                 }
             };
 
-        case INGESTION_ACTION.TRANSFER.UPLOAD_COMPLETE:
+        case INGESTION_ACTION.UPLOAD.RETRY:
             return {
                 ...state,
-                transfer: {
-                    ...transfer,
-                    current: null,
-                    uploading: false,
-                    status: status === INGESTION_TRANSFER_STATUS.ERROR ? INGESTION_TRANSFER_STATUS.ERROR : INGESTION_TRANSFER_STATUS.FINISHED
+                uploads: {
+                    ...uploads,
+                    files: lodash.forEach(files, file => {
+                        if (file.id === action.id) {
+                            lodash.set(file, 'status', FileUploadStatus.UPLOADING);
+                        }
+                    })
                 }
             };
 
-        case INGESTION_ACTION.TRANSFER.UPLOAD_ERROR:
+        case INGESTION_ACTION.UPLOAD.REMOVE:
             return {
                 ...state,
-                transfer: {
-                    ...transfer,
-                    current: null,
-                    abort: null,
-                    pending: pending.slice(1),
-                    failed: failed.set(action.previous.id, action.previous),
-                    error: action.error,
-                    status: INGESTION_TRANSFER_STATUS.ERROR
+                uploads: {
+                    ...uploads,
+                    files: files.filter(file => {
+                        return file.id !== action.id;
+                    })
                 }
             };
 
-        case INGESTION_ACTION.TRANSFER.REMOVE_FILE:
+        case INGESTION_ACTION.UPLOAD.SET_CANCEL_HANDLER:
             return {
                 ...state,
-                transfer: {
-                    ...transfer,
-                    abort: null,
-                    progress: action.progress,
-                    files: files.filter(({ id }) => id !== action.id),
-                    failed: action.failed
+                uploads: {
+                    ...uploads,
+                    files: lodash.forEach(files, file => {
+                        if (file.id === action.id) {
+                            lodash.set(file, 'cancel', action.cancel);
+                        }
+                    })
                 }
             };
 
-        case INGESTION_ACTION.TRANSFER.CHANGE_ASSET_TYPE:
+        case INGESTION_ACTION.UPLOAD.SET_ASSET_TYPE:
             return {
                 ...state,
-                transfer: {
-                    ...transfer,
+                uploads: {
+                    ...uploads,
                     files: lodash.forEach(files, file => {
                         if (file.id === action.id) {
                             lodash.set(file, 'type', action.assetType);

@@ -1,163 +1,220 @@
-import { useCallback, useEffect, useContext } from 'react';
+import { useCallback, useContext } from 'react';
 import { toast } from 'react-toastify';
 import { AppContext, AssetType } from '../../../context';
-import { TRANSFER_ACTIONS, IngestionFile, FileId, IngestionDispatchAction } from '../../../context';
-import lodash from 'lodash';
+import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus, IngestionUploadResponse, IngestionUploadStatus } from '../../../context';
 import { MUTATION_UPLOAD_ASSET, apolloUploader } from '../../../graphql';
-import { UPLOAD_STATUS } from '../../../constants';
+import lodash from 'lodash';
 
 interface UseFilesUpload {
-    onChange: (acceptedFiles: File[]) => void;
-    onSubmit: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+    loadFiles: (acceptedFiles: File[]) => void;
+    startUpload: (id: FileId) => void;
+    cancelUpload: (id: FileId) => void;
+    retryUpload: (id: FileId) => void;
+    removeUpload: (id: FileId) => void;
+    changeAssetType: (id: FileId, type: AssetType) => void;
 }
 
 const useFilesUpload = (): UseFilesUpload => {
     const { ingestion, ingestionDispatch } = useContext(AppContext);
-    const { files, pending, current, uploading, uploaded, failed } = ingestion.transfer;
+    const { files } = ingestion.uploads;
 
-    const onSubmit = useCallback(
-        (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-            event.preventDefault();
+    const getFile = useCallback((id: FileId): IngestionFile | undefined => files.find(file => file.id === id), [files]);
 
-            if (uploading) {
-                toast.info('Uploading files please wait...');
-                return;
-            }
+    const loadFiles = useCallback(
+        (acceptedFiles: File[]) => {
+            if (acceptedFiles.length) {
+                const ingestionFiles: IngestionFile[] = [];
+                acceptedFiles.forEach((file: File): void => {
+                    const id = file.name;
+                    const alreadyContains = !!lodash.find(files, { id });
 
-            if (files.length) {
-                const failedUploads = new Map<FileId, IngestionFile>(failed);
-                const pending = files.filter(({ id }) => {
-                    if (failedUploads.has(id)) {
-                        failedUploads.delete(id);
+                    const type = AssetType.Diconde;
+                    const status = FileUploadStatus.READY;
+                    const progress = 0;
+                    const cancel = null;
+
+                    if (!alreadyContains) {
+                        const ingestionFile = {
+                            id,
+                            file,
+                            status,
+                            progress,
+                            type,
+                            cancel
+                        };
+
+                        ingestionFiles.push(ingestionFile);
+                    } else {
+                        toast.info(`${file.name} was already loaded`);
                     }
-
-                    return !uploaded.has(id);
                 });
 
-                const submitAction: IngestionDispatchAction = {
-                    type: TRANSFER_ACTIONS.SUBMIT,
-                    pending,
-                    failed: failedUploads
+                const loadAction: IngestionDispatchAction = {
+                    type: UPLOAD_ACTIONS.LOAD,
+                    files: ingestionFiles
                 };
 
-                ingestionDispatch(submitAction);
-            } else {
-                toast.warn('You do not have any files loaded.');
+                ingestionDispatch(loadAction);
             }
         },
-        [uploading, files, uploaded, failed, ingestionDispatch]
+        [files, ingestionDispatch]
     );
 
-    const onChange = (acceptedFiles: File[]): void => {
-        if (acceptedFiles.length) {
-            let ingestionFiles: IngestionFile[] = [];
-            acceptedFiles.forEach((file: File): void => {
-                const id = file.name;
-                const alreadyContains = !!lodash.find(files, { id });
-                const type = AssetType.Diconde;
-
-                if (!alreadyContains) {
-                    const ingestionFile = { id, file, type };
-
-                    ingestionFiles.push(ingestionFile);
-                } else {
-                    toast.info(`${file.name} was already loaded`);
-                }
-            });
-
-            ingestionFiles = lodash.concat(files, ingestionFiles);
-
-            const loadAction: IngestionDispatchAction = {
-                type: TRANSFER_ACTIONS.LOAD,
-                files: ingestionFiles
+    const changeAssetType = useCallback(
+        (id: FileId, assetType: AssetType): void => {
+            const changeAssetTypeAction: IngestionDispatchAction = {
+                type: UPLOAD_ACTIONS.SET_ASSET_TYPE,
+                id,
+                assetType
             };
 
-            ingestionDispatch(loadAction);
+            ingestionDispatch(changeAssetTypeAction);
+        },
+        [ingestionDispatch]
+    );
+
+    const startUpload = (id: FileId) => {
+        const startAction: IngestionDispatchAction = {
+            type: UPLOAD_ACTIONS.START,
+            id
+        };
+
+        const file = getFile(id);
+
+        if (file) {
+            ingestionDispatch(startAction);
+            startUploadTransfer(file);
         }
     };
 
-    useEffect(() => {
-        const isEmpty = !pending.length;
-        if (!isEmpty) {
-            // check queue status here
+    const retryUpload = (id: FileId): void => {
+        const retryAction: IngestionDispatchAction = {
+            type: UPLOAD_ACTIONS.RETRY,
+            id
+        };
 
-            if (current) {
-                const uploadedAction: IngestionDispatchAction = {
-                    type: TRANSFER_ACTIONS.FILE_UPLOADED,
-                    previous: current
+        const file = getFile(id);
+
+        if (file) {
+            ingestionDispatch(retryAction);
+            startUploadTransfer(file);
+        }
+    };
+
+    const cancelUpload = useCallback(
+        (id: FileId): void => {
+            const file = getFile(id);
+
+            if (file) {
+                if (file.status === 'UPLOADING') {
+                    const { cancel } = file;
+                    if (cancel) {
+                        cancel();
+                        const cancelledAction: IngestionDispatchAction = {
+                            type: UPLOAD_ACTIONS.CANCELLED,
+                            id
+                        };
+
+                        ingestionDispatch(cancelledAction);
+                        toast.warn('Upload has been cancelled');
+                    }
+                }
+            }
+        },
+        [getFile, ingestionDispatch]
+    );
+
+    const removeUpload = useCallback(
+        (id: FileId): void => {
+            const removeAction: IngestionDispatchAction = {
+                type: UPLOAD_ACTIONS.REMOVE,
+                id
+            };
+
+            ingestionDispatch(removeAction);
+        },
+        [ingestionDispatch]
+    );
+
+    const startUploadTransfer = useCallback(
+        async (ingestionFile: IngestionFile) => {
+            const { id, file, type } = ingestionFile;
+
+            const successAction: IngestionDispatchAction = {
+                type: UPLOAD_ACTIONS.SUCCESS,
+                id
+            };
+
+            const errorAction: IngestionDispatchAction = {
+                type: UPLOAD_ACTIONS.FAILED,
+                id
+            };
+
+            try {
+                const onProgress = (event: ProgressEvent) => {
+                    const { loaded, total } = event;
+                    const progress = Math.floor((loaded / total) * 100);
+                    const updateProgress = !(progress % 5);
+
+                    if (updateProgress) {
+                        const uploadProgressAction: IngestionDispatchAction = {
+                            type: UPLOAD_ACTIONS.PROGRESS,
+                            id,
+                            progress
+                        };
+
+                        ingestionDispatch(uploadProgressAction);
+                    }
                 };
 
-                const errorAction = (error: string): IngestionDispatchAction => ({
-                    type: TRANSFER_ACTIONS.UPLOAD_ERROR,
-                    error,
-                    previous: current
-                });
+                const onCancel = (cancel: () => void) => {
+                    const setCancel: IngestionDispatchAction = {
+                        type: UPLOAD_ACTIONS.SET_CANCEL_HANDLER,
+                        id,
+                        cancel
+                    };
 
-                const { id, file, type } = current;
+                    ingestionDispatch(setCancel);
+                };
 
-                apolloUploader({
+                const { data }: IngestionUploadResponse = await apolloUploader({
                     mutation: MUTATION_UPLOAD_ASSET,
                     variables: { file, type },
                     useUpload: true,
-                    onProgress: (event: ProgressEvent) => {
-                        const { loaded, total } = event;
-                        const progress = Math.floor((loaded / total) * 100);
-                        const updateProgress = !(progress % 5);
+                    onProgress,
+                    onCancel
+                });
 
-                        if (updateProgress) {
-                            const uploadProgressAction: IngestionDispatchAction = {
-                                type: TRANSFER_ACTIONS.UPLOAD_PROGRESS,
-                                id,
-                                progress
-                            };
+                const { uploadAsset } = data;
 
-                            ingestionDispatch(uploadProgressAction);
-                        }
-                    },
-                    onAbort: (abort: () => void) => {
-                        const setAbortAction: IngestionDispatchAction = {
-                            type: TRANSFER_ACTIONS.SET_ABORT_HANDLER,
-                            abort
-                        };
-
-                        ingestionDispatch(setAbortAction);
+                if (uploadAsset.status === IngestionUploadStatus.SUCCESS) {
+                    ingestionDispatch(successAction);
+                    toast.success(`Upload finished for ${file.name}`);
+                } else if (uploadAsset.status === IngestionUploadStatus.FAILED) {
+                    const error = `Upload failed for ${file.name}`;
+                    toast.error(error);
+                    ingestionDispatch(errorAction);
+                }
+            } catch ({ message }) {
+                const file = getFile(id);
+                if (file) {
+                    if (file.status !== FileUploadStatus.CANCELLED) {
+                        toast.error(message);
+                        ingestionDispatch(errorAction);
                     }
-                })
-                    .then(({ data }) => {
-                        const { uploadAsset } = data;
-
-                        if (uploadAsset.status === UPLOAD_STATUS.SUCCESS) {
-                            ingestionDispatch(uploadedAction);
-                        } else {
-                            const error = `Upload failed for ${file.name}`;
-                            ingestionDispatch(errorAction(error));
-                        }
-                    })
-                    .catch(error => {
-                        const message = error.message.replace('GraphQL error:', '');
-                        ingestionDispatch(errorAction(message));
-                    });
-            } else if (!current) {
-                const current = pending[0];
-                ingestionDispatch({ type: TRANSFER_ACTIONS.START_NEXT, current });
+                }
             }
-        }
-    }, [current, pending, ingestionDispatch]);
-
-    useEffect(() => {
-        const isEmpty = !pending.length;
-        if (isEmpty && uploading) {
-            const completeAction: IngestionDispatchAction = {
-                type: TRANSFER_ACTIONS.UPLOAD_COMPLETE
-            };
-
-            ingestionDispatch(completeAction);
-        }
-    }, [pending.length, uploading, ingestionDispatch]);
+        },
+        [getFile, ingestionDispatch]
+    );
 
     return {
-        onSubmit,
-        onChange
+        loadFiles,
+        startUpload,
+        cancelUpload,
+        retryUpload,
+        removeUpload,
+        changeAssetType
     };
 };
 

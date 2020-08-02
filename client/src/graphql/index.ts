@@ -35,11 +35,11 @@ interface IApolloUploader {
     variables: unknown;
     useUpload: boolean;
     onProgress: (event: ProgressEvent) => void;
-    onAbort: (abortHandler: () => void) => void;
+    onCancel: (cancelHandler: () => void) => void;
 }
 
 const apolloUploader = (options: IApolloUploader): Promise<any> => {
-    const { mutation, variables, useUpload, onProgress, onAbort } = options;
+    const { mutation, variables, useUpload, onProgress, onCancel } = options;
 
     return apolloClient.mutate({
         mutation,
@@ -48,7 +48,7 @@ const apolloUploader = (options: IApolloUploader): Promise<any> => {
             fetchOptions: {
                 useUpload,
                 onProgress,
-                onAbort
+                onCancel
             }
         }
     });

@@ -3,11 +3,11 @@ import { Box, CircularProgress, ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
-import { Slide, toast, ToastContainer } from 'react-toastify';
+import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { PrivateRoute, PublicRoute } from './components';
 import { ROUTES } from './constants';
-import { AppContext, AppContextProvider, INGESTION_TRANSFER_STATUS } from './context';
+import { AppContext, AppContextProvider } from './context';
 import './global/root.css';
 import { apolloClient } from './graphql';
 import { About, Home, Login } from './pages';
@@ -17,8 +17,7 @@ import { AliveScope } from 'react-activation';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
-    const { user, updateUser, ingestion } = useContext(AppContext);
-    const { transfer: { status, uploading, error } } = ingestion;
+    const { user, updateUser } = useContext(AppContext);
 
     const initialize = useCallback(async () => {
         if (!user) {
@@ -32,21 +31,6 @@ function AppRouter(): React.ReactElement {
         initialize();
     }, [initialize]);
 
-    useEffect(() => {
-        if (error && uploading) {
-            toast.error(error);
-        }
-    }, [error, uploading]);
-
-    useEffect(() => {
-        if (!uploading) {
-            if (status === INGESTION_TRANSFER_STATUS.FINISHED) {
-                toast.success('Successfully uploaded files');
-            } else if (status === INGESTION_TRANSFER_STATUS.ERROR) {
-                toast.error('Some of the uploads have failed');
-            }
-        }
-    }, [status, uploading]);
 
     return (
         <Router>
@@ -93,9 +77,4 @@ function App(): React.ReactElement {
 }
 
 
-ReactDOM.render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>,
-    document.getElementById('root')
-);
+ReactDOM.render(<App />, document.getElementById('root'));
