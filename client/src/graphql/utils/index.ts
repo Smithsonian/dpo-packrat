@@ -28,12 +28,15 @@ const uploadFetch = (url: string, options: any): any =>
             const body = 'response' in xhr ? xhr.response : (xhr as any).responseText;
             resolve(new Response(body, opts));
         };
+
         xhr.onerror = () => {
             reject(new TypeError('Network request failed'));
         };
+
         xhr.ontimeout = () => {
             reject(new TypeError('Network request failed'));
         };
+
         xhr.open(options.method, url, true);
 
         Object.keys(options.headers).forEach(key => {
@@ -44,9 +47,12 @@ const uploadFetch = (url: string, options: any): any =>
             xhr.upload.onprogress = options.onProgress;
         }
 
-        options.onAbort(() => {
-            xhr.abort();
+        xhr.onabort = () => {
             reject(new TypeError('Upload cancelled'));
+        };
+
+        options.onCancel(() => {
+            xhr.abort();
         });
 
         xhr.send(options.body);

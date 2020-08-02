@@ -1,10 +1,11 @@
-import React, { useContext, useCallback } from 'react';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { AppContext, TRANSFER_ACTIONS, INGESTION_TRANSFER_STATUS, FileId, IngestionFile, IngestionDispatchAction, AssetType } from '../../../../context';
-import FileUploadListItem from './FileUploadListItem';
 import { AnimatePresence } from 'framer-motion';
+import React, { useContext } from 'react';
 import { FieldType } from '../../../../components';
+import { AppContext, AssetType, FileId, IngestionFile } from '../../../../context';
+import useFilesUpload from '../../hooks/useFilesUpload';
+import FileUploadListItem from './FileUploadListItem';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
@@ -56,7 +57,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        minHeight: 70,
+        minHeight: 80,
         width: '100%',
     },
     emptyListLabel: {
@@ -68,94 +69,40 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 
 function FileUploadList(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion, ingestionDispatch } = useContext(AppContext);
-    const { transfer } = ingestion;
-    const { files, current, uploaded, progress, abort, failed, status } = transfer;
+    const { ingestion: { uploads } } = useContext(AppContext);
+    const { files } = uploads;
 
-    const onChangeType = useCallback((id: FileId, type: AssetType): void => {
-        const changeAssetTypeAction: IngestionDispatchAction = {
-            type: TRANSFER_ACTIONS.CHANGE_ASSET_TYPE,
-            id,
-            assetType: type
-        };
+    const { changeAssetType, startUpload, retryUpload, cancelUpload, removeUpload } = useFilesUpload();
 
-        ingestionDispatch(changeAssetTypeAction);
-    }, [ingestionDispatch]);
+    const onChangeType = (id: FileId, assetType: AssetType): void => changeAssetType(id, assetType);
 
-    const onRetry = useCallback((id: FileId): void => {
-        if (status !== INGESTION_TRANSFER_STATUS.PROCESSING) {
-            const failedUploads = new Map<FileId, IngestionFile>(failed);
-            const uploadProgress = new Map<FileId, number>(progress);
+    const onUpload = (id: FileId): void => startUpload(id);
 
-            if (failedUploads.has(id)) {
-                failedUploads.delete(id);
-            }
+    const onRetry = (id: FileId): void => retryUpload(id);
 
-            if (uploadProgress.has(id)) {
-                uploadProgress.delete(id);
-            }
+    const onCancel = (id: FileId): void => cancelUpload(id);
 
-            const loadAction: IngestionDispatchAction = {
-                type: TRANSFER_ACTIONS.REMOVE_FILE,
-                id,
-                progress: uploadProgress,
-                failed: failedUploads
-            };
+    const onRemove = (id: FileId): void => removeUpload(id);
 
-            ingestionDispatch(loadAction);
-        } else {
-            if (abort) {
-                abort();
-            }
-        }
-    }, [status, failed, abort, progress, ingestionDispatch]);
-
-    const onRemove = useCallback((id: FileId): void => {
-        if (status !== INGESTION_TRANSFER_STATUS.PROCESSING) {
-            const failedUploads = new Map<FileId, IngestionFile>(failed);
-            const uploadProgress = new Map<FileId, number>(progress);
-
-            if (failedUploads.has(id)) {
-                failedUploads.delete(id);
-            }
-
-            if (uploadProgress.has(id)) {
-                uploadProgress.delete(id);
-            }
-
-            const loadAction: IngestionDispatchAction = {
-                type: TRANSFER_ACTIONS.REMOVE_FILE,
-                id,
-                progress: uploadProgress,
-                failed: failedUploads
-            };
-
-            ingestionDispatch(loadAction);
-        } else {
-            if (abort) {
-                abort();
-            }
-        }
-    }, [status, failed, abort, progress, ingestionDispatch]);
-
-    const getFileList = ({ id, file: { name, size }, type }: IngestionFile, index: number) => {
-        const uploading = current?.id === id ?? false;
-        const complete = uploaded.has(id);
-        const hasFailed = failed.has(id);
-        const progress = transfer.progress.get(id) || 0;
+    const getFileList = ({ id, file, status, progress, type }: IngestionFile, index: number) => {
+        const uploading = status === 'UPLOADING';
+        const complete = status === 'SUCCESS';
+        const failed = status === 'FAILED' || status === 'CANCELLED';
 
         return (
             <AnimatePresence key={index}>
                 <FileUploadListItem
                     id={id}
-                    name={name}
-                    size={size}
+                    file={file}
                     type={type}
                     uploading={uploading}
                     complete={complete}
-                    failed={hasFailed}
+                    failed={failed}
                     progress={progress}
+                    status={status}
                     onChangeType={onChangeType}
+                    onCancel={onCancel}
+                    onUpload={onUpload}
                     onRetry={onRetry}
                     onRemove={onRemove}
                 />

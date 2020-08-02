@@ -1,14 +1,12 @@
-import React, { useCallback, useContext } from 'react';
 import { Button, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { UPLOAD_FILE_TYPES } from '../../../../constants';
-
+import React from 'react';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
+import { toast } from 'react-toastify';
+import { UPLOAD_FILE_TYPES } from '../../../../constants';
 import { Colors } from '../../../../theme';
 import useFilesUpload from '../../hooks/useFilesUpload';
-import { toast } from 'react-toastify';
-import { AppContext } from '../../../../context';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -40,33 +38,28 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 
 function IngestionFilesPicker(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion } = useContext(AppContext);
-    const { transfer: { uploading, failed } } = ingestion;
+    const { loadFiles } = useFilesUpload();
 
-    const { onChange, onSubmit } = useFilesUpload();
-
-    const onDrop = useCallback((acceptedFiles: File[]) => {
-        let filesAllowed: boolean = true;
-
-        acceptedFiles.forEach((acceptedFile: File) => {
+    const onDrop = (acceptedFiles: File[]) => {
+        const checkedFiles: File[] = acceptedFiles.filter((acceptedFile: File) => {
             const { type } = acceptedFile;
             const [ext] = type.split('/').splice(-1);
 
-            if (!UPLOAD_FILE_TYPES.includes(ext)) {
-                filesAllowed = false;
+            const isAllowed = UPLOAD_FILE_TYPES.includes(ext);
+
+            if (!isAllowed) {
                 toast.error(`*.${ext} file type is not allowed`);
+                return false;
             }
+
+            return true;
         });
 
-        if (filesAllowed) {
-            onChange(acceptedFiles);
-        }
-    }, [onChange]);
-
-    const hasError = !!failed.size;
+        loadFiles(checkedFiles);
+    };
 
     return (
-        <Dropzone noClick noDrag={uploading} onDrop={onDrop}>
+        <Dropzone noClick onDrop={onDrop}>
             {({ getRootProps, getInputProps, open }) => (
                 <div className={classes.container} {...getRootProps()}>
                     <BsCloudUpload className={classes.icon} size='25%' />
@@ -78,19 +71,9 @@ function IngestionFilesPicker(): React.ReactElement {
                         color='primary'
                         variant='contained'
                         onClick={open}
-                        disabled={uploading}
                         disableElevation
                     >
                         Browse files
-                    </Button>
-                    <Button
-                        className={classes.button}
-                        color='primary'
-                        variant='contained'
-                        onClick={onSubmit}
-                        disableElevation
-                    >
-                        {uploading ? 'Uploading...' : hasError ? 'Retry' : 'Upload'}
                     </Button>
                 </div>
             )}

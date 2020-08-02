@@ -24,6 +24,10 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
     const stream = fileStream.pipe(createWriteStream(`${path}/${filename}`));
 
     return new Promise(resolve => {
+        fileStream.on('error', () => {
+            stream.emit('error');
+        });
+
         stream.on('finish', () => {
             resolve({ status: UploadStatus.Success });
         });
