@@ -127,7 +127,7 @@ type SET_ASSET_TYPE = {
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
     const { uploads } = state;
     const { files } = uploads;
-    console.log(action.type);
+
     switch (action.type) {
         case INGESTION_ACTION.UPLOAD.LOAD:
             return {

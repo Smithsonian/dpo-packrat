@@ -1,6 +1,6 @@
 import { Box, Grid } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState, useEffect } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useParams } from 'react-router';
 import { HOME_ROUTES } from '../../../constants';
@@ -128,4 +128,4 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
     );
 }
 
-export default SidePanel;
+export default memo(SidePanel);
