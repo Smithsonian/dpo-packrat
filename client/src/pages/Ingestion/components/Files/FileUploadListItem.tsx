@@ -16,7 +16,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         display: 'flex',
         minHeight: 70,
         alignItems: 'center',
-        backgroundColor: ({ complete }: FileUploadListItemProps) => complete ? colorWithOpacity(palette.success.light, 66) : palette.background.paper,
+        backgroundColor: palette.background.paper,
         marginTop: 10,
         borderRadius: 5,
         zIndex: 10,
@@ -87,7 +87,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         position: 'absolute',
         height: '100%',
         width: ({ progress }: FileUploadListItemProps) => `${progress}%`,
-        backgroundColor: ({ complete, failed }: FileUploadListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? 'transparent' : colorWithOpacity(palette.secondary.light, 66),
+        backgroundColor: ({ complete, failed }: FileUploadListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? colorWithOpacity(palette.success.light, 66) : palette.secondary.light,
         zIndex: 5,
         top: 0,
         left: 0,
@@ -104,6 +104,7 @@ interface FileUploadListItemProps {
     complete: boolean;
     progress: number;
     failed: boolean;
+    cancelled: boolean;
     type: AssetType;
     status: string;
     onUpload: (id: FileId) => void;

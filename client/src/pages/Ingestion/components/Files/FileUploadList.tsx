@@ -87,7 +87,8 @@ function FileUploadList(): React.ReactElement {
     const getFileList = ({ id, file, status, progress, type }: IngestionFile, index: number) => {
         const uploading = status === 'UPLOADING';
         const complete = status === 'SUCCESS';
-        const failed = status === 'FAILED' || status === 'CANCELLED';
+        const failed = status === 'FAILED';
+        const cancelled = status === 'CANCELLED';
 
         return (
             <AnimatePresence key={index}>
@@ -98,6 +99,7 @@ function FileUploadList(): React.ReactElement {
                     uploading={uploading}
                     complete={complete}
                     failed={failed}
+                    cancelled={cancelled}
                     progress={progress}
                     status={status}
                     onChangeType={onChangeType}
@@ -126,9 +128,7 @@ function FileUploadList(): React.ReactElement {
                         </Box>
                     </Box>
                     <Box className={classes.list}>
-                        {!files.length && (
-                            <Typography className={classes.emptyListLabel} variant='body1'>No files loaded yet</Typography>
-                        )}
+                        {!files.length && <Typography className={classes.emptyListLabel} variant='body1'>No files loaded yet</Typography>}
                         {files.map(getFileList)}
                     </Box>
                 </>
