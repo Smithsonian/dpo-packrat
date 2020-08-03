@@ -120,13 +120,15 @@ model AssetVersion {
   StorageLocation String
   StorageChecksum String
   StorageSize     Int           @default(0)
+  Ingested        Boolean
   Asset           Asset         @relation(fields: [idAsset], references: [idAsset])
   User            User          @relation(fields: [idUserCreator], references: [idUser])
   SystemObject    SystemObject?
 
+  @@index([Ingested, idUserCreator], name: "AssetVersion_Ingested_idUserCreator")
   @@index([StorageChecksum], name: "AssetVersion_StorageChecksum")
   @@index([idAsset, DateCreated], name: "AssetVersion_idAsset_DateCreated")
-  @@index([idUserCreator], name: "fk_assetversion_user1")
+  @@index([idUserCreator, Ingested], name: "AssetVersion_idUserCreator_Ingested")
 }
 
 model CaptureData {
