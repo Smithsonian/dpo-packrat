@@ -6,6 +6,7 @@ import { MUTATION_UPLOAD_ASSET, apolloUploader } from '../../../graphql';
 import lodash from 'lodash';
 
 interface UseFilesUpload {
+    getSelectedFiles: () => IngestionFile[];
     loadFiles: (acceptedFiles: File[]) => void;
     startUpload: (id: FileId) => void;
     cancelUpload: (id: FileId) => void;
@@ -18,7 +19,8 @@ const useFilesUpload = (): UseFilesUpload => {
     const { ingestion, ingestionDispatch } = useContext(AppContext);
     const { files } = ingestion.uploads;
 
-    const getFile = useCallback((id: FileId): IngestionFile | undefined => files.find(file => file.id === id), [files]);
+    const getSelectedFiles = useCallback((): IngestionFile[] => files.filter(({ selected }) => selected), [files]);
+    const getFile = useCallback((id: FileId): IngestionFile | undefined => lodash.find(files, { id }), [files]);
 
     const loadFiles = useCallback(
         (acceptedFiles: File[]) => {
@@ -209,6 +211,7 @@ const useFilesUpload = (): UseFilesUpload => {
     );
 
     return {
+        getSelectedFiles,
         loadFiles,
         startUpload,
         cancelUpload,

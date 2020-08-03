@@ -7,6 +7,9 @@ import { HOME_ROUTES, INGESTION_ROUTE, resolveRoute, resolveSubRoute } from '../
 import { Colors } from '../../../../theme';
 import UploadFilesPicker from './UploadFilesPicker';
 import UploadList from './UploadList';
+import { useHistory } from 'react-router';
+import useFilesUpload from '../../hooks/useFilesUpload';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -48,6 +51,19 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 
 function Uploads(): React.ReactElement {
     const classes = useStyles();
+    const history = useHistory();
+    const { getSelectedFiles } = useFilesUpload();
+
+    const onIngest = () => {
+        const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
+        const selectedFiles = getSelectedFiles();
+
+        if (selectedFiles.length) {
+            history.push(nextStep);
+        } else {
+            toast.warn('Please select at least 1 file to ingest');
+        }
+    };
 
     return (
         <KeepAlive>
@@ -60,7 +76,7 @@ function Uploads(): React.ReactElement {
                     leftLabel='Discard'
                     leftRoute={resolveRoute(HOME_ROUTES.DASHBOARD)}
                     rightLabel='Ingest'
-                    rightRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM)}
+                    onClickRight={onIngest}
                 />
             </Box>
         </KeepAlive >
