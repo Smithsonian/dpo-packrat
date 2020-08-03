@@ -46,8 +46,13 @@ type IngestionUploads = {
     loading: boolean;
 };
 
+export type MetadataStep = {
+    file: IngestionFile;
+};
+
 export type Ingestion = {
     uploads: IngestionUploads;
+    metadata: MetadataStep[];
 };
 
 export enum UPLOAD_ACTIONS {
@@ -66,31 +71,24 @@ export enum UPLOAD_ACTIONS {
     SET_ASSET_TYPE = 'SET_ASSET_TYPE'
 }
 
+export enum METADATA_ACTIONS {
+    ADD_STEP = 'ADD_STEP'
+}
+
 const INGESTION_ACTION = {
-    UPLOAD: UPLOAD_ACTIONS
+    UPLOAD: UPLOAD_ACTIONS,
+    METADATA: METADATA_ACTIONS
 };
 
 const ingestionState: Ingestion = {
     uploads: {
         files: [],
         loading: true
-    }
+    },
+    metadata: []
 };
 
-export type IngestionDispatchAction =
-    | FETCH_COMPLETE
-    | FETCH_FAILED
-    | LOAD
-    | START
-    | FAILED
-    | PROGRESS
-    | CANCELLED
-    | COMPLETE
-    | REMOVE
-    | SELECT
-    | SET_CANCEL_HANDLER
-    | SET_ASSET_TYPE
-    | RETRY;
+type UploadDispatchAction = FETCH_COMPLETE | FETCH_FAILED | LOAD | START | FAILED | PROGRESS | CANCELLED | COMPLETE | REMOVE | SELECT | SET_CANCEL_HANDLER | SET_ASSET_TYPE | RETRY;
 
 type FETCH_COMPLETE = {
     type: UPLOAD_ACTIONS.FETCH_COMPLETE;
@@ -160,11 +158,20 @@ type SET_ASSET_TYPE = {
     assetType: AssetType;
 };
 
+type MetadataDispatchAction = ADD_STEP;
+
+type ADD_STEP = {
+    type: METADATA_ACTIONS.ADD_STEP;
+    metadata: MetadataStep[];
+};
+
+export type IngestionDispatchAction = UploadDispatchAction | MetadataDispatchAction;
+
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
     const { uploads } = state;
     const { files } = uploads;
 
-    console.log(action);
+    console.log(action.type);
 
     switch (action.type) {
         case INGESTION_ACTION.UPLOAD.FETCH_COMPLETE:
@@ -255,6 +262,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                     files: lodash.forEach(files, file => {
                         if (file.id === action.id) {
                             lodash.set(file, 'status', FileUploadStatus.COMPLETE);
+                            lodash.set(file, 'cancel', null);
                         }
                     })
                 }
@@ -323,6 +331,12 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 }
             };
 
+        case INGESTION_ACTION.METADATA.ADD_STEP:
+            return {
+                ...state,
+                metadata: action.metadata
+            };
+
         default:
             return state;
     }
@@ -337,7 +351,7 @@ export interface IngestionReducer {
 
 export default function useIngestionContext(): IngestionReducer {
     const [ingestion, ingestionDispatch] = useReducer(ingestionReducer, ingestionState);
-
+    console.log(ingestion.metadata);
     return {
         ingestion,
         ingestionDispatch

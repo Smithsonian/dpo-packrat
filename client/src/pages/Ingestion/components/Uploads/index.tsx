@@ -52,13 +52,13 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 function Uploads(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const { getSelectedFiles } = useFilesUpload();
+    const { updateMetadataSteps } = useFilesUpload();
 
     const onIngest = () => {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
-        const selectedFiles = getSelectedFiles();
+        const success = updateMetadataSteps();
 
-        if (selectedFiles.length) {
+        if (success) {
             history.push(nextStep);
         } else {
             toast.warn('Please select at least 1 file to ingest');
