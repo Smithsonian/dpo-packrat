@@ -25,10 +25,6 @@ function Ingestion(): React.ReactElement {
             type: INGESTION_ROUTE.ROUTES.UPLOADS
         },
         {
-            label: 'Files',
-            type: INGESTION_ROUTE.ROUTES.FILES
-        },
-        {
             label: 'Subject & Item',
             type: INGESTION_ROUTE.ROUTES.SUBJECT_ITEM
         },
@@ -41,7 +37,7 @@ function Ingestion(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <PrivateRoute exact path={path}>
-                <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.FILES)} />
+                <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)} />
             </PrivateRoute>
 
             <PrivateRoute path={resolveRoute(INGESTION_ROUTE.TYPE)}>
