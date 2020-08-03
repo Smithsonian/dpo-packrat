@@ -13,6 +13,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     StorageChecksum!: string;
     StorageLocation!: string;
     StorageSize!: number;
+    Ingested!: boolean;
 
     constructor(input: AssetVersionBase) {
         super(input);
@@ -22,10 +23,10 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { DateCreated, idAsset, idUserCreator, StorageChecksum, StorageLocation, StorageSize } = this;
+            const { DateCreated, idAsset, idUserCreator, StorageChecksum, StorageLocation, StorageSize, Ingested } = this;
             ({ idAssetVersion: this.idAssetVersion, DateCreated: this.DateCreated, idAsset: this.idAsset,
                 idUserCreator: this.idUserCreator, StorageChecksum: this.StorageChecksum,
-                StorageLocation: this.StorageLocation, StorageSize: this.StorageSize } =
+                StorageLocation: this.StorageLocation, StorageSize: this.StorageSize, Ingested: this.Ingested } =
                 await DBC.DBConnection.prisma.assetVersion.create({
                     data: {
                         Asset:              { connect: { idAsset }, },
@@ -34,6 +35,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                         StorageLocation,
                         StorageChecksum,
                         StorageSize,
+                        Ingested,
                         SystemObject:       { create: { Retired: false }, },
                     },
                 }));
@@ -46,7 +48,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAssetVersion, DateCreated, idAsset, idUserCreator, StorageChecksum, StorageLocation, StorageSize } = this;
+            const { idAssetVersion, DateCreated, idAsset, idUserCreator, StorageChecksum, StorageLocation, StorageSize, Ingested } = this;
             return await DBC.DBConnection.prisma.assetVersion.update({
                 where: { idAssetVersion, },
                 data: {
@@ -56,6 +58,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                     StorageLocation,
                     StorageChecksum,
                     StorageSize,
+                    Ingested,
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
@@ -107,6 +110,28 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchFromUser', error);
+            return null;
+        }
+    }
+
+    static async fetchFromUserByIngested(idUserCreator: number, Ingested: boolean): Promise<AssetVersion[] | null> {
+        if (!idUserCreator)
+            return null;
+        try {
+            return DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator, Ingested } }), AssetVersion);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Asset.fetchFromUserByIngested', error);
+            return null;
+        }
+    }
+
+    static async fetchByIngested(Ingested: boolean): Promise<AssetVersion[] | null> {
+        try {
+            return DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBC.DBConnection.prisma.assetVersion.findMany({ where: { Ingested } }), AssetVersion);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Asset.fetchByIngested', error);
             return null;
         }
     }
