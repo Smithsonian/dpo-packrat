@@ -5,7 +5,6 @@ import { Redirect, useRouteMatch } from 'react-router';
 import { PrivateRoute, SidebarMenu, SidebarOption } from '../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, INGESTION_PARAMS_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
 import Uploads from './components/Uploads';
-import Files from './components/Files';
 import Metadata from './components/Metadata';
 import SubjectItem from './components/SubjectItem';
 
@@ -55,12 +54,6 @@ function Ingestion(): React.ReactElement {
                         exact
                         path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)}
                         component={Uploads}
-                    />
-
-                    <PrivateRoute
-                        exact
-                        path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.FILES)}
-                        component={Files}
                     />
 
                     <PrivateRoute
