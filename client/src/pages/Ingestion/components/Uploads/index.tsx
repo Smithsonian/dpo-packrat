@@ -1,11 +1,12 @@
-import React from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-
-import { Colors } from '../../../../theme';
-import UploadList from './UploadList';
-import UploadFilesPicker from './UploadFilesPicker';
+import React from 'react';
 import KeepAlive from 'react-activation';
+import { SidebarBottomNavigator } from '../../../../components';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveRoute, resolveSubRoute } from '../../../../constants';
+import { Colors } from '../../../../theme';
+import UploadFilesPicker from './UploadFilesPicker';
+import UploadList from './UploadList';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -55,6 +56,12 @@ function Uploads(): React.ReactElement {
                     <UploadFilesPicker />
                     <UploadList />
                 </Box>
+                <SidebarBottomNavigator
+                    leftLabel='Discard'
+                    leftRoute={resolveRoute(HOME_ROUTES.DASHBOARD)}
+                    rightLabel='Ingest'
+                    rightRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM)}
+                />
             </Box>
         </KeepAlive >
     );

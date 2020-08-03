@@ -29,7 +29,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
         });
 
         stream.on('finish', () => {
-            resolve({ status: UploadStatus.Success });
+            resolve({ status: UploadStatus.Complete });
         });
 
         stream.on('error', () => {

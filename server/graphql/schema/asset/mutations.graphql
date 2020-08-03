@@ -10,7 +10,7 @@ type Mutation {
 }
 
 enum UploadStatus {
-    SUCCESS
+    COMPLETE
     FAILED
 }
 

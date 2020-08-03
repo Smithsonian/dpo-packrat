@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Typography, Select, MenuItem, CircularProgress } from '@material-ui/core';
-import { green, red, yellow } from '@material-ui/core/colors';
+import { green, red, yellow, grey, blue } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
-import { IoIosCloseCircle, IoMdCheckmark } from 'react-icons/io';
-import { FaRedo } from 'react-icons/fa';
+import { IoIosCloseCircle } from 'react-icons/io';
+import { FaRedo, FaRegCircle, FaDotCircle } from 'react-icons/fa';
 import { MdFileUpload } from 'react-icons/md';
 import { colorWithOpacity } from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
@@ -19,13 +19,15 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         backgroundColor: palette.background.paper,
         marginTop: 10,
         borderRadius: 5,
+        width: '100%',
         zIndex: 10,
         overflow: 'hidden'
     },
     item: {
         display: 'flex',
         width: '100%',
-        zIndex: 'inherit'
+        zIndex: 'inherit',
+        cursor: ({ complete }: UploadListItemProps) => complete ? 'pointer' : 'default'
     },
     details: {
         display: 'flex',
@@ -88,7 +90,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         position: 'absolute',
         height: '100%',
         width: ({ progress }: UploadListItemProps) => `${progress}%`,
-        backgroundColor: ({ complete, failed }: UploadListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? colorWithOpacity(palette.success.light, 66) : palette.secondary.light,
+        backgroundColor: ({ complete, failed }: UploadListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? colorWithOpacity(palette.success.light, 33) : palette.secondary.light,
         zIndex: 5,
         top: 0,
         left: 0,
@@ -100,7 +102,9 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 
 interface UploadListItemProps {
     id: FileId;
-    file: File,
+    size: number;
+    name: string;
+    selected: boolean;
     uploading: boolean;
     complete: boolean;
     progress: number;
@@ -108,6 +112,7 @@ interface UploadListItemProps {
     cancelled: boolean;
     type: AssetType;
     status: string;
+    onSelect: (id: FileId, selected: boolean) => void;
     onUpload: (id: FileId) => void;
     onCancel: (id: FileId) => void;
     onRetry: (id: FileId) => void;
@@ -116,23 +121,32 @@ interface UploadListItemProps {
 }
 
 function UploadListItem(props: UploadListItemProps): React.ReactElement {
-    const { id, file, type, status, complete, progress, failed, uploading, onChangeType, onUpload, onCancel, onRemove, onRetry } = props;
-    const { name, size } = file;
+    const { id, name, size, type, status, complete, progress, selected, failed, uploading, onChangeType, onUpload, onCancel, onRemove, onRetry, onSelect } = props;
     const classes = useStyles(props);
-
-    let options: React.ReactElement = <IoMdCheckmark className={classes.option} size={24} color={green[500]} />;
 
     const upload = () => onUpload(id);
     const remove = () => uploading ? onCancel(id) : onRemove(id);
     const retry = () => onRetry(id);
+    const select = () => complete ? onSelect(id, !selected) : null;
+
+    let options: React.ReactElement | null = null;
 
     if (!complete) {
         options = (
             <>
-                {!uploading && !complete && !failed && <MdFileUpload className={classes.option} onClick={upload} size={26} color={green[500]} />}
-                {uploading && !complete && !failed && <CircularProgress className={classes.option} size={20} color='primary' />}
+                {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={26} color={green[500]} />}
+                {uploading && !failed && <CircularProgress className={classes.option} size={20} color='primary' />}
                 {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={yellow[600]} />}
                 <IoIosCloseCircle className={classes.option} onClick={remove} size={24} color={red[500]} />
+            </>
+        );
+    }
+
+    if (complete) {
+        options = (
+            <>
+                {!selected && <FaRegCircle className={classes.option} size={24} color={grey[500]} />}
+                {selected && <FaDotCircle className={classes.option} size={24} color={blue[500]} />}
             </>
         );
     }
@@ -150,8 +164,9 @@ function UploadListItem(props: UploadListItemProps): React.ReactElement {
             variants={variants}
             initial='hidden'
             animate='visible'
+            whileTap={{ scale: complete ? 0.95 : 1 }}
         >
-            <Box className={classes.item}>
+            <Box className={classes.item} onClick={select}>
                 <Box className={classes.details}>
                     <Box>
                         <Typography className={classes.name} variant='caption'>{name}</Typography>

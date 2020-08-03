@@ -1,12 +1,13 @@
 import { Button, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useContext } from 'react';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
 import { toast } from 'react-toastify';
 import { UPLOAD_FILE_TYPES } from '../../../../constants';
 import { Colors } from '../../../../theme';
 import useFilesUpload from '../../hooks/useFilesUpload';
+import { AppContext } from '../../../../context';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -38,6 +39,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 
 function UploadFilesPicker(): React.ReactElement {
     const classes = useStyles();
+    const { ingestion: { uploads: { loading } } } = useContext(AppContext);
     const { loadFiles } = useFilesUpload();
 
     const onDrop = (acceptedFiles: File[]) => {
@@ -59,7 +61,7 @@ function UploadFilesPicker(): React.ReactElement {
     };
 
     return (
-        <Dropzone noClick onDrop={onDrop}>
+        <Dropzone noClick noDrag={loading} onDrop={onDrop}>
             {({ getRootProps, getInputProps, open }) => (
                 <div className={classes.container} {...getRootProps()}>
                     <BsCloudUpload className={classes.icon} size='25%' />
@@ -71,6 +73,7 @@ function UploadFilesPicker(): React.ReactElement {
                         color='primary'
                         variant='contained'
                         onClick={open}
+                        disabled={loading}
                         disableElevation
                     >
                         Browse files

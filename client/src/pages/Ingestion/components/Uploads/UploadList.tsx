@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { AnimatePresence } from 'framer-motion';
 import React, { useContext } from 'react';
 import { FieldType } from '../../../../components';
-import { AppContext, AssetType, FileId, IngestionFile } from '../../../../context';
+import { AppContext, AssetType, FileId, IngestionFile, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS } from '../../../../context';
 import useFilesUpload from '../../hooks/useFilesUpload';
 import UploadListItem from './UploadListItem';
 
@@ -56,11 +56,12 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     list: {
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
         minHeight: 80,
         width: '100%',
     },
-    emptyListLabel: {
+    listDetail: {
         textAlign: 'center',
         color: palette.grey[500],
         fontStyle: 'italic'
@@ -69,8 +70,20 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 
 function UploadList(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion: { uploads } } = useContext(AppContext);
-    const { files } = uploads;
+    const { ingestion: { uploads }, ingestionDispatch } = useContext(AppContext);
+    const { files, loading } = uploads;
+
+    React.useEffect(() => {
+        setTimeout(() => {
+            // fetch from server, and process here with FETCH_FAILED
+            const fetchSuccessAction: IngestionDispatchAction = {
+                type: UPLOAD_ACTIONS.FETCH_COMPLETE,
+                files: []
+            };
+
+            ingestionDispatch(fetchSuccessAction);
+        }, 2000);
+    }, [ingestionDispatch]);
 
     const { changeAssetType, startUpload, retryUpload, cancelUpload, removeUpload } = useFilesUpload();
 
@@ -84,18 +97,30 @@ function UploadList(): React.ReactElement {
 
     const onRemove = (id: FileId): void => removeUpload(id);
 
-    const getFileList = ({ id, file, status, progress, type }: IngestionFile, index: number) => {
-        const uploading = status === 'UPLOADING';
-        const complete = status === 'SUCCESS';
-        const failed = status === 'FAILED';
-        const cancelled = status === 'CANCELLED';
+    const onSelect = (id: FileId, selected: boolean): void => {
+        const selectAction: IngestionDispatchAction = {
+            type: UPLOAD_ACTIONS.SELECT,
+            id,
+            selected
+        };
+
+        ingestionDispatch(selectAction);
+    };
+
+    const getFileList = ({ id, name, size, status, selected, progress, type }: IngestionFile, index: number) => {
+        const uploading = status === FileUploadStatus.UPLOADING;
+        const complete = status === FileUploadStatus.COMPLETE;
+        const failed = status === FileUploadStatus.FAILED;
+        const cancelled = status === FileUploadStatus.CANCELLED;
 
         return (
             <AnimatePresence key={index}>
                 <UploadListItem
                     id={id}
-                    file={file}
+                    name={name}
+                    size={size}
                     type={type}
+                    selected={selected}
                     uploading={uploading}
                     complete={complete}
                     failed={failed}
@@ -103,6 +128,7 @@ function UploadList(): React.ReactElement {
                     progress={progress}
                     status={status}
                     onChangeType={onChangeType}
+                    onSelect={onSelect}
                     onCancel={onCancel}
                     onUpload={onUpload}
                     onRetry={onRetry}
@@ -128,8 +154,14 @@ function UploadList(): React.ReactElement {
                         </Box>
                     </Box>
                     <Box className={classes.list}>
-                        {!files.length && <Typography className={classes.emptyListLabel} variant='body1'>No files loaded yet</Typography>}
-                        {files.map(getFileList)}
+                        {loading ?
+                            <Typography className={classes.listDetail} variant='body1'>Fetching available files...</Typography>
+                            :
+                            <>
+                                {!files.length && <Typography className={classes.listDetail} variant='body1'>No files available</Typography>}
+                                {files.map(getFileList)}
+                            </>
+                        }
                     </Box>
                 </>
             </FieldType>

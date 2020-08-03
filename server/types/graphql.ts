@@ -853,7 +853,7 @@ export type MutationCreateVocabularySetArgs = {
 };
 
 export enum UploadStatus {
-    Success = 'SUCCESS',
+    Complete = 'COMPLETE',
     Failed = 'FAILED'
 }
 
