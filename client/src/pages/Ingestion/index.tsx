@@ -4,6 +4,7 @@ import React from 'react';
 import { Redirect, useRouteMatch } from 'react-router';
 import { PrivateRoute, SidebarMenu, SidebarOption } from '../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, INGESTION_PARAMS_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
+import Uploads from './components/Uploads';
 import Files from './components/Files';
 import Metadata from './components/Metadata';
 import SubjectItem from './components/SubjectItem';
@@ -20,6 +21,10 @@ function Ingestion(): React.ReactElement {
     const { path } = useRouteMatch();
 
     const options: SidebarOption[] = [
+        {
+            label: 'Uploads',
+            type: INGESTION_ROUTE.ROUTES.UPLOADS
+        },
         {
             label: 'Files',
             type: INGESTION_ROUTE.ROUTES.FILES
@@ -46,6 +51,12 @@ function Ingestion(): React.ReactElement {
                     paramIdentifier={INGESTION_PARAMS_TYPE.STEP}
                     options={options}
                 >
+                    <PrivateRoute
+                        exact
+                        path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)}
+                        component={Uploads}
+                    />
+
                     <PrivateRoute
                         exact
                         path={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.FILES)}

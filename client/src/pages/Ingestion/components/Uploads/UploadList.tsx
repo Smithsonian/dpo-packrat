@@ -5,7 +5,7 @@ import React, { useContext } from 'react';
 import { FieldType } from '../../../../components';
 import { AppContext, AssetType, FileId, IngestionFile } from '../../../../context';
 import useFilesUpload from '../../hooks/useFilesUpload';
-import FileUploadListItem from './FileUploadListItem';
+import UploadListItem from './UploadListItem';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
@@ -67,7 +67,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     },
 }));
 
-function FileUploadList(): React.ReactElement {
+function UploadList(): React.ReactElement {
     const classes = useStyles();
     const { ingestion: { uploads } } = useContext(AppContext);
     const { files } = uploads;
@@ -92,7 +92,7 @@ function FileUploadList(): React.ReactElement {
 
         return (
             <AnimatePresence key={index}>
-                <FileUploadListItem
+                <UploadListItem
                     id={id}
                     file={file}
                     type={type}
@@ -138,4 +138,4 @@ function FileUploadList(): React.ReactElement {
     );
 }
 
-export default FileUploadList;
+export default UploadList;

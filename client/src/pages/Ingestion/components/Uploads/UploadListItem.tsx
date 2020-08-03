@@ -70,6 +70,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         width: '80%',
         padding: '0px 10px',
         borderRadius: 5,
+        fontSize: '0.8rem',
         border: `1px solid ${colorWithOpacity(palette.primary.main, 66)}`
     },
     options: {
@@ -86,8 +87,8 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     progress: {
         position: 'absolute',
         height: '100%',
-        width: ({ progress }: FileUploadListItemProps) => `${progress}%`,
-        backgroundColor: ({ complete, failed }: FileUploadListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? colorWithOpacity(palette.success.light, 66) : palette.secondary.light,
+        width: ({ progress }: UploadListItemProps) => `${progress}%`,
+        backgroundColor: ({ complete, failed }: UploadListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? colorWithOpacity(palette.success.light, 66) : palette.secondary.light,
         zIndex: 5,
         top: 0,
         left: 0,
@@ -97,7 +98,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     }
 }));
 
-interface FileUploadListItemProps {
+interface UploadListItemProps {
     id: FileId;
     file: File,
     uploading: boolean;
@@ -114,7 +115,7 @@ interface FileUploadListItemProps {
     onChangeType: (id: FileId, type: AssetType) => void;
 }
 
-function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement {
+function UploadListItem(props: UploadListItemProps): React.ReactElement {
     const { id, file, type, status, complete, progress, failed, uploading, onChangeType, onUpload, onCancel, onRemove, onRetry } = props;
     const { name, size } = file;
     const classes = useStyles(props);
@@ -174,6 +175,7 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
                         value={type}
                         className={classes.typeSelect}
                         disabled={uploading || complete}
+                        renderValue={value => `Capture Data: ${value}`}
                         onChange={({ target: { value } }) => onChangeType(id, value as AssetType)}
                         disableUnderline
                     >
@@ -189,4 +191,4 @@ function FileUploadListItem(props: FileUploadListItemProps): React.ReactElement 
     );
 }
 
-export default FileUploadListItem;
+export default UploadListItem;

@@ -19,6 +19,7 @@ export const HOME_ROUTE = {
 };
 
 export enum INGESTION_ROUTES_TYPE {
+    UPLOADS = 'uploads',
     FILES = 'files',
     SUBJECT_ITEM = 'subject_item',
     METADATA = 'metadata'
