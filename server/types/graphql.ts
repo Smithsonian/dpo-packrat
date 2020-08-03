@@ -78,6 +78,7 @@ export type AssetVersion = {
     StorageChecksum: Scalars['String'];
     StorageLocation: Scalars['String'];
     StorageSize: Scalars['Int'];
+    Ingested: Scalars['Boolean'];
     Asset?: Maybe<Asset>;
     User?: Maybe<User>;
     SystemObject?: Maybe<SystemObject>;

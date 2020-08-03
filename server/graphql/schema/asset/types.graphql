@@ -18,6 +18,7 @@ type AssetVersion {
     StorageChecksum: String!
     StorageLocation: String!
     StorageSize: Int!
+    Ingested: Boolean!
     Asset: Asset
     User: User
     SystemObject: SystemObject
