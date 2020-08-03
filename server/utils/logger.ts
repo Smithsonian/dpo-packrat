@@ -28,6 +28,7 @@ export function configureLogger(logPath: string): void {
         ]
     });
 
+    /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
         logger.add(new winston.transports.Console({
             // format: winston.format.simple(), // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
