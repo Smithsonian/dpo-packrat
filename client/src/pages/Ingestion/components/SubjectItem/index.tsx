@@ -28,7 +28,7 @@ function SubjectItem(): React.ReactElement {
             </Box>
             <SidebarBottomNavigator
                 leftLabel='Previous'
-                leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.FILES)}
+                leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)}
                 rightLabel='Next'
                 rightRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.METADATA)}
             />
