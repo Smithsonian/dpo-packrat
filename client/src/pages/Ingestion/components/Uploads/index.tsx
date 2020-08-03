@@ -1,10 +1,11 @@
 import React from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { resolveRoute, HOME_ROUTES, resolveSubRoute, INGESTION_ROUTE } from '../../../../constants';
-import { SidebarBottomNavigator } from '../../../../components';
 
 import { Colors } from '../../../../theme';
+import UploadList from './UploadList';
+import UploadFilesPicker from './UploadFilesPicker';
+import KeepAlive from 'react-activation';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -44,19 +45,19 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     },
 }));
 
-function Files(): React.ReactElement {
+function Uploads(): React.ReactElement {
     const classes = useStyles();
 
     return (
-        <Box className={classes.container} >
-            <SidebarBottomNavigator
-                leftLabel='Cancel'
-                leftRoute={resolveRoute(HOME_ROUTES.DASHBOARD)}
-                rightLabel='Next'
-                rightRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM)}
-            />
-        </Box >
+        <KeepAlive>
+            <Box className={classes.container}>
+                <Box className={classes.content}>
+                    <UploadFilesPicker />
+                    <UploadList />
+                </Box>
+            </Box>
+        </KeepAlive >
     );
 }
 
-export default Files;
+export default Uploads;

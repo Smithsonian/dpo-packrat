@@ -36,7 +36,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     },
 }));
 
-function IngestionFilesPicker(): React.ReactElement {
+function UploadFilesPicker(): React.ReactElement {
     const classes = useStyles();
     const { loadFiles } = useFilesUpload();
 
@@ -82,4 +82,4 @@ function IngestionFilesPicker(): React.ReactElement {
 }
 
 
-export default IngestionFilesPicker;
+export default UploadFilesPicker;
