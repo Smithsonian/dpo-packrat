@@ -1,12 +1,12 @@
 import { useCallback, useContext } from 'react';
 import { toast } from 'react-toastify';
-import { AppContext, AssetType } from '../../../context';
+import { AppContext, AssetType, METADATA_ACTIONS, MetadataStep } from '../../../context';
 import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus, IngestionUploadResponse, IngestionUploadStatus } from '../../../context';
 import { MUTATION_UPLOAD_ASSET, apolloUploader } from '../../../graphql';
 import lodash from 'lodash';
 
 interface UseFilesUpload {
-    getSelectedFiles: () => IngestionFile[];
+    updateMetadataSteps: () => boolean;
     loadFiles: (acceptedFiles: File[]) => void;
     startUpload: (id: FileId) => void;
     cancelUpload: (id: FileId) => void;
@@ -19,8 +19,30 @@ const useFilesUpload = (): UseFilesUpload => {
     const { ingestion, ingestionDispatch } = useContext(AppContext);
     const { files } = ingestion.uploads;
 
-    const getSelectedFiles = useCallback((): IngestionFile[] => files.filter(({ selected }) => selected), [files]);
     const getFile = useCallback((id: FileId): IngestionFile | undefined => lodash.find(files, { id }), [files]);
+
+    const getSelectedFiles = useCallback((): IngestionFile[] => files.filter(({ selected }) => selected), [files]);
+
+    const updateMetadataSteps = useCallback((): boolean => {
+        const selectedFiles = getSelectedFiles();
+
+        if (!selectedFiles.length) return false;
+
+        const metadata: MetadataStep[] = [];
+
+        selectedFiles.forEach((file: IngestionFile) => {
+            const metadataStep = { file };
+            metadata.push(metadataStep);
+        });
+
+        const addStepAction: IngestionDispatchAction = {
+            type: METADATA_ACTIONS.ADD_STEP,
+            metadata
+        };
+
+        ingestionDispatch(addStepAction);
+        return true;
+    }, [getSelectedFiles, ingestionDispatch]);
 
     const loadFiles = useCallback(
         (acceptedFiles: File[]) => {
@@ -211,7 +233,7 @@ const useFilesUpload = (): UseFilesUpload => {
     );
 
     return {
-        getSelectedFiles,
+        updateMetadataSteps,
         loadFiles,
         startUpload,
         cancelUpload,
