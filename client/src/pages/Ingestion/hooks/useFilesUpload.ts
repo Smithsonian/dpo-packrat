@@ -28,19 +28,19 @@ const useFilesUpload = (): UseFilesUpload => {
                     const id = file.name;
                     const alreadyContains = !!lodash.find(files, { id });
 
-                    const type = AssetType.Diconde;
-                    const status = FileUploadStatus.READY;
-                    const progress = 0;
-                    const cancel = null;
+                    const { name, size } = file;
 
                     if (!alreadyContains) {
                         const ingestionFile = {
                             id,
                             file,
-                            status,
-                            progress,
-                            type,
-                            cancel
+                            name,
+                            size,
+                            status: FileUploadStatus.READY,
+                            progress: 0,
+                            type: AssetType.Diconde,
+                            selected: false,
+                            cancel: null
                         };
 
                         ingestionFiles.push(ingestionFile);
@@ -141,7 +141,7 @@ const useFilesUpload = (): UseFilesUpload => {
             const { id, file, type } = ingestionFile;
 
             const successAction: IngestionDispatchAction = {
-                type: UPLOAD_ACTIONS.SUCCESS,
+                type: UPLOAD_ACTIONS.COMPLETE,
                 id
             };
 
@@ -187,7 +187,7 @@ const useFilesUpload = (): UseFilesUpload => {
 
                 const { uploadAsset } = data;
 
-                if (uploadAsset.status === IngestionUploadStatus.SUCCESS) {
+                if (uploadAsset.status === IngestionUploadStatus.COMPLETE) {
                     ingestionDispatch(successAction);
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (uploadAsset.status === IngestionUploadStatus.FAILED) {

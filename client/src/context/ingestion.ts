@@ -2,7 +2,7 @@ import { useReducer, Dispatch } from 'react';
 import lodash from 'lodash';
 
 export enum IngestionUploadStatus {
-    SUCCESS = 'SUCCESS',
+    COMPLETE = 'COMPLETE',
     FAILED = 'FAILED'
 }
 
@@ -24,22 +24,26 @@ export enum AssetType {
 export enum FileUploadStatus {
     READY = 'READY',
     UPLOADING = 'UPLOADING',
-    SUCCESS = 'SUCCESS',
+    COMPLETE = 'COMPLETE',
     CANCELLED = 'CANCELLED',
     FAILED = 'FAILED'
 }
 
 export type IngestionFile = {
     id: FileId;
+    size: number;
+    name: string;
     file: File;
     type: AssetType;
     status: FileUploadStatus;
     progress: number;
+    selected: boolean;
     cancel: (() => void) | null;
 };
 
 type IngestionUploads = {
     files: IngestionFile[];
+    loading: boolean;
 };
 
 export type Ingestion = {
@@ -48,13 +52,16 @@ export type Ingestion = {
 
 export enum UPLOAD_ACTIONS {
     LOAD = 'LOAD',
+    FETCH_COMPLETE = 'FETCH_COMPLETE',
+    FETCH_FAILED = 'FETCH_FAILED',
     START = 'START',
     FAILED = 'FAILED',
     PROGRESS = 'PROGRESS',
     CANCELLED = 'CANCELLED',
     RETRY = 'RETRY',
-    SUCCESS = 'SUCCESS',
+    COMPLETE = 'COMPLETE',
     REMOVE = 'REMOVE',
+    SELECT = 'SELECT',
     SET_CANCEL_HANDLER = 'SET_CANCEL_HANDLER',
     SET_ASSET_TYPE = 'SET_ASSET_TYPE'
 }
@@ -65,11 +72,34 @@ const INGESTION_ACTION = {
 
 const ingestionState: Ingestion = {
     uploads: {
-        files: []
+        files: [],
+        loading: true
     }
 };
 
-export type IngestionDispatchAction = LOAD | START | FAILED | PROGRESS | CANCELLED | SUCCESS | REMOVE | SET_CANCEL_HANDLER | SET_ASSET_TYPE | RETRY;
+export type IngestionDispatchAction =
+    | FETCH_COMPLETE
+    | FETCH_FAILED
+    | LOAD
+    | START
+    | FAILED
+    | PROGRESS
+    | CANCELLED
+    | COMPLETE
+    | REMOVE
+    | SELECT
+    | SET_CANCEL_HANDLER
+    | SET_ASSET_TYPE
+    | RETRY;
+
+type FETCH_COMPLETE = {
+    type: UPLOAD_ACTIONS.FETCH_COMPLETE;
+    files: IngestionFile[];
+};
+
+type FETCH_FAILED = {
+    type: UPLOAD_ACTIONS.FETCH_FAILED;
+};
 
 type LOAD = {
     type: UPLOAD_ACTIONS.LOAD;
@@ -97,8 +127,8 @@ type CANCELLED = {
     id: FileId;
 };
 
-type SUCCESS = {
-    type: UPLOAD_ACTIONS.SUCCESS;
+type COMPLETE = {
+    type: UPLOAD_ACTIONS.COMPLETE;
     id: FileId;
 };
 
@@ -110,6 +140,12 @@ type RETRY = {
 type REMOVE = {
     type: UPLOAD_ACTIONS.REMOVE;
     id: FileId;
+};
+
+type SELECT = {
+    type: UPLOAD_ACTIONS.SELECT;
+    id: FileId;
+    selected: boolean;
 };
 
 type SET_CANCEL_HANDLER = {
@@ -128,7 +164,27 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
     const { uploads } = state;
     const { files } = uploads;
 
+    console.log(action);
+
     switch (action.type) {
+        case INGESTION_ACTION.UPLOAD.FETCH_COMPLETE:
+            return {
+                ...state,
+                uploads: {
+                    ...uploads,
+                    loading: false
+                }
+            };
+
+        case INGESTION_ACTION.UPLOAD.FETCH_FAILED:
+            return {
+                ...state,
+                uploads: {
+                    ...uploads,
+                    loading: false
+                }
+            };
+
         case INGESTION_ACTION.UPLOAD.LOAD:
             return {
                 ...state,
@@ -169,6 +225,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
             return {
                 ...state,
                 uploads: {
+                    ...uploads,
                     files: lodash.forEach(files, file => {
                         if (file.id === action.id) {
                             lodash.set(file, 'progress', action.progress);
@@ -190,14 +247,14 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 }
             };
 
-        case INGESTION_ACTION.UPLOAD.SUCCESS:
+        case INGESTION_ACTION.UPLOAD.COMPLETE:
             return {
                 ...state,
                 uploads: {
                     ...uploads,
                     files: lodash.forEach(files, file => {
                         if (file.id === action.id) {
-                            lodash.set(file, 'status', FileUploadStatus.SUCCESS);
+                            lodash.set(file, 'status', FileUploadStatus.COMPLETE);
                         }
                     })
                 }
@@ -235,6 +292,19 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                     files: lodash.forEach(files, file => {
                         if (file.id === action.id) {
                             lodash.set(file, 'cancel', action.cancel);
+                        }
+                    })
+                }
+            };
+
+        case INGESTION_ACTION.UPLOAD.SELECT:
+            return {
+                ...state,
+                uploads: {
+                    ...uploads,
+                    files: lodash.forEach(files, file => {
+                        if (file.id === action.id) {
+                            lodash.set(file, 'selected', action.selected);
                         }
                     })
                 }
