@@ -49,7 +49,7 @@ const useFilesUpload = (): UseFilesUpload => {
             if (acceptedFiles.length) {
                 const ingestionFiles: IngestionFile[] = [];
                 acceptedFiles.forEach((file: File): void => {
-                    const id = file.name;
+                    const id = file.name.replace(/[^\w\s]/gi, '');
                     const alreadyContains = !!lodash.find(files, { id });
 
                     const { name, size } = file;

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { HOME_ROUTES, resolveSubRoute, INGESTION_ROUTE } from '../../../../constants';
 import { SidebarBottomNavigator } from '../../../../components';
+import { useHistory, Redirect } from 'react-router';
+import { AppContext } from '../../../../context';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -20,6 +22,21 @@ const useStyles = makeStyles(() => ({
 
 function SubjectItem(): React.ReactElement {
     const classes = useStyles();
+    const history = useHistory();
+    const { ingestion: { metadata } } = useContext(AppContext);
+
+    const onNext = () => {
+        const { file: { id, type } } = metadata[0];
+        const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?file=${id}&type=${type}`);
+
+        history.push(nextRoute);
+    };
+
+    const metadataLength = metadata.length;
+
+    if (!metadataLength) {
+        return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
+    }
 
     return (
         <Box className={classes.container}>
@@ -30,7 +47,7 @@ function SubjectItem(): React.ReactElement {
                 leftLabel='Previous'
                 leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)}
                 rightLabel='Next'
-                rightRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.METADATA)}
+                onClickRight={onNext}
             />
         </Box>
     );
