@@ -41,6 +41,10 @@ function Metadata(): React.ReactElement {
     const metadataStepIndex = lodash.indexOf(metadata, metadataStep);
     const isLast = (metadataStepIndex + 1) === metadataLength;
 
+    const onPrevious = () => {
+        history.goBack();
+    };
+
     const onNext = () => {
         if (isLast) {
             alert('Finished');
@@ -62,7 +66,7 @@ function Metadata(): React.ReactElement {
             </Box>
             <SidebarBottomNavigator
                 leftLabel='Previous'
-                leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM)}
+                onClickLeft={onPrevious}
                 rightLabel={isLast ? 'Finish' : 'Next'}
                 onClickRight={onNext}
             />
