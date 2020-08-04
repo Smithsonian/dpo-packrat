@@ -2161,6 +2161,16 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(vocabularyFetch).toBeTruthy();
     });
 
+    test('DB Fetch Vocabulary: Vocabulary.fetchAll', async () => {
+        let vocabularyFetch: DBAPI.Vocabulary[] | null = null;
+        if (vocabularySet) {
+            vocabularyFetch = await DBAPI.Vocabulary.fetchAll();
+            if (vocabularyFetch)
+                expect(vocabularyFetch).toEqual(expect.arrayContaining([vocabulary, vocabulary2]));
+        }
+        expect(vocabularyFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: VocabularySet', async () => {
         let vocabularySetFetch: DBAPI.VocabularySet | null = null;
         if (vocabularySet) {
@@ -2172,6 +2182,17 @@ describe('DB Fetch By ID Test Suite', () => {
         }
         expect(vocabularySetFetch).toBeTruthy();
     });
+
+    test('DB Fetch VocabularySet: VocabularySet.fetchAll', async () => {
+        let vocabularySetFetch: DBAPI.VocabularySet[] | null = null;
+        if (vocabularySet) {
+            vocabularySetFetch = await DBAPI.VocabularySet.fetchAll();
+            if (vocabularySetFetch)
+                expect(vocabularySetFetch).toEqual(expect.arrayContaining([vocabularySet]));
+        }
+        expect(vocabularySetFetch).toBeTruthy();
+    });
+
 
     test('DB Fetch By ID: Workflow', async () => {
         let workflowFetch: DBAPI.Workflow | null = null;
