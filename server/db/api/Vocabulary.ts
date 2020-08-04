@@ -74,5 +74,15 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return null;
         }
     }
+
+    static async fetchAll(): Promise<Vocabulary[] | null> {
+        try {
+            return DBC.CopyArray<VocabularyBase, Vocabulary>(
+                await DBC.DBConnection.prisma.vocabulary.findMany(), Vocabulary);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Vocabulary.fetchAll', error);
+            return null;
+        }
+    }
 }
 

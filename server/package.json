@@ -35,7 +35,7 @@
     "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
     "postinstall": "cd .. && yarn generate:server:prisma && cd server",
     "test": "jest --passWithNoTests --detectOpenHandles --forceExit",
-    "initdb": "docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.sql\"",
+    "initdb": "docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.sql\" & docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.DATA.sql\"",
     "dropdb": "docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD -e 'DROP DATABASE IF EXISTS `Packrat`'\""
   },
   "dependencies": {
