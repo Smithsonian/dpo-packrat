@@ -54,17 +54,13 @@ export function IngestionSidebarMenu(props: IngestionSidebarMenuProps): React.Re
     const classes = useStyles();
 
     useEffect(() => {
-        console.log(fullRoute);
         setSelectedOption(decodeURIComponent(fullRoute));
     }, [fullRoute]);
 
-    const sidebarOptions = options.map(option => {
-        console.log(option.route);
-        return {
-            ...option,
-            isSelected: selectedOption.includes(option.route)
-        };
-    });
+    const sidebarOptions = options.map(option => ({
+        ...option,
+        isSelected: selectedOption.includes(option.route)
+    }));
 
     return (
         <>
