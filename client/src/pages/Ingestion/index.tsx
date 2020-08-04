@@ -52,16 +52,17 @@ function Ingestion(): React.ReactElement {
     const routeChangeCheck = ({ pathname }): boolean | string => {
         let allowChange: boolean = true;
         const { href: url } = window.location;
-        if (url.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM)) {
-            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
-        }
 
-        if (url.includes(INGESTION_ROUTES_TYPE.METADATA)) {
+        if (url.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM)) {
             allowChange = pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
         }
 
+        if (url.includes(INGESTION_ROUTES_TYPE.METADATA)) {
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+        }
+
         if (allowChange) return true;
-        return 'Are you sure you want to go to navigate away, changes might be lost?';
+        return 'Are you sure you want to go to navigate away? changes might be lost';
     };
 
     return (
