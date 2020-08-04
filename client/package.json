@@ -46,6 +46,7 @@
     "framer-motion": "^2.3.0",
     "graphql": "^15.3.0",
     "graphql.macro": "^1.4.2",
+    "query-string": "^6.13.1",
     "react": "^16.13.1",
     "react-activation": "^0.5.5",
     "react-app-rewired": "^2.1.6",
