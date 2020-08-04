@@ -9,6 +9,7 @@ import Uploads from './components/Uploads';
 import Metadata from './components/Metadata';
 import SubjectItem from './components/SubjectItem';
 import { AppContext } from '../../context';
+import { Prompt } from 'react-router-dom';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -39,7 +40,7 @@ function Ingestion(): React.ReactElement {
                 updatedOptions.push({
                     title: 'Metadata',
                     subtitle: name,
-                    route: `${INGESTION_ROUTE.ROUTES.METADATA}?file=${id}&type=${type}`,
+                    route: `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`,
                     enabled: false
                 });
             });
@@ -48,8 +49,24 @@ function Ingestion(): React.ReactElement {
         setOptions(updatedOptions);
     }, [metadata]);
 
+    const routeChangeCheck = ({ pathname }): boolean | string => {
+        let allowChange: boolean = true;
+        const { href: url } = window.location;
+        if (url.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM)) {
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+        }
+
+        if (url.includes(INGESTION_ROUTES_TYPE.METADATA)) {
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+        }
+
+        if (allowChange) return true;
+        return 'Are you sure you want to go to navigate away, changes might be lost?';
+    };
+
     return (
         <Box className={classes.container}>
+            <Prompt message={routeChangeCheck} />
             <PrivateRoute exact path={path}>
                 <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS)} />
             </PrivateRoute>

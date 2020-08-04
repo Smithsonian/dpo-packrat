@@ -26,18 +26,18 @@ const useStyles = makeStyles(() => ({
 function Metadata(): React.ReactElement {
     const classes = useStyles();
     const { search } = useLocation();
-    const { ingestion: { metadata } } = useContext(AppContext);
+    const { ingestion } = useContext(AppContext);
+    const { metadata } = ingestion;
     const history = useHistory();
 
     const metadataLength = metadata.length;
+    const query = qs.parse(search);
 
-    if (!metadataLength) {
+    if (!metadataLength || !query.fileId) {
         return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
     }
 
-    const query = qs.parse(search);
-
-    const metadataStep = metadata.find(({ file }) => file.id === query.file);
+    const metadataStep = metadata.find(({ file }) => file.id === query.fileId);
     const metadataStepIndex = lodash.indexOf(metadata, metadataStep);
     const isLast = (metadataStepIndex + 1) === metadataLength;
 
@@ -46,7 +46,7 @@ function Metadata(): React.ReactElement {
             alert('Finished');
         } else {
             const { file: { id, type } } = metadata[metadataStepIndex + 1];
-            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?file=${id}&type=${type}`);
+            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
 
             history.push(nextRoute);
         }

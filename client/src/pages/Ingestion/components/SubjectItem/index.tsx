@@ -27,7 +27,7 @@ function SubjectItem(): React.ReactElement {
 
     const onNext = () => {
         const { file: { id, type } } = metadata[0];
-        const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?file=${id}&type=${type}`);
+        const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
 
         history.push(nextRoute);
     };
