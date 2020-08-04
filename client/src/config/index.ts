@@ -5,7 +5,7 @@
  */
 const Config = {
     contact: {
-        email: 'RossiV@si.edu'
+        email: 'blundellj@si.edu'
     }
 };
 
