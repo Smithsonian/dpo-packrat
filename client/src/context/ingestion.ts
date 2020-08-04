@@ -171,8 +171,6 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
     const { uploads } = state;
     const { files } = uploads;
 
-    console.log(action.type);
-
     switch (action.type) {
         case INGESTION_ACTION.UPLOAD.FETCH_COMPLETE:
             return {
@@ -351,7 +349,7 @@ export interface IngestionReducer {
 
 export default function useIngestionContext(): IngestionReducer {
     const [ingestion, ingestionDispatch] = useReducer(ingestionReducer, ingestionState);
-    console.log(ingestion.metadata);
+
     return {
         ingestion,
         ingestionDispatch
