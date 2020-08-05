@@ -49,8 +49,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup test DB
+      - name: Setup test DB Schema
         run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test < server/db/sql/scripts/Packrat.sql
+
+      - name: Setup test DB Data
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test < server/db/sql/scripts/Packrat.DATA.sql
 
       - name: Setup node version
         uses: actions/setup-node@v1
