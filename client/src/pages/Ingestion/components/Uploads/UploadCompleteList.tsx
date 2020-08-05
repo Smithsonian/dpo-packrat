@@ -2,7 +2,7 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useContext } from 'react';
 import { FieldType } from '../../../../components';
-import { AppContext, FileUploadStatus } from '../../../../context';
+import { AppContext, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS } from '../../../../context';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 
@@ -44,21 +44,39 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     },
 }));
 
-function UploadList(): React.ReactElement {
+function UploadListComplete(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion: { uploads } } = useContext(AppContext);
-    const { files } = uploads;
+    const { ingestion: { uploads }, ingestionDispatch } = useContext(AppContext);
+    const { files, loading } = uploads;
 
-    const uploadingFiles = [...files].filter(({ status }) => status !== FileUploadStatus.COMPLETE);
+    React.useEffect(() => {
+        setTimeout(() => {
+            // fetch from server, and process here with FETCH_FAILED
+            const fetchSuccessAction: IngestionDispatchAction = {
+                type: UPLOAD_ACTIONS.FETCH_COMPLETE,
+                files: []
+            };
+
+            ingestionDispatch(fetchSuccessAction);
+        }, 2000);
+    }, [ingestionDispatch]);
+
+    const uploadedFiles = files.filter(({ status }) => status === FileUploadStatus.COMPLETE);
 
     return (
         <Box className={classes.container}>
             <FieldType required>
                 <>
-                    <UploadListHeader title='Uploading files' />
+                    <UploadListHeader title='Uploaded Files: Select assets to ingest which belong to the same Subject &amp; Item' />
                     <Box className={classes.list}>
-                        {!uploadingFiles.length && <Typography className={classes.listDetail} variant='body1'>Add files to upload</Typography>}
-                        <FileList files={uploadingFiles} />
+                        {loading ?
+                            <Typography className={classes.listDetail} variant='body1'>Fetching available files...</Typography>
+                            :
+                            <>
+                                {!uploadedFiles.length && <Typography className={classes.listDetail} variant='body1'>No files available</Typography>}
+                                <FileList files={uploadedFiles} />
+                            </>
+                        }
                     </Box>
                 </>
             </FieldType>
@@ -67,4 +85,4 @@ function UploadList(): React.ReactElement {
     );
 }
 
-export default UploadList;
+export default UploadListComplete;

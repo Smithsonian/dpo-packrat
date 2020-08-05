@@ -27,7 +27,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         display: 'flex',
         width: '100%',
         zIndex: 'inherit',
-        cursor: ({ complete }: UploadListItemProps) => complete ? 'pointer' : 'default'
+        cursor: ({ complete }: FileListItemProps) => complete ? 'pointer' : 'default'
     },
     details: {
         display: 'flex',
@@ -89,8 +89,8 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     progress: {
         position: 'absolute',
         height: '100%',
-        width: ({ progress }: UploadListItemProps) => `${progress}%`,
-        backgroundColor: ({ complete, failed }: UploadListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? colorWithOpacity(palette.success.light, 33) : palette.secondary.light,
+        width: ({ progress }: FileListItemProps) => `${progress}%`,
+        backgroundColor: ({ complete, failed }: FileListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? colorWithOpacity(palette.success.light, 33) : palette.secondary.light,
         zIndex: 5,
         top: 0,
         left: 0,
@@ -100,7 +100,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     }
 }));
 
-interface UploadListItemProps {
+interface FileListItemProps {
     id: FileId;
     size: number;
     name: string;
@@ -120,7 +120,7 @@ interface UploadListItemProps {
     onChangeType: (id: FileId, type: AssetType) => void;
 }
 
-function UploadListItem(props: UploadListItemProps): React.ReactElement {
+function FileListItem(props: FileListItemProps): React.ReactElement {
     const { id, name, size, type, status, complete, progress, selected, failed, uploading, onChangeType, onUpload, onCancel, onRemove, onRetry, onSelect } = props;
     const classes = useStyles(props);
 
@@ -206,4 +206,4 @@ function UploadListItem(props: UploadListItemProps): React.ReactElement {
     );
 }
 
-export default UploadListItem;
+export default FileListItem;
