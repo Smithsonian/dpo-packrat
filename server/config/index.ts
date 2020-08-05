@@ -8,6 +8,10 @@ enum AUTH_TYPE {
     LDAP = 'ldapauth'
 }
 
+enum STORAGE_TYPE {
+    LOCAL = 'local'
+}
+
 type ConfigType = {
     auth: {
         type: AUTH_TYPE;
@@ -16,7 +20,10 @@ type ConfigType = {
             checkPeriod: number;
             expires: Date;
         };
-    };
+    },
+    storage: {
+        type: STORAGE_TYPE;
+    },
 };
 
 const oneDayMs = 24 * 60 * 60 * 1000; // 24hrs in milliseconds
@@ -29,6 +36,9 @@ const Config: ConfigType = {
             expires: new Date(Date.now() + oneDayMs),
             checkPeriod: 24 * 60 * 60 // prune expired entries every 24h
         }
+    },
+    storage: {
+        type: STORAGE_TYPE.LOCAL,
     }
 };
 
