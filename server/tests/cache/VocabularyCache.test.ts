@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as CACHE from '../../cache';
 import * as DB from '../../db';
-import { VocabularyCache } from '../../cache';
+import * as H from '../../utils/helpers';
+import { VocabularyCache, eVocabularySetID } from '../../cache';
 // import * as LOG from '../../utils/logger';
 
 enum eCacheTestMode {
@@ -106,6 +108,53 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     }
                 }
             }
+        });
+
+        test('Cache: VocabularyCache.vocabularySetEntriesByEnum ' + description, async () => {
+            /* istanbul ignore if */
+            if (!vocabularySetAll)
+                return;
+
+            const vocabNameMap: Map<string, number> = new Map<string, number>();    // Map normalized vocabulary set name -> idVocabularySet
+            for (const vocabularySet of vocabularySetAll) {
+                const sVocabSetNameNorm: string = vocabularySet.Name.replace('.', '').toUpperCase();
+                vocabNameMap.set(sVocabSetNameNorm, vocabularySet.idVocabularySet);
+            }
+
+            // iterate through all enums of eVocabularySetID; for each:
+            for (const sVocabSetID in eVocabularySetID) { // Object.keys(eVocabularySetID).filter(k => typeof eVocabularySetID[k as any] === 'number')) {
+                if (!isNaN(Number(sVocabSetID)))
+                    continue;
+                const eVocabSetID: eVocabularySetID = (<any>eVocabularySetID)[sVocabSetID]; // <eVocabularySetID><unknown>eVocabularySetID[sVocabSetID]; // eVocabularySetID = sVocabSetID as keyof typeof eVocabularySetID; // (<any>eVocabularySetID)[sVocabSetID];
+                if (eVocabSetID == eVocabularySetID.eNone)
+                    continue;
+
+                // compute the vocabulary set entries
+                const vocabularySetEntriesInCacheByEnum: DB.Vocabulary[] | undefined =
+                    await CACHE.VocabularyCache.vocabularySetEntriesByEnum(eVocabSetID);
+                expect(vocabularySetEntriesInCacheByEnum).toBeTruthy();
+
+                // compute the vocabulary set name and ID from the enum name
+                const sVocabSetNameNorm: string = sVocabSetID.substring(1).toUpperCase();
+                const nVocabSetID: number | undefined = vocabNameMap.get(sVocabSetNameNorm);
+                expect(nVocabSetID).toBeTruthy();
+                /* istanbul ignore if */
+                if (!nVocabSetID)
+                    continue;
+
+                // compute the vocabulary set entries from the enum converted to an ID
+                const vocabularySetEntriesInCache: DB.Vocabulary[] | undefined =
+                    await CACHE.VocabularyCache.vocabularySetEntries(nVocabSetID);
+                expect(vocabularySetEntriesInCache).toBeTruthy();
+
+                // verify arrays match
+                expect(H.Helpers.arraysEqual(vocabularySetEntriesInCacheByEnum, vocabularySetEntriesInCache)).toBeTruthy();
+            }
+
+            const vocabularySetEntriesInCacheByEnumNone: DB.Vocabulary[] | undefined =
+                await CACHE.VocabularyCache.vocabularySetEntriesByEnum(eVocabularySetID.eNone);
+            expect(vocabularySetEntriesInCacheByEnumNone).toBeUndefined();
+
         });
     });
 }
