@@ -44,8 +44,8 @@ function UploadFilesPicker(): React.ReactElement {
 
     const onDrop = (acceptedFiles: File[]) => {
         const checkedFiles: File[] = acceptedFiles.filter((acceptedFile: File) => {
-            const { type } = acceptedFile;
-            const [ext] = type.split('/').splice(-1);
+            const { name } = acceptedFile;
+            const [ext] = name.split('.').splice(-1);
 
             const isAllowed = UPLOAD_FILE_TYPES.includes(ext);
 
