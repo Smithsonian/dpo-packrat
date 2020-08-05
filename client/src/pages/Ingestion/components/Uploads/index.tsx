@@ -7,6 +7,7 @@ import { HOME_ROUTES, INGESTION_ROUTE, resolveRoute, resolveSubRoute } from '../
 import { Colors } from '../../../../theme';
 import UploadFilesPicker from './UploadFilesPicker';
 import UploadList from './UploadList';
+import UploadCompleteList from './UploadCompleteList';
 import { useHistory } from 'react-router';
 import useFilesUpload from '../../hooks/useFilesUpload';
 import { toast } from 'react-toastify';
@@ -70,6 +71,7 @@ function Uploads(): React.ReactElement {
             <Box className={classes.container}>
                 <Box className={classes.content}>
                     <UploadFilesPicker />
+                    <UploadCompleteList />
                     <UploadList />
                 </Box>
                 <SidebarBottomNavigator

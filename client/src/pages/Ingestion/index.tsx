@@ -24,7 +24,6 @@ function Ingestion(): React.ReactElement {
     const { ingestion: { metadata } } = useContext(AppContext);
 
     const [options, setOptions] = useState<IngestionSidebarOption[]>([]);
-    const hasMetadata = !!metadata.length;
 
     useEffect(() => {
         const updatedOptions: IngestionSidebarOption[] = [];
@@ -74,13 +73,11 @@ function Ingestion(): React.ReactElement {
 
             <PrivateRoute path={resolveRoute(INGESTION_ROUTE.TYPE)}>
 
-                {hasMetadata && (
-                    <IngestionSidebarMenu
-                        title='INGESTION'
-                        paramIdentifier={INGESTION_PARAMS_TYPE.STEP}
-                        options={options}
-                    />
-                )}
+                <IngestionSidebarMenu
+                    title='INGESTION'
+                    paramIdentifier={INGESTION_PARAMS_TYPE.STEP}
+                    options={options}
+                />
 
                 <PrivateRoute
                     exact
