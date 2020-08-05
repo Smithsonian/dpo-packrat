@@ -12,7 +12,7 @@ class LocalAuth implements IAuth {
             };
         }
 
-        if (users.length !== 1) {
+        if (users.length > 1) {
             return {
                 user: null,
                 error: 'Multiple users exist for specified email address'
@@ -20,6 +20,14 @@ class LocalAuth implements IAuth {
         }
 
         const user: DBAPI.User = users[0];
+
+        if (!user) {
+            return {
+                user: null,
+                error: 'User does not exist'
+            };
+        }
+
         if (!user.Active) {
             return {
                 user,
