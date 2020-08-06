@@ -53,14 +53,12 @@ function UploadList(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <FieldType required>
-                <>
-                    <UploadListHeader title='Uploading files' />
-                    <Box className={classes.list}>
-                        {!uploadingFiles.length && <Typography className={classes.listDetail} variant='body1'>Add files to upload</Typography>}
-                        <FileList files={uploadingFiles} />
-                    </Box>
-                </>
+            <FieldType required align='center' label='Uploading files'>
+                <UploadListHeader />
+                <Box className={classes.list}>
+                    {!uploadingFiles.length && <Typography className={classes.listDetail} variant='body1'>Add files to upload</Typography>}
+                    <FileList files={uploadingFiles} />
+                </Box>
             </FieldType>
         </Box>
 

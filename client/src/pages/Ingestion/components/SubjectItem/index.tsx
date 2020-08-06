@@ -1,10 +1,12 @@
 import React, { useContext } from 'react';
-import { Box, Typography } from '@material-ui/core';
+import { Box, Chip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { HOME_ROUTES, resolveSubRoute, INGESTION_ROUTE } from '../../../../constants';
-import { SidebarBottomNavigator } from '../../../../components';
+import { SidebarBottomNavigator, FieldType } from '../../../../components';
 import { useHistory, Redirect } from 'react-router';
 import { AppContext } from '../../../../context';
+import SubjectList from './SubjectList';
+import SearchList from './SearchList';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -15,15 +17,16 @@ const useStyles = makeStyles(() => ({
     content: {
         display: 'flex',
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
+        width: '50vw',
+        flexDirection: 'column',
+        padding: '40px 0px 0px 40px'
     },
 }));
 
 function SubjectItem(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const { ingestion: { metadata } } = useContext(AppContext);
+    const { ingestion: { metadata, subject: { subjects } } } = useContext(AppContext);
 
     const onNext = () => {
         const { file: { id, type } } = metadata[0];
@@ -41,7 +44,13 @@ function SubjectItem(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
-                <Typography variant='subtitle1'>Subject and Item</Typography>
+                <Box>
+                    {metadata.map(({ file }, index) => <Chip key={index} style={{ marginRight: 10 }} label={file.name} variant='outlined' />)}
+                </Box>
+                <SearchList />
+                <FieldType required label='Subject(s) Selected' marginTop={2}>
+                    <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
+                </FieldType>
             </Box>
             <SidebarBottomNavigator
                 leftLabel='Previous'
