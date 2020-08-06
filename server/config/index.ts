@@ -26,7 +26,6 @@ type ConfigType = {
         edan: {
             server: string;
             appId: string;
-            tierType: number;
             authKey: string;
         }
     }
@@ -46,9 +45,8 @@ const Config: ConfigType = {
     collection: {
         type: COLLECTION_TYPE.EDAN,
         edan: {
-            server: 'http://edan.si.edu/',
-            appId: 'OCIO3D',
-            tierType: 1,
+            server: process.env.EDAN_SERVER ? process.env.EDAN_SERVER : 'http://edan.si.edu/',
+            appId: process.env.EDAN_APPID ? process.env.EDAN_APPID : 'OCIO3D',
             authKey: process.env.EDAN_AUTH_KEY ? process.env.EDAN_AUTH_KEY : ''
         }
     }
