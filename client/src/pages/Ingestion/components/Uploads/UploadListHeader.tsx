@@ -37,30 +37,21 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     },
 }));
 
-interface UploadListHeaderProps {
-    title: string;
-}
-
-function UploadListHeader(props: UploadListHeaderProps): React.ReactElement {
+function UploadListHeader(): React.ReactElement {
     const classes = useStyles();
-    const { title } = props;
 
     return (
-        <>
-            <Typography className={classes.title} variant='caption'>{title}</Typography>
-            <Box className={classes.header}>
-                <Box className={classes.fileDetails}>
-                    <Typography className={classes.label} variant='body1'>Filename</Typography>
-                </Box>
-                <Box className={classes.size}>
-                    <Typography className={classes.label} variant='body1'>Size</Typography>
-                </Box>
-                <Box className={classes.assetType}>
-                    <Typography className={classes.label} variant='body1'>Asset Type</Typography>
-                </Box>
+        <Box className={classes.header}>
+            <Box className={classes.fileDetails}>
+                <Typography className={classes.label} variant='body1'>Filename</Typography>
             </Box>
-        </>
-
+            <Box className={classes.size}>
+                <Typography className={classes.label} variant='body1'>Size</Typography>
+            </Box>
+            <Box className={classes.assetType}>
+                <Typography className={classes.label} variant='body1'>Asset Type</Typography>
+            </Box>
+        </Box>
     );
 }
 

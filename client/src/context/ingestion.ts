@@ -46,12 +46,23 @@ type IngestionUploads = {
     loading: boolean;
 };
 
+export type Subject = {
+    arkId: string;
+    unit: string;
+    name: string;
+};
+
+export type SubjectStep = {
+    subjects: Subject[];
+};
+
 export type MetadataStep = {
     file: IngestionFile;
 };
 
 export type Ingestion = {
     uploads: IngestionUploads;
+    subject: SubjectStep;
     metadata: MetadataStep[];
 };
 
@@ -71,12 +82,18 @@ export enum UPLOAD_ACTIONS {
     SET_ASSET_TYPE = 'SET_ASSET_TYPE'
 }
 
+export enum SUBJECT_ACTIONS {
+    ADD_SUBJECT = 'ADD_SUBJECT',
+    REMOVE_SUBJECT = 'REMOVE_SUBJECT'
+}
+
 export enum METADATA_ACTIONS {
     ADD_STEP = 'ADD_STEP'
 }
 
 const INGESTION_ACTION = {
     UPLOAD: UPLOAD_ACTIONS,
+    SUBJECT: SUBJECT_ACTIONS,
     METADATA: METADATA_ACTIONS
 };
 
@@ -84,6 +101,9 @@ const ingestionState: Ingestion = {
     uploads: {
         files: [],
         loading: true
+    },
+    subject: {
+        subjects: []
     },
     metadata: []
 };
@@ -158,6 +178,18 @@ type SET_ASSET_TYPE = {
     assetType: AssetType;
 };
 
+type SubjectDispatchAction = ADD_SUBJECT | REMOVE_SUBJECT;
+
+type ADD_SUBJECT = {
+    type: SUBJECT_ACTIONS.ADD_SUBJECT;
+    subject: Subject;
+};
+
+type REMOVE_SUBJECT = {
+    type: SUBJECT_ACTIONS.REMOVE_SUBJECT;
+    arkId: string;
+};
+
 type MetadataDispatchAction = ADD_STEP;
 
 type ADD_STEP = {
@@ -165,11 +197,12 @@ type ADD_STEP = {
     metadata: MetadataStep[];
 };
 
-export type IngestionDispatchAction = UploadDispatchAction | MetadataDispatchAction;
+export type IngestionDispatchAction = UploadDispatchAction | SubjectDispatchAction | MetadataDispatchAction;
 
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
-    const { uploads } = state;
+    const { uploads, subject } = state;
     const { files } = uploads;
+    const { subjects } = subject;
 
     switch (action.type) {
         case INGESTION_ACTION.UPLOAD.FETCH_COMPLETE:
@@ -333,6 +366,24 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
             return {
                 ...state,
                 metadata: action.metadata
+            };
+
+        case INGESTION_ACTION.SUBJECT.ADD_SUBJECT:
+            return {
+                ...state,
+                subject: {
+                    ...subject,
+                    subjects: [...subjects, action.subject]
+                }
+            };
+
+        case INGESTION_ACTION.SUBJECT.REMOVE_SUBJECT:
+            return {
+                ...state,
+                subject: {
+                    ...subject,
+                    subjects: lodash.filter(subjects, ({ arkId }) => arkId !== action.arkId)
+                }
             };
 
         default:
