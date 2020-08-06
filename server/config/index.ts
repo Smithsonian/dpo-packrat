@@ -8,6 +8,10 @@ enum AUTH_TYPE {
     LDAP = 'ldapauth'
 }
 
+enum COLLECTION_TYPE {
+    EDAN = 'edan'
+}
+
 type ConfigType = {
     auth: {
         type: AUTH_TYPE;
@@ -16,7 +20,16 @@ type ConfigType = {
             checkPeriod: number;
             expires: Date;
         };
-    };
+    },
+    collection: {
+        type: COLLECTION_TYPE;
+        edan: {
+            server: string;
+            appId: string;
+            tierType: number;
+            authKey: string;
+        }
+    }
 };
 
 const oneDayMs = 24 * 60 * 60 * 1000; // 24hrs in milliseconds
@@ -29,7 +42,16 @@ const Config: ConfigType = {
             expires: new Date(Date.now() + oneDayMs),
             checkPeriod: 24 * 60 * 60 // prune expired entries every 24h
         }
+    },
+    collection: {
+        type: COLLECTION_TYPE.EDAN,
+        edan: {
+            server: 'http://edan.si.edu/',
+            appId: 'OCIO3D',
+            tierType: 1,
+            authKey: process.env.EDAN_AUTH_KEY ? process.env.EDAN_AUTH_KEY : ''
+        }
     }
 };
 
-export { Config as default, AUTH_TYPE };
+export { Config as default, AUTH_TYPE, COLLECTION_TYPE };
