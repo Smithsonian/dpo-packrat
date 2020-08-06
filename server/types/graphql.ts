@@ -580,6 +580,7 @@ export type Query = {
     __typename?: 'Query';
     getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
+    getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     getLicense: GetLicenseResult;
@@ -667,6 +668,11 @@ export type GetAssetInput = {
 export type GetAssetResult = {
     __typename?: 'GetAssetResult';
     Asset?: Maybe<Asset>;
+};
+
+export type GetUploadedAssetVersionResult = {
+    __typename?: 'GetUploadedAssetVersionResult';
+    AssetVersion: Array<Maybe<AssetVersion>>;
 };
 
 export type GetCaptureDataInput = {

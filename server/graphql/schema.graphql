@@ -524,6 +524,7 @@ type WorkflowTemplate {
 type Query {
   getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
+  getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
@@ -553,6 +554,10 @@ input GetAssetInput {
 
 type GetAssetResult {
   Asset: Asset
+}
+
+type GetUploadedAssetVersionResult {
+  AssetVersion: [AssetVersion]!
 }
 
 input GetCaptureDataInput {
