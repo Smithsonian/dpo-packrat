@@ -9,7 +9,7 @@ const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         alignItems: 'center',
-        padding: 10
+        paddingBottom: 10
     },
     searchField: {
         display: 'flex',

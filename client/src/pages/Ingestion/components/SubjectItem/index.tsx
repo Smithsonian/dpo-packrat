@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Box, Chip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { HOME_ROUTES, resolveSubRoute, INGESTION_ROUTE } from '../../../../constants';
@@ -7,6 +7,8 @@ import { useHistory, Redirect } from 'react-router';
 import { AppContext } from '../../../../context';
 import SubjectList from './SubjectList';
 import SearchList from './SearchList';
+import ItemList from './ItemList';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -28,7 +30,23 @@ function SubjectItem(): React.ReactElement {
     const history = useHistory();
     const { ingestion: { metadata, subject: { subjects } } } = useContext(AppContext);
 
-    const onNext = () => {
+    const [subjectError, setSubjectError] = useState(false);
+    const [itemError, setItemError] = useState(false);
+
+    useEffect(() => {
+        if (subjects.length > 0) {
+            setSubjectError(false);
+        }
+    }, [subjects]);
+
+    const onNext = (): void => {
+        if (!subjects.length) {
+            setItemError(true);
+            setSubjectError(true);
+            toast.warn('Please resolve issue for subject');
+            return;
+        }
+
         const { file: { id, type } } = metadata[0];
         const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
 
@@ -48,8 +66,12 @@ function SubjectItem(): React.ReactElement {
                     {metadata.map(({ file }, index) => <Chip key={index} style={{ marginRight: 10 }} label={file.name} variant='outlined' />)}
                 </Box>
                 <SearchList />
-                <FieldType required label='Subject(s) Selected' marginTop={2}>
+                <FieldType error={subjectError} required label='Subject(s) Selected' marginTop={2}>
                     <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
+                </FieldType>
+
+                <FieldType error={itemError} required label='Item' marginTop={2}>
+                    <ItemList />
                 </FieldType>
             </Box>
             <SidebarBottomNavigator

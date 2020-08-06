@@ -42,14 +42,13 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
     const remove = () => onRemove(arkId);
 
     return (
-
         <TableRow>
             <TableCell>{arkId}</TableCell>
             <TableCell align='left'>{unit}</TableCell>
             <TableCell className={classes.name} align='left'>
                 <Typography variant='caption'>{name}</Typography>
                 <Box className={classes.options}>
-                    {selected ? <MdRemoveCircleOutline className={classes.option} onClick={remove} size={24} /> : <MdAddCircleOutline className={classes.option} onClick={add} size={20} />}
+                    {selected ? <MdRemoveCircleOutline className={classes.option} onClick={remove} size={24} /> : <MdAddCircleOutline className={classes.option} onClick={add} size={24} />}
                 </Box>
             </TableCell>
         </TableRow>
