@@ -29,7 +29,7 @@ const useStyles = makeStyles(() => ({
 function SubjectItem(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const { ingestion: { metadata, subject: { subjects } } } = useContext(AppContext);
+    const { ingestion: { metadatas, subjects } } = useContext(AppContext);
     const { getSelectedItem } = useItem();
     const [subjectError, setSubjectError] = useState(false);
     const [itemError, setItemError] = useState(false);
@@ -55,13 +55,13 @@ function SubjectItem(): React.ReactElement {
             return;
         }
 
-        const { file: { id, type } } = metadata[0];
+        const { file: { id, type } } = metadatas[0];
         const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
 
         history.push(nextRoute);
     };
 
-    const metadataLength = metadata.length;
+    const metadataLength = metadatas.length;
 
     if (!metadataLength) {
         return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
@@ -71,7 +71,7 @@ function SubjectItem(): React.ReactElement {
         <Box className={classes.container}>
             <Box className={classes.content}>
                 <Box>
-                    {metadata.map(({ file }, index) => <Chip key={index} style={{ marginRight: 10 }} label={file.name} variant='outlined' />)}
+                    {metadatas.map(({ file }, index) => <Chip key={index} style={{ marginRight: 10 }} label={file.name} variant='outlined' />)}
                 </Box>
                 <SearchList />
                 <FieldType error={subjectError} required label='Subject(s) Selected' marginTop={2}>

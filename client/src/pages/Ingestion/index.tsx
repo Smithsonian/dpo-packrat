@@ -21,21 +21,21 @@ const useStyles = makeStyles(() => ({
 function Ingestion(): React.ReactElement {
     const classes = useStyles();
     const { path } = useRouteMatch();
-    const { ingestion: { metadata } } = useContext(AppContext);
+    const { ingestion: { metadatas } } = useContext(AppContext);
 
     const [options, setOptions] = useState<IngestionSidebarOption[]>([]);
 
     useEffect(() => {
         const updatedOptions: IngestionSidebarOption[] = [];
 
-        if (metadata.length) {
+        if (metadatas.length) {
             updatedOptions.push({
                 title: 'Subject & Item',
                 route: INGESTION_ROUTE.ROUTES.SUBJECT_ITEM,
                 enabled: false
             });
 
-            metadata.forEach(({ file: { id, name, type } }) => {
+            metadatas.forEach(({ file: { id, name, type } }) => {
                 updatedOptions.push({
                     title: 'Metadata',
                     subtitle: name,
@@ -46,7 +46,7 @@ function Ingestion(): React.ReactElement {
         }
 
         setOptions(updatedOptions);
-    }, [metadata]);
+    }, [metadatas]);
 
     const routeChangeCheck = ({ pathname }): boolean | string => {
         let allowChange: boolean = true;

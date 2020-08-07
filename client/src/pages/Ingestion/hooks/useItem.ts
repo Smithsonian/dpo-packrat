@@ -10,11 +10,9 @@ interface UseItem {
 
 function useItem(): UseItem {
     const {
-        ingestion: { item },
+        ingestion: { items },
         ingestionDispatch
     } = useContext(AppContext);
-
-    const { items } = item;
 
     const getSelectedItem = () => lodash.find(items, { selected: true });
 
