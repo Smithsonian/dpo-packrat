@@ -1,14 +1,15 @@
-import React, { useContext, useState, useEffect } from 'react';
 import { Box, Chip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { HOME_ROUTES, resolveSubRoute, INGESTION_ROUTE } from '../../../../constants';
-import { SidebarBottomNavigator, FieldType } from '../../../../components';
-import { useHistory, Redirect } from 'react-router';
-import { AppContext } from '../../../../context';
-import SubjectList from './SubjectList';
-import SearchList from './SearchList';
-import ItemList from './ItemList';
+import React, { useContext, useEffect, useState } from 'react';
+import { Redirect, useHistory } from 'react-router';
 import { toast } from 'react-toastify';
+import { FieldType, SidebarBottomNavigator } from '../../../../components';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
+import { AppContext } from '../../../../context';
+import useItem from '../../hooks/useItem';
+import ItemList from './ItemList';
+import SearchList from './SearchList';
+import SubjectList from './SubjectList';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -29,7 +30,7 @@ function SubjectItem(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
     const { ingestion: { metadata, subject: { subjects } } } = useContext(AppContext);
-
+    const { getSelectedItem } = useItem();
     const [subjectError, setSubjectError] = useState(false);
     const [itemError, setItemError] = useState(false);
 
@@ -41,9 +42,16 @@ function SubjectItem(): React.ReactElement {
 
     const onNext = (): void => {
         if (!subjects.length) {
-            setItemError(true);
             setSubjectError(true);
             toast.warn('Please resolve issue for subject');
+            return;
+        }
+
+        const selectedItem = getSelectedItem();
+
+        if (!selectedItem) {
+            setItemError(true);
+            toast.warn('Please select or provide an item');
             return;
         }
 
