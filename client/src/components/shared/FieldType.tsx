@@ -9,6 +9,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         flexDirection: 'column',
         padding: 10,
         borderRadius: 5,
+        width: ({ width }: FieldTypeProps) => width || '100%',
         marginTop: ({ marginTop }: FieldTypeProps) => spacing(marginTop || 0),
         backgroundColor: ({ required, error }: FieldTypeProps) => error ? colorWithOpacity(palette.error.light, 66) : required ? palette.primary.light : palette.secondary.light
     },
@@ -21,6 +22,8 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
 interface FieldTypeProps {
     required: boolean;
     label: string;
+    width?: string;
+    direction?: string;
     align?: PropTypes.Alignment;
     marginTop?: number;
     error?: boolean;
@@ -28,11 +31,11 @@ interface FieldTypeProps {
 }
 
 function FieldType(props: FieldTypeProps): React.ReactElement {
-    const { label, children, align = 'left' } = props;
+    const { label, children, align = 'left', direction } = props;
     const classes = useStyles(props);
 
     return (
-        <Box className={classes.container}>
+        <Box className={classes.container} flexDirection={direction || 'column'}>
             <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>
             {children}
         </Box>
