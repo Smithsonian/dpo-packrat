@@ -52,9 +52,7 @@ export type Subject = {
     name: string;
 };
 
-export type SubjectStep = {
-    subjects: Subject[];
-};
+export type SubjectStep = Subject[];
 
 export type Item = {
     id: string;
@@ -63,19 +61,19 @@ export type Item = {
     selected: boolean;
 };
 
-export type ItemStep = {
-    items: Item[];
-};
+export type ItemStep = Item[];
 
-export type MetadataStep = {
+export type Metadata = {
     file: IngestionFile;
 };
 
+export type MetadataStep = Metadata[];
+
 export type Ingestion = {
     uploads: IngestionUploads;
-    subject: SubjectStep;
-    item: ItemStep;
-    metadata: MetadataStep[];
+    subjects: SubjectStep;
+    items: ItemStep;
+    metadatas: MetadataStep;
 };
 
 export enum UPLOAD_ACTIONS {
@@ -104,7 +102,7 @@ export enum ITEM_ACTIONS {
 }
 
 export enum METADATA_ACTIONS {
-    ADD_STEP = 'ADD_STEP'
+    ADD_METADATA = 'ADD_METADATA'
 }
 
 const INGESTION_ACTION = {
@@ -126,13 +124,9 @@ const ingestionState: Ingestion = {
         files: [],
         loading: true
     },
-    subject: {
-        subjects: []
-    },
-    item: {
-        items: [defaultItem]
-    },
-    metadata: []
+    subjects: [],
+    items: [defaultItem],
+    metadatas: []
 };
 
 type UploadDispatchAction = FETCH_COMPLETE | FETCH_FAILED | LOAD | START | FAILED | PROGRESS | CANCELLED | COMPLETE | REMOVE | SELECT | SET_CANCEL_HANDLER | SET_ASSET_TYPE | RETRY;
@@ -229,21 +223,21 @@ type UPDATE_ITEM = {
     item: Item;
 };
 
-type MetadataDispatchAction = ADD_STEP;
+type MetadataDispatchAction = ADD_METADATA;
 
-type ADD_STEP = {
-    type: METADATA_ACTIONS.ADD_STEP;
-    metadata: MetadataStep[];
+type ADD_METADATA = {
+    type: METADATA_ACTIONS.ADD_METADATA;
+    metadatas: Metadata[];
 };
 
 export type IngestionDispatchAction = UploadDispatchAction | SubjectDispatchAction | ItemDispatchAction | MetadataDispatchAction;
 
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
-    const { uploads, subject, item } = state;
+    const { uploads, subjects, items } = state;
     const { files } = uploads;
-    const { subjects } = subject;
-    const { items } = item;
+
     console.log(action.type);
+
     switch (action.type) {
         case INGESTION_ACTION.UPLOAD.FETCH_COMPLETE:
             return {
@@ -402,51 +396,39 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 }
             };
 
-        case INGESTION_ACTION.METADATA.ADD_STEP:
+        case INGESTION_ACTION.METADATA.ADD_METADATA:
             return {
                 ...state,
-                metadata: action.metadata
+                metadatas: action.metadatas
             };
 
         case INGESTION_ACTION.SUBJECT.ADD_SUBJECT:
             return {
                 ...state,
-                subject: {
-                    ...subject,
-                    subjects: [...subjects, action.subject]
-                }
+                subjects: [...subjects, action.subject]
             };
 
         case INGESTION_ACTION.SUBJECT.REMOVE_SUBJECT:
             return {
                 ...state,
-                subject: {
-                    ...subject,
-                    subjects: lodash.filter(subjects, ({ arkId }) => arkId !== action.arkId)
-                }
+                subjects: lodash.filter(subjects, ({ arkId }) => arkId !== action.arkId)
             };
 
         case INGESTION_ACTION.ITEM.ADD_ITEMS:
             return {
                 ...state,
-                item: {
-                    ...items,
-                    items: lodash.concat(items, action.items)
-                }
+                items: lodash.concat(items, action.items)
             };
 
         case INGESTION_ACTION.ITEM.UPDATE_ITEM:
             return {
                 ...state,
-                item: {
-                    ...items,
-                    items: lodash.map(items, item => {
-                        if (item.id === action.item.id) {
-                            return action.item;
-                        }
-                        return item;
-                    })
-                }
+                items: lodash.map(items, item => {
+                    if (item.id === action.item.id) {
+                        return action.item;
+                    }
+                    return item;
+                })
             };
 
         default:

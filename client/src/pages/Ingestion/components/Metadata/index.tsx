@@ -27,18 +27,18 @@ function Metadata(): React.ReactElement {
     const classes = useStyles();
     const { search } = useLocation();
     const { ingestion } = useContext(AppContext);
-    const { metadata } = ingestion;
+    const { metadatas } = ingestion;
     const history = useHistory();
 
-    const metadataLength = metadata.length;
+    const metadataLength = metadatas.length;
     const query = qs.parse(search);
 
     if (!metadataLength || !query.fileId) {
         return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
     }
 
-    const metadataStep = metadata.find(({ file }) => file.id === query.fileId);
-    const metadataStepIndex = lodash.indexOf(metadata, metadataStep);
+    const metadataStep = metadatas.find(({ file }) => file.id === query.fileId);
+    const metadataStepIndex = lodash.indexOf(metadatas, metadataStep);
     const isLast = (metadataStepIndex + 1) === metadataLength;
 
     const onPrevious = () => {
@@ -49,7 +49,7 @@ function Metadata(): React.ReactElement {
         if (isLast) {
             alert('Finished');
         } else {
-            const { file: { id, type } } = metadata[metadataStepIndex + 1];
+            const { file: { id, type } } = metadatas[metadataStepIndex + 1];
             const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
 
             history.push(nextRoute);

@@ -11,11 +11,9 @@ interface UseSubject {
 
 function useSubject(): UseSubject {
     const {
-        ingestion: { subject },
+        ingestion: { subjects },
         ingestionDispatch
     } = useContext(AppContext);
-
-    const { subjects } = subject;
 
     const { addItems } = useItem();
 

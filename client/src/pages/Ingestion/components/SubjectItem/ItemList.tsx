@@ -9,7 +9,7 @@ import { DebounceInput } from 'react-debounce-input';
 
 const useStyles = makeStyles(({ palette, spacing, typography }) => ({
     container: {
-        maxHeight: '16vh',
+        maxHeight: '18vh',
         backgroundColor: palette.background.paper
     },
     headerText: {
@@ -53,8 +53,7 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
 
 function ItemList(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion: { item } } = useContext(AppContext);
-    const { items } = item;
+    const { ingestion: { items } } = useContext(AppContext);
     const { updateItem } = useItem();
 
     const selectableHeaderStyle = {
