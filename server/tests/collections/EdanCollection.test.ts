@@ -1,6 +1,7 @@
 import * as COL from '../../collections/interface/';
 import * as LOG from '../../utils/logger';
 import * as path from 'path';
+import Config from '../../config';
 
 beforeAll(() => {
     const logPath: string = './logs';
@@ -8,8 +9,7 @@ beforeAll(() => {
     LOG.logger.info('**************************');
     LOG.logger.info('EdanCollection Tests');
     LOG.logger.info(`EdanCollection Tests writing logs to ${path.resolve(logPath)}`);
-    const testSecret: string | undefined = 'foobar1' + process.env.TEST_SECRET + 'foobar2';
-    LOG.logger.info(`TEST_SECRET env=${testSecret}`);
+    LOG.logger.info(`authKey=${Config.collection.edan.authKey.substring(0, 6)}...${Config.collection.edan.authKey.substring(Config.collection.edan.authKey.length - 6, 6)}`);
 });
 
 afterAll(async done => {
