@@ -8,6 +8,7 @@ beforeAll(() => {
     LOG.logger.info('**************************');
     LOG.logger.info('EdanCollection Tests');
     LOG.logger.info(`EdanCollection Tests writing logs to ${path.resolve(logPath)}`);
+    LOG.logger.info(`TEST_SECRET env=${process.env.TEST_SECRET}`);
 });
 
 afterAll(async done => {
