@@ -236,8 +236,6 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
     const { uploads, subjects, items } = state;
     const { files } = uploads;
 
-    console.log(action.type);
-
     switch (action.type) {
         case INGESTION_ACTION.UPLOAD.FETCH_COMPLETE:
             return {
