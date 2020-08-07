@@ -68,7 +68,6 @@ jobs:
       - name: Run Tests
         run: yarn test
         env:
-          TEST_SECRET: ${{ secrets.TEST_SECRET }}
           EDAN_AUTH_KEY: ${{ secrets.EDAN_AUTH_KEY }}
           DATABASE_URL: mysql://root:test@localhost:3306/Packrat
 
