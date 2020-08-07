@@ -6,7 +6,7 @@ import useProject from '../../hooks/useProject';
 
 const useStyles = makeStyles(({ palette }) => ({
     projectSelect: {
-        width: '60%',
+        width: '100%',
         padding: '0px 10px',
         backgroundColor: palette.background.paper
     }
@@ -22,14 +22,14 @@ function ProjectList(): React.ReactElement {
 
     return (
         <Select
-            value={selectedProject?.id || 'select'}
+            value={selectedProject?.id || 'none'}
             disabled={hasProjects}
             className={classes.projectSelect}
-            renderValue={() => `${selectedProject?.name || 'select'}`}
+            renderValue={() => `${selectedProject?.name || 'none'}`}
             onChange={({ target: { value } }) => updateSelectedProject(value as number)}
             disableUnderline
         >
-            <MenuItem value='select'>select</MenuItem>
+            <MenuItem value='none'>none</MenuItem>
             {projects.map(({ id, name }, index) => <MenuItem key={index} value={id}>{name}</MenuItem>)}
         </Select>
     );
