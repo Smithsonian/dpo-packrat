@@ -43,7 +43,7 @@ function SubjectItem(): React.ReactElement {
     const onNext = (): void => {
         if (!subjects.length) {
             setSubjectError(true);
-            toast.warn('Please resolve issue for subject');
+            toast.warn('Please provide at least one subject');
             return;
         }
 

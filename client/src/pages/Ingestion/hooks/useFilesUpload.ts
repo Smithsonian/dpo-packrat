@@ -62,7 +62,7 @@ const useFilesUpload = (): UseFilesUpload => {
                             size,
                             status: FileUploadStatus.READY,
                             progress: 0,
-                            type: AssetType.Diconde,
+                            type: AssetType.Photogrammetry,
                             selected: false,
                             cancel: null
                         };
