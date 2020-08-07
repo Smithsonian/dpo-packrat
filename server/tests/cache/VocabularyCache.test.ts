@@ -2,7 +2,7 @@
 import * as CACHE from '../../cache';
 import * as DB from '../../db';
 import * as H from '../../utils/helpers';
-import { VocabularyCache, eVocabularySetID } from '../../cache';
+import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
 // import * as LOG from '../../utils/logger';
 
 enum eCacheTestMode {
@@ -72,6 +72,38 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             }
         });
 
+        test('Cache: VocabularyCache.vocabularyByEnum ' + description, async () => {
+            /* istanbul ignore if */
+            if (!vocabularyAll)
+                return;
+
+            // iterate through all enums of eVocabularyID; for each:
+            for (const sVocabID in eVocabularyID) {
+                if (!isNaN(Number(sVocabID)))
+                    continue;
+                const eVocabID: eVocabularyID = (<any>eVocabularyID)[sVocabID];
+                const vocabulary: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
+
+                switch (eVocabID) {
+                    case eVocabularyID.eIdentifierIdentifierTypeARK:
+                        expect(vocabulary).toBeTruthy();
+                        /* istanbul ignore else */
+                        if (vocabulary)
+                            expect(vocabulary.Term).toEqual('ARK');
+                        break;
+                    case eVocabularyID.eIdentifierIdentifierTypeUnitCMSID:
+                        expect(vocabulary).toBeTruthy();
+                        /* istanbul ignore else */
+                        if (vocabulary)
+                            expect(vocabulary.Term).toEqual('Unit CMS ID');
+                        break;
+                    case eVocabularyID.eNone:
+                        expect(vocabulary).toBeFalsy();
+                        break;
+                }
+            }
+        });
+
         test('Cache: VocabularyCache.vocabularySet ' + description, async () => {
             /* istanbul ignore if */
             if (!vocabularySetAll)
@@ -83,6 +115,50 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 /* istanbul ignore else */
                 if (vocabularySetInCache)
                     expect(vocabularySet).toMatchObject(vocabularySetInCache);
+            }
+        });
+
+        test('Cache: VocabularyCache.vocabularySetByEnum ' + description, async () => {
+            /* istanbul ignore if */
+            if (!vocabularySetAll)
+                return;
+
+            // iterate through all enums of eVocabularySetID; for each:
+            for (const sVocabSetID in eVocabularySetID) {
+                if (!isNaN(Number(sVocabSetID)))
+                    continue;
+                const eVocabSetID: eVocabularySetID = (<any>eVocabularySetID)[sVocabSetID];
+                const vocabularySet: DB.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
+
+                switch (eVocabSetID) {
+                    case eVocabularySetID.eCaptureDataCaptureMethod:
+                    case eVocabularySetID.eCaptureDataDatasetType:
+                    case eVocabularySetID.eCaptureDataItemPositionType:
+                    case eVocabularySetID.eCaptureDataFocusType:
+                    case eVocabularySetID.eCaptureDataLightSourceType:
+                    case eVocabularySetID.eCaptureDataBackgroundRemovalMethod:
+                    case eVocabularySetID.eCaptureDataClusterType:
+                    case eVocabularySetID.eCaptureDataFileVariantType:
+                    case eVocabularySetID.eModelCreationMethod:
+                    case eVocabularySetID.eModelModality:
+                    case eVocabularySetID.eModelUnits:
+                    case eVocabularySetID.eModelPurpose:
+                    case eVocabularySetID.eModelGeometryFileModelFileType:
+                    case eVocabularySetID.eModelProcessingActionStepActionMethod:
+                    case eVocabularySetID.eModelUVMapChannelUVMapType:
+                    case eVocabularySetID.eIdentifierIdentifierType:
+                    case eVocabularySetID.eMetadataMetadataSource:
+                    case eVocabularySetID.eWorkflowStepWorkflowStepType:
+                        expect(vocabularySet).toBeTruthy();
+                        /* istanbul ignore else */
+                        if (vocabularySet)
+                            expect('e' + vocabularySet.Name.replace('.', '')).toEqual(sVocabSetID);
+                        break;
+
+                    case eVocabularySetID.eNone:
+                        expect(vocabularySet).toBeFalsy();
+                        break;
+                }
             }
         });
 
@@ -154,7 +230,6 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             const vocabularySetEntriesInCacheByEnumNone: DB.Vocabulary[] | undefined =
                 await CACHE.VocabularyCache.vocabularySetEntriesByEnum(eVocabularySetID.eNone);
             expect(vocabularySetEntriesInCacheByEnumNone).toBeUndefined();
-
         });
     });
 }

@@ -4,9 +4,7 @@
  * for testing graphql api
  */
 import GraphQLApi from '../../../graphql';
-import * as LOG from '../../../utils/logger';
 import * as DBC from '../../../db/connection';
-import * as path from 'path';
 import {
     CreateUserInput,
     CreateVocabularySetInput,
@@ -30,12 +28,6 @@ class TestSuiteUtils {
     };
 
     private beforeAll = (): void => {
-        const logPath: string = './logs';
-        LOG.configureLogger(logPath);
-        LOG.logger.info('**************************');
-        LOG.logger.info('GraphQL Test Suite');
-        LOG.logger.info(`GraphQL Tests writing logs to ${path.resolve(logPath)}`);
-
         this.graphQLApi = new GraphQLApi();
     };
 

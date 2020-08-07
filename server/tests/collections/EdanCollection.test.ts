@@ -1,14 +1,5 @@
 import * as COL from '../../collections/interface/';
 import * as LOG from '../../utils/logger';
-import * as path from 'path';
-
-beforeAll(() => {
-    const logPath: string = './logs';
-    LOG.configureLogger(logPath);
-    LOG.logger.info('**************************');
-    LOG.logger.info('EdanCollection Tests');
-    LOG.logger.info(`EdanCollection Tests writing logs to ${path.resolve(logPath)}`);
-});
 
 afterAll(async done => {
     done();
