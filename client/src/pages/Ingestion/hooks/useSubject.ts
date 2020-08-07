@@ -1,8 +1,9 @@
-import { Subject, AppContext, IngestionDispatchAction, SUBJECT_ACTIONS, Item } from '../../../context';
+import { Subject, AppContext, IngestionDispatchAction, SUBJECT_ACTIONS, Item, Project } from '../../../context';
 import { useContext } from 'react';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
 import useItem from './useItem';
+import useProject from './useProject';
 
 interface UseSubject {
     addSubject: (subject: Subject) => void;
@@ -16,6 +17,7 @@ function useSubject(): UseSubject {
     } = useContext(AppContext);
 
     const { addItems } = useItem();
+    const { addProjects } = useProject();
 
     const addSubject = (subject: Subject) => {
         const alreadyExists = !!lodash.find(subjects, { arkId: subject.arkId });
@@ -37,6 +39,16 @@ function useSubject(): UseSubject {
             };
 
             addItems([mockItem]);
+
+            // TODO: fetch project for subject here
+
+            const mockProject: Project = {
+                id: 1,
+                name: 'Mammoth (NMNH)',
+                selected: true
+            };
+
+            addProjects([mockProject]);
         } else {
             toast.info(`Subject ${subject.name} has already been added`);
         }

@@ -1,4 +1,4 @@
-import { Box, Chip } from '@material-ui/core';
+import { Box, Chip, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useContext, useEffect, useState } from 'react';
 import { Redirect, useHistory } from 'react-router';
@@ -10,6 +10,8 @@ import useItem from '../../hooks/useItem';
 import ItemList from './ItemList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
+import ProjectList from './ProjectList';
+import useProject from '../../hooks/useProject';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -24,14 +26,23 @@ const useStyles = makeStyles(() => ({
         flexDirection: 'column',
         padding: '40px 0px 0px 40px'
     },
+    filesLabel: {
+        marginRight: 20
+    },
+    fileChip: {
+        marginRight: 10,
+        marginBottom: 5
+    }
 }));
 
 function SubjectItem(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const { ingestion: { metadatas, subjects } } = useContext(AppContext);
+    const { ingestion: { metadatas, subjects, projects } } = useContext(AppContext);
+    const { getSelectedProject } = useProject();
     const { getSelectedItem } = useItem();
     const [subjectError, setSubjectError] = useState(false);
+    const [projectError, setProjectError] = useState(false);
     const [itemError, setItemError] = useState(false);
 
     useEffect(() => {
@@ -40,20 +51,38 @@ function SubjectItem(): React.ReactElement {
         }
     }, [subjects]);
 
+    useEffect(() => {
+        if (projects.length > 0) {
+            setProjectError(false);
+        }
+    }, [projects]);
+
     const onNext = (): void => {
+        let error: boolean = false;
+
         if (!subjects.length) {
+            error = true;
             setSubjectError(true);
             toast.warn('Please provide at least one subject');
-            return;
+        }
+
+        const selectedProject = getSelectedProject();
+
+        if (!selectedProject) {
+            error = true;
+            setProjectError(true);
+            toast.warn('Please select a project');
         }
 
         const selectedItem = getSelectedItem();
 
         if (!selectedItem) {
+            error = true;
             setItemError(true);
             toast.warn('Please select or provide an item');
-            return;
         }
+
+        if (error) return;
 
         const { file: { id, type } } = metadatas[0];
         const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
@@ -70,12 +99,23 @@ function SubjectItem(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
-                <Box>
-                    {metadatas.map(({ file }, index) => <Chip key={index} style={{ marginRight: 10 }} label={file.name} variant='outlined' />)}
+                <Box display='flex' flexDirection='row' alignItems='center' flexWrap='wrap'>
+                    <Typography className={classes.filesLabel}>Select Subject and Item for:</Typography>
+                    {metadatas.map(({ file }, index) => <Chip key={index} className={classes.fileChip} label={file.name} variant='outlined' />)}
                 </Box>
                 <SearchList />
                 <FieldType error={subjectError} required label='Subject(s) Selected' marginTop={2}>
                     <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
+                </FieldType>
+
+                <FieldType
+                    error={projectError}
+                    width={'40%'}
+                    required
+                    label='Project'
+                    marginTop={2}
+                >
+                    <ProjectList />
                 </FieldType>
 
                 <FieldType error={itemError} required label='Item' marginTop={2}>
