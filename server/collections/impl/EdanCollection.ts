@@ -3,7 +3,13 @@ import fetch from 'node-fetch';
 
 import * as COL from '../interface';
 import Config from '../../config';
-// import * as LOG from '../../utils/logger';
+import * as LOG from '../../utils/logger';
+
+interface GetRequestResults {
+    output: string;
+    statusText: string;
+    ok: boolean;
+}
 
 class EdanCollection implements COL.ICollection {
     async queryCollection(query: string, rows: number, start: number): Promise<COL.CollectionQueryResults | null> {
@@ -14,34 +20,42 @@ class EdanCollection implements COL.ICollection {
             error: ''
         };
 
-        const params: string        = `q=${escape(query)}&rows=${rows}&start=${start}`;
-        const stringResult: string  = await this.sendGetRequest('metadata/v2.0/collections/search.htm', params);
-        const jsonResult            = stringResult ? JSON.parse(stringResult) : null;
+        const params: string                = `q=${escape(query)}&rows=${rows}&start=${start}`;
+        const reqResult: GetRequestResults  = await this.sendGetRequest('metadata/v2.0/collections/search.htm', params);
+        const jsonResult                    = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
 
         // jsonResult.rows -- array of { ..., title, id, unitCode, ..., content };
         // content.descriptiveNonRepeating.title.content = name
         // content.descriptiveNonRepeating.record_ID = EDAN ID
         // content.descriptiveNonRepeating.unit_code = Unit
         // content.descriptiveNonRepeating.guid = ID
+        /* istanbul ignore else */
         if (jsonResult) {
+            /* istanbul ignore else */
             if (jsonResult.rowCount)
                 result.rowCount = jsonResult.rowCount;
 
+            /* istanbul ignore else */
             if (jsonResult.rows) {
                 for (const row of jsonResult.rows) {
-                    let name = row.title ? row.title : '';
-                    let unit = row.unitCode ? row.unitCode : '';
-                    let identifierPublic = row.id ? row.id : '';
-                    let identifierCollection = row.id ? row.id : '';
+                    let name = row.title ? row.title : /* istanbul ignore next */ '';
+                    let unit = row.unitCode ? row.unitCode : /* istanbul ignore next */ '';
+                    let identifierPublic = row.id ? row.id : /* istanbul ignore next */ '';
+                    let identifierCollection = row.id ? row.id : /* istanbul ignore next */ '';
 
+                    /* istanbul ignore else */
                     if (row.content && row.content.descriptiveNonRepeating) {
                         const description = row.content.descriptiveNonRepeating;
+                        /* istanbul ignore else */
                         if (description.title && description.title.content)
                             name = description.title.content;
+                        /* istanbul ignore else */
                         if (description.unit_code)
                             unit = description.unit_code;
+                        /* istanbul ignore else */
                         if (description.record_ID)
                             identifierCollection = description.record_ID;
+                        /* istanbul ignore else */
                         if (description.guid)
                             identifierPublic = description.guid;
                     }
@@ -52,7 +66,7 @@ class EdanCollection implements COL.ICollection {
         }
 
         // LOG.logger.info(JSON.stringify(result) + '\n\n');
-        // LOG.logger.info(stringResult + '\n\n');
+        // LOG.logger.info(reqResult.output + '\n\n');
         return result;
     }
 
@@ -87,12 +101,23 @@ class EdanCollection implements COL.ICollection {
      * @param path The URL path
      * @param params The URL params, which specify the query details
      */
-    private async sendGetRequest(path: string, params: string): Promise<string> {
+    private async sendGetRequest(path: string, params: string): Promise<GetRequestResults> {
         const url: string = Config.collection.edan.server + path + '?' + params;
-        const res = await fetch(url, { headers: this.encodeHeader(params) });
-        // LOG.logger.info(`res.statusText=${res.statusText}`);
-        // TODO: detect and handle errors
-        return res.text();
+        try {
+            const res = await fetch(url, { headers: this.encodeHeader(params) });
+            return {
+                output: await res.text(),
+                statusText: res.statusText,
+                ok: res.ok
+            };
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('EdanCollection.sendGetRequest', error);
+            return {
+                output: JSON.stringify(error),
+                statusText: 'node-fetch error',
+                ok: false
+            };
+        }
     }
 }
 
