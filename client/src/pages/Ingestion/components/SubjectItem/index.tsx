@@ -7,13 +7,13 @@ import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { AppContext } from '../../../../context';
 import useItem from '../../hooks/useItem';
+import useProject from '../../hooks/useProject';
 import ItemList from './ItemList';
+import ProjectList from './ProjectList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
-import ProjectList from './ProjectList';
-import useProject from '../../hooks/useProject';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -27,6 +27,7 @@ const useStyles = makeStyles(() => ({
         padding: '40px 0px 0px 40px'
     },
     filesLabel: {
+        color: palette.primary.dark,
         marginRight: 20
     },
     fileChip: {
@@ -45,6 +46,8 @@ function SubjectItem(): React.ReactElement {
     const [projectError, setProjectError] = useState(false);
     const [itemError, setItemError] = useState(false);
 
+    const selectedItem = getSelectedItem();
+
     useEffect(() => {
         if (subjects.length > 0) {
             setSubjectError(false);
@@ -56,6 +59,14 @@ function SubjectItem(): React.ReactElement {
             setProjectError(false);
         }
     }, [projects]);
+
+    useEffect(() => {
+        if (selectedItem) {
+            if (selectedItem.name.length) {
+                setItemError(false);
+            }
+        }
+    }, [selectedItem]);
 
     const onNext = (): void => {
         let error: boolean = false;
@@ -74,12 +85,16 @@ function SubjectItem(): React.ReactElement {
             toast.warn('Please select a project');
         }
 
-        const selectedItem = getSelectedItem();
-
         if (!selectedItem) {
             error = true;
             setItemError(true);
             toast.warn('Please select or provide an item');
+        }
+
+        if (selectedItem?.name.trim() === '') {
+            error = true;
+            setItemError(true);
+            toast.warn('Please provide a valid name for item');
         }
 
         if (error) return;
