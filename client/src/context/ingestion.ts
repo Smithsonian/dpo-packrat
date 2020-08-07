@@ -56,6 +56,17 @@ export type SubjectStep = {
     subjects: Subject[];
 };
 
+export type Item = {
+    id: string;
+    name: string;
+    fullSubject: boolean;
+    selected: boolean;
+};
+
+export type ItemStep = {
+    items: Item[];
+};
+
 export type MetadataStep = {
     file: IngestionFile;
 };
@@ -63,6 +74,7 @@ export type MetadataStep = {
 export type Ingestion = {
     uploads: IngestionUploads;
     subject: SubjectStep;
+    item: ItemStep;
     metadata: MetadataStep[];
 };
 
@@ -86,6 +98,10 @@ export enum SUBJECT_ACTIONS {
     ADD_SUBJECT = 'ADD_SUBJECT',
     REMOVE_SUBJECT = 'REMOVE_SUBJECT'
 }
+export enum ITEM_ACTIONS {
+    ADD_ITEMS = 'ADD_ITEMS',
+    UPDATE_ITEM = 'UPDATE_ITEM'
+}
 
 export enum METADATA_ACTIONS {
     ADD_STEP = 'ADD_STEP'
@@ -94,7 +110,15 @@ export enum METADATA_ACTIONS {
 const INGESTION_ACTION = {
     UPLOAD: UPLOAD_ACTIONS,
     SUBJECT: SUBJECT_ACTIONS,
+    ITEM: ITEM_ACTIONS,
     METADATA: METADATA_ACTIONS
+};
+
+export const defaultItem: Item = {
+    id: 'default',
+    name: '',
+    fullSubject: false,
+    selected: true
 };
 
 const ingestionState: Ingestion = {
@@ -104,6 +128,9 @@ const ingestionState: Ingestion = {
     },
     subject: {
         subjects: []
+    },
+    item: {
+        items: [defaultItem]
     },
     metadata: []
 };
@@ -190,6 +217,18 @@ type REMOVE_SUBJECT = {
     arkId: string;
 };
 
+type ItemDispatchAction = ADD_ITEMS | UPDATE_ITEM;
+
+type ADD_ITEMS = {
+    type: ITEM_ACTIONS.ADD_ITEMS;
+    items: Item[];
+};
+
+type UPDATE_ITEM = {
+    type: ITEM_ACTIONS.UPDATE_ITEM;
+    item: Item;
+};
+
 type MetadataDispatchAction = ADD_STEP;
 
 type ADD_STEP = {
@@ -197,13 +236,14 @@ type ADD_STEP = {
     metadata: MetadataStep[];
 };
 
-export type IngestionDispatchAction = UploadDispatchAction | SubjectDispatchAction | MetadataDispatchAction;
+export type IngestionDispatchAction = UploadDispatchAction | SubjectDispatchAction | ItemDispatchAction | MetadataDispatchAction;
 
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
-    const { uploads, subject } = state;
+    const { uploads, subject, item } = state;
     const { files } = uploads;
     const { subjects } = subject;
-
+    const { items } = item;
+    console.log(action.type);
     switch (action.type) {
         case INGESTION_ACTION.UPLOAD.FETCH_COMPLETE:
             return {
@@ -383,6 +423,29 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 subject: {
                     ...subject,
                     subjects: lodash.filter(subjects, ({ arkId }) => arkId !== action.arkId)
+                }
+            };
+
+        case INGESTION_ACTION.ITEM.ADD_ITEMS:
+            return {
+                ...state,
+                item: {
+                    ...items,
+                    items: lodash.concat(items, action.items)
+                }
+            };
+
+        case INGESTION_ACTION.ITEM.UPDATE_ITEM:
+            return {
+                ...state,
+                item: {
+                    ...items,
+                    items: lodash.map(items, item => {
+                        if (item.id === action.item.id) {
+                            return action.item;
+                        }
+                        return item;
+                    })
                 }
             };
 
