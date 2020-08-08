@@ -90,7 +90,9 @@ model Asset {
   FileName          String
   FilePath          String
   idAssetGroup      Int?
+  idVAssetType      Int
   AssetGroup        AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
+  Vocabulary        Vocabulary          @relation(fields: [idVAssetType], references: [idVocabulary])
   AssetVersion      AssetVersion[]
   CaptureData       CaptureData[]
   CaptureDataFile   CaptureDataFile[]
@@ -105,6 +107,7 @@ model Asset {
   SystemObject      SystemObject?
 
   @@index([idAssetGroup], name: "Asset_idAssetGroup")
+  @@index([idVAssetType], name: "fk_asset_vocabulary1")
 }
 
 model AssetGroup {
@@ -669,6 +672,7 @@ model Vocabulary {
   SortOrder                                                                Int
   Term                                                                     String
   VocabularySet                                                            VocabularySet               @relation(fields: [idVocabularySet], references: [idVocabularySet])
+  Asset                                                                    Asset[]
   CaptureData                                                              CaptureData[]
   CaptureDataFile                                                          CaptureDataFile[]
   CaptureDataPhoto_CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary")

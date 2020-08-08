@@ -91,7 +91,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
             return null;
         try {
             return DBC.CopyArray<ProjectBase, Project>(
-                await DBC.DBConnection.prisma.queryRaw<Project[]>`
+                await DBC.DBConnection.prisma.$queryRaw<Project[]>`
                 SELECT DISTINCT P.*
                 FROM Project AS P
                 JOIN SystemObject AS SOP ON (P.idProject = SOP.idProject)
@@ -115,7 +115,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
             return null;
         try {
             return DBC.CopyArray<ProjectBase, Project>(
-                await DBC.DBConnection.prisma.queryRaw<Project[]>`
+                await DBC.DBConnection.prisma.$queryRaw<Project[]>`
                 SELECT DISTINCT P.*
                 FROM Project AS P
                 JOIN SystemObject AS SOProject ON (P.idProject = SOProject.idProject)
