@@ -1,4 +1,2 @@
-import StorageFactory from './StorageFactory';
-import IStorage from './IStorage';
-
-export { IStorage, StorageFactory };
+export * from './StorageFactory';
+export * from './IStorage';
