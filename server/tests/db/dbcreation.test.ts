@@ -70,11 +70,14 @@ let systemObjectItem: DBAPI.SystemObject | null;
 let systemObjectItemNulls: DBAPI.SystemObject | null;
 let systemObjectScene: DBAPI.SystemObject | null;
 let systemObjectSubject: DBAPI.SystemObject | null;
+let systemObjectSubjectNulls: DBAPI.SystemObject | null;
 let systemObjectVersion: DBAPI.SystemObjectVersion | null;
 let systemObjectXref: DBAPI.SystemObjectXref | null;
 let systemObjectXref2: DBAPI.SystemObjectXref | null;
 let systemObjectXrefSubItem1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefSubItem2: DBAPI.SystemObjectXref | null;
+let systemObjectXrefSubItem3: DBAPI.SystemObjectXref | null;
+let systemObjectXrefSubItem4: DBAPI.SystemObjectXref | null;
 let unit: DBAPI.Unit | null;
 let unit2: DBAPI.Unit | null;
 let user: DBAPI.User | null;
@@ -207,6 +210,22 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
+    test('DB Creation: Subject With Nulls', async () => {
+        if (unit)
+            subjectNulls = new DBAPI.Subject({
+                idUnit: unit.idUnit,
+                idAssetThumbnail: null,
+                idGeoLocation: null,
+                Name: 'Test Subject Nulls',
+                idSubject: 0
+            });
+        expect(subjectNulls).toBeTruthy();
+        if (subjectNulls) {
+            expect(await subjectNulls.create()).toBeTruthy();
+            expect(subjectNulls.idSubject).toBeGreaterThan(0);
+        }
+    });
+
     test('DB Creation: VocabularySet', async () => {
         vocabularySet = new DBAPI.VocabularySet({
             Name: 'Test Vocabulary Set',
@@ -297,6 +316,12 @@ describe('DB Creation Test Suite', () => {
         systemObjectSubject = subject ? await subject.fetchSystemObject() : null;
         expect(systemObjectSubject).toBeTruthy();
         expect(systemObjectSubject ? systemObjectSubject.idSubject : -1).toBe(subject ? subject.idSubject : -2);
+    });
+
+    test('DB Creation: Fetch System Object Subject 2', async() => {
+        systemObjectSubjectNulls = subjectNulls ? await subjectNulls.fetchSystemObject() : null;
+        expect(systemObjectSubjectNulls).toBeTruthy();
+        expect(systemObjectSubjectNulls ? systemObjectSubjectNulls.idSubject : -1).toBe(subjectNulls ? subjectNulls.idSubject : -2);
     });
 
     test('DB Creation: Fetch System Object Scene', async() => {
@@ -976,41 +1001,64 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
-    test('DB Creation: SystemObjectXref Subject-Item 1', async () => {
-        if (systemObjectSubject && item) {
+    test('DB Creation: SystemObjectXref Subject-Item 1/3', async () => {
+        if (systemObjectSubject && systemObjectSubjectNulls && item) {
             const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromItemID(item.idItem);
             expect(SO).toBeTruthy();
 
-            if (SO)
+            if (SO) {
                 systemObjectXrefSubItem1 = new DBAPI.SystemObjectXref({
                     idSystemObjectMaster: systemObjectSubject.idSystemObject,
                     idSystemObjectDerived: SO.idSystemObject,
                     idSystemObjectXref: 0
                 });
+                systemObjectXrefSubItem3 = new DBAPI.SystemObjectXref({
+                    idSystemObjectMaster: systemObjectSubjectNulls.idSystemObject,
+                    idSystemObjectDerived: SO.idSystemObject,
+                    idSystemObjectXref: 0
+                });
+            }
         }
         expect(systemObjectXrefSubItem1).toBeTruthy();
         if (systemObjectXrefSubItem1) {
             expect(await systemObjectXrefSubItem1.create()).toBeTruthy();
             expect(systemObjectXrefSubItem1.idSystemObjectXref).toBeGreaterThan(0);
         }
+
+        expect(systemObjectXrefSubItem3).toBeTruthy();
+        if (systemObjectXrefSubItem3) {
+            expect(await systemObjectXrefSubItem3.create()).toBeTruthy();
+            expect(systemObjectXrefSubItem3.idSystemObjectXref).toBeGreaterThan(0);
+        }
     });
 
-    test('DB Creation: SystemObjectXref Subject-Item 2', async () => {
-        if (systemObjectSubject && itemNulls) {
+    test('DB Creation: SystemObjectXref Subject-Item 2/4', async () => {
+        if (systemObjectSubject && systemObjectSubjectNulls && itemNulls) {
             const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromItemID(itemNulls.idItem);
             expect(SO).toBeTruthy();
 
-            if (SO)
+            if (SO) {
                 systemObjectXrefSubItem2 = new DBAPI.SystemObjectXref({
                     idSystemObjectMaster: systemObjectSubject.idSystemObject,
                     idSystemObjectDerived: SO.idSystemObject,
                     idSystemObjectXref: 0
                 });
+                systemObjectXrefSubItem4 = new DBAPI.SystemObjectXref({
+                    idSystemObjectMaster: systemObjectSubjectNulls.idSystemObject,
+                    idSystemObjectDerived: SO.idSystemObject,
+                    idSystemObjectXref: 0
+                });
+            }
         }
         expect(systemObjectXrefSubItem2).toBeTruthy();
         if (systemObjectXrefSubItem2) {
             expect(await systemObjectXrefSubItem2.create()).toBeTruthy();
             expect(systemObjectXrefSubItem2.idSystemObjectXref).toBeGreaterThan(0);
+        }
+        expect(systemObjectXrefSubItem4).toBeTruthy();
+        if (systemObjectXrefSubItem4) {
+            expect(await systemObjectXrefSubItem4.create()).toBeTruthy();
+            expect(systemObjectXrefSubItem4.idSystemObjectXref).toBeGreaterThan(0);
         }
     });
 
@@ -1127,22 +1175,6 @@ describe('DB Creation Test Suite', () => {
         if (projectDocumentation) {
             expect(await projectDocumentation.create()).toBeTruthy();
             expect(projectDocumentation.idProjectDocumentation).toBeGreaterThan(0);
-        }
-    });
-
-    test('DB Creation: Subject With Nulls', async () => {
-        if (unit)
-            subjectNulls = new DBAPI.Subject({
-                idUnit: unit.idUnit,
-                idAssetThumbnail: null,
-                idGeoLocation: null,
-                Name: 'Test Subject Nulls',
-                idSubject: 0
-            });
-        expect(subjectNulls).toBeTruthy();
-        if (subjectNulls) {
-            expect(await subjectNulls.create()).toBeTruthy();
-            expect(subjectNulls.idSubject).toBeGreaterThan(0);
         }
     });
 
@@ -1654,8 +1686,23 @@ describe('DB Fetch By ID Test Suite', () => {
             itemFetch = await DBAPI.Item.fetchFromSubject(subject.idSubject);
             if (itemFetch) {
                 if (item) {
-                    expect(itemFetch).toEqual(expect.arrayContaining([item]));
+                    expect(itemFetch).toEqual(expect.arrayContaining([item, itemNulls]));
                 }
+            }
+        }
+        expect(itemFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Item: Item.fetchFromSubjects', async () => {
+        let itemFetch: DBAPI.Item[] | null = null;
+        if (subject && subjectNulls) {
+            itemFetch = await DBAPI.Item.fetchFromSubjects([subject.idSubject, subjectNulls.idSubject]);
+            if (itemFetch) {
+                const itemIDs: number[] = [];
+                for (const item of itemFetch)
+                    itemIDs.push(item.idItem);
+                if (item && itemNulls)
+                    expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
             }
         }
         expect(itemFetch).toBeTruthy();
