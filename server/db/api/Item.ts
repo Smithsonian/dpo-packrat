@@ -130,7 +130,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase {
             return null;
         try {
             return DBC.CopyArray<ItemBase, Item>(
-                await DBC.DBConnection.prisma.queryRaw<Item[]>`
+                await DBC.DBConnection.prisma.$queryRaw<Item[]>`
                 SELECT DISTINCT I.*
                 FROM Item AS I
                 JOIN SystemObject AS SOI ON (I.idItem = SOI.idItem)
