@@ -54,3 +54,4 @@ export * from './api/Workflow';
 export * from './api/WorkflowStep';
 export * from './api/WorkflowStepSystemObjectXref';
 export * from './api/WorkflowTemplate';
+export * from './api/composite/SubjectUnitIdentifier';

@@ -4,7 +4,6 @@
  * Entry file for server
  */
 
-import * as path from 'path';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
@@ -15,11 +14,8 @@ import { passport, authCorsConfig, authSession, AuthRouter } from './auth';
 
 import cookieParser from 'cookie-parser';
 
-const logPath: string = './logs';
-LOG.configureLogger(logPath);
 LOG.logger.info('**************************');
 LOG.logger.info('Packrat Server Initialized');
-LOG.logger.info(`Packrat writing logs to ${path.resolve(logPath)}`);
 
 const app = express();
 const PORT = 4000;
