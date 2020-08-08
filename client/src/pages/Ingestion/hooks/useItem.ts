@@ -26,7 +26,8 @@ function useItem(): UseItem {
             });
 
             if (!fetchedItems.length) {
-                ingestionDispatch(addItemsAction([currentDefaultItem]));
+                const selectedDefaultItem = { ...currentDefaultItem, selected: true };
+                ingestionDispatch(addItemsAction([selectedDefaultItem]));
                 return;
             }
 
