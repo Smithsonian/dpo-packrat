@@ -1,6 +1,6 @@
 import * as DBAPI from '../../../db';
 import * as COL from '../../../collections/interface/';
-import * as LOG from '../../../utils/logger';
+// import * as LOG from '../../../utils/logger';
 
 afterAll(async done => {
     done();
@@ -62,9 +62,9 @@ function executeQueryCollection(ICollection: COL.ICollection, query: string, exp
                     IdentifierCollection: record.identifierCollection
                 });
 
-        LOG.logger.info(query + '\n');
-        for (const record of resultsDB)
-            LOG.logger.info(JSON.stringify(record));
+        // LOG.logger.info(query + '\n');
+        // for (const record of resultsDB)
+        //     LOG.logger.info(JSON.stringify(record));
 
         if (!expectNull)
             expect(resultsDB).toBeTruthy();
