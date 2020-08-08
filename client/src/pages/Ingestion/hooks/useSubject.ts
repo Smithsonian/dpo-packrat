@@ -1,13 +1,16 @@
-import { Subject, AppContext, IngestionDispatchAction, SUBJECT_ACTIONS, Item, Project } from '../../../context';
+import { StateSubject, AppContext, IngestionDispatchAction, SUBJECT_ACTIONS, StateItem, StateProject } from '../../../context';
+import { parseItemToState, parseProjectToState } from '../../../context/utils';
 import { useContext } from 'react';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
 import useItem from './useItem';
 import useProject from './useProject';
+import { apolloClient, QUERY_GET_INGESTION_ITEMS_FOR_SUBJECT, QUERY_GET_INGESTION_PROJECTS_FOR_SUBJECT } from '../../../graphql';
+import { Item, Project } from '../../../types/graphql';
 
 interface UseSubject {
-    addSubject: (subject: Subject) => void;
-    removeSubject: (arkId: string) => void;
+    addSubject: (subject: StateSubject) => Promise<void>;
+    removeSubject: (id: number) => void;
 }
 
 function useSubject(): UseSubject {
@@ -19,8 +22,8 @@ function useSubject(): UseSubject {
     const { addItems } = useItem();
     const { addProjects } = useProject();
 
-    const addSubject = (subject: Subject) => {
-        const alreadyExists = !!lodash.find(subjects, { arkId: subject.arkId });
+    const addSubject = async (subject: StateSubject): Promise<void> => {
+        const alreadyExists = !!lodash.find(subjects, { id: subject.id });
 
         if (!alreadyExists) {
             const addSubjectAction: IngestionDispatchAction = {
@@ -30,43 +33,89 @@ function useSubject(): UseSubject {
 
             ingestionDispatch(addSubjectAction);
 
-            // TODO: fetch item for subject here
-            const mockItem: Item = {
-                id: String(1),
-                name: 'Geonimo 238 Thorax',
-                selected: false,
-                fullSubject: false
-            };
-
-            addItems([mockItem]);
-
-            // TODO: fetch project for subject here
-
-            const mockProject: Project = {
-                id: 1,
-                name: 'Mammoth (NMNH)',
-                selected: true
-            };
-
-            addProjects([mockProject]);
+            const selectedSubjects = [...subjects, subject];
+            updateProjectsAndItemsForSubjects(selectedSubjects, addItems, addProjects);
         } else {
             toast.info(`Subject ${subject.name} has already been added`);
         }
     };
 
-    const removeSubject = (arkId: string) => {
+    const removeSubject = (id: number) => {
         const removeSubjectAction: IngestionDispatchAction = {
             type: SUBJECT_ACTIONS.REMOVE_SUBJECT,
-            arkId
+            id
         };
 
         ingestionDispatch(removeSubjectAction);
+
+        const selectedSubjects = lodash.filter(subjects, subject => subject.id !== id);
+        updateProjectsAndItemsForSubjects(selectedSubjects, addItems, addProjects);
     };
 
     return {
         addSubject,
         removeSubject
     };
+}
+
+async function updateProjectsAndItemsForSubjects(selectedSubjects: StateSubject[], addItems, addProjects): Promise<void> {
+    if (!selectedSubjects.length) {
+        console.log('adding none', selectedSubjects);
+        addItems([]);
+        addProjects([]);
+        return;
+    }
+
+    console.log('fetching for', selectedSubjects);
+    const idSubjects = selectedSubjects.map(({ id }) => id);
+
+    const variables = {
+        input: {
+            idSubjects
+        }
+    };
+
+    // TODO: remove mock as queries are integrated fully
+
+    try {
+        const {
+            data: { getIngestionItemsForSubjects }
+        } = await apolloClient.query({ query: QUERY_GET_INGESTION_ITEMS_FOR_SUBJECT, variables });
+        const { Item: foundItems } = getIngestionItemsForSubjects;
+
+        const items: StateItem[] = foundItems.map((item: Item) => parseItemToState(item, false));
+
+        const mockItem: StateItem = {
+            id: String(1),
+            name: 'Geonimo 238 Thorax',
+            selected: false,
+            entireSubject: false
+        };
+
+        addItems([...items, mockItem]);
+    } catch (error) {
+        toast.error('Failed to get items for subjects');
+    }
+
+    try {
+        const {
+            data: { getIngestionProjectsForSubjects }
+        } = await apolloClient.query({ query: QUERY_GET_INGESTION_PROJECTS_FOR_SUBJECT, variables });
+
+        const { Project: foundProjects } = getIngestionProjectsForSubjects;
+
+        const projects: StateProject[] = foundProjects.map((project: Project) => parseProjectToState(project, false));
+
+        const mockProject: StateProject = {
+            id: 1,
+            name: 'Mammoth (NMNH)',
+            selected: true
+        };
+
+        addProjects([...projects, mockProject]);
+    } catch (error) {
+        toast.error('Failed to get projects for subjects');
+    }
 }
 
 export default useSubject;

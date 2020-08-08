@@ -1,8 +1,26 @@
 type Query {
+    getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
+    getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
     getUnit(input: GetUnitInput!): GetUnitResult!
     getProject(input: GetProjectInput!): GetProjectResult!
     getSubject(input: GetSubjectInput!): GetUnitResult!
     getItem(input: GetItemInput!): GetItemResult!
+}
+
+input GetIngestionItemsForSubjectsInput {
+    idSubjects: [Int!]
+}
+
+type GetIngestionItemsForSubjectsResult {
+    Item: [Item]!
+}
+
+input GetIngestionProjectsForSubjectsInput {
+    idSubjects: [Int!]
+}
+
+type GetIngestionProjectsForSubjectsResult {
+    Project: [Project]!
 }
 
 input GetUnitInput {

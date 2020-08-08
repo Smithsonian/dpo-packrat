@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography, TableContainer, Table, TableCell, TableHead, TableRow, TableBody } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import SubjectListItem from './SubjectListItem';
-import { Subject } from '../../../../context';
+import { StateSubject } from '../../../../context';
 import useSubject from '../../hooks/useSubject';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
@@ -28,7 +28,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
 }));
 
 interface SubjectListProps {
-    subjects: Subject[];
+    subjects: StateSubject[];
     emptyLabel: string;
     selected: boolean;
 }
@@ -40,9 +40,10 @@ function SubjectList(props: SubjectListProps): React.ReactElement {
 
     const header: string[] = ['ARK / ID', 'UNIT', 'NAME'];
 
-    const getSubjectList = ({ arkId, unit, name }: Subject, index: number) => (
+    const getSubjectList = ({ id, arkId, unit, name }: StateSubject, index: number) => (
         <SubjectListItem
             key={index}
+            id={id}
             arkId={arkId}
             unit={unit}
             name={name}

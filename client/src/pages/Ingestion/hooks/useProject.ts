@@ -1,12 +1,12 @@
-import { Project, AppContext, IngestionDispatchAction, PROJECT_ACTIONS } from '../../../context';
+import { StateProject, AppContext, IngestionDispatchAction, PROJECT_ACTIONS } from '../../../context';
 import { useContext } from 'react';
 import lodash from 'lodash';
 
 interface UseProject {
-    getSelectedProject: () => Project | undefined;
-    addProjects: (projects: Project[]) => void;
+    getSelectedProject: () => StateProject | undefined;
+    addProjects: (projects: StateProject[]) => void;
     updateSelectedProject: (id: number) => void;
-    updateProject: (project: Project) => void;
+    updateProject: (project: StateProject) => void;
 }
 
 function useProject(): UseProject {
@@ -17,10 +17,10 @@ function useProject(): UseProject {
 
     const getSelectedProject = () => lodash.find(projects, { selected: true });
 
-    const addProjects = (fetchedProjects: Project[]) => {
-        const newProjects: Project[] = [];
+    const addProjects = (fetchedProjects: StateProject[]) => {
+        const newProjects: StateProject[] = [];
 
-        fetchedProjects.forEach((project: Project) => {
+        fetchedProjects.forEach((project: StateProject) => {
             const { id } = project;
             const alreadyExists = !!lodash.find(projects, { id });
 
@@ -38,12 +38,12 @@ function useProject(): UseProject {
     };
 
     const updateSelectedProject = (id: number): void => {
-        const project: Project | undefined = lodash.find(projects, { id });
+        const project: StateProject | undefined = lodash.find(projects, { id });
 
         if (project) {
             const { selected } = project;
             if (selected) {
-                const alreadySelected: Project | undefined = getSelectedProject();
+                const alreadySelected: StateProject | undefined = getSelectedProject();
 
                 if (alreadySelected) {
                     const unselectedProject = {
@@ -59,7 +59,7 @@ function useProject(): UseProject {
         }
     };
 
-    const updateProject = (project: Project): void => {
+    const updateProject = (project: StateProject): void => {
         const updateProjectAction: IngestionDispatchAction = {
             type: PROJECT_ACTIONS.UPDATE_PROJECT,
             project

@@ -530,6 +530,8 @@ type Query {
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
+  getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getProject(input: GetProjectInput!): GetProjectResult!
   getSubject(input: GetSubjectInput!): GetUnitResult!
@@ -598,6 +600,22 @@ input GetSceneInput {
 
 type GetSceneResult {
   Scene: Scene
+}
+
+input GetIngestionItemsForSubjectsInput {
+  idSubjects: [Int!]
+}
+
+type GetIngestionItemsForSubjectsResult {
+  Item: [Item]!
+}
+
+input GetIngestionProjectsForSubjectsInput {
+  idSubjects: [Int!]
+}
+
+type GetIngestionProjectsForSubjectsResult {
+  Project: [Project]!
 }
 
 input GetUnitInput {

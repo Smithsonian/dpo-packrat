@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { TableContainer, Table, TableCell, TableHead, TableRow, TableBody, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { AppContext, Item, defaultItem } from '../../../../context';
+import { AppContext, StateItem, defaultItem } from '../../../../context';
 import { FaRegCircle, FaDotCircle } from 'react-icons/fa';
 import { grey, blue } from '@material-ui/core/colors';
 import useItem from '../../hooks/useItem';
@@ -60,8 +60,8 @@ function ItemList(): React.ReactElement {
         width: 100
     };
 
-    const getItemsList = (item: Item, index: number) => {
-        const { id, selected, name, fullSubject } = item;
+    const getItemsList = (item: StateItem, index: number) => {
+        const { id, selected, name, entireSubject } = item;
         const isDefaultItem = id === defaultItem.id;
 
         let content: React.ReactElement = (
@@ -74,8 +74,8 @@ function ItemList(): React.ReactElement {
             updateItem({ ...item, selected });
         };
 
-        const onUpdateFullSubject = (fullSubject: boolean) => {
-            updateItem({ ...item, fullSubject });
+        const onUpdateEntireSubject = (entireSubject: boolean) => {
+            updateItem({ ...item, entireSubject });
         };
 
         const onUpdateName = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,9 +102,9 @@ function ItemList(): React.ReactElement {
                 key={index}
                 isDefaultItem={isDefaultItem}
                 onUpdateSelected={onUpdateSelected}
-                onUpdateFullSubject={onUpdateFullSubject}
+                onUpdateEntireSubject={onUpdateEntireSubject}
                 selected={selected}
-                fullSubject={fullSubject}
+                entireSubject={entireSubject}
             >
                 <TableCell align='left'>
                     {content}
@@ -134,15 +134,15 @@ function ItemList(): React.ReactElement {
 interface ItemListItemProps {
     isDefaultItem: boolean;
     selected: boolean;
-    fullSubject: boolean;
+    entireSubject: boolean;
     onUpdateSelected: (selected: boolean) => void;
-    onUpdateFullSubject: (fullSubject: boolean) => void;
+    onUpdateEntireSubject: (entireSubject: boolean) => void;
     children?: React.ReactElement | React.ReactElement[]
 }
 
 function ItemListItem(props: ItemListItemProps) {
     const classes = useStyles();
-    const { isDefaultItem, selected, onUpdateSelected, onUpdateFullSubject, fullSubject, children } = props;
+    const { isDefaultItem, selected, onUpdateSelected, onUpdateEntireSubject, entireSubject, children } = props;
 
     const rowStyle = {
         width: 100
@@ -158,11 +158,11 @@ function ItemListItem(props: ItemListItemProps) {
             <TableCell style={rowStyle} align='center'>
                 {isDefaultItem ? (
                     <Checkbox
-                        checked={fullSubject}
-                        onChange={({ target }) => onUpdateFullSubject(target.checked)}
+                        checked={entireSubject}
+                        onChange={({ target }) => onUpdateEntireSubject(target.checked)}
                         color='primary'
                     />
-                ) : fullSubject ? 'Yes' : 'No'}
+                ) : entireSubject ? 'Yes' : 'No'}
             </TableCell>
         </TableRow>
     );
