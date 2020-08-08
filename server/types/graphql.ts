@@ -580,11 +580,15 @@ export type Query = {
     __typename?: 'Query';
     getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
+    getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
     getScene: GetSceneResult;
+    searchIngestionSubjects: SearchIngestionSubjectsResult;
+    getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
+    getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getUnit: GetUnitResult;
     getProject: GetProjectResult;
     getSubject: GetUnitResult;
@@ -621,6 +625,18 @@ export type QueryGetModelArgs = {
 
 export type QueryGetSceneArgs = {
     input: GetSceneInput;
+};
+
+export type QuerySearchIngestionSubjectsArgs = {
+    input: SearchIngestionSubjectsInput;
+};
+
+export type QueryGetIngestionItemsForSubjectsArgs = {
+    input: GetIngestionItemsForSubjectsInput;
+};
+
+export type QueryGetIngestionProjectsForSubjectsArgs = {
+    input: GetIngestionProjectsForSubjectsInput;
 };
 
 export type QueryGetUnitArgs = {
@@ -669,6 +685,11 @@ export type GetAssetResult = {
     Asset?: Maybe<Asset>;
 };
 
+export type GetUploadedAssetVersionResult = {
+    __typename?: 'GetUploadedAssetVersionResult';
+    AssetVersion: Array<Maybe<AssetVersion>>;
+};
+
 export type GetCaptureDataInput = {
     idCaptureData: Scalars['Int'];
 };
@@ -712,6 +733,33 @@ export type GetSceneInput = {
 export type GetSceneResult = {
     __typename?: 'GetSceneResult';
     Scene?: Maybe<Scene>;
+};
+
+export type SearchIngestionSubjectsInput = {
+    query: Scalars['String'];
+};
+
+export type SearchIngestionSubjectsResult = {
+    __typename?: 'SearchIngestionSubjectsResult';
+    Subject: Array<Maybe<Subject>>;
+};
+
+export type GetIngestionItemsForSubjectsInput = {
+    idSubjects?: Maybe<Array<Scalars['Int']>>;
+};
+
+export type GetIngestionItemsForSubjectsResult = {
+    __typename?: 'GetIngestionItemsForSubjectsResult';
+    Item: Array<Maybe<Item>>;
+};
+
+export type GetIngestionProjectsForSubjectsInput = {
+    idSubjects?: Maybe<Array<Scalars['Int']>>;
+};
+
+export type GetIngestionProjectsForSubjectsResult = {
+    __typename?: 'GetIngestionProjectsForSubjectsResult';
+    Project: Array<Maybe<Project>>;
 };
 
 export type GetUnitInput = {
@@ -850,6 +898,12 @@ export type MutationCreateVocabularyArgs = {
 
 export type MutationCreateVocabularySetArgs = {
     input: CreateVocabularySetInput;
+};
+
+export type UploadAssetInput = {
+    __typename?: 'UploadAssetInput';
+    file: Scalars['Upload'];
+    type: AssetType;
 };
 
 export enum UploadStatus {

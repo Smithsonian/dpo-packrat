@@ -1,28 +1,42 @@
 import React from 'react';
-import { Box } from '@material-ui/core';
+import { Box, Typography, PropTypes } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import { colorWithOpacity } from '../../theme/colors';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
         padding: 10,
         borderRadius: 5,
-        backgroundColor: ({ required }: FieldTypeProps) => required ? palette.primary.light : palette.secondary.light
+        width: ({ width }: FieldTypeProps) => width || '100%',
+        marginTop: ({ marginTop }: FieldTypeProps) => spacing(marginTop || 0),
+        backgroundColor: ({ required, error }: FieldTypeProps) => error ? colorWithOpacity(palette.error.light, 66) : required ? palette.primary.light : palette.secondary.light
+    },
+    label: {
+        margin: '5px 0px 10px 0px',
+        color: palette.primary.dark
     }
 }));
 
 interface FieldTypeProps {
     required: boolean;
-    children: React.ReactElement
+    label: string;
+    width?: string;
+    direction?: string;
+    align?: PropTypes.Alignment;
+    marginTop?: number;
+    error?: boolean;
+    children: React.ReactElement | React.ReactElement[]
 }
 
 function FieldType(props: FieldTypeProps): React.ReactElement {
-    const { children } = props;
+    const { label, children, align = 'left', direction } = props;
     const classes = useStyles(props);
 
     return (
-        <Box className={classes.container}>
+        <Box className={classes.container} flexDirection={direction || 'column'}>
+            <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>
             {children}
         </Box>
     );

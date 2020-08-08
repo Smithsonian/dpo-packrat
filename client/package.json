@@ -50,6 +50,7 @@
     "react": "^16.13.1",
     "react-activation": "^0.5.5",
     "react-app-rewired": "^2.1.6",
+    "react-debounce-input": "^3.2.2",
     "react-dom": "^16.13.1",
     "react-dropzone": "^11.0.2",
     "react-icons": "^3.10.0",

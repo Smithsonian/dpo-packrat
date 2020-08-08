@@ -1,12 +1,19 @@
-import React, { useContext } from 'react';
-import { Box, Typography } from '@material-ui/core';
+import { Box, Chip, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { HOME_ROUTES, resolveSubRoute, INGESTION_ROUTE } from '../../../../constants';
-import { SidebarBottomNavigator } from '../../../../components';
-import { useHistory, Redirect } from 'react-router';
+import React, { useContext, useEffect, useState } from 'react';
+import { Redirect, useHistory } from 'react-router';
+import { toast } from 'react-toastify';
+import { FieldType, SidebarBottomNavigator } from '../../../../components';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { AppContext } from '../../../../context';
+import useItem from '../../hooks/useItem';
+import useProject from '../../hooks/useProject';
+import ItemList from './ItemList';
+import ProjectList from './ProjectList';
+import SearchList from './SearchList';
+import SubjectList from './SubjectList';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -15,24 +22,90 @@ const useStyles = makeStyles(() => ({
     content: {
         display: 'flex',
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
+        width: '50vw',
+        flexDirection: 'column',
+        padding: '40px 0px 0px 40px'
     },
+    filesLabel: {
+        color: palette.primary.dark,
+        marginRight: 20
+    },
+    fileChip: {
+        marginRight: 10,
+        marginBottom: 5
+    }
 }));
 
 function SubjectItem(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const { ingestion: { metadata } } = useContext(AppContext);
+    const { ingestion: { metadatas, subjects, projects } } = useContext(AppContext);
+    const { getSelectedProject } = useProject();
+    const { getSelectedItem } = useItem();
+    const [subjectError, setSubjectError] = useState(false);
+    const [projectError, setProjectError] = useState(false);
+    const [itemError, setItemError] = useState(false);
 
-    const onNext = () => {
-        const { file: { id, type } } = metadata[0];
+    const selectedItem = getSelectedItem();
+
+    useEffect(() => {
+        if (subjects.length > 0) {
+            setSubjectError(false);
+        }
+    }, [subjects]);
+
+    useEffect(() => {
+        if (projects.length > 0) {
+            setProjectError(false);
+        }
+    }, [projects]);
+
+    useEffect(() => {
+        if (selectedItem) {
+            if (selectedItem.name.length) {
+                setItemError(false);
+            }
+        }
+    }, [selectedItem]);
+
+    const onNext = (): void => {
+        let error: boolean = false;
+
+        if (!subjects.length) {
+            error = true;
+            setSubjectError(true);
+            toast.warn('Please provide at least one subject');
+        }
+
+        const selectedProject = getSelectedProject();
+
+        if (!selectedProject) {
+            error = true;
+            setProjectError(true);
+            toast.warn('Please select a project');
+        }
+
+        if (!selectedItem) {
+            error = true;
+            setItemError(true);
+            toast.warn('Please select or provide an item');
+        }
+
+        if (selectedItem?.name.trim() === '') {
+            error = true;
+            setItemError(true);
+            toast.warn('Please provide a valid name for item');
+        }
+
+        if (error) return;
+
+        const { file: { id, type } } = metadatas[0];
         const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
 
         history.push(nextRoute);
     };
 
-    const metadataLength = metadata.length;
+    const metadataLength = metadatas.length;
 
     if (!metadataLength) {
         return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
@@ -41,7 +114,28 @@ function SubjectItem(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
-                <Typography variant='subtitle1'>Subject and Item</Typography>
+                <Box display='flex' flexDirection='row' alignItems='center' flexWrap='wrap'>
+                    <Typography className={classes.filesLabel}>Select Subject and Item for:</Typography>
+                    {metadatas.map(({ file }, index) => <Chip key={index} className={classes.fileChip} label={file.name} variant='outlined' />)}
+                </Box>
+                <SearchList />
+                <FieldType error={subjectError} required label='Subject(s) Selected' marginTop={2}>
+                    <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
+                </FieldType>
+
+                <FieldType
+                    error={projectError}
+                    width={'40%'}
+                    required
+                    label='Project'
+                    marginTop={2}
+                >
+                    <ProjectList />
+                </FieldType>
+
+                <FieldType error={itemError} required label='Item' marginTop={2}>
+                    <ItemList />
+                </FieldType>
             </Box>
             <SidebarBottomNavigator
                 leftLabel='Previous'

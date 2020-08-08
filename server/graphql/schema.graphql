@@ -524,11 +524,15 @@ type WorkflowTemplate {
 type Query {
   getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
+  getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
+  getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
+  getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getProject(input: GetProjectInput!): GetProjectResult!
   getSubject(input: GetSubjectInput!): GetUnitResult!
@@ -553,6 +557,10 @@ input GetAssetInput {
 
 type GetAssetResult {
   Asset: Asset
+}
+
+type GetUploadedAssetVersionResult {
+  AssetVersion: [AssetVersion]!
 }
 
 input GetCaptureDataInput {
@@ -593,6 +601,30 @@ input GetSceneInput {
 
 type GetSceneResult {
   Scene: Scene
+}
+
+input SearchIngestionSubjectsInput {
+  query: String!
+}
+
+type SearchIngestionSubjectsResult {
+  Subject: [Subject]!
+}
+
+input GetIngestionItemsForSubjectsInput {
+  idSubjects: [Int!]
+}
+
+type GetIngestionItemsForSubjectsResult {
+  Item: [Item]!
+}
+
+input GetIngestionProjectsForSubjectsInput {
+  idSubjects: [Int!]
+}
+
+type GetIngestionProjectsForSubjectsResult {
+  Project: [Project]!
 }
 
 input GetUnitInput {
@@ -675,6 +707,11 @@ type Mutation {
   createUser(input: CreateUserInput!): CreateUserResult!
   createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
+}
+
+type UploadAssetInput {
+  file: Upload!
+  type: AssetType!
 }
 
 enum UploadStatus {

@@ -1,0 +1,12 @@
+query getUploadedAssetVersion {
+    getUploadedAssetVersion {
+        AssetVersion {
+            idAssetVersion
+            StorageSize
+            Asset {
+                idAsset
+                FileName
+            }
+        }
+    }
+}
