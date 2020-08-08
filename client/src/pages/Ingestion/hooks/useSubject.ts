@@ -60,13 +60,11 @@ function useSubject(): UseSubject {
 
 async function updateProjectsAndItemsForSubjects(selectedSubjects: StateSubject[], addItems, addProjects): Promise<void> {
     if (!selectedSubjects.length) {
-        console.log('adding none', selectedSubjects);
         addItems([]);
         addProjects([]);
         return;
     }
 
-    console.log('fetching for', selectedSubjects);
     const idSubjects = selectedSubjects.map(({ id }) => id);
 
     const variables = {
