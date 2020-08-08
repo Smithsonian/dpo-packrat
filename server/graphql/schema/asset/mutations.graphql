@@ -9,6 +9,11 @@ type Mutation {
     uploadAsset(file: Upload!, type: AssetType!): UploadAssetResult!
 }
 
+type UploadAssetInput {
+    file: Upload!
+    type: AssetType!
+}
+
 enum UploadStatus {
     COMPLETE
     FAILED
