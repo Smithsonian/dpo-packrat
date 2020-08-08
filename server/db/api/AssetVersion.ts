@@ -119,7 +119,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return null;
         try {
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
-                await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator, Ingested }, include: { Asset: true } }), AssetVersion);
+                await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator, Ingested } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchFromUserByIngested', error);
             return null;
