@@ -38,6 +38,7 @@ module.exports = {
         'object-curly-spacing': ['error', 'always'],
         'key-spacing': ['error', { beforeColon: false, mode: 'minimum' }],
         'object-shorthand': ['error', 'always'],
+        '@typescript-eslint/no-empty-function': 'off',
         // JSX RULES
         'jsx-quotes': ['error', 'prefer-single'],
         'react/jsx-boolean-value': 'error',

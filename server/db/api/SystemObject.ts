@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import * as P from '@prisma/client';
 import { WorkflowStep } from '..';
 import * as DBC from '../connection';
