@@ -1,5 +1,4 @@
 import * as COL from '../../collections/interface/';
-// import * as LOG from '../../utils/logger';
 
 afterAll(async done => {
     done();
@@ -21,7 +20,7 @@ describe('Collections: EdanCollection', () => {
 function executeTestQuery(ICollection: COL.ICollection, query: string, expectNoResults: boolean): void {
     test('Collections: EdanCollection.queryCollection ' + query, async () => {
         const results: COL.CollectionQueryResults | null = await ICollection.queryCollection(query, 10, 0);
-        // LOG.logger.info(query + '\n' + JSON.stringify(results) + '\n');
+
         expect(results).toBeTruthy();
         if (results) {
             expect(results.records).toBeTruthy();
