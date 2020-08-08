@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { Vocabulary } from '../Vocabulary';
 import * as DBC from '../../connection';
 import * as CACHE from '../../../cache';

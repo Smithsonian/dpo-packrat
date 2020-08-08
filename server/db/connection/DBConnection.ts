@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { PrismaClient } from '@prisma/client';
 
 export class DBConnection {
