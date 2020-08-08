@@ -60,7 +60,7 @@ type AssetVersion {
   idAsset: Int!
   idUserCreator: Int!
   StorageChecksum: String!
-  StorageLocation: String!
+  StorageKey: String!
   StorageSize: Int!
   Ingested: Boolean!
   Asset: Asset

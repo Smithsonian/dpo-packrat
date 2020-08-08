@@ -492,7 +492,7 @@ describe('DB Creation Test Suite', () => {
                 idAsset: assetThumbnail.idAsset,
                 idUserCreator: user.idUser,
                 DateCreated: new Date(),
-                StorageLocation: '/test/asset/path',
+                StorageKey: randomStorageKey('/test/asset/path/'),
                 StorageChecksum: 'Asset Checksum',
                 StorageSize: 50,
                 idAssetVersion: 0,
@@ -511,7 +511,7 @@ describe('DB Creation Test Suite', () => {
                 idAsset: assetThumbnail.idAsset,
                 idUserCreator: user.idUser,
                 DateCreated: new Date(),
-                StorageLocation: '/test/asset/path',
+                StorageKey: randomStorageKey('/test/asset2/path/'),
                 StorageChecksum: 'Asset Checksum',
                 StorageSize: 50,
                 idAssetVersion: 0,
@@ -5061,3 +5061,7 @@ describe('DB Null/Zero ID Test', () => {
         await expect(SO.update()).rejects.toThrow('DBAPI.SystemObject.update() should never be called');
     });
 });
+
+function randomStorageKey(baseName: string) {
+    return baseName + (Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+}

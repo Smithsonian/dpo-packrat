@@ -62,4 +62,4 @@ const Config: ConfigType = {
     }
 };
 
-export { Config as default, AUTH_TYPE, COLLECTION_TYPE };
+export { Config as default, AUTH_TYPE, COLLECTION_TYPE, STORAGE_TYPE };

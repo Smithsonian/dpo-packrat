@@ -1,3 +1,1 @@
-import LocalStorage from './LocalStorage';
-
-export { LocalStorage };
+export * from './LocalStorage';

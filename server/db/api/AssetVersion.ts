@@ -11,7 +11,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     idAsset!: number;
     idUserCreator!: number;
     StorageChecksum!: string;
-    StorageLocation!: string;
+    StorageKey!: string;
     StorageSize!: number;
     Ingested!: boolean;
 
@@ -23,16 +23,16 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { DateCreated, idAsset, idUserCreator, StorageChecksum, StorageLocation, StorageSize, Ingested } = this;
+            const { DateCreated, idAsset, idUserCreator, StorageChecksum, StorageKey, StorageSize, Ingested } = this;
             ({ idAssetVersion: this.idAssetVersion, DateCreated: this.DateCreated, idAsset: this.idAsset,
                 idUserCreator: this.idUserCreator, StorageChecksum: this.StorageChecksum,
-                StorageLocation: this.StorageLocation, StorageSize: this.StorageSize, Ingested: this.Ingested } =
+                StorageKey: this.StorageKey, StorageSize: this.StorageSize, Ingested: this.Ingested } =
                 await DBC.DBConnection.prisma.assetVersion.create({
                     data: {
                         Asset:              { connect: { idAsset }, },
                         User:               { connect: { idUser: idUserCreator }, },
                         DateCreated,
-                        StorageLocation,
+                        StorageKey,
                         StorageChecksum,
                         StorageSize,
                         Ingested,
@@ -48,14 +48,14 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAssetVersion, DateCreated, idAsset, idUserCreator, StorageChecksum, StorageLocation, StorageSize, Ingested } = this;
+            const { idAssetVersion, DateCreated, idAsset, idUserCreator, StorageChecksum, StorageKey, StorageSize, Ingested } = this;
             return await DBC.DBConnection.prisma.assetVersion.update({
                 where: { idAssetVersion, },
                 data: {
                     Asset:              { connect: { idAsset }, },
                     User:               { connect: { idUser: idUserCreator }, },
                     DateCreated,
-                    StorageLocation,
+                    StorageKey,
                     StorageChecksum,
                     StorageSize,
                     Ingested,
