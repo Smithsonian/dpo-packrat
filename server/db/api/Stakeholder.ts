@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { Stakeholder as StakeholderBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { SystemObject } from '..';
 import * as DBC from '../connection';
