@@ -49,8 +49,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup test DB
+      - name: Setup test DB Schema
         run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test < server/db/sql/scripts/Packrat.sql
+
+      - name: Setup test DB Data
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test < server/db/sql/scripts/Packrat.DATA.sql
 
       - name: Setup node version
         uses: actions/setup-node@v1
@@ -65,6 +68,7 @@ jobs:
       - name: Run Tests
         run: yarn test
         env:
+          EDAN_AUTH_KEY: ${{ secrets.EDAN_AUTH_KEY }}
           DATABASE_URL: mysql://root:test@localhost:3306/Packrat
 
   build:

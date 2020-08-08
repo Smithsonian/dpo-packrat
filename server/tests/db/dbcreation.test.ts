@@ -1,15 +1,6 @@
 import * as DBAPI from '../../db';
 import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
-import * as path from 'path';
-
-beforeAll(() => {
-    const logPath: string = './logs';
-    LOG.configureLogger(logPath);
-    LOG.logger.info('**************************');
-    LOG.logger.info('DB Creation Tests');
-    LOG.logger.info(`DB Creation Tests writing logs to ${path.resolve(logPath)}`);
-});
 
 afterAll(async done => {
     await DBC.DBConnection.disconnect();
@@ -79,11 +70,18 @@ let systemObjectItem: DBAPI.SystemObject | null;
 let systemObjectItemNulls: DBAPI.SystemObject | null;
 let systemObjectScene: DBAPI.SystemObject | null;
 let systemObjectSubject: DBAPI.SystemObject | null;
+let systemObjectSubjectNulls: DBAPI.SystemObject | null;
 let systemObjectVersion: DBAPI.SystemObjectVersion | null;
 let systemObjectXref: DBAPI.SystemObjectXref | null;
 let systemObjectXref2: DBAPI.SystemObjectXref | null;
 let systemObjectXrefSubItem1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefSubItem2: DBAPI.SystemObjectXref | null;
+let systemObjectXrefSubItem3: DBAPI.SystemObjectXref | null;
+let systemObjectXrefSubItem4: DBAPI.SystemObjectXref | null;
+let systemObjectXrefProjectSubject1: DBAPI.SystemObjectXref | null;
+let systemObjectXrefProjectSubject2: DBAPI.SystemObjectXref | null;
+let systemObjectXrefUnitProject1: DBAPI.SystemObjectXref | null;
+let systemObjectXrefUnitProject2: DBAPI.SystemObjectXref | null;
 let unit: DBAPI.Unit | null;
 let unit2: DBAPI.Unit | null;
 let user: DBAPI.User | null;
@@ -216,6 +214,22 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
+    test('DB Creation: Subject With Nulls', async () => {
+        if (unit2)
+            subjectNulls = new DBAPI.Subject({
+                idUnit: unit2.idUnit,
+                idAssetThumbnail: null,
+                idGeoLocation: null,
+                Name: 'Test Subject Nulls',
+                idSubject: 0
+            });
+        expect(subjectNulls).toBeTruthy();
+        if (subjectNulls) {
+            expect(await subjectNulls.create()).toBeTruthy();
+            expect(subjectNulls.idSubject).toBeGreaterThan(0);
+        }
+    });
+
     test('DB Creation: VocabularySet', async () => {
         vocabularySet = new DBAPI.VocabularySet({
             Name: 'Test Vocabulary Set',
@@ -306,6 +320,12 @@ describe('DB Creation Test Suite', () => {
         systemObjectSubject = subject ? await subject.fetchSystemObject() : null;
         expect(systemObjectSubject).toBeTruthy();
         expect(systemObjectSubject ? systemObjectSubject.idSubject : -1).toBe(subject ? subject.idSubject : -2);
+    });
+
+    test('DB Creation: Fetch System Object Subject 2', async() => {
+        systemObjectSubjectNulls = subjectNulls ? await subjectNulls.fetchSystemObject() : null;
+        expect(systemObjectSubjectNulls).toBeTruthy();
+        expect(systemObjectSubjectNulls ? systemObjectSubjectNulls.idSubject : -1).toBe(subjectNulls ? subjectNulls.idSubject : -2);
     });
 
     test('DB Creation: Fetch System Object Scene', async() => {
@@ -940,6 +960,30 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
+    test('DB Creation: Project', async () => {
+        project = new DBAPI.Project({
+            Name: 'Test Project',
+            Description: 'Test',
+            idProject: 0,
+        });
+        expect(project).toBeTruthy();
+        if (project) {
+            expect(await project.create()).toBeTruthy();
+            expect(project.idProject).toBeGreaterThan(0);
+        }
+
+        project2 = new DBAPI.Project({
+            Name: 'Test Project 2',
+            Description: 'Test',
+            idProject: 0,
+        });
+        expect(project2).toBeTruthy();
+        if (project2) {
+            expect(await project2.create()).toBeTruthy();
+            expect(project2.idProject).toBeGreaterThan(0);
+        }
+    });
+
     test('DB Creation: SystemObjectVersion', async () => {
         if (systemObjectScene) {
             systemObjectVersion = new DBAPI.SystemObjectVersion({
@@ -985,41 +1029,132 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
-    test('DB Creation: SystemObjectXref Subject-Item 1', async () => {
-        if (systemObjectSubject && item) {
+    test('DB Creation: SystemObjectXref Subject-Item 1/3', async () => {
+        if (systemObjectSubject && systemObjectSubjectNulls && item) {
             const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromItemID(item.idItem);
             expect(SO).toBeTruthy();
 
-            if (SO)
+            if (SO) {
                 systemObjectXrefSubItem1 = new DBAPI.SystemObjectXref({
                     idSystemObjectMaster: systemObjectSubject.idSystemObject,
                     idSystemObjectDerived: SO.idSystemObject,
                     idSystemObjectXref: 0
                 });
+                systemObjectXrefSubItem3 = new DBAPI.SystemObjectXref({
+                    idSystemObjectMaster: systemObjectSubjectNulls.idSystemObject,
+                    idSystemObjectDerived: SO.idSystemObject,
+                    idSystemObjectXref: 0
+                });
+            }
         }
         expect(systemObjectXrefSubItem1).toBeTruthy();
         if (systemObjectXrefSubItem1) {
             expect(await systemObjectXrefSubItem1.create()).toBeTruthy();
             expect(systemObjectXrefSubItem1.idSystemObjectXref).toBeGreaterThan(0);
         }
+
+        expect(systemObjectXrefSubItem3).toBeTruthy();
+        if (systemObjectXrefSubItem3) {
+            expect(await systemObjectXrefSubItem3.create()).toBeTruthy();
+            expect(systemObjectXrefSubItem3.idSystemObjectXref).toBeGreaterThan(0);
+        }
     });
 
-    test('DB Creation: SystemObjectXref Subject-Item 2', async () => {
-        if (systemObjectSubject && itemNulls) {
+    test('DB Creation: SystemObjectXref Subject-Item 2/4', async () => {
+        if (systemObjectSubject && systemObjectSubjectNulls && itemNulls) {
             const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromItemID(itemNulls.idItem);
             expect(SO).toBeTruthy();
 
-            if (SO)
+            if (SO) {
                 systemObjectXrefSubItem2 = new DBAPI.SystemObjectXref({
                     idSystemObjectMaster: systemObjectSubject.idSystemObject,
                     idSystemObjectDerived: SO.idSystemObject,
                     idSystemObjectXref: 0
                 });
+                systemObjectXrefSubItem4 = new DBAPI.SystemObjectXref({
+                    idSystemObjectMaster: systemObjectSubjectNulls.idSystemObject,
+                    idSystemObjectDerived: SO.idSystemObject,
+                    idSystemObjectXref: 0
+                });
+            }
         }
         expect(systemObjectXrefSubItem2).toBeTruthy();
         if (systemObjectXrefSubItem2) {
             expect(await systemObjectXrefSubItem2.create()).toBeTruthy();
             expect(systemObjectXrefSubItem2.idSystemObjectXref).toBeGreaterThan(0);
+        }
+        expect(systemObjectXrefSubItem4).toBeTruthy();
+        if (systemObjectXrefSubItem4) {
+            expect(await systemObjectXrefSubItem4.create()).toBeTruthy();
+            expect(systemObjectXrefSubItem4.idSystemObjectXref).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: SystemObjectXref Project-Subject & Unit-Project', async () => {
+        let SOProject1: DBAPI.SystemObject | null = null;
+        let SOProject2: DBAPI.SystemObject | null = null;
+        let SOUnit1: DBAPI.SystemObject | null = null;
+        let SOUnit2: DBAPI.SystemObject | null = null;
+
+        if (systemObjectSubject && systemObjectSubjectNulls && project && project2) {
+            SOProject1 = await DBAPI.SystemObject.fetchFromProjectID(project.idProject);
+            expect(SOProject1).toBeTruthy();
+            SOProject2 = await DBAPI.SystemObject.fetchFromProjectID(project2.idProject);
+            expect(SOProject2).toBeTruthy();
+
+            if (SOProject1)
+                systemObjectXrefProjectSubject1 = new DBAPI.SystemObjectXref({
+                    idSystemObjectMaster: SOProject1.idSystemObject,
+                    idSystemObjectDerived: systemObjectSubject.idSystemObject,
+                    idSystemObjectXref: 0
+                });
+            if (SOProject2)
+                systemObjectXrefProjectSubject2 = new DBAPI.SystemObjectXref({
+                    idSystemObjectMaster: SOProject2.idSystemObject,
+                    idSystemObjectDerived: systemObjectSubjectNulls.idSystemObject,
+                    idSystemObjectXref: 0
+                });
+        }
+
+        if (SOProject1 && SOProject2 && unit && unit2) {
+            SOUnit1 = await DBAPI.SystemObject.fetchFromUnitID(unit.idUnit);
+            expect(SOUnit1).toBeTruthy();
+            SOUnit2 = await DBAPI.SystemObject.fetchFromUnitID(unit2.idUnit);
+            expect(SOUnit2).toBeTruthy();
+
+            if (SOUnit1)
+                systemObjectXrefUnitProject1 = new DBAPI.SystemObjectXref({
+                    idSystemObjectMaster: SOUnit1.idSystemObject,
+                    idSystemObjectDerived: SOProject1.idSystemObject,
+                    idSystemObjectXref: 0
+                });
+            if (SOUnit2)
+                systemObjectXrefUnitProject2 = new DBAPI.SystemObjectXref({
+                    idSystemObjectMaster: SOUnit2.idSystemObject,
+                    idSystemObjectDerived: SOProject2.idSystemObject,
+                    idSystemObjectXref: 0
+                });
+        }
+
+        expect(systemObjectXrefProjectSubject1).toBeTruthy();
+        if (systemObjectXrefProjectSubject1) {
+            expect(await systemObjectXrefProjectSubject1.create()).toBeTruthy();
+            expect(systemObjectXrefProjectSubject1.idSystemObjectXref).toBeGreaterThan(0);
+        }
+        expect(systemObjectXrefProjectSubject2).toBeTruthy();
+        if (systemObjectXrefProjectSubject2) {
+            expect(await systemObjectXrefProjectSubject2.create()).toBeTruthy();
+            expect(systemObjectXrefProjectSubject2.idSystemObjectXref).toBeGreaterThan(0);
+        }
+        expect(systemObjectXrefUnitProject1).toBeTruthy();
+        if (systemObjectXrefUnitProject1) {
+            expect(await systemObjectXrefUnitProject1.create()).toBeTruthy();
+            expect(systemObjectXrefUnitProject1.idSystemObjectXref).toBeGreaterThan(0);
+        }
+        expect(systemObjectXrefUnitProject2).toBeTruthy();
+        if (systemObjectXrefUnitProject2) {
+            expect(await systemObjectXrefUnitProject2.create()).toBeTruthy();
+            expect(systemObjectXrefUnitProject2.idSystemObjectXref).toBeGreaterThan(0);
         }
     });
 
@@ -1100,30 +1235,6 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
-    test('DB Creation: Project', async () => {
-        project = new DBAPI.Project({
-            Name: 'Test Project',
-            Description: 'Test',
-            idProject: 0,
-        });
-        expect(project).toBeTruthy();
-        if (project) {
-            expect(await project.create()).toBeTruthy();
-            expect(project.idProject).toBeGreaterThan(0);
-        }
-
-        project2 = new DBAPI.Project({
-            Name: 'Test Project 2',
-            Description: 'Test',
-            idProject: 0,
-        });
-        expect(project2).toBeTruthy();
-        if (project2) {
-            expect(await project2.create()).toBeTruthy();
-            expect(project2.idProject).toBeGreaterThan(0);
-        }
-    });
-
     test('DB Creation: ProjectDocumentation', async () => {
         if (project)
             projectDocumentation = new DBAPI.ProjectDocumentation({
@@ -1136,22 +1247,6 @@ describe('DB Creation Test Suite', () => {
         if (projectDocumentation) {
             expect(await projectDocumentation.create()).toBeTruthy();
             expect(projectDocumentation.idProjectDocumentation).toBeGreaterThan(0);
-        }
-    });
-
-    test('DB Creation: Subject With Nulls', async () => {
-        if (unit)
-            subjectNulls = new DBAPI.Subject({
-                idUnit: unit.idUnit,
-                idAssetThumbnail: null,
-                idGeoLocation: null,
-                Name: 'Test Subject Nulls',
-                idSubject: 0
-            });
-        expect(subjectNulls).toBeTruthy();
-        if (subjectNulls) {
-            expect(await subjectNulls.create()).toBeTruthy();
-            expect(subjectNulls.idSubject).toBeGreaterThan(0);
         }
     });
 
@@ -1663,8 +1758,23 @@ describe('DB Fetch By ID Test Suite', () => {
             itemFetch = await DBAPI.Item.fetchFromSubject(subject.idSubject);
             if (itemFetch) {
                 if (item) {
-                    expect(itemFetch).toEqual(expect.arrayContaining([item]));
+                    expect(itemFetch).toEqual(expect.arrayContaining([item, itemNulls]));
                 }
+            }
+        }
+        expect(itemFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Item: Item.fetchFromSubjects', async () => {
+        let itemFetch: DBAPI.Item[] | null = null;
+        if (subject && subjectNulls) {
+            itemFetch = await DBAPI.Item.fetchFromSubjects([subject.idSubject, subjectNulls.idSubject]);
+            if (itemFetch) {
+                const itemIDs: number[] = [];
+                for (const item of itemFetch)
+                    itemIDs.push(item.idItem);
+                if (item && itemNulls)
+                    expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
             }
         }
         expect(itemFetch).toBeTruthy();
@@ -2813,6 +2923,36 @@ describe('DB Fetch *.fetchSystemObject Test Suite', () => {
                 expect(SO.idProject).toEqual(project.idProject);
         }
         expect(SO).toBeTruthy();
+    });
+
+    test('DB Fetch Project: Project.fetchAll', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (project && project2) {
+            projectFetch = await DBAPI.Project.fetchAll();
+            if (projectFetch)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Project: Project.fetchFromSubjects', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (subject && subjectNulls) {
+            projectFetch = await DBAPI.Project.fetchFromSubjects([subject.idSubject, subjectNulls.idSubject]);
+            if (projectFetch && project && project2)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Project: Project.fetchFromSubjectsUnits', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (subject && subjectNulls) {
+            projectFetch = await DBAPI.Project.fetchFromSubjectsUnits([subject.idSubject, subjectNulls.idSubject]);
+            if (projectFetch && project && project2)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
     });
 
     test('DB Fetch ProjectDocumentation.fetchSystemObject', async () => {
@@ -4778,6 +4918,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Item.fetch(0)).toBeNull();
         expect(await DBAPI.Item.fetchFromSubject(0)).toBeNull();
         expect(await DBAPI.Item.fetchFromSubject(-1)).toBeNull();
+        expect(await DBAPI.Item.fetchFromSubjects([])).toBeNull();
         expect(await DBAPI.Job.fetch(0)).toBeNull();
         expect(await DBAPI.JobTask.fetch(0)).toBeNull();
         expect(await DBAPI.JobTaskCook.fetch(0)).toBeNull();

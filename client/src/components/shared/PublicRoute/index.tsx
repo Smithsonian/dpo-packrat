@@ -4,8 +4,8 @@
  */
 import React, { useContext } from 'react';
 import { Route, Redirect, RouteProps } from 'react-router-dom';
-import { Routes } from '../../constants';
-import { AppContext } from '../../context';
+import { ROUTES } from '../../../constants';
+import { AppContext } from '../../../context';
 
 interface PublicRouteProps {
     restricted?: boolean;
@@ -16,7 +16,7 @@ function PublicRoute({ component: Component, restricted = false, ...rest }: Publ
     const { user } = useContext(AppContext);
 
     const render = props => (
-        !!user && restricted ? <Redirect to={Routes.DASHBOARD} /> : <Component {...props} />
+        !!user && restricted ? <Redirect to={ROUTES.HOME} /> : <Component {...props} />
     );
 
     return <Route {...rest} render={render} />;
