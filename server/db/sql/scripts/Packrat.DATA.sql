@@ -19,6 +19,7 @@ INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelUVMapChannel.UV
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Identifier.IdentifierType', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Metadata.MetadataSource', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('WorkflowStep.WorkflowStepType', 1);
+INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Asset.AssetType', 1);
 
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 1, 'Photogrammetry');
@@ -98,6 +99,18 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (15, 11, 'Refle
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (15, 12, 'Refraction');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 1, 'ARK');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 2, 'Unit CMS ID');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 1, 'Capture Data Set: Photogrammetry');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 2, 'Capture Data Set: Diconde');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 3, 'Capture Data Set: Dicom');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 4, 'Capture Data Set: Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 5, 'Capture Data File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 6, 'Model');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 7, 'Model Geometry File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 8, 'Model UV Map File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 9, 'Scene');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 10, 'Project Documentation');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 11, 'Intermediary File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 12, 'Other');
 
 SELECT idVocabulary 
 INTO @idVocabARK 
