@@ -1,47 +1,43 @@
-import React from 'react';
-import { Box, Typography, CircularProgress } from '@material-ui/core';
+import React, { useState } from 'react';
+import { Box, } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { Check, Warning } from '@material-ui/icons';
-import useUser from './hooks/useUser';
+import SidePanel from './components/SidePanel';
+import { Redirect, useRouteMatch } from 'react-router';
+import Ingestion from '../Ingestion';
+import { Header, PrivateRoute } from '../../components';
+import { resolveRoute, HOME_ROUTES, HOME_ROUTE } from '../../constants';
 
 const useStyles = makeStyles(() => ({
     container: {
         display: 'flex',
-        flex: 1,
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        flex: 1
     },
+    content: {
+        display: 'flex',
+        flex: 1
+    }
 }));
 
 function Home(): React.ReactElement {
     const classes = useStyles();
-    const { userLoading, userError } = useUser(0);
+    const [isExpanded, setExpanded] = useState(true);
+    const { path } = useRouteMatch();
 
-    let queryProgress = <CircularProgress color='primary' size={20} />;
-
-    if (!userLoading && !userError) {
-        queryProgress = (
-            <>
-                <Typography color='primary' variant='body1'>Server reachable</Typography>
-                <Check color='primary' />
-            </>
-        );
-    }
-
-    if (userError) {
-        queryProgress = (
-            <>
-                <Typography color='primary' variant='body1'>Server unreachable</Typography>
-                <Warning htmlColor='red' />
-            </>
-        );
-    }
+    const onToggle = (): void => setExpanded(setExpanded => !setExpanded);
 
     return (
         <Box className={classes.container}>
-            <Typography color='primary' variant='h4'>Home</Typography>
-            {queryProgress}
+            <PrivateRoute exact path={path}>
+                <Redirect to={resolveRoute(HOME_ROUTES.DASHBOARD)} />
+            </PrivateRoute>
+            <PrivateRoute path={HOME_ROUTE.TYPE}>
+                <Header />
+                <Box className={classes.content}>
+                    <SidePanel isExpanded={isExpanded} onToggle={onToggle} />
+                    <PrivateRoute path={resolveRoute(HOME_ROUTES.INGESTION)} component={Ingestion} />
+                </Box>
+            </PrivateRoute>
         </Box>
     );
 }

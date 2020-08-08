@@ -1,14 +1,15 @@
-import React, { useContext } from 'react';
-import { Box, Typography, Container, Button, Icon } from '@material-ui/core';
+import { Box, Container, Icon, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { useHistory } from 'react-router-dom';
-import { Formik, Field, FormikHelpers } from 'formik';
-import { toast } from 'react-toastify';
+import { Field, Formik, FormikHelpers } from 'formik';
 import { TextField } from 'formik-material-ui';
-import { Routes } from '../../constants';
+import React, { useContext } from 'react';
+import { useHistory } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import API from '../../api';
-import { getAuthenticatedUser } from '../../utils/auth';
+import { LoadingButton } from '../../components';
+import { ROUTES } from '../../constants';
 import { AppContext } from '../../context';
+import { getAuthenticatedUser } from '../../utils/auth';
 import useLoginForm, { ILoginForm } from './hooks/useLoginForm';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
@@ -34,6 +35,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         marginTop: spacing(2)
     },
     loginButton: {
+        height: 40,
         marginTop: spacing(5)
     },
     textFiledInput: {
@@ -70,7 +72,7 @@ function Login(): React.ReactElement {
                 const authenticatedUser = await getAuthenticatedUser();
                 updateUser(authenticatedUser);
                 toast.success('Welcome to Packrat');
-                history.push(Routes.DASHBOARD);
+                history.push(ROUTES.HOME);
             } else {
                 toast.error(message);
             }
@@ -83,13 +85,13 @@ function Login(): React.ReactElement {
         <Box className={classes.container}>
             <Container maxWidth='xs'>
                 <Typography className={classes.loginTitle} variant='h4' color='primary'>Login</Typography>
-                <Typography className={classes.loginSubtitle} variant='subtitle1'>Welcome to packrat</Typography>
+                <Typography className={classes.loginSubtitle} variant='body1'>Welcome to packrat</Typography>
                 <Formik
                     initialValues={initialValues}
                     validationSchema={loginValidationSchema}
                     onSubmit={onLogin}
                 >
-                    {({ handleSubmit, handleChange, values }) => (
+                    {({ handleSubmit, handleChange, values, isSubmitting }) => (
                         <form className={classes.loginForm} onSubmit={handleSubmit}>
                             <Field
                                 value={values.email}
@@ -109,20 +111,20 @@ function Login(): React.ReactElement {
                                 name='password'
                                 label='Password'
                                 type='password'
-                                disabled
                                 placeholder='password'
                                 InputProps={InputProps}
                                 component={TextField}
                             />
-                            <Button
+                            <LoadingButton
                                 type='submit'
                                 className={classes.loginButton}
                                 variant='outlined'
                                 color='primary'
-                                endIcon={<Icon>login</Icon>}
+                                endIcon={!isSubmitting && <Icon>login</Icon>}
+                                loading={isSubmitting}
                             >
                                 Login
-                            </Button>
+                            </LoadingButton>
                         </form>
                     )}
                 </Formik>

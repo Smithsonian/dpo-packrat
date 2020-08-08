@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Item as ItemBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { Item as ItemBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
 import { SystemObject } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -113,6 +113,32 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase {
                 }), Item);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Item.fetchFromSubject', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of items that are connected to any of the specified subjects.
+     * Items are connected to system objects; we examine those system objects which are in a *derived* relationship
+     * to system objects connected to any of the specified subjects.
+     *
+     * Note: this method returns ints instead of boolean for EntireSubject
+     * @param idSubjects Array of Subject.idSubject
+     */
+    static async fetchFromSubjects(idSubjects: number[]): Promise<Item[] | null> {
+        if (!idSubjects || idSubjects.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<ItemBase, Item>(
+                await DBC.DBConnection.prisma.queryRaw<Item[]>`
+                SELECT DISTINCT I.*
+                FROM Item AS I
+                JOIN SystemObject AS SOI ON (I.idItem = SOI.idItem)
+                JOIN SystemObjectXref AS SOX ON (SOI.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOS ON (SOX.idSystemObjectMaster = SOS.idSystemObject)
+                WHERE SOS.idSubject IN (${join(idSubjects)})`, Item);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Item.fetchFromSubjects', error);
             return null;
         }
     }
