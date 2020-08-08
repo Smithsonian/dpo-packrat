@@ -119,8 +119,8 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase {
 
     /**
      * Computes the array of items that are connected to any of the specified subjects.
-     * Items are connected to system objects; we examine those system objects which are in a derived relationship
-     * to system objects connected to any of the specifeid subjects.
+     * Items are connected to system objects; we examine those system objects which are in a *derived* relationship
+     * to system objects connected to any of the specified subjects.
      *
      * Note: this method returns ints instead of boolean for EntireSubject
      * @param idSubjects Array of Subject.idSubject
@@ -131,14 +131,14 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase {
         try {
             return DBC.CopyArray<ItemBase, Item>(
                 await DBC.DBConnection.prisma.queryRaw<Item[]>`
-                SELECT I.*
+                SELECT DISTINCT I.*
                 FROM Item AS I
                 JOIN SystemObject AS SOI ON (I.idItem = SOI.idItem)
                 JOIN SystemObjectXref AS SOX ON (SOI.idSystemObject = SOX.idSystemObjectDerived)
                 JOIN SystemObject AS SOS ON (SOX.idSystemObjectMaster = SOS.idSystemObject)
                 WHERE SOS.idSubject IN (${join(idSubjects)})`, Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchFromSubject', error);
+            LOG.logger.error('DBAPI.Item.fetchFromSubjects', error);
             return null;
         }
     }
