@@ -5,8 +5,14 @@ export type Logger = winston.Logger;
 export let logger: Logger;
 let LoggerRequestID: number = 1;
 
-/// Call this method once!
-export function configureLogger(logPath: string): void {
+function configureLogger(logPath: string | null): void {
+    /* istanbul ignore if */
+    if (logger)
+        return;
+
+    if (!logPath)
+        logPath = './logs';
+
     logger = winston.createLogger({
         level: 'verbose',
         format: winston.format.combine(
@@ -40,7 +46,12 @@ export function configureLogger(logPath: string): void {
             )
         }));
     }
+
+    logger.info('**************************');
+    logger.info(`Writing logs to ${path.resolve(logPath)}`);
 }
+
+configureLogger(null);
 
 /// Use this method to retrieve a logger that prepends a "request ID" to the logfile output
 /// Each call to this method will increment the request ID -- so stash and reuse the returned
@@ -48,54 +59,3 @@ export function configureLogger(logPath: string): void {
 export function getRequestLogger(): winston.Logger {
     return logger.child({ requestID: LoggerRequestID++ });
 }
-
-/*
-import { createLogger, format, transports } from 'winston';
-
-const { combine, timestamp, prettyPrint, colorize, errors,  } = format;
-
-
-const logger = createLogger({
-  format: combine(
-    errors({ stack: true }), // <-- use errors format
-    colorize(),
-    timestamp(),
-    prettyPrint()
-  ),
-  transports: [new transports.Console()],
-});
-
-or
-
-const errorStackTracerFormat = winston.format(info => {
-    if (info.meta && info.meta instanceof Error) {
-        info.message = `${info.message} ${info.meta.stack}`;
-    }
-    return info;
-});
-
-const logger = winston.createLogger({
-    format: winston.format.combine(
-        winston.format.splat(), // Necessary to produce the 'meta' property
-        errorStackTracerFormat(),
-        winston.format.simple()
-    )
-});
-
-or
-
-const errorStackFormat = winston.format(info => {
-  if (info instanceof Error) {
-    return Object.assign({}, info, {
-      stack: info.stack,
-      message: info.message
-    })
-  }
-  return info
-})
-
-const logger = winston.createLogger({
-  transports: [ ... ],
-  format: winston.format.combine(errorStackFormat(), myFormat)
-})
-*/

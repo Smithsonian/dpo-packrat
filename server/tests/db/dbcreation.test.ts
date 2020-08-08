@@ -1,15 +1,6 @@
 import * as DBAPI from '../../db';
 import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
-import * as path from 'path';
-
-beforeAll(() => {
-    const logPath: string = './logs';
-    LOG.configureLogger(logPath);
-    LOG.logger.info('**************************');
-    LOG.logger.info('DB Creation Tests');
-    LOG.logger.info(`DB Creation Tests writing logs to ${path.resolve(logPath)}`);
-});
 
 afterAll(async done => {
     await DBC.DBConnection.disconnect();
