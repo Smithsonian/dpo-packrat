@@ -1,14 +1,17 @@
 import React, { useContext } from 'react';
-import { Box, Typography } from '@material-ui/core';
+import { Box, Typography, Breadcrumbs } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { resolveSubRoute, INGESTION_ROUTE, HOME_ROUTES } from '../../../../constants';
 import { SidebarBottomNavigator } from '../../../../components';
 import { useLocation, Redirect, useHistory } from 'react-router';
-import { AppContext } from '../../../../context';
-import lodash from 'lodash';
+import { AppContext, FileId } from '../../../../context';
 import * as qs from 'query-string';
+import useMetadata from '../../hooks/useMetadata';
+import useProject from '../../hooks/useProject';
+import useItem from '../../hooks/useItem';
+import { MdNavigateNext } from 'react-icons/md';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -18,28 +21,36 @@ const useStyles = makeStyles(() => ({
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        width: '50vw',
+        padding: '40px 0px 0px 40px'
     },
+    breadcrumbs: {
+        marginBottom: 10,
+        color: palette.primary.dark
+    }
 }));
 
 function Metadata(): React.ReactElement {
     const classes = useStyles();
     const { search } = useLocation();
     const { ingestion } = useContext(AppContext);
-    const { metadata } = ingestion;
+    const { metadatas } = ingestion;
     const history = useHistory();
 
-    const metadataLength = metadata.length;
+    const { getSelectedProject } = useProject();
+    const { getSelectedItem } = useItem();
+    const { getMetadataInfo } = useMetadata();
+
+    const metadataLength = metadatas.length;
     const query = qs.parse(search);
 
     if (!metadataLength || !query.fileId) {
         return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
     }
 
-    const metadataStep = metadata.find(({ file }) => file.id === query.fileId);
-    const metadataStepIndex = lodash.indexOf(metadata, metadataStep);
-    const isLast = (metadataStepIndex + 1) === metadataLength;
+    const { metadata, metadataIndex, isLast } = getMetadataInfo(query.fileId as FileId);
+    const project = getSelectedProject();
+    const item = getSelectedItem();
 
     const onPrevious = () => {
         history.goBack();
@@ -49,7 +60,7 @@ function Metadata(): React.ReactElement {
         if (isLast) {
             alert('Finished');
         } else {
-            const { file: { id, type } } = metadata[metadataStepIndex + 1];
+            const { file: { id, type } } = metadatas[metadataIndex + 1];
             const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
 
             history.push(nextRoute);
@@ -59,10 +70,11 @@ function Metadata(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
-                <Typography variant='subtitle1'>Metadata</Typography>
-                <Typography variant='caption'>Name: {metadataStep?.file.name}</Typography>
-                <Typography variant='caption'>Size: {metadataStep?.file.size}</Typography>
-                <Typography variant='caption'>Type: {metadataStep?.file.type}</Typography>
+                <Breadcrumbs className={classes.breadcrumbs} separator={<MdNavigateNext color='inherit' size={20} />}>
+                    <Typography color='inherit'>Specify metadata for: {project?.name}</Typography>
+                    <Typography color='inherit'>{item?.name}</Typography>
+                    <Typography color='inherit'>{metadata?.file?.name}</Typography>
+                </Breadcrumbs>
             </Box>
             <SidebarBottomNavigator
                 leftLabel='Previous'

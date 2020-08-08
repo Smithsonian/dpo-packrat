@@ -1,6 +1,6 @@
 import { useCallback, useContext } from 'react';
 import { toast } from 'react-toastify';
-import { AppContext, AssetType, METADATA_ACTIONS, MetadataStep } from '../../../context';
+import { AppContext, AssetType, METADATA_ACTIONS, StateMetadata } from '../../../context';
 import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus, IngestionUploadResponse, IngestionUploadStatus } from '../../../context';
 import { MUTATION_UPLOAD_ASSET, apolloUploader } from '../../../graphql';
 import lodash from 'lodash';
@@ -28,16 +28,16 @@ const useFilesUpload = (): UseFilesUpload => {
 
         if (!selectedFiles.length) return false;
 
-        const metadata: MetadataStep[] = [];
+        const metadatas: StateMetadata[] = [];
 
         selectedFiles.forEach((file: IngestionFile) => {
             const metadataStep = { file };
-            metadata.push(metadataStep);
+            metadatas.push(metadataStep);
         });
 
         const addStepAction: IngestionDispatchAction = {
-            type: METADATA_ACTIONS.ADD_STEP,
-            metadata
+            type: METADATA_ACTIONS.ADD_METADATA,
+            metadatas
         };
 
         ingestionDispatch(addStepAction);
@@ -62,7 +62,7 @@ const useFilesUpload = (): UseFilesUpload => {
                             size,
                             status: FileUploadStatus.READY,
                             progress: 0,
-                            type: AssetType.Diconde,
+                            type: AssetType.Photogrammetry,
                             selected: false,
                             cancel: null
                         };

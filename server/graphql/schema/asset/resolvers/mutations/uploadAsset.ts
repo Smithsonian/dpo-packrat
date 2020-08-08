@@ -38,6 +38,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
 
         stream.on('close', () => {
             stream.close();
+            // TODO: create asset + asset version
         });
     });
 }

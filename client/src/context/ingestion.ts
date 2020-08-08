@@ -46,13 +46,44 @@ type IngestionUploads = {
     loading: boolean;
 };
 
-export type MetadataStep = {
+export type StateSubject = {
+    id: number;
+    arkId: string;
+    unit: string;
+    name: string;
+};
+
+export type SubjectStep = StateSubject[];
+
+export type StateProject = {
+    id: number;
+    name: string;
+    selected: boolean;
+};
+
+export type ProjectStep = StateProject[];
+
+export type StateItem = {
+    id: string;
+    name: string;
+    entireSubject: boolean;
+    selected: boolean;
+};
+
+export type ItemStep = StateItem[];
+
+export type StateMetadata = {
     file: IngestionFile;
 };
 
+export type MetadataStep = StateMetadata[];
+
 export type Ingestion = {
     uploads: IngestionUploads;
-    metadata: MetadataStep[];
+    subjects: SubjectStep;
+    projects: ProjectStep;
+    items: ItemStep;
+    metadatas: MetadataStep;
 };
 
 export enum UPLOAD_ACTIONS {
@@ -71,13 +102,38 @@ export enum UPLOAD_ACTIONS {
     SET_ASSET_TYPE = 'SET_ASSET_TYPE'
 }
 
+export enum SUBJECT_ACTIONS {
+    ADD_SUBJECT = 'ADD_SUBJECT',
+    REMOVE_SUBJECT = 'REMOVE_SUBJECT'
+}
+
+export enum PROJECT_ACTIONS {
+    ADD_PROJECTS = 'ADD_PROJECTS',
+    UPDATE_PROJECT = 'UPDATE_PROJECT'
+}
+
+export enum ITEM_ACTIONS {
+    ADD_ITEMS = 'ADD_ITEMS',
+    UPDATE_ITEM = 'UPDATE_ITEM'
+}
+
 export enum METADATA_ACTIONS {
-    ADD_STEP = 'ADD_STEP'
+    ADD_METADATA = 'ADD_METADATA'
 }
 
 const INGESTION_ACTION = {
     UPLOAD: UPLOAD_ACTIONS,
+    SUBJECT: SUBJECT_ACTIONS,
+    PROJECT: PROJECT_ACTIONS,
+    ITEM: ITEM_ACTIONS,
     METADATA: METADATA_ACTIONS
+};
+
+export const defaultItem: StateItem = {
+    id: 'default',
+    name: '',
+    entireSubject: false,
+    selected: true
 };
 
 const ingestionState: Ingestion = {
@@ -85,7 +141,10 @@ const ingestionState: Ingestion = {
         files: [],
         loading: true
     },
-    metadata: []
+    subjects: [],
+    projects: [],
+    items: [defaultItem],
+    metadatas: []
 };
 
 type UploadDispatchAction = FETCH_COMPLETE | FETCH_FAILED | LOAD | START | FAILED | PROGRESS | CANCELLED | COMPLETE | REMOVE | SELECT | SET_CANCEL_HANDLER | SET_ASSET_TYPE | RETRY;
@@ -158,17 +217,53 @@ type SET_ASSET_TYPE = {
     assetType: AssetType;
 };
 
-type MetadataDispatchAction = ADD_STEP;
+type SubjectDispatchAction = ADD_SUBJECT | REMOVE_SUBJECT;
 
-type ADD_STEP = {
-    type: METADATA_ACTIONS.ADD_STEP;
-    metadata: MetadataStep[];
+type ADD_SUBJECT = {
+    type: SUBJECT_ACTIONS.ADD_SUBJECT;
+    subject: StateSubject;
 };
 
-export type IngestionDispatchAction = UploadDispatchAction | MetadataDispatchAction;
+type REMOVE_SUBJECT = {
+    type: SUBJECT_ACTIONS.REMOVE_SUBJECT;
+    id: number;
+};
+
+type ProjectDispatchAction = ADD_PROJECTS | UPDATE_PROJECT;
+
+type ADD_PROJECTS = {
+    type: PROJECT_ACTIONS.ADD_PROJECTS;
+    projects: StateProject[];
+};
+
+type UPDATE_PROJECT = {
+    type: PROJECT_ACTIONS.UPDATE_PROJECT;
+    project: StateProject;
+};
+
+type ItemDispatchAction = ADD_ITEMS | UPDATE_ITEM;
+
+type ADD_ITEMS = {
+    type: ITEM_ACTIONS.ADD_ITEMS;
+    items: StateItem[];
+};
+
+type UPDATE_ITEM = {
+    type: ITEM_ACTIONS.UPDATE_ITEM;
+    item: StateItem;
+};
+
+type MetadataDispatchAction = ADD_METADATA;
+
+type ADD_METADATA = {
+    type: METADATA_ACTIONS.ADD_METADATA;
+    metadatas: StateMetadata[];
+};
+
+export type IngestionDispatchAction = UploadDispatchAction | SubjectDispatchAction | ProjectDispatchAction | ItemDispatchAction | MetadataDispatchAction;
 
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
-    const { uploads } = state;
+    const { uploads, subjects, projects, items } = state;
     const { files } = uploads;
 
     switch (action.type) {
@@ -329,10 +424,56 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 }
             };
 
-        case INGESTION_ACTION.METADATA.ADD_STEP:
+        case INGESTION_ACTION.METADATA.ADD_METADATA:
             return {
                 ...state,
-                metadata: action.metadata
+                metadatas: action.metadatas
+            };
+
+        case INGESTION_ACTION.SUBJECT.ADD_SUBJECT:
+            return {
+                ...state,
+                subjects: [...subjects, action.subject]
+            };
+
+        case INGESTION_ACTION.SUBJECT.REMOVE_SUBJECT:
+            return {
+                ...state,
+                subjects: lodash.filter(subjects, ({ id }) => id !== action.id)
+            };
+
+        case INGESTION_ACTION.PROJECT.ADD_PROJECTS:
+            return {
+                ...state,
+                projects: action.projects
+            };
+
+        case INGESTION_ACTION.PROJECT.UPDATE_PROJECT:
+            return {
+                ...state,
+                projects: lodash.map(projects, project => {
+                    if (project.id === action.project.id) {
+                        return action.project;
+                    }
+                    return project;
+                })
+            };
+
+        case INGESTION_ACTION.ITEM.ADD_ITEMS:
+            return {
+                ...state,
+                items: action.items
+            };
+
+        case INGESTION_ACTION.ITEM.UPDATE_ITEM:
+            return {
+                ...state,
+                items: lodash.map(items, item => {
+                    if (item.id === action.item.id) {
+                        return action.item;
+                    }
+                    return item;
+                })
             };
 
         default:
