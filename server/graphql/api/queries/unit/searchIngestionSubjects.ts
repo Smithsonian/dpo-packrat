@@ -5,6 +5,12 @@ const searchIngestionSubjects = gql`
         searchIngestionSubjects(input: $input) {
             Subject {
                 idSubject
+                Name
+                Unit {
+                    idUnit
+                    Name
+                    ARKPrefix
+                }
             }
         }
     }

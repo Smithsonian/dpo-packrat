@@ -2,13 +2,14 @@ import { Subject, Item, Project } from '../types/graphql';
 import { StateSubject, StateItem, StateProject } from './ingestion';
 
 export function parseSubjectToState(subject: Subject): StateSubject {
-    // TODO: update with unit and arkId
-    const { idSubject } = subject;
+    // TODO: how to handle no arkId and unit name?
+    const { idSubject, Name, Unit } = subject;
+
     return {
         id: idSubject,
-        arkId: '',
-        unit: '',
-        name: ''
+        name: Name,
+        arkId: Unit?.ARKPrefix ?? `${Name}-unit-arkId`,
+        unit: Unit?.Name ?? `${Name} unit`
     };
 }
 

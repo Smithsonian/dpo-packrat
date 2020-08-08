@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { FieldType, LoadingButton } from '../../../../components';
 import SubjectList from './SubjectList';
 import { StateSubject } from '../../../../context';
+import { useLazyQuery } from '@apollo/react-hooks';
+import { QUERY_SEARCH_INGESTION_SUBJECTS } from '../../../../graphql';
+import { parseSubjectToState } from '../../../../context/utils';
+import { Subject } from '../../../../types/graphql';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -43,10 +47,26 @@ const mockSubjects: StateSubject[] = [{
 
 function SearchList(): React.ReactElement {
     const classes = useStyles();
+    const [query, setQuery] = useState('');
+    const [searchSubject, { data, called, loading, error }] = useLazyQuery(QUERY_SEARCH_INGESTION_SUBJECTS);
+
     const [subjects, setSubjects] = useState<StateSubject[]>([]);
 
-    const onSearch = () => {
-        setSubjects(mockSubjects);
+    useEffect(() => {
+        if (called && !loading && !error) {
+            const { searchIngestionSubjects } = data;
+            const { Subject: foundSubjects } = searchIngestionSubjects;
+            // TODO: remove mock subjects after query integration
+            const searchedSubjects = foundSubjects.map((subject: Subject) => parseSubjectToState(subject));
+            setSubjects([...searchedSubjects, ...mockSubjects]);
+        }
+    }, [called, data, loading, error]);
+
+    const onSearch = async () => {
+        if (query === '') return;
+
+        const variables = { input: { query } };
+        searchSubject({ variables });
     };
 
     let content: React.ReactElement | null = null;
@@ -61,6 +81,7 @@ function SearchList(): React.ReactElement {
                 <TextField
                     className={classes.searchField}
                     InputLabelProps={{ shrink: false }}
+                    onChange={({ target }) => setQuery(target.value)}
                 />
                 <LoadingButton
                     className={classes.searchButton}
