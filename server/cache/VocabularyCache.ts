@@ -23,6 +23,7 @@ export enum eVocabularySetID {
     eIdentifierIdentifierType,
     eMetadataMetadataSource,
     eWorkflowStepWorkflowStepType,
+    eAssetAssetType,
     eNone = -1
 }
 
@@ -104,6 +105,7 @@ export class VocabularyCache {
                 case 'Identifier.IdentifierType':               eVocabSetEnum = eVocabularySetID.eIdentifierIdentifierType; break;
                 case 'Metadata.MetadataSource':                 eVocabSetEnum = eVocabularySetID.eMetadataMetadataSource; break;
                 case 'WorkflowStep.WorkflowStepType':           eVocabSetEnum = eVocabularySetID.eWorkflowStepWorkflowStepType; break;
+                case 'Asset.AssetType':                         eVocabSetEnum = eVocabularySetID.eAssetAssetType; break;
             }
 
             if (eVocabSetEnum != eVocabularySetID.eNone) {

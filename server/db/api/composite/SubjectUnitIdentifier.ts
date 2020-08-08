@@ -29,7 +29,7 @@ export class SubjectUnitIdentifier {
                 SubjectUnitIdentifier.initialized = true;
             }
 
-            return await DBC.DBConnection.prisma.queryRaw<SubjectUnitIdentifier[]>`
+            return await DBC.DBConnection.prisma.$queryRaw<SubjectUnitIdentifier[]>`
             WITH 
             ARKIDs (idSystemObject, IdentifierValue) AS (
                 SELECT idSystemObject, IdentifierValue
