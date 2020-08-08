@@ -6,6 +6,7 @@ export let logger: Logger;
 let LoggerRequestID: number = 1;
 
 function configureLogger(logPath: string | null): void {
+    /* istanbul ignore if */
     if (logger)
         return;
 
