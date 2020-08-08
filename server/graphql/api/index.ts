@@ -58,7 +58,16 @@ import {
     CreateVocabularyInput,
     CreateVocabularyResult,
     CreateVocabularySetInput,
-    CreateVocabularySetResult
+    UploadAssetInput,
+    UploadAssetResult,
+    GetUploadedAssetVersionResult,
+    CreateVocabularySetResult,
+    SearchIngestionSubjectsInput,
+    SearchIngestionSubjectsResult,
+    GetIngestionItemsForSubjectsInput,
+    GetIngestionItemsForSubjectsResult,
+    GetIngestionProjectsForSubjectsInput,
+    GetIngestionProjectsForSubjectsResult
 } from '../../types/graphql';
 
 // Queries
@@ -77,6 +86,10 @@ import getItem from './queries/unit/getItem';
 import getSubject from './queries/unit/getSubject';
 import getVocabulary from './queries/vocabulary/getVocabulary';
 import getWorkflow from './queries/workflow/getWorkflow';
+import getUploadedAssetVersion from './queries/asset/getUploadedAssetVersion';
+import searchIngestionSubjects from './queries/unit/searchIngestionSubjects';
+import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSubjects';
+import getIngestionProjectsForSubjects from './queries/unit/getIngestionProjectsForSubjects';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -90,6 +103,8 @@ import createItem from './mutations/unit/createItem';
 import createSubject from './mutations/unit/createSubject';
 import createVocabulary from './mutations/vocabulary/createVocabulary';
 import createVocabularySet from './mutations/vocabulary/createVocabularySet';
+import uploadAsset from './mutations/asset/uploadAsset';
+
 import { Context } from '../../types/resolvers';
 
 const allQueries = {
@@ -118,7 +133,12 @@ const allQueries = {
     createItem,
     createSubject,
     createVocabulary,
-    createVocabularySet
+    createVocabularySet,
+    uploadAsset,
+    getUploadedAssetVersion,
+    searchIngestionSubjects,
+    getIngestionItemsForSubjects,
+    getIngestionProjectsForSubjects
 };
 
 type GraphQLRequest = {
@@ -141,6 +161,26 @@ class GraphQLApi {
 
     async getCurrentUser(context: Context): Promise<GetUserResult> {
         const operationName = 'getCurrentUser';
+        const variables = {};
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async uploadAsset(input: UploadAssetInput, context: Context): Promise<UploadAssetResult> {
+        const operationName = 'uploadAsset';
+        const variables = input;
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getUploadedAssetVersion(context: Context): Promise<GetUploadedAssetVersionResult> {
+        const operationName = 'getUploadedAssetVersion';
         const variables = {};
         return this.graphqlRequest({
             operationName,
@@ -269,6 +309,36 @@ class GraphQLApi {
         });
     }
 
+    async searchIngestionSubjects(input: SearchIngestionSubjectsInput, context?: Context): Promise<SearchIngestionSubjectsResult> {
+        const operationName = 'searchIngestionSubjects';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput, context?: Context): Promise<GetIngestionItemsForSubjectsResult> {
+        const operationName = 'getIngestionItemsForSubjects';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput, context?: Context): Promise<GetIngestionProjectsForSubjectsResult> {
+        const operationName = 'getIngestionProjectsForSubjects';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
     async getUnit(input: GetUnitInput, context?: Context): Promise<GetUnitResult> {
         const operationName = 'getUnit';
         const variables = { input };
@@ -389,7 +459,7 @@ class GraphQLApi {
         });
     }
 
-    private async graphqlRequest({ query, variables, context, operationName }: GraphQLRequest): Promise<Object> {
+    private async graphqlRequest({ query, variables, context, operationName }: GraphQLRequest): Promise<any> {
         const queryNode: DocumentNode = allQueries[operationName];
         const queryNodeString: string = print(queryNode);
         const source: string = query || queryNodeString;

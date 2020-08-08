@@ -530,6 +530,7 @@ type Query {
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
   getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
@@ -600,6 +601,14 @@ input GetSceneInput {
 
 type GetSceneResult {
   Scene: Scene
+}
+
+input SearchIngestionSubjectsInput {
+  query: String!
+}
+
+type SearchIngestionSubjectsResult {
+  Subject: [Subject]!
 }
 
 input GetIngestionItemsForSubjectsInput {
@@ -698,6 +707,11 @@ type Mutation {
   createUser(input: CreateUserInput!): CreateUserResult!
   createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
+}
+
+type UploadAssetInput {
+  file: Upload!
+  type: AssetType!
 }
 
 enum UploadStatus {

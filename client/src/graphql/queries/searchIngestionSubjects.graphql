@@ -1,0 +1,7 @@
+query searchIngestionSubjects($input: SearchIngestionSubjectsInput!) {
+    searchIngestionSubjects(input: $input) {
+        Subject {
+            idSubject
+        }
+    }
+}

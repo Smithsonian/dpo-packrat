@@ -1,10 +1,19 @@
 type Query {
+    searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
     getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
     getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
     getUnit(input: GetUnitInput!): GetUnitResult!
     getProject(input: GetProjectInput!): GetProjectResult!
     getSubject(input: GetSubjectInput!): GetUnitResult!
     getItem(input: GetItemInput!): GetItemResult!
+}
+
+input SearchIngestionSubjectsInput {
+    query: String!
+}
+
+type SearchIngestionSubjectsResult {
+    Subject: [Subject]!
 }
 
 input GetIngestionItemsForSubjectsInput {

@@ -586,6 +586,7 @@ export type Query = {
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
     getScene: GetSceneResult;
+    searchIngestionSubjects: SearchIngestionSubjectsResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getUnit: GetUnitResult;
@@ -624,6 +625,10 @@ export type QueryGetModelArgs = {
 
 export type QueryGetSceneArgs = {
     input: GetSceneInput;
+};
+
+export type QuerySearchIngestionSubjectsArgs = {
+    input: SearchIngestionSubjectsInput;
 };
 
 export type QueryGetIngestionItemsForSubjectsArgs = {
@@ -728,6 +733,15 @@ export type GetSceneInput = {
 export type GetSceneResult = {
     __typename?: 'GetSceneResult';
     Scene?: Maybe<Scene>;
+};
+
+export type SearchIngestionSubjectsInput = {
+    query: Scalars['String'];
+};
+
+export type SearchIngestionSubjectsResult = {
+    __typename?: 'SearchIngestionSubjectsResult';
+    Subject: Array<Maybe<Subject>>;
 };
 
 export type GetIngestionItemsForSubjectsInput = {
@@ -884,6 +898,12 @@ export type MutationCreateVocabularyArgs = {
 
 export type MutationCreateVocabularySetArgs = {
     input: CreateVocabularySetInput;
+};
+
+export type UploadAssetInput = {
+    __typename?: 'UploadAssetInput';
+    file: Scalars['Upload'];
+    type: AssetType;
 };
 
 export enum UploadStatus {
