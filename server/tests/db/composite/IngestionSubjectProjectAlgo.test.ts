@@ -1,5 +1,4 @@
 import * as DBAPI from '../../../db';
-// import * as LOG from '../../../utils/logger';
 
 afterAll(async done => {
     done();
@@ -38,21 +37,21 @@ function executeMultistageQuery(subjectIDs: number[], expectNull: boolean): void
     test(`DB Composite IngestionSubjectProjectAlgo Test 2 '${JSON.stringify(subjectIDs)}'`, async () => {
         let results: DBAPI.Project[] | null = null;
         results = await DBAPI.Project.fetchFromSubjects(subjectIDs);
-        // LOG.logger.info('Step 1:' + JSON.stringify(results));
+
         if (!expectNull)
             expect(results).toBeTruthy();
         else
             expect(results).toBeFalsy();
 
         results = await DBAPI.Project.fetchFromSubjectsUnits(subjectIDs);
-        // LOG.logger.info('Step 2:' + JSON.stringify(results));
+
         if (!expectNull)
             expect(results).toBeTruthy();
         else
             expect(results).toBeFalsy();
 
         results = await DBAPI.Project.fetchAll();
-        // LOG.logger.info('Step 3:' + JSON.stringify(results));
+
         expect(results).toBeTruthy();
     });
 }
