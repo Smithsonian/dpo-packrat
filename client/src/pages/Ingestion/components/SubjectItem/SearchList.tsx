@@ -3,7 +3,7 @@ import { Box, TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { FieldType, LoadingButton } from '../../../../components';
 import SubjectList from './SubjectList';
-import { Subject } from '../../../../context';
+import { StateSubject } from '../../../../context';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -22,17 +22,20 @@ const useStyles = makeStyles(({ palette }) => ({
     }
 }));
 
-const mockSubjects: Subject[] = [{
+const mockSubjects: StateSubject[] = [{
+    id: 1,
     arkId: '123de82-9664-4049-b5bb-746e2fbe229e',
     unit: 'NMNH',
     name: '1 USNM RAD 125353: Geronimo 238'
 },
 {
+    id: 2,
     arkId: '313958de82-9664-4049-b5bb-746e2fbe229e',
     unit: 'NMNH',
     name: '2 USNM RAD 125353: Geronimo 238'
 },
 {
+    id: 3,
     arkId: '31958de82-9664-4049-b5bb-746e2fbe229e',
     unit: 'NMNH',
     name: '3 USNM RAD 125353: Geronimo 238'
@@ -40,7 +43,7 @@ const mockSubjects: Subject[] = [{
 
 function SearchList(): React.ReactElement {
     const classes = useStyles();
-    const [subjects, setSubjects] = useState<Subject[]>([]);
+    const [subjects, setSubjects] = useState<StateSubject[]>([]);
 
     const onSearch = () => {
         setSubjects(mockSubjects);

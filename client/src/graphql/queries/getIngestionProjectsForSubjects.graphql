@@ -1,0 +1,8 @@
+query getIngestionProjectsForSubjects($input: GetIngestionProjectsForSubjectsInput!) {
+    getIngestionProjectsForSubjects(input: $input) {
+        Project {
+            idProject
+            Name
+        }
+    }
+}

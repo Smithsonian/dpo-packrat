@@ -7,3 +7,6 @@ generates:
   ./types/graphql.ts:
     plugins:
       - typescript
+  ../client/src/types/graphql.ts:
+    plugins:
+      - typescript

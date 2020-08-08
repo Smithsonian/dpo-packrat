@@ -1,11 +1,11 @@
-import { Item, AppContext, IngestionDispatchAction, ITEM_ACTIONS } from '../../../context';
+import { StateItem, AppContext, IngestionDispatchAction, ITEM_ACTIONS, defaultItem } from '../../../context';
 import { useContext } from 'react';
 import lodash from 'lodash';
 
 interface UseItem {
-    getSelectedItem: () => Item | undefined;
-    addItems: (items: Item[]) => void;
-    updateItem: (item: Item) => void;
+    getSelectedItem: () => StateItem | undefined;
+    addItems: (items: StateItem[]) => void;
+    updateItem: (item: StateItem) => void;
 }
 
 function useItem(): UseItem {
@@ -16,36 +16,45 @@ function useItem(): UseItem {
 
     const getSelectedItem = () => lodash.find(items, { selected: true });
 
-    const addItems = (fetchedItems: Item[]) => {
-        const newItems: Item[] = [];
+    const addItems = (fetchedItems: StateItem[]): void => {
+        const currentDefaultItem = lodash.find(items, { id: defaultItem.id });
 
-        fetchedItems.forEach((item: Item) => {
-            const { id } = item;
-            const alreadyExists = !!lodash.find(items, { id });
+        if (currentDefaultItem) {
+            const addItemsAction = (items: StateItem[]): IngestionDispatchAction => ({
+                type: ITEM_ACTIONS.ADD_ITEMS,
+                items
+            });
 
-            if (!alreadyExists) {
-                newItems.push(item);
+            if (!fetchedItems.length) {
+                ingestionDispatch(addItemsAction([currentDefaultItem]));
+                return;
             }
-        });
 
-        const addItemsAction: IngestionDispatchAction = {
-            type: ITEM_ACTIONS.ADD_ITEMS,
-            items: newItems
-        };
+            const newItems: StateItem[] = [currentDefaultItem];
 
-        ingestionDispatch(addItemsAction);
+            fetchedItems.forEach((item: StateItem) => {
+                const { id } = item;
+                const alreadyExists = !!lodash.find(items, { id });
+
+                if (!alreadyExists) {
+                    newItems.push(item);
+                }
+            });
+
+            ingestionDispatch(addItemsAction(newItems));
+        }
     };
 
-    const updateItem = (item: Item) => {
+    const updateItem = (item: StateItem) => {
         const { selected } = item;
 
-        const updateItemAction = (item: Item): IngestionDispatchAction => ({
+        const updateItemAction = (item: StateItem): IngestionDispatchAction => ({
             type: ITEM_ACTIONS.UPDATE_ITEM,
             item
         });
 
         if (selected) {
-            const alreadySelected: Item | undefined = getSelectedItem();
+            const alreadySelected: StateItem | undefined = getSelectedItem();
 
             if (alreadySelected) {
                 const unselectedItem = {
