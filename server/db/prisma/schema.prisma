@@ -240,6 +240,7 @@ model Identifier {
   idSystemObject    Int?
   SystemObject      SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
   Vocabulary        Vocabulary    @relation(fields: [idVIdentifierType], references: [idVocabulary])
+  Subject           Subject[]
 
   @@index([IdentifierValue], name: "Identifier_IdentifierValue")
   @@index([idSystemObject, idVIdentifierType], name: "Identifier_idSystemObject_idVIdentifierType")
@@ -520,18 +521,21 @@ model Stakeholder {
 }
 
 model Subject {
-  idSubject        Int           @default(autoincrement()) @id
-  idUnit           Int
-  idAssetThumbnail Int?
-  idGeoLocation    Int?
-  Name             String
-  Asset            Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset])
-  GeoLocation      GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation])
-  Unit             Unit          @relation(fields: [idUnit], references: [idUnit])
-  SystemObject     SystemObject?
+  idSubject             Int           @default(autoincrement()) @id
+  idUnit                Int
+  idAssetThumbnail      Int?
+  idGeoLocation         Int?
+  Name                  String
+  idIdentifierPreferred Int?
+  Asset                 Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset])
+  GeoLocation           GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation])
+  Identifier            Identifier?   @relation(fields: [idIdentifierPreferred], references: [idIdentifier])
+  Unit                  Unit          @relation(fields: [idUnit], references: [idUnit])
+  SystemObject          SystemObject?
 
   @@index([idAssetThumbnail], name: "fk_subject_asset1")
   @@index([idGeoLocation], name: "fk_subject_geolocation1")
+  @@index([idIdentifierPreferred], name: "fk_subject_identifier1")
   @@index([idUnit], name: "fk_subject_unit1")
 }
 

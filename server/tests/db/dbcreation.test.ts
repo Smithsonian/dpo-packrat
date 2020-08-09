@@ -36,6 +36,7 @@ let captureDataPhotoNulls: DBAPI.CaptureDataPhoto | null;
 let geoLocation: DBAPI.GeoLocation | null;
 let identifier: DBAPI.Identifier | null;
 let identifierNull: DBAPI.Identifier | null;
+let identifierSubjectHookup: DBAPI.Identifier | null;
 let intermediaryFile: DBAPI.IntermediaryFile | null;
 let item: DBAPI.Item | null;
 let itemNulls: DBAPI.Item | null;
@@ -255,19 +256,53 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
+    test('DB Creation: Identifier Subject Hookup', async () => {
+        if (vocabulary)
+            identifierSubjectHookup = new DBAPI.Identifier({
+                IdentifierValue: 'Test Identifier Null 2',
+                idVIdentifierType: vocabulary.idVocabulary,
+                idSystemObject: null,
+                idIdentifier: 0
+            });
+        expect(identifierSubjectHookup).toBeTruthy();
+        if (identifierSubjectHookup) {
+            expect(await identifierSubjectHookup.create()).toBeTruthy();
+            expect(identifierSubjectHookup.idIdentifier).toBeGreaterThan(0);
+        }
+    });
+
     test('DB Creation: Subject', async () => {
-        if (unit && assetThumbnail && geoLocation)
+        if (unit && assetThumbnail && geoLocation && identifierSubjectHookup)
             subject = new DBAPI.Subject({
                 idUnit: unit.idUnit,
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idGeoLocation: geoLocation.idGeoLocation,
                 Name: 'Test Subject',
+                idIdentifierPreferred: identifierSubjectHookup.idIdentifier,
                 idSubject: 0
             });
         expect(subject).toBeTruthy();
         if (subject) {
             expect(await subject.create()).toBeTruthy();
             expect(subject.idSubject).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: Fetch System Object Subject', async() => {
+        systemObjectSubject = subject ? await subject.fetchSystemObject() : null;
+        expect(systemObjectSubject).toBeTruthy();
+        expect(systemObjectSubject ? systemObjectSubject.idSubject : -1).toBe(subject ? subject.idSubject : -2);
+    });
+
+    test('DB Creation: Update Identifier with Subject', async() => {
+        if (systemObjectSubject && identifierSubjectHookup) {
+            identifierSubjectHookup.idSystemObject = systemObjectSubject.idSystemObject;
+            expect(await identifierSubjectHookup.update()).toBeTruthy();
+
+            const identifierFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifierSubjectHookup.idIdentifier);
+            expect(identifierFetch).toBeTruthy();
+            if (identifierFetch)
+                expect(identifierFetch.idSystemObject).toBe(systemObjectSubject.idSystemObject);
         }
     });
 
@@ -278,6 +313,7 @@ describe('DB Creation Test Suite', () => {
                 idAssetThumbnail: null,
                 idGeoLocation: null,
                 Name: 'Test Subject Nulls',
+                idIdentifierPreferred: null,
                 idSubject: 0
             });
         expect(subjectNulls).toBeTruthy();
@@ -328,12 +364,6 @@ describe('DB Creation Test Suite', () => {
             expect(await sceneNulls.create()).toBeTruthy();
             expect(sceneNulls.idScene).toBeGreaterThan(0);
         }
-    });
-
-    test('DB Creation: Fetch System Object Subject', async() => {
-        systemObjectSubject = subject ? await subject.fetchSystemObject() : null;
-        expect(systemObjectSubject).toBeTruthy();
-        expect(systemObjectSubject ? systemObjectSubject.idSubject : -1).toBe(subject ? subject.idSubject : -2);
     });
 
     test('DB Creation: Fetch System Object Subject 2', async() => {
@@ -4997,12 +5027,15 @@ describe('DB Update Test Suite', () => {
         if (subject) {
             expect(subject.idAssetThumbnail).toBeNull();
             subject.idGeoLocation = null;
+            subject.idIdentifierPreferred = null;
             bUpdated = await subject.update();
 
             const subjectFetch: DBAPI.Subject | null = await DBAPI.Subject.fetch(subject.idSubject);
             expect(subjectFetch).toBeTruthy();
-            if (subjectFetch)
+            if (subjectFetch) {
                 expect(subjectFetch.idGeoLocation).toBeNull();
+                expect(subjectFetch.idIdentifierPreferred).toBeNull();
+            }
         }
         expect(bUpdated).toBeTruthy();
     });

@@ -10,9 +10,11 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase {
     idGeoLocation!: number | null;
     idUnit!: number;
     Name!: string;
+    idIdentifierPreferred!: number | null;
 
     private idAssetThumbnailOrig!: number | null;
     private idGeoLocationOrig!: number | null;
+    private idIdentifierPreferredOrig!: number | null;
 
     constructor(input: SubjectBase) {
         super(input);
@@ -21,19 +23,21 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase {
     protected updateCachedValues(): void {
         this.idAssetThumbnailOrig = this.idAssetThumbnail;
         this.idGeoLocationOrig = this.idGeoLocation;
+        this.idIdentifierPreferredOrig = this.idIdentifierPreferred;
     }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idUnit, idAssetThumbnail, idGeoLocation, Name } = this;
+            const { idUnit, idAssetThumbnail, idGeoLocation, Name, idIdentifierPreferred } = this;
             ({ idSubject: this.idSubject, idUnit: this.idUnit, idAssetThumbnail: this.idAssetThumbnail,
-                idGeoLocation: this.idGeoLocation, Name: this.Name } =
+                idGeoLocation: this.idGeoLocation, Name: this.Name, idIdentifierPreferred: this.idIdentifierPreferred } =
                 await DBC.DBConnection.prisma.subject.create({
                     data: {
                         Unit:           { connect: { idUnit }, },
                         Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
                         GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : undefined,
                         Name,
+                        Identifier:     idIdentifierPreferred ? { connect: { idIdentifier: idIdentifierPreferred }, } : undefined,
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
@@ -46,13 +50,15 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase {
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idSubject, idUnit, idAssetThumbnail, idGeoLocation, Name, idAssetThumbnailOrig, idGeoLocationOrig } = this;
+            const { idSubject, idUnit, idAssetThumbnail, idGeoLocation, Name, idIdentifierPreferred,
+                idAssetThumbnailOrig, idGeoLocationOrig, idIdentifierPreferredOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.subject.update({
                 where: { idSubject, },
                 data: {
                     Unit:           { connect: { idUnit }, },
                     Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
                     GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : idGeoLocationOrig ? { disconnect: true, } : undefined,
+                    Identifier:     idIdentifierPreferred ? { connect: { idIdentifier: idIdentifierPreferred }, } : idIdentifierPreferredOrig ? { disconnect: true, } : undefined,
                     Name,
                 },
             }) ? true : /* istanbul ignore next */ false;

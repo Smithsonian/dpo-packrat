@@ -411,8 +411,10 @@ type Subject {
   AssetThumbnail: Asset
   idAssetThumbnail: Int
   idGeoLocation: Int
+  idIdentifierPreferred: Int
   GeoLocation: GeoLocation
   Unit: Unit
+  IdentifierPreferred: Identifier
   Item: [Item]
   SystemObject: SystemObject
 }
@@ -533,7 +535,7 @@ type Query {
   getScene(input: GetSceneInput!): GetSceneResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getProject(input: GetProjectInput!): GetProjectResult!
-  getSubject(input: GetSubjectInput!): GetUnitResult!
+  getSubject(input: GetSubjectInput!): GetSubjectResult!
   getItem(input: GetItemInput!): GetItemResult!
   getUser(input: GetUserInput!): GetUserResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
@@ -745,6 +747,7 @@ input CreateSubjectInput {
   Name: String!
   idAssetThumbnail: Int
   idGeoLocation: Int
+  idIdentifierPreferred: Int
 }
 
 type CreateSubjectResult {

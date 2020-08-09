@@ -386,6 +386,7 @@ CREATE TABLE IF NOT EXISTS `Subject` (
   `idAssetThumbnail` int(11) DEFAULT NULL,
   `idGeoLocation` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
+  `idIdentifierPreferred` int(11) DEFAULT NULL,
   PRIMARY KEY (`idSubject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -919,6 +920,11 @@ ADD CONSTRAINT `fk_subject_asset1`
 ADD CONSTRAINT `fk_subject_geolocation1`
   FOREIGN KEY (`idGeoLocation`)
   REFERENCES `Packrat`.`GeoLocation` (`idGeoLocation`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_subject_identifier1`
+  FOREIGN KEY (`idIdentifierPreferred`)
+  REFERENCES `Packrat`.`Identifier` (`idIdentifier`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
