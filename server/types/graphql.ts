@@ -452,10 +452,12 @@ export type Subject = {
     AssetThumbnail?: Maybe<Asset>;
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
+    idIdentifierPreferred?: Maybe<Scalars['Int']>;
     GeoLocation?: Maybe<GeoLocation>;
     Unit?: Maybe<Unit>;
     Item?: Maybe<Array<Maybe<Item>>>;
     SystemObject?: Maybe<SystemObject>;
+    IdentifierPreferred?: Maybe<Identifier>;
 };
 
 export type Item = {
@@ -586,7 +588,7 @@ export type Query = {
     getScene: GetSceneResult;
     getUnit: GetUnitResult;
     getProject: GetProjectResult;
-    getSubject: GetUnitResult;
+    getSubject: GetSubjectResult;
     getItem: GetItemResult;
     getUser: GetUserResult;
     getVocabulary: GetVocabularyResult;
@@ -919,6 +921,7 @@ export type CreateSubjectInput = {
     Name: Scalars['String'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
+    idIdentifierPreferred?: Maybe<Scalars['Int']>;
 };
 
 export type CreateSubjectResult = {
