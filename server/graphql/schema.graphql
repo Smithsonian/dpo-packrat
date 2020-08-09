@@ -48,7 +48,9 @@ type Asset {
   FileName: String!
   FilePath: String!
   idAssetGroup: Int
+  idSystemObject: Int
   AssetGroup: AssetGroup
+  SystemObjectSource: SystemObject
   AssetVersion: [AssetVersion]
   VAssetType: Vocabulary
   SystemObject: SystemObject
