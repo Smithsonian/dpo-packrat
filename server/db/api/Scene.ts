@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Scene as SceneBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { Scene as SceneBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
 import { SystemObject } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -92,6 +92,30 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase {
                 await DBC.DBConnection.prisma.scene.findMany({ where: { ModelSceneXref: { some: { idModel }, }, }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.fetchSceneFromXref', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of Scenes that are connected to any of the specified items.
+     * Scenes are connected to system objects; we examine those system objects which are in a *derived* relationship
+     * to system objects connected to any of the specified items.
+     * @param idItem Array of Item.idItem
+     */
+    static async fetchDerivedFromItems(idItem: number[]): Promise<Scene[] | null> {
+        if (!idItem || idItem.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<SceneBase, Scene>(
+                await DBC.DBConnection.prisma.$queryRaw<Scene[]>`
+                SELECT DISTINCT S.*
+                FROM Scene AS S
+                JOIN SystemObject AS SOS ON (S.idScene = SOS.idScene)
+                JOIN SystemObjectXref AS SOX ON (SOS.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
+                WHERE SOI.idItem IN (${join(idItem)})`, Scene);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Scene.fetchDerivedFromItems', error);
             return null;
         }
     }

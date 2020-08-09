@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { CaptureData as CaptureDataBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { CaptureData as CaptureDataBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
 import { SystemObject } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -111,6 +111,30 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 }), CaptureData);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetchFromXref', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of CaptureData that are connected to any of the specified items.
+     * CaptureData are connected to system objects; we examine those system objects which are in a *derived* relationship
+     * to system objects connected to any of the specified items.
+     * @param idItem Array of Item.idItem
+     */
+    static async fetchDerivedFromItems(idItem: number[]): Promise<CaptureData[] | null> {
+        if (!idItem || idItem.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<CaptureDataBase, CaptureData>(
+                await DBC.DBConnection.prisma.$queryRaw<CaptureData[]>`
+                SELECT DISTINCT C.*
+                FROM CaptureData AS C
+                JOIN SystemObject AS SOC ON (C.idCaptureData = SOC.idCaptureData)
+                JOIN SystemObjectXref AS SOX ON (SOC.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
+                WHERE SOI.idItem IN (${join(idItem)})`, CaptureData);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.CaptureData.fetchDerivedFromItems', error);
             return null;
         }
     }

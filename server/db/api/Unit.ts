@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Unit as UnitBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { Unit as UnitBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
 import { SystemObject } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -71,6 +71,30 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase {
                 await DBC.DBConnection.prisma.unit.findOne({ where: { idUnit, }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.fetch', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of units that are connected to any of the specified projects.
+     * Units  are connected to system objects; we examine those system objects which are in a *master* relationship
+     * to system objects connected to any of the specified projects.
+     * @param idProjects Array of Project.idProject
+     */
+    static async fetchMasterFromProjects(idProjects: number[]): Promise<Unit[] | null> {
+        if (!idProjects || idProjects.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<UnitBase, Unit>(
+                await DBC.DBConnection.prisma.$queryRaw<Unit[]>`
+                SELECT DISTINCT U.*
+                FROM Unit AS U
+                JOIN SystemObject AS SOU ON (U.idUnit = SOU.idUnit)
+                JOIN SystemObjectXref AS SOX ON (SOU.idSystemObject = SOX.idSystemObjectMaster)
+                JOIN SystemObject AS SOP ON (SOX.idSystemObjectDerived = SOP.idSystemObject)
+                WHERE SOP.idProject IN (${join(idProjects)})`, Unit);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Item.fetchMasterFromProjects', error);
             return null;
         }
     }
