@@ -15,7 +15,7 @@ const Subject = {
         return await DBAPI.GeoLocation.fetch(parent.idGeoLocation);
     },
     Item: async (parent: Parent): Promise<DBAPI.Item[] | null> => {
-        return await DBAPI.Item.fetchFromSubject(parent.idSubject);
+        return await DBAPI.Item.fetchDerivedFromSubject(parent.idSubject);
     },
     SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
         return await DBAPI.SystemObject.fetchFromSubjectID(parent.idSubject);

@@ -82,6 +82,18 @@ let systemObjectXrefProjectSubject1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefProjectSubject2: DBAPI.SystemObjectXref | null;
 let systemObjectXrefUnitProject1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefUnitProject2: DBAPI.SystemObjectXref | null;
+let systemObjectXrefItemCaptureData1: DBAPI.SystemObjectXref | null;
+let systemObjectXrefItemCaptureData2: DBAPI.SystemObjectXref | null;
+let systemObjectXrefItemModel1: DBAPI.SystemObjectXref | null;
+let systemObjectXrefItemModel2: DBAPI.SystemObjectXref | null;
+let systemObjectXrefItemScene1: DBAPI.SystemObjectXref | null;
+let systemObjectXrefItemScene2: DBAPI.SystemObjectXref | null;
+let systemObjectXrefProjectStakeholder1: DBAPI.SystemObjectXref | null;
+let systemObjectXrefProjectStakeholder2: DBAPI.SystemObjectXref | null;
+let systemObjectXrefProjectProjectDoc1: DBAPI.SystemObjectXref | null;
+let systemObjectXrefProjectProjectDoc2: DBAPI.SystemObjectXref | null;
+let systemObjectXrefItemIntermediaryFile1: DBAPI.SystemObjectXref | null;
+let systemObjectXrefItemIntermediaryFile2: DBAPI.SystemObjectXref | null;
 let unit: DBAPI.Unit | null;
 let unit2: DBAPI.Unit | null;
 let user: DBAPI.User | null;
@@ -1379,6 +1391,199 @@ describe('DB Creation Test Suite', () => {
             expect(workflowStepSystemObjectXref2.idWorkflowStepSystemObjectXref).toBeGreaterThan(0);
         }
     });
+
+    test('DB Creation: SystemObjectXref Item-CaptureData/Model/Scene/IntermediaryFile', async () => {
+        if (item && itemNulls) {
+            const SOItem: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromItemID(item.idItem);
+            const SOItemNulls: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromItemID(itemNulls.idItem);
+            expect(SOItem).toBeTruthy();
+            expect(SOItemNulls).toBeTruthy();
+
+            if (SOItem && SOItemNulls && captureData && captureDataNulls && model && modelNulls && scene && sceneNulls && intermediaryFile) {
+                const SOCaptureData: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromCaptureDataID(captureData.idCaptureData);
+                const SOCaptureDataNulls: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromCaptureDataID(captureDataNulls.idCaptureData);
+                const SOModel: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(model.idModel);
+                const SOModelNulls: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(modelNulls.idModel);
+                const SOScene: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSceneID(scene.idScene);
+                const SOSceneNulls: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSceneID(sceneNulls.idScene);
+                const SOIntermediaryFile: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromIntermediaryFileID(intermediaryFile.idIntermediaryFile);
+
+                expect(SOCaptureData).toBeTruthy();
+                expect(SOCaptureDataNulls).toBeTruthy();
+                expect(SOModel).toBeTruthy();
+                expect(SOModelNulls).toBeTruthy();
+                expect(SOScene).toBeTruthy();
+                expect(SOSceneNulls).toBeTruthy();
+                expect(SOIntermediaryFile).toBeTruthy();
+
+                if (SOCaptureData && SOCaptureDataNulls && SOModel && SOModelNulls && SOScene && SOSceneNulls && SOIntermediaryFile) {
+                    systemObjectXrefItemCaptureData1 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOItem.idSystemObject,
+                        idSystemObjectDerived: SOCaptureData.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                    systemObjectXrefItemCaptureData2 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOItemNulls.idSystemObject,
+                        idSystemObjectDerived: SOCaptureDataNulls.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                    systemObjectXrefItemModel1 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOItem.idSystemObject,
+                        idSystemObjectDerived: SOModel.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                    systemObjectXrefItemModel2 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOItemNulls.idSystemObject,
+                        idSystemObjectDerived: SOModelNulls.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                    systemObjectXrefItemScene1 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOItem.idSystemObject,
+                        idSystemObjectDerived: SOScene.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                    systemObjectXrefItemScene2 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOItemNulls.idSystemObject,
+                        idSystemObjectDerived: SOSceneNulls.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                    systemObjectXrefItemIntermediaryFile1 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOItem.idSystemObject,
+                        idSystemObjectDerived: SOIntermediaryFile.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                    systemObjectXrefItemIntermediaryFile2 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOItemNulls.idSystemObject,
+                        idSystemObjectDerived: SOIntermediaryFile.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                }
+            }
+        }
+        expect(systemObjectXrefItemCaptureData1).toBeTruthy();
+        if (systemObjectXrefItemCaptureData1) {
+            expect(await systemObjectXrefItemCaptureData1.create()).toBeTruthy();
+            expect(systemObjectXrefItemCaptureData1.idSystemObjectXref).toBeGreaterThan(0);
+        }
+
+        expect(systemObjectXrefItemCaptureData2).toBeTruthy();
+        if (systemObjectXrefItemCaptureData2) {
+            expect(await systemObjectXrefItemCaptureData2.create()).toBeTruthy();
+            expect(systemObjectXrefItemCaptureData2.idSystemObjectXref).toBeGreaterThan(0);
+        }
+
+        expect(systemObjectXrefItemModel1).toBeTruthy();
+        if (systemObjectXrefItemModel1) {
+            expect(await systemObjectXrefItemModel1.create()).toBeTruthy();
+            expect(systemObjectXrefItemModel1.idSystemObjectXref).toBeGreaterThan(0);
+        }
+
+        expect(systemObjectXrefItemModel2).toBeTruthy();
+        if (systemObjectXrefItemModel2) {
+            expect(await systemObjectXrefItemModel2.create()).toBeTruthy();
+            expect(systemObjectXrefItemModel2.idSystemObjectXref).toBeGreaterThan(0);
+        }
+
+        expect(systemObjectXrefItemScene1).toBeTruthy();
+        if (systemObjectXrefItemScene1) {
+            expect(await systemObjectXrefItemScene1.create()).toBeTruthy();
+            expect(systemObjectXrefItemScene1.idSystemObjectXref).toBeGreaterThan(0);
+        }
+
+        expect(systemObjectXrefItemScene2).toBeTruthy();
+        if (systemObjectXrefItemScene2) {
+            expect(await systemObjectXrefItemScene2.create()).toBeTruthy();
+            expect(systemObjectXrefItemScene2.idSystemObjectXref).toBeGreaterThan(0);
+        }
+
+        expect(systemObjectXrefItemIntermediaryFile1).toBeTruthy();
+        if (systemObjectXrefItemIntermediaryFile1) {
+            expect(await systemObjectXrefItemIntermediaryFile1.create()).toBeTruthy();
+            expect(systemObjectXrefItemIntermediaryFile1.idSystemObjectXref).toBeGreaterThan(0);
+        }
+
+        expect(systemObjectXrefItemIntermediaryFile2).toBeTruthy();
+        if (systemObjectXrefItemIntermediaryFile2) {
+            expect(await systemObjectXrefItemIntermediaryFile2.create()).toBeTruthy();
+            expect(systemObjectXrefItemIntermediaryFile2.idSystemObjectXref).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: SystemObjectXref Project-Stakeholder', async () => {
+        if (project && project2) {
+            const SOProject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(project.idProject);
+            const SOProject2: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(project2.idProject);
+            expect(SOProject).toBeTruthy();
+            expect(SOProject2).toBeTruthy();
+
+            if (SOProject && SOProject2 && stakeholder) {
+                const SOStakeholder: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromStakeholderID(stakeholder.idStakeholder);
+                expect(SOStakeholder).toBeTruthy();
+
+                if (SOStakeholder) {
+                    systemObjectXrefProjectStakeholder1 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOProject.idSystemObject,
+                        idSystemObjectDerived: SOStakeholder.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                    systemObjectXrefProjectStakeholder2 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOProject2.idSystemObject,
+                        idSystemObjectDerived: SOStakeholder.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                }
+            }
+        }
+        expect(systemObjectXrefProjectStakeholder1).toBeTruthy();
+        if (systemObjectXrefProjectStakeholder1) {
+            expect(await systemObjectXrefProjectStakeholder1.create()).toBeTruthy();
+            expect(systemObjectXrefProjectStakeholder1.idSystemObjectXref).toBeGreaterThan(0);
+        }
+
+        expect(systemObjectXrefProjectStakeholder2).toBeTruthy();
+        if (systemObjectXrefProjectStakeholder2) {
+            expect(await systemObjectXrefProjectStakeholder2.create()).toBeTruthy();
+            expect(systemObjectXrefProjectStakeholder2.idSystemObjectXref).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: SystemObjectXref Project-ProjectDocumentation', async () => {
+        if (project && project2) {
+            const SOProject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(project.idProject);
+            const SOProject2: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(project2.idProject);
+            expect(SOProject).toBeTruthy();
+            expect(SOProject2).toBeTruthy();
+
+            if (SOProject && SOProject2 && projectDocumentation) {
+                const SOProjectDocumentation: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectDocumentationID(projectDocumentation.idProjectDocumentation);
+                expect(SOProjectDocumentation).toBeTruthy();
+
+                if (SOProjectDocumentation) {
+                    systemObjectXrefProjectProjectDoc1 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOProject.idSystemObject,
+                        idSystemObjectDerived: SOProjectDocumentation.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                    systemObjectXrefProjectProjectDoc2 = new DBAPI.SystemObjectXref({
+                        idSystemObjectMaster: SOProject2.idSystemObject,
+                        idSystemObjectDerived: SOProjectDocumentation.idSystemObject,
+                        idSystemObjectXref: 0
+                    });
+                }
+            }
+        }
+        expect(systemObjectXrefProjectProjectDoc1).toBeTruthy();
+        if (systemObjectXrefProjectProjectDoc1) {
+            expect(await systemObjectXrefProjectProjectDoc1.create()).toBeTruthy();
+            expect(systemObjectXrefProjectProjectDoc1.idSystemObjectXref).toBeGreaterThan(0);
+        }
+
+        expect(systemObjectXrefProjectProjectDoc2).toBeTruthy();
+        if (systemObjectXrefProjectProjectDoc2) {
+            expect(await systemObjectXrefProjectProjectDoc2.create()).toBeTruthy();
+            expect(systemObjectXrefProjectProjectDoc2.idSystemObjectXref).toBeGreaterThan(0);
+        }
+    });
 });
 
 // *******************************************************************
@@ -1755,10 +1960,10 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(itemFetch).toBeTruthy();
     });
 
-    test('DB Fetch Item: Item.fetchFromSubject', async () => {
+    test('DB Fetch Item: Item.fetchDerivedFromSubject', async () => {
         let itemFetch: DBAPI.Item[] | null = null;
         if (subject) {
-            itemFetch = await DBAPI.Item.fetchFromSubject(subject.idSubject);
+            itemFetch = await DBAPI.Item.fetchDerivedFromSubject(subject.idSubject);
             if (itemFetch) {
                 if (item) {
                     expect(itemFetch).toEqual(expect.arrayContaining([item, itemNulls]));
@@ -1768,10 +1973,10 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(itemFetch).toBeTruthy();
     });
 
-    test('DB Fetch Item: Item.fetchFromSubjects', async () => {
+    test('DB Fetch Item: Item.fetchDerivedFromSubjects', async () => {
         let itemFetch: DBAPI.Item[] | null = null;
         if (subject && subjectNulls) {
-            itemFetch = await DBAPI.Item.fetchFromSubjects([subject.idSubject, subjectNulls.idSubject]);
+            itemFetch = await DBAPI.Item.fetchDerivedFromSubjects([subject.idSubject, subjectNulls.idSubject]);
             if (itemFetch) {
                 const itemIDs: number[] = [];
                 for (const item of itemFetch)
@@ -2120,6 +2325,30 @@ describe('DB Fetch By ID Test Suite', () => {
                 if (subject) {
                     expect(subjectFetch).toEqual(expect.arrayContaining([subject]));
                 }
+            }
+        }
+        expect(subjectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Subject: Subject.fetchMasterFromItems', async () => {
+        let subjectFetch: DBAPI.Subject[] | null = null;
+        if (item && itemNulls) {
+            subjectFetch = await DBAPI.Subject.fetchMasterFromItems([item.idItem, itemNulls.idItem]);
+            if (subjectFetch) {
+                if (subject && subjectNulls)
+                    expect(subjectFetch).toEqual(expect.arrayContaining([subject, subjectNulls]));
+            }
+        }
+        expect(subjectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Subject: Subject.fetchDerivedFromProjects', async () => {
+        let subjectFetch: DBAPI.Subject[] | null = null;
+        if (project && project2) {
+            subjectFetch = await DBAPI.Subject.fetchDerivedFromProjects([project.idProject, project2.idProject]);
+            if (subjectFetch) {
+                if (subject && subjectNulls)
+                    expect(subjectFetch).toEqual(expect.arrayContaining([subject, subjectNulls]));
             }
         }
         expect(subjectFetch).toBeTruthy();
@@ -2938,26 +3167,6 @@ describe('DB Fetch *.fetchSystemObject Test Suite', () => {
         expect(projectFetch).toBeTruthy();
     });
 
-    test('DB Fetch Project: Project.fetchFromSubjects', async () => {
-        let projectFetch: DBAPI.Project[] | null = null;
-        if (subject && subjectNulls) {
-            projectFetch = await DBAPI.Project.fetchFromSubjects([subject.idSubject, subjectNulls.idSubject]);
-            if (projectFetch && project && project2)
-                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
-        }
-        expect(projectFetch).toBeTruthy();
-    });
-
-    test('DB Fetch Project: Project.fetchFromSubjectsUnits', async () => {
-        let projectFetch: DBAPI.Project[] | null = null;
-        if (subject && subjectNulls) {
-            projectFetch = await DBAPI.Project.fetchFromSubjectsUnits([subject.idSubject, subjectNulls.idSubject]);
-            if (projectFetch && project && project2)
-                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
-        }
-        expect(projectFetch).toBeTruthy();
-    });
-
     test('DB Fetch ProjectDocumentation.fetchSystemObject', async () => {
         let SO: DBAPI.SystemObject | null = null;
         if (projectDocumentation) {
@@ -3424,11 +3633,8 @@ describe('DB Fetch Xref Test Suite', () => {
         let SO: DBAPI.SystemObject[] | null = null;
         if (systemObjectSubject && systemObjectScene) {
             SO = await DBAPI.SystemObject.fetchMasterFromXref(systemObjectScene.idSystemObject);
-            if (SO) {
-                expect(SO.length).toBe(1);
-                if (SO.length == 1)
-                    expect(SO[0].idSystemObject).toBe(systemObjectSubject.idSystemObject);
-            }
+            if (SO)
+                expect(SO.length).toBeGreaterThan(0);
         }
         expect(SO).toBeTruthy();
     });
@@ -3456,14 +3662,8 @@ describe('DB Fetch Xref Test Suite', () => {
         let SO: DBAPI.SystemObjectPairs[] | null = null;
         if (systemObjectSubject && systemObjectScene) {
             SO = await DBAPI.SystemObjectPairs.fetchMasterFromXref(systemObjectScene.idSystemObject);
-            if (SO) {
-                expect(SO.length).toBe(1);
-                if (SO.length == 1) {
-                    expect(SO[0].Subject).toBeTruthy();
-                    if (SO[0].Subject)
-                        expect(SO[0].Subject.idSubject).toBe(systemObjectSubject.idSubject);
-                }
-            }
+            if (SO)
+                expect(SO.length).toBeGreaterThan(0);
         }
         expect(SO).toBeTruthy();
     });
@@ -3508,10 +3708,48 @@ describe('DB Fetch Xref Test Suite', () => {
 // DB Fetch Special Test Suite
 // *******************************************************************
 describe('DB Fetch Special Test Suite', () => {
-    test('DB Fetch Special: Item.fetchFromSubject', async () => {
+    test('DB Fetch Special: CaptureData.fetchFromCaptureDataPhoto', async () => {
+        let captureDataFetch: DBAPI.CaptureData | null = null;
+        if (captureDataPhoto)
+            captureDataFetch = await DBAPI.CaptureData.fetchFromCaptureDataPhoto(captureDataPhoto.idCaptureDataPhoto);
+
+        expect(captureDataFetch).toBeTruthy();
+        if (captureData)
+            expect(captureDataFetch).toMatchObject(captureData);
+    });
+
+    test('DB Fetch Special: CaptureData.fetchDerivedFromItems', async () => {
+        let captureDataFetch: DBAPI.CaptureData[] | null = null;
+        if (item && itemNulls) {
+            captureDataFetch = await DBAPI.CaptureData.fetchDerivedFromItems([item.idItem, itemNulls.idItem]);
+            if (captureDataFetch && captureData && captureDataNulls) {
+                const IDs: number[] = [];
+                for (const CD of captureDataFetch)
+                    IDs.push(CD.idCaptureData);
+                expect(IDs).toEqual(expect.arrayContaining([captureData.idCaptureData, captureDataNulls.idCaptureData]));
+            }
+        }
+        expect(captureDataFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: IntermediaryFile.fetchDerivedFromItems', async () => {
+        let intermediaryFileFetch: DBAPI.IntermediaryFile[] | null = null;
+        if (item && itemNulls) {
+            intermediaryFileFetch = await DBAPI.IntermediaryFile.fetchDerivedFromItems([item.idItem, itemNulls.idItem]);
+            if (intermediaryFileFetch && intermediaryFile) {
+                const IDs: number[] = [];
+                for (const IF of intermediaryFileFetch)
+                    IDs.push(IF.idIntermediaryFile);
+                expect(IDs).toEqual(expect.arrayContaining([intermediaryFile.idIntermediaryFile]));
+            }
+        }
+        expect(intermediaryFileFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Item.fetchDerivedFromSubject', async () => {
         let items: DBAPI.Item[] | null = null;
         if (subject && item && itemNulls) {
-            items = await DBAPI.Item.fetchFromSubject(subject.idSubject);
+            items = await DBAPI.Item.fetchDerivedFromSubject(subject.idSubject);
             if (items) {
                 expect(items.length).toEqual(2);
                 if (items.length == 2)
@@ -3521,14 +3759,168 @@ describe('DB Fetch Special Test Suite', () => {
         expect(items).toBeTruthy();
     });
 
-    test('DB Fetch Special: CaptureData.fetchFromCaptureDataPhoto', async () => {
-        let captureDataFetch: DBAPI.CaptureData | null = null;
-        if (captureDataPhoto)
-            captureDataFetch = await DBAPI.CaptureData.fetchFromCaptureDataPhoto(captureDataPhoto.idCaptureDataPhoto);
+    test('DB Fetch Special: Item.fetchMasterFromCaptureDatas', async () => {
+        let itemFetch: DBAPI.Item[] | null = null;
+        if (captureData && captureDataNulls) {
+            itemFetch = await DBAPI.Item.fetchMasterFromCaptureDatas([captureData.idCaptureData, captureDataNulls.idCaptureData]);
+            if (itemFetch && item && itemNulls) {
+                const itemIDs: number[] = [];
+                for (const item of itemFetch)
+                    itemIDs.push(item.idItem);
+                expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
+            }
+        }
+        expect(itemFetch).toBeTruthy();
+    });
 
-        expect(captureDataFetch).toBeTruthy();
-        if (captureData)
-            expect(captureDataFetch).toMatchObject(captureData);
+    test('DB Fetch Special: Item.fetchMasterFromModels', async () => {
+        let itemFetch: DBAPI.Item[] | null = null;
+        if (model && modelNulls) {
+            itemFetch = await DBAPI.Item.fetchMasterFromModels([model.idModel, modelNulls.idModel]);
+            if (itemFetch && item && itemNulls) {
+                const itemIDs: number[] = [];
+                for (const item of itemFetch)
+                    itemIDs.push(item.idItem);
+                expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
+            }
+        }
+        expect(itemFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Item.fetchMasterFromIntermediaryFiles', async () => {
+        let itemFetch: DBAPI.Item[] | null = null;
+        if (intermediaryFile) {
+            itemFetch = await DBAPI.Item.fetchMasterFromIntermediaryFiles([intermediaryFile.idIntermediaryFile]);
+            if (itemFetch && item && itemNulls) {
+                const itemIDs: number[] = [];
+                for (const item of itemFetch)
+                    itemIDs.push(item.idItem);
+                expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
+            }
+        }
+        expect(itemFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Item.fetchMasterFromScenes', async () => {
+        let itemFetch: DBAPI.Item[] | null = null;
+        if (scene && sceneNulls) {
+            itemFetch = await DBAPI.Item.fetchMasterFromScenes([scene.idScene, sceneNulls.idScene]);
+            if (itemFetch && item && itemNulls) {
+                const itemIDs: number[] = [];
+                for (const item of itemFetch)
+                    itemIDs.push(item.idItem);
+                expect(itemIDs).toEqual(expect.arrayContaining([item.idItem, itemNulls.idItem]));
+            }
+        }
+        expect(itemFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Model.fetchDerivedFromItems', async () => {
+        let modelFetch: DBAPI.Model[] | null = null;
+        if (item && itemNulls) {
+            modelFetch = await DBAPI.Model.fetchDerivedFromItems([item.idItem, itemNulls.idItem]);
+            if (modelFetch && model && modelNulls) {
+                const IDs: number[] = [];
+                for (const M of modelFetch)
+                    IDs.push(M.idModel);
+                expect(IDs).toEqual(expect.arrayContaining([model.idModel, modelNulls.idModel]));
+            }
+        }
+        expect(modelFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Project.fetchMasterFromSubjects', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (subject && subjectNulls) {
+            projectFetch = await DBAPI.Project.fetchMasterFromSubjects([subject.idSubject, subjectNulls.idSubject]);
+            if (projectFetch && project && project2)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Project.fetchMasterFromStakeholders', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (stakeholder) {
+            projectFetch = await DBAPI.Project.fetchMasterFromStakeholders([stakeholder.idStakeholder]);
+            if (projectFetch && project && project2)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Project.fetchMasterFromProjectDocumentations', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (projectDocumentation) {
+            projectFetch = await DBAPI.Project.fetchMasterFromProjectDocumentations([projectDocumentation.idProjectDocumentation]);
+            if (projectFetch && project && project2)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Project.fetchDerivedFromUnits', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (unit && unit2) {
+            projectFetch = await DBAPI.Project.fetchDerivedFromUnits([unit.idUnit, unit2.idUnit]);
+            if (projectFetch && project && project2)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Project: Project.fetchFromSubjectsUnits', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (subject && subjectNulls) {
+            projectFetch = await DBAPI.Project.fetchDerivedFromSubjectsUnits([subject.idSubject, subjectNulls.idSubject]);
+            if (projectFetch && project && project2)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ProjectDocumentation.fetchDerivedFromProjects', async () => {
+        let projectDocumentationFetch: DBAPI.ProjectDocumentation[] | null = null;
+        if (project && project2) {
+            projectDocumentationFetch = await DBAPI.ProjectDocumentation.fetchDerivedFromProjects([project.idProject, project2.idProject]);
+            if (projectDocumentationFetch && projectDocumentation)
+                expect(projectDocumentationFetch).toEqual(expect.arrayContaining([projectDocumentation]));
+        }
+        expect(projectDocumentationFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Scene.fetchDerivedFromItems', async () => {
+        let sceneFetch: DBAPI.Scene[] | null = null;
+        if (item && itemNulls) {
+            sceneFetch = await DBAPI.Scene.fetchDerivedFromItems([item.idItem, itemNulls.idItem]);
+            if (sceneFetch && scene && sceneNulls) {
+                const IDs: number[] = [];
+                for (const S of sceneFetch)
+                    IDs.push(S.idScene);
+                expect(IDs).toEqual(expect.arrayContaining([scene.idScene, sceneNulls.idScene]));
+            }
+        }
+        expect(sceneFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Stakeholder.fetchDerivedFromProjects', async () => {
+        let stakeholderFetch: DBAPI.Stakeholder[] | null = null;
+        if (project && project2) {
+            stakeholderFetch = await DBAPI.Stakeholder.fetchDerivedFromProjects([project.idProject, project2.idProject]);
+            if (stakeholderFetch && stakeholder)
+                expect(stakeholderFetch).toEqual(expect.arrayContaining([stakeholder]));
+        }
+        expect(stakeholderFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Unit.fetchMasterFromProjects', async () => {
+        let unitFetch: DBAPI.Unit[] | null = null;
+        if (project && project2) {
+            unitFetch = await DBAPI.Unit.fetchMasterFromProjects([project.idProject, project2.idProject]);
+            if (unitFetch && unit && unit2)
+                expect(unitFetch).toEqual(expect.arrayContaining([unit, unit2]));
+        }
+        expect(unitFetch).toBeTruthy();
     });
 });
 
@@ -4908,6 +5300,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.CaptureData.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromCaptureDataPhoto(0)).toBeNull();
+        expect(await DBAPI.CaptureData.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.CaptureDataFile.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureDataFile.fetchFromCaptureData(0)).toBeNull();
         expect(await DBAPI.CaptureDataGroup.fetch(0)).toBeNull();
@@ -4920,10 +5313,15 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Identifier.fetch(0)).toBeNull();
         expect(await DBAPI.Identifier.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.IntermediaryFile.fetch(0)).toBeNull();
+        expect(await DBAPI.IntermediaryFile.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.Item.fetch(0)).toBeNull();
-        expect(await DBAPI.Item.fetchFromSubject(0)).toBeNull();
-        expect(await DBAPI.Item.fetchFromSubject(-1)).toBeNull();
-        expect(await DBAPI.Item.fetchFromSubjects([])).toBeNull();
+        expect(await DBAPI.Item.fetchDerivedFromSubject(0)).toBeNull();
+        expect(await DBAPI.Item.fetchDerivedFromSubject(-1)).toBeNull();
+        expect(await DBAPI.Item.fetchDerivedFromSubjects([])).toBeNull();
+        expect(await DBAPI.Item.fetchMasterFromCaptureDatas([])).toBeNull();
+        expect(await DBAPI.Item.fetchMasterFromModels([])).toBeNull();
+        expect(await DBAPI.Item.fetchMasterFromScenes([])).toBeNull();
+        expect(await DBAPI.Item.fetchMasterFromIntermediaryFiles([])).toBeNull();
         expect(await DBAPI.Job.fetch(0)).toBeNull();
         expect(await DBAPI.JobTask.fetch(0)).toBeNull();
         expect(await DBAPI.JobTaskCook.fetch(0)).toBeNull();
@@ -4937,6 +5335,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Metadata.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.Model.fetch(0)).toBeNull();
         expect(await DBAPI.Model.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.Model.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.ModelGeometryFile.fetch(0)).toBeNull();
         expect(await DBAPI.ModelGeometryFile.fetchFromModel(0)).toBeNull();
         expect(await DBAPI.ModelProcessingAction.fetch(0)).toBeNull();
@@ -4951,13 +5350,25 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ModelUVMapFile.fetch(0)).toBeNull();
         expect(await DBAPI.ModelUVMapFile.fetchFromModelGeometryFile(0)).toBeNull();
         expect(await DBAPI.Project.fetch(0)).toBeNull();
+        expect(await DBAPI.Project.fetchDerivedFromUnits([])).toBeNull();
+        expect(await DBAPI.Project.fetchMasterFromSubjects([])).toBeNull();
+        expect(await DBAPI.Project.fetchMasterFromStakeholders([])).toBeNull();
+        expect(await DBAPI.Project.fetchMasterFromProjectDocumentations([])).toBeNull();
+        expect(await DBAPI.Project.fetchDerivedFromSubjectsUnits([])).toBeNull();
+        expect(await DBAPI.Project.fetchMasterFromStakeholders([])).toBeNull();
+        expect(await DBAPI.Project.fetchMasterFromProjectDocumentations([])).toBeNull();
         expect(await DBAPI.ProjectDocumentation.fetch(0)).toBeNull();
         expect(await DBAPI.ProjectDocumentation.fetchFromProject(0)).toBeNull();
+        expect(await DBAPI.ProjectDocumentation.fetchDerivedFromProjects([])).toBeNull();
         expect(await DBAPI.Scene.fetch(0)).toBeNull();
         expect(await DBAPI.Scene.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.Scene.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
+        expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();
         expect(await DBAPI.Subject.fetch(0)).toBeNull();
         expect(await DBAPI.Subject.fetchFromUnit(0)).toBeNull();
+        expect(await DBAPI.Subject.fetchMasterFromItems([])).toBeNull();
+        expect(await DBAPI.Subject.fetchDerivedFromProjects([])).toBeNull();
         expect(await DBAPI.SystemObject.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObject.fetchDerivedFromXref(0)).toBeNull();
         expect(await DBAPI.SystemObject.fetchMasterFromXref(0)).toBeNull();
@@ -5017,6 +5428,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObjectVersion.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.SystemObjectXref.fetch(0)).toBeNull();
         expect(await DBAPI.Unit.fetch(0)).toBeNull();
+        expect(await DBAPI.Unit.fetchMasterFromProjects([])).toBeNull();
         expect(await DBAPI.User.fetch(0)).toBeNull();
         expect(await DBAPI.UserPersonalizationSystemObject.fetch(0)).toBeNull();
         expect(await DBAPI.UserPersonalizationSystemObject.fetchFromUser(0)).toBeNull();
