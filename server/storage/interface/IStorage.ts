@@ -45,6 +45,13 @@ export type HierarchyUpdatedResults = {
     error: string
 };
 
+export type ComputeStorageKeyResults = {
+    storageKeyComputed: string;
+    storageKeyCurrent: string | null;
+    success: boolean,
+    error: string
+};
+
 export interface IStorage {
     /**
      * Provides a Readable stream for accessing the bits associated with storageKey. Also provides the hash, which the client may use for validating streamed bits.
@@ -89,4 +96,11 @@ export interface IStorage {
      * @param storageKey Opaque storage identifier created by writeStream(), maintained by closeWriteStream(), and updated by placeAsset()
      */
     validateHash(storageKey: string): Promise<boolean>;
+
+    /**
+     * Computes a storage key representing an asset and asset version
+     * @param asset Asset for whom to compute storage key
+     * @param assetVersion Asset Version for whom to compute storage key
+     */
+    computeStorageKey(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<ComputeStorageKeyResults>;
 }
