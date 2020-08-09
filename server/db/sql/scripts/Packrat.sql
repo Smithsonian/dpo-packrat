@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS `Asset` (
   `FilePath` varchar(512) NOT NULL,
   `idAssetGroup` int(11) DEFAULT NULL,
   `idVAssetType` int(11) NOT NULL,
+  `idSystemObject` int(11) DEFAULT NULL,
   PRIMARY KEY (`idAsset`),
   KEY `Asset_idAssetGroup` (`idAssetGroup`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -599,6 +600,11 @@ ADD CONSTRAINT `fk_asset_assetgroup1`
 ADD CONSTRAINT `fk_asset_vocabulary1`
   FOREIGN KEY (`idVAssetType`)
   REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_asset_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
