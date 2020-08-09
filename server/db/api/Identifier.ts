@@ -68,6 +68,25 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
         }
     }
 
+    /** Returns Identifier specified by Subject.idIdentierPreferred */
+    static async fetchFromSubjectPreferred(idSubject: number): Promise<Identifier | null> {
+        if (!idSubject)
+            return null;
+        try {
+            const IDArray: Identifier[] | null =
+                DBC.CopyArray<IdentifierBase, Identifier>(
+                    await DBC.DBConnection.prisma.$queryRaw<Identifier[]>`
+                    SELECT I.*
+                    FROM Identifier AS I
+                    JOIN Subject AS S ON (I.idIdentifier = S.idIdentifierPreferred)
+                    WHERE S.idSubject = ${idSubject}`, Identifier);
+            return (IDArray && IDArray.length > 0) ? IDArray[0] : /* istanbul ignore next */ null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Identifier.fetchFromSubjectPreferred', error);
+            return null;
+        }
+    }
+
     static async fetchFromSystemObject(idSystemObject: number): Promise<Identifier[] | null> {
         if (!idSystemObject)
             return null;
