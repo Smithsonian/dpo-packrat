@@ -179,6 +179,7 @@ describe('DB Creation Test Suite', () => {
                 FilePath: '/test/asset/path',
                 idAssetGroup: assetGroup.idAssetGroup,
                 idVAssetType: vocabulary.idVocabulary,
+                idSystemObject: null,
                 idAsset: 0
             });
         expect(assetThumbnail).toBeTruthy();
@@ -483,12 +484,13 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Asset Without Asset Group', async () => {
-        if (vocabulary)
+        if (vocabulary&& systemObjectSubject)
             assetWithoutAG = new DBAPI.Asset({
                 FileName: 'Test Asset 2',
                 FilePath: '/test/asset/path2',
                 idAssetGroup: null,
                 idVAssetType: vocabulary.idVocabulary,
+                idSystemObject: systemObjectSubject.idSystemObject,
                 idAsset: 0
             });
         expect(assetWithoutAG).toBeTruthy();
@@ -2859,6 +2861,7 @@ describe('DB Fetch SystemObject*.fetch Test Suite', () => {
                     expect(SO.Asset).toMatchObject(assetThumbnail);
                     expect(assetThumbnail).toMatchObject(SO.Asset);
                 }
+                SO.Asset = assetThumbnail;
             }
         }
         expect(SO).toBeTruthy();
@@ -3322,6 +3325,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.Asset).toMatchObject(assetThumbnail);
                 if (SYOP.Asset)
                     expect(assetThumbnail).toMatchObject(SYOP.Asset);
+                SYOP.Asset = assetThumbnail;
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3708,6 +3712,21 @@ describe('DB Fetch Xref Test Suite', () => {
 // DB Fetch Special Test Suite
 // *******************************************************************
 describe('DB Fetch Special Test Suite', () => {
+    test('DB FetchSpecial: Asset.fetchSourceSystemObject 1', async() => {
+        let SOAsset: DBAPI.SystemObject | null = null;
+        if (assetThumbnail)
+            SOAsset = await assetThumbnail.fetchSourceSystemObject();
+        expect(SOAsset).toBeFalsy();
+    });
+
+    test('DB FetchSpecial: Asset.fetchSourceSystemObject 2', async() => {
+        let SOAssetSource: DBAPI.SystemObject | null = null;
+        if (assetWithoutAG)
+            SOAssetSource = await assetWithoutAG.fetchSourceSystemObject();
+        expect(SOAssetSource).toBeTruthy();
+        expect(SOAssetSource).toEqual(systemObjectSubject);
+    });
+
     test('DB Fetch Special: CaptureData.fetchFromCaptureDataPhoto', async () => {
         let captureDataFetch: DBAPI.CaptureData | null = null;
         if (captureDataPhoto)
@@ -4086,12 +4105,13 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: Asset.update', async () => {
         let bUpdated: boolean = false;
-        if (assetThumbnail && assetGroup2 && vocabulary2) {
+        if (assetThumbnail && assetGroup2 && vocabulary2 && systemObjectSubject) {
             const SOOld: DBAPI.SystemObject | null = await assetThumbnail.fetchSystemObject();
             expect(SOOld).toBeTruthy();
 
             assetThumbnail.idAssetGroup = assetGroup2.idAssetGroup;
             assetThumbnail.idVAssetType = vocabulary2.idVocabulary;
+            assetThumbnail.idSystemObject = systemObjectSubject.idSystemObject;
             bUpdated = await assetThumbnail.update();
 
             const assetFetch: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetThumbnail.idAsset);
@@ -4099,6 +4119,7 @@ describe('DB Update Test Suite', () => {
             if (assetFetch) {
                 expect(assetFetch.idAssetGroup).toBe(assetGroup2.idAssetGroup);
                 expect(assetFetch.idVAssetType).toBe(vocabulary2.idVocabulary);
+                expect(assetFetch.idSystemObject).toBe(systemObjectSubject.idSystemObject);
 
                 const SONew: DBAPI.SystemObject | null = await assetFetch.fetchSystemObject();
                 expect(SONew).toBeTruthy();
@@ -4114,6 +4135,7 @@ describe('DB Update Test Suite', () => {
         let bUpdated: boolean = false;
         if (assetThumbnail) {
             assetThumbnail.idAssetGroup = null;
+            assetThumbnail.idSystemObject = null;
             bUpdated = await assetThumbnail.update();
 
             const assetFetch: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetThumbnail.idAsset);

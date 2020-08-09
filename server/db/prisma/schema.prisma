@@ -86,27 +86,30 @@ model Actor {
 }
 
 model Asset {
-  idAsset           Int                 @default(autoincrement()) @id
-  FileName          String
-  FilePath          String
-  idAssetGroup      Int?
-  idVAssetType      Int
-  AssetGroup        AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
-  Vocabulary        Vocabulary          @relation(fields: [idVAssetType], references: [idVocabulary])
-  AssetVersion      AssetVersion[]
-  CaptureData       CaptureData[]
-  CaptureDataFile   CaptureDataFile[]
-  IntermediaryFile  IntermediaryFile[]
-  Item              Item[]
-  Metadata          Metadata[]
-  Model             Model[]
-  ModelGeometryFile ModelGeometryFile[]
-  ModelUVMapFile    ModelUVMapFile[]
-  Scene             Scene[]
-  Subject           Subject[]
-  SystemObject      SystemObject?
+  idAsset                                         Int                 @default(autoincrement()) @id
+  FileName                                        String
+  FilePath                                        String
+  idAssetGroup                                    Int?
+  idVAssetType                                    Int
+  idSystemObject                                  Int?
+  AssetGroup                                      AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
+  SystemObject_Asset_idSystemObjectToSystemObject SystemObject?       @relation("Asset_idSystemObjectToSystemObject", fields: [idSystemObject], references: [idSystemObject])
+  Vocabulary                                      Vocabulary          @relation(fields: [idVAssetType], references: [idVocabulary])
+  AssetVersion                                    AssetVersion[]
+  CaptureData                                     CaptureData[]
+  CaptureDataFile                                 CaptureDataFile[]
+  IntermediaryFile                                IntermediaryFile[]
+  Item                                            Item[]
+  Metadata                                        Metadata[]
+  Model                                           Model[]
+  ModelGeometryFile                               ModelGeometryFile[]
+  ModelUVMapFile                                  ModelUVMapFile[]
+  Scene                                           Scene[]
+  Subject                                         Subject[]
+  SystemObject_AssetToSystemObject_idAsset        SystemObject?       @relation("AssetToSystemObject_idAsset")
 
   @@index([idAssetGroup], name: "Asset_idAssetGroup")
+  @@index([idSystemObject], name: "fk_asset_systemobject1")
   @@index([idVAssetType], name: "fk_asset_vocabulary1")
 }
 
@@ -551,7 +554,7 @@ model SystemObject {
   idWorkflowStep                                                        Int?                              @unique
   Retired                                                               Boolean
   Actor                                                                 Actor?                            @relation(fields: [idActor], references: [idActor])
-  Asset                                                                 Asset?                            @relation(fields: [idAsset], references: [idAsset])
+  Asset_AssetToSystemObject_idAsset                                     Asset?                            @relation("AssetToSystemObject_idAsset", fields: [idAsset], references: [idAsset])
   AssetVersion                                                          AssetVersion?                     @relation(fields: [idAssetVersion], references: [idAssetVersion])
   CaptureData                                                           CaptureData?                      @relation(fields: [idCaptureData], references: [idCaptureData])
   IntermediaryFile                                                      IntermediaryFile?                 @relation(fields: [idIntermediaryFile], references: [idIntermediaryFile])
@@ -566,6 +569,7 @@ model SystemObject {
   Workflow                                                              Workflow?                         @relation(fields: [idWorkflow], references: [idWorkflow])
   WorkflowStep                                                          WorkflowStep?                     @relation(fields: [idWorkflowStep], references: [idWorkflowStep])
   AccessContextObject                                                   AccessContextObject[]
+  Asset_Asset_idSystemObjectToSystemObject                              Asset[]                           @relation("Asset_idSystemObjectToSystemObject")
   Identifier                                                            Identifier[]
   LicenseAssignment                                                     LicenseAssignment[]
   Metadata                                                              Metadata[]

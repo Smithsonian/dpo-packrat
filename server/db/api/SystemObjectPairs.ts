@@ -8,7 +8,7 @@ import * as LOG from '../../utils/logger';
 
 type SystemObjectPairsBase = P.SystemObject
 & { Actor: P.Actor | null}
-& { Asset: P.Asset | null}
+& { Asset_AssetToSystemObject_idAsset: P.Asset | null}
 & { AssetVersion: P.AssetVersion | null}
 & { CaptureData: P.CaptureData | null}
 & { IntermediaryFile: P.IntermediaryFile | null}
@@ -24,7 +24,7 @@ type SystemObjectPairsBase = P.SystemObject
 & { WorkflowStep: P.WorkflowStep | null};
 
 type SystemObjectActorBase = P.SystemObject & { Actor: P.Actor | null};
-type SystemObjectAssetBase = P.SystemObject & { Asset: P.Asset | null};
+type SystemObjectAssetBase = P.SystemObject & { Asset_AssetToSystemObject_idAsset: P.Asset | null};
 type SystemObjectAssetVersionBase = P.SystemObject & { AssetVersion: P.AssetVersion | null};
 type SystemObjectCaptureDataBase = P.SystemObject & { CaptureData: P.CaptureData | null};
 type SystemObjectIntermediaryFileBase = P.SystemObject & { IntermediaryFile: P.IntermediaryFile | null};
@@ -62,11 +62,18 @@ export class SystemObjectActor extends SystemObject implements SystemObjectActor
 }
 
 export class SystemObjectAsset extends SystemObject implements SystemObjectAssetBase {
-    Asset: Asset | null;
+    Asset_AssetToSystemObject_idAsset: Asset | null; // wacky name produced by prisma
+    get Asset(): Asset | null {
+        return this.Asset_AssetToSystemObject_idAsset;
+    }
+    set Asset(value: Asset | null) {
+        this.Asset_AssetToSystemObject_idAsset = value;
+    }
 
     constructor(input: SystemObjectAssetBase) {
         super(input);
-        this.Asset = (input.Asset) ? new Asset(input.Asset) : /* istanbul ignore next */ null;
+        this.Asset_AssetToSystemObject_idAsset = (input.Asset_AssetToSystemObject_idAsset)
+            ? new Asset(input.Asset_AssetToSystemObject_idAsset) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idAsset: number): Promise<SystemObjectAsset | null> {
@@ -74,7 +81,7 @@ export class SystemObjectAsset extends SystemObject implements SystemObjectAsset
             return null;
         try {
             const SOPair: SystemObjectAssetBase | null =
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset_AssetToSystemObject_idAsset: true, }, });
             return SOPair ? new SystemObjectAsset(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectAsset.fetch', error);
@@ -371,7 +378,7 @@ export class SystemObjectWorkflowStep extends SystemObject implements SystemObje
 
 export class SystemObjectPairs extends SystemObject implements SystemObjectPairsBase {
     Actor: Actor | null = null;
-    Asset: Asset | null = null;
+    Asset_AssetToSystemObject_idAsset: Asset | null = null;
     AssetVersion: AssetVersion | null = null;
     CaptureData: CaptureData | null = null;
     IntermediaryFile: IntermediaryFile | null = null;
@@ -386,10 +393,17 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
     Workflow: Workflow | null = null;
     WorkflowStep: WorkflowStep | null = null;
 
+    get Asset(): Asset | null {
+        return this.Asset_AssetToSystemObject_idAsset;
+    }
+    set Asset(value: Asset | null) {
+        this.Asset_AssetToSystemObject_idAsset = value;
+    }
+
     constructor(input: SystemObjectPairsBase) {
         super(input);
         if (input.Actor) this.Actor = new Actor(input.Actor);
-        if (input.Asset) this.Asset = new Asset(input.Asset);
+        if (input.Asset_AssetToSystemObject_idAsset) this.Asset_AssetToSystemObject_idAsset = new Asset(input.Asset_AssetToSystemObject_idAsset);
         if (input.AssetVersion) this.AssetVersion = new AssetVersion(input.AssetVersion);
         if (input.CaptureData) this.CaptureData = new CaptureData(input.CaptureData);
         if (input.IntermediaryFile) this.IntermediaryFile = new IntermediaryFile(input.IntermediaryFile);
@@ -414,7 +428,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     where: { idSystemObject, },
                     include: {
                         Actor: true,
-                        Asset: true,
+                        Asset_AssetToSystemObject_idAsset: true,
                         AssetVersion: true,
                         CaptureData: true,
                         IntermediaryFile: true,
@@ -450,7 +464,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     },
                     include: {
                         Actor: true,
-                        Asset: true,
+                        Asset_AssetToSystemObject_idAsset: true,
                         AssetVersion: true,
                         CaptureData: true,
                         IntermediaryFile: true,
@@ -485,7 +499,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     },
                     include: {
                         Actor: true,
-                        Asset: true,
+                        Asset_AssetToSystemObject_idAsset: true,
                         AssetVersion: true,
                         CaptureData: true,
                         IntermediaryFile: true,
