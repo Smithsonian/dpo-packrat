@@ -1,4 +1,5 @@
-import * as STORE from '../interface';
+import * as STORE from '../../interface';
+import * as DBAPI from '../../../db';
 
 export class LocalStorage implements STORE.IStorage {
     async readStream(storageKey: string): Promise<STORE.ReadStreamResult> {
@@ -59,6 +60,21 @@ export class LocalStorage implements STORE.IStorage {
     async validateHash(storageKey: string): Promise<boolean> {
         storageKey;
         return false;
+    }
+
+    async computeStorageKey(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<STORE.ComputeStorageKeyResults> {
+        const retValue: STORE.ComputeStorageKeyResults = {
+            storageKeyComputed: '',
+            storageKeyCurrent: assetVersion.StorageKey,
+            success: false,
+            error: 'Not Implemented'
+        };
+        asset;
+
+        // Compute Subject for this asset
+        // Asset
+
+        return retValue;
     }
 }
 
