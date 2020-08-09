@@ -11,6 +11,9 @@ const Asset = {
     VAssetType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
         return await DBAPI.Vocabulary.fetch(parent.idVAssetType);
     },
+    SystemObjectSource: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
+        return await DBAPI.SystemObject.fetch(parent.idSystemObject);
+    },
     AssetVersion: async (parent: Parent): Promise<DBAPI.AssetVersion[] | null> => {
         return await DBAPI.AssetVersion.fetchFromAsset(parent.idAsset);
     },
