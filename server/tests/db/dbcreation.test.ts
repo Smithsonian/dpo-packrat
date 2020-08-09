@@ -3781,6 +3781,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(captureDataFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Identifier.fetchFromSubjectPreferred', async () => {
+        let identifierFetch: DBAPI.Identifier | null = null;
+        if (subject) {
+            identifierFetch = await DBAPI.Identifier.fetchFromSubjectPreferred(subject.idSubject);
+            if (identifierFetch && identifierSubjectHookup)
+                expect(identifierFetch).toMatchObject(identifierSubjectHookup);
+        }
+        expect(identifierFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: IntermediaryFile.fetchDerivedFromItems', async () => {
         let intermediaryFileFetch: DBAPI.IntermediaryFile[] | null = null;
         if (item && itemNulls) {
@@ -5366,6 +5376,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBC.CopyObject<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
         expect(await DBAPI.GeoLocation.fetch(0)).toBeNull();
         expect(await DBAPI.Identifier.fetch(0)).toBeNull();
+        expect(await DBAPI.Identifier.fetchFromSubjectPreferred(0)).toBeNull();
         expect(await DBAPI.Identifier.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.IntermediaryFile.fetch(0)).toBeNull();
         expect(await DBAPI.IntermediaryFile.fetchDerivedFromItems([])).toBeNull();
