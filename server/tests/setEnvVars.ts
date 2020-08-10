@@ -7,3 +7,5 @@ if (!process.env.EDAN_SERVER)
     process.env.EDAN_SERVER = 'http://edan.si.edu/';
 if (!process.env.EDAN_APPID)
     process.env.EDAN_APPID = 'OCIO3D';
+if (!process.env.OCFL_STORAGE_ROOT)
+    process.env.OCFL_STORAGE_ROOT = './var/PackratStorage';

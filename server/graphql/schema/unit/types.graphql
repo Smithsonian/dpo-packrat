@@ -58,8 +58,10 @@ type Subject {
     AssetThumbnail: Asset
     idAssetThumbnail: Int
     idGeoLocation: Int
+    idIdentifierPreferred: Int
     GeoLocation: GeoLocation
     Unit: Unit
+    IdentifierPreferred: Identifier
     Item: [Item]
     SystemObject: SystemObject
 }

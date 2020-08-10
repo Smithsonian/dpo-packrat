@@ -4,13 +4,14 @@ import * as DBAPI from '../../../../../db';
 
 export default async function createSubject(_: Parent, args: MutationCreateSubjectArgs): Promise<CreateSubjectResult> {
     const { input } = args;
-    const { idUnit, idAssetThumbnail, idGeoLocation, Name } = input;
+    const { idUnit, idAssetThumbnail, idGeoLocation, idIdentifierPreferred, Name } = input;
 
     const subjectArgs = {
         idSubject: 0,
         idUnit,
         idAssetThumbnail: idAssetThumbnail || null,
         idGeoLocation: idGeoLocation || null,
+        idIdentifierPreferred: idIdentifierPreferred || null,
         Name
     };
 

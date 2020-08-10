@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ProjectDocumentation as ProjectDocumentationBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { ProjectDocumentation as ProjectDocumentationBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
 import { SystemObject } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -84,6 +84,30 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
                 await DBC.DBConnection.prisma.projectDocumentation.findMany({ where: { idProject } }), ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.fetchFromProject', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of ProjectDocumentation that are connected to any of the specified projects.
+     * ProjectDocumentation are connected to system objects; we examine those system objects which are in a *derived* relationship
+     * to system objects connected to any of the specified projects.
+     * @param idProjects Array of Project.idProject
+     */
+    static async fetchDerivedFromProjects(idProjects: number[]): Promise<ProjectDocumentation[] | null> {
+        if (!idProjects || idProjects.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(
+                await DBC.DBConnection.prisma.$queryRaw<ProjectDocumentation[]>`
+                SELECT DISTINCT PD.*
+                FROM ProjectDocumentation AS PD
+                JOIN SystemObject AS SOPD ON (PD.idProjectDocumentation = SOPD.idProjectDocumentation)
+                JOIN SystemObjectXref AS SOX ON (SOPD.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOP ON (SOX.idSystemObjectMaster = SOP.idSystemObject)
+                WHERE SOP.idProject IN (${join(idProjects)})`, ProjectDocumentation);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.ProjectDocumentation.fetchDerivedFromProjects', error);
             return null;
         }
     }
