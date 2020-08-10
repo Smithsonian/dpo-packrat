@@ -552,7 +552,6 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
-    jest.setTimeout(120000);
     test('DB Creation: AssetVersion Not Ingested', async () => {
         if (assetThumbnail && user)
             assetVersionNotIngested = new DBAPI.AssetVersion({
@@ -1830,6 +1829,19 @@ describe('DB Fetch By ID Test Suite', () => {
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
             }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchByAssetAndVersion', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchByAssetAndVersion(assetThumbnail.idAsset, 1);
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
+            assetVersionFetch = await DBAPI.AssetVersion.fetchByAssetAndVersion(assetThumbnail.idAsset, 2);
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
         }
         expect(assetVersionFetch).toBeTruthy();
     });
@@ -5377,7 +5389,9 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchByAssetAndVersion(0, 1)).toBeNull();
         expect(await DBAPI.CaptureData.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromCaptureDataPhoto(0)).toBeNull();

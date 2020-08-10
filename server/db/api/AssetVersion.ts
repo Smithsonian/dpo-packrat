@@ -39,7 +39,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                         StorageChecksum,
                         StorageSize,
                         Ingested,
-                        Version: nextVersion ? nextVersion : 1,
+                        Version: nextVersion ? nextVersion : /* istanbul ignore next */ 1,
                         SystemObject:       { create: { Retired: false }, },
                     },
                 }));
@@ -73,12 +73,12 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         if (!idAsset)
             return null;
         try {
-            const VersionInfo: { Version: number } =
-                await DBC.DBConnection.prisma.$queryRaw<{ Version: number }>`
+            const VersionInfo: [{ Version: number }] =
+                await DBC.DBConnection.prisma.$queryRaw<[{ Version: number }]>`
                 SELECT IFNULL(MAX(AV.Version), 0) + 1 AS 'Version'
                 FROM AssetVersion AS AV
                 WHERE AV.idAsset = ${idAsset};`;
-            return VersionInfo.Version;
+            return (VersionInfo && VersionInfo.length > 0) ? VersionInfo[0].Version : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetVersion.computeNextVersionNumber', error);
             return null;
