@@ -84,7 +84,6 @@ function SearchList(): React.ReactElement {
                     onClick={onSearch}
                 >
                     <IoIosSearch color='inherit' size={20} />
-
                 </LoadingButton>
             </Box>
             <>
