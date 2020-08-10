@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { Vocabulary } from '../Vocabulary';
 import * as DBC from '../../connection';
 import * as CACHE from '../../../cache';
@@ -29,7 +28,7 @@ export class SubjectUnitIdentifier {
                 SubjectUnitIdentifier.initialized = true;
             }
 
-            return await DBC.DBConnection.prisma.queryRaw<SubjectUnitIdentifier[]>`
+            return await DBC.DBConnection.prisma.$queryRaw<SubjectUnitIdentifier[]>`
             WITH 
             ARKIDs (idSystemObject, IdentifierValue) AS (
                 SELECT idSystemObject, IdentifierValue

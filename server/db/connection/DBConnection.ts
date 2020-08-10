@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { PrismaClient } from '@prisma/client';
 
 export class DBConnection {
@@ -22,7 +21,7 @@ export class DBConnection {
 
     private async disconnect(): Promise<void> {
         if (this._prisma) {
-            await this._prisma.disconnect();
+            await this._prisma.$disconnect();
             this._prisma = null;
         }
     }
