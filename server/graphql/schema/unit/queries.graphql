@@ -8,16 +8,24 @@ type Query {
     getItem(input: GetItemInput!): GetItemResult!
 }
 
+type SubjectUnitIdentifier {
+    idSubject: Int!
+    SubjectName: String!
+    UnitAbbreviation: String!
+    IdentifierPublic: String
+    IdentifierCollection: String
+}
+
 input SearchIngestionSubjectsInput {
     query: String!
 }
 
 type SearchIngestionSubjectsResult {
-    Subject: [Subject]!
+    SubjectUnitIdentifier: [SubjectUnitIdentifier]!
 }
 
 input GetIngestionItemsForSubjectsInput {
-    idSubjects: [Int!]
+    idSubjects: [Int!]!
 }
 
 type GetIngestionItemsForSubjectsResult {
@@ -25,7 +33,7 @@ type GetIngestionItemsForSubjectsResult {
 }
 
 input GetIngestionProjectsForSubjectsInput {
-    idSubjects: [Int!]
+    idSubjects: [Int!]!
 }
 
 type GetIngestionProjectsForSubjectsResult {

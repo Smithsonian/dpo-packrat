@@ -6,7 +6,7 @@ import { StateSubject } from '../../../../context';
 
 const useStyles = makeStyles(() => ({
     name: {
-        display: 'flex'
+        width: '100%',
     },
     options: {
         marginLeft: 20
@@ -47,10 +47,12 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
         <TableRow>
             <TableCell>{arkId}</TableCell>
             <TableCell align='left'>{unit}</TableCell>
-            <TableCell className={classes.name} align='left'>
-                <Typography variant='caption'>{name}</Typography>
-                <Box className={classes.options}>
-                    {selected ? <MdRemoveCircleOutline className={classes.option} onClick={remove} size={24} /> : <MdAddCircleOutline className={classes.option} onClick={add} size={24} />}
+            <TableCell align='left'>
+                <Box display='flex' flexDirection='row'>
+                    <Typography className={classes.name} variant='caption'>{name}</Typography>
+                    <Box className={classes.options}>
+                        {selected ? <MdRemoveCircleOutline className={classes.option} onClick={remove} size={24} /> : <MdAddCircleOutline className={classes.option} onClick={add} size={24} />}
+                    </Box>
                 </Box>
             </TableCell>
         </TableRow>
