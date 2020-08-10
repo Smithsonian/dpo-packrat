@@ -37,17 +37,12 @@ export type WriteStreamCloseResult = {
 };
 
 export type HierarchyUpdatedResults = {
-    storageKeyInput: string,
-    storageKeyOutput: string | null,
-    asset: DBAPI.Asset | null,
-    assetVersion: DBAPI.AssetVersion | null,
     success: boolean,
     error: string
 };
 
 export type ComputeStorageKeyResults = {
-    storageKeyComputed: string;
-    storageKeyCurrent: string | null;
+    storageKey: string;
     success: boolean,
     error: string
 };
@@ -84,9 +79,8 @@ export interface IStorage {
     writeStreamClose(storageKey: string): Promise<WriteStreamCloseResult>;
 
     /**
-     * Informs the storage system of the potential need to recompute a storage key
-     * due to changes in an asset version's hieararchical objects (e.g. Unit Name, Project Name, Subject's primary identifier, Item.Name)
-     * If a change is needed, update storage, and update the storage key in the AssetVersion in the database
+     * Informs the storage system of the potential need to update metadata describing the asset
+     * due to changes in an asset's object ancestrion (e.g. Units, Projects, Subjects, Items, etc)
      * @param storageKey Opaque storage identifier created by writeStream(), maintained by closeWriteStream(), and updated by placeAsset()
      */
     hierarchyUpdated(storageKey: string): Promise<HierarchyUpdatedResults>;
@@ -98,9 +92,8 @@ export interface IStorage {
     validateHash(storageKey: string): Promise<boolean>;
 
     /**
-     * Computes a storage key representing an asset and asset version
-     * @param asset Asset for whom to compute storage key
-     * @param assetVersion Asset Version for whom to compute storage key
+     * Computes a storage key representing an asset
+     * @param uniqueID This will be Asset.idAsset, transformed into a string
      */
-    computeStorageKey(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<ComputeStorageKeyResults>;
+    computeStorageKey(uniqueID: string): Promise<ComputeStorageKeyResults>;
 }

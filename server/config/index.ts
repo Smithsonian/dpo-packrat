@@ -25,9 +25,6 @@ type ConfigType = {
             expires: Date;
         };
     },
-    storage: {
-        type: STORAGE_TYPE;
-    },
     collection: {
         type: COLLECTION_TYPE;
         edan: {
@@ -36,6 +33,13 @@ type ConfigType = {
             authKey: string;
         }
     }
+    log: {
+        root: string;
+    }
+    storage: {
+        type: STORAGE_TYPE;
+        root: string;
+    },
 };
 
 const oneDayMs = 24 * 60 * 60 * 1000; // 24hrs in milliseconds
@@ -49,9 +53,6 @@ const Config: ConfigType = {
             checkPeriod: 24 * 60 * 60 // prune expired entries every 24h
         }
     },
-    storage: {
-        type: STORAGE_TYPE.LOCAL,
-    },
     collection: {
         type: COLLECTION_TYPE.EDAN,
         edan: {
@@ -59,6 +60,13 @@ const Config: ConfigType = {
             appId: process.env.EDAN_APPID ? process.env.EDAN_APPID : /* istanbul ignore next */ 'OCIO3D',
             authKey: process.env.EDAN_AUTH_KEY ? process.env.EDAN_AUTH_KEY : /* istanbul ignore next */  ''
         }
+    },
+    log: {
+        root: './var/logs'
+    },
+    storage: {
+        type: STORAGE_TYPE.LOCAL,
+        root: process.env.OCFL_STORAGE_ROOT ? process.env.OCFL_STORAGE_ROOT : /* istanbul ignore next */ './var/PackratStorage'
     }
 };
 
