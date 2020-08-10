@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import * as STORE from '../../interface';
-// import * as DBAPI from '../../../db';
+import * as DBAPI from '../../../db';
 import { IOResults } from '../../../utils/helpers';
 import { OCFLRoot } from './OCFLRoot';
 
@@ -15,14 +15,29 @@ export class LocalStorage implements STORE.IStorage {
         return await this.ocflRoot.initialize(storageRoot);
     }
 
-    async readStream(storageKey: string): Promise<STORE.ReadStreamResult> {
+    async readStream(storageKey: string, version: number): Promise<STORE.ReadStreamResult> {
         const retValue: STORE.ReadStreamResult = {
             readStream: null,
             hash: null,
             success: false,
             error: 'Not Implemented'
         };
-        storageKey;
+
+        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetchByStorageKey(storageKey);
+        if (!asset) {
+            retValue.success = false;
+            retValue.error = `No asset found from storageKey ${storageKey}`;
+            return retValue;
+        }
+
+        const assetVersion: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchByAssetAndVersion(asset.idAsset, version);
+        if (!assetVersion) {
+            retValue.success = false;
+            retValue.error = `No asset version found from storageKey ${storageKey}, idAsset ${asset.idAsset}, version ${version}`;
+            return retValue;
+        }
+
+        // const location: string = this.ocflRoot.computeLocation(storageKey)
         return retValue;
     }
 
@@ -122,28 +137,6 @@ export class LocalStorage implements STORE.IStorage {
     1. Robust storage.
     2. Transparent storage: be able to know what is stored simply by walking the storage hierarchy.
     3. Metadata storage: provide on-disk backups of relational data present in the DB.
-
-    Issues / Challenges:
-    1. The storage key calculation is dependent on data that can change.  So, either:
-        a. We update the storage key (and the implied directory path) when its source data is changed.
-           This is hard! The storage system doesn't know when this happens, and making the storage client
-           Take this action implies some crazy linkage between components.  I don't like this.
-        b. We don't update the storage key when its source data is changed.
-           This is easy! But then our transparency goals are not met, especially if the changed data
-           was a correction of faulty information, such as a bad ARK ID of a subject.
-    2. We want to store metadata in the OCFL object root. But metadata can change and will be edited over time.
-       As with issue 1, we either make our client tell us when these changes are made, or we ignore such changes.
-
-    Approaches:
-    1. Ignore changes. PROs: easy. CONs: breaks transparency and metadata storage goals
-    2. Handle changes. PROs: meets transparency and metadata storage goals. CONs: Very hard!
-    3. Ignore changes in real time; use offline service to find and correct changes.
-       Write our own OCFL client which validates the content.
-       - Validates hashes
-       - Compares storageKeys (i.e. file paths) with computed storage keys from live metadata. Updates storageKeys and file paths when needed.
-       - Compares metadata with computed meta from live system.  Updates/versions as needed.
-       I really like this approach. We avoid the nasty linkage issue, and our data store remains robust and mostly transparent,
-       except for oddball cases when storage key sources are changed. There are updated as the system verification tool runs.
 */
 
 /*

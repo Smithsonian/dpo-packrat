@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS `Asset` (
   `idAssetGroup` int(11) DEFAULT NULL,
   `idVAssetType` int(11) NOT NULL,
   `idSystemObject` int(11) DEFAULT NULL,
+  `StorageKey` varchar(512) NOT NULL UNIQUE,
   PRIMARY KEY (`idAsset`),
   KEY `Asset_idAssetGroup` (`idAssetGroup`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -84,14 +85,13 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `idAsset` int(11) NOT NULL,
   `idUserCreator` int(11) NOT NULL,
   `DateCreated` datetime NOT NULL,
-  `StorageKey` varchar(512) NOT NULL UNIQUE,
   `StorageChecksum` varchar(128) NOT NULL,
   `StorageSize` bigint(20) NOT NULL DEFAULT 0,
   `Ingested` boolean NOT NULL,
+  `Version` int(11) NOT NULL,
   PRIMARY KEY (`idAssetVersion`),
-  KEY `AssetVersion_idAsset_DateCreated` (`idAsset`,`DateCreated`),
+  KEY `AssetVersion_idAsset_Version` (`idAsset`,`Version`),
   KEY `AssetVersion_StorageChecksum` (`StorageChecksum`),
-  KEY `AssetVersion_StorageKey` (`StorageKey`),
   KEY `AssetVersion_Ingested_idUserCreator` (`Ingested`,`idUserCreator`),
   KEY `AssetVersion_idUserCreator_Ingested` (`idUserCreator`,`Ingested`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

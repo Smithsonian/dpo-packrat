@@ -64,6 +64,7 @@ export type Asset = {
     FileName: Scalars['String'];
     FilePath: Scalars['String'];
     idAssetGroup?: Maybe<Scalars['Int']>;
+    StorageKey: Scalars['String'];
     AssetGroup?: Maybe<AssetGroup>;
     AssetVersion?: Maybe<Array<Maybe<AssetVersion>>>;
     SystemObject?: Maybe<SystemObject>;
@@ -76,7 +77,6 @@ export type AssetVersion = {
     idAsset: Scalars['Int'];
     idUserCreator: Scalars['Int'];
     StorageChecksum: Scalars['String'];
-    StorageKey: Scalars['String'];
     StorageSize: Scalars['Int'];
     Ingested: Scalars['Boolean'];
     Asset?: Maybe<Asset>;
