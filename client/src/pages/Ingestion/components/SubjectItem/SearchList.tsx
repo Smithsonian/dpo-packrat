@@ -52,7 +52,7 @@ function SearchList(): React.ReactElement {
         const trimmedQuery = query.trim();
 
         if (trimmedQuery === '') {
-            toast.warn('Search query is not valid');
+            toast.warn('Search query should not be empty');
             return;
         }
 
