@@ -12,8 +12,8 @@ type SubjectUnitIdentifier {
     idSubject: Int!
     SubjectName: String!
     UnitAbbreviation: String!
-    IdentifierPublic: String!
-    IdentifierCollection: String!
+    IdentifierPublic: String
+    IdentifierCollection: String
 }
 
 input SearchIngestionSubjectsInput {

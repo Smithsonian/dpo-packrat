@@ -740,8 +740,8 @@ export type SubjectUnitIdentifier = {
     idSubject: Scalars['Int'];
     SubjectName: Scalars['String'];
     UnitAbbreviation: Scalars['String'];
-    IdentifierPublic: Scalars['String'];
-    IdentifierCollection: Scalars['String'];
+    IdentifierPublic?: Maybe<Scalars['String']>;
+    IdentifierCollection?: Maybe<Scalars['String']>;
 };
 
 export type SearchIngestionSubjectsInput = {
