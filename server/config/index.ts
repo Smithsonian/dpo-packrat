@@ -8,6 +8,10 @@ enum AUTH_TYPE {
     LDAP = 'ldapauth'
 }
 
+enum STORAGE_TYPE {
+    LOCAL = 'local'
+}
+
 enum COLLECTION_TYPE {
     EDAN = 'edan'
 }
@@ -29,6 +33,13 @@ type ConfigType = {
             authKey: string;
         }
     }
+    log: {
+        root: string;
+    }
+    storage: {
+        type: STORAGE_TYPE;
+        root: string;
+    },
 };
 
 const oneDayMs = 24 * 60 * 60 * 1000; // 24hrs in milliseconds
@@ -49,7 +60,14 @@ const Config: ConfigType = {
             appId: process.env.EDAN_APPID ? process.env.EDAN_APPID : /* istanbul ignore next */ 'OCIO3D',
             authKey: process.env.EDAN_AUTH_KEY ? process.env.EDAN_AUTH_KEY : /* istanbul ignore next */  ''
         }
+    },
+    log: {
+        root: './var/logs'
+    },
+    storage: {
+        type: STORAGE_TYPE.LOCAL,
+        root: process.env.OCFL_STORAGE_ROOT ? process.env.OCFL_STORAGE_ROOT : /* istanbul ignore next */ './var/PackratStorage'
     }
 };
 
-export { Config as default, AUTH_TYPE, COLLECTION_TYPE };
+export { Config as default, AUTH_TYPE, COLLECTION_TYPE, STORAGE_TYPE };

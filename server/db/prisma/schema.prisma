@@ -86,27 +86,31 @@ model Actor {
 }
 
 model Asset {
-  idAsset           Int                 @default(autoincrement()) @id
-  FileName          String
-  FilePath          String
-  idAssetGroup      Int?
-  idVAssetType      Int
-  AssetGroup        AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
-  Vocabulary        Vocabulary          @relation(fields: [idVAssetType], references: [idVocabulary])
-  AssetVersion      AssetVersion[]
-  CaptureData       CaptureData[]
-  CaptureDataFile   CaptureDataFile[]
-  IntermediaryFile  IntermediaryFile[]
-  Item              Item[]
-  Metadata          Metadata[]
-  Model             Model[]
-  ModelGeometryFile ModelGeometryFile[]
-  ModelUVMapFile    ModelUVMapFile[]
-  Scene             Scene[]
-  Subject           Subject[]
-  SystemObject      SystemObject?
+  idAsset                                         Int                 @default(autoincrement()) @id
+  FileName                                        String
+  FilePath                                        String
+  idAssetGroup                                    Int?
+  idVAssetType                                    Int
+  idSystemObject                                  Int?
+  StorageKey                                      String              @unique
+  AssetGroup                                      AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
+  SystemObject_Asset_idSystemObjectToSystemObject SystemObject?       @relation("Asset_idSystemObjectToSystemObject", fields: [idSystemObject], references: [idSystemObject])
+  Vocabulary                                      Vocabulary          @relation(fields: [idVAssetType], references: [idVocabulary])
+  AssetVersion                                    AssetVersion[]
+  CaptureData                                     CaptureData[]
+  CaptureDataFile                                 CaptureDataFile[]
+  IntermediaryFile                                IntermediaryFile[]
+  Item                                            Item[]
+  Metadata                                        Metadata[]
+  Model                                           Model[]
+  ModelGeometryFile                               ModelGeometryFile[]
+  ModelUVMapFile                                  ModelUVMapFile[]
+  Scene                                           Scene[]
+  Subject                                         Subject[]
+  SystemObject_AssetToSystemObject_idAsset        SystemObject?       @relation("AssetToSystemObject_idAsset")
 
   @@index([idAssetGroup], name: "Asset_idAssetGroup")
+  @@index([idSystemObject], name: "fk_asset_systemobject1")
   @@index([idVAssetType], name: "fk_asset_vocabulary1")
 }
 
@@ -120,17 +124,17 @@ model AssetVersion {
   idAsset         Int
   idUserCreator   Int
   DateCreated     DateTime
-  StorageLocation String
   StorageChecksum String
   StorageSize     Int           @default(0)
   Ingested        Boolean
+  Version         Int
   Asset           Asset         @relation(fields: [idAsset], references: [idAsset])
   User            User          @relation(fields: [idUserCreator], references: [idUser])
   SystemObject    SystemObject?
 
   @@index([Ingested, idUserCreator], name: "AssetVersion_Ingested_idUserCreator")
   @@index([StorageChecksum], name: "AssetVersion_StorageChecksum")
-  @@index([idAsset, DateCreated], name: "AssetVersion_idAsset_DateCreated")
+  @@index([idAsset, Version], name: "AssetVersion_idAsset_Version")
   @@index([idUserCreator, Ingested], name: "AssetVersion_idUserCreator_Ingested")
 }
 
@@ -236,6 +240,7 @@ model Identifier {
   idSystemObject    Int?
   SystemObject      SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
   Vocabulary        Vocabulary    @relation(fields: [idVIdentifierType], references: [idVocabulary])
+  Subject           Subject[]
 
   @@index([IdentifierValue], name: "Identifier_IdentifierValue")
   @@index([idSystemObject, idVIdentifierType], name: "Identifier_idSystemObject_idVIdentifierType")
@@ -516,18 +521,21 @@ model Stakeholder {
 }
 
 model Subject {
-  idSubject        Int           @default(autoincrement()) @id
-  idUnit           Int
-  idAssetThumbnail Int?
-  idGeoLocation    Int?
-  Name             String
-  Asset            Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset])
-  GeoLocation      GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation])
-  Unit             Unit          @relation(fields: [idUnit], references: [idUnit])
-  SystemObject     SystemObject?
+  idSubject             Int           @default(autoincrement()) @id
+  idUnit                Int
+  idAssetThumbnail      Int?
+  idGeoLocation         Int?
+  Name                  String
+  idIdentifierPreferred Int?
+  Asset                 Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset])
+  GeoLocation           GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation])
+  Identifier            Identifier?   @relation(fields: [idIdentifierPreferred], references: [idIdentifier])
+  Unit                  Unit          @relation(fields: [idUnit], references: [idUnit])
+  SystemObject          SystemObject?
 
   @@index([idAssetThumbnail], name: "fk_subject_asset1")
   @@index([idGeoLocation], name: "fk_subject_geolocation1")
+  @@index([idIdentifierPreferred], name: "fk_subject_identifier1")
   @@index([idUnit], name: "fk_subject_unit1")
 }
 
@@ -550,7 +558,7 @@ model SystemObject {
   idWorkflowStep                                                        Int?                              @unique
   Retired                                                               Boolean
   Actor                                                                 Actor?                            @relation(fields: [idActor], references: [idActor])
-  Asset                                                                 Asset?                            @relation(fields: [idAsset], references: [idAsset])
+  Asset_AssetToSystemObject_idAsset                                     Asset?                            @relation("AssetToSystemObject_idAsset", fields: [idAsset], references: [idAsset])
   AssetVersion                                                          AssetVersion?                     @relation(fields: [idAssetVersion], references: [idAssetVersion])
   CaptureData                                                           CaptureData?                      @relation(fields: [idCaptureData], references: [idCaptureData])
   IntermediaryFile                                                      IntermediaryFile?                 @relation(fields: [idIntermediaryFile], references: [idIntermediaryFile])
@@ -565,6 +573,7 @@ model SystemObject {
   Workflow                                                              Workflow?                         @relation(fields: [idWorkflow], references: [idWorkflow])
   WorkflowStep                                                          WorkflowStep?                     @relation(fields: [idWorkflowStep], references: [idWorkflowStep])
   AccessContextObject                                                   AccessContextObject[]
+  Asset_Asset_idSystemObjectToSystemObject                              Asset[]                           @relation("Asset_idSystemObjectToSystemObject")
   Identifier                                                            Identifier[]
   LicenseAssignment                                                     LicenseAssignment[]
   Metadata                                                              Metadata[]

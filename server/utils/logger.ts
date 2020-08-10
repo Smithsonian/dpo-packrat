@@ -1,5 +1,7 @@
 import * as winston from 'winston';
 import * as path from 'path';
+import * as fs from 'fs';
+import Config from '../config';
 
 export type Logger = winston.Logger;
 export let logger: Logger;
@@ -11,7 +13,7 @@ function configureLogger(logPath: string | null): void {
         return;
 
     if (!logPath)
-        logPath = './logs';
+        logPath = Config.log.root ? Config.log.root : /* istanbul ignore next */ './var/logs';
 
     logger = winston.createLogger({
         level: 'verbose',
@@ -45,6 +47,13 @@ function configureLogger(logPath: string | null): void {
                 winston.format.simple()
             )
         }));
+    }
+
+    try {
+        if (!fs.existsSync(logPath))
+            fs.mkdirSync(logPath);
+    } catch (error) {
+        logger.error(error);
     }
 
     logger.info('**************************');

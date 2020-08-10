@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { IntermediaryFile as IntermediaryFileBase, SystemObject as SystemObjectBase } from '@prisma/client';
+import { IntermediaryFile as IntermediaryFileBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
 import { SystemObject } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -68,6 +68,30 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
                 await DBC.DBConnection.prisma.intermediaryFile.findOne({ where: { idIntermediaryFile, }, }), IntermediaryFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.IntermediaryFile.fetch', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of IntermediaryFiles that are connected to any of the specified items.
+     * IntermediaryFiles are connected to system objects; we examine those system objects which are in a *derived* relationship
+     * to system objects connected to any of the specified items.
+     * @param idItem Array of Item.idItem
+     */
+    static async fetchDerivedFromItems(idItem: number[]): Promise<IntermediaryFile[] | null> {
+        if (!idItem || idItem.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<IntermediaryFileBase, IntermediaryFile>(
+                await DBC.DBConnection.prisma.$queryRaw<IntermediaryFile[]>`
+                SELECT DISTINCT I.*
+                FROM IntermediaryFile AS I
+                JOIN SystemObject AS SOIF ON (I.idIntermediaryFile = SOIF.idIntermediaryFile)
+                JOIN SystemObjectXref AS SOX ON (SOIF.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
+                WHERE SOI.idItem IN (${join(idItem)})`, IntermediaryFile);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.IntermediaryFile.fetchDerivedFromItems', error);
             return null;
         }
     }

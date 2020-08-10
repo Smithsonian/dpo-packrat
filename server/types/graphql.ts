@@ -65,6 +65,7 @@ export type Asset = {
     FileName: Scalars['String'];
     FilePath: Scalars['String'];
     idAssetGroup?: Maybe<Scalars['Int']>;
+    StorageKey: Scalars['String'];
     AssetGroup?: Maybe<AssetGroup>;
     AssetVersion?: Maybe<Array<Maybe<AssetVersion>>>;
     SystemObject?: Maybe<SystemObject>;
@@ -77,7 +78,6 @@ export type AssetVersion = {
     idAsset: Scalars['Int'];
     idUserCreator: Scalars['Int'];
     StorageChecksum: Scalars['String'];
-    StorageLocation: Scalars['String'];
     StorageSize: Scalars['Int'];
     Ingested: Scalars['Boolean'];
     Asset?: Maybe<Asset>;
@@ -453,10 +453,12 @@ export type Subject = {
     AssetThumbnail?: Maybe<Asset>;
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
+    idIdentifierPreferred?: Maybe<Scalars['Int']>;
     GeoLocation?: Maybe<GeoLocation>;
     Unit?: Maybe<Unit>;
     Item?: Maybe<Array<Maybe<Item>>>;
     SystemObject?: Maybe<SystemObject>;
+    IdentifierPreferred?: Maybe<Identifier>;
 };
 
 export type Item = {
@@ -591,7 +593,7 @@ export type Query = {
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getUnit: GetUnitResult;
     getProject: GetProjectResult;
-    getSubject: GetUnitResult;
+    getSubject: GetSubjectResult;
     getItem: GetItemResult;
     getCurrentUser: GetCurrentUserResult;
     getUser: GetUserResult;
@@ -1010,6 +1012,7 @@ export type CreateSubjectInput = {
     Name: Scalars['String'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
+    idIdentifierPreferred?: Maybe<Scalars['Int']>;
 };
 
 export type CreateSubjectResult = {
