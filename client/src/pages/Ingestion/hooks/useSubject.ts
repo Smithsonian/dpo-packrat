@@ -23,7 +23,7 @@ function useSubject(): UseSubject {
     const { addProjects } = useProject();
 
     const addSubject = async (subject: StateSubject): Promise<void> => {
-        const alreadyExists = !!lodash.find(subjects, { id: subject.id });
+        const alreadyExists = !!lodash.find(subjects, { name: subject.name });
 
         if (!alreadyExists) {
             const addSubjectAction: IngestionDispatchAction = {
@@ -73,8 +73,6 @@ async function updateProjectsAndItemsForSubjects(selectedSubjects: StateSubject[
         }
     };
 
-    // TODO: remove mock as queries are integrated fully
-
     try {
         const {
             data: { getIngestionItemsForSubjects }
@@ -83,14 +81,7 @@ async function updateProjectsAndItemsForSubjects(selectedSubjects: StateSubject[
 
         const items: StateItem[] = foundItems.map((item: Item) => parseItemToState(item, false));
 
-        const mockItem: StateItem = {
-            id: String(1),
-            name: 'Geonimo 238 Thorax',
-            selected: false,
-            entireSubject: false
-        };
-
-        addItems([...items, mockItem]);
+        addItems(items);
     } catch (error) {
         toast.error('Failed to get items for subjects');
     }
@@ -102,15 +93,9 @@ async function updateProjectsAndItemsForSubjects(selectedSubjects: StateSubject[
 
         const { Project: foundProjects } = getIngestionProjectsForSubjects;
 
-        const projects: StateProject[] = foundProjects.map((project: Project) => parseProjectToState(project, false));
+        const projects: StateProject[] = foundProjects.map((project: Project, index: number) => parseProjectToState(project, !index));
 
-        const mockProject: StateProject = {
-            id: 1,
-            name: 'Mammoth (NMNH)',
-            selected: true
-        };
-
-        addProjects([...projects, mockProject]);
+        addProjects(projects);
     } catch (error) {
         toast.error('Failed to get projects for subjects');
     }
