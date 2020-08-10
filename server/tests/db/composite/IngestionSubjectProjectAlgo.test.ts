@@ -20,11 +20,11 @@ describe('DB Composite IngestionSubjectProjectAlgo Test', () => {
 function executeAlgorithm(subjectIDs: number[]): void {
     test(`DB Composite IngestionSubjectProjectAlgo Test 1 '${JSON.stringify(subjectIDs)}'`, async () => {
         let results: DBAPI.Project[] | null = null;
-        results = await DBAPI.Project.fetchFromSubjects(subjectIDs);
+        results = await DBAPI.Project.fetchMasterFromSubjects(subjectIDs);
         if (results && results.length > 0)
             return;
 
-        results = await DBAPI.Project.fetchFromSubjectsUnits(subjectIDs);
+        results = await DBAPI.Project.fetchDerivedFromSubjectsUnits(subjectIDs);
         if (results && results.length > 0)
             return;
 
@@ -36,14 +36,14 @@ function executeAlgorithm(subjectIDs: number[]): void {
 function executeMultistageQuery(subjectIDs: number[], expectNull: boolean): void {
     test(`DB Composite IngestionSubjectProjectAlgo Test 2 '${JSON.stringify(subjectIDs)}'`, async () => {
         let results: DBAPI.Project[] | null = null;
-        results = await DBAPI.Project.fetchFromSubjects(subjectIDs);
+        results = await DBAPI.Project.fetchMasterFromSubjects(subjectIDs);
 
         if (!expectNull)
             expect(results).toBeTruthy();
         else
             expect(results).toBeFalsy();
 
-        results = await DBAPI.Project.fetchFromSubjectsUnits(subjectIDs);
+        results = await DBAPI.Project.fetchDerivedFromSubjectsUnits(subjectIDs);
 
         if (!expectNull)
             expect(results).toBeTruthy();

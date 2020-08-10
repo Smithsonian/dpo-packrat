@@ -69,6 +69,8 @@ CREATE TABLE IF NOT EXISTS `Asset` (
   `FilePath` varchar(512) NOT NULL,
   `idAssetGroup` int(11) DEFAULT NULL,
   `idVAssetType` int(11) NOT NULL,
+  `idSystemObject` int(11) DEFAULT NULL,
+  `StorageKey` varchar(512) NOT NULL UNIQUE,
   PRIMARY KEY (`idAsset`),
   KEY `Asset_idAssetGroup` (`idAssetGroup`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -83,12 +85,12 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `idAsset` int(11) NOT NULL,
   `idUserCreator` int(11) NOT NULL,
   `DateCreated` datetime NOT NULL,
-  `StorageLocation` varchar(512) NOT NULL,
   `StorageChecksum` varchar(128) NOT NULL,
   `StorageSize` bigint(20) NOT NULL DEFAULT 0,
   `Ingested` boolean NOT NULL,
+  `Version` int(11) NOT NULL,
   PRIMARY KEY (`idAssetVersion`),
-  KEY `AssetVersion_idAsset_DateCreated` (`idAsset`,`DateCreated`),
+  KEY `AssetVersion_idAsset_Version` (`idAsset`,`Version`),
   KEY `AssetVersion_StorageChecksum` (`StorageChecksum`),
   KEY `AssetVersion_Ingested_idUserCreator` (`Ingested`,`idUserCreator`),
   KEY `AssetVersion_idUserCreator_Ingested` (`idUserCreator`,`Ingested`)
@@ -384,6 +386,7 @@ CREATE TABLE IF NOT EXISTS `Subject` (
   `idAssetThumbnail` int(11) DEFAULT NULL,
   `idGeoLocation` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
+  `idIdentifierPreferred` int(11) DEFAULT NULL,
   PRIMARY KEY (`idSubject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -598,6 +601,11 @@ ADD CONSTRAINT `fk_asset_assetgroup1`
 ADD CONSTRAINT `fk_asset_vocabulary1`
   FOREIGN KEY (`idVAssetType`)
   REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_asset_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
@@ -912,6 +920,11 @@ ADD CONSTRAINT `fk_subject_asset1`
 ADD CONSTRAINT `fk_subject_geolocation1`
   FOREIGN KEY (`idGeoLocation`)
   REFERENCES `Packrat`.`GeoLocation` (`idGeoLocation`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_subject_identifier1`
+  FOREIGN KEY (`idIdentifierPreferred`)
+  REFERENCES `Packrat`.`Identifier` (`idIdentifier`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
