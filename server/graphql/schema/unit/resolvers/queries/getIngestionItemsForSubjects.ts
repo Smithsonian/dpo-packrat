@@ -6,7 +6,7 @@ export default async function getIngestionItemsForSubjects(_: Parent, args: Quer
     const { input } = args;
     const { idSubjects } = input;
 
-    const Item = await DBAPI.Item.fetchFromSubjects(idSubjects);
+    const Item = await DBAPI.Item.fetchDerivedFromSubjects(idSubjects);
 
     if (Item) {
         return { Item };
