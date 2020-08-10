@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useLazyQuery } from '@apollo/react-hooks';
 import { Box, TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import React, { useEffect, useState } from 'react';
+import { IoIosSearch } from 'react-icons/io';
 import { FieldType, LoadingButton } from '../../../../components';
-import SubjectList from './SubjectList';
 import { StateSubject } from '../../../../context';
-import { useLazyQuery } from '@apollo/react-hooks';
+import { parseSubjectUnitIdentifierToState } from '../../../../context/utils';
 import { QUERY_SEARCH_INGESTION_SUBJECTS } from '../../../../graphql';
-import { parseSubjectToState } from '../../../../context/utils';
-import { Subject } from '../../../../types/graphql';
+import { SubjectUnitIdentifier } from '../../../../types/graphql';
+import SubjectList from './SubjectList';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -22,28 +24,10 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     searchButton: {
         height: 35,
+        width: 60,
         color: palette.background.paper
     }
 }));
-
-const mockSubjects: StateSubject[] = [{
-    id: 1,
-    arkId: '123de82-9664-4049-b5bb-746e2fbe229e',
-    unit: 'NMNH',
-    name: '1 USNM RAD 125353: Geronimo 238'
-},
-{
-    id: 2,
-    arkId: '313958de82-9664-4049-b5bb-746e2fbe229e',
-    unit: 'NMNH',
-    name: '2 USNM RAD 125353: Geronimo 238'
-},
-{
-    id: 3,
-    arkId: '31958de82-9664-4049-b5bb-746e2fbe229e',
-    unit: 'NMNH',
-    name: '3 USNM RAD 125353: Geronimo 238'
-}];
 
 function SearchList(): React.ReactElement {
     const classes = useStyles();
@@ -53,19 +37,26 @@ function SearchList(): React.ReactElement {
     const [subjects, setSubjects] = useState<StateSubject[]>([]);
 
     useEffect(() => {
-        if (called && !loading && !error) {
+        if (data && called && !loading && !error) {
             const { searchIngestionSubjects } = data;
-            const { Subject: foundSubjects } = searchIngestionSubjects;
-            // TODO: remove mock subjects after query integration
-            const searchedSubjects = foundSubjects.map((subject: Subject) => parseSubjectToState(subject));
-            setSubjects([...searchedSubjects, ...mockSubjects]);
+            const { SubjectUnitIdentifier: foundSubjectUnitIdentifier } = searchIngestionSubjects;
+
+            const searchedSubjectUnitIdentifier = foundSubjectUnitIdentifier.map((subjectUnitIdentifier: SubjectUnitIdentifier) => parseSubjectUnitIdentifierToState(subjectUnitIdentifier));
+            setSubjects([...searchedSubjectUnitIdentifier]);
         }
     }, [called, data, loading, error]);
 
-    const onSearch = async () => {
-        if (query === '') return;
+    const onSearch = (): void => {
+        if (loading) return;
 
-        const variables = { input: { query } };
+        const trimmedQuery = query.trim();
+
+        if (trimmedQuery === '') {
+            toast.warn('Search query is not valid');
+            return;
+        }
+
+        const variables = { input: { query: trimmedQuery } };
         searchSubject({ variables });
     };
 
@@ -88,10 +79,11 @@ function SearchList(): React.ReactElement {
                     variant='contained'
                     color='primary'
                     disableElevation
-                    loading={false}
+                    loaderSize={12}
+                    loading={loading}
                     onClick={onSearch}
                 >
-                    Search
+                    <IoIosSearch color='inherit' size={20} />
 
                 </LoadingButton>
             </Box>
