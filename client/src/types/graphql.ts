@@ -735,17 +735,26 @@ export type GetSceneResult = {
     Scene?: Maybe<Scene>;
 };
 
+export type SubjectUnitIdentifier = {
+    __typename?: 'SubjectUnitIdentifier';
+    idSubject: Scalars['Int'];
+    SubjectName: Scalars['String'];
+    UnitAbbreviation: Scalars['String'];
+    IdentifierPublic: Scalars['String'];
+    IdentifierCollection: Scalars['String'];
+};
+
 export type SearchIngestionSubjectsInput = {
     query: Scalars['String'];
 };
 
 export type SearchIngestionSubjectsResult = {
     __typename?: 'SearchIngestionSubjectsResult';
-    Subject: Array<Maybe<Subject>>;
+    SubjectUnitIdentifier: Array<Maybe<SubjectUnitIdentifier>>;
 };
 
 export type GetIngestionItemsForSubjectsInput = {
-    idSubjects?: Maybe<Array<Scalars['Int']>>;
+    idSubjects: Array<Scalars['Int']>;
 };
 
 export type GetIngestionItemsForSubjectsResult = {
@@ -754,7 +763,7 @@ export type GetIngestionItemsForSubjectsResult = {
 };
 
 export type GetIngestionProjectsForSubjectsInput = {
-    idSubjects?: Maybe<Array<Scalars['Int']>>;
+    idSubjects: Array<Scalars['Int']>;
 };
 
 export type GetIngestionProjectsForSubjectsResult = {
