@@ -1,6 +1,5 @@
 import * as DBAPI from '../../../db';
 import * as COL from '../../../collections/interface/';
-// import * as LOG from '../../../utils/logger';
 
 afterAll(async done => {
     done();
@@ -29,7 +28,7 @@ describe('DB Composite SubjectUnitIdentifier Test', () => {
 function executeQuery(query: string, expectNull: boolean, expectResults: boolean): void {
     test(`DB Composite SubjectUnitIdentifier.fetch '${query}'`, async () => {
         const results: DBAPI.SubjectUnitIdentifier[] | null = await DBAPI.SubjectUnitIdentifier.fetch(query, 10);
-        // LOG.logger.info(JSON.stringify(results));
+
         if (!expectNull)
             expect(results).toBeTruthy();
         else
@@ -61,10 +60,6 @@ function executeQueryCollection(ICollection: COL.ICollection, query: string, exp
                     IdentifierPublic: record.identifierPublic,
                     IdentifierCollection: record.identifierCollection
                 });
-
-        // LOG.logger.info(query + '\n');
-        // for (const record of resultsDB)
-        //     LOG.logger.info(JSON.stringify(record));
 
         if (!expectNull)
             expect(resultsDB).toBeTruthy();

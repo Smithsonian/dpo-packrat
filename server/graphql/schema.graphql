@@ -50,6 +50,7 @@ type Asset {
   idAssetGroup: Int
   AssetGroup: AssetGroup
   AssetVersion: [AssetVersion]
+  VAssetType: Vocabulary
   SystemObject: SystemObject
 }
 

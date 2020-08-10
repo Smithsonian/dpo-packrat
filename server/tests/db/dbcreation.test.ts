@@ -101,6 +101,49 @@ let workflowTemplate: DBAPI.WorkflowTemplate | null;
 // DB Creation Test Suite
 // *******************************************************************
 describe('DB Creation Test Suite', () => {
+    test('DB Creation: VocabularySet', async () => {
+        vocabularySet = new DBAPI.VocabularySet({
+            Name: 'Test Vocabulary Set',
+            SystemMaintained: false,
+            idVocabularySet: 0
+        });
+        expect(vocabularySet).toBeTruthy();
+        if (vocabularySet) {
+            expect(await vocabularySet.create()).toBeTruthy();
+            expect(vocabularySet.idVocabularySet).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: Vocabulary', async () => {
+        if (vocabularySet)
+            vocabulary = new DBAPI.Vocabulary({
+                idVocabularySet: vocabularySet.idVocabularySet,
+                SortOrder: 0,
+                Term: 'Test Vocabulary',
+                idVocabulary: 0
+            });
+        expect(vocabulary).toBeTruthy();
+        if (vocabulary) {
+            expect(await vocabulary.create()).toBeTruthy();
+            expect(vocabulary.idVocabulary).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: Vocabulary 2', async () => {
+        if (vocabularySet)
+            vocabulary2 = new DBAPI.Vocabulary({
+                idVocabularySet: vocabularySet.idVocabularySet,
+                SortOrder: 0,
+                Term: 'Test Vocabulary 2',
+                idVocabulary: 0
+            });
+        expect(vocabulary2).toBeTruthy();
+        if (vocabulary2) {
+            expect(await vocabulary2.create()).toBeTruthy();
+            expect(vocabulary2.idVocabulary).toBeGreaterThan(0);
+        }
+    });
+
     test('DB Creation: AssetGroup', async () => {
         assetGroup = new DBAPI.AssetGroup({ idAssetGroup: 0 });
         expect(assetGroup).toBeTruthy();
@@ -118,11 +161,12 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Asset', async () => {
-        if (assetGroup)
+        if (assetGroup && vocabulary)
             assetThumbnail = new DBAPI.Asset({
                 FileName: 'Test Asset Thumbnail',
                 FilePath: '/test/asset/path',
-                idAssetGroup:  assetGroup.idAssetGroup,
+                idAssetGroup: assetGroup.idAssetGroup,
+                idVAssetType: vocabulary.idVocabulary,
                 idAsset: 0
             });
         expect(assetThumbnail).toBeTruthy();
@@ -227,49 +271,6 @@ describe('DB Creation Test Suite', () => {
         if (subjectNulls) {
             expect(await subjectNulls.create()).toBeTruthy();
             expect(subjectNulls.idSubject).toBeGreaterThan(0);
-        }
-    });
-
-    test('DB Creation: VocabularySet', async () => {
-        vocabularySet = new DBAPI.VocabularySet({
-            Name: 'Test Vocabulary Set',
-            SystemMaintained: false,
-            idVocabularySet: 0
-        });
-        expect(vocabularySet).toBeTruthy();
-        if (vocabularySet) {
-            expect(await vocabularySet.create()).toBeTruthy();
-            expect(vocabularySet.idVocabularySet).toBeGreaterThan(0);
-        }
-    });
-
-    test('DB Creation: Vocabulary', async () => {
-        if (vocabularySet)
-            vocabulary = new DBAPI.Vocabulary({
-                idVocabularySet: vocabularySet.idVocabularySet,
-                SortOrder: 0,
-                Term: 'Test Vocabulary',
-                idVocabulary: 0
-            });
-        expect(vocabulary).toBeTruthy();
-        if (vocabulary) {
-            expect(await vocabulary.create()).toBeTruthy();
-            expect(vocabulary.idVocabulary).toBeGreaterThan(0);
-        }
-    });
-
-    test('DB Creation: Vocabulary 2', async () => {
-        if (vocabularySet)
-            vocabulary2 = new DBAPI.Vocabulary({
-                idVocabularySet: vocabularySet.idVocabularySet,
-                SortOrder: 0,
-                Term: 'Test Vocabulary 2',
-                idVocabulary: 0
-            });
-        expect(vocabulary2).toBeTruthy();
-        if (vocabulary2) {
-            expect(await vocabulary2.create()).toBeTruthy();
-            expect(vocabulary2.idVocabulary).toBeGreaterThan(0);
         }
     });
 
@@ -470,12 +471,14 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Asset Without Asset Group', async () => {
-        assetWithoutAG = new DBAPI.Asset({
-            FileName: 'Test Asset 2',
-            FilePath: '/test/asset/path2',
-            idAssetGroup:  null,
-            idAsset: 0
-        });
+        if (vocabulary)
+            assetWithoutAG = new DBAPI.Asset({
+                FileName: 'Test Asset 2',
+                FilePath: '/test/asset/path2',
+                idAssetGroup: null,
+                idVAssetType: vocabulary.idVocabulary,
+                idAsset: 0
+            });
         expect(assetWithoutAG).toBeTruthy();
         if (assetWithoutAG) {
             expect(await assetWithoutAG.create()).toBeTruthy();
@@ -3691,17 +3694,19 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: Asset.update', async () => {
         let bUpdated: boolean = false;
-        if (assetThumbnail && assetGroup2) {
+        if (assetThumbnail && assetGroup2 && vocabulary2) {
             const SOOld: DBAPI.SystemObject | null = await assetThumbnail.fetchSystemObject();
             expect(SOOld).toBeTruthy();
 
             assetThumbnail.idAssetGroup = assetGroup2.idAssetGroup;
+            assetThumbnail.idVAssetType = vocabulary2.idVocabulary;
             bUpdated = await assetThumbnail.update();
 
             const assetFetch: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetThumbnail.idAsset);
             expect(assetFetch).toBeTruthy();
             if (assetFetch) {
                 expect(assetFetch.idAssetGroup).toBe(assetGroup2.idAssetGroup);
+                expect(assetFetch.idVAssetType).toBe(vocabulary2.idVocabulary);
 
                 const SONew: DBAPI.SystemObject | null = await assetFetch.fetchSystemObject();
                 expect(SONew).toBeTruthy();

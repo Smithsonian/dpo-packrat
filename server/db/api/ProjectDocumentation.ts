@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { ProjectDocumentation as ProjectDocumentationBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { SystemObject } from '..';
 import * as DBC from '../connection';

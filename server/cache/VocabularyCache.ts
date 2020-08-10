@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import * as LOG from '../utils/logger';
 import { CacheControl } from './CacheControl';
 import { Vocabulary, VocabularySet } from '../db';
@@ -23,6 +22,7 @@ export enum eVocabularySetID {
     eIdentifierIdentifierType,
     eMetadataMetadataSource,
     eWorkflowStepWorkflowStepType,
+    eAssetAssetType,
     eNone = -1
 }
 
@@ -104,6 +104,7 @@ export class VocabularyCache {
                 case 'Identifier.IdentifierType':               eVocabSetEnum = eVocabularySetID.eIdentifierIdentifierType; break;
                 case 'Metadata.MetadataSource':                 eVocabSetEnum = eVocabularySetID.eMetadataMetadataSource; break;
                 case 'WorkflowStep.WorkflowStepType':           eVocabSetEnum = eVocabularySetID.eWorkflowStepWorkflowStepType; break;
+                case 'Asset.AssetType':                         eVocabSetEnum = eVocabularySetID.eAssetAssetType; break;
             }
 
             if (eVocabSetEnum != eVocabularySetID.eNone) {

@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { IntermediaryFile as IntermediaryFileBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { SystemObject } from '..';
 import * as DBC from '../connection';
