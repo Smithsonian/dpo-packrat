@@ -52,7 +52,7 @@ export interface IStorage {
      * Provides a Readable stream for accessing the bits associated with storageKey. Also provides the hash, which the client may use for validating streamed bits.
      * @param storageKey Opaque storage identifier created by writeStream(), maintained by closeWriteStream(), and updated by placeAsset()
      */
-    readStream(storageKey: string): Promise<ReadStreamResult>;
+    readStream(storageKey: string, version: number): Promise<ReadStreamResult>;
 
     /**
      * Informs the storage system that the client is done reading this stream

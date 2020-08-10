@@ -35,8 +35,10 @@
     "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
     "postinstall": "cd .. && yarn generate:server:prisma && cd server",
     "test": "jest --passWithNoTests --detectOpenHandles --forceExit",
-    "initdb": "docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.sql\" & docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.DATA.sql\"",
-    "dropdb": "docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD -e 'DROP DATABASE IF EXISTS `Packrat`'\""
+    "initdbdock": "docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.SCHEMA.sql\" & docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.PROC.sql\" & docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.DATA.sql\"",
+    "dropdbdock": "docker exec -i packrat-db sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD -e 'DROP DATABASE IF EXISTS `Packrat`'\"",
+    "initdb": "sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < ./db/sql/scripts/Packrat.SCHEMA.sql\" & sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < ./db/sql/scripts/Packrat.PROC.sql\" & sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD < ./db/sql/scripts/Packrat.DATA.sql\"",
+    "dropdb": "sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD -e 'DROP DATABASE IF EXISTS `Packrat`'\""
   },
   "dependencies": {
     "@dpo-packrat/common": "0.3.2",

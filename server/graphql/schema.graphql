@@ -49,6 +49,7 @@ type Asset {
   FilePath: String!
   idAssetGroup: Int
   idSystemObject: Int
+  StorageKey: String!
   AssetGroup: AssetGroup
   SystemObjectSource: SystemObject
   AssetVersion: [AssetVersion]
@@ -62,9 +63,9 @@ type AssetVersion {
   idAsset: Int!
   idUserCreator: Int!
   StorageChecksum: String!
-  StorageKey: String!
   StorageSize: Int!
   Ingested: Boolean!
+  Version: Int!
   Asset: Asset
   User: User
   SystemObject: SystemObject

@@ -11,6 +11,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
     idAssetGroup!: number | null;
     idVAssetType!: number;
     idSystemObject!: number | null;
+    StorageKey!: string;
 
     private idAssetGroupOrig!: number | null;
     private idSystemObjectOrig!: number | null;
@@ -26,9 +27,9 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject } = this;
+            const { FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, StorageKey } = this;
             ({ idAsset: this.idAsset, FileName: this.FileName, FilePath: this.FilePath, idAssetGroup: this.idAssetGroup,
-                idVAssetType: this.idVAssetType, idSystemObject: this.idSystemObject } =
+                idVAssetType: this.idVAssetType, idSystemObject: this.idSystemObject, StorageKey: this.StorageKey } =
                 await DBC.DBConnection.prisma.asset.create({
                     data: {
                         FileName,
@@ -37,6 +38,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
                         Vocabulary:     { connect: { idVocabulary: idVAssetType }, },
                         SystemObject_Asset_idSystemObjectToSystemObject: idSystemObject ? { connect: { idSystemObject }, } : undefined,
                         SystemObject_AssetToSystemObject_idAsset:   { create: { Retired: false }, },
+                        StorageKey,
                     },
                 }));
             return true;
@@ -48,7 +50,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAsset, FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, idAssetGroupOrig, idSystemObjectOrig } = this;
+            const { idAsset, FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, StorageKey, idAssetGroupOrig, idSystemObjectOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.asset.update({
                 where: { idAsset, },
                 data: {
@@ -57,6 +59,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
                     AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : idAssetGroupOrig ? { disconnect: true, } : undefined,
                     Vocabulary:     { connect: { idVocabulary: idVAssetType }, },
                     SystemObject_Asset_idSystemObjectToSystemObject: idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
+                    StorageKey,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -86,6 +89,18 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
                 await DBC.DBConnection.prisma.asset.findOne({ where: { idAsset, }, }), Asset);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchByStorageKey(StorageKey: string): Promise<Asset | null> {
+        if (!StorageKey)
+            return null;
+        try {
+            return DBC.CopyObject<AssetBase, Asset>(
+                await DBC.DBConnection.prisma.asset.findOne({ where: { StorageKey, }, }), Asset);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Asset.fetchByStorageKey', error);
             return null;
         }
     }

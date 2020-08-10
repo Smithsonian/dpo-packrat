@@ -181,6 +181,7 @@ describe('DB Creation Test Suite', () => {
                 idAssetGroup: assetGroup.idAssetGroup,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: null,
+                StorageKey: randomStorageKey('/test/asset/path/'),
                 idAsset: 0
             });
         expect(assetThumbnail).toBeTruthy();
@@ -243,9 +244,9 @@ describe('DB Creation Test Suite', () => {
             EmailAddress: 'test@si.edu',
             SecurityID: 'SECURITY_ID',
             Active: true,
-            DateActivated: new Date(),
+            DateActivated: nowCleansed(),
             DateDisabled: null,
-            WorkflowNotificationTime: new Date(),
+            WorkflowNotificationTime: nowCleansed(),
             EmailSettings: 0,
             idUser: 0
         });
@@ -521,6 +522,7 @@ describe('DB Creation Test Suite', () => {
                 idAssetGroup: null,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectSubject.idSystemObject,
+                StorageKey: randomStorageKey('/test/asset/path/'),
                 idAsset: 0
             });
         expect(assetWithoutAG).toBeTruthy();
@@ -535,36 +537,39 @@ describe('DB Creation Test Suite', () => {
             assetVersion = new DBAPI.AssetVersion({
                 idAsset: assetThumbnail.idAsset,
                 idUserCreator: user.idUser,
-                DateCreated: new Date(),
-                StorageKey: randomStorageKey('/test/asset/path/'),
+                DateCreated: nowCleansed(),
                 StorageChecksum: 'Asset Checksum',
                 StorageSize: 50,
                 idAssetVersion: 0,
-                Ingested: true
+                Ingested: true,
+                Version: 0
             });
         expect(assetVersion).toBeTruthy();
         if (assetVersion) {
             expect(await assetVersion.create()).toBeTruthy();
-            expect(assetVersion.idAsset).toBeGreaterThan(0);
+            expect(assetVersion.idAssetVersion).toBeGreaterThan(0);
+            expect(assetVersion.Version).toBeGreaterThan(0);
         }
     });
 
+    jest.setTimeout(120000);
     test('DB Creation: AssetVersion Not Ingested', async () => {
         if (assetThumbnail && user)
             assetVersionNotIngested = new DBAPI.AssetVersion({
                 idAsset: assetThumbnail.idAsset,
                 idUserCreator: user.idUser,
-                DateCreated: new Date(),
-                StorageKey: randomStorageKey('/test/asset2/path/'),
+                DateCreated: nowCleansed(),
                 StorageChecksum: 'Asset Checksum',
                 StorageSize: 50,
                 idAssetVersion: 0,
-                Ingested: false
+                Ingested: false,
+                Version: 0
             });
         expect(assetVersionNotIngested).toBeTruthy();
         if (assetVersionNotIngested) {
             expect(await assetVersionNotIngested.create()).toBeTruthy();
-            expect(assetVersionNotIngested.idAsset).toBeGreaterThan(0);
+            expect(assetVersionNotIngested.idAssetVersion).toBeGreaterThan(0);
+            expect(assetVersionNotIngested.Version).toBeGreaterThan(0);
         }
     });
 
@@ -572,7 +577,7 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary && assetThumbnail)
             captureData = new DBAPI.CaptureData({
                 idVCaptureMethod: vocabulary.idVocabulary,
-                DateCaptured: new Date(),
+                DateCaptured: nowCleansed(),
                 Description: 'Test Capture Data',
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idCaptureData: 0
@@ -588,7 +593,7 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary)
             captureDataNulls = new DBAPI.CaptureData({
                 idVCaptureMethod: vocabulary.idVocabulary,
-                DateCaptured: new Date(),
+                DateCaptured: nowCleansed(),
                 Description: 'Test Capture Data Nulls',
                 idAssetThumbnail: null,
                 idCaptureData: 0
@@ -735,7 +740,7 @@ describe('DB Creation Test Suite', () => {
         if (assetThumbnail)
             intermediaryFile = new DBAPI.IntermediaryFile({
                 idAsset: assetThumbnail.idAsset,
-                DateCreated: new Date(),
+                DateCreated: nowCleansed(),
                 idIntermediaryFile: 0
             });
         expect(intermediaryFile).toBeTruthy();
@@ -874,7 +879,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Model', async () => {
         if (vocabulary && assetThumbnail)
             model = new DBAPI.Model({
-                DateCreated: new Date(),
+                DateCreated: nowCleansed(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 Master: true,
                 Authoritative: true,
@@ -894,7 +899,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Model With Nulls', async () => {
         if (vocabulary)
             modelNulls = new DBAPI.Model({
-                DateCreated: new Date(),
+                DateCreated: nowCleansed(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 Master: true,
                 Authoritative: true,
@@ -950,7 +955,7 @@ describe('DB Creation Test Suite', () => {
             modelProcessingAction = new DBAPI.ModelProcessingAction({
                 idModel: model.idModel,
                 idActor: actorWithUnit.idActor,
-                DateProcessed: new Date(),
+                DateProcessed: nowCleansed(),
                 ToolsUsed: 'Test Model Processing Action',
                 Description: 'Test Model Processing Action Description',
                 idModelProcessingAction: 0
@@ -1253,8 +1258,8 @@ describe('DB Creation Test Suite', () => {
             licenseAssignment = new DBAPI.LicenseAssignment({
                 idLicense: license.idLicense,
                 idUserCreator: user.idUser,
-                DateStart: new Date(),
-                DateEnd: new Date(),
+                DateStart: nowCleansed(),
+                DateEnd: nowCleansed(),
                 idSystemObject: systemObjectSubject.idSystemObject,
                 idLicenseAssignment: 0
             });
@@ -1350,8 +1355,8 @@ describe('DB Creation Test Suite', () => {
                 idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
                 idProject: project.idProject,
                 idUserInitiator: user.idUser,
-                DateInitiated: new Date(),
-                DateUpdated: new Date(),
+                DateInitiated: nowCleansed(),
+                DateUpdated: nowCleansed(),
                 idWorkflow: 0
             });
         expect(workflow).toBeTruthy();
@@ -1367,8 +1372,8 @@ describe('DB Creation Test Suite', () => {
                 idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
                 idProject: null,
                 idUserInitiator: null,
-                DateInitiated: new Date(),
-                DateUpdated: new Date(),
+                DateInitiated: nowCleansed(),
+                DateUpdated: nowCleansed(),
                 idWorkflow: 0
             });
         expect(workflowNulls).toBeTruthy();
@@ -1385,8 +1390,8 @@ describe('DB Creation Test Suite', () => {
                 idUserOwner: user.idUser,
                 idVWorkflowStepType: vocabulary.idVocabulary,
                 State: 0,
-                DateCreated: new Date(),
-                DateCompleted: new Date(),
+                DateCreated: nowCleansed(),
+                DateCompleted: nowCleansed(),
                 idWorkflowStep: 0
             });
         expect(workflowStep).toBeTruthy();
@@ -1781,6 +1786,16 @@ describe('DB Fetch By ID Test Suite', () => {
                 expect(assetFetch).toMatchObject(assetThumbnail);
                 expect(assetThumbnail).toMatchObject(assetFetch);
             }
+        }
+        expect(assetFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Asset: Asset.fetchByStorageKey', async () => {
+        let assetFetch: DBAPI.Asset | null = null;
+        if (assetThumbnail) {
+            assetFetch = await DBAPI.Asset.fetchByStorageKey(assetThumbnail.StorageKey);
+            if (assetFetch)
+                expect(assetFetch).toEqual(assetThumbnail);
         }
         expect(assetFetch).toBeTruthy();
     });
@@ -5356,6 +5371,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Actor.fetch(0)).toBeNull();
         expect(await DBAPI.Actor.fetchFromUnit(0)).toBeNull();
         expect(await DBAPI.Asset.fetch(0)).toBeNull();
+        expect(await DBAPI.Asset.fetchByStorageKey('')).toBeNull();
         expect(await DBAPI.Asset.fetchFromAssetGroup(0)).toBeNull();
         expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
@@ -5542,4 +5558,10 @@ describe('DB Null/Zero ID Test', () => {
 
 function randomStorageKey(baseName: string) {
     return baseName + (Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+}
+
+function nowCleansed(): Date {
+    const date: Date = new Date();
+    date.setMilliseconds(0);
+    return date;
 }

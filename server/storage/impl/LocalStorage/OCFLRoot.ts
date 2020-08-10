@@ -10,6 +10,13 @@ export class OCFLRoot {
 
     constructor() { }
 
+    // For example, the idAsset == 1 yields the SHA1 hash of 356A192B7913B04C54574D18C28D46E6395428AB.  This will yield the path:
+    // /35/6A/19/356A192B7913B04C54574D18C28D46E6395428AB (the entire hash is repeated at the of the n-tuple).
+
+    computeLocation(storageKey: string): string {
+        return `/${storageKey.substring(0, 2)}/${storageKey.substring(2, 4)}/${storageKey.substring(4, 6)}/${storageKey}`;
+    }
+
     async initialize(storageRoot: string): Promise<H.IOResults> {
         this.storageRoot = storageRoot;                                 // single spot under which our files are stored
         this.storageRootRepo = path.join(storageRoot, 'REPO');          // root of OCFL repository
