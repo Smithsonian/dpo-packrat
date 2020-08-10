@@ -48,7 +48,10 @@ type Asset {
   FileName: String!
   FilePath: String!
   idAssetGroup: Int
+  idSystemObject: Int
+  StorageKey: String!
   AssetGroup: AssetGroup
+  SystemObjectSource: SystemObject
   AssetVersion: [AssetVersion]
   VAssetType: Vocabulary
   SystemObject: SystemObject
@@ -60,9 +63,9 @@ type AssetVersion {
   idAsset: Int!
   idUserCreator: Int!
   StorageChecksum: String!
-  StorageLocation: String!
   StorageSize: Int!
   Ingested: Boolean!
+  Version: Int!
   Asset: Asset
   User: User
   SystemObject: SystemObject
@@ -409,8 +412,10 @@ type Subject {
   AssetThumbnail: Asset
   idAssetThumbnail: Int
   idGeoLocation: Int
+  idIdentifierPreferred: Int
   GeoLocation: GeoLocation
   Unit: Unit
+  IdentifierPreferred: Identifier
   Item: [Item]
   SystemObject: SystemObject
 }
@@ -536,7 +541,7 @@ type Query {
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getProject(input: GetProjectInput!): GetProjectResult!
-  getSubject(input: GetSubjectInput!): GetUnitResult!
+  getSubject(input: GetSubjectInput!): GetSubjectResult!
   getItem(input: GetItemInput!): GetItemResult!
   getCurrentUser: GetCurrentUserResult!
   getUser(input: GetUserInput!): GetUserResult!
@@ -811,6 +816,7 @@ input CreateSubjectInput {
   Name: String!
   idAssetThumbnail: Int
   idGeoLocation: Int
+  idIdentifierPreferred: Int
 }
 
 type CreateSubjectResult {

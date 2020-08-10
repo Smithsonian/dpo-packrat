@@ -29,6 +29,7 @@ input CreateSubjectInput {
     Name: String!
     idAssetThumbnail: Int
     idGeoLocation: Int
+    idIdentifierPreferred: Int
 }
 
 type CreateSubjectResult {

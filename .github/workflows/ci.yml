@@ -50,7 +50,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup test DB Schema
-        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test < server/db/sql/scripts/Packrat.sql
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test < server/db/sql/scripts/Packrat.SCHEMA.sql
+
+      - name: Setup test DB Proc
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test < server/db/sql/scripts/Packrat.PROC.sql
 
       - name: Setup test DB Data
         run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test < server/db/sql/scripts/Packrat.DATA.sql
