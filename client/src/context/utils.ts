@@ -7,13 +7,14 @@ export function parseSubjectUnitIdentifierToState(subjectUnitIdentifier: Subject
     return {
         id: idSubject,
         name: SubjectName,
-        arkId: IdentifierPublic,
+        arkId: IdentifierPublic || '',
         unit: UnitAbbreviation
     };
 }
 
 export function parseItemToState(item: Item, selected: boolean): StateItem {
     const { idItem, Name, EntireSubject } = item;
+
     return {
         id: String(idItem),
         entireSubject: EntireSubject,
