@@ -66,12 +66,19 @@ function SearchList(): React.ReactElement {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
     }
 
+    const onKeyDown = (key: string): void => {
+        if (key === 'Enter') {
+            onSearch();
+        }
+    };
+
     return (
         <FieldType required={false} label='Search for Subject' marginTop={2}>
             <Box className={classes.container}>
                 <TextField
                     className={classes.searchField}
                     InputLabelProps={{ shrink: false }}
+                    onKeyDown={({ key }) => onKeyDown(key)}
                     onChange={({ target }) => setQuery(target.value)}
                 />
                 <LoadingButton
