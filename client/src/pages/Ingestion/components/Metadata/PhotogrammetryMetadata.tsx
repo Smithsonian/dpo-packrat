@@ -7,7 +7,6 @@ import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/picker
 import { Colors } from '../../../../theme';
 import { StateMetadata, AssetType } from '../../../../context';
 import { PhotogrammetrySelectOptions } from '../../../../context';
-import { FileId } from '../../../../context';
 import useMetadata from '../../hooks/useMetadata';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -61,19 +60,19 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 }));
 
 interface PhotogrammetryMetadataProps {
-    fileId: FileId;
     metadata: StateMetadata;
 }
 
 function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.ReactElement {
-    const { fileId, metadata } = props;
+    const { metadata } = props;
     const classes = useStyles();
     const { DatasetType, ItemPositionType, FocusType, LightsourceType, BackgroundRemovalMethod, ClusterType } = PhotogrammetrySelectOptions;
 
+    const fileId = metadata.file.id;
     const { photogrammetry } = metadata;
-    const { updateFields } = useMetadata();
+    const { getFieldErrors, updateFields } = useMetadata();
 
-    const dateCapturedError = photogrammetry.dateCaptured.toString() === 'Invalid Date';
+    const errors = getFieldErrors(metadata);
 
     const setField = ({ target }): void => {
         const { name, value } = target;
@@ -108,7 +107,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
             <Box className={classes.fieldsContainer}>
                 <Box display='flex' flex={1} flexDirection='column'>
                     <FieldType
-                        error={dateCapturedError}
+                        error={errors.photogrammetry.dateCaptured}
                         required
                         label='Date Captured'
                         direction='row'
