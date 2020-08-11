@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { IoIosSearch } from 'react-icons/io';
 import { FieldType, LoadingButton } from '../../../../components';
 import { StateSubject } from '../../../../context';
-import { parseSubjectUnitIdentifierToState } from '../../../../context/utils';
+import { parseSubjectUnitIdentifierToState } from '../../../../context';
 import { QUERY_SEARCH_INGESTION_SUBJECTS } from '../../../../graphql';
 import { SubjectUnitIdentifier } from '../../../../types/graphql';
 import SubjectList from './SubjectList';
