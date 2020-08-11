@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { IoIosSearch } from 'react-icons/io';
 import { FieldType, LoadingButton } from '../../../../components';
 import { StateSubject } from '../../../../context';
-import { parseSubjectUnitIdentifierToState } from '../../../../context/utils';
+import { parseSubjectUnitIdentifierToState } from '../../../../context';
 import { QUERY_SEARCH_INGESTION_SUBJECTS } from '../../../../graphql';
 import { SubjectUnitIdentifier } from '../../../../types/graphql';
 import SubjectList from './SubjectList';
@@ -66,12 +66,19 @@ function SearchList(): React.ReactElement {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
     }
 
+    const onKeyDown = (key: string): void => {
+        if (key === 'Enter') {
+            onSearch();
+        }
+    };
+
     return (
         <FieldType required={false} label='Search for Subject' marginTop={2}>
             <Box className={classes.container}>
                 <TextField
                     className={classes.searchField}
                     InputLabelProps={{ shrink: false }}
+                    onKeyDown={({ key }) => onKeyDown(key)}
                     onChange={({ target }) => setQuery(target.value)}
                 />
                 <LoadingButton
@@ -84,7 +91,6 @@ function SearchList(): React.ReactElement {
                     onClick={onSearch}
                 >
                     <IoIosSearch color='inherit' size={20} />
-
                 </LoadingButton>
             </Box>
             <>

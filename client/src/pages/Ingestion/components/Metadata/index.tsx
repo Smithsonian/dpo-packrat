@@ -1,15 +1,17 @@
-import React, { useContext } from 'react';
-import { Box, Typography, Breadcrumbs } from '@material-ui/core';
+import { Box, Breadcrumbs, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { resolveSubRoute, INGESTION_ROUTE, HOME_ROUTES } from '../../../../constants';
-import { SidebarBottomNavigator } from '../../../../components';
-import { useLocation, Redirect, useHistory } from 'react-router';
-import { AppContext, FileId } from '../../../../context';
 import * as qs from 'query-string';
+import React, { useContext } from 'react';
+import { MdNavigateNext } from 'react-icons/md';
+import { Redirect, useHistory, useLocation } from 'react-router';
+import { toast } from 'react-toastify';
+import { SidebarBottomNavigator } from '../../../../components';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
+import { AppContext, AssetType, FileId, StateItem, StateMetadata, StateProject } from '../../../../context';
+import useItem from '../../hooks/useItem';
 import useMetadata from '../../hooks/useMetadata';
 import useProject from '../../hooks/useProject';
-import useItem from '../../hooks/useItem';
-import { MdNavigateNext } from 'react-icons/md';
+import PhotogrammetryMetadata from './PhotogrammetryMetadata';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -30,6 +32,11 @@ const useStyles = makeStyles(({ palette }) => ({
     }
 }));
 
+type QueryParams = {
+    fileId: FileId;
+    type: AssetType;
+};
+
 function Metadata(): React.ReactElement {
     const classes = useStyles();
     const { search } = useLocation();
@@ -39,16 +46,17 @@ function Metadata(): React.ReactElement {
 
     const { getSelectedProject } = useProject();
     const { getSelectedItem } = useItem();
-    const { getMetadataInfo } = useMetadata();
+    const { getFieldErrors, getMetadataInfo } = useMetadata();
 
     const metadataLength = metadatas.length;
-    const query = qs.parse(search);
+    const query = qs.parse(search) as QueryParams;
+    const { fileId, type } = query;
 
-    if (!metadataLength || !query.fileId) {
+    if (!metadataLength || !fileId) {
         return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
     }
 
-    const { metadata, metadataIndex, isLast } = getMetadataInfo(query.fileId as FileId);
+    const { metadata, metadataIndex, isLast } = getMetadataInfo(fileId);
     const project = getSelectedProject();
     const item = getSelectedItem();
 
@@ -57,24 +65,44 @@ function Metadata(): React.ReactElement {
     };
 
     const onNext = () => {
+        const { photogrammetry } = getFieldErrors(metadata);
+        let hasError: boolean = false;
+
+        for (const fieldValue of Object.values(photogrammetry)) {
+            if (fieldValue) {
+                hasError = true;
+            }
+        }
+
+        if (hasError) {
+            toast.warn('Please address all the errors');
+            return;
+        }
+
         if (isLast) {
             alert('Finished');
         } else {
-            const { file: { id, type } } = metadatas[metadataIndex + 1];
+            const nextMetadata = metadatas[metadataIndex + 1];
+            const { file: { id, type } } = nextMetadata;
             const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
 
             history.push(nextRoute);
         }
     };
 
+    const getMetadataComponent = (): React.ReactElement | null => {
+        if (type === AssetType.Photogrammetry) {
+            return <PhotogrammetryMetadata metadata={metadata} />;
+        }
+
+        return null;
+    };
+
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
-                <Breadcrumbs className={classes.breadcrumbs} separator={<MdNavigateNext color='inherit' size={20} />}>
-                    <Typography color='inherit'>Specify metadata for: {project?.name}</Typography>
-                    <Typography color='inherit'>{item?.name}</Typography>
-                    <Typography color='inherit'>{metadata?.file?.name}</Typography>
-                </Breadcrumbs>
+                <BreadcrumbsHeader project={project} item={item} metadata={metadata} />
+                {getMetadataComponent()}
             </Box>
             <SidebarBottomNavigator
                 leftLabel='Previous'
@@ -83,6 +111,25 @@ function Metadata(): React.ReactElement {
                 onClickRight={onNext}
             />
         </Box>
+    );
+}
+
+interface BreadcrumbsHeaderProps {
+    project: StateProject | undefined;
+    item: StateItem | undefined;
+    metadata: StateMetadata
+}
+
+function BreadcrumbsHeader(props: BreadcrumbsHeaderProps) {
+    const classes = useStyles();
+    const { project, item, metadata } = props;
+
+    return (
+        <Breadcrumbs className={classes.breadcrumbs} separator={<MdNavigateNext color='inherit' size={20} />}>
+            <Typography color='inherit'>Specify metadata for: {project?.name}</Typography>
+            <Typography color='inherit'>{item?.name}</Typography>
+            <Typography color='inherit'>{metadata.file.name}</Typography>
+        </Breadcrumbs>
     );
 }
 

@@ -1,5 +1,6 @@
 import { useReducer, Dispatch } from 'react';
 import lodash from 'lodash';
+import { defaultItem } from './ingestion.defaults';
 
 export enum IngestionUploadStatus {
     COMPLETE = 'COMPLETE',
@@ -72,7 +73,24 @@ export type StateItem = {
 
 export type ItemStep = StateItem[];
 
+export type PhotogrammetryFields = {
+    description: string;
+    dateCaptured: Date;
+    datasetType: string;
+    datasetFieldId: string;
+    itemPositionType: string;
+    itemPositionFieldId: string;
+    itemArrangementFieldId: string;
+    focusType: string;
+    lightsourceType: string;
+    backgroundRemovalMethod: string;
+    clusterType: string;
+    clusterGeometryFieldId: string;
+    cameraSettingUniform: boolean;
+};
+
 export type StateMetadata = {
+    photogrammetry: PhotogrammetryFields;
     file: IngestionFile;
 };
 
@@ -118,7 +136,8 @@ export enum ITEM_ACTIONS {
 }
 
 export enum METADATA_ACTIONS {
-    ADD_METADATA = 'ADD_METADATA'
+    ADD_METADATA = 'ADD_METADATA',
+    UPDATE_METADATA_FIELDS = 'UPDATE_METADATA_FIELDS'
 }
 
 const INGESTION_ACTION = {
@@ -127,13 +146,6 @@ const INGESTION_ACTION = {
     PROJECT: PROJECT_ACTIONS,
     ITEM: ITEM_ACTIONS,
     METADATA: METADATA_ACTIONS
-};
-
-export const defaultItem: StateItem = {
-    id: 'default',
-    name: '',
-    entireSubject: false,
-    selected: true
 };
 
 const ingestionState: Ingestion = {
@@ -253,17 +265,27 @@ type UPDATE_ITEM = {
     item: StateItem;
 };
 
-type MetadataDispatchAction = ADD_METADATA;
+type MetadataDispatchAction = ADD_METADATA | UPDATE_METADATA_FIELDS;
 
 type ADD_METADATA = {
     type: METADATA_ACTIONS.ADD_METADATA;
     metadatas: StateMetadata[];
 };
 
+export type MetadataFieldValue = string | number | boolean | Date;
+
+type UPDATE_METADATA_FIELDS = {
+    type: METADATA_ACTIONS.UPDATE_METADATA_FIELDS;
+    id: FileId;
+    fieldName: string;
+    fieldValue: MetadataFieldValue;
+    assetType: AssetType;
+};
+
 export type IngestionDispatchAction = UploadDispatchAction | SubjectDispatchAction | ProjectDispatchAction | ItemDispatchAction | MetadataDispatchAction;
 
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
-    const { uploads, subjects, projects, items } = state;
+    const { uploads, subjects, projects, items, metadatas } = state;
     const { files } = uploads;
 
     switch (action.type) {
@@ -428,6 +450,18 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
             return {
                 ...state,
                 metadatas: action.metadatas
+            };
+
+        case INGESTION_ACTION.METADATA.UPDATE_METADATA_FIELDS:
+            return {
+                ...state,
+                metadatas: lodash.forEach(metadatas, ({ file, photogrammetry }) => {
+                    if (file.id === action.id) {
+                        if (action.assetType === AssetType.Photogrammetry) {
+                            lodash.set(photogrammetry, action.fieldName, action.fieldValue);
+                        }
+                    }
+                })
             };
 
         case INGESTION_ACTION.SUBJECT.ADD_SUBJECT:

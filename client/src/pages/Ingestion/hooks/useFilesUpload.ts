@@ -4,6 +4,7 @@ import { AppContext, AssetType, METADATA_ACTIONS, StateMetadata } from '../../..
 import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus, IngestionUploadResponse, IngestionUploadStatus } from '../../../context';
 import { MUTATION_UPLOAD_ASSET, apolloUploader } from '../../../graphql';
 import lodash from 'lodash';
+import { defaultPhotogrammetryFields } from '../../../context';
 
 interface UseFilesUpload {
     updateMetadataSteps: () => boolean;
@@ -31,7 +32,11 @@ const useFilesUpload = (): UseFilesUpload => {
         const metadatas: StateMetadata[] = [];
 
         selectedFiles.forEach((file: IngestionFile) => {
-            const metadataStep = { file };
+            const metadataStep: StateMetadata = {
+                file,
+                photogrammetry: defaultPhotogrammetryFields
+            };
+
             metadatas.push(metadataStep);
         });
 
