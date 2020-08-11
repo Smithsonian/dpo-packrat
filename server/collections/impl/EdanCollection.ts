@@ -84,9 +84,9 @@ class EdanCollection implements COL.ICollection {
         dateString                          = dateString.substring(0, dateString.length - 5).replace('T', ' '); // trim off final ".333Z"; replace "T" with " "
         const auth: string                  = `${ipnonce}\n${uri}\n${dateString}\n${Config.collection.edan.authKey}`;
 
-        const SHA1: crypto.Hash             = crypto.createHash('SHA1');
-        SHA1.update(auth);
-        const authContent: string           = Buffer.from(SHA1.digest('hex')).toString('base64'); // seems like a bug to base64 encode hex output, but that does the trick!
+        const hash: crypto.Hash             = crypto.createHash('sha1');
+        hash.update(auth);
+        const authContent: string           = Buffer.from(hash.digest('hex')).toString('base64'); // seems like a bug to base64 encode hex output, but that does the trick!
 
         headers.push(['X-AppId', Config.collection.edan.appId]);
         headers.push(['X-RequestDate', dateString]);

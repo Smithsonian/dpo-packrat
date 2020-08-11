@@ -102,15 +102,18 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 2, 'Unit C
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 1, 'Capture Data Set: Photogrammetry');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 2, 'Capture Data Set: Diconde');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 3, 'Capture Data Set: Dicom');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 4, 'Capture Data Set: Other');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 5, 'Capture Data File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 6, 'Model');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 7, 'Model Geometry File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 8, 'Model UV Map File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 9, 'Scene');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 10, 'Project Documentation');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 11, 'Intermediary File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 12, 'Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 4, 'Capture Data Set: Laser Line');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 5, 'Capture Data Set: Spherical Laser');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 6, 'Capture Data Set: Structured Light');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 7, 'Capture Data Set: Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 8, 'Capture Data File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 9, 'Model');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 10, 'Model Geometry File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 11, 'Model UV Map File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 12, 'Scene');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 13, 'Project Documentation');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 14, 'Intermediary File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 15, 'Other');
 
 SELECT idVocabulary 
 INTO @idVocabARK 
@@ -1103,3 +1106,9 @@ INSERT INTO Subject (idUnit, Name) VALUES (25, 'slipper_orchid'); SET @IDSubject
 INSERT INTO Subject (idUnit, Name) VALUES (25, 'Unknown Bee 1'); SET @IDSubject = LAST_INSERT_ID(); INSERT INTO SystemObject (idSubject, Retired) VALUES (@IDSubject, 0); SET @IDSOSubject = LAST_INSERT_ID(); INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT idSystemObject, @IDSOSubject FROM SystemObject WHERE idProject = 96; INSERT INTO Item (Name, EntireSubject) VALUES ('Unknown Bee 1', 1); SET @IDItem = LAST_INSERT_ID(); INSERT INTO SystemObject (idItem, Retired) VALUES (@IDItem, 0); SET @IDSOItem = LAST_INSERT_ID(); INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) VALUES (@IDSOSubject, @IDSOItem);INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) VALUES ('edanmdm-siris_sic_10286', @idVocabARK, @IDSOSubject);  SET @IDIdentifier = LAST_INSERT_ID(); UPDATE Subject SET idIdentifierPreferred = @IDIdentifier WHERE idSubject = @IDSubject; INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) VALUES ('siris_sic_10286', @idVocabCMSUnitID, @IDSOSubject); 
 INSERT INTO Subject (idUnit, Name) VALUES (25, 'Unknown Bee 2'); SET @IDSubject = LAST_INSERT_ID(); INSERT INTO SystemObject (idSubject, Retired) VALUES (@IDSubject, 0); SET @IDSOSubject = LAST_INSERT_ID(); INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT idSystemObject, @IDSOSubject FROM SystemObject WHERE idProject = 96; INSERT INTO Item (Name, EntireSubject) VALUES ('Unknown Bee 2', 1); SET @IDItem = LAST_INSERT_ID(); INSERT INTO SystemObject (idItem, Retired) VALUES (@IDItem, 0); SET @IDSOItem = LAST_INSERT_ID(); INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) VALUES (@IDSOSubject, @IDSOItem);INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) VALUES ('edanmdm-siris_sil_1134128', @idVocabARK, @IDSOSubject);  SET @IDIdentifier = LAST_INSERT_ID(); UPDATE Subject SET idIdentifierPreferred = @IDIdentifier WHERE idSubject = @IDSubject; INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) VALUES ('siris_sil_1134128', @idVocabCMSUnitID, @IDSOSubject); 
 INSERT INTO Subject (idUnit, Name) VALUES (25, 'Unknown Bee 4'); SET @IDSubject = LAST_INSERT_ID(); INSERT INTO SystemObject (idSubject, Retired) VALUES (@IDSubject, 0); SET @IDSOSubject = LAST_INSERT_ID(); INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT idSystemObject, @IDSOSubject FROM SystemObject WHERE idProject = 96; INSERT INTO Item (Name, EntireSubject) VALUES ('Unknown Bee 4', 1); SET @IDItem = LAST_INSERT_ID(); INSERT INTO SystemObject (idItem, Retired) VALUES (@IDItem, 0); SET @IDSOItem = LAST_INSERT_ID(); INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) VALUES (@IDSOSubject, @IDSOItem);INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) VALUES ('edanmdm-siris_sic_10286', @idVocabARK, @IDSOSubject);  SET @IDIdentifier = LAST_INSERT_ID(); UPDATE Subject SET idIdentifierPreferred = @IDIdentifier WHERE idSubject = @IDSubject; INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) VALUES ('siris_sic_10286', @idVocabCMSUnitID, @IDSOSubject); 
+
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jon Tyson', 'tysonj@si.edu', 'TBD', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jon Blundell', 'blundellj@si.edu', 'TBD', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Vince Rossi', 'rossiv@si.edu', 'TBD', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jamie Cope', 'copeg@si.edu', 'TBD', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Karan Pratap Singh', 'karan.pratapsingh686@gmail.com', 'TBD', 1, NOW());
