@@ -31,16 +31,7 @@ function useItem(): UseItem {
                 return;
             }
 
-            const newItems: StateItem[] = [currentDefaultItem];
-
-            fetchedItems.forEach((item: StateItem) => {
-                const { id } = item;
-                const alreadyExists = !!lodash.find(items, { id });
-
-                if (!alreadyExists) {
-                    newItems.push(item);
-                }
-            });
+            const newItems: StateItem[] = [currentDefaultItem].concat(fetchedItems);
 
             ingestionDispatch(addItemsAction(newItems));
         }

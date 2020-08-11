@@ -1,5 +1,5 @@
 import { StateSubject, AppContext, IngestionDispatchAction, SUBJECT_ACTIONS, StateItem, StateProject } from '../../../context';
-import { parseItemToState, parseProjectToState } from '../../../context/utils';
+import { parseItemToState, parseProjectToState } from '../../../context';
 import { useContext } from 'react';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
