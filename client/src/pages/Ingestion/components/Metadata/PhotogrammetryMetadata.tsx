@@ -8,6 +8,7 @@ import { Colors } from '../../../../theme';
 import { StateMetadata, AssetType } from '../../../../context';
 import { PhotogrammetrySelectOptions } from '../../../../context';
 import useMetadata from '../../hooks/useMetadata';
+import { DebounceInput } from 'react-debounce-input';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
@@ -96,11 +97,14 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
     return (
         <Box className={classes.container}>
             <FieldType required label='Description' direction='row' containerProps={rowFieldProps}>
-                <textarea
+                <DebounceInput
+                    element='textarea'
                     className={classes.description}
                     name='description'
                     value={photogrammetry.description}
                     onChange={setField}
+                    forceNotifyByEnter={false}
+                    debounceTimeout={400}
                 />
             </FieldType>
 
@@ -147,12 +151,14 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                 <Box className={classes.divider} />
                 <Box display='flex' flex={1} flexDirection='column'>
                     <FieldType required={false} label='Data Field ID' direction='row' containerProps={rowFieldProps}>
-                        <input
+                        <DebounceInput
+                            element='input'
                             value={photogrammetry.datasetFieldId}
                             className={classes.input}
                             type='number'
                             name='datasetFieldId'
                             onChange={setField}
+                            debounceTimeout={400}
                         />
                     </FieldType>
                     <FieldType required={false} label='Item Position Type' direction='row' containerProps={rowFieldProps}>
@@ -167,21 +173,25 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                         </Select>
                     </FieldType>
                     <FieldType required={false} label='Item Position Field ID' direction='row' containerProps={rowFieldProps}>
-                        <input
+                        <DebounceInput
+                            element='input'
                             value={photogrammetry.itemPositionFieldId}
                             className={classes.input}
                             type='number'
                             name='itemPositionFieldId'
                             onChange={setField}
+                            debounceTimeout={400}
                         />
                     </FieldType>
                     <FieldType required={false} label='Item Arrangement Field ID' direction='row' containerProps={rowFieldProps}>
-                        <input
+                        <DebounceInput
+                            element='input'
                             value={photogrammetry.itemArrangementFieldId}
                             className={classes.input}
                             type='number'
                             name='itemArrangementFieldId'
                             onChange={setField}
+                            debounceTimeout={400}
                         />
                     </FieldType>
                     <FieldType required={false} label='Focus Type' direction='row' containerProps={rowFieldProps}>
@@ -229,12 +239,14 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                         </Select>
                     </FieldType>
                     <FieldType required={false} label='Cluster Geometry Field ID' direction='row' containerProps={rowFieldProps}>
-                        <input
+                        <DebounceInput
+                            element='input'
                             value={photogrammetry.clusterGeometryFieldId}
                             className={classes.input}
                             type='number'
                             name='clusterGeometryFieldId'
                             onChange={setField}
+                            debounceTimeout={400}
                         />
                     </FieldType>
                     <FieldType required={false} label='Camera Settings Uniform?' direction='row' containerProps={rowFieldProps}>
