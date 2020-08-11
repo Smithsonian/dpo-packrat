@@ -1,7 +1,8 @@
 // import * as fs from 'fs';
 // import { /* PassThrough, */ Stream } from 'stream';
+// import * as path from 'path';
+// import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
-import * as LOG from '../../utils/logger';
 
 describe('Utils: Helpers', () => {
     test('Utils: Helpers.arraysEqual', () => {
@@ -36,11 +37,11 @@ describe('Utils: Helpers', () => {
     const filePath2: string = H.Helpers.randomFilename(directoryPath, '');
     const filePath3: string = H.Helpers.randomFilename(directoryPath, '');
     const filePath4: string = H.Helpers.randomFilename(directoryPath, '');
-    LOG.logger.info(`directoryPath = ${directoryPath}`);
-    LOG.logger.info(`filePath      = ${filePath}`);
-    LOG.logger.info(`filePath2     = ${filePath2}`);
-    LOG.logger.info(`filePath3     = ${filePath3}`);
-    LOG.logger.info(`filePath4     = ${filePath4}`);
+    // LOG.logger.info(`directoryPath = ${directoryPath}`);
+    // LOG.logger.info(`filePath      = ${filePath}`);
+    // LOG.logger.info(`filePath2     = ${filePath2}`);
+    // LOG.logger.info(`filePath3     = ${filePath3}`);
+    // LOG.logger.info(`filePath4     = ${filePath4}`);
 
     test('Utils: Helpers.randomSlug', () => {
         const s1: string = H.Helpers.randomSlug();
@@ -59,6 +60,19 @@ describe('Utils: Helpers', () => {
         expect(s2.substring(9, 16)).toEqual('prefix-');
     });
 
+    test('Utils: Helpers.validFilename', () => {
+        expect(H.Helpers.validFilename(filePath)).toBeFalsy();
+        expect(H.Helpers.validFilename('con')).toBeFalsy();
+        expect(H.Helpers.validFilename('com1')).toBeFalsy();
+        expect(H.Helpers.validFilename('prn')).toBeFalsy();
+        expect(H.Helpers.validFilename('lpt5')).toBeFalsy();
+        expect(H.Helpers.validFilename('foo:bar')).toBeFalsy();
+        expect(H.Helpers.validFilename('foo/bar')).toBeFalsy();
+        expect(H.Helpers.validFilename('foo\\bar')).toBeFalsy();
+        expect(H.Helpers.validFilename('foo<bar')).toBeFalsy();
+        expect(H.Helpers.validFilename('.lpt5')).toBeTruthy();
+    });
+
     test('Utils: Helpers.createDirectory', () => {
         let res: H.IOResults = H.Helpers.createDirectory(directoryPath);
         expect(res.ok).toBeTruthy();
@@ -73,6 +87,28 @@ describe('Utils: Helpers', () => {
         expect(res.ok).toBeTruthy();
         res = H.Helpers.fileOrDirExists(filePath);
         expect(res.ok).toBeTruthy();
+    });
+
+    test('Utils: Helpers.stat', () => {
+        let res: H.StatResults = H.Helpers.stat(filePath);
+        expect(res.ok).toBeTruthy();
+        expect(res.stat).toBeTruthy();
+        if (res.stat)
+            expect(res.stat.size).toBe(0);
+
+        res = H.Helpers.stat(H.Helpers.randomSlug());
+        expect(res.ok).toBeFalsy();
+    });
+
+    test('Utils: Helpers.computeHashFromFile', async () => {
+        let res: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha512');
+        expect(res.ok).toBeTruthy();
+        expect(res.hash).toBeTruthy();
+        // hash of an empty file is always the same:
+        expect(res.hash).toBe('cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e');
+
+        res = await H.Helpers.computeHashFromFile(H.Helpers.randomSlug(), 'sha512');
+        expect(res.ok).toBeFalsy();
     });
 
     test('Utils: Helpers.copyFile', () => {
