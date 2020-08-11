@@ -1,11 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable no-control-regex */
+/* eslint-disable no-useless-escape */
 import * as L from 'lodash';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as crypto from 'crypto';
 import * as LOG from './logger';
 
 export type IOResults = {
+    ok: boolean,
+    error: string
+};
+
+export type HashResults = {
+    hash: string,
+    ok: boolean,
+    error: string
+};
+
+export type StatResults = {
+    stat: fs.Stats | null,
     ok: boolean,
     error: string
 };
@@ -25,6 +40,13 @@ export class Helpers {
     // Adapted from https://github.com/npm/unique-filename/blob/master/index.js
     static randomFilename(filepath: string, prefix: string): string {
         return path.join(filepath, (prefix ? prefix + '-' : '') + Helpers.randomSlug());
+    }
+
+    // Adapted from https://github.com/sindresorhus/filename-reserved-regex/blob/master/index.js
+    static validFilename(filename: string): boolean {
+        const bInvalid: boolean = /[<>:"\/\\|?*\x00-\x1F]/g.test(filename) ||               // Windows and Posix
+                                  /^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i.test(filename);  // Windows
+        return !bInvalid;
     }
 
     static copyFile(nameSource: string, nameDestination: string, allowOverwrite: boolean = true): IOResults {
@@ -125,5 +147,49 @@ export class Helpers {
             res.error = `Unable to remove directory ${directory}: ${error}`;
         }
         return res;
+    }
+
+    static stat(filePath: string): StatResults {
+        const res: StatResults = {
+            stat: null,
+            ok: true,
+            error: ''
+        };
+
+        try {
+            res.stat = fs.statSync(filePath);
+            res.ok = true;
+        } catch (error) /* istanbul ignore next */ {
+            res.ok = false;
+            res.error = JSON.stringify(error);
+        }
+        return res;
+    }
+
+    // Adapted from https://stackoverflow.com/questions/33599688/how-to-use-es8-async-await-with-streams
+    /** Computes a hash from a file. @param hashMethod Pass in 'sha512' or 'sha1', for example */
+    static async computeHashFromFile(filePath: string, hashMethod: string): Promise<HashResults> {
+        const res: HashResults = {
+            hash: '',
+            ok: true,
+            error: ''
+        };
+        const hash      = crypto.createHash(hashMethod);
+        const stream    = fs.createReadStream(filePath);
+        stream.pipe(hash);
+
+        return new Promise<HashResults>((resolve) => {
+            stream.on('end', () => {
+                res.hash = hash.digest('hex');
+                resolve(res);
+            });
+
+            stream.on('error', () => {
+                // do we need to perform cleanup?
+                res.ok = false;
+                res.error = 'Stream Error';
+                resolve(res);
+            });
+        });
     }
 }
