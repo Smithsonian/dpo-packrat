@@ -9,6 +9,9 @@ const Colors = {
         workflow: '#0093EE',
         reporting: '#81C926',
         admin: '#FD7B1F'
+    },
+    upload: {
+        success: '#AFFFA9'
     }
 };
 

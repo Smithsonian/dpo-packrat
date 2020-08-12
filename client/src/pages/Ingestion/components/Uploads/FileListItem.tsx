@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { IoIosCloseCircle } from 'react-icons/io';
 import { FaRedo, FaRegCircle, FaDotCircle } from 'react-icons/fa';
 import { MdFileUpload } from 'react-icons/md';
-import { colorWithOpacity } from '../../../../theme/colors';
+import Colors, { colorWithOpacity } from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
 import { FileId, AssetType } from '../../../../context';
 import { motion } from 'framer-motion';
@@ -90,7 +90,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         position: 'absolute',
         height: '100%',
         width: ({ progress }: FileListItemProps) => `${progress}%`,
-        backgroundColor: ({ complete, failed }: FileListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? colorWithOpacity(palette.success.light, 33) : palette.secondary.light,
+        backgroundColor: ({ complete, failed }: FileListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? colorWithOpacity(Colors.upload.success, 80) : palette.secondary.light,
         zIndex: 5,
         top: 0,
         left: 0,
