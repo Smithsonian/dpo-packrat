@@ -276,16 +276,13 @@ export type MetadataFieldValue = string | number | boolean | Date;
 
 type UPDATE_METADATA_FIELDS = {
     type: METADATA_ACTIONS.UPDATE_METADATA_FIELDS;
-    id: FileId;
-    fieldName: string;
-    fieldValue: MetadataFieldValue;
-    assetType: AssetType;
+    metadatas: StateMetadata[];
 };
 
 export type IngestionDispatchAction = UploadDispatchAction | SubjectDispatchAction | ProjectDispatchAction | ItemDispatchAction | MetadataDispatchAction;
 
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
-    const { uploads, subjects, projects, items, metadatas } = state;
+    const { uploads, subjects, projects, items } = state;
     const { files } = uploads;
 
     switch (action.type) {
@@ -455,13 +452,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
         case INGESTION_ACTION.METADATA.UPDATE_METADATA_FIELDS:
             return {
                 ...state,
-                metadatas: lodash.forEach(metadatas, ({ file, photogrammetry }) => {
-                    if (file.id === action.id) {
-                        if (action.assetType === AssetType.Photogrammetry) {
-                            lodash.set(photogrammetry, action.fieldName, action.fieldValue);
-                        }
-                    }
-                })
+                metadatas: action.metadatas
             };
 
         case INGESTION_ACTION.SUBJECT.ADD_SUBJECT:
