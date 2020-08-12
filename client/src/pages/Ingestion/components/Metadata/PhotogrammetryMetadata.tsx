@@ -1,11 +1,12 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Box, Select, MenuItem, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { FieldType } from '../../../../components';
 import DateFnsUtils from '@date-io/date-fns';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
 import { Colors } from '../../../../theme';
-import { StateMetadata, AssetType } from '../../../../context';
+import { StateMetadata, defaultPhotogrammetryFields, MetadataFieldValue, PhotogrammetryFields, AppContext } from '../../../../context';
 import { PhotogrammetrySelectOptions } from '../../../../context';
 import useMetadata from '../../hooks/useMetadata';
 import { DebounceInput } from 'react-debounce-input';
@@ -61,36 +62,50 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 }));
 
 interface PhotogrammetryMetadataProps {
-    metadata: StateMetadata;
+    metadataIndex: number;
 }
 
 function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.ReactElement {
-    const { metadata } = props;
+    const { metadataIndex } = props;
+    const { ingestion: { metadatas } } = useContext(AppContext);
     const classes = useStyles();
     const { DatasetType, ItemPositionType, FocusType, LightsourceType, BackgroundRemovalMethod, ClusterType } = PhotogrammetrySelectOptions;
 
-    const fileId = metadata.file.id;
-    const { photogrammetry } = metadata;
-    const { getFieldErrors, updateFields } = useMetadata();
+    const metadata: StateMetadata = metadatas[metadataIndex];
+
+    const { getFieldErrors, updatePhotogrammetryFields } = useMetadata();
+
+    const [values, setValues] = useState<PhotogrammetryFields>(defaultPhotogrammetryFields);
+
+    useEffect(() => {
+        setValues(metadatas[metadataIndex].photogrammetry);
+    }, [metadataIndex]);
+
+    useEffect(() => {
+        updatePhotogrammetryFields(metadataIndex, values);
+    }, [values]);
 
     const errors = getFieldErrors(metadata);
 
     const setField = ({ target }): void => {
         const { name, value } = target;
-        updateFields(fileId, name, value, AssetType.Photogrammetry);
+        updateValues(name, value);
     };
 
     const setDateField = (name: string, value: string | null | undefined): void => {
         if (value) {
             const date = new Date(value);
-            updateFields(fileId, name, date, AssetType.Photogrammetry);
+            updateValues(name, date);
         }
     };
 
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
-        updateFields(fileId, name, checked, AssetType.Photogrammetry);
+
+        updateValues(name, checked);
     };
+
+    const updateValues = (name: string, value: MetadataFieldValue) => setValues(values => ({ ...values, [name]: value }));
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
@@ -101,7 +116,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     element='textarea'
                     className={classes.description}
                     name='description'
-                    value={photogrammetry.description}
+                    value={values.description}
                     onChange={setField}
                     forceNotifyByEnter={false}
                     debounceTimeout={400}
@@ -123,7 +138,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                                 variant='inline'
                                 format='MM/dd/yyyy'
                                 margin='normal'
-                                value={photogrammetry.dateCaptured}
+                                value={values.dateCaptured}
                                 className={classes.date}
                                 InputProps={{ disableUnderline: true }}
                                 onChange={(_, value) => setDateField('dateCaptured', value)}
@@ -138,7 +153,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                         containerProps={rowFieldProps}
                     >
                         <Select
-                            value={photogrammetry.datasetType}
+                            value={values.datasetType}
                             className={classes.select}
                             name='datasetType'
                             onChange={setField}
@@ -153,7 +168,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     <FieldType required={false} label='Data Field ID' direction='row' containerProps={rowFieldProps}>
                         <DebounceInput
                             element='input'
-                            value={photogrammetry.datasetFieldId}
+                            value={values.datasetFieldId}
                             className={classes.input}
                             type='number'
                             name='datasetFieldId'
@@ -163,7 +178,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     </FieldType>
                     <FieldType required={false} label='Item Position Type' direction='row' containerProps={rowFieldProps}>
                         <Select
-                            value={photogrammetry.itemPositionType}
+                            value={values.itemPositionType}
                             className={classes.select}
                             name='itemPositionType'
                             onChange={setField}
@@ -175,7 +190,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     <FieldType required={false} label='Item Position Field ID' direction='row' containerProps={rowFieldProps}>
                         <DebounceInput
                             element='input'
-                            value={photogrammetry.itemPositionFieldId}
+                            value={values.itemPositionFieldId}
                             className={classes.input}
                             type='number'
                             name='itemPositionFieldId'
@@ -186,7 +201,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     <FieldType required={false} label='Item Arrangement Field ID' direction='row' containerProps={rowFieldProps}>
                         <DebounceInput
                             element='input'
-                            value={photogrammetry.itemArrangementFieldId}
+                            value={values.itemArrangementFieldId}
                             className={classes.input}
                             type='number'
                             name='itemArrangementFieldId'
@@ -196,7 +211,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     </FieldType>
                     <FieldType required={false} label='Focus Type' direction='row' containerProps={rowFieldProps}>
                         <Select
-                            value={photogrammetry.focusType}
+                            value={values.focusType}
                             className={classes.select}
                             name='focusType'
                             onChange={setField}
@@ -207,7 +222,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     </FieldType>
                     <FieldType required={false} label='Light Source Type' direction='row' containerProps={rowFieldProps}>
                         <Select
-                            value={photogrammetry.lightsourceType}
+                            value={values.lightsourceType}
                             className={classes.select}
                             name='lightsourceType'
                             onChange={setField}
@@ -218,7 +233,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     </FieldType>
                     <FieldType required={false} label='Background Removal Method' direction='row' containerProps={rowFieldProps}>
                         <Select
-                            value={photogrammetry.backgroundRemovalMethod}
+                            value={values.backgroundRemovalMethod}
                             className={classes.select}
                             name='backgroundRemovalMethod'
                             onChange={setField}
@@ -229,7 +244,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     </FieldType>
                     <FieldType required={false} label='Cluster Type' direction='row' containerProps={rowFieldProps}>
                         <Select
-                            value={photogrammetry.clusterType}
+                            value={values.clusterType}
                             className={classes.select}
                             name='clusterType'
                             onChange={setField}
@@ -241,7 +256,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     <FieldType required={false} label='Cluster Geometry Field ID' direction='row' containerProps={rowFieldProps}>
                         <DebounceInput
                             element='input'
-                            value={photogrammetry.clusterGeometryFieldId}
+                            value={values.clusterGeometryFieldId}
                             className={classes.input}
                             type='number'
                             name='clusterGeometryFieldId'
@@ -252,7 +267,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
                     <FieldType required={false} label='Camera Settings Uniform?' direction='row' containerProps={rowFieldProps}>
                         <Checkbox
                             name='cameraSettingUniform'
-                            checked={photogrammetry.cameraSettingUniform}
+                            checked={values.cameraSettingUniform}
                             onChange={setCheckboxField}
                             color='primary'
                         />
