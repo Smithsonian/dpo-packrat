@@ -117,7 +117,8 @@ export enum UPLOAD_ACTIONS {
     REMOVE = 'REMOVE',
     SELECT = 'SELECT',
     SET_CANCEL_HANDLER = 'SET_CANCEL_HANDLER',
-    SET_ASSET_TYPE = 'SET_ASSET_TYPE'
+    SET_ASSET_TYPE = 'SET_ASSET_TYPE',
+    DISCARD_FILES = 'DISCARD_FILES'
 }
 
 export enum SUBJECT_ACTIONS {
@@ -159,7 +160,21 @@ const ingestionState: Ingestion = {
     metadatas: []
 };
 
-type UploadDispatchAction = FETCH_COMPLETE | FETCH_FAILED | LOAD | START | FAILED | PROGRESS | CANCELLED | COMPLETE | REMOVE | SELECT | SET_CANCEL_HANDLER | SET_ASSET_TYPE | RETRY;
+type UploadDispatchAction =
+    | FETCH_COMPLETE
+    | FETCH_FAILED
+    | LOAD
+    | START
+    | FAILED
+    | PROGRESS
+    | CANCELLED
+    | COMPLETE
+    | REMOVE
+    | SELECT
+    | SET_CANCEL_HANDLER
+    | SET_ASSET_TYPE
+    | RETRY
+    | DISCARD_FILES;
 
 type FETCH_COMPLETE = {
     type: UPLOAD_ACTIONS.FETCH_COMPLETE;
@@ -227,6 +242,10 @@ type SET_ASSET_TYPE = {
     type: UPLOAD_ACTIONS.SET_ASSET_TYPE;
     id: FileId;
     assetType: AssetType;
+};
+
+type DISCARD_FILES = {
+    type: UPLOAD_ACTIONS.DISCARD_FILES;
 };
 
 type SubjectDispatchAction = ADD_SUBJECT | REMOVE_SUBJECT;
@@ -440,6 +459,15 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                             lodash.set(file, 'type', action.assetType);
                         }
                     })
+                }
+            };
+
+        case INGESTION_ACTION.UPLOAD.DISCARD_FILES:
+            return {
+                ...ingestionState,
+                uploads: {
+                    ...ingestionState.uploads,
+                    loading: false
                 }
             };
 

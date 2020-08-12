@@ -14,6 +14,7 @@ interface UseFilesUpload {
     retryUpload: (id: FileId) => void;
     removeUpload: (id: FileId) => void;
     changeAssetType: (id: FileId, type: AssetType) => void;
+    discardFiles: () => void;
 }
 
 const useFilesUpload = (): UseFilesUpload => {
@@ -54,7 +55,7 @@ const useFilesUpload = (): UseFilesUpload => {
             if (acceptedFiles.length) {
                 const ingestionFiles: IngestionFile[] = [];
                 acceptedFiles.forEach((file: File): void => {
-                    const id = file.name.replace(/[^\w\s]/gi, '');
+                    const id = `${file.name.replace(/[^\w\s]/gi, '')}${files.length}`;
                     const alreadyContains = !!lodash.find(files, { id });
 
                     const { name, size } = file;
@@ -237,6 +238,15 @@ const useFilesUpload = (): UseFilesUpload => {
         [getFile, ingestionDispatch]
     );
 
+    const discardFiles = () => {
+        // TODO: send dispatch to server about discarded items
+        const discardFilesAction: IngestionDispatchAction = {
+            type: UPLOAD_ACTIONS.DISCARD_FILES
+        };
+
+        ingestionDispatch(discardFilesAction);
+    };
+
     return {
         updateMetadataSteps,
         loadFiles,
@@ -244,7 +254,8 @@ const useFilesUpload = (): UseFilesUpload => {
         cancelUpload,
         retryUpload,
         removeUpload,
-        changeAssetType
+        changeAssetType,
+        discardFiles
     };
 };
 
