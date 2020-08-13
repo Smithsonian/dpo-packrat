@@ -1,9 +1,0 @@
-query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
-    getIngestionItemsForSubjects(input: $input) {
-        Item {
-            idItem
-            EntireSubject
-            Name
-        }
-    }
-}

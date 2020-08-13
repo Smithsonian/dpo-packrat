@@ -10,12 +10,9 @@ import { StateMetadata, defaultPhotogrammetryFields, MetadataFieldValue, Photogr
 import useMetadata from '../../hooks/useMetadata';
 import { DebounceInput } from 'react-debounce-input';
 import { eVocabularySetID } from '../../../../types/server';
-import { GetVocabularyEntriesResult, Vocabulary } from '../../../../types/graphql';
+import { Vocabulary } from '../../../../types/graphql';
 import useVocabularyEntries from '../../hooks/useVocabularyEntries';
 
-/**
- * TODO: CameraSettingUniform query?
- */
 const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
         marginTop: 20,
@@ -70,6 +67,8 @@ interface PhotogrammetryMetadataProps {
     metadataIndex: number;
 }
 
+type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
+
 function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.ReactElement {
     const { metadataIndex } = props;
     const { ingestion: { metadatas } } = useContext(AppContext);
@@ -80,15 +79,15 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
     const { getFieldErrors, updatePhotogrammetryFields } = useMetadata();
 
     const [values, setValues] = useState<PhotogrammetryFields>(defaultPhotogrammetryFields);
-    const [vocabularyEntries, setVocabularyEntries] = useState<Map<eVocabularySetID, Vocabulary[]>>(new Map<eVocabularySetID, Vocabulary[]>());
+    const [vocabularyEntries, setVocabularyEntries] = useState<Map<eVocabularySetID, VocabularyOption[]>>(new Map<eVocabularySetID, Vocabulary[]>());
 
     const { vocabularyEntryData, vocabularyEntryLoading, vocabularyEntryError } = useVocabularyEntries();
 
     useEffect(() => {
         if (vocabularyEntryData && !vocabularyEntryLoading && !vocabularyEntryError) {
             const { getVocabularyEntries } = vocabularyEntryData;
-            const { VocabularyEntries }: GetVocabularyEntriesResult = getVocabularyEntries;
-            const updatedVocabularyEntries = new Map<eVocabularySetID, Vocabulary[]>();
+            const { VocabularyEntries } = getVocabularyEntries;
+            const updatedVocabularyEntries = new Map<eVocabularySetID, VocabularyOption[]>();
 
             VocabularyEntries.forEach(({ eVocabSetID, Vocabulary }) => {
                 updatedVocabularyEntries.set(eVocabSetID, Vocabulary);
@@ -136,7 +135,7 @@ function PhotogrammetryMetadata(props: PhotogrammetryMetadataProps): React.React
     const getEntries = (eVocabularySetID: eVocabularySetID): React.ReactElement | React.ReactElement[] => {
         const vocabularyEntry = vocabularyEntries.get(eVocabularySetID);
 
-        let selectOptions: Vocabulary[] = [];
+        let selectOptions: VocabularyOption[] = [];
 
         if (vocabularyEntry) {
             selectOptions = vocabularyEntry;

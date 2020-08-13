@@ -542,7 +542,7 @@ type Query {
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getProject(input: GetProjectInput!): GetProjectResult!
-  getSubject(input: GetSubjectInput!): GetUnitResult!
+  getSubject(input: GetSubjectInput!): GetSubjectResult!
   getItem(input: GetItemInput!): GetItemResult!
   getCurrentUser: GetCurrentUserResult!
   getUser(input: GetUserInput!): GetUserResult!
@@ -624,7 +624,7 @@ input SearchIngestionSubjectsInput {
 }
 
 type SearchIngestionSubjectsResult {
-  SubjectUnitIdentifier: [SubjectUnitIdentifier]!
+  SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
 }
 
 input GetIngestionItemsForSubjectsInput {
@@ -632,7 +632,7 @@ input GetIngestionItemsForSubjectsInput {
 }
 
 type GetIngestionItemsForSubjectsResult {
-  Item: [Item]!
+  Item: [Item!]!
 }
 
 input GetIngestionProjectsForSubjectsInput {
@@ -640,7 +640,7 @@ input GetIngestionProjectsForSubjectsInput {
 }
 
 type GetIngestionProjectsForSubjectsResult {
-  Project: [Project]!
+  Project: [Project!]!
 }
 
 input GetUnitInput {
@@ -701,11 +701,11 @@ input GetVocabularyEntriesInput {
 
 type VocabularyEntry {
   eVocabSetID: Int!
-  Vocabulary: [Vocabulary]!
+  Vocabulary: [Vocabulary!]!
 }
 
 type GetVocabularyEntriesResult {
-  VocabularyEntries: [VocabularyEntry]!
+  VocabularyEntries: [VocabularyEntry!]!
 }
 
 input GetWorkflowInput {
