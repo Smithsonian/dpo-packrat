@@ -65,9 +65,11 @@
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "1.15.1",
-    "@graphql-codegen/schema-ast": "^1.15.1",
-    "@graphql-codegen/typescript": "1.15.1",
+    "@graphql-codegen/cli": "1.17.8",
+    "@graphql-codegen/schema-ast": "1.17.8",
+    "@graphql-codegen/typescript": "1.17.8",
+    "@graphql-codegen/typescript-operations": "1.17.8",
+    "@graphql-codegen/typescript-react-apollo": "^2.0.6",
     "@prisma/cli": "^2.4.1",
     "@types/jest": "^24.9.0",
     "@types/node-fetch": "^2.5.7",

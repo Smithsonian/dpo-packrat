@@ -12,7 +12,7 @@ import { AppContext, AssetType, FileId, StateItem, StateMetadata, StateProject }
 import useItem from '../../hooks/useItem';
 import useMetadata from '../../hooks/useMetadata';
 import useProject from '../../hooks/useProject';
-import PhotogrammetryMetadata from './PhotogrammetryMetadata';
+import Photogrammetry from './Photogrammetry';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -94,7 +94,7 @@ function Metadata(): React.ReactElement {
 
     const getMetadataComponent = (metadataIndex: number): React.ReactElement | null => {
         if (type === AssetType.Photogrammetry) {
-            return <PhotogrammetryMetadata metadataIndex={metadataIndex} />;
+            return <Photogrammetry metadataIndex={metadataIndex} />;
         }
 
         return null;
