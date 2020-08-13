@@ -73,19 +73,28 @@ export type StateItem = {
 
 export type ItemStep = StateItem[];
 
+export type StateIdentifier = {
+    id: number;
+    identifier: string;
+    identifierType: string;
+    selected: boolean;
+};
+
 export type PhotogrammetryFields = {
+    systemCreated: boolean;
+    identifiers: StateIdentifier[];
     description: string;
     dateCaptured: Date;
-    datasetType: string;
-    datasetFieldId: string;
-    itemPositionType: string;
-    itemPositionFieldId: string;
-    itemArrangementFieldId: string;
-    focusType: string;
-    lightsourceType: string;
-    backgroundRemovalMethod: string;
-    clusterType: string;
-    clusterGeometryFieldId: string;
+    datasetType: number | null;
+    datasetFieldId: number | null;
+    itemPositionType: number | null;
+    itemPositionFieldId: number | null;
+    itemArrangementFieldId: number | null;
+    focusType: number | null;
+    lightsourceType: number | null;
+    backgroundRemovalMethod: number | null;
+    clusterType: number | null;
+    clusterGeometryFieldId: number | null;
     cameraSettingUniform: boolean;
 };
 

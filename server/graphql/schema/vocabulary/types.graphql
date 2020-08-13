@@ -2,6 +2,7 @@ type Vocabulary {
     idVocabulary: Int!
     idVocabularySet: Int!
     SortOrder: Int!
+    Term: String!
     VocabularySet: VocabularySet
 }
 
