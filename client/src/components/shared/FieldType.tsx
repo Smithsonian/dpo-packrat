@@ -20,7 +20,8 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
 
 interface FieldTypeProps {
     required: boolean;
-    label: string;
+    renderLabel?: boolean;
+    label?: string;
     width?: string;
     direction?: string;
     containerProps?: BoxProps;
@@ -31,12 +32,18 @@ interface FieldTypeProps {
 }
 
 function FieldType(props: FieldTypeProps): React.ReactElement {
-    const { label, children, align = 'left', direction, containerProps } = props;
+    const { label, renderLabel, children, align = 'left', direction, containerProps } = props;
     const classes = useStyles(props);
+
+    let content: React.ReactElement | null = <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>;
+
+    if (renderLabel === false) {
+        content = null;
+    }
 
     return (
         <Box className={classes.container} flexDirection={direction || 'column'} {...containerProps}>
-            <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>
+            {content}
             {children}
         </Box>
     );
