@@ -53,7 +53,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         fontFamily: typography.fontFamily
     },
     date: {
-        width: 260,
+        width: 230,
         background: palette.background.paper,
         border: `1px solid ${palette.primary.contrastText}`,
         padding: '1px 8px',
