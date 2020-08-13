@@ -73,7 +73,16 @@ export type StateItem = {
 
 export type ItemStep = StateItem[];
 
+export type StateIdentifier = {
+    id: number;
+    identifier: string;
+    identifierType: string;
+    selected: boolean;
+};
+
 export type PhotogrammetryFields = {
+    systemCreated: boolean;
+    identifiers: StateIdentifier[];
     description: string;
     dateCaptured: Date;
     datasetType: number | null;

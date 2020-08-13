@@ -8,6 +8,8 @@ export const defaultItem: StateItem = {
 };
 
 export const defaultPhotogrammetryFields: PhotogrammetryFields = {
+    systemCreated: true,
+    identifiers: [],
     description: '',
     dateCaptured: new Date(),
     datasetType: null,
