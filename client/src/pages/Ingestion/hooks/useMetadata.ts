@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AppContext, FileId, StateMetadata, MetadataFieldValue, METADATA_ACTIONS, IngestionDispatchAction, AssetType } from '../../../context';
+import { AppContext, FileId, StateMetadata, PhotogrammetryFields, METADATA_ACTIONS, IngestionDispatchAction, AssetType } from '../../../context';
 import lodash from 'lodash';
 
 type MetadataInfo = {
@@ -18,7 +18,7 @@ interface UseMetadata {
     getFieldErrors: (metadata: StateMetadata) => FieldErrors;
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
     getMetadataInfo: (id: FileId) => MetadataInfo;
-    updateFields: (id: FileId, fieldName: string, fieldValue: MetadataFieldValue, assetType: AssetType) => void;
+    updatePhotogrammetryFields: (metadataIndex: number, values: PhotogrammetryFields) => void;
 }
 
 function useMetadata(): UseMetadata {
@@ -59,13 +59,23 @@ function useMetadata(): UseMetadata {
         };
     };
 
-    const updateFields = (id: FileId, fieldName: string, fieldValue: MetadataFieldValue, assetType: AssetType): void => {
+    const updatePhotogrammetryFields = (metadataIndex: number, values: PhotogrammetryFields): void => {
+        const updatedMetadatas = lodash.map([...metadatas], (metadata: StateMetadata, index: number) => {
+            if (index === metadataIndex) {
+                return {
+                    ...metadata,
+                    photogrammetry: {
+                        ...values
+                    }
+                };
+            }
+
+            return metadata;
+        });
+
         const updateMetadataFieldsAction: IngestionDispatchAction = {
             type: METADATA_ACTIONS.UPDATE_METADATA_FIELDS,
-            id,
-            fieldName,
-            fieldValue,
-            assetType
+            metadatas: updatedMetadatas
         };
 
         ingestionDispatch(updateMetadataFieldsAction);
@@ -75,7 +85,7 @@ function useMetadata(): UseMetadata {
         getFieldErrors,
         getCurrentMetadata,
         getMetadataInfo,
-        updateFields
+        updatePhotogrammetryFields
     };
 }
 

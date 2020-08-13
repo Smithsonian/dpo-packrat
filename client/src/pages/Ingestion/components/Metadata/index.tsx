@@ -1,3 +1,4 @@
+/* eslint-disable no-var */
 import { Box, Breadcrumbs, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import * as qs from 'query-string';
@@ -80,6 +81,7 @@ function Metadata(): React.ReactElement {
         }
 
         if (isLast) {
+            console.log(metadatas);
             alert('Finished');
         } else {
             const nextMetadata = metadatas[metadataIndex + 1];
@@ -90,9 +92,9 @@ function Metadata(): React.ReactElement {
         }
     };
 
-    const getMetadataComponent = (): React.ReactElement | null => {
+    const getMetadataComponent = (metadataIndex: number): React.ReactElement | null => {
         if (type === AssetType.Photogrammetry) {
-            return <PhotogrammetryMetadata metadata={metadata} />;
+            return <PhotogrammetryMetadata metadataIndex={metadataIndex} />;
         }
 
         return null;
@@ -102,7 +104,7 @@ function Metadata(): React.ReactElement {
         <Box className={classes.container}>
             <Box className={classes.content}>
                 <BreadcrumbsHeader project={project} item={item} metadata={metadata} />
-                {getMetadataComponent()}
+                {getMetadataComponent(metadataIndex)}
             </Box>
             <SidebarBottomNavigator
                 leftLabel='Previous'
