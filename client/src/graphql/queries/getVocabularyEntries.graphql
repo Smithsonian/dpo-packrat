@@ -1,0 +1,11 @@
+query getVocabularyEntries($input: GetVocabularyEntriesInput!) {
+    getVocabularyEntries(input: $input) {
+        VocabularyEntries {
+            eVocabSetID
+            Vocabulary {
+                idVocabulary
+                Term
+            }
+        }
+    }
+}
