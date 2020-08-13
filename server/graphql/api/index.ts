@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/ban-types */
 /**
  * GraphQLApi
  * This helps with seamless access to our graphql api enabling
@@ -67,7 +66,9 @@ import {
     GetIngestionItemsForSubjectsInput,
     GetIngestionItemsForSubjectsResult,
     GetIngestionProjectsForSubjectsInput,
-    GetIngestionProjectsForSubjectsResult
+    GetIngestionProjectsForSubjectsResult,
+    GetVocabularyEntriesInput,
+    GetVocabularyEntriesResult
 } from '../../types/graphql';
 
 // Queries
@@ -333,6 +334,16 @@ class GraphQLApi {
 
     async getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput, context?: Context): Promise<GetIngestionProjectsForSubjectsResult> {
         const operationName = 'getIngestionProjectsForSubjects';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getVocabularyEntries(input: GetVocabularyEntriesInput, context?: Context): Promise<GetVocabularyEntriesResult> {
+        const operationName = 'getVocabularyEntries';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
