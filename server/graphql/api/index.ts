@@ -90,6 +90,7 @@ import getUploadedAssetVersion from './queries/asset/getUploadedAssetVersion';
 import searchIngestionSubjects from './queries/unit/searchIngestionSubjects';
 import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSubjects';
 import getIngestionProjectsForSubjects from './queries/unit/getIngestionProjectsForSubjects';
+import getVocabularyEntries from './queries/vocabulary/getVocabularyEntries';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -138,7 +139,8 @@ const allQueries = {
     getUploadedAssetVersion,
     searchIngestionSubjects,
     getIngestionItemsForSubjects,
-    getIngestionProjectsForSubjects
+    getIngestionProjectsForSubjects,
+    getVocabularyEntries
 };
 
 type GraphQLRequest = {

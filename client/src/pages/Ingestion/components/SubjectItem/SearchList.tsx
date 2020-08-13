@@ -1,4 +1,4 @@
-import { useLazyQuery } from '@apollo/react-hooks';
+import { useLazyQuery } from '@apollo/client';
 import { Box, TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
@@ -6,7 +6,7 @@ import { IoIosSearch } from 'react-icons/io';
 import { FieldType, LoadingButton } from '../../../../components';
 import { StateSubject } from '../../../../context';
 import { parseSubjectUnitIdentifierToState } from '../../../../context';
-import { QUERY_SEARCH_INGESTION_SUBJECTS } from '../../../../graphql';
+import { SearchIngestionSubjectsDocument } from '../../../../types/graphql';
 import { SubjectUnitIdentifier } from '../../../../types/graphql';
 import SubjectList from './SubjectList';
 import { toast } from 'react-toastify';
@@ -33,7 +33,7 @@ const useStyles = makeStyles(({ palette }) => ({
 function SearchList(): React.ReactElement {
     const classes = useStyles();
     const [query, setQuery] = useState('');
-    const [searchSubject, { data, called, loading, error }] = useLazyQuery(QUERY_SEARCH_INGESTION_SUBJECTS);
+    const [searchSubject, { data, called, loading, error }] = useLazyQuery(SearchIngestionSubjectsDocument);
 
     const [subjects, setSubjects] = useState<StateSubject[]>([]);
 

@@ -5,8 +5,8 @@ import { FieldType } from '../../../../components';
 import { AppContext, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS, AssetType } from '../../../../context';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
-import { useQuery } from '@apollo/react-hooks';
-import { QUERY_GET_UPLOADED_ASSET_VERSION } from '../../../../graphql';
+import { useQuery } from '@apollo/client';
+import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
@@ -51,7 +51,7 @@ function UploadListComplete(): React.ReactElement {
     const { ingestion: { uploads }, ingestionDispatch } = useContext(AppContext);
     const { files } = uploads;
 
-    const { data, loading, error } = useQuery(QUERY_GET_UPLOADED_ASSET_VERSION);
+    const { data, loading, error } = useQuery(GetUploadedAssetVersionDocument);
 
     useEffect(() => {
         if (!loading && !error) {

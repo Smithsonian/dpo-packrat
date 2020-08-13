@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type Maybe<T> = T | null;
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
     ID: string;
@@ -597,7 +599,7 @@ export type Query = {
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getUnit: GetUnitResult;
     getProject: GetProjectResult;
-    getSubject: GetUnitResult;
+    getSubject: GetSubjectResult;
     getItem: GetItemResult;
     getCurrentUser: GetCurrentUserResult;
     getUser: GetUserResult;
@@ -761,7 +763,7 @@ export type SearchIngestionSubjectsInput = {
 
 export type SearchIngestionSubjectsResult = {
     __typename?: 'SearchIngestionSubjectsResult';
-    SubjectUnitIdentifier: Array<Maybe<SubjectUnitIdentifier>>;
+    SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
 };
 
 export type GetIngestionItemsForSubjectsInput = {
@@ -770,7 +772,7 @@ export type GetIngestionItemsForSubjectsInput = {
 
 export type GetIngestionItemsForSubjectsResult = {
     __typename?: 'GetIngestionItemsForSubjectsResult';
-    Item: Array<Maybe<Item>>;
+    Item: Array<Item>;
 };
 
 export type GetIngestionProjectsForSubjectsInput = {
@@ -779,7 +781,7 @@ export type GetIngestionProjectsForSubjectsInput = {
 
 export type GetIngestionProjectsForSubjectsResult = {
     __typename?: 'GetIngestionProjectsForSubjectsResult';
-    Project: Array<Maybe<Project>>;
+    Project: Array<Project>;
 };
 
 export type GetUnitInput = {
@@ -848,12 +850,12 @@ export type GetVocabularyEntriesInput = {
 export type VocabularyEntry = {
     __typename?: 'VocabularyEntry';
     eVocabSetID: Scalars['Int'];
-    Vocabulary: Array<Maybe<Vocabulary>>;
+    Vocabulary: Array<Vocabulary>;
 };
 
 export type GetVocabularyEntriesResult = {
     __typename?: 'GetVocabularyEntriesResult';
-    VocabularyEntries: Array<Maybe<VocabularyEntry>>;
+    VocabularyEntries: Array<VocabularyEntry>;
 };
 
 export type GetWorkflowInput = {

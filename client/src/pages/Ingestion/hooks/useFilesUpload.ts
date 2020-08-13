@@ -2,7 +2,8 @@ import { useCallback, useContext } from 'react';
 import { toast } from 'react-toastify';
 import { AppContext, AssetType, METADATA_ACTIONS, StateMetadata } from '../../../context';
 import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus, IngestionUploadResponse, IngestionUploadStatus } from '../../../context';
-import { MUTATION_UPLOAD_ASSET, apolloUploader } from '../../../graphql';
+import { apolloUploader } from '../../../graphql';
+import { UploadAssetDocument } from '../../../types/graphql';
 import lodash from 'lodash';
 import { defaultPhotogrammetryFields } from '../../../context';
 
@@ -208,7 +209,7 @@ const useFilesUpload = (): UseFilesUpload => {
                 };
 
                 const { data }: IngestionUploadResponse = await apolloUploader({
-                    mutation: MUTATION_UPLOAD_ASSET,
+                    mutation: UploadAssetDocument,
                     variables: { file, type },
                     useUpload: true,
                     onProgress,
