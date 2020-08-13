@@ -1,5 +1,6 @@
 type Query {
     getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
+    getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
 }
 
 input GetVocabularyInput {
@@ -8,4 +9,17 @@ input GetVocabularyInput {
 
 type GetVocabularyResult {
     Vocabulary: Vocabulary
+}
+
+input GetVocabularyEntriesInput {
+    eVocabSetIDs: [Int!]!
+}
+
+type VocabularyEntry {
+    eVocabSetID: Int!
+    Vocabulary: [Vocabulary!]!
+}
+
+type GetVocabularyEntriesResult {
+    VocabularyEntries: [VocabularyEntry!]!
 }
