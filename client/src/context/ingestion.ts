@@ -2,19 +2,6 @@ import { useReducer, Dispatch } from 'react';
 import lodash from 'lodash';
 import { defaultItem } from './ingestion.defaults';
 
-export enum IngestionUploadStatus {
-    COMPLETE = 'COMPLETE',
-    FAILED = 'FAILED'
-}
-
-export type IngestionUploadResponse = {
-    data: {
-        uploadAsset: {
-            status: IngestionUploadStatus;
-        };
-    };
-};
-
 export type FileId = string;
 
 export enum AssetType {
