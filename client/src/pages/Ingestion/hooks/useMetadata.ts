@@ -11,6 +11,7 @@ type MetadataInfo = {
 type FieldErrors = {
     photogrammetry: {
         dateCaptured: boolean;
+        datasetType: boolean;
     };
 };
 
@@ -30,7 +31,8 @@ function useMetadata(): UseMetadata {
     const getFieldErrors = (metadata: StateMetadata): FieldErrors => {
         const errors: FieldErrors = {
             photogrammetry: {
-                dateCaptured: false
+                dateCaptured: false,
+                datasetType: false
             }
         };
 
@@ -39,6 +41,7 @@ function useMetadata(): UseMetadata {
 
         if (type === AssetType.Photogrammetry) {
             errors.photogrammetry.dateCaptured = metadata.photogrammetry.dateCaptured.toString() === 'Invalid Date';
+            errors.photogrammetry.datasetType = metadata.photogrammetry.datasetType === null;
         }
 
         return errors;

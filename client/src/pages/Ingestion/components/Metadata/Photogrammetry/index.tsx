@@ -261,6 +261,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             <SelectField
                                 required
                                 label='Dataset Type'
+                                error={errors.photogrammetry.datasetType}
                                 value={values.datasetType || getInitialEntry(eVocabularySetID.eCaptureDataDatasetType)}
                                 name='datasetType'
                                 onChange={setIdField}
