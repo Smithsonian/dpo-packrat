@@ -6,7 +6,7 @@ import { VocabularyOption } from './index';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     select: {
-        minWidth: 240,
+        width: 250,
         padding: '0px 10px',
         background: palette.background.paper,
         border: `1px solid ${palette.primary.contrastText}`,
