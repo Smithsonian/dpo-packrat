@@ -5,10 +5,10 @@ import { FieldType } from '../../../../../components';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     input: {
-        width: 230,
+        width: '50%',
         outline: 'none',
         border: `1px solid ${palette.primary.contrastText}`,
-        padding: '8px',
+        padding: 8,
         borderRadius: 5,
         fontFamily: typography.fontFamily
     }
