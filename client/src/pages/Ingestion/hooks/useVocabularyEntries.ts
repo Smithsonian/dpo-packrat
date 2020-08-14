@@ -14,6 +14,7 @@ function useVocabularyEntries(): UseVocabularyEntries {
         variables: {
             input: {
                 eVocabSetIDs: [
+                    eVocabularySetID.eIdentifierIdentifierType,
                     eVocabularySetID.eCaptureDataDatasetType,
                     eVocabularySetID.eCaptureDataItemPositionType,
                     eVocabularySetID.eCaptureDataFocusType,

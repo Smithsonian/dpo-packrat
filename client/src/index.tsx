@@ -64,7 +64,7 @@ function App(): React.ReactElement {
                     <ToastContainer
                         transition={Slide}
                         position='bottom-right'
-                        autoClose={2000}
+                        autoClose={5000}
                         closeOnClick
                         pauseOnFocusLoss
                         draggable

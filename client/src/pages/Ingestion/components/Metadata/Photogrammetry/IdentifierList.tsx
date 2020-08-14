@@ -5,6 +5,7 @@ import { DebounceInput } from 'react-debounce-input';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { FieldType } from '../../../../../components';
 import { StateIdentifier } from '../../../../../context';
+import { VocabularyOption } from '.';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -61,15 +62,14 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 
 interface IdentifierListProps {
     identifiers: StateIdentifier[]
-    onAdd: () => void;
+    onAdd: (initialEntry: number | null) => void;
     onUpdate: (id: number, fieldName: string, fieldValue: number | string | boolean) => void;
     onRemove: (id: number) => void;
+    identifierTypes: VocabularyOption[];
 }
 
-const IdentifierType = ['ARK'];
-
 function IdentifierList(props: IdentifierListProps): React.ReactElement {
-    const { identifiers, onAdd, onUpdate, onRemove } = props;
+    const { identifiers, onAdd, onUpdate, identifierTypes, onRemove } = props;
     const classes = useStyles();
 
     return (
@@ -110,7 +110,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                                     onChange={update}
                                     disableUnderline
                                 >
-                                    {IdentifierType.map((type, index) => <MenuItem key={index} value={type}>{type}</MenuItem>)}
+                                    {identifierTypes.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                 </Select>
                                 <MdRemoveCircleOutline className={classes.identifierOption} onClick={remove} size={35} />
                             </Box>
@@ -121,7 +121,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                         disableElevation
                         color='primary'
                         variant='contained'
-                        onClick={onAdd}
+                        onClick={() => onAdd(identifierTypes[0].idVocabulary)}
                     >
                         Add
                     </Button>
