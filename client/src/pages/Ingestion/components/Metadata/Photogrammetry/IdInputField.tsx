@@ -5,7 +5,7 @@ import { FieldType } from '../../../../../components';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     input: {
-        width: 220,
+        width: 230,
         outline: 'none',
         border: `1px solid ${palette.primary.contrastText}`,
         padding: '8px',
