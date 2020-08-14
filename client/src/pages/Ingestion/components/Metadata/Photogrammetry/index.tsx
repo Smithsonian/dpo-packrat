@@ -15,6 +15,7 @@ import Description from './Description';
 import IdentifierList from './IdentifierList';
 import SelectField from './SelectField';
 import IdInputField from './IdInputField';
+import lodash from 'lodash';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -56,8 +57,6 @@ interface PhotogrammetryProps {
 
 export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
 
-const IdentifierType = ['ARK'];
-
 function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { metadataIndex } = props;
     const { ingestion: { metadatas } } = useContext(AppContext);
@@ -83,6 +82,15 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
             });
 
             setVocabularyEntries(updatedVocabularyEntries);
+            const initialDatasetType = updatedVocabularyEntries.get(eVocabularySetID.eCaptureDataDatasetType);
+            if (initialDatasetType) {
+                setValues(values => ({ ...values, datasetType: initialDatasetType[0].idVocabulary }));
+            }
+
+            const initialIdentifierType = updatedVocabularyEntries.get(eVocabularySetID.eIdentifierIdentifierType);
+            if (initialIdentifierType) {
+                addIdentifer(initialIdentifierType[0].idVocabulary);
+            }
         }
     }, [vocabularyEntryData, vocabularyEntryLoading, vocabularyEntryError]);
 
@@ -143,22 +151,27 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         return null;
     };
 
-    const addIdentifer = () => {
-        const { identifiers } = values;
-        const newIdentifier: StateIdentifier = {
-            id: identifiers.length + 1,
-            identifier: '',
-            identifierType: IdentifierType[0], // FIXME: initial identifier ark type
-            selected: false
-        };
+    const addIdentifer = (initialEntry: number | null) => {
+        setValues(values => {
+            const { identifiers } = values;
+            const newIdentifier: StateIdentifier = {
+                id: identifiers.length + 1,
+                identifier: '',
+                identifierType: getInitialEntry(eVocabularySetID.eIdentifierIdentifierType) || initialEntry,
+                selected: false
+            };
 
-        setValues(values => ({ ...values, identifiers: [...values.identifiers, newIdentifier] }));
+            return {
+                ...values,
+                identifiers: lodash.concat(identifiers, [newIdentifier])
+            };
+        });
     };
 
     const removeIdentifier = (id: number) => {
         setValues(values => {
             const { identifiers } = values;
-            const updatedIdentifiers = [...identifiers].filter(identifier => identifier.id !== id);
+            const updatedIdentifiers = lodash.filter(identifiers, identifier => identifier.id !== id);
 
             return {
                 ...values,
@@ -170,9 +183,9 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const updateIdentifierFields = (id: number, name: string, value: string | number | boolean) => {
         setValues(values => {
             const { identifiers } = values;
-            const updatedIdentifiers = [...identifiers].filter(identifier => {
+            const updatedIdentifiers = lodash.filter(identifiers, identifier => {
                 if (identifier.id === id) {
-                    identifier[name] = value;
+                    lodash.set(identifier, name, value);
                 }
                 return true;
             });
@@ -204,12 +217,19 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             <Box className={classes.assetIdentifier}>
                                 <Checkbox
                                     name='systemCreated'
-                                    checked
+                                    checked={values.systemCreated}
                                     color='primary'
+                                    onChange={setCheckboxField}
                                 />
                                 <Typography className={classes.systemCreatedText} variant='body1'>System will create an identifier</Typography>
                             </Box>
-                            <IdentifierList identifiers={values.identifiers} onAdd={addIdentifer} onRemove={removeIdentifier} onUpdate={updateIdentifierFields} />
+                            <IdentifierList
+                                identifiers={values.identifiers}
+                                identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
+                                onAdd={addIdentifer}
+                                onRemove={removeIdentifier}
+                                onUpdate={updateIdentifierFields}
+                            />
                         </FieldType>
                     </Box>
 

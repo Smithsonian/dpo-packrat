@@ -76,7 +76,7 @@ function Metadata(): React.ReactElement {
         }
 
         if (hasError) {
-            toast.warn('Please address all the errors');
+            toast.warn('Please address all the errors', { autoClose: false });
             return;
         }
 

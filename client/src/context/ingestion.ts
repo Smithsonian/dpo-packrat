@@ -76,7 +76,7 @@ export type ItemStep = StateItem[];
 export type StateIdentifier = {
     id: number;
     identifier: string;
-    identifierType: string;
+    identifierType: number | null;
     selected: boolean;
 };
 
