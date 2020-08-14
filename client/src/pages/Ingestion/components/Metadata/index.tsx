@@ -67,7 +67,31 @@ function Metadata(): React.ReactElement {
 
     const onNext = () => {
         const { photogrammetry } = getFieldErrors(metadata);
+        const { photogrammetry: { description, systemCreated, identifiers } } = metadata;
         let hasError: boolean = false;
+
+        if (!systemCreated) {
+            hasError = true;
+        }
+
+        identifiers.forEach(({ identifier, selected }) => {
+            if (selected) {
+                hasError = false;
+                if (identifier.trim() === '') {
+                    toast.warn('Please provide a valid identifier', { autoClose: false });
+                    hasError = true;
+                }
+            }
+        });
+
+        if (hasError && !systemCreated) {
+            toast.warn('Should select/provide at least 1 identifier', { autoClose: false });
+        }
+
+        if (description.trim() === '') {
+            toast.warn('Description cannot be empty', { autoClose: false });
+            hasError = true;
+        }
 
         for (const fieldValue of Object.values(photogrammetry)) {
             if (fieldValue) {
@@ -75,14 +99,10 @@ function Metadata(): React.ReactElement {
             }
         }
 
-        if (hasError) {
-            toast.warn('Please address all the errors', { autoClose: false });
-            return;
-        }
+        if (hasError) return;
 
         if (isLast) {
             console.log(metadatas);
-            alert('Finished');
         } else {
             const nextMetadata = metadatas[metadataIndex + 1];
             const { file: { id, type } } = nextMetadata;

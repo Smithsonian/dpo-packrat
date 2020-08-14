@@ -21,11 +21,12 @@ interface SelectFieldProps {
     name: string;
     options: VocabularyOption[];
     required?: boolean;
+    error?: boolean;
     onChange: (event: React.ChangeEvent<unknown>) => void;
 }
 
 function SelectField(props: SelectFieldProps): React.ReactElement {
-    const { label, value, name, required, options, onChange } = props;
+    const { label, value, name, required, error, options, onChange } = props;
 
     const classes = useStyles();
 
@@ -33,7 +34,13 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
-        <FieldType required={required ? required : false} label={label} direction='row' containerProps={rowFieldProps}>
+        <FieldType
+            required={required ? required : false}
+            error={error || false}
+            label={label}
+            direction='row'
+            containerProps={rowFieldProps}
+        >
             <Select
                 value={value}
                 className={classes.select}
