@@ -41,7 +41,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         width: 30
     },
     date: {
-        width: 230,
+        width: '50%',
         background: palette.background.paper,
         border: `1px solid ${palette.primary.contrastText}`,
         padding: '1px 8px',
