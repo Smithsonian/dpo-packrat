@@ -66,6 +66,8 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const { getFieldErrors, updatePhotogrammetryFields } = useMetadata();
 
+    const errors = getFieldErrors(metadata);
+
     const [values, setValues] = useState<PhotogrammetryFields>(defaultPhotogrammetryFields);
     const [vocabularyEntries, setVocabularyEntries] = useState<Map<eVocabularySetID, VocabularyOption[]>>(new Map<eVocabularySetID, Vocabulary[]>());
 
@@ -82,17 +84,25 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
             });
 
             setVocabularyEntries(updatedVocabularyEntries);
-            const initialDatasetType = updatedVocabularyEntries.get(eVocabularySetID.eCaptureDataDatasetType);
-            if (initialDatasetType) {
-                setValues(values => ({ ...values, datasetType: initialDatasetType[0].idVocabulary }));
-            }
 
             const initialIdentifierType = updatedVocabularyEntries.get(eVocabularySetID.eIdentifierIdentifierType);
             if (initialIdentifierType) {
-                addIdentifer(initialIdentifierType[0].idVocabulary);
+                const [{ idVocabulary: initialEntry }] = initialIdentifierType;
+                addIdentifer(initialEntry);
             }
         }
     }, [vocabularyEntryData, vocabularyEntryLoading, vocabularyEntryError]);
+
+    useEffect(() => {
+        const initialDatasetType = vocabularyEntries.get(eVocabularySetID.eCaptureDataDatasetType);
+
+        if (values.datasetType === null) {
+            if (initialDatasetType) {
+                const [{ idVocabulary: datasetType }] = initialDatasetType;
+                setValues(values => ({ ...values, datasetType }));
+            }
+        }
+    }, [metadataIndex, values.datasetType, vocabularyEntries]);
 
     useEffect(() => {
         setValues(metadatas[metadataIndex].photogrammetry);
@@ -100,9 +110,11 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     useEffect(() => {
         updatePhotogrammetryFields(metadataIndex, values);
-    }, [values]);
 
-    const errors = getFieldErrors(metadata);
+        return () => {
+            updatePhotogrammetryFields(metadataIndex, values);
+        };
+    }, [values]);
 
     const setField = ({ target }): void => {
         const { name, value } = target;
@@ -145,7 +157,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         const vocabularyEntry = vocabularyEntries.get(eVocabularySetID);
 
         if (vocabularyEntry) {
-            return vocabularyEntry[0]?.idVocabulary;
+            return vocabularyEntry[0].idVocabulary;
         }
 
         return null;
@@ -261,7 +273,6 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             <SelectField
                                 required
                                 label='Dataset Type'
-                                error={errors.photogrammetry.datasetType}
                                 value={values.datasetType || getInitialEntry(eVocabularySetID.eCaptureDataDatasetType)}
                                 name='datasetType'
                                 onChange={setIdField}

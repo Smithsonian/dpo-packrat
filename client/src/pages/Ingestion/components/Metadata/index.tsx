@@ -67,8 +67,12 @@ function Metadata(): React.ReactElement {
 
     const onNext = () => {
         const { photogrammetry } = getFieldErrors(metadata);
-        const { photogrammetry: { description, systemCreated, identifiers } } = metadata;
+        const { photogrammetry: { datasetType, description, systemCreated, identifiers } } = metadata;
         let hasError: boolean = false;
+
+        if (!datasetType) {
+            toast.warn('Please select a valid dataset type', { autoClose: false });
+        }
 
         if (!systemCreated) {
             hasError = true;
