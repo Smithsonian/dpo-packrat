@@ -1,12 +1,11 @@
 import React from 'react';
-import { Box, Typography, PropTypes } from '@material-ui/core';
+import { Box, Typography, PropTypes, BoxProps } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { colorWithOpacity } from '../../theme/colors';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'flex',
-        flexDirection: 'column',
         padding: 10,
         borderRadius: 5,
         width: ({ width }: FieldTypeProps) => width || '100%',
@@ -21,9 +20,11 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
 
 interface FieldTypeProps {
     required: boolean;
-    label: string;
+    renderLabel?: boolean;
+    label?: string;
     width?: string;
     direction?: string;
+    containerProps?: BoxProps;
     align?: PropTypes.Alignment;
     marginTop?: number;
     error?: boolean;
@@ -31,12 +32,18 @@ interface FieldTypeProps {
 }
 
 function FieldType(props: FieldTypeProps): React.ReactElement {
-    const { label, children, align = 'left', direction } = props;
+    const { label, renderLabel, children, align = 'left', direction, containerProps } = props;
     const classes = useStyles(props);
 
+    let content: React.ReactElement | null = <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>;
+
+    if (renderLabel === false) {
+        content = null;
+    }
+
     return (
-        <Box className={classes.container} flexDirection={direction || 'column'}>
-            <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>
+        <Box className={classes.container} flexDirection={direction || 'column'} {...containerProps}>
+            {content}
             {children}
         </Box>
     );

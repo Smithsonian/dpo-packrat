@@ -3,8 +3,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useContext } from 'react';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
-import { toast } from 'react-toastify';
-import { UPLOAD_FILE_TYPES } from '../../../../constants';
 import { Colors } from '../../../../theme';
 import useFilesUpload from '../../hooks/useFilesUpload';
 import { AppContext } from '../../../../context';
@@ -43,21 +41,7 @@ function UploadFilesPicker(): React.ReactElement {
     const { loadFiles } = useFilesUpload();
 
     const onDrop = (acceptedFiles: File[]) => {
-        const checkedFiles: File[] = acceptedFiles.filter((acceptedFile: File) => {
-            const { name } = acceptedFile;
-            const [ext] = name.split('.').splice(-1);
-
-            const isAllowed = UPLOAD_FILE_TYPES.includes(ext);
-
-            if (!isAllowed) {
-                toast.error(`*.${ext} file type is not allowed`);
-                return false;
-            }
-
-            return true;
-        });
-
-        loadFiles(checkedFiles);
+        loadFiles(acceptedFiles);
     };
 
     return (

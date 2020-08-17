@@ -1,9 +1,11 @@
 import { useCallback, useContext } from 'react';
 import { toast } from 'react-toastify';
 import { AppContext, AssetType, METADATA_ACTIONS, StateMetadata } from '../../../context';
-import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus, IngestionUploadResponse, IngestionUploadStatus } from '../../../context';
-import { MUTATION_UPLOAD_ASSET, apolloUploader } from '../../../graphql';
+import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus } from '../../../context';
+import { apolloUploader } from '../../../graphql';
+import { UploadAssetDocument, UploadAssetMutation, UploadStatus } from '../../../types/graphql';
 import lodash from 'lodash';
+import { defaultPhotogrammetryFields } from '../../../context';
 
 interface UseFilesUpload {
     updateMetadataSteps: () => boolean;
@@ -13,6 +15,7 @@ interface UseFilesUpload {
     retryUpload: (id: FileId) => void;
     removeUpload: (id: FileId) => void;
     changeAssetType: (id: FileId, type: AssetType) => void;
+    discardFiles: () => void;
 }
 
 const useFilesUpload = (): UseFilesUpload => {
@@ -31,7 +34,11 @@ const useFilesUpload = (): UseFilesUpload => {
         const metadatas: StateMetadata[] = [];
 
         selectedFiles.forEach((file: IngestionFile) => {
-            const metadataStep = { file };
+            const metadataStep: StateMetadata = {
+                file,
+                photogrammetry: defaultPhotogrammetryFields
+            };
+
             metadatas.push(metadataStep);
         });
 
@@ -49,7 +56,7 @@ const useFilesUpload = (): UseFilesUpload => {
             if (acceptedFiles.length) {
                 const ingestionFiles: IngestionFile[] = [];
                 acceptedFiles.forEach((file: File): void => {
-                    const id = file.name.replace(/[^\w\s]/gi, '');
+                    const id = `${file.name.replace(/[^\w\s]/gi, '')}${files.length}`;
                     const alreadyContains = !!lodash.find(files, { id });
 
                     const { name, size } = file;
@@ -201,23 +208,25 @@ const useFilesUpload = (): UseFilesUpload => {
                     ingestionDispatch(setCancel);
                 };
 
-                const { data }: IngestionUploadResponse = await apolloUploader({
-                    mutation: MUTATION_UPLOAD_ASSET,
+                const { data } = await apolloUploader({
+                    mutation: UploadAssetDocument,
                     variables: { file, type },
                     useUpload: true,
                     onProgress,
                     onCancel
                 });
 
-                const { uploadAsset } = data;
+                const { uploadAsset }: UploadAssetMutation = data;
 
-                if (uploadAsset.status === IngestionUploadStatus.COMPLETE) {
-                    ingestionDispatch(successAction);
-                    toast.success(`Upload finished for ${file.name}`);
-                } else if (uploadAsset.status === IngestionUploadStatus.FAILED) {
-                    const error = `Upload failed for ${file.name}`;
-                    toast.error(error);
-                    ingestionDispatch(errorAction);
+                if (uploadAsset) {
+                    if (uploadAsset.status === UploadStatus.Complete) {
+                        ingestionDispatch(successAction);
+                        toast.success(`Upload finished for ${file.name}`);
+                    } else if (uploadAsset.status === UploadStatus.Failed) {
+                        const error = `Upload failed for ${file.name}`;
+                        toast.error(error);
+                        ingestionDispatch(errorAction);
+                    }
                 }
             } catch ({ message }) {
                 const file = getFile(id);
@@ -232,6 +241,15 @@ const useFilesUpload = (): UseFilesUpload => {
         [getFile, ingestionDispatch]
     );
 
+    const discardFiles = () => {
+        // TODO: send dispatch to server about discarded items
+        const discardFilesAction: IngestionDispatchAction = {
+            type: UPLOAD_ACTIONS.DISCARD_FILES
+        };
+
+        ingestionDispatch(discardFilesAction);
+    };
+
     return {
         updateMetadataSteps,
         loadFiles,
@@ -239,7 +257,8 @@ const useFilesUpload = (): UseFilesUpload => {
         cancelUpload,
         retryUpload,
         removeUpload,
-        changeAssetType
+        changeAssetType,
+        discardFiles
     };
 };
 

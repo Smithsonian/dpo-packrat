@@ -72,7 +72,6 @@ function Ingestion(): React.ReactElement {
             </PrivateRoute>
 
             <PrivateRoute path={resolveRoute(INGESTION_ROUTE.TYPE)}>
-
                 <IngestionSidebarMenu
                     title='INGESTION'
                     paramIdentifier={INGESTION_PARAMS_TYPE.STEP}

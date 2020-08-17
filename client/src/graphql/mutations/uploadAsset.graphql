@@ -1,5 +1,0 @@
-mutation uploadAsset($file: Upload!, $type: AssetType!) {
-    uploadAsset(file: $file, type: $type) {
-        status
-    }
-}

@@ -1,18 +1,6 @@
 import { useReducer, Dispatch } from 'react';
 import lodash from 'lodash';
-
-export enum IngestionUploadStatus {
-    COMPLETE = 'COMPLETE',
-    FAILED = 'FAILED'
-}
-
-export type IngestionUploadResponse = {
-    data: {
-        uploadAsset: {
-            status: IngestionUploadStatus;
-        };
-    };
-};
+import { defaultItem } from './ingestion.defaults';
 
 export type FileId = string;
 
@@ -72,7 +60,33 @@ export type StateItem = {
 
 export type ItemStep = StateItem[];
 
+export type StateIdentifier = {
+    id: number;
+    identifier: string;
+    identifierType: number | null;
+    selected: boolean;
+};
+
+export type PhotogrammetryFields = {
+    systemCreated: boolean;
+    identifiers: StateIdentifier[];
+    description: string;
+    dateCaptured: Date;
+    datasetType: number | null;
+    datasetFieldId: number | null;
+    itemPositionType: number | null;
+    itemPositionFieldId: number | null;
+    itemArrangementFieldId: number | null;
+    focusType: number | null;
+    lightsourceType: number | null;
+    backgroundRemovalMethod: number | null;
+    clusterType: number | null;
+    clusterGeometryFieldId: number | null;
+    cameraSettingUniform: boolean;
+};
+
 export type StateMetadata = {
+    photogrammetry: PhotogrammetryFields;
     file: IngestionFile;
 };
 
@@ -99,7 +113,8 @@ export enum UPLOAD_ACTIONS {
     REMOVE = 'REMOVE',
     SELECT = 'SELECT',
     SET_CANCEL_HANDLER = 'SET_CANCEL_HANDLER',
-    SET_ASSET_TYPE = 'SET_ASSET_TYPE'
+    SET_ASSET_TYPE = 'SET_ASSET_TYPE',
+    DISCARD_FILES = 'DISCARD_FILES'
 }
 
 export enum SUBJECT_ACTIONS {
@@ -118,7 +133,8 @@ export enum ITEM_ACTIONS {
 }
 
 export enum METADATA_ACTIONS {
-    ADD_METADATA = 'ADD_METADATA'
+    ADD_METADATA = 'ADD_METADATA',
+    UPDATE_METADATA_FIELDS = 'UPDATE_METADATA_FIELDS'
 }
 
 const INGESTION_ACTION = {
@@ -127,13 +143,6 @@ const INGESTION_ACTION = {
     PROJECT: PROJECT_ACTIONS,
     ITEM: ITEM_ACTIONS,
     METADATA: METADATA_ACTIONS
-};
-
-export const defaultItem: StateItem = {
-    id: 'default',
-    name: '',
-    entireSubject: false,
-    selected: true
 };
 
 const ingestionState: Ingestion = {
@@ -147,7 +156,21 @@ const ingestionState: Ingestion = {
     metadatas: []
 };
 
-type UploadDispatchAction = FETCH_COMPLETE | FETCH_FAILED | LOAD | START | FAILED | PROGRESS | CANCELLED | COMPLETE | REMOVE | SELECT | SET_CANCEL_HANDLER | SET_ASSET_TYPE | RETRY;
+type UploadDispatchAction =
+    | FETCH_COMPLETE
+    | FETCH_FAILED
+    | LOAD
+    | START
+    | FAILED
+    | PROGRESS
+    | CANCELLED
+    | COMPLETE
+    | REMOVE
+    | SELECT
+    | SET_CANCEL_HANDLER
+    | SET_ASSET_TYPE
+    | RETRY
+    | DISCARD_FILES;
 
 type FETCH_COMPLETE = {
     type: UPLOAD_ACTIONS.FETCH_COMPLETE;
@@ -217,6 +240,10 @@ type SET_ASSET_TYPE = {
     assetType: AssetType;
 };
 
+type DISCARD_FILES = {
+    type: UPLOAD_ACTIONS.DISCARD_FILES;
+};
+
 type SubjectDispatchAction = ADD_SUBJECT | REMOVE_SUBJECT;
 
 type ADD_SUBJECT = {
@@ -253,10 +280,17 @@ type UPDATE_ITEM = {
     item: StateItem;
 };
 
-type MetadataDispatchAction = ADD_METADATA;
+type MetadataDispatchAction = ADD_METADATA | UPDATE_METADATA_FIELDS;
 
 type ADD_METADATA = {
     type: METADATA_ACTIONS.ADD_METADATA;
+    metadatas: StateMetadata[];
+};
+
+export type MetadataFieldValue = string | number | boolean | Date;
+
+type UPDATE_METADATA_FIELDS = {
+    type: METADATA_ACTIONS.UPDATE_METADATA_FIELDS;
     metadatas: StateMetadata[];
 };
 
@@ -424,7 +458,22 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 }
             };
 
+        case INGESTION_ACTION.UPLOAD.DISCARD_FILES:
+            return {
+                ...ingestionState,
+                uploads: {
+                    ...ingestionState.uploads,
+                    loading: false
+                }
+            };
+
         case INGESTION_ACTION.METADATA.ADD_METADATA:
+            return {
+                ...state,
+                metadatas: action.metadatas
+            };
+
+        case INGESTION_ACTION.METADATA.UPDATE_METADATA_FIELDS:
             return {
                 ...state,
                 metadatas: action.metadatas

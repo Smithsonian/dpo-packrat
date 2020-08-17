@@ -473,6 +473,7 @@ type Vocabulary {
   idVocabulary: Int!
   idVocabularySet: Int!
   SortOrder: Int!
+  Term: String!
   VocabularySet: VocabularySet
 }
 
@@ -546,6 +547,7 @@ type Query {
   getCurrentUser: GetCurrentUserResult!
   getUser(input: GetUserInput!): GetUserResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
+  getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
 }
 
@@ -622,7 +624,7 @@ input SearchIngestionSubjectsInput {
 }
 
 type SearchIngestionSubjectsResult {
-  SubjectUnitIdentifier: [SubjectUnitIdentifier]!
+  SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
 }
 
 input GetIngestionItemsForSubjectsInput {
@@ -630,7 +632,7 @@ input GetIngestionItemsForSubjectsInput {
 }
 
 type GetIngestionItemsForSubjectsResult {
-  Item: [Item]!
+  Item: [Item!]!
 }
 
 input GetIngestionProjectsForSubjectsInput {
@@ -638,7 +640,7 @@ input GetIngestionProjectsForSubjectsInput {
 }
 
 type GetIngestionProjectsForSubjectsResult {
-  Project: [Project]!
+  Project: [Project!]!
 }
 
 input GetUnitInput {
@@ -691,6 +693,19 @@ input GetVocabularyInput {
 
 type GetVocabularyResult {
   Vocabulary: Vocabulary
+}
+
+input GetVocabularyEntriesInput {
+  eVocabSetIDs: [Int!]!
+}
+
+type VocabularyEntry {
+  eVocabSetID: Int!
+  Vocabulary: [Vocabulary!]!
+}
+
+type GetVocabularyEntriesResult {
+  VocabularyEntries: [VocabularyEntry!]!
 }
 
 input GetWorkflowInput {

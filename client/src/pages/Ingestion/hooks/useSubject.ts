@@ -1,12 +1,19 @@
 import { StateSubject, AppContext, IngestionDispatchAction, SUBJECT_ACTIONS, StateItem, StateProject } from '../../../context';
-import { parseItemToState, parseProjectToState } from '../../../context/utils';
+import { parseItemToState, parseProjectToState } from '../../../context';
 import { useContext } from 'react';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
 import useItem from './useItem';
 import useProject from './useProject';
-import { apolloClient, QUERY_GET_INGESTION_ITEMS_FOR_SUBJECT, QUERY_GET_INGESTION_PROJECTS_FOR_SUBJECT } from '../../../graphql';
+import { apolloClient } from '../../../graphql';
+import {
+    GetIngestionItemsForSubjectsDocument,
+    GetIngestionProjectsForSubjectsDocument,
+    GetIngestionItemsForSubjectsQuery,
+    GetIngestionProjectsForSubjectsQuery
+} from '../../../types/graphql';
 import { Item, Project } from '../../../types/graphql';
+import { ApolloQueryResult } from '@apollo/client';
 
 interface UseSubject {
     addSubject: (subject: StateSubject) => Promise<void>;
@@ -74,28 +81,38 @@ async function updateProjectsAndItemsForSubjects(selectedSubjects: StateSubject[
     };
 
     try {
-        const {
-            data: { getIngestionItemsForSubjects }
-        } = await apolloClient.query({ query: QUERY_GET_INGESTION_ITEMS_FOR_SUBJECT, variables });
-        const { Item: foundItems } = getIngestionItemsForSubjects;
+        const itemsQueryResult: ApolloQueryResult<GetIngestionItemsForSubjectsQuery> = await apolloClient.query({
+            query: GetIngestionItemsForSubjectsDocument,
+            variables
+        });
 
-        const items: StateItem[] = foundItems.map((item: Item) => parseItemToState(item, false));
+        const { data } = itemsQueryResult;
 
-        addItems(items);
+        if (data) {
+            const { Item: foundItems } = data.getIngestionItemsForSubjects;
+
+            const items: StateItem[] = foundItems.map((item: Item) => parseItemToState(item, false));
+
+            addItems(items);
+        }
     } catch (error) {
         toast.error('Failed to get items for subjects');
     }
 
     try {
-        const {
-            data: { getIngestionProjectsForSubjects }
-        } = await apolloClient.query({ query: QUERY_GET_INGESTION_PROJECTS_FOR_SUBJECT, variables });
+        const projectsQueryResult: ApolloQueryResult<GetIngestionProjectsForSubjectsQuery> = await apolloClient.query({
+            query: GetIngestionProjectsForSubjectsDocument,
+            variables
+        });
 
-        const { Project: foundProjects } = getIngestionProjectsForSubjects;
+        const { data } = projectsQueryResult;
+        if (data) {
+            const { Project: foundProjects } = data.getIngestionProjectsForSubjects;
 
-        const projects: StateProject[] = foundProjects.map((project: Project, index: number) => parseProjectToState(project, !index));
+            const projects: StateProject[] = foundProjects.map((project: Project, index: number) => parseProjectToState(project, !index));
 
-        addProjects(projects);
+            addProjects(projects);
+        }
     } catch (error) {
         toast.error('Failed to get projects for subjects');
     }

@@ -18,20 +18,11 @@ function useProject(): UseProject {
     const getSelectedProject = () => lodash.find(projects, { selected: true });
 
     const addProjects = (fetchedProjects: StateProject[]) => {
-        const newProjects: StateProject[] = [];
-
-        fetchedProjects.forEach((project: StateProject) => {
-            const { id } = project;
-            const alreadyExists = !!lodash.find(projects, { id });
-
-            if (!alreadyExists) {
-                newProjects.push(project);
-            }
-        });
+        if (!fetchedProjects.length) return;
 
         const addItemsAction: IngestionDispatchAction = {
             type: PROJECT_ACTIONS.ADD_PROJECTS,
-            projects: newProjects
+            projects: fetchedProjects
         };
 
         ingestionDispatch(addItemsAction);
@@ -42,7 +33,7 @@ function useProject(): UseProject {
 
         if (project) {
             const { selected } = project;
-            if (selected) {
+            if (!selected) {
                 const alreadySelected: StateProject | undefined = getSelectedProject();
 
                 if (alreadySelected) {
@@ -53,6 +44,7 @@ function useProject(): UseProject {
 
                     updateProject(unselectedProject);
                 }
+                project.selected = true;
             }
 
             updateProject(project);
