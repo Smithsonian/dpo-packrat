@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory';
-import ApolloClient from 'apollo-client';
+import { ApolloClient, InMemoryCache, NormalizedCacheObject } from '@apollo/client';
 import { createUploadLink } from 'apollo-upload-client';
 import { apolloFetch } from './utils';
 import { DocumentNode } from 'graphql';
@@ -55,6 +54,3 @@ const apolloUploader = (options: IApolloUploader): Promise<any> => {
 };
 
 export { apolloClient, apolloUploader };
-
-export * from './mutations';
-export * from './queries';

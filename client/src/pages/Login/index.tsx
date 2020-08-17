@@ -10,6 +10,7 @@ import { LoadingButton } from '../../components';
 import { ROUTES } from '../../constants';
 import { AppContext } from '../../context';
 import { getAuthenticatedUser } from '../../utils/auth';
+import { actionOnKeyPress } from '../../utils/shared';
 import useLoginForm, { ILoginForm } from './hooks/useLoginForm';
 import { colorWithOpacity } from '../../theme/colors';
 import Config from '../../config';
@@ -142,7 +143,7 @@ function Login(): React.ReactElement {
                         validationSchema={loginValidationSchema}
                         onSubmit={onLogin}
                     >
-                        {({ handleSubmit, handleChange, values, isSubmitting }) => (
+                        {({ handleSubmit, handleChange, values, isSubmitting, submitForm }) => (
                             <form className={classes.loginForm} onSubmit={handleSubmit}>
                                 <Field
                                     value={values.email}
@@ -174,6 +175,7 @@ function Login(): React.ReactElement {
                                     disableElevation
                                     variant='contained'
                                     color='primary'
+                                    onKeyDown={({ key }) => actionOnKeyPress(key, 'Enter', submitForm)}
                                     loading={isSubmitting}
                                 >
                                     Sign In

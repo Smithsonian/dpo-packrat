@@ -1,15 +1,16 @@
-import { useLazyQuery } from '@apollo/react-hooks';
+import { useLazyQuery } from '@apollo/client';
 import { Box, TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { IoIosSearch } from 'react-icons/io';
 import { FieldType, LoadingButton } from '../../../../components';
 import { StateSubject } from '../../../../context';
-import { parseSubjectUnitIdentifierToState } from '../../../../context/utils';
-import { QUERY_SEARCH_INGESTION_SUBJECTS } from '../../../../graphql';
+import { parseSubjectUnitIdentifierToState } from '../../../../context';
+import { SearchIngestionSubjectsDocument } from '../../../../types/graphql';
 import { SubjectUnitIdentifier } from '../../../../types/graphql';
 import SubjectList from './SubjectList';
 import { toast } from 'react-toastify';
+import { actionOnKeyPress } from '../../../../utils/shared';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -32,7 +33,7 @@ const useStyles = makeStyles(({ palette }) => ({
 function SearchList(): React.ReactElement {
     const classes = useStyles();
     const [query, setQuery] = useState('');
-    const [searchSubject, { data, called, loading, error }] = useLazyQuery(QUERY_SEARCH_INGESTION_SUBJECTS);
+    const [searchSubject, { data, called, loading, error }] = useLazyQuery(SearchIngestionSubjectsDocument);
 
     const [subjects, setSubjects] = useState<StateSubject[]>([]);
 
@@ -72,6 +73,7 @@ function SearchList(): React.ReactElement {
                 <TextField
                     className={classes.searchField}
                     InputLabelProps={{ shrink: false }}
+                    onKeyDown={({ key }) => actionOnKeyPress(key, 'Enter', onSearch)}
                     onChange={({ target }) => setQuery(target.value)}
                 />
                 <LoadingButton
@@ -84,7 +86,6 @@ function SearchList(): React.ReactElement {
                     onClick={onSearch}
                 >
                     <IoIosSearch color='inherit' size={20} />
-
                 </LoadingButton>
             </Box>
             <>

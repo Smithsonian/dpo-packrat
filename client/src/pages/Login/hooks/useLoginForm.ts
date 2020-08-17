@@ -12,8 +12,8 @@ const loginValidationSchema = () =>
     });
 
 const initialValues = {
-    email: 'test@si.edu',
-    password: 'test@si.edu'
+    email: '',
+    password: ''
 };
 
 function useLoginForm(): { initialValues: ILoginForm; loginValidationSchema: typeof loginValidationSchema } {

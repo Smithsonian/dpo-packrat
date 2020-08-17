@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type Maybe<T> = T | null;
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
     ID: string;
@@ -65,9 +66,12 @@ export type Asset = {
     FileName: Scalars['String'];
     FilePath: Scalars['String'];
     idAssetGroup?: Maybe<Scalars['Int']>;
+    idSystemObject?: Maybe<Scalars['Int']>;
     StorageKey: Scalars['String'];
     AssetGroup?: Maybe<AssetGroup>;
+    SystemObjectSource?: Maybe<SystemObject>;
     AssetVersion?: Maybe<Array<Maybe<AssetVersion>>>;
+    VAssetType?: Maybe<Vocabulary>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -80,6 +84,7 @@ export type AssetVersion = {
     StorageChecksum: Scalars['String'];
     StorageSize: Scalars['Int'];
     Ingested: Scalars['Boolean'];
+    Version: Scalars['Int'];
     Asset?: Maybe<Asset>;
     User?: Maybe<User>;
     SystemObject?: Maybe<SystemObject>;
@@ -456,9 +461,9 @@ export type Subject = {
     idIdentifierPreferred?: Maybe<Scalars['Int']>;
     GeoLocation?: Maybe<GeoLocation>;
     Unit?: Maybe<Unit>;
+    IdentifierPreferred?: Maybe<Identifier>;
     Item?: Maybe<Array<Maybe<Item>>>;
     SystemObject?: Maybe<SystemObject>;
-    IdentifierPreferred?: Maybe<Identifier>;
 };
 
 export type Item = {
@@ -519,6 +524,7 @@ export type Vocabulary = {
     idVocabulary: Scalars['Int'];
     idVocabularySet: Scalars['Int'];
     SortOrder: Scalars['Int'];
+    Term: Scalars['String'];
     VocabularySet?: Maybe<VocabularySet>;
 };
 
@@ -598,6 +604,7 @@ export type Query = {
     getCurrentUser: GetCurrentUserResult;
     getUser: GetUserResult;
     getVocabulary: GetVocabularyResult;
+    getVocabularyEntries: GetVocabularyEntriesResult;
     getWorkflow: GetWorkflowResult;
 };
 
@@ -663,6 +670,10 @@ export type QueryGetUserArgs = {
 
 export type QueryGetVocabularyArgs = {
     input: GetVocabularyInput;
+};
+
+export type QueryGetVocabularyEntriesArgs = {
+    input: GetVocabularyEntriesInput;
 };
 
 export type QueryGetWorkflowArgs = {
@@ -752,7 +763,7 @@ export type SearchIngestionSubjectsInput = {
 
 export type SearchIngestionSubjectsResult = {
     __typename?: 'SearchIngestionSubjectsResult';
-    SubjectUnitIdentifier: Array<Maybe<SubjectUnitIdentifier>>;
+    SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
 };
 
 export type GetIngestionItemsForSubjectsInput = {
@@ -761,7 +772,7 @@ export type GetIngestionItemsForSubjectsInput = {
 
 export type GetIngestionItemsForSubjectsResult = {
     __typename?: 'GetIngestionItemsForSubjectsResult';
-    Item: Array<Maybe<Item>>;
+    Item: Array<Item>;
 };
 
 export type GetIngestionProjectsForSubjectsInput = {
@@ -770,7 +781,7 @@ export type GetIngestionProjectsForSubjectsInput = {
 
 export type GetIngestionProjectsForSubjectsResult = {
     __typename?: 'GetIngestionProjectsForSubjectsResult';
-    Project: Array<Maybe<Project>>;
+    Project: Array<Project>;
 };
 
 export type GetUnitInput = {
@@ -830,6 +841,21 @@ export type GetVocabularyInput = {
 export type GetVocabularyResult = {
     __typename?: 'GetVocabularyResult';
     Vocabulary?: Maybe<Vocabulary>;
+};
+
+export type GetVocabularyEntriesInput = {
+    eVocabSetIDs: Array<Scalars['Int']>;
+};
+
+export type VocabularyEntry = {
+    __typename?: 'VocabularyEntry';
+    eVocabSetID: Scalars['Int'];
+    Vocabulary: Array<Vocabulary>;
+};
+
+export type GetVocabularyEntriesResult = {
+    __typename?: 'GetVocabularyEntriesResult';
+    VocabularyEntries: Array<VocabularyEntry>;
 };
 
 export type GetWorkflowInput = {

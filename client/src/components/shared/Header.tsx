@@ -44,7 +44,10 @@ function Header(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
 
-    const onLogout = async () => {
+    const onLogout = async (): Promise<void> => {
+        const isConfirmed = global.confirm('Are you sure you want to logout?');
+        if (!isConfirmed) return;
+
         try {
             const { success } = await API.logout();
 

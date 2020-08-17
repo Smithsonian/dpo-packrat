@@ -74,7 +74,7 @@ function SubjectItem(): React.ReactElement {
         if (!subjects.length) {
             error = true;
             setSubjectError(true);
-            toast.warn('Please provide at least one subject');
+            toast.warn('Please provide at least one subject', { autoClose: false });
         }
 
         const selectedProject = getSelectedProject();
@@ -82,19 +82,19 @@ function SubjectItem(): React.ReactElement {
         if (!selectedProject) {
             error = true;
             setProjectError(true);
-            toast.warn('Please select a project');
+            toast.warn('Please select a project', { autoClose: false });
         }
 
         if (!selectedItem) {
             error = true;
             setItemError(true);
-            toast.warn('Please select or provide an item');
+            toast.warn('Please select or provide an item', { autoClose: false });
         }
 
         if (selectedItem?.name.trim() === '') {
             error = true;
             setItemError(true);
-            toast.warn('Please provide a valid name for item');
+            toast.warn('Please provide a valid name for item', { autoClose: false });
         }
 
         if (error) return;

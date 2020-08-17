@@ -1,4 +1,4 @@
-import { ApolloProvider } from '@apollo/react-hooks';
+import { ApolloProvider } from '@apollo/client';
 import { Box, CircularProgress, ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
@@ -64,7 +64,7 @@ function App(): React.ReactElement {
                     <ToastContainer
                         transition={Slide}
                         position='bottom-right'
-                        autoClose={2000}
+                        autoClose={5000}
                         closeOnClick
                         pauseOnFocusLoss
                         draggable
