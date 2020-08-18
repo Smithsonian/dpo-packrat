@@ -17,6 +17,7 @@ const useStyles = makeStyles(({ palette }) => ({
         background: palette.background.paper
     },
     navButton: {
+        minHeight: 36,
         minWidth: 100,
         color: Colors.defaults.white
     },
@@ -46,6 +47,7 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
             variant='contained'
             color='primary'
             disableElevation
+            loaderSize={15}
             loading={leftLoading || false}
             onClick={onClickLeft}
         >
@@ -59,6 +61,7 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
             variant='contained'
             color='primary'
             disableElevation
+            loaderSize={15}
             loading={rightLoading || false}
             onClick={onClickRight}
         >
