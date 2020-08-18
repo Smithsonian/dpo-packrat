@@ -9,19 +9,19 @@ import * as crypto from 'crypto';
 import * as LOG from './logger';
 
 export type IOResults = {
-    ok: boolean,
+    success: boolean,
     error: string
 };
 
 export type HashResults = {
     hash: string,
-    ok: boolean,
+    success: boolean,
     error: string
 };
 
 export type StatResults = {
     stat: fs.Stats | null,
-    ok: boolean,
+    success: boolean,
     error: string
 };
 
@@ -51,7 +51,7 @@ export class Helpers {
 
     static copyFile(nameSource: string, nameDestination: string, allowOverwrite: boolean = true): IOResults {
         const res: IOResults = {
-            ok: true,
+            success: true,
             error: ''
         };
 
@@ -59,7 +59,7 @@ export class Helpers {
             fs.copyFileSync(nameSource, nameDestination, allowOverwrite ? 0 : fs.constants.COPYFILE_EXCL);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.copyFile', error);
-            res.ok = false;
+            res.success = false;
             res.error = `Unable to copy ${nameSource} to ${nameDestination}: ${error}`;
         }
         return res;
@@ -67,16 +67,16 @@ export class Helpers {
 
     static fileOrDirExists(name: string): IOResults {
         const res: IOResults = {
-            ok: true,
+            success: true,
             error: ''
         };
 
         try {
             if (!fs.existsSync(name))
-                res.ok = false;
+                res.success = false;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.fileExists', error);
-            res.ok = false;
+            res.success = false;
             res.error = `Unable to test existence of ${name}: ${error}`;
         }
         return res;
@@ -84,7 +84,7 @@ export class Helpers {
 
     static ensureFileExists(filename: string): IOResults {
         const res: IOResults = {
-            ok: true,
+            success: true,
             error: ''
         };
 
@@ -92,7 +92,7 @@ export class Helpers {
             fs.closeSync(fs.openSync(filename, 'a'));
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.ensureFileExists', error);
-            res.ok = false;
+            res.success = false;
             res.error = `Unable to ensure existence of ${filename}: ${error}`;
         }
         return res;
@@ -100,7 +100,7 @@ export class Helpers {
 
     static removeFile(filename: string): IOResults {
         const res: IOResults = {
-            ok: true,
+            success: true,
             error: ''
         };
 
@@ -109,7 +109,7 @@ export class Helpers {
                 fs.unlinkSync(filename);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.removeFile', error);
-            res.ok = false;
+            res.success = false;
             res.error = `Unable to remove file ${filename}: ${error}`;
         }
         return res;
@@ -117,7 +117,7 @@ export class Helpers {
 
     static createDirectory(directory: string): IOResults {
         const res: IOResults = {
-            ok: true,
+            success: true,
             error: ''
         };
 
@@ -126,7 +126,7 @@ export class Helpers {
                 fs.mkdirSync(directory);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.createDirectory', error);
-            res.ok = false;
+            res.success = false;
             res.error = `Unable to create directory ${directory}: ${error}`;
         }
         return res;
@@ -134,7 +134,7 @@ export class Helpers {
 
     static removeDirectory(directory: string): IOResults {
         const res: IOResults = {
-            ok: true,
+            success: true,
             error: ''
         };
 
@@ -143,7 +143,7 @@ export class Helpers {
                 fs.rmdirSync(directory);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.removeDirectory', error);
-            res.ok = false;
+            res.success = false;
             res.error = `Unable to remove directory ${directory}: ${error}`;
         }
         return res;
@@ -152,15 +152,15 @@ export class Helpers {
     static stat(filePath: string): StatResults {
         const res: StatResults = {
             stat: null,
-            ok: true,
+            success: true,
             error: ''
         };
 
         try {
             res.stat = fs.statSync(filePath);
-            res.ok = true;
+            res.success = true;
         } catch (error) /* istanbul ignore next */ {
-            res.ok = false;
+            res.success = false;
             res.error = JSON.stringify(error);
         }
         return res;
@@ -171,7 +171,7 @@ export class Helpers {
     static async computeHashFromFile(filePath: string, hashMethod: string): Promise<HashResults> {
         const res: HashResults = {
             hash: '',
-            ok: true,
+            success: true,
             error: ''
         };
         const hash      = crypto.createHash(hashMethod);
@@ -186,7 +186,7 @@ export class Helpers {
 
             stream.on('error', () => {
                 // do we need to perform cleanup?
-                res.ok = false;
+                res.success = false;
                 res.error = 'Stream Error';
                 resolve(res);
             });

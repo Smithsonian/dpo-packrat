@@ -75,56 +75,56 @@ describe('Utils: Helpers', () => {
 
     test('Utils: Helpers.createDirectory', () => {
         let res: H.IOResults = H.Helpers.createDirectory(directoryPath);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         res = H.Helpers.fileOrDirExists(directoryPath);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         res = H.Helpers.createDirectory(directoryPath);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
     });
 
     test('Utils: Helpers.ensureFileExists', () => {
         let res: H.IOResults = H.Helpers.ensureFileExists(filePath);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         res = H.Helpers.fileOrDirExists(filePath);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
     });
 
     test('Utils: Helpers.stat', () => {
         let res: H.StatResults = H.Helpers.stat(filePath);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         expect(res.stat).toBeTruthy();
         if (res.stat)
             expect(res.stat.size).toBe(0);
 
         res = H.Helpers.stat(H.Helpers.randomSlug());
-        expect(res.ok).toBeFalsy();
+        expect(res.success).toBeFalsy();
     });
 
     test('Utils: Helpers.computeHashFromFile', async () => {
         let res: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha512');
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         expect(res.hash).toBeTruthy();
         // hash of an empty file is always the same:
         expect(res.hash).toBe('cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e');
 
         res = await H.Helpers.computeHashFromFile(H.Helpers.randomSlug(), 'sha512');
-        expect(res.ok).toBeFalsy();
+        expect(res.success).toBeFalsy();
     });
 
     test('Utils: Helpers.copyFile', () => {
         let res: H.IOResults = H.Helpers.copyFile(filePath, filePath2);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         res = H.Helpers.copyFile(filePath, filePath2, false);
-        expect(res.ok).toBeFalsy();
+        expect(res.success).toBeFalsy();
     });
 
     test('Utils: Helpers.fileExists', () => {
         let res: H.IOResults = H.Helpers.fileOrDirExists(filePath);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         res = H.Helpers.fileOrDirExists(filePath2);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         res = H.Helpers.fileOrDirExists(filePath3);
-        expect(res.ok).toBeFalsy();
+        expect(res.success).toBeFalsy();
     });
 
     /*
@@ -134,31 +134,31 @@ describe('Utils: Helpers', () => {
         await streamToFile(RS, filePath3);
 
         let res: H.IOResults = H.Helpers.removeFile(filePath2);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         res = H.Helpers.copyFile(filePath, filePath2, true);
-        expect(res.ok).toBeFalsy();
+        expect(res.success).toBeFalsy();
         res = H.Helpers.removeDirectory(directoryPath);
-        expect(res.ok).toBeFalsy();
+        expect(res.success).toBeFalsy();
         RS.destroy();
     });
     */
 
     test('Utils: Helpers.removeFile', () => {
         let res: H.IOResults = H.Helpers.removeFile(filePath);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         res = H.Helpers.removeFile(filePath2);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         res = H.Helpers.removeFile(filePath3);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
         res = H.Helpers.removeFile(filePath4);
-        expect(res.ok).toBeTruthy();            // removing a non-existant file succeeds
+        expect(res.success).toBeTruthy();            // removing a non-existant file succeeds
     });
 
     test('Utils: Helpers.removeDirectory', () => {
         let res: H.IOResults = H.Helpers.removeDirectory(filePath);
-        expect(res.ok).toBeTruthy();    // removing a non-existant directory suceeds
+        expect(res.success).toBeTruthy();    // removing a non-existant directory suceeds
         res = H.Helpers.removeDirectory(directoryPath);
-        expect(res.ok).toBeTruthy();
+        expect(res.success).toBeTruthy();
     });
 });
 

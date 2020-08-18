@@ -8,7 +8,7 @@ import * as LOG from '../../utils/logger';
 interface GetRequestResults {
     output: string;
     statusText: string;
-    ok: boolean;
+    success: boolean;
 }
 
 class EdanCollection implements COL.ICollection {
@@ -108,14 +108,14 @@ class EdanCollection implements COL.ICollection {
             return {
                 output: await res.text(),
                 statusText: res.statusText,
-                ok: res.ok
+                success: res.ok
             };
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('EdanCollection.sendGetRequest', error);
             return {
                 output: JSON.stringify(error),
                 statusText: 'node-fetch error',
-                ok: false
+                success: false
             };
         }
     }
