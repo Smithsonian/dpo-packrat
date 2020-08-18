@@ -22,14 +22,14 @@ interface SelectFieldProps {
     options: VocabularyOption[];
     required?: boolean;
     error?: boolean;
+    width?: string;
     onChange: (event: React.ChangeEvent<unknown>) => void;
 }
 
 function SelectField(props: SelectFieldProps): React.ReactElement {
-    const { label, value, name, required, error, options, onChange } = props;
+    const { label, value, name, width, required, error, options, onChange } = props;
 
     const classes = useStyles();
-
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
@@ -40,6 +40,7 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
             label={label}
             direction='row'
             containerProps={rowFieldProps}
+            width={width || undefined}
         >
             <Select
                 value={value}
