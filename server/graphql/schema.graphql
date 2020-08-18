@@ -532,6 +532,7 @@ type Query {
   getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
+  getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
@@ -569,6 +570,20 @@ type GetAssetResult {
 
 type GetUploadedAssetVersionResult {
   AssetVersion: [AssetVersion]!
+}
+
+input GetContentsForAssetVersionsInput {
+  idAssetVersions: [Int!]!
+}
+
+type AssetVersionContent {
+  idAssetVersion: Int!
+  folders: [String!]!
+  all: [String!]!
+}
+
+type GetContentsForAssetVersionsResult {
+  AssetVersionContent: [AssetVersionContent!]!
 }
 
 input GetCaptureDataInput {

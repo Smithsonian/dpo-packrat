@@ -589,6 +589,7 @@ export type Query = {
     getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
+    getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     getLicense: GetLicenseResult;
@@ -614,6 +615,10 @@ export type QueryGetAccessPolicyArgs = {
 
 export type QueryGetAssetArgs = {
     input: GetAssetInput;
+};
+
+export type QueryGetContentsForAssetVersionsArgs = {
+    input: GetContentsForAssetVersionsInput;
 };
 
 export type QueryGetCaptureDataArgs = {
@@ -701,6 +706,22 @@ export type GetAssetResult = {
 export type GetUploadedAssetVersionResult = {
     __typename?: 'GetUploadedAssetVersionResult';
     AssetVersion: Array<Maybe<AssetVersion>>;
+};
+
+export type GetContentsForAssetVersionsInput = {
+    idAssetVersions: Array<Scalars['Int']>;
+};
+
+export type AssetVersionContent = {
+    __typename?: 'AssetVersionContent';
+    idAssetVersion: Scalars['Int'];
+    folders: Array<Scalars['String']>;
+    all: Array<Scalars['String']>;
+};
+
+export type GetContentsForAssetVersionsResult = {
+    __typename?: 'GetContentsForAssetVersionsResult';
+    AssetVersionContent: Array<AssetVersionContent>;
 };
 
 export type GetCaptureDataInput = {
