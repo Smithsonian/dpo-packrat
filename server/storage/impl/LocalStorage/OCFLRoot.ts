@@ -1,12 +1,14 @@
 import * as path from 'path';
+//import * as STORE from '../../interface';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
+import * as OO from './OCFLObject';
 
 export type ComputeWriteStreamLocationResults = {
     locationPublic: string,     // partial path, safe to share
     locationPrivate: string,    // full path; keep private, but needed to create stream
-    ioResults: H.IOResults,
+    ioResults: H.IOResults
 };
 
 export class OCFLRoot {
@@ -60,7 +62,7 @@ export class OCFLRoot {
             locationPublic: '<INVALID>',
             locationPrivate: '<INVALID>',
             ioResults: {
-                ok: false,
+                success: false,
                 error: '',
             }
         };
@@ -69,7 +71,7 @@ export class OCFLRoot {
         const fileName: string      = H.Helpers.randomSlug();
         const directoryPath: string = path.join(this.computeLocationStagingRoot(), directoryName);
         results.ioResults = H.Helpers.createDirectory(directoryPath);
-        if (results.ioResults.ok) {
+        if (results.ioResults.success) {
             results.locationPublic = path.join(directoryName, fileName);    // Partial path
             results.locationPrivate = path.join(directoryPath, fileName);   // Full path
         }
@@ -86,16 +88,21 @@ export class OCFLRoot {
 
         let ioResults: H.IOResults;
         ioResults = this.initializeDirectory(this.storageRoot, 'Local Storage Root');
-        if (!ioResults.ok)
+        if (!ioResults.success)
             return ioResults;
         ioResults = this.initializeDirectory(this.storageRootRepo, 'OCFL Storage Root');
-        if (!ioResults.ok)
+        if (!ioResults.success)
             return ioResults;
         ioResults = this.initializeDirectory(this.storageRootStaging, 'Staging Root');
-        if (!ioResults.ok)
+        if (!ioResults.success)
             return ioResults;
 
         return await this.initializeStorageRoot();
+    }
+
+    async ocflObject(storageKey: string, fileName: string, version: number, staging: boolean): Promise<OO.OCFLObjectInitResults> {
+        const ocflObject: OO.OCFLObject = new OO.OCFLObject(this);
+        return await ocflObject.initialize(storageKey, fileName, version, staging);
     }
 
     private async initializeStorageRoot(): Promise<H.IOResults> {
@@ -103,19 +110,19 @@ export class OCFLRoot {
         let source: string | null   = null;
         let dest: string            = path.join(this.storageRootRepo, ST.OCFLStorageRootNamasteFilename);
         let ioResults: H.IOResults  = this.initializeFile(source, dest, 'OCFL Root Namaste File');
-        if (!ioResults.ok)
+        if (!ioResults.success)
             return ioResults;
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootLayoutFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootLayoutFilename);
         ioResults   = this.initializeFile(source, dest, 'OCFL Root Layout File');
-        if (!ioResults.ok)
+        if (!ioResults.success)
             return ioResults;
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootSpecFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootSpecFilename);
         ioResults   = this.initializeFile(source, dest, 'OCFL Root Spec File');
-        if (!ioResults.ok)
+        if (!ioResults.success)
             return ioResults;
 
         return ioResults;
@@ -123,12 +130,12 @@ export class OCFLRoot {
 
     private initializeDirectory(directory: string, description: string): H.IOResults {
         let ioResults: H.IOResults = H.Helpers.fileOrDirExists(directory);
-        if (ioResults.ok)
+        if (ioResults.success)
             return ioResults;
 
         LOG.logger.info(`${description} does not exist; creating it`);
         ioResults = H.Helpers.createDirectory(directory);
-        if (!ioResults.ok)
+        if (!ioResults.success)
             LOG.logger.error(`Unable to create ${description} at ${directory}`);
         return ioResults;
     }
@@ -136,12 +143,12 @@ export class OCFLRoot {
     private initializeFile(source: string | null, dest: string, description: string): H.IOResults {
         let ioResults: H.IOResults;
         ioResults = H.Helpers.fileOrDirExists(dest);
-        if (ioResults.ok)
+        if (ioResults.success)
             return ioResults;
 
         LOG.logger.info(`${description} does not exist; creating it`);
         ioResults = source ? H.Helpers.copyFile(source, dest) : H.Helpers.ensureFileExists(dest);
-        if (!ioResults.ok)
+        if (!ioResults.success)
             LOG.logger.error(`Unable to create ${description} at ${dest}`);
         return ioResults;
     }

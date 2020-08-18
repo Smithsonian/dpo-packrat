@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as STORE from '../../interface';
-import * as DBAPI from '../../../db';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import { OCFLRoot, ComputeWriteStreamLocationResults } from './OCFLRoot';
+import { OCFLObjectInitResults } from './OCFLObject';
 
 export class LocalStorage implements STORE.IStorage {
     private ocflRoot: OCFLRoot;
@@ -18,32 +20,25 @@ export class LocalStorage implements STORE.IStorage {
         return await this.ocflRoot.initialize(storageRoot);
     }
 
-    async readStream(storageKey: string, version: number): Promise<STORE.ReadStreamResult> {
+    async readStream(readStreamInput: STORE.ReadStreamInput): Promise<STORE.ReadStreamResult> {
         const retValue: STORE.ReadStreamResult = {
             readStream: null,
-            hash: null,
+            storageHash: null,
             success: false,
             error: ''
         };
 
-        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetchByStorageKey(storageKey);
-        if (!asset) {
+        const { storageKey, fileName, version, staging } = readStreamInput;
+        const ocflObjectInitResults: OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, fileName, version, staging);
+        if (!ocflObjectInitResults.success || !ocflObjectInitResults.ocflObject) {
             retValue.success = false;
-            retValue.error = `No asset found from storageKey ${storageKey}`;
+            retValue.error = ocflObjectInitResults.error;
             return retValue;
         }
+        retValue.storageHash = ocflObjectInitResults.ocflObject.hash;
 
-        const assetVersion: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchByAssetAndVersion(asset.idAsset, version);
-        if (!assetVersion || assetVersion.length == 0) {
-            retValue.success = false;
-            retValue.error = `No asset version found from storageKey ${storageKey}, idAsset ${asset.idAsset}, version ${version}`;
-            return retValue;
-        }
-        retValue.hash = assetVersion[0].StorageChecksum;
-
-        const location: string = this.ocflRoot.computeLocationObjectVersionContent(storageKey, version, asset.FileName, false);
         try {
-            retValue.readStream = fs.createReadStream(location);
+            retValue.readStream = fs.createReadStream(ocflObjectInitResults.ocflObject.location);
             retValue.success = true;
             retValue.error = '';
         } catch (error) {
@@ -72,7 +67,7 @@ export class LocalStorage implements STORE.IStorage {
         // Compute random directory path and name in staging folder
         // Provide this as the storage key which clients must pass back to us
         const res: ComputeWriteStreamLocationResults = this.ocflRoot.computeWriteStreamLocation();
-        if (!res.ioResults.ok) {
+        if (!res.ioResults.success) {
             retValue.success = false;
             retValue.error = res.ioResults.error;
             return retValue;
@@ -92,121 +87,111 @@ export class LocalStorage implements STORE.IStorage {
         return retValue;
     }
 
-    /**
-     * Informs the storage system that the client is done writing to the stream returned by writeStream().
-     * Promotes staged files into the repository.
-     * Updates the database, creating an AssetVersion, and when needed, an Asset
-     * @param writeStreamCloseInput Includes storage key, the opaque storage identifier created by writeStream(), maintained by closeWriteStream(), and updated by placeAsset().
-     * Other information is needed to properly update database.
-     */
-    async writeStreamClose(writeStreamCloseInput: STORE.WriteStreamCloseInput): Promise<STORE.WriteStreamCloseResult> {
-        const retValue: STORE.WriteStreamCloseResult = {
-            storageKey: null,
-            asset: null,
-            assetVersion: null,
+    async commitWriteStream(writeStreamCloseInput: STORE.CommitWriteStreamInput): Promise<STORE.CommitWriteStreamResult> {
+        const retValue: STORE.CommitWriteStreamResult = {
+            storageHash: null,
+            storageSize: null,
             success: false,
             error: ''
         };
 
-        // Verify that asset is populated
-        const asset: DBAPI.Asset = writeStreamCloseInput.asset;
-        if (!asset || !asset.FileName) {
-            retValue.success = false;
-            retValue.error = `Invalid asset specified: ${asset}`;
-            return retValue;
-        }
-
-        // Create asset if necessary
-        let Ingested: boolean = true;
-        if (!asset.idAsset) {
-            Ingested = false;
-            asset.StorageKey = writeStreamCloseInput.storageKey;
-            if (!await asset.create()) {
-                retValue.success = false;
-                retValue.error = 'Unable to create Asset in database';
-                return retValue;
-            }
-        }
-        retValue.asset = asset;
-
         // Compute hash
         const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), writeStreamCloseInput.storageKey);
         const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha512');
-        if (!hashResults.ok) {
+        if (!hashResults.success) {
             retValue.success = false;
             retValue.error = `Unable to compute hash from file: ${hashResults.error}`;
             return retValue;
         }
 
+        // Validate computed hash
+        if (writeStreamCloseInput.storageHash && writeStreamCloseInput.storageHash != hashResults.hash) {
+            retValue.success = false;
+            retValue.error = `Computed hash ${hashResults.hash} does not match specified hash ${writeStreamCloseInput.storageHash}`;
+            return retValue;
+        }
+
         // Compute filesize
         const statResults: H.StatResults = H.Helpers.stat(filePath);
-        if (!statResults.ok || !statResults.stat) {
+        if (!statResults.success || !statResults.stat) {
             retValue.success = false;
             retValue.error = `Unable to compute file stats: ${statResults.error}`;
             return retValue;
         }
 
-        // Create assetVersion
-        const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
-            idAsset: asset.idAsset,
-            idUserCreator: writeStreamCloseInput.idUserCreator,
-            DateCreated: writeStreamCloseInput.dateCreated,
-            StorageChecksum: hashResults.hash,
-            StorageSize: statResults.stat.size,
-            Ingested,                   // true when uploading a new version of an existing asset; computed above
-            Version: 0,                 // will be filled in by assetVersion.create()
-            idAssetVersion: 0           // will be filled in by assetVersion.create()
-        });
+        retValue.success = true;
+        retValue.storageHash = hashResults.hash;
+        retValue.storageSize = statResults.stat.size;
+        return retValue;
+    }
 
-        if (!await assetVersion.create()) {
+    async promoteStagedAsset(promoteStagedAssetInput: STORE.PromoteStagedAssetInput): Promise<STORE.PromoteStagedAssetResult> {
+        const retValue: STORE.PromoteStagedAssetResult = {
+            success: false,
+            error: ''
+        };
+
+        const { storageKeyStaged, storageKeyFinal, fileName, version, metadata } = promoteStagedAssetInput;
+        const ocflObjectInitResults: OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, fileName, version, false);
+        if (!ocflObjectInitResults.success) {
             retValue.success = false;
-            retValue.error = 'Unable to create AssetVersion in database';
+            retValue.error = ocflObjectInitResults.error;
+            return retValue;
+        } else if (!ocflObjectInitResults.ocflObject) {
+            retValue.success = false;
+            retValue.error = 'OCFLObject initialization failure';
             return retValue;
         }
-        retValue.assetVersion = assetVersion;
 
-        if (Ingested) {
-            const res: STORE.PromoteStagedFileResult = await this.promoteStagedAsset(asset, assetVersion);
-            retValue.success = res.success;
-            retValue.error = res.error;
-            return retValue;
-        } else {
-            retValue.success = true;
+        const pathOnDisk: string = storageKeyStaged ? path.join(this.ocflRoot.computeLocationStagingRoot(), storageKeyStaged) : '';
+        const ioResults = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, fileName, metadata);
+        if (!ioResults.success) {
+            retValue.success = false;
+            retValue.error = ioResults.error;
             return retValue;
         }
-    }
 
-    async promoteStagedAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<STORE.PromoteStagedFileResult> {
-        const retValue: STORE.PromoteStagedFileResult = {
-            success: false,
-            error: 'Not Implemented'
-        };
-        asset;
-        assetVersion;
-        return retValue;
-        /*
-        if (asset.StorageKey && asset.idAsset > 0) {
-            const version: number | null = await DBAPI.AssetVersion.computeNextVersionNumber(asset.idAsset);
-            const nextVersion: number = (version ? version : 0) + 1;
-            const location: string = this.ocflRoot.computeLocationObjectVersionContent(asset.StorageKey, nextVersion, asset.FileName, true);
-            // confirm that final write location doesn't exist yet!
-        }
-        */
-    }
-
-
-    async hierarchyUpdated(storageKey: string): Promise<STORE.HierarchyUpdatedResults> {
-        const retValue: STORE.HierarchyUpdatedResults = {
-            success: false,
-            error: 'Not Implemented'
-        };
-        storageKey;
+        retValue.success = true;
         return retValue;
     }
 
-    async validateHash(storageKey: string): Promise<boolean> {
-        storageKey;
-        return false;
+    async updateMetadata(storageKey: string, metadata: any): Promise<STORE.UpdateMetadataResults> {
+        const promoteStagedAssetInput: STORE.PromoteStagedAssetInput = {
+            storageKeyStaged: '',
+            storageKeyFinal: storageKey,
+            fileName: '',
+            version: 0,
+            metadata
+        };
+        return await this.promoteStagedAsset(promoteStagedAssetInput);
+    }
+
+    async validateAsset(storageKey: string): Promise<STORE.ValidateAssetResults> {
+        const retValue: STORE.ValidateAssetResults = {
+            success: false,
+            error: ''
+        };
+
+        const ocflObjectInitResults: OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, '', 0, false);
+        if (!ocflObjectInitResults.success) {
+            retValue.success = false;
+            retValue.error = ocflObjectInitResults.error;
+            return retValue;
+        } else if (!ocflObjectInitResults.ocflObject) {
+            retValue.success = false;
+            retValue.error = 'OCFLObject initialization failure';
+            return retValue;
+        }
+
+        const ioResults = await ocflObjectInitResults.ocflObject.validate();
+        if (!ioResults.success) {
+            retValue.success = false;
+            retValue.error = ioResults.error;
+            return retValue;
+        }
+
+        retValue.success = true;
+        return retValue;
     }
 
     async computeStorageKey(uniqueID: string): Promise<STORE.ComputeStorageKeyResults> {
@@ -232,9 +217,12 @@ const createHashFromFile = filePath => new Promise(resolve => {
 /*
     Our local storage is an implementation of the OCFL v1.0 specification (c.f. https://ocfl.io/1.0/spec/)
 
-    Each Asset and it's associated AssetVersions are an "OCFL Object" (c.f. https://ocfl.io/1.0/spec/#object-spec).
+    Each Asset and it's associated AssetVersions are an "OCFL Object" (c.f. https://ocfl.io/1.0/spec/#object-spec). Note that OCFL
+    is setup to allow multiple files to be associated with a single OCFL Object.  For Packrat, we are choosing to store just a single
+    file in each OCFL Object.
 
-    We'll be using an algorithm referenced here: "https://birkland.github.io/ocfl-rfc-demo/0003-truncated-ntuple-layout?n=2&depth=3&encoding=sha1"
+    To implement OCFL, we need to map our content to directory paths relative to the OCFL storage root.  To do this, we'll be using
+    an algorithm referenced here: "https://birkland.github.io/ocfl-rfc-demo/0003-truncated-ntuple-layout?n=2&depth=3&encoding=sha1"
     We're calling this the "Packrat-Truncated n-tuple Tree".  The Asset.idAsset is hashed via sha1 and rendered in hex. The resulting string is
     transformed into a directory path by building 3 subdirectories of 2 characters each from the start of the string.
 
