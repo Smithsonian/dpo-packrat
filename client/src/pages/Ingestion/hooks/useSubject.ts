@@ -81,6 +81,24 @@ async function updateProjectsAndItemsForSubjects(selectedSubjects: StateSubject[
     };
 
     try {
+        const projectsQueryResult: ApolloQueryResult<GetIngestionProjectsForSubjectsQuery> = await apolloClient.query({
+            query: GetIngestionProjectsForSubjectsDocument,
+            variables
+        });
+
+        const { data } = projectsQueryResult;
+        if (data) {
+            const { Project: foundProjects } = data.getIngestionProjectsForSubjects;
+
+            const projects: StateProject[] = foundProjects.map((project: Project, index: number) => parseProjectToState(project, !index));
+
+            addProjects(projects);
+        }
+    } catch (error) {
+        toast.error('Failed to get projects for subjects');
+    }
+
+    try {
         const itemsQueryResult: ApolloQueryResult<GetIngestionItemsForSubjectsQuery> = await apolloClient.query({
             query: GetIngestionItemsForSubjectsDocument,
             variables
@@ -97,24 +115,6 @@ async function updateProjectsAndItemsForSubjects(selectedSubjects: StateSubject[
         }
     } catch (error) {
         toast.error('Failed to get items for subjects');
-    }
-
-    try {
-        const projectsQueryResult: ApolloQueryResult<GetIngestionProjectsForSubjectsQuery> = await apolloClient.query({
-            query: GetIngestionProjectsForSubjectsDocument,
-            variables
-        });
-
-        const { data } = projectsQueryResult;
-        if (data) {
-            const { Project: foundProjects } = data.getIngestionProjectsForSubjects;
-
-            const projects: StateProject[] = foundProjects.map((project: Project, index: number) => parseProjectToState(project, !index));
-
-            addProjects(projects);
-        }
-    } catch (error) {
-        toast.error('Failed to get projects for subjects');
     }
 }
 
