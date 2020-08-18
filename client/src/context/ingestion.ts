@@ -1,6 +1,8 @@
 import { useReducer, Dispatch } from 'react';
 import lodash from 'lodash';
 import { defaultItem } from './ingestion.defaults';
+import { eVocabularySetID } from '../types/server';
+import { Vocabulary } from '../types/graphql';
 
 export type FileId = string;
 
@@ -67,9 +69,16 @@ export type StateIdentifier = {
     selected: boolean;
 };
 
+export type StateFolder = {
+    id: number;
+    name: string;
+    variantType: number | null;
+};
+
 export type PhotogrammetryFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    folders: StateFolder[];
     description: string;
     dateCaptured: Date;
     datasetType: number | null;
@@ -91,6 +100,8 @@ export type StateMetadata = {
 };
 
 export type MetadataStep = StateMetadata[];
+export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
+export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
 
 export type Ingestion = {
     uploads: IngestionUploads;
@@ -98,6 +109,7 @@ export type Ingestion = {
     projects: ProjectStep;
     items: ItemStep;
     metadatas: MetadataStep;
+    vocabularies: StateVocabulary;
 };
 
 export enum UPLOAD_ACTIONS {
@@ -137,12 +149,17 @@ export enum METADATA_ACTIONS {
     UPDATE_METADATA_FIELDS = 'UPDATE_METADATA_FIELDS'
 }
 
+export enum VOCABULARY_ACTIONS {
+    ADD_VOCABULARIES = 'ADD_VOCABULARIES'
+}
+
 const INGESTION_ACTION = {
     UPLOAD: UPLOAD_ACTIONS,
     SUBJECT: SUBJECT_ACTIONS,
     PROJECT: PROJECT_ACTIONS,
     ITEM: ITEM_ACTIONS,
-    METADATA: METADATA_ACTIONS
+    METADATA: METADATA_ACTIONS,
+    VOCABULARY: VOCABULARY_ACTIONS
 };
 
 const ingestionState: Ingestion = {
@@ -153,7 +170,8 @@ const ingestionState: Ingestion = {
     subjects: [],
     projects: [],
     items: [defaultItem],
-    metadatas: []
+    metadatas: [],
+    vocabularies: new Map<eVocabularySetID, VocabularyOption[]>()
 };
 
 type UploadDispatchAction =
@@ -282,19 +300,26 @@ type UPDATE_ITEM = {
 
 type MetadataDispatchAction = ADD_METADATA | UPDATE_METADATA_FIELDS;
 
+export type MetadataFieldValue = string | number | boolean | Date;
+
 type ADD_METADATA = {
     type: METADATA_ACTIONS.ADD_METADATA;
     metadatas: StateMetadata[];
 };
-
-export type MetadataFieldValue = string | number | boolean | Date;
 
 type UPDATE_METADATA_FIELDS = {
     type: METADATA_ACTIONS.UPDATE_METADATA_FIELDS;
     metadatas: StateMetadata[];
 };
 
-export type IngestionDispatchAction = UploadDispatchAction | SubjectDispatchAction | ProjectDispatchAction | ItemDispatchAction | MetadataDispatchAction;
+type VocabularyDispatchAction = ADD_VOCABULARIES;
+
+type ADD_VOCABULARIES = {
+    type: VOCABULARY_ACTIONS.ADD_VOCABULARIES;
+    vocabularies: StateVocabulary;
+};
+
+export type IngestionDispatchAction = UploadDispatchAction | SubjectDispatchAction | ProjectDispatchAction | ItemDispatchAction | MetadataDispatchAction | VocabularyDispatchAction;
 
 const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): Ingestion => {
     const { uploads, subjects, projects, items } = state;
@@ -523,6 +548,12 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                     }
                     return item;
                 })
+            };
+
+        case INGESTION_ACTION.VOCABULARY.ADD_VOCABULARIES:
+            return {
+                ...state,
+                vocabularies: action.vocabularies
             };
 
         default:

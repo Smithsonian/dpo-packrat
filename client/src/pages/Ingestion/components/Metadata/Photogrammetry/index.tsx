@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Box, Checkbox, CircularProgress, Typography } from '@material-ui/core';
+import { Box, Checkbox, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useContext, useEffect, useState } from 'react';
 import { FieldType } from '../../../../../components';
@@ -16,6 +16,7 @@ import IdentifierList from './IdentifierList';
 import SelectField from './SelectField';
 import IdInputField from './IdInputField';
 import lodash from 'lodash';
+import AssetContents from './AssetContents';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -69,40 +70,8 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const errors = getFieldErrors(metadata);
 
     const [values, setValues] = useState<PhotogrammetryFields>(defaultPhotogrammetryFields);
-    const [vocabularyEntries, setVocabularyEntries] = useState<Map<eVocabularySetID, VocabularyOption[]>>(new Map<eVocabularySetID, Vocabulary[]>());
 
-    const { vocabularyEntryData, vocabularyEntryLoading, vocabularyEntryError } = useVocabularyEntries();
-
-    useEffect(() => {
-        if (vocabularyEntryData && !vocabularyEntryLoading && !vocabularyEntryError) {
-            const { getVocabularyEntries } = vocabularyEntryData;
-            const { VocabularyEntries } = getVocabularyEntries;
-            const updatedVocabularyEntries = new Map<eVocabularySetID, VocabularyOption[]>();
-
-            VocabularyEntries.forEach(({ eVocabSetID, Vocabulary }) => {
-                updatedVocabularyEntries.set(eVocabSetID, Vocabulary);
-            });
-
-            setVocabularyEntries(updatedVocabularyEntries);
-
-            const initialIdentifierType = updatedVocabularyEntries.get(eVocabularySetID.eIdentifierIdentifierType);
-            if (initialIdentifierType) {
-                const [{ idVocabulary: initialEntry }] = initialIdentifierType;
-                addIdentifer(initialEntry);
-            }
-        }
-    }, [vocabularyEntryData, vocabularyEntryLoading, vocabularyEntryError]);
-
-    useEffect(() => {
-        const initialDatasetType = vocabularyEntries.get(eVocabularySetID.eCaptureDataDatasetType);
-
-        if (values.datasetType === null) {
-            if (initialDatasetType) {
-                const [{ idVocabulary: datasetType }] = initialDatasetType;
-                setValues(values => ({ ...values, datasetType }));
-            }
-        }
-    }, [metadataIndex, values.datasetType, vocabularyEntries]);
+    const { getEntries, getInitialEntry } = useVocabularyEntries();
 
     useEffect(() => {
         setValues(metadatas[metadataIndex].photogrammetry);
@@ -140,28 +109,6 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     };
 
     const updateValues = (name: string, value: MetadataFieldValue) => setValues(values => ({ ...values, [name]: value }));
-
-    const getEntries = (eVocabularySetID: eVocabularySetID): VocabularyOption[] => {
-        const vocabularyEntry = vocabularyEntries.get(eVocabularySetID);
-
-        let selectOptions: VocabularyOption[] = [];
-
-        if (vocabularyEntry) {
-            selectOptions = vocabularyEntry;
-        }
-
-        return selectOptions;
-    };
-
-    const getInitialEntry = (eVocabularySetID: eVocabularySetID): number | null => {
-        const vocabularyEntry = vocabularyEntries.get(eVocabularySetID);
-
-        if (vocabularyEntry) {
-            return vocabularyEntry[0].idVocabulary;
-        }
-
-        return null;
-    };
 
     const addIdentifer = (initialEntry: number | null) => {
         setValues(values => {
@@ -209,134 +156,147 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         });
     };
 
+    const updateFolderVariant = (folderId: number, variantType: number) => {
+        setValues(values => {
+            const folders = [...values.folders].map(folder => {
+                if (folderId === folder.id) {
+                    return {
+                        ...folder,
+                        variantType
+                    };
+                }
+                return folder;
+            });
+
+            return {
+                ...values,
+                folders
+            };
+        });
+    };
+
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
         <Box className={classes.container}>
-            {vocabularyEntryLoading ?
-                <Box
-                    display='flex'
-                    flex={1}
-                    alignItems='center'
-                    justifyContent='center'
-                    height='60vh'
-                >
-                    <CircularProgress color='primary' size={40} />
+
+            <Box marginBottom='10px'>
+                <FieldType required label='Asset Identifier(s)'>
+                    <Box className={classes.assetIdentifier}>
+                        <Checkbox
+                            name='systemCreated'
+                            checked={values.systemCreated}
+                            color='primary'
+                            onChange={setCheckboxField}
+                        />
+                        <Typography className={classes.systemCreatedText} variant='body1'>System will create an identifier</Typography>
+                    </Box>
+                    <IdentifierList
+                        identifiers={values.identifiers}
+                        identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
+                        onAdd={addIdentifer}
+                        onRemove={removeIdentifier}
+                        onUpdate={updateIdentifierFields}
+                    />
+                </FieldType>
+            </Box>
+
+            <Description value={values.description} onChange={setField} />
+
+            <Box className={classes.fieldsContainer} flexDirection='row'>
+                <Box display='flex' flex={1} flexDirection='column'>
+                    <FieldType
+                        error={errors.photogrammetry.dateCaptured}
+                        required
+                        label='Date Captured'
+                        direction='row'
+                        containerProps={rowFieldProps}
+                    >
+                        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                            <KeyboardDatePicker
+                                disableToolbar
+                                variant='inline'
+                                format='MM/dd/yyyy'
+                                margin='normal'
+                                value={values.dateCaptured}
+                                className={classes.date}
+                                InputProps={{ disableUnderline: true }}
+                                onChange={(_, value) => setDateField('dateCaptured', value)}
+                            />
+                        </MuiPickersUtilsProvider>
+                    </FieldType>
+
+                    <SelectField
+                        required
+                        label='Dataset Type'
+                        value={values.datasetType || getInitialEntry(eVocabularySetID.eCaptureDataDatasetType)}
+                        name='datasetType'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eCaptureDataDatasetType)}
+                    />
+                    <AssetContents
+                        initialEntry={getInitialEntry(eVocabularySetID.eCaptureDataFileVariantType)}
+                        folders={values.folders}
+                        options={getEntries(eVocabularySetID.eCaptureDataFileVariantType)}
+                        onUpdate={updateFolderVariant}
+                    />
                 </Box>
-                : <>
-                    <Box marginBottom='10px'>
-                        <FieldType required label='Asset Identifier(s)'>
-                            <Box className={classes.assetIdentifier}>
-                                <Checkbox
-                                    name='systemCreated'
-                                    checked={values.systemCreated}
-                                    color='primary'
-                                    onChange={setCheckboxField}
-                                />
-                                <Typography className={classes.systemCreatedText} variant='body1'>System will create an identifier</Typography>
-                            </Box>
-                            <IdentifierList
-                                identifiers={values.identifiers}
-                                identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
-                                onAdd={addIdentifer}
-                                onRemove={removeIdentifier}
-                                onUpdate={updateIdentifierFields}
-                            />
-                        </FieldType>
-                    </Box>
+                <Box className={classes.divider} />
+                <Box display='flex' flex={1} flexDirection='column'>
+                    <IdInputField label='Dataset Field ID' value={values.datasetFieldId || 0} name='datasetFieldId' onChange={setIdField} />
+                    <SelectField
+                        label='Item Position Type'
+                        value={values.itemPositionType || getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType)}
+                        name='itemPositionType'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eCaptureDataItemPositionType)}
+                    />
+                    <IdInputField label='Item Position Field ID' value={values.itemPositionFieldId || 0} name='itemPositionFieldId' onChange={setIdField} />
+                    <IdInputField label='Item Arrangement Field ID' value={values.itemArrangementFieldId || 0} name='itemArrangementFieldId' onChange={setIdField} />
+                    <SelectField
+                        label='Focus Type'
+                        value={values.focusType || getInitialEntry(eVocabularySetID.eCaptureDataFocusType)}
+                        name='focusType'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eCaptureDataFocusType)}
+                    />
 
-                    <Description value={values.description} onChange={setField} />
+                    <SelectField
+                        label='Light Source Type'
+                        value={values.lightsourceType || getInitialEntry(eVocabularySetID.eCaptureDataLightSourceType)}
+                        name='lightsourceType'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eCaptureDataLightSourceType)}
+                    />
 
-                    <Box className={classes.fieldsContainer}>
-                        <Box display='flex' flex={1} flexDirection='column'>
-                            <FieldType
-                                error={errors.photogrammetry.dateCaptured}
-                                required
-                                label='Date Captured'
-                                direction='row'
-                                containerProps={rowFieldProps}
-                            >
-                                <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                                    <KeyboardDatePicker
-                                        disableToolbar
-                                        variant='inline'
-                                        format='MM/dd/yyyy'
-                                        margin='normal'
-                                        value={values.dateCaptured}
-                                        className={classes.date}
-                                        InputProps={{ disableUnderline: true }}
-                                        onChange={(_, value) => setDateField('dateCaptured', value)}
-                                    />
-                                </MuiPickersUtilsProvider>
-                            </FieldType>
+                    <SelectField
+                        label='Background Removal Method'
+                        value={values.backgroundRemovalMethod || getInitialEntry(eVocabularySetID.eCaptureDataBackgroundRemovalMethod)}
+                        name='backgroundRemovalMethod'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod)}
+                    />
 
-                            <SelectField
-                                required
-                                label='Dataset Type'
-                                value={values.datasetType || getInitialEntry(eVocabularySetID.eCaptureDataDatasetType)}
-                                name='datasetType'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eCaptureDataDatasetType)}
-                            />
-                        </Box>
-                        <Box className={classes.divider} />
-                        <Box display='flex' flex={1} flexDirection='column'>
-                            <IdInputField label='Dataset Field ID' value={values.datasetFieldId || 0} name='datasetFieldId' onChange={setIdField} />
-                            <SelectField
-                                label='Item Position Type'
-                                value={values.itemPositionType || getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType)}
-                                name='itemPositionType'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eCaptureDataItemPositionType)}
-                            />
-                            <IdInputField label='Item Position Field ID' value={values.itemPositionFieldId || 0} name='itemPositionFieldId' onChange={setIdField} />
-                            <IdInputField label='Item Arrangement Field ID' value={values.itemArrangementFieldId || 0} name='itemArrangementFieldId' onChange={setIdField} />
-                            <SelectField
-                                label='Focus Type'
-                                value={values.focusType || getInitialEntry(eVocabularySetID.eCaptureDataFocusType)}
-                                name='focusType'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eCaptureDataFocusType)}
-                            />
+                    <SelectField
+                        label='Cluster Type'
+                        value={values.clusterType || getInitialEntry(eVocabularySetID.eCaptureDataClusterType)}
+                        name='clusterType'
+                        onChange={setIdField}
+                        options={getEntries(eVocabularySetID.eCaptureDataClusterType)}
+                    />
 
-                            <SelectField
-                                label='Light Source Type'
-                                value={values.lightsourceType || getInitialEntry(eVocabularySetID.eCaptureDataLightSourceType)}
-                                name='lightsourceType'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eCaptureDataLightSourceType)}
-                            />
-
-                            <SelectField
-                                label='Background Removal Method'
-                                value={values.backgroundRemovalMethod || getInitialEntry(eVocabularySetID.eCaptureDataBackgroundRemovalMethod)}
-                                name='backgroundRemovalMethod'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod)}
-                            />
-
-                            <SelectField
-                                label='Cluster Type'
-                                value={values.clusterType || getInitialEntry(eVocabularySetID.eCaptureDataClusterType)}
-                                name='clusterType'
-                                onChange={setIdField}
-                                options={getEntries(eVocabularySetID.eCaptureDataClusterType)}
-                            />
-
-                            <IdInputField label='Cluster Geometry Field ID' value={values.clusterGeometryFieldId || 0} name='clusterGeometryFieldId' onChange={setIdField} />
-                            <FieldType required={false} label='Camera Settings Uniform?' direction='row' containerProps={rowFieldProps}>
-                                <Checkbox
-                                    disabled
-                                    name='cameraSettingUniform'
-                                    checked={values.cameraSettingUniform}
-                                    onChange={setCheckboxField}
-                                    color='primary'
-                                />
-                            </FieldType>
-                        </Box>
-                    </Box>
-                </>
-            }
+                    <IdInputField label='Cluster Geometry Field ID' value={values.clusterGeometryFieldId || 0} name='clusterGeometryFieldId' onChange={setIdField} />
+                    <FieldType required={false} label='Camera Settings Uniform?' direction='row' containerProps={rowFieldProps}>
+                        <Checkbox
+                            disabled
+                            name='cameraSettingUniform'
+                            checked={values.cameraSettingUniform}
+                            onChange={setCheckboxField}
+                            color='primary'
+                        />
+                    </FieldType>
+                </Box>
+            </Box>
         </Box>
     );
 }
