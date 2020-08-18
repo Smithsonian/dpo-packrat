@@ -20,7 +20,8 @@ const getVocabularyEntriesTest = (utils: TestSuiteUtils): void => {
                     eVocabularySetID.eCaptureDataFocusType,
                     eVocabularySetID.eCaptureDataLightSourceType,
                     eVocabularySetID.eCaptureDataBackgroundRemovalMethod,
-                    eVocabularySetID.eCaptureDataClusterType
+                    eVocabularySetID.eCaptureDataClusterType,
+                    eVocabularySetID.eCaptureDataFileVariantType
                 ]
             };
 
