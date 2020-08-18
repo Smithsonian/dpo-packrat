@@ -68,7 +68,9 @@ import {
     GetIngestionProjectsForSubjectsInput,
     GetIngestionProjectsForSubjectsResult,
     GetVocabularyEntriesInput,
-    GetVocabularyEntriesResult
+    GetVocabularyEntriesResult,
+    GetContentsForAssetVersionsInput,
+    GetContentsForAssetVersionsResult
 } from '../../types/graphql';
 
 // Queries
@@ -92,6 +94,7 @@ import searchIngestionSubjects from './queries/unit/searchIngestionSubjects';
 import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSubjects';
 import getIngestionProjectsForSubjects from './queries/unit/getIngestionProjectsForSubjects';
 import getVocabularyEntries from './queries/vocabulary/getVocabularyEntries';
+import getContentsForAssetVersions from './queries/asset/getContentsForAssetVersions';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -141,7 +144,8 @@ const allQueries = {
     searchIngestionSubjects,
     getIngestionItemsForSubjects,
     getIngestionProjectsForSubjects,
-    getVocabularyEntries
+    getVocabularyEntries,
+    getContentsForAssetVersions
 };
 
 type GraphQLRequest = {
@@ -344,6 +348,16 @@ class GraphQLApi {
 
     async getVocabularyEntries(input: GetVocabularyEntriesInput, context?: Context): Promise<GetVocabularyEntriesResult> {
         const operationName = 'getVocabularyEntries';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getContentsForAssetVersions(input: GetContentsForAssetVersionsInput, context?: Context): Promise<GetContentsForAssetVersionsResult> {
+        const operationName = 'getContentsForAssetVersions';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
