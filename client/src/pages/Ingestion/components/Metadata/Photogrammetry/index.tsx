@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Box, Checkbox, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, withStyles } from '@material-ui/core/styles';
 import React, { useContext, useEffect, useState } from 'react';
 import { FieldType } from '../../../../../components';
 import DateFnsUtils from '@date-io/date-fns';
@@ -51,6 +51,22 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         fontFamily: typography.fontFamily
     }
 }));
+
+const checkboxStyles = ({ palette }) => ({
+    root: {
+        color: palette.primary.main,
+        '&$checked': {
+            color: palette.primary.main,
+        },
+        '&$disabled': {
+            color: palette.primary.main,
+        }
+    },
+    checked: {},
+    disabled: {}
+});
+
+const CustomCheckbox = withStyles(checkboxStyles)(Checkbox);
 
 interface PhotogrammetryProps {
     metadataIndex: number;
@@ -142,11 +158,14 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const updateIdentifierFields = (id: number, name: string, value: string | number | boolean) => {
         setValues(values => {
             const { identifiers } = values;
-            const updatedIdentifiers = lodash.filter(identifiers, identifier => {
+            const updatedIdentifiers = identifiers.map(identifier => {
                 if (identifier.id === id) {
-                    lodash.set(identifier, name, value);
+                    return {
+                        ...identifier,
+                        [name]: value
+                    };
                 }
-                return true;
+                return identifier;
             });
 
             return {
@@ -287,7 +306,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
                     <IdInputField label='Cluster Geometry Field ID' value={values.clusterGeometryFieldId || 0} name='clusterGeometryFieldId' onChange={setIdField} />
                     <FieldType required={false} label='Camera Settings Uniform?' direction='row' containerProps={rowFieldProps}>
-                        <Checkbox
+                        <CustomCheckbox
                             disabled
                             name='cameraSettingUniform'
                             checked={values.cameraSettingUniform}
