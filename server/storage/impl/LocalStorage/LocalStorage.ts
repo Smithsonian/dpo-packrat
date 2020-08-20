@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as STORE from '../../interface';
@@ -35,10 +34,10 @@ export class LocalStorage implements STORE.IStorage {
             retValue.error = ocflObjectInitResults.error;
             return retValue;
         }
-        retValue.storageHash = ocflObjectInitResults.ocflObject.hash(fileName, version);
+        retValue.storageHash = ocflObjectInitResults.ocflObject.fileHash(fileName, version);
 
         try {
-            retValue.readStream = fs.createReadStream(ocflObjectInitResults.ocflObject.location(fileName, version));
+            retValue.readStream = fs.createReadStream(ocflObjectInitResults.ocflObject.fileLocation(fileName, version));
             retValue.success = true;
             retValue.error = '';
         } catch (error) {
@@ -47,13 +46,6 @@ export class LocalStorage implements STORE.IStorage {
             retValue.error = JSON.stringify(error);
         }
         return retValue;
-
-        // do we need to detect and handle a close event?
-        // here's the logic:
-        // retValue.readStream = fs.createReadStream(location, { emitClose: true });
-        // retValue.readStream.on('close', () => {
-        //
-        // });
     }
 
     async writeStream(): Promise<STORE.WriteStreamResult> {
@@ -126,47 +118,50 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async promoteStagedAsset(promoteStagedAssetInput: STORE.PromoteStagedAssetInput): Promise<STORE.PromoteStagedAssetResult> {
-        const retValue: STORE.PromoteStagedAssetResult = {
-            success: false,
-            error: ''
-        };
-
-        const { storageKeyStaged, storageKeyFinal, fileName, metadata } = promoteStagedAssetInput;
+        const { storageKeyStaged, storageKeyFinal, fileName, metadata, opInfo } = promoteStagedAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, false, false);
-        if (!ocflObjectInitResults.success) {
-            retValue.success = false;
-            retValue.error = ocflObjectInitResults.error;
-            return retValue;
-        } else if (!ocflObjectInitResults.ocflObject) {
-            retValue.success = false;
-            retValue.error = 'OCFLObject initialization failure';
-            return retValue;
+        if (!ocflObjectInitResults.success)
+            return ocflObjectInitResults;
+        else if (!ocflObjectInitResults.ocflObject) {
+            return {
+                success: false,
+                error: 'OCFLObject initialization failure'
+            };
         }
 
         const pathOnDisk: string = path.join(this.ocflRoot.computeLocationStagingRoot(), storageKeyStaged);
-        const ioResults = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, fileName, metadata);
-        if (!ioResults.success) {
-            retValue.success = false;
-            retValue.error = ioResults.error;
-            return retValue;
-        }
-
-        retValue.success = true;
-        return retValue;
+        return await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, fileName, metadata, opInfo);
     }
 
-    async updateMetadata(storageKey: string, metadata: any): Promise<STORE.UpdateMetadataResults> {
+    async renameAsset(renameAssetInput: STORE.RenameAssetInput): Promise<STORE.RenameAssetResult> {
+        const { storageKey, fileNameOld, fileNameNew, opInfo } = renameAssetInput;
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false, false);
+        if (!ocflObjectInitResults.success)
+            return ocflObjectInitResults;
+        else if (!ocflObjectInitResults.ocflObject) {
+            return {
+                success: false,
+                error: 'OCFLObject initialization failure'
+            };
+        }
+
+        return await ocflObjectInitResults.ocflObject.rename(fileNameOld, fileNameNew, opInfo);
+    }
+
+    async updateMetadata(updateMetadataInput: STORE.UpdateMetadataInput): Promise<STORE.UpdateMetadataResult> {
+        const { storageKey, metadata, opInfo } = updateMetadataInput;
         const promoteStagedAssetInput: STORE.PromoteStagedAssetInput = {
             storageKeyStaged: '',
             storageKeyFinal: storageKey,
             fileName: '',
-            metadata
+            metadata,
+            opInfo
         };
         return await this.promoteStagedAsset(promoteStagedAssetInput);
     }
 
-    async validateAsset(storageKey: string): Promise<STORE.ValidateAssetResults> {
-        const retValue: STORE.ValidateAssetResults = {
+    async validateAsset(storageKey: string): Promise<STORE.ValidateAssetResult> {
+        const retValue: STORE.ValidateAssetResult = {
             success: false,
             error: ''
         };
@@ -193,25 +188,17 @@ export class LocalStorage implements STORE.IStorage {
         return retValue;
     }
 
-    async computeStorageKey(uniqueID: string): Promise<STORE.ComputeStorageKeyResults> {
-        const retValue: STORE.ComputeStorageKeyResults = {
+    async computeStorageKey(uniqueID: string): Promise<STORE.ComputeStorageKeyResult> {
+        const retValue: STORE.ComputeStorageKeyResult = {
             storageKey: '',
             success: false,
             error: ''
         };
 
-        const hash: crypto.Hash = crypto.createHash('sha1');
-        retValue.storageKey     = hash.update(uniqueID).digest('hex');
+        retValue.storageKey     = H.Helpers.computeHashFromString(uniqueID, 'sha1');
         return retValue;
     }
 }
-
-/*
-const createHashFromFile = filePath => new Promise(resolve => {
-    const hash = crypto.createHash('sha1');
-    fs.createReadStream(filePath).on('data', data => hash.update(data)).on('end', () => resolve(hash.digest('hex')));
-});
-*/
 
 /*
     Our local storage is an implementation of the OCFL v1.0 specification (c.f. https://ocfl.io/1.0/spec/)

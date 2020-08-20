@@ -1,5 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { OperationInfo } from '../../interface/IStorage';
 import { OCFLObject } from './OCFLObject';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
@@ -12,14 +13,34 @@ import * as LOG from '../../../utils/logger';
  * For the version state manifest, the filenames are just the logical portion of the name,
  * e.g. LogicalPath/LogicalFilename.ext. */
 export class OCFLInventoryManifest {
-    recordContent(filename: string, hash: string): void {
+    addContent(filename: string, hash: string): void {
+        hash = hash.toLowerCase();
         if (!this[hash])
             this[hash] = [filename];
         else
             this[hash].push(filename);
     }
 
+    removeContent(filename: string, hash: string): boolean {
+        hash = hash.toLowerCase();
+        if (!this[hash])    // if we can't find this hash
+            return false;   // error
+
+        const stringArray: Array<string> = <Array<string>><unknown>this[hash];
+        const matchIndex = stringArray.indexOf(filename);
+        if (matchIndex == -1)   // if we can't find our filename in the array
+            return false;       // error
+
+        stringArray.splice(matchIndex);     // yank our item
+        if (stringArray.length > 0)
+            this[hash] = stringArray;       // if there are still entries, record the updated list
+        else
+            delete this[hash];              // otherwise, remove the entry for this hash
+        return true;
+    }
+
     getFilenameForHash(hash: string): string[] {
+        hash = hash.toLowerCase();
         if (!this[hash])
             return [];
         return this[hash];
@@ -39,6 +60,30 @@ export class OCFLInventoryManifest {
         }
         return '';
     }
+
+    getLatestContentPathAndHash(fileName: string): { path: string, hash: string } {
+        // Walk properties
+        // For each, walk value arrays
+        const matches: { path: string, hash: string }[] = [];
+        for (const hash in this) {
+            if (!Array.isArray(this[hash]))
+                continue;
+            const stringArray: Array<string> = <Array<string>><unknown>this[hash];
+            for (const name of stringArray) {
+                // strip off v###/content/ and look for exact match on remainder
+                const contentIndex = name.indexOf('/content/');
+                if (contentIndex == -1)
+                    continue;
+                if (name.substring(contentIndex + 9) === fileName)
+                    matches.push({ path: name, hash });
+            }
+        }
+
+        if (matches.length == 0)
+            return { path: '', hash: '' };
+        matches.sort((s1, s2) => s2.path.localeCompare(s1.path)); // sort descending
+        return matches[0];
+    }
 }
 
 export class OFCLInventoryUser {
@@ -55,10 +100,10 @@ export class OFCLInventoryUser {
  * are file hashes, and whose values are the list of files that have that hash. Each file is represented by the logical
  * path to the content -- not using version numbers and "content" folders */
 export class OCFLInventoryVersion {
-    constructor(message: string, user: OFCLInventoryUser) {
+    constructor(opInfo: OperationInfo) {
         this.created = new Date().toISOString();
-        this.message = message;
-        this.user = user;
+        this.message = opInfo.message;
+        this.user = new OFCLInventoryUser(opInfo.userEmailAddress, opInfo.userName);
     }
     created: string = '';
     message: string = '';
@@ -69,20 +114,26 @@ export class OCFLInventoryVersion {
 /** Container object for OCFLInventoryVersion(s).  Note that each version is storage as a property, value pair.
  * The property is the string "v1", "v2", etc -- the version number; the value is an OCFLInventoryVersion object */
 export class OCFLInventoryVersions {
-    recordVersion(version: string, message: string, userEmailAddress: string, userName: string): boolean {
+    addVersion(version: string, opInfo: OperationInfo): boolean {
         if (this[version])
             return false;
-        const user: OFCLInventoryUser = new OFCLInventoryUser(userEmailAddress, userName);
-        this[version] = new OCFLInventoryVersion(message, user);
+        this[version] = new OCFLInventoryVersion(opInfo);
         return true;
     }
 
-    recordState(version: string, logicalPath: string, hash: string): boolean {
+    addContentToState(version: string, logicalPath: string, hash: string): boolean {
         const inventoryVersion: OCFLInventoryVersion | null = this.getInventoryVersion(version);
         if (!inventoryVersion)
             return false;
-        inventoryVersion.state.recordContent(logicalPath, hash);
+        inventoryVersion.state.addContent(logicalPath, hash);
         return true;
+    }
+
+    removeContentFromState(version: string, logicalPath: string, hash: string): boolean {
+        const inventoryVersion: OCFLInventoryVersion | null = this.getInventoryVersion(version);
+        if (!inventoryVersion)
+            return false;
+        return inventoryVersion.state.removeContent(logicalPath, hash);
     }
 
     getInventoryVersion(version: string): OCFLInventoryVersion | null {
@@ -102,14 +153,12 @@ export type OCFLInventoryReadResults = {
  * The object root inventory matches the one found in the "head" version -- the most recent version.
  * Usage For New Items:
  *      - Create an OCFLInventory object via new OCFLInventory('UniqueIdentifier');
- *      - Call addVersion(), passing in an optional message ('Ingestion') and user email address and name
- *      - Call recordContent() once for each file present in the asset
- *      - Persist via writeToDisk().  Note that OCFL wants you to place this both in the object root and in the v1 folder
  * Usage For Existing Items, to add a new version:
  *      - Create an OCFLInventory object via readFromDisk(); don't specify a version -- read the root inventory
- *      - Call addVersion()
- *      - Call recordContent()
- *      - Persist via writeToDisk().  Note that OCFL wants you to place this both in the object root and in the new version folder
+ * And then:
+ *      - Call addVersion(), passing in an optional message ('Ingestion') and user email address and name
+ *      - Call recordContent() once for each file present in the asset
+ *      - Persist via writeToDisk().  Note that OCFL wants you to place this both in the object root and in the latest version folder
  */
 export class OCFLInventory {
     id: string = '';
@@ -128,7 +177,7 @@ export class OCFLInventory {
     }
 
     hash(fileName: string, version: number): string {
-        const versionString: string = OCFLObject.versionFolder(version);
+        const versionString: string = OCFLObject.versionFolderName(version);
         const ocflInventoryVersion: OCFLInventoryVersion | null = this.versions.getInventoryVersion(versionString);
         if (!ocflInventoryVersion || !ocflInventoryVersion.state)
             return '';
@@ -136,10 +185,10 @@ export class OCFLInventory {
     }
 
     /** Call this before recording content! */
-    addVersion(message: string, userEmailAddress: string, userName: string): void {
+    addVersion(opInfo: OperationInfo): void {
         const version: number = 1 + this.headVersion;
-        this.head = OCFLObject.versionFolder(version);
-        this.versions.recordVersion(this.head, message, userEmailAddress, userName);
+        this.head = OCFLObject.versionFolderName(version);
+        this.versions.addVersion(this.head, opInfo);
     }
 
     /**
@@ -147,9 +196,17 @@ export class OCFLInventory {
      * @param contentPath Path to content, including version number and 'content', e.g. v1/content/subdir/FOOBAR.txt
      * @param logicalPath Path to logical content, not including version number, e.g. subdir/FOOBAR.txt
      */
-    recordContent(contentPath: string, logicalPath: string, hash: string): void {
-        this.manifest.recordContent(contentPath, hash);
-        this.versions.recordState(this.head, logicalPath, hash);
+    addContent(contentPath: string, logicalPath: string, hash: string): void {
+        this.manifest.addContent(contentPath, hash);
+        this.versions.addContentToState(this.head, logicalPath, hash);
+    }
+
+    removeContent(contentPath: string, logicalPath: string, hash: string): boolean {
+        if (!this.manifest.removeContent(contentPath, hash))
+            return false;
+        if (!this.versions.removeContentFromState(this.head, logicalPath, hash))
+            return false;
+        return true;
     }
 
     /** Write root inventory to disk */
@@ -164,14 +221,11 @@ export class OCFLInventory {
 
     async writeToDiskWorker(ocflObject: OCFLObject, version: number): Promise<H.IOResults> {
         const dest: string = OCFLInventory.inventoryFilePath(ocflObject, version);
+        const hashResults: H.HashResults = await H.Helpers.writeJsonAndComputeHash(dest, this, 'sha512');
+        if (!hashResults.success)
+            return hashResults;
+
         try {
-            fs.writeJsonSync(dest, this);
-
-            // Compute hash
-            const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(dest, 'sha512');
-            if (!hashResults.success)
-                return hashResults;
-
             // write hash to inventory digest
             const digestContents: string = `${hashResults.hash} ${ST.OCFLStorageObjectInventoryFilename}`;
             const destDigest: string = OCFLInventory.inventoryDigestPath(ocflObject, version);

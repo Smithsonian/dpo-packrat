@@ -8,3 +8,5 @@ export const OCFLStorageObjectInventoryFilename: string = 'inventory.json';
 export const OCFLStorageObjectInventoryDigestFilename: string = 'inventory.json.sha512';
 
 export const OCFLSourceDocsPath: string =  './assets/storage/';
+
+export const OCFLMetadataFilename: string = '0=metadata.json';

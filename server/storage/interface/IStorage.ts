@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Readable, Writable } from 'stream';
 
+export type OperationInfo = {
+    message: string,
+    userEmailAddress: string,
+    userName: string
+};
+
 export type ReadStreamInput = {
     storageKey: string,
     fileName: string,
@@ -39,6 +45,7 @@ export type PromoteStagedAssetInput = {
     storageKeyFinal: string,
     fileName: string,
     metadata: any,
+    opInfo: OperationInfo
 };
 
 export type PromoteStagedAssetResult = {
@@ -46,18 +53,36 @@ export type PromoteStagedAssetResult = {
     error: string
 };
 
-export type UpdateMetadataResults = {
+export type RenameAssetInput = {
+    storageKey: string,
+    fileNameOld: string,
+    fileNameNew: string,
+    opInfo: OperationInfo
+};
+
+export type RenameAssetResult = {
     success: boolean,
     error: string
 };
 
-export type ComputeStorageKeyResults = {
+export type UpdateMetadataInput = {
+    storageKey: string,
+    metadata: any,
+    opInfo: OperationInfo
+};
+
+export type UpdateMetadataResult = {
+    success: boolean,
+    error: string
+};
+
+export type ComputeStorageKeyResult = {
     storageKey: string;
     success: boolean,
     error: string
 };
 
-export type ValidateAssetResults = {
+export type ValidateAssetResult = {
     success: boolean,
     error: string
 };
@@ -95,21 +120,25 @@ export interface IStorage {
     promoteStagedAsset(promoteStagedAssetInput: PromoteStagedAssetInput): Promise<PromoteStagedAssetResult>;
 
     /**
+     * Renames the specified asset
+     */
+    renameAsset(renameAssetInput: RenameAssetInput): Promise<RenameAssetResult>;
+    /**
      * Informs the storage system of the potential need to update metadata describing the asset
      * due to changes in an asset's object ancestrion (e.g. Units, Projects, Subjects, Items, etc)
      * @param storageKey Opaque storage identifier created by writeStream(), maintained by closeWriteStream(), and updated by promoteStagedAsset()
      */
-    updateMetadata(storageKey: string, metadata: any): Promise<UpdateMetadataResults>;
+    updateMetadata(updateMetadataInput: UpdateMetadataInput): Promise<UpdateMetadataResult>;
 
     /**
      * Validate hash stored for asset
      * @param storageKey Opaque storage identifier created by writeStream(), maintained by closeWriteStream(), and updated by promoteStagedAsset()
      */
-    validateAsset(storageKey: string): Promise<ValidateAssetResults>;
+    validateAsset(storageKey: string): Promise<ValidateAssetResult>;
 
     /**
      * Computes a storage key representing an asset
      * @param uniqueID This will be Asset.idAsset, transformed into a string
      */
-    computeStorageKey(uniqueID: string): Promise<ComputeStorageKeyResults>;
+    computeStorageKey(uniqueID: string): Promise<ComputeStorageKeyResult>;
 }

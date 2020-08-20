@@ -4,7 +4,8 @@
 /* eslint-disable no-useless-escape */
 import * as L from 'lodash';
 import * as path from 'path';
-import * as fs from 'fs';
+import { Stats } from 'fs';
+import * as fs from 'fs-extra';
 import * as crypto from 'crypto';
 import * as LOG from './logger';
 
@@ -20,7 +21,7 @@ export type HashResults = {
 };
 
 export type StatResults = {
-    stat: fs.Stats | null,
+    stat: Stats | null,
     success: boolean,
     error: string
 };
@@ -61,6 +62,22 @@ export class Helpers {
             LOG.logger.error('Helpers.copyFile', error);
             res.success = false;
             res.error = `Unable to copy ${nameSource} to ${nameDestination}: ${error}`;
+        }
+        return res;
+    }
+
+    static moveFile(nameSource: string, nameDestination: string): IOResults {
+        const res: IOResults = {
+            success: true,
+            error: ''
+        };
+
+        try {
+            fs.renameSync(nameSource, nameDestination);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('Helpers.moveFile', error);
+            res.success = false;
+            res.error = `Unable to move ${nameSource} to ${nameDestination}: ${error}`;
         }
         return res;
     }
@@ -216,5 +233,24 @@ export class Helpers {
                 resolve(res);
             });
         });
+    }
+
+    static computeHashFromString(input: string, hashMethod: string): string {
+        const hash: crypto.Hash = crypto.createHash(hashMethod);
+        return hash.update(input).digest('hex');
+    }
+
+    static async writeJsonAndComputeHash(dest: string, obj: any, hashMethod: string): Promise<HashResults> {
+        try {
+            fs.writeJsonSync(dest, obj);
+            return await Helpers.computeHashFromFile(dest, hashMethod);
+        } catch (error) {
+            LOG.logger.error('Helpers.writeJsonAndComputeHash', error);
+            return {
+                hash: '',
+                success: false,
+                error: JSON.stringify(error)
+            };
+        }
     }
 }
