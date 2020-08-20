@@ -597,6 +597,7 @@ export type Query = {
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
+    areCameraSettingsUniform: AreCameraSettingsUniformResult;
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
     getScene: GetSceneResult;
@@ -637,6 +638,11 @@ export type QueryGetCaptureDataArgs = {
 
 export type QueryGetCaptureDataPhotoArgs = {
     input: GetCaptureDataPhotoInput;
+};
+
+
+export type QueryAreCameraSettingsUniformArgs = {
+    input: AreCameraSettingsUniformInput;
 };
 
 
@@ -764,6 +770,15 @@ export type GetCaptureDataPhotoInput = {
 export type GetCaptureDataPhotoResult = {
     __typename?: 'GetCaptureDataPhotoResult';
     CaptureDataPhoto?: Maybe<CaptureDataPhoto>;
+};
+
+export type AreCameraSettingsUniformInput = {
+    idAssetVersion: Scalars['Int'];
+};
+
+export type AreCameraSettingsUniformResult = {
+    __typename?: 'AreCameraSettingsUniformResult';
+    isUniform: Scalars['Boolean'];
 };
 
 export type GetLicenseInput = {
@@ -923,6 +938,7 @@ export type Mutation = {
     uploadAsset: UploadAssetResult;
     createCaptureData: CreateCaptureDataResult;
     createCaptureDataPhoto: CreateCaptureDataPhotoResult;
+    ingestData: IngestDataResult;
     createModel: CreateModelResult;
     createScene: CreateSceneResult;
     createUnit: CreateUnitResult;
@@ -948,6 +964,11 @@ export type MutationCreateCaptureDataArgs = {
 
 export type MutationCreateCaptureDataPhotoArgs = {
     input: CreateCaptureDataPhotoInput;
+};
+
+
+export type MutationIngestDataArgs = {
+    input: IngestDataInput;
 };
 
 
@@ -1041,6 +1062,67 @@ export type CreateCaptureDataPhotoInput = {
 export type CreateCaptureDataPhotoResult = {
     __typename?: 'CreateCaptureDataPhotoResult';
     CaptureDataPhoto?: Maybe<CaptureDataPhoto>;
+};
+
+export type IngestSubject = {
+    id: Scalars['Int'];
+    name: Scalars['String'];
+    arkId: Scalars['String'];
+    unit: Scalars['String'];
+};
+
+export type IngestProject = {
+    id: Scalars['Int'];
+    name: Scalars['String'];
+};
+
+export type IngestItem = {
+    id: Scalars['Int'];
+    name: Scalars['String'];
+    entireSubject: Scalars['Boolean'];
+};
+
+export type IngestIdentifier = {
+    id: Scalars['Int'];
+    identifier: Scalars['String'];
+    identifierType: Scalars['Int'];
+};
+
+export type IngestFolder = {
+    name: Scalars['String'];
+    variantType: Scalars['Int'];
+};
+
+export type PhotogrammetryIngest = {
+    idAssetVersion: Scalars['Int'];
+    dateCaptured: Scalars['String'];
+    datasetType: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    description: Scalars['String'];
+    cameraSettingUniform: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifier>;
+    folders: Array<IngestFolder>;
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+};
+
+export type IngestDataInput = {
+    subjects: Array<IngestSubject>;
+    project: IngestProject;
+    item: IngestItem;
+    photogrammetry: Array<PhotogrammetryIngest>;
+};
+
+export type IngestDataResult = {
+    __typename?: 'IngestDataResult';
+    success: Scalars['Boolean'];
 };
 
 export type CreateModelInput = {
@@ -1200,6 +1282,21 @@ export type CreateCaptureDataPhotoMutation = (
                     & Pick<CaptureDataPhoto, 'idCaptureDataPhoto'>
                 )>
             }
+        )
+    }
+);
+
+export type IngestDataMutationVariables = Exact<{
+    input: IngestDataInput;
+}>;
+
+
+export type IngestDataMutation = (
+    { __typename?: 'Mutation' }
+    & {
+        ingestData: (
+            { __typename?: 'IngestDataResult' }
+            & Pick<IngestDataResult, 'success'>
         )
     }
 );
@@ -1504,6 +1601,21 @@ export type GetCaptureDataPhotoQuery = (
                     & Pick<CaptureDataPhoto, 'idCaptureDataPhoto'>
                 )>
             }
+        )
+    }
+);
+
+export type AreCameraSettingsUniformQueryVariables = Exact<{
+    input: AreCameraSettingsUniformInput;
+}>;
+
+
+export type AreCameraSettingsUniformQuery = (
+    { __typename?: 'Query' }
+    & {
+        areCameraSettingsUniform: (
+            { __typename?: 'AreCameraSettingsUniformResult' }
+            & Pick<AreCameraSettingsUniformResult, 'isUniform'>
         )
     }
 );
@@ -1914,6 +2026,38 @@ export function useCreateCaptureDataPhotoMutation(baseOptions?: Apollo.MutationH
 export type CreateCaptureDataPhotoMutationHookResult = ReturnType<typeof useCreateCaptureDataPhotoMutation>;
 export type CreateCaptureDataPhotoMutationResult = Apollo.MutationResult<CreateCaptureDataPhotoMutation>;
 export type CreateCaptureDataPhotoMutationOptions = Apollo.BaseMutationOptions<CreateCaptureDataPhotoMutation, CreateCaptureDataPhotoMutationVariables>;
+export const IngestDataDocument = gql`
+    mutation ingestData($input: IngestDataInput!) {
+  ingestData(input: $input) {
+    success
+  }
+}
+    `;
+export type IngestDataMutationFn = Apollo.MutationFunction<IngestDataMutation, IngestDataMutationVariables>;
+
+/**
+ * __useIngestDataMutation__
+ *
+ * To run a mutation, you first call `useIngestDataMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useIngestDataMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [ingestDataMutation, { data, loading, error }] = useIngestDataMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useIngestDataMutation(baseOptions?: Apollo.MutationHookOptions<IngestDataMutation, IngestDataMutationVariables>) {
+    return Apollo.useMutation<IngestDataMutation, IngestDataMutationVariables>(IngestDataDocument, baseOptions);
+}
+export type IngestDataMutationHookResult = ReturnType<typeof useIngestDataMutation>;
+export type IngestDataMutationResult = Apollo.MutationResult<IngestDataMutation>;
+export type IngestDataMutationOptions = Apollo.BaseMutationOptions<IngestDataMutation, IngestDataMutationVariables>;
 export const CreateModelDocument = gql`
     mutation createModel($input: CreateModelInput!) {
   createModel(input: $input) {
@@ -2439,6 +2583,39 @@ export function useGetCaptureDataPhotoLazyQuery(baseOptions?: Apollo.LazyQueryHo
 export type GetCaptureDataPhotoQueryHookResult = ReturnType<typeof useGetCaptureDataPhotoQuery>;
 export type GetCaptureDataPhotoLazyQueryHookResult = ReturnType<typeof useGetCaptureDataPhotoLazyQuery>;
 export type GetCaptureDataPhotoQueryResult = Apollo.QueryResult<GetCaptureDataPhotoQuery, GetCaptureDataPhotoQueryVariables>;
+export const AreCameraSettingsUniformDocument = gql`
+    query areCameraSettingsUniform($input: AreCameraSettingsUniformInput!) {
+  areCameraSettingsUniform(input: $input) {
+    isUniform
+  }
+}
+    `;
+
+/**
+ * __useAreCameraSettingsUniformQuery__
+ *
+ * To run a query within a React component, call `useAreCameraSettingsUniformQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAreCameraSettingsUniformQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAreCameraSettingsUniformQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAreCameraSettingsUniformQuery(baseOptions?: Apollo.QueryHookOptions<AreCameraSettingsUniformQuery, AreCameraSettingsUniformQueryVariables>) {
+    return Apollo.useQuery<AreCameraSettingsUniformQuery, AreCameraSettingsUniformQueryVariables>(AreCameraSettingsUniformDocument, baseOptions);
+}
+export function useAreCameraSettingsUniformLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AreCameraSettingsUniformQuery, AreCameraSettingsUniformQueryVariables>) {
+    return Apollo.useLazyQuery<AreCameraSettingsUniformQuery, AreCameraSettingsUniformQueryVariables>(AreCameraSettingsUniformDocument, baseOptions);
+}
+export type AreCameraSettingsUniformQueryHookResult = ReturnType<typeof useAreCameraSettingsUniformQuery>;
+export type AreCameraSettingsUniformLazyQueryHookResult = ReturnType<typeof useAreCameraSettingsUniformLazyQuery>;
+export type AreCameraSettingsUniformQueryResult = Apollo.QueryResult<AreCameraSettingsUniformQuery, AreCameraSettingsUniformQueryVariables>;
 export const GetLicenseDocument = gql`
     query getLicense($input: GetLicenseInput!) {
   getLicense(input: $input) {

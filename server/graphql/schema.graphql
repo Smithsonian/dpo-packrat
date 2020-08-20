@@ -535,6 +535,7 @@ type Query {
   getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
+  areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
@@ -600,6 +601,14 @@ input GetCaptureDataPhotoInput {
 
 type GetCaptureDataPhotoResult {
   CaptureDataPhoto: CaptureDataPhoto
+}
+
+input AreCameraSettingsUniformInput {
+  idAssetVersion: Int!
+}
+
+type AreCameraSettingsUniformResult {
+  isUniform: Boolean!
 }
 
 input GetLicenseInput {
@@ -742,6 +751,7 @@ type Mutation {
   uploadAsset(file: Upload!, type: AssetType!): UploadAssetResult!
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
+  ingestData(input: IngestDataInput!): IngestDataResult!
   createModel(input: CreateModelInput!): CreateModelResult!
   createScene(input: CreateSceneInput!): CreateSceneResult!
   createUnit(input: CreateUnitInput!): CreateUnitResult!
@@ -795,6 +805,66 @@ input CreateCaptureDataPhotoInput {
 
 type CreateCaptureDataPhotoResult {
   CaptureDataPhoto: CaptureDataPhoto
+}
+
+input IngestSubject {
+  id: Int!
+  name: String!
+  arkId: String!
+  unit: String!
+}
+
+input IngestProject {
+  id: Int!
+  name: String!
+}
+
+input IngestItem {
+  id: Int!
+  name: String!
+  entireSubject: Boolean!
+}
+
+input IngestIdentifier {
+  id: Int!
+  identifier: String!
+  identifierType: Int!
+}
+
+input IngestFolder {
+  name: String!
+  variantType: Int!
+}
+
+input PhotogrammetryIngest {
+  idAssetVersion: Int!
+  dateCaptured: String!
+  datasetType: Int!
+  systemCreated: Boolean!
+  description: String!
+  cameraSettingUniform: Boolean!
+  identifiers: [IngestIdentifier!]!
+  folders: [IngestFolder!]!
+  datasetFieldId: Int
+  itemPositionType: Int
+  itemPositionFieldId: Int
+  itemArrangementFieldId: Int
+  focusType: Int
+  lightsourceType: Int
+  backgroundRemovalMethod: Int
+  clusterType: Int
+  clusterGeometryFieldId: Int
+}
+
+input IngestDataInput {
+  subjects: [IngestSubject!]!
+  project: IngestProject!
+  item: IngestItem!
+  photogrammetry: [PhotogrammetryIngest!]!
+}
+
+type IngestDataResult {
+  success: Boolean!
 }
 
 input CreateModelInput {
