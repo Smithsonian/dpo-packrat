@@ -7,7 +7,7 @@ import * as STORE from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import { OCFLRoot, ComputeWriteStreamLocationResults } from './OCFLRoot';
-import { OCFLObjectInitResults } from './OCFLObject';
+import * as OO from './OCFLObject';
 
 export class LocalStorage implements STORE.IStorage {
     private ocflRoot: OCFLRoot;
@@ -29,7 +29,7 @@ export class LocalStorage implements STORE.IStorage {
         };
 
         const { storageKey, fileName, version, staging } = readStreamInput;
-        const ocflObjectInitResults: OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, fileName, version, staging);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, fileName, version, staging, true);
         if (!ocflObjectInitResults.success || !ocflObjectInitResults.ocflObject) {
             retValue.success = false;
             retValue.error = ocflObjectInitResults.error;
@@ -132,7 +132,7 @@ export class LocalStorage implements STORE.IStorage {
         };
 
         const { storageKeyStaged, storageKeyFinal, fileName, version, metadata } = promoteStagedAssetInput;
-        const ocflObjectInitResults: OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, fileName, version, false);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, fileName, version, false, false);
         if (!ocflObjectInitResults.success) {
             retValue.success = false;
             retValue.error = ocflObjectInitResults.error;
@@ -172,7 +172,7 @@ export class LocalStorage implements STORE.IStorage {
             error: ''
         };
 
-        const ocflObjectInitResults: OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, '', 0, false);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, '', 0, false, true);
         if (!ocflObjectInitResults.success) {
             retValue.success = false;
             retValue.error = ocflObjectInitResults.error;
