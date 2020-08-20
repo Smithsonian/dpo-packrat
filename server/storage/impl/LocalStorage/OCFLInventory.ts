@@ -18,6 +18,27 @@ export class OCFLInventoryManifest {
         else
             this[hash].push(filename);
     }
+
+    getFilenameForHash(hash: string): string[] {
+        if (!this[hash])
+            return [];
+        return this[hash];
+    }
+
+    getHashForFilename(fileName: string): string {
+        // Walk properties
+        // For each, walk value arrays
+        for (const hash in this) {
+            if (!Array.isArray(this[hash]))
+                continue;
+            const stringArray: Array<string> = <Array<string>><unknown>this[hash];
+            for (const name of stringArray) {
+                if (name === fileName)
+                    return hash;
+            }
+        }
+        return '';
+    }
 }
 
 export class OFCLInventoryUser {
@@ -38,12 +59,11 @@ export class OCFLInventoryVersion {
         this.created = new Date().toISOString();
         this.message = message;
         this.user = user;
-        this.state = new OCFLInventoryManifest();
     }
     created: string = '';
     message: string = '';
     user: OFCLInventoryUser | undefined = undefined;
-    state: OCFLInventoryManifest | undefined = undefined;
+    state: OCFLInventoryManifest = new OCFLInventoryManifest();
 }
 
 /** Container object for OCFLInventoryVersion(s).  Note that each version is storage as a property, value pair.
@@ -58,10 +78,17 @@ export class OCFLInventoryVersions {
     }
 
     recordState(version: string, logicalPath: string, hash: string): boolean {
-        if (!this[version])
+        const inventoryVersion: OCFLInventoryVersion | null = this.getInventoryVersion(version);
+        if (!inventoryVersion)
             return false;
-        (<OCFLInventoryVersion>this[version]).state?.recordContent(logicalPath, hash);
+        inventoryVersion.state.recordContent(logicalPath, hash);
         return true;
+    }
+
+    getInventoryVersion(version: string): OCFLInventoryVersion | null {
+        if (!this[version])
+            return null;
+        return <OCFLInventoryVersion>(this[version]);
     }
 }
 
@@ -97,16 +124,21 @@ export class OCFLInventory {
     }
 
     get headVersion(): number {
-        if (!this.head)
-            return 0;
-        else
-            return parseInt(this.head.substring(1));
+        return (!this.head) ? 0 : parseInt(this.head.substring(1));
+    }
+
+    hash(fileName: string, version: number): string {
+        const versionString: string = OCFLObject.versionFolder(version);
+        const ocflInventoryVersion: OCFLInventoryVersion | null = this.versions.getInventoryVersion(versionString);
+        if (!ocflInventoryVersion || !ocflInventoryVersion.state)
+            return '';
+        return ocflInventoryVersion.state.getHashForFilename(fileName);
     }
 
     /** Call this before recording content! */
     addVersion(message: string, userEmailAddress: string, userName: string): void {
         const version: number = 1 + this.headVersion;
-        this.head = `v${version}`;
+        this.head = OCFLObject.versionFolder(version);
         this.versions.recordVersion(this.head, message, userEmailAddress, userName);
     }
 
@@ -120,9 +152,31 @@ export class OCFLInventory {
         this.versions.recordState(this.head, logicalPath, hash);
     }
 
-    writeToDisk(dest: string): H.IOResults {
+    /** Write root inventory to disk */
+    async writeToDisk(ocflObject: OCFLObject): Promise<H.IOResults> {
+        return await this.writeToDiskWorker(ocflObject, 0);
+    }
+
+    /** Write version inventory to disk */
+    async writeToDiskVersion(ocflObject: OCFLObject, version: number): Promise<H.IOResults> {
+        return await this.writeToDiskWorker(ocflObject, version);
+    }
+
+    async writeToDiskWorker(ocflObject: OCFLObject, version: number): Promise<H.IOResults> {
+        const dest: string = OCFLInventory.inventoryFilePath(ocflObject, version);
         try {
             fs.writeJsonSync(dest, this);
+
+            // Compute hash
+            const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(dest, 'sha512');
+            if (!hashResults.success)
+                return hashResults;
+
+            // write hash to inventory digest
+            const digestContents: string = `${hashResults.hash} ${ST.OCFLStorageObjectInventoryFilename}`;
+            const destDigest: string = OCFLInventory.inventoryDigestPath(ocflObject, version);
+            fs.writeFileSync(destDigest, digestContents);
+
             return {
                 success: true,
                 error: ''
@@ -136,14 +190,24 @@ export class OCFLInventory {
         }
     }
 
+    static inventoryFilePath(ocflObject: OCFLObject, version: number): string {
+        const foldername: string = (version == 0) ? ocflObject.objectRoot : ocflObject.versionRoot(version);
+        return path.join(foldername, ST.OCFLStorageObjectInventoryFilename);
+    }
+
+    static inventoryDigestPath(ocflObject: OCFLObject, version: number): string {
+        const foldername: string = (version == 0) ? ocflObject.objectRoot : ocflObject.versionRoot(version);
+        return path.join(foldername, ST.OCFLStorageObjectInventoryDigestFilename);
+    }
+
     /** Read root inventory from disk */
     static readFromDisk(ocflObject: OCFLObject): OCFLInventoryReadResults {
-        return this.readFromDiskWorker(ocflObject, 0);
+        return OCFLInventory.readFromDiskWorker(ocflObject, 0);
     }
 
     /** Read version inventory from disk */
     static readFromDiskVersion(ocflObject: OCFLObject, version: number): OCFLInventoryReadResults {
-        return this.readFromDiskWorker(ocflObject, version);
+        return OCFLInventory.readFromDiskWorker(ocflObject, version);
     }
 
     private static readFromDiskWorker(ocflObject: OCFLObject, version: number): OCFLInventoryReadResults {
@@ -153,9 +217,7 @@ export class OCFLInventory {
             error: ''
         };
 
-        const dest: string = (version == 0)
-            ? path.join(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryFilename)
-            : ocflObject.versionRoot(version);
+        const dest: string = OCFLInventory.inventoryFilePath(ocflObject, version);
         const ioResults = H.Helpers.fileOrDirExists(dest);
         if (!ioResults.success) {
             retValue.success = false;

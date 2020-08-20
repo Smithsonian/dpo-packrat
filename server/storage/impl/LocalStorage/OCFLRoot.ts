@@ -88,9 +88,9 @@ export class OCFLRoot {
         return await this.initializeStorageRoot();
     }
 
-    async ocflObject(storageKey: string, fileName: string, version: number, staging: boolean, forReading: boolean): Promise<OO.OCFLObjectInitResults> {
+    async ocflObject(storageKey: string, staging: boolean, forReading: boolean): Promise<OO.OCFLObjectInitResults> {
         const ocflObject: OO.OCFLObject = new OO.OCFLObject(this);
-        return await ocflObject.initialize(storageKey, fileName, version, staging, forReading);
+        return await ocflObject.initialize(storageKey, staging, forReading);
     }
 
     private async initializeStorageRoot(): Promise<H.IOResults> {

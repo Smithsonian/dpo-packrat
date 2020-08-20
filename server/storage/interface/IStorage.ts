@@ -38,7 +38,6 @@ export type PromoteStagedAssetInput = {
     storageKeyStaged: string,
     storageKeyFinal: string,
     fileName: string,
-    version: number,
     metadata: any,
 };
 

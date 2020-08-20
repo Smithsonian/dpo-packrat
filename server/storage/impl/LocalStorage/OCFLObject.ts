@@ -14,16 +14,18 @@ export type OCFLObjectInitResults = {
 export class OCFLObject {
     private _ocflRoot: OCFLRoot;
     private _storageKey: string = '';
-    private _fileName: string = '';
-    private _version: number = 0;
     private _staging: boolean = false;
 
     private _objectRoot: string = '';
-    private _location: string = '';
-    private _hash: string = '';
+    private _ocflInventory: INV.OCFLInventory | null = null;
 
     constructor(ocflRoot: OCFLRoot) {
         this._ocflRoot = ocflRoot;
+    }
+
+    private get ocflInventory(): INV.OCFLInventory | null {
+        this.ensureInventoryIsLoaded();
+        return this._ocflInventory;
     }
 
     private computeObjectRoot(storageKey: string, staging: boolean): string {
@@ -34,7 +36,7 @@ export class OCFLObject {
     computeLocationObjectVersionRoot(storageKey: string, version: number, staging: boolean): string {
         if (version < 1)
             version = 1;
-        return path.join(this.computeObjectRoot(storageKey, staging), `v${version}`);
+        return path.join(this.computeObjectRoot(storageKey, staging), OCFLObject.versionFolder(version));
     }
 
     /** Computes path to file for a given storageKey, version, and filename */
@@ -42,10 +44,8 @@ export class OCFLObject {
         return path.join(this.computeLocationObjectVersionRoot(storageKey, version, staging), ST.OCFLStorageObjectContentFolder, filename);
     }
 
-    async initialize(storageKey: string, fileName: string, version: number, staging: boolean, forReading: boolean): Promise<OCFLObjectInitResults> {
+    async initialize(storageKey: string, staging: boolean, forReading: boolean): Promise<OCFLObjectInitResults> {
         this._storageKey = storageKey;
-        this._fileName = fileName;  // may be ''
-        this._version = version;    // may be 0
         this._staging = staging;
         this._objectRoot = this.computeObjectRoot(this._storageKey, this._staging);
 
@@ -79,7 +79,7 @@ export class OCFLObject {
     /**
      * Addition: Adds a new file path and corresponding content to an OCFL Object. The path cannot exist in the previous version of the object,
      * and the content cannot have existed in any earlier versions of the object.
-     * Updating: Changes the content pointed to by an content path. The path must exist in the previous version of the OCFL Object,
+     * Updating: Changes the content pointed to by a content path. The path must exist in the previous version of the OCFL Object,
      * and the content cannot have existed in any earlier versions of the object.
      * @param pathOnDisk Full path to added content's bits on disk; may be null if only metadata is being updated
      * @param fileName Name (and path) of added content's bits; may be null if only metadata is being updated
@@ -179,20 +179,25 @@ export class OCFLObject {
         return results;
     }
 
-    get hash(): string {
-        return this._hash;
-    }
-
-    get location(): string {
-        return this._location;
-    }
-
     get objectRoot(): string {
         return this._objectRoot;
     }
 
     versionRoot(version: number): string {
-        return path.join(this._objectRoot, `v${version}`);
+        return path.join(this._objectRoot, OCFLObject.versionFolder(version));
+    }
+
+    static versionFolder(version: number): string {
+        return `v${version}`;
+    }
+
+    hash(fileName: string, version: number): string {
+        const ocflInventory: INV.OCFLInventory | null = this.ocflInventory;
+        return ocflInventory ? ocflInventory.hash(fileName, version) : '';
+    }
+
+    location(fileName: string, version: number): string {
+        return path.join(this._objectRoot, OCFLObject.versionFolder(version), fileName);
     }
 
     private async initializeStructure(forReading: boolean): Promise<H.IOResults> {
@@ -206,7 +211,7 @@ export class OCFLObject {
 
         // Ensure initialization of OCFL Object Root "NAMASTE" file
         const source: string = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageObjectNamasteFilename);
-        let dest: string = path.join(this._objectRoot, ST.OCFLStorageObjectNamasteFilename);
+        const dest: string = path.join(this._objectRoot, ST.OCFLStorageObjectNamasteFilename);
         ioResults = forReading
             ? H.Helpers.fileOrDirExists(dest)
             : H.Helpers.initializeFile(source, dest, 'OCFL Object Root Namaste File');
@@ -233,6 +238,7 @@ export class OCFLObject {
             // validate that headVersion's inventory matches root inventory
         }
 
+        /*
         // Validate version information:
         if (this._version > 0) {
             dest = this.computeLocationObjectVersionRoot(this._storageKey, this._version, this._staging);
@@ -275,6 +281,7 @@ export class OCFLObject {
                 }
             }
         }
+        */
 
         ioResults.success = true;
         return ioResults;
@@ -285,6 +292,23 @@ export class OCFLObject {
         return {
             success: false,
             error: 'Not implemented'
+        };
+    }
+
+    private ensureInventoryIsLoaded(): H.IOResults {
+        if (!this._ocflInventory) {
+            const results = INV.OCFLInventory.readFromDisk(this);
+            if (!results.success || !results.ocflInventory) {
+                return {
+                    success: false,
+                    error: results.error
+                };
+            }
+            this._ocflInventory = results.ocflInventory;
+        }
+        return {
+            success: true,
+            error: ''
         };
     }
 }
