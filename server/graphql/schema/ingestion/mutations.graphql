@@ -1,0 +1,63 @@
+type Mutation {
+    ingestData(input: IngestDataInput!): IngestDataResult!
+}
+
+input IngestSubject {
+    id: Int!
+    name: String!
+    arkId: String!
+    unit: String!
+}
+
+input IngestProject {
+    id: Int!
+    name: String!
+}
+
+input IngestItem {
+    id: Int!
+    name: String!
+    entireSubject: Boolean!
+}
+
+input IngestIdentifier {
+    id: Int!
+    identifier: String!
+    identifierType: Int!
+}
+
+input IngestFolder {
+    name: String!
+    variantType: Int!
+}
+
+input PhotogrammetryIngest {
+    idAssetVersion: Int!
+    dateCaptured: String!
+    datasetType: Int!
+    systemCreated: Boolean!
+    description: String!
+    cameraSettingUniform: Boolean!
+    identifiers: [IngestIdentifier!]!
+    folders: [IngestFolder!]!
+    datasetFieldId: Int
+    itemPositionType: Int
+    itemPositionFieldId: Int
+    itemArrangementFieldId: Int
+    focusType: Int
+    lightsourceType: Int
+    backgroundRemovalMethod: Int
+    clusterType: Int
+    clusterGeometryFieldId: Int
+}
+
+input IngestDataInput {
+    subjects: [IngestSubject!]!
+    project: IngestProject!
+    item: IngestItem!
+    photogrammetry: [PhotogrammetryIngest!]!
+}
+
+type IngestDataResult {
+    success: Boolean!
+}

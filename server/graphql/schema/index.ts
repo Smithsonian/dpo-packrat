@@ -14,6 +14,7 @@ import { vocabularyResolvers } from './vocabulary';
 import { workflowResolvers } from './workflow';
 import { systemObjectResolvers } from './systemobject';
 import { accessControlResolvers } from './accesscontrol';
+import { ingestionResolvers } from './ingestion';
 
 const resolvers = mergeResolvers([
     assetResolvers,
@@ -26,7 +27,8 @@ const resolvers = mergeResolvers([
     vocabularyResolvers,
     workflowResolvers,
     systemObjectResolvers,
-    accessControlResolvers
+    accessControlResolvers,
+    ingestionResolvers
 ]);
 
 const types = loadFilesSync(join(__dirname, './**/types.graphql'));

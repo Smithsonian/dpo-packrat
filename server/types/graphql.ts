@@ -592,6 +592,7 @@ export type Query = {
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
+    areCameraSettingsUniform: AreCameraSettingsUniformResult;
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
     getScene: GetSceneResult;
@@ -627,6 +628,10 @@ export type QueryGetCaptureDataArgs = {
 
 export type QueryGetCaptureDataPhotoArgs = {
     input: GetCaptureDataPhotoInput;
+};
+
+export type QueryAreCameraSettingsUniformArgs = {
+    input: AreCameraSettingsUniformInput;
 };
 
 export type QueryGetLicenseArgs = {
@@ -740,6 +745,15 @@ export type GetCaptureDataPhotoInput = {
 export type GetCaptureDataPhotoResult = {
     __typename?: 'GetCaptureDataPhotoResult';
     CaptureDataPhoto?: Maybe<CaptureDataPhoto>;
+};
+
+export type AreCameraSettingsUniformInput = {
+    idAssetVersion: Scalars['Int'];
+};
+
+export type AreCameraSettingsUniformResult = {
+    __typename?: 'AreCameraSettingsUniformResult';
+    isUniform: Scalars['Boolean'];
 };
 
 export type GetLicenseInput = {
@@ -898,6 +912,7 @@ export type Mutation = {
     uploadAsset: UploadAssetResult;
     createCaptureData: CreateCaptureDataResult;
     createCaptureDataPhoto: CreateCaptureDataPhotoResult;
+    ingestData: IngestDataResult;
     createModel: CreateModelResult;
     createScene: CreateSceneResult;
     createUnit: CreateUnitResult;
@@ -920,6 +935,10 @@ export type MutationCreateCaptureDataArgs = {
 
 export type MutationCreateCaptureDataPhotoArgs = {
     input: CreateCaptureDataPhotoInput;
+};
+
+export type MutationIngestDataArgs = {
+    input: IngestDataInput;
 };
 
 export type MutationCreateModelArgs = {
@@ -1004,6 +1023,67 @@ export type CreateCaptureDataPhotoInput = {
 export type CreateCaptureDataPhotoResult = {
     __typename?: 'CreateCaptureDataPhotoResult';
     CaptureDataPhoto?: Maybe<CaptureDataPhoto>;
+};
+
+export type IngestSubject = {
+    id: Scalars['Int'];
+    name: Scalars['String'];
+    arkId: Scalars['String'];
+    unit: Scalars['String'];
+};
+
+export type IngestProject = {
+    id: Scalars['Int'];
+    name: Scalars['String'];
+};
+
+export type IngestItem = {
+    id: Scalars['Int'];
+    name: Scalars['String'];
+    entireSubject: Scalars['Boolean'];
+};
+
+export type IngestIdentifier = {
+    id: Scalars['Int'];
+    identifier: Scalars['String'];
+    identifierType: Scalars['Int'];
+};
+
+export type IngestFolder = {
+    name: Scalars['String'];
+    variantType: Scalars['Int'];
+};
+
+export type PhotogrammetryIngest = {
+    idAssetVersion: Scalars['Int'];
+    dateCaptured: Scalars['String'];
+    datasetType: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    description: Scalars['String'];
+    cameraSettingUniform: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifier>;
+    folders: Array<IngestFolder>;
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+};
+
+export type IngestDataInput = {
+    subjects: Array<IngestSubject>;
+    project: IngestProject;
+    item: IngestItem;
+    photogrammetry: Array<PhotogrammetryIngest>;
+};
+
+export type IngestDataResult = {
+    __typename?: 'IngestDataResult';
+    success: Scalars['Boolean'];
 };
 
 export type CreateModelInput = {
