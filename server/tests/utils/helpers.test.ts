@@ -1,7 +1,7 @@
 // import * as fs from 'fs';
 // import { /* PassThrough, */ Stream } from 'stream';
 // import * as path from 'path';
-// import * as LOG from '../../utils/logger';
+import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
 describe('Utils: Helpers', () => {
@@ -114,6 +114,7 @@ describe('Utils: Helpers', () => {
     test('Utils: Helpers.copyFile', () => {
         let res: H.IOResults = H.Helpers.copyFile(filePath, filePath2);
         expect(res.success).toBeTruthy();
+        LOG.logger.info('NOTICE: The logged error that should follow is expected!');
         res = H.Helpers.copyFile(filePath, filePath2, false);
         expect(res.success).toBeFalsy();
     });

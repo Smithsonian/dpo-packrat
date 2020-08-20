@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as path from 'path';
+import { OperationInfo } from '../../interface/IStorage';
 import { OCFLRoot } from './OCFLRoot';
 import * as INV from './OCFLInventory';
 import * as ST from './SharedTypes';
@@ -15,38 +16,20 @@ export class OCFLObject {
     private _ocflRoot: OCFLRoot;
     private _storageKey: string = '';
     private _staging: boolean = false;
+    private _forReading: boolean = false;
 
     private _objectRoot: string = '';
     private _ocflInventory: INV.OCFLInventory | null = null;
+    private _newObject: boolean = false;
 
     constructor(ocflRoot: OCFLRoot) {
         this._ocflRoot = ocflRoot;
     }
 
-    private get ocflInventory(): INV.OCFLInventory | null {
-        this.ensureInventoryIsLoaded();
-        return this._ocflInventory;
-    }
-
-    private computeObjectRoot(storageKey: string, staging: boolean): string {
-        return this._ocflRoot.computeLocationObjectRoot(storageKey, staging);
-    }
-
-    /** Computes path to version root for a given storageKey and version */
-    computeLocationObjectVersionRoot(storageKey: string, version: number, staging: boolean): string {
-        if (version < 1)
-            version = 1;
-        return path.join(this.computeObjectRoot(storageKey, staging), OCFLObject.versionFolder(version));
-    }
-
-    /** Computes path to file for a given storageKey, version, and filename */
-    computeLocationObjectVersionContent(storageKey: string, version: number, filename: string, staging: boolean): string {
-        return path.join(this.computeLocationObjectVersionRoot(storageKey, version, staging), ST.OCFLStorageObjectContentFolder, filename);
-    }
-
     async initialize(storageKey: string, staging: boolean, forReading: boolean): Promise<OCFLObjectInitResults> {
         this._storageKey = storageKey;
         this._staging = staging;
+        this._forReading = forReading;
         this._objectRoot = this.computeObjectRoot(this._storageKey, this._staging);
 
         const retValue: OCFLObjectInitResults = {
@@ -56,15 +39,15 @@ export class OCFLObject {
         };
 
         // Verify structure / create structure
-        let ioResults = await this.initializeStructure(forReading);
+        let ioResults = await this.initializeStructure();
         if (!ioResults.success) {
             retValue.success = false;
             retValue.error = ioResults.error;
             return retValue;
         }
 
-        // load up details from storage
-        ioResults = await this.loadFromStorage(false);
+        // load inventory
+        ioResults = this.ensureInventoryIsLoaded();
         if (!ioResults.success) {
             retValue.success = false;
             retValue.error = ioResults.error;
@@ -84,22 +67,69 @@ export class OCFLObject {
      * @param pathOnDisk Full path to added content's bits on disk; may be null if only metadata is being updated
      * @param fileName Name (and path) of added content's bits; may be null if only metadata is being updated
      * @param metadata Optional metadata record that accompanies this content addition
+     * @param opInfo Operation Info, specifying a message and user context for the operation
      */
-    async addOrUpdate(pathOnDisk: string | null, fileName: string | null, metadata: any | null): Promise<H.IOResults> {
-        const results: H.IOResults = {
+    async addOrUpdate(pathOnDisk: string | null, fileName: string | null, metadata: any | null, opInfo: OperationInfo): Promise<H.IOResults> {
+        let results: H.IOResults = {
             success: false,
-            error: 'Not Implemented'
+            error: ''
         };
-        pathOnDisk;
-        fileName;
-        metadata;
+
+        if (!pathOnDisk && !fileName && !metadata) {
+            results.error = 'No information specified';
+            return results;
+        }
+
+        // Read current inventory, if any
+        if (!this._ocflInventory) {
+            results.error = 'Unable to compute OCFL Inventory';
+            return results;
+        }
+
+        // Prepare new version in inventory
+        this._ocflInventory.addVersion(opInfo);
+        const version: number = this._ocflInventory.headVersion;
+        const destFolder: string = this.versionContentFullPath(version);
+        const contentPath: string = this.versionContentPartialPath(version);
+        let hashResults: H.HashResults;
+
+        if (pathOnDisk && fileName) {
+            // Compute hash
+            hashResults = await H.Helpers.computeHashFromFile(pathOnDisk, 'sha512');
+            if (!hashResults.success)
+                return hashResults;
+
+            // Update Inventory
+            this._ocflInventory.addContent(path.join(contentPath, fileName), fileName, hashResults.hash);
+
+            // Move file to new version folder
+            results = H.Helpers.moveFile(pathOnDisk, path.join(destFolder, fileName));
+            if (!results.success)
+                return results;
+        }
+
+        if (metadata) {
+            // serialize metadata to new version folder & compute hash
+            const metadataFilename: string = ST.OCFLMetadataFilename;
+            hashResults = await H.Helpers.writeJsonAndComputeHash(path.join(destFolder, metadataFilename), metadata, 'sha512');
+            if (!hashResults.success)
+                return hashResults;
+
+            // Update Inventory
+            this._ocflInventory.addContent(path.join(contentPath, metadataFilename), metadataFilename, hashResults.hash);
+        }
+
+        // Save Inventory and Inventory Digest to new version folder
+        results = await this._ocflInventory.writeToDiskVersion(this, version);
+        if (!results.success)
+            return results;
+
+        // Save Inventory and Inventory Digest to root folder
+        results = await this._ocflInventory.writeToDisk(this);
+        if (!results.success)
+            return results;
+
         return results;
-        // Prepare/Compute OCFLObject
-        // Ensure OCFLObject is initialized
-        // For new & existing OCFLObjects, prepare supporting files in staging area (manifest, hash, folder structure)
-        // Move files into place as atomically as possible
-        // Catch and handle exceptions
-        // Return output
     }
 
     /**
@@ -108,13 +138,59 @@ export class OCFLObject {
      * @param fileNameOld
      * @param fileNameNew
      */
-    async rename(fileNameOld: string, fileNameNew: string): Promise<H.IOResults> {
-        const results: H.IOResults = {
-            success: false,
-            error: 'Not Implemented'
-        };
-        fileNameOld;
-        fileNameNew;
+    async rename(fileNameOld: string, fileNameNew: string, opInfo: OperationInfo): Promise<H.IOResults> {
+        let results: H.IOResults;
+
+        // update inventory with new version
+        // Read current inventory, if any
+        if (!this._ocflInventory) {
+            return {
+                success: false,
+                error: 'Unable to compute OCFL Inventory'
+            };
+        }
+
+        // find most recent version of old file in inventory -- locate path
+        const { path: contentPathSource, hash } = this._ocflInventory.manifest.getLatestContentPathAndHash(fileNameOld);
+        if (!contentPathSource) {
+            return {
+                success: false,
+                error: `OCFLObject.rename: Unable to locate old file ${fileNameOld}`
+            };
+        }
+
+        // Prepare new version in inventory
+        this._ocflInventory.addVersion(opInfo);
+        const version: number = this._ocflInventory.headVersion;
+
+        // copy old file to new file in new version
+        const fullPathSource: string = path.join(this.objectRoot, contentPathSource);
+        const fullPathDest: string = this.fileLocation(fileNameNew, version);
+        results = H.Helpers.copyFile(fullPathSource, fullPathDest, false);
+        if (!results.success)
+            return results;
+
+        // record copied, renamed file
+        const contentPathDest: string = path.join(this.versionContentPartialPath(version), fileNameNew);
+        this._ocflInventory.addContent(contentPathDest, fileNameNew, hash);
+
+        // remove old file from inventory
+        if (!this._ocflInventory.removeContent(contentPathSource, fileNameOld, hash))
+            return {
+                success: false,
+                error: `Unable to remove ${fileNameOld} from OCFL Inventory`
+            };
+
+        // Save Inventory and Inventory Digest to new version folder
+        results = await this._ocflInventory.writeToDiskVersion(this, version);
+        if (!results.success)
+            return results;
+
+        // Save Inventory and Inventory Digest to root folder
+        results = await this._ocflInventory.writeToDisk(this);
+        if (!results.success)
+            return results;
+
         return results;
     }
 
@@ -183,43 +259,56 @@ export class OCFLObject {
         return this._objectRoot;
     }
 
-    versionRoot(version: number): string {
-        return path.join(this._objectRoot, OCFLObject.versionFolder(version));
+    private computeObjectRoot(storageKey: string, staging: boolean): string {
+        return this._ocflRoot.computeLocationObjectRoot(storageKey, staging);
     }
 
-    static versionFolder(version: number): string {
+    versionRoot(version: number): string {
+        return path.join(this._objectRoot, OCFLObject.versionFolderName(version));
+    }
+
+    versionContentFullPath(version: number): string {
+        return path.join(this.versionRoot(version), ST.OCFLStorageObjectContentFolder);
+    }
+
+    versionContentPartialPath(version: number): string {
+        return path.join(OCFLObject.versionFolderName(version), ST.OCFLStorageObjectContentFolder);
+    }
+
+    static versionFolderName(version: number): string {
         return `v${version}`;
     }
 
-    hash(fileName: string, version: number): string {
-        const ocflInventory: INV.OCFLInventory | null = this.ocflInventory;
-        return ocflInventory ? ocflInventory.hash(fileName, version) : '';
+    fileHash(fileName: string, version: number): string {
+        return this._ocflInventory ? this._ocflInventory.hash(fileName, version) : '';
     }
 
-    location(fileName: string, version: number): string {
-        return path.join(this._objectRoot, OCFLObject.versionFolder(version), fileName);
+    fileLocation(fileName: string, version: number): string {
+        return path.join(this.versionContentFullPath(version), fileName);
     }
 
-    private async initializeStructure(forReading: boolean): Promise<H.IOResults> {
+    private async initializeStructure(): Promise<H.IOResults> {
         // Ensure object root directory exists
         let ioResults: H.IOResults;
-        ioResults = forReading
-            ? H.Helpers.fileOrDirExists(this._objectRoot)
-            : H.Helpers.initializeDirectory(this._objectRoot, 'OCFL Object Root');
+        ioResults = H.Helpers.fileOrDirExists(this._objectRoot);
+        if (!ioResults.success)
+            this._newObject = true;
+        if (!this._forReading)
+            ioResults = H.Helpers.initializeDirectory(this._objectRoot, 'OCFL Object Root');
         if (!ioResults.success)
             return ioResults;
 
         // Ensure initialization of OCFL Object Root "NAMASTE" file
         const source: string = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageObjectNamasteFilename);
         const dest: string = path.join(this._objectRoot, ST.OCFLStorageObjectNamasteFilename);
-        ioResults = forReading
+        ioResults = this._forReading
             ? H.Helpers.fileOrDirExists(dest)
             : H.Helpers.initializeFile(source, dest, 'OCFL Object Root Namaste File');
         if (!ioResults.success)
             return ioResults;
 
         // If reading, validate that the root inventory file exists
-        if (forReading) {
+        if (this._forReading) {
             const invResults = INV.OCFLInventory.readFromDisk(this);
             if (!invResults.success || !invResults.ocflInventory) {
                 ioResults.success = false;
@@ -238,12 +327,38 @@ export class OCFLObject {
             // validate that headVersion's inventory matches root inventory
         }
 
-        /*
+        ioResults.success = true;
+        return ioResults;
+    }
+
+    private ensureInventoryIsLoaded(): H.IOResults {
+        if (!this._ocflInventory) {
+            if (!this._newObject) {
+                const results = INV.OCFLInventory.readFromDisk(this);
+                if (!results.success || !results.ocflInventory) {
+                    return {
+                        success: false,
+                        error: results.error
+                    };
+                }
+                this._ocflInventory = results.ocflInventory;
+            } else
+                this._ocflInventory = new INV.OCFLInventory(this._storageKey);
+        }
+        return {
+            success: true,
+            error: ''
+        };
+    }
+}
+
+
+/*
         // Validate version information:
         if (this._version > 0) {
             dest = this.computeLocationObjectVersionRoot(this._storageKey, this._version, this._staging);
             ioResults = H.Helpers.fileOrDirExists(dest);
-            if (forReading) {
+            if (this._forReading) {
                 // if reading, validate that the version root exists
                 if (!ioResults.success)
                     return ioResults;
@@ -268,7 +383,7 @@ export class OCFLObject {
         if (this._fileName) {
             dest = this.computeLocationObjectVersionContent(this._storageKey, this._version, this._fileName, this._staging);
             ioResults = H.Helpers.fileOrDirExists(dest);
-            if (forReading) {
+            if (this._forReading) {
                 // if reading, validate that the content exists:
                 if (!ioResults.success)
                     return ioResults;
@@ -281,34 +396,4 @@ export class OCFLObject {
                 }
             }
         }
-        */
-
-        ioResults.success = true;
-        return ioResults;
-    }
-
-    private loadFromStorage(validate: boolean): H.IOResults {
-        validate;
-        return {
-            success: false,
-            error: 'Not implemented'
-        };
-    }
-
-    private ensureInventoryIsLoaded(): H.IOResults {
-        if (!this._ocflInventory) {
-            const results = INV.OCFLInventory.readFromDisk(this);
-            if (!results.success || !results.ocflInventory) {
-                return {
-                    success: false,
-                    error: results.error
-                };
-            }
-            this._ocflInventory = results.ocflInventory;
-        }
-        return {
-            success: true,
-            error: ''
-        };
-    }
-}
+*/

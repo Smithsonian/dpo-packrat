@@ -1,9 +1,8 @@
-import * as crypto from 'crypto';
 import fetch from 'node-fetch';
-
 import * as COL from '../interface';
 import Config from '../../config';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 
 interface GetRequestResults {
     output: string;
@@ -84,9 +83,8 @@ class EdanCollection implements COL.ICollection {
         dateString                          = dateString.substring(0, dateString.length - 5).replace('T', ' '); // trim off final ".333Z"; replace "T" with " "
         const auth: string                  = `${ipnonce}\n${uri}\n${dateString}\n${Config.collection.edan.authKey}`;
 
-        const hash: crypto.Hash             = crypto.createHash('sha1');
-        hash.update(auth);
-        const authContent: string           = Buffer.from(hash.digest('hex')).toString('base64'); // seems like a bug to base64 encode hex output, but that does the trick!
+        const hash: string                  = H.Helpers.computeHashFromString(auth, 'sha1');
+        const authContent: string           = Buffer.from(hash).toString('base64'); // seems like a bug to base64 encode hex output, but that does the trick!
 
         headers.push(['X-AppId', Config.collection.edan.appId]);
         headers.push(['X-RequestDate', dateString]);

@@ -125,7 +125,7 @@ export class AssetStorageAdapter {
     }
 
     static async ingestAsset(storageKeyStaged: string, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
-        idSystemObject: number): Promise<IngestAssetResult> {
+        idSystemObject: number, opInfo: STORE.OperationInfo): Promise<IngestAssetResult> {
         // Call IStorage.promote
         // Update asset.StorageKey, if needed
         // Update assetVersion.Ingested to true
@@ -159,7 +159,8 @@ export class AssetStorageAdapter {
             storageKeyStaged,
             storageKeyFinal: storageKeyResults.storageKey,
             fileName: asset.FileName,
-            metadata
+            metadata,
+            opInfo
         };
 
         const resStorage = await storage.promoteStagedAsset(promoteStagedAssetInput);
