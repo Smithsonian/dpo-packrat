@@ -91,8 +91,6 @@ let systemObjectXrefItemScene1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefItemScene2: DBAPI.SystemObjectXref | null;
 let systemObjectXrefProjectStakeholder1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefProjectStakeholder2: DBAPI.SystemObjectXref | null;
-let systemObjectXrefProjectProjectDoc1: DBAPI.SystemObjectXref | null;
-let systemObjectXrefProjectProjectDoc2: DBAPI.SystemObjectXref | null;
 let systemObjectXrefItemIntermediaryFile1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefItemIntermediaryFile2: DBAPI.SystemObjectXref | null;
 let unit: DBAPI.Unit | null;
@@ -1580,44 +1578,6 @@ describe('DB Creation Test Suite', () => {
         if (systemObjectXrefProjectStakeholder2) {
             expect(await systemObjectXrefProjectStakeholder2.create()).toBeTruthy();
             expect(systemObjectXrefProjectStakeholder2.idSystemObjectXref).toBeGreaterThan(0);
-        }
-    });
-
-    test('DB Creation: SystemObjectXref Project-ProjectDocumentation', async () => {
-        if (project && project2) {
-            const SOProject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(project.idProject);
-            const SOProject2: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(project2.idProject);
-            expect(SOProject).toBeTruthy();
-            expect(SOProject2).toBeTruthy();
-
-            if (SOProject && SOProject2 && projectDocumentation) {
-                const SOProjectDocumentation: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectDocumentationID(projectDocumentation.idProjectDocumentation);
-                expect(SOProjectDocumentation).toBeTruthy();
-
-                if (SOProjectDocumentation) {
-                    systemObjectXrefProjectProjectDoc1 = new DBAPI.SystemObjectXref({
-                        idSystemObjectMaster: SOProject.idSystemObject,
-                        idSystemObjectDerived: SOProjectDocumentation.idSystemObject,
-                        idSystemObjectXref: 0
-                    });
-                    systemObjectXrefProjectProjectDoc2 = new DBAPI.SystemObjectXref({
-                        idSystemObjectMaster: SOProject2.idSystemObject,
-                        idSystemObjectDerived: SOProjectDocumentation.idSystemObject,
-                        idSystemObjectXref: 0
-                    });
-                }
-            }
-        }
-        expect(systemObjectXrefProjectProjectDoc1).toBeTruthy();
-        if (systemObjectXrefProjectProjectDoc1) {
-            expect(await systemObjectXrefProjectProjectDoc1.create()).toBeTruthy();
-            expect(systemObjectXrefProjectProjectDoc1.idSystemObjectXref).toBeGreaterThan(0);
-        }
-
-        expect(systemObjectXrefProjectProjectDoc2).toBeTruthy();
-        if (systemObjectXrefProjectProjectDoc2) {
-            expect(await systemObjectXrefProjectProjectDoc2.create()).toBeTruthy();
-            expect(systemObjectXrefProjectProjectDoc2.idSystemObjectXref).toBeGreaterThan(0);
         }
     });
 });
@@ -3940,7 +3900,7 @@ describe('DB Fetch Special Test Suite', () => {
         if (projectDocumentation) {
             projectFetch = await DBAPI.Project.fetchMasterFromProjectDocumentations([projectDocumentation.idProjectDocumentation]);
             if (projectFetch && project && project2)
-                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+                expect(projectFetch).toEqual(expect.arrayContaining([project]));
         }
         expect(projectFetch).toBeTruthy();
     });

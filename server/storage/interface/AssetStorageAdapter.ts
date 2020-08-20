@@ -159,7 +159,6 @@ export class AssetStorageAdapter {
             storageKeyStaged,
             storageKeyFinal: storageKeyResults.storageKey,
             fileName: asset.FileName,
-            version: assetVersion.Version,
             metadata
         };
 

@@ -29,16 +29,16 @@ export class LocalStorage implements STORE.IStorage {
         };
 
         const { storageKey, fileName, version, staging } = readStreamInput;
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, fileName, version, staging, true);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, staging, true);
         if (!ocflObjectInitResults.success || !ocflObjectInitResults.ocflObject) {
             retValue.success = false;
             retValue.error = ocflObjectInitResults.error;
             return retValue;
         }
-        retValue.storageHash = ocflObjectInitResults.ocflObject.hash;
+        retValue.storageHash = ocflObjectInitResults.ocflObject.hash(fileName, version);
 
         try {
-            retValue.readStream = fs.createReadStream(ocflObjectInitResults.ocflObject.location);
+            retValue.readStream = fs.createReadStream(ocflObjectInitResults.ocflObject.location(fileName, version));
             retValue.success = true;
             retValue.error = '';
         } catch (error) {
@@ -131,8 +131,8 @@ export class LocalStorage implements STORE.IStorage {
             error: ''
         };
 
-        const { storageKeyStaged, storageKeyFinal, fileName, version, metadata } = promoteStagedAssetInput;
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, fileName, version, false, false);
+        const { storageKeyStaged, storageKeyFinal, fileName, metadata } = promoteStagedAssetInput;
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, false, false);
         if (!ocflObjectInitResults.success) {
             retValue.success = false;
             retValue.error = ocflObjectInitResults.error;
@@ -143,7 +143,7 @@ export class LocalStorage implements STORE.IStorage {
             return retValue;
         }
 
-        const pathOnDisk: string = storageKeyStaged ? path.join(this.ocflRoot.computeLocationStagingRoot(), storageKeyStaged) : '';
+        const pathOnDisk: string = path.join(this.ocflRoot.computeLocationStagingRoot(), storageKeyStaged);
         const ioResults = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, fileName, metadata);
         if (!ioResults.success) {
             retValue.success = false;
@@ -160,7 +160,6 @@ export class LocalStorage implements STORE.IStorage {
             storageKeyStaged: '',
             storageKeyFinal: storageKey,
             fileName: '',
-            version: 0,
             metadata
         };
         return await this.promoteStagedAsset(promoteStagedAssetInput);
@@ -172,7 +171,7 @@ export class LocalStorage implements STORE.IStorage {
             error: ''
         };
 
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, '', 0, false, true);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false, true);
         if (!ocflObjectInitResults.success) {
             retValue.success = false;
             retValue.error = ocflObjectInitResults.error;
