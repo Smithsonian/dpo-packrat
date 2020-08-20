@@ -44,18 +44,6 @@ export class OCFLRoot {
         return path.join(this.computeLocationRoot(staging), this.computeStorageKeyFolder(storageKey));
     }
 
-    /** Computes path to version root for a given storageKey and version */
-    computeLocationObjectVersionRoot(storageKey: string, version: number, staging: boolean): string {
-        if (version < 1)
-            version = 1;
-        return path.join(this.computeLocationObjectRoot(storageKey, staging), `v${version}`);
-    }
-
-    /** Computes path to file for a given storageKey, version, and filename */
-    computeLocationObjectVersionContent(storageKey: string, version: number, filename: string, staging: boolean): string {
-        return path.join(this.computeLocationObjectVersionRoot(storageKey, version, staging), ST.OCFLStorageObjectContentFolder, filename);
-    }
-
     /** Computes a random directory and filename in the staging area */
     computeWriteStreamLocation(): ComputeWriteStreamLocationResults {
         const results: ComputeWriteStreamLocationResults = {
@@ -87,69 +75,44 @@ export class OCFLRoot {
         LOG.logger.info(`OCFL Storage initialization: Staging Root = ${this.storageRootStaging}`);
 
         let ioResults: H.IOResults;
-        ioResults = this.initializeDirectory(this.storageRoot, 'Local Storage Root');
+        ioResults = H.Helpers.initializeDirectory(this.storageRoot, 'Local Storage Root');
         if (!ioResults.success)
             return ioResults;
-        ioResults = this.initializeDirectory(this.storageRootRepo, 'OCFL Storage Root');
+        ioResults = H.Helpers.initializeDirectory(this.storageRootRepo, 'OCFL Storage Root');
         if (!ioResults.success)
             return ioResults;
-        ioResults = this.initializeDirectory(this.storageRootStaging, 'Staging Root');
+        ioResults = H.Helpers.initializeDirectory(this.storageRootStaging, 'Staging Root');
         if (!ioResults.success)
             return ioResults;
 
         return await this.initializeStorageRoot();
     }
 
-    async ocflObject(storageKey: string, fileName: string, version: number, staging: boolean): Promise<OO.OCFLObjectInitResults> {
+    async ocflObject(storageKey: string, fileName: string, version: number, staging: boolean, forReading: boolean): Promise<OO.OCFLObjectInitResults> {
         const ocflObject: OO.OCFLObject = new OO.OCFLObject(this);
-        return await ocflObject.initialize(storageKey, fileName, version, staging);
+        return await ocflObject.initialize(storageKey, fileName, version, staging, forReading);
     }
 
     private async initializeStorageRoot(): Promise<H.IOResults> {
         // Ensure initialization of OCFL Storage Root "NAMASTE" file
-        let source: string | null   = null;
+        let source: string          = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootNamasteFilename);
         let dest: string            = path.join(this.storageRootRepo, ST.OCFLStorageRootNamasteFilename);
-        let ioResults: H.IOResults  = this.initializeFile(source, dest, 'OCFL Root Namaste File');
+        let ioResults: H.IOResults  = H.Helpers.initializeFile(source, dest, 'OCFL Root Namaste File');
         if (!ioResults.success)
             return ioResults;
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootLayoutFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootLayoutFilename);
-        ioResults   = this.initializeFile(source, dest, 'OCFL Root Layout File');
+        ioResults   = H.Helpers.initializeFile(source, dest, 'OCFL Root Layout File');
         if (!ioResults.success)
             return ioResults;
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootSpecFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootSpecFilename);
-        ioResults   = this.initializeFile(source, dest, 'OCFL Root Spec File');
+        ioResults   = H.Helpers.initializeFile(source, dest, 'OCFL Root Spec File');
         if (!ioResults.success)
             return ioResults;
 
-        return ioResults;
-    }
-
-    private initializeDirectory(directory: string, description: string): H.IOResults {
-        let ioResults: H.IOResults = H.Helpers.fileOrDirExists(directory);
-        if (ioResults.success)
-            return ioResults;
-
-        LOG.logger.info(`${description} does not exist; creating it`);
-        ioResults = H.Helpers.createDirectory(directory);
-        if (!ioResults.success)
-            LOG.logger.error(`Unable to create ${description} at ${directory}`);
-        return ioResults;
-    }
-
-    private initializeFile(source: string | null, dest: string, description: string): H.IOResults {
-        let ioResults: H.IOResults;
-        ioResults = H.Helpers.fileOrDirExists(dest);
-        if (ioResults.success)
-            return ioResults;
-
-        LOG.logger.info(`${description} does not exist; creating it`);
-        ioResults = source ? H.Helpers.copyFile(source, dest) : H.Helpers.ensureFileExists(dest);
-        if (!ioResults.success)
-            LOG.logger.error(`Unable to create ${description} at ${dest}`);
         return ioResults;
     }
 }

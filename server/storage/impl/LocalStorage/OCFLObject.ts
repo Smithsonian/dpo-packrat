@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import * as path from 'path';
 import { OCFLRoot } from './OCFLRoot';
-//import * as ST from './SharedTypes';
-//import * as STORE from '../../interface';
+import * as INV from './OCFLInventory';
+import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
 
 export type OCFLObjectInitResults = {
@@ -25,14 +26,54 @@ export class OCFLObject {
         this._ocflRoot = ocflRoot;
     }
 
-    async initialize(storageKey: string, fileName: string, version: number, staging: boolean): Promise<OCFLObjectInitResults> {
+    private computeObjectRoot(storageKey: string, staging: boolean): string {
+        return this._ocflRoot.computeLocationObjectRoot(storageKey, staging);
+    }
+
+    /** Computes path to version root for a given storageKey and version */
+    computeLocationObjectVersionRoot(storageKey: string, version: number, staging: boolean): string {
+        if (version < 1)
+            version = 1;
+        return path.join(this.computeObjectRoot(storageKey, staging), `v${version}`);
+    }
+
+    /** Computes path to file for a given storageKey, version, and filename */
+    computeLocationObjectVersionContent(storageKey: string, version: number, filename: string, staging: boolean): string {
+        return path.join(this.computeLocationObjectVersionRoot(storageKey, version, staging), ST.OCFLStorageObjectContentFolder, filename);
+    }
+
+    async initialize(storageKey: string, fileName: string, version: number, staging: boolean, forReading: boolean): Promise<OCFLObjectInitResults> {
         this._storageKey = storageKey;
         this._fileName = fileName;  // may be ''
         this._version = version;    // may be 0
         this._staging = staging;
-        this._objectRoot = this._ocflRoot.computeLocationObjectRoot(this._storageKey, this._staging);
+        this._objectRoot = this.computeObjectRoot(this._storageKey, this._staging);
 
-        return await this.initializeStructure();
+        const retValue: OCFLObjectInitResults = {
+            ocflObject: null,
+            success: false,
+            error: ''
+        };
+
+        // Verify structure / create structure
+        let ioResults = await this.initializeStructure(forReading);
+        if (!ioResults.success) {
+            retValue.success = false;
+            retValue.error = ioResults.error;
+            return retValue;
+        }
+
+        // load up details from storage
+        ioResults = await this.loadFromStorage(false);
+        if (!ioResults.success) {
+            retValue.success = false;
+            retValue.error = ioResults.error;
+            return retValue;
+        }
+
+        retValue.success = true;
+        retValue.ocflObject = this;
+        return retValue;
     }
 
     /**
@@ -146,11 +187,104 @@ export class OCFLObject {
         return this._location;
     }
 
-    private async initializeStructure(): Promise<OCFLObjectInitResults> {
-        this._fileName;
-        this._version;
-        this._objectRoot;
-        // check for existence of directory
-        return { ocflObject: null, success: false, error: 'Not Implemented' };
+    get objectRoot(): string {
+        return this._objectRoot;
+    }
+
+    versionRoot(version: number): string {
+        return path.join(this._objectRoot, `v${version}`);
+    }
+
+    private async initializeStructure(forReading: boolean): Promise<H.IOResults> {
+        // Ensure object root directory exists
+        let ioResults: H.IOResults;
+        ioResults = forReading
+            ? H.Helpers.fileOrDirExists(this._objectRoot)
+            : H.Helpers.initializeDirectory(this._objectRoot, 'OCFL Object Root');
+        if (!ioResults.success)
+            return ioResults;
+
+        // Ensure initialization of OCFL Object Root "NAMASTE" file
+        const source: string = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageObjectNamasteFilename);
+        let dest: string = path.join(this._objectRoot, ST.OCFLStorageObjectNamasteFilename);
+        ioResults = forReading
+            ? H.Helpers.fileOrDirExists(dest)
+            : H.Helpers.initializeFile(source, dest, 'OCFL Object Root Namaste File');
+        if (!ioResults.success)
+            return ioResults;
+
+        // If reading, validate that the root inventory file exists
+        if (forReading) {
+            const invResults = INV.OCFLInventory.readFromDisk(this);
+            if (!invResults.success || !invResults.ocflInventory) {
+                ioResults.success = false;
+                ioResults.error = invResults.error ? invResults.error : `Failed to read inventory for ${this}`;
+                return ioResults;
+            }
+
+            const ocflInventory: INV.OCFLInventory = invResults.ocflInventory;
+            if (ocflInventory.headVersion <= 0) {
+                ioResults.success = false;
+                ioResults.error = `Invalid inventory file for ${this}`;
+                return ioResults;
+            }
+
+            // additional validations here, when needed:
+            // validate that headVersion's inventory matches root inventory
+        }
+
+        // Validate version information:
+        if (this._version > 0) {
+            dest = this.computeLocationObjectVersionRoot(this._storageKey, this._version, this._staging);
+            ioResults = H.Helpers.fileOrDirExists(dest);
+            if (forReading) {
+                // if reading, validate that the version root exists
+                if (!ioResults.success)
+                    return ioResults;
+            } else {
+                // if writing, validate that the current version root does not exist, and the previous version root (if any) exists
+                if (ioResults.success) {
+                    ioResults.success = false;
+                    ioResults.error = 'Attempting to write to existing version!';
+                    return ioResults;
+                }
+
+                for (let ver = this._version - 1; ver > 0; ver--) {
+                    dest = this.computeLocationObjectVersionRoot(this._storageKey, ver, this._staging);
+                    ioResults = H.Helpers.fileOrDirExists(dest);
+                    if (!ioResults.success)
+                        return ioResults;
+                }
+            }
+        }
+
+        // Validate filename information:
+        if (this._fileName) {
+            dest = this.computeLocationObjectVersionContent(this._storageKey, this._version, this._fileName, this._staging);
+            ioResults = H.Helpers.fileOrDirExists(dest);
+            if (forReading) {
+                // if reading, validate that the content exists:
+                if (!ioResults.success)
+                    return ioResults;
+            } else {
+                // if writing, validate the the content does not exist
+                if (ioResults.success) {
+                    ioResults.success = false;
+                    ioResults.error = 'Attempting to write to existing file!';
+                    return ioResults;
+                }
+            }
+        }
+
+        ioResults.success = true;
+        return ioResults;
+    }
+
+    private loadFromStorage(validate: boolean): H.IOResults {
+        validate;
+        return {
+            success: false,
+            error: 'Not implemented'
+        };
     }
 }

@@ -98,6 +98,19 @@ export class Helpers {
         return res;
     }
 
+    static initializeFile(source: string | null, dest: string, description: string): IOResults {
+        let ioResults: IOResults;
+        ioResults = Helpers.fileOrDirExists(dest);
+        if (ioResults.success)
+            return ioResults;
+
+        LOG.logger.info(`${description} does not exist; creating it`);
+        ioResults = source ? Helpers.copyFile(source, dest) : Helpers.ensureFileExists(dest);
+        if (!ioResults.success) /* istanbul ignore next */
+            LOG.logger.error(`Unable to create ${description} at ${dest}`);
+        return ioResults;
+    }
+
     static removeFile(filename: string): IOResults {
         const res: IOResults = {
             success: true,
@@ -147,6 +160,18 @@ export class Helpers {
             res.error = `Unable to remove directory ${directory}: ${error}`;
         }
         return res;
+    }
+
+    static initializeDirectory(directory: string, description: string): IOResults {
+        let ioResults: IOResults = Helpers.fileOrDirExists(directory);
+        if (ioResults.success)
+            return ioResults;
+
+        LOG.logger.info(`${description} does not exist; creating it`);
+        ioResults = Helpers.createDirectory(directory);
+        if (!ioResults.success) /* istanbul ignore next */
+            LOG.logger.error(`Unable to create ${description} at ${directory}`);
+        return ioResults;
     }
 
     static stat(filePath: string): StatResults {

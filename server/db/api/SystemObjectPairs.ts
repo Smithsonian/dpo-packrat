@@ -376,6 +376,25 @@ export class SystemObjectWorkflowStep extends SystemObject implements SystemObje
     }
 }
 
+export enum eSystemObjectType {
+    eUnit,
+    eProject,
+    eSubject,
+    eItem,
+    eCaptureData,
+    eModel,
+    eScene,
+    eIntermediaryFile,
+    eProjectDocumentation,
+    eAsset,
+    eAssetVersion,
+    eActor,
+    eStakeholder,
+    eWorkflow,
+    eWorkflowStep,
+    eUnknown
+}
+
 export class SystemObjectPairs extends SystemObject implements SystemObjectPairsBase {
     Actor: Actor | null = null;
     Asset_AssetToSystemObject_idAsset: Asset | null = null;
