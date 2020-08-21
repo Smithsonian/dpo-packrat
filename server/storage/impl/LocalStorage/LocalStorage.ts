@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import * as fs from 'fs';
 import * as path from 'path';
+import * as ST from './SharedTypes';
 import * as STORE from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
@@ -89,7 +90,7 @@ export class LocalStorage implements STORE.IStorage {
 
         // Compute hash
         const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), writeStreamCloseInput.storageKey);
-        const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha512');
+        const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(filePath, ST.OCFLDigestAlgorithm);
         if (!hashResults.success) {
             retValue.success = false;
             retValue.error = `Unable to compute hash from file: ${hashResults.error}`;

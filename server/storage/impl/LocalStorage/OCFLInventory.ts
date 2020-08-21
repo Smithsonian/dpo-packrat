@@ -6,6 +6,11 @@ import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 
+export type OCFLInventoryManifestEntry = {
+    hash: string;
+    files: string[];
+};
+
 /** Represents manifest information for either the entire inventory file or for a version state block.
  * Either way, this is an object whose property keys are file hashes and whose values are the list of
  * files with that hash. For the inventory file manifest, the filenames are the partial path to the file,
@@ -83,6 +88,27 @@ export class OCFLInventoryManifest {
             return { path: '', hash: '' };
         matches.sort((s1, s2) => s2.path.localeCompare(s1.path)); // sort descending
         return matches[0];
+    }
+
+    getEntries(): OCFLInventoryManifestEntry[] {
+        const entries: OCFLInventoryManifestEntry[] = [];
+        for (const hash in this) {
+            if (!Array.isArray(this[hash]))
+                continue;
+            const files: Array<string> = <Array<string>><unknown>this[hash];
+            entries.push ({ hash, files });
+        }
+        return entries;
+    }
+
+    /** Computes a map of fileName -> hash for each entry in the manifest */
+    getFileMap(): Map<string, string> {
+        const fileMap: Map<string, string> = new Map<string, string>(); // map of fileName -> hash
+        for (const manifestEntry of this.getEntries()) {
+            for (const fileName of manifestEntry.hash)
+                fileMap.set(fileName, manifestEntry.hash);
+        }
+        return fileMap;
     }
 }
 
@@ -163,7 +189,7 @@ export type OCFLInventoryReadResults = {
 export class OCFLInventory {
     id: string = '';
     head: string = '';
-    digestAlgorithm: string = 'sha512';
+    digestAlgorithm: string = ST.OCFLDigestAlgorithm;
     type: string = 'https://ocfl.io/1.0/spec/#inventory';
     manifest: OCFLInventoryManifest = new OCFLInventoryManifest();
     versions: OCFLInventoryVersions = new OCFLInventoryVersions();
@@ -209,25 +235,81 @@ export class OCFLInventory {
         return true;
     }
 
+    async validate(ocflObject: OCFLObject, isRootInventory: boolean): Promise<H.IOResults> {
+        let results: H.IOResults;
+
+        // Confirm conformance to spec
+        // Confirm inventory hash exists, is well-formed, and matches inventory
+        const inventoryFilename: string = OCFLInventory.inventoryFilePath(ocflObject, isRootInventory ? 0 : this.headVersion);
+        results = H.Helpers.fileOrDirExists(inventoryFilename);
+        if (!results.success)
+            return results;
+
+        const digestFilename: string = OCFLInventory.inventoryDigestPath(ocflObject, isRootInventory ? 0 : this.headVersion);
+        results = H.Helpers.fileOrDirExists(digestFilename);
+        if (!results.success)
+            return results;
+
+        let hashResults: H.HashResults = await H.Helpers.computeHashFromFile(inventoryFilename, ST.OCFLDigestAlgorithm);
+        if (!hashResults.success)
+            return hashResults;
+
+        try {
+            const digestContentsExpected: string = OCFLInventory.digestContents(hashResults.hash);
+            const digestContents: string = fs.readFileSync(digestFilename);
+            if (digestContentsExpected != digestContents) {
+                results.success = false;
+                results.error = `Inventory digest ${digestFilename} did not have expected contents; expected ${digestContentsExpected}; found ${digestContents}`;
+                return results;
+            }
+        } catch (error) {
+            results.success = false;
+            results.error = `OCFLInventory.validate failed to read digestFile ${digestFilename}: ${error}`;
+            LOG.logger.error(results.error, error);
+            return results;
+        }
+
+        // Confirm files described in manifest exist and have correct hashes
+        for (const manifestEntry of this.manifest.getEntries()) {
+            for (const fileName of manifestEntry.files) {
+                const filePath: string = path.join(ocflObject.objectRoot, fileName);
+                hashResults = await H.Helpers.computeHashFromFile(filePath, ST.OCFLDigestAlgorithm);
+                if (!hashResults.success)
+                    return hashResults;
+                if (hashResults.hash != manifestEntry.hash) {
+                    results.success = false;
+                    results.error = `OCFLInventory.validate found a different hash for ${filePath}; expected ${manifestEntry.hash}; found ${hashResults.hash}`;
+                }
+            }
+        }
+
+        results.success = true;
+        return results;
+    }
+
     /** Write root inventory to disk */
     async writeToDisk(ocflObject: OCFLObject): Promise<H.IOResults> {
         return await this.writeToDiskWorker(ocflObject, 0);
     }
 
     /** Write version inventory to disk */
-    async writeToDiskVersion(ocflObject: OCFLObject, version: number): Promise<H.IOResults> {
-        return await this.writeToDiskWorker(ocflObject, version);
+    async writeToDiskVersion(ocflObject: OCFLObject): Promise<H.IOResults> {
+        return await this.writeToDiskWorker(ocflObject, this.headVersion);
+    }
+
+    static digestContents(hash: string): string {
+        return `${hash} ${ST.OCFLStorageObjectInventoryFilename}`;
     }
 
     async writeToDiskWorker(ocflObject: OCFLObject, version: number): Promise<H.IOResults> {
         const dest: string = OCFLInventory.inventoryFilePath(ocflObject, version);
-        const hashResults: H.HashResults = await H.Helpers.writeJsonAndComputeHash(dest, this, 'sha512');
+        const hashResults: H.HashResults = await H.Helpers.writeJsonAndComputeHash(dest, this, ST.OCFLDigestAlgorithm);
         if (!hashResults.success)
             return hashResults;
 
         try {
             // write hash to inventory digest
-            const digestContents: string = `${hashResults.hash} ${ST.OCFLStorageObjectInventoryFilename}`;
+            const digestContents: string = OCFLInventory.digestContents(hashResults.hash);
             const destDigest: string = OCFLInventory.inventoryDigestPath(ocflObject, version);
             fs.writeFileSync(destDigest, digestContents);
 
