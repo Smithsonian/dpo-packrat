@@ -95,10 +95,6 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     useEffect(() => {
         updatePhotogrammetryFields(metadataIndex, values);
-
-        return () => {
-            updatePhotogrammetryFields(metadataIndex, values);
-        };
     }, [values]);
 
     const setField = ({ target }): void => {

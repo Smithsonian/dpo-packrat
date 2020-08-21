@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AppContext, StateItem, StateProject, StateIdentifier, defaultItem } from '../../../context';
+import { AppContext, StateItem, StateProject, StateIdentifier, defaultItem, IngestionDispatchAction, METADATA_ACTIONS } from '../../../context';
 import useItem from './useItem';
 import useProject from './useProject';
 import useMetadata from './useMetadata';
@@ -8,15 +8,21 @@ import { apolloClient } from '../../../graphql';
 import lodash from 'lodash';
 import { FetchResult } from '@apollo/client';
 import { toast } from 'react-toastify';
+import { useHistory } from 'react-router';
+import { HOME_ROUTES, resolveSubRoute, INGESTION_ROUTES_TYPE } from '../../../constants/routes';
 
 interface UseIngest {
     ingestPhotogrammetryData: () => Promise<boolean>;
+    ingestionComplete: () => void;
 }
 
 function useIngest(): UseIngest {
     const {
-        ingestion: { subjects, metadatas }
+        ingestion: { subjects, metadatas },
+        ingestionDispatch
     } = useContext(AppContext);
+
+    const history = useHistory();
 
     const { getSelectedProject } = useProject();
     const { getSelectedItem } = useItem();
@@ -46,7 +52,7 @@ function useIngest(): UseIngest {
 
             let ingestItemId: number | null = null;
 
-            if (isDefaultItem) {
+            if (!isDefaultItem) {
                 ingestItemId = Number.parseInt(id, 10);
             }
 
@@ -168,8 +174,20 @@ function useIngest(): UseIngest {
         return false;
     };
 
+    const ingestionComplete = (): void => {
+        const ingestionCompleteAction: IngestionDispatchAction = {
+            type: METADATA_ACTIONS.INGESTION_COMPLETE
+        };
+
+        ingestionDispatch(ingestionCompleteAction);
+
+        const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS);
+        history.push(nextRoute);
+    };
+
     return {
-        ingestPhotogrammetryData
+        ingestPhotogrammetryData,
+        ingestionComplete
     };
 }
 

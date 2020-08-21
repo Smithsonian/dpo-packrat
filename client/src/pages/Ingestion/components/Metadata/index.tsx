@@ -51,7 +51,7 @@ function Metadata(): React.ReactElement {
     const { getSelectedProject } = useProject();
     const { getSelectedItem } = useItem();
     const { getFieldErrors, getMetadataInfo } = useMetadata();
-    const { ingestPhotogrammetryData } = useIngest();
+    const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
 
     const metadataLength = metadatas.length;
     const query = qs.parse(search) as QueryParams;
@@ -116,7 +116,7 @@ function Metadata(): React.ReactElement {
 
             if (success) {
                 toast.success('Ingestion complete');
-                // TODO: KARAN: clear state, go to uploads?
+                ingestionComplete();
             } else {
                 toast.error('Ingestion failed, please try again later');
             }
