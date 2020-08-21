@@ -1038,7 +1038,7 @@ export type IngestProject = {
 };
 
 export type IngestItem = {
-    id: Scalars['Int'];
+    id?: Maybe<Scalars['Int']>;
     name: Scalars['String'];
     entireSubject: Scalars['Boolean'];
 };

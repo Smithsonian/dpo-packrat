@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AppContext, StateItem, StateProject, StateIdentifier } from '../../../context';
+import { AppContext, StateItem, StateProject, StateIdentifier, defaultItem } from '../../../context';
 import useItem from './useItem';
 import useProject from './useProject';
 import useMetadata from './useMetadata';
@@ -41,8 +41,17 @@ function useIngest(): UseIngest {
 
         if (item) {
             const { id, name, entireSubject } = item;
+
+            const isDefaultItem = id === defaultItem.id;
+
+            let ingestItemId: number | null = null;
+
+            if (isDefaultItem) {
+                ingestItemId = Number.parseInt(id, 10);
+            }
+
             ingestItem = {
-                id: Number.parseInt(id, 10),
+                id: ingestItemId,
                 name,
                 entireSubject
             };

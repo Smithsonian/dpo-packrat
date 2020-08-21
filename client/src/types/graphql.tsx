@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import { gql } from '@apollo/client';
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
 
 export type Maybe<T> = T | null;
@@ -1077,7 +1076,7 @@ export type IngestProject = {
 };
 
 export type IngestItem = {
-    id: Scalars['Int'];
+    id?: Maybe<Scalars['Int']>;
     name: Scalars['String'];
     entireSubject: Scalars['Boolean'];
 };
