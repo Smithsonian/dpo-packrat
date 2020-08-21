@@ -146,7 +146,8 @@ export enum ITEM_ACTIONS {
 
 export enum METADATA_ACTIONS {
     ADD_METADATA = 'ADD_METADATA',
-    UPDATE_METADATA_FIELDS = 'UPDATE_METADATA_FIELDS'
+    UPDATE_METADATA_FIELDS = 'UPDATE_METADATA_FIELDS',
+    INGESTION_COMPLETE = 'INGESTION_COMPLETE'
 }
 
 export enum VOCABULARY_ACTIONS {
@@ -298,7 +299,7 @@ type UPDATE_ITEM = {
     item: StateItem;
 };
 
-type MetadataDispatchAction = ADD_METADATA | UPDATE_METADATA_FIELDS;
+type MetadataDispatchAction = ADD_METADATA | UPDATE_METADATA_FIELDS | INGESTION_COMPLETE;
 
 export type MetadataFieldValue = string | number | boolean | Date;
 
@@ -310,6 +311,10 @@ type ADD_METADATA = {
 type UPDATE_METADATA_FIELDS = {
     type: METADATA_ACTIONS.UPDATE_METADATA_FIELDS;
     metadatas: StateMetadata[];
+};
+
+type INGESTION_COMPLETE = {
+    type: METADATA_ACTIONS.INGESTION_COMPLETE;
 };
 
 type VocabularyDispatchAction = ADD_VOCABULARIES;
@@ -555,6 +560,20 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 ...state,
                 vocabularies: action.vocabularies
             };
+
+        case INGESTION_ACTION.METADATA.INGESTION_COMPLETE: {
+            const updatedUploadFiles = [...state.uploads.files].filter(({ selected }) => !selected);
+            const updatedUploads = {
+                ...state.uploads,
+                files: updatedUploadFiles
+            };
+
+            return {
+                ...ingestionState,
+                uploads: updatedUploads,
+                vocabularies: state.vocabularies
+            };
+        }
 
         default:
             return state;
