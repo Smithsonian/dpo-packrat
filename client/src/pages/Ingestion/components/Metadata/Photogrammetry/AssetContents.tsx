@@ -3,8 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { FieldType } from '../../../../../components';
 import SelectField from './SelectField';
-import { StateFolder } from '../../../../../context';
-import { VocabularyOption } from './index';
+import { StateFolder, VocabularyOption } from '../../../../../context';
 
 const useStyles = makeStyles(({ palette }) => ({
     header: {

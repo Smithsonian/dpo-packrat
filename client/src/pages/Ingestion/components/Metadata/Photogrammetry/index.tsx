@@ -9,7 +9,6 @@ import { Colors } from '../../../../../theme';
 import { StateMetadata, defaultPhotogrammetryFields, MetadataFieldValue, PhotogrammetryFields, AppContext, StateIdentifier } from '../../../../../context';
 import useMetadata from '../../../hooks/useMetadata';
 import { eVocabularySetID } from '../../../../../types/server';
-import { Vocabulary } from '../../../../../types/graphql';
 import useVocabularyEntries from '../../../hooks/useVocabularyEntries';
 import Description from './Description';
 import IdentifierList from './IdentifierList';
@@ -71,8 +70,6 @@ const CustomCheckbox = withStyles(checkboxStyles)(Checkbox);
 interface PhotogrammetryProps {
     metadataIndex: number;
 }
-
-export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
 
 function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { metadataIndex } = props;
