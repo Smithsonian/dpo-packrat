@@ -174,8 +174,8 @@ export class OCFLObject {
         const contentPathDest: string = path.join(this.versionContentPartialPath(version), fileNameNew);
         this._ocflInventory.addContent(contentPathDest, fileNameNew, hash);
 
-        // remove old file from inventory
-        if (!this._ocflInventory.removeContent(contentPathSource, fileNameOld, hash))
+        // remove old file from inventory, if we're changing names (reinstate uses this code, with fileNameOld === fileNameNew)
+        if (fileNameOld != fileNameNew && !this._ocflInventory.removeContent(contentPathSource, fileNameOld, hash))
             return {
                 success: false,
                 error: `Unable to remove ${fileNameOld} from OCFL Inventory`
@@ -199,12 +199,48 @@ export class OCFLObject {
      * The path and content remain available in earlier versions of the object.
      * @param fileName
      */
-    async delete(fileName: string): Promise<H.IOResults> {
-        const results: H.IOResults = {
-            success: false,
-            error: 'Not Implemented'
-        };
-        fileName;
+    async delete(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
+        let results: H.IOResults;
+
+        // update inventory with new version
+        // Read current inventory, if any
+        if (!this._ocflInventory) {
+            return {
+                success: false,
+                error: 'Unable to compute OCFL Inventory'
+            };
+        }
+
+        // find most recent version of old file in inventory -- locate path
+        const { path: contentPathSource, hash } = this._ocflInventory.manifest.getLatestContentPathAndHash(fileName);
+        if (!contentPathSource) {
+            return {
+                success: false,
+                error: `OCFLObject.rename: Unable to locate old file ${fileName}`
+            };
+        }
+
+        // Prepare new version in inventory
+        this._ocflInventory.addVersion(opInfo);
+        const version: number = this._ocflInventory.headVersion;
+
+        // remove old file from inventory
+        if (!this._ocflInventory.removeContent(contentPathSource, fileName, hash))
+            return {
+                success: false,
+                error: `Unable to remove ${fileName} from OCFL Inventory`
+            };
+
+        // Save Inventory and Inventory Digest to new version folder
+        results = await this._ocflInventory.writeToDiskVersion(this, version);
+        if (!results.success)
+            return results;
+
+        // Save Inventory and Inventory Digest to root folder
+        results = await this._ocflInventory.writeToDisk(this);
+        if (!results.success)
+            return results;
+
         return results;
     }
 
@@ -214,13 +250,8 @@ export class OCFLObject {
      * effectively updating the file path with older content, or it may not, effectively adding the older content as a new file.
      * @param fileName
      */
-    async reinstate(fileName: string): Promise<H.IOResults> {
-        const results: H.IOResults = {
-            success: false,
-            error: 'Not Implemented'
-        };
-        fileName;
-        return results;
+    async reinstate(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
+        return this.rename(fileName, fileName, opInfo);
     }
 
     /**

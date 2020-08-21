@@ -3,6 +3,7 @@ import { Readable, Writable } from 'stream';
 
 export type OperationInfo = {
     message: string,
+    idUser: number,
     userEmailAddress: string,
     userName: string
 };
@@ -65,6 +66,28 @@ export type RenameAssetResult = {
     error: string
 };
 
+export type HideAssetInput = {
+    storageKey: string,
+    fileName: string,
+    opInfo: OperationInfo
+};
+
+export type HideAssetResult = {
+    success: boolean,
+    error: string
+};
+
+export type ReinstateAssetInput = {
+    storageKey: string,
+    fileName: string,
+    opInfo: OperationInfo
+};
+
+export type ReinstateAssetResult = {
+    success: boolean,
+    error: string
+};
+
 export type UpdateMetadataInput = {
     storageKey: string,
     metadata: any,
@@ -123,6 +146,17 @@ export interface IStorage {
      * Renames the specified asset
      */
     renameAsset(renameAssetInput: RenameAssetInput): Promise<RenameAssetResult>;
+
+    /**
+     * Hides the specified asset
+     */
+    hideAsset(hideAssetInput: HideAssetInput): Promise<HideAssetResult>;
+
+    /**
+     * Reinstates the specified asset
+     */
+    reinstateAsset(reinstateAssetInput: ReinstateAssetInput): Promise<ReinstateAssetResult>;
+
     /**
      * Informs the storage system of the potential need to update metadata describing the asset
      * due to changes in an asset's object ancestrion (e.g. Units, Projects, Subjects, Items, etc)

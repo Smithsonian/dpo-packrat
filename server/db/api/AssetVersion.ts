@@ -153,6 +153,39 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         }
     }
 
+    static async fetchLatestFromAsset(idAsset: number): Promise<AssetVersion | null> {
+        if (!idAsset)
+            return null;
+        try {
+            const assetVersions: AssetVersionBase[] | null = // DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                SELECT *
+                FROM AssetVersion
+                WHERE idAsset = ${idAsset}
+                  AND VERSION = (SELECT MAX(VERSION)
+                                 FROM AssetVersion
+                                 WHERE idAsset = ${idAsset});`; //, AssetVersion);
+            /* istanbul ignore if */
+            if (!assetVersions || assetVersions.length == 0)
+                return null;
+            const assetVersion: AssetVersionBase = assetVersions[0];
+            // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
+            return new AssetVersion({
+                idAssetVersion: assetVersion.idAssetVersion,
+                idAsset: assetVersion.idAsset,
+                idUserCreator: assetVersion.idUserCreator,
+                DateCreated: new Date(assetVersion.DateCreated),
+                StorageChecksum: assetVersion.StorageChecksum,
+                StorageSize: assetVersion.StorageSize,
+                Ingested: assetVersion.Ingested ? true : false,
+                Version: assetVersion.Version
+            });
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.AssetVersion.fetchLatestFromAsset', error);
+            return null;
+        }
+    }
+
     static async fetchFromUser(idUserCreator: number): Promise<AssetVersion[] | null> {
         if (!idUserCreator)
             return null;
