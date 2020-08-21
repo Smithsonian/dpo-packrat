@@ -24,6 +24,7 @@ let assetGroup2: DBAPI.AssetGroup | null;
 let assetThumbnail: DBAPI.Asset | null;
 let assetWithoutAG: DBAPI.Asset | null;
 let assetVersion: DBAPI.AssetVersion | null;
+let assetVersion2: DBAPI.AssetVersion | null;
 let assetVersionNotIngested: DBAPI.AssetVersion | null;
 let captureData: DBAPI.CaptureData | null;
 let captureDataNulls: DBAPI.CaptureData | null;
@@ -567,6 +568,26 @@ describe('DB Creation Test Suite', () => {
             expect(await assetVersionNotIngested.create()).toBeTruthy();
             expect(assetVersionNotIngested.idAssetVersion).toBeGreaterThan(0);
             expect(assetVersionNotIngested.Version).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: AssetVersion 2', async () => {
+        if (assetThumbnail && user)
+            assetVersion2 = new DBAPI.AssetVersion({
+                idAsset: assetThumbnail.idAsset,
+                idUserCreator: user.idUser,
+                DateCreated: nowCleansed(),
+                StorageChecksum: 'Asset Checksum',
+                StorageSize: 50,
+                idAssetVersion: 0,
+                Ingested: true,
+                Version: 0
+            });
+        expect(assetVersion2).toBeTruthy();
+        if (assetVersion2) {
+            expect(await assetVersion2.create()).toBeTruthy();
+            expect(assetVersion2.idAssetVersion).toBeGreaterThan(0);
+            expect(assetVersion2.Version).toBeGreaterThan(0);
         }
     });
 
@@ -1787,7 +1808,18 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersion2]));
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchLatestFromAsset', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromAsset(assetThumbnail.idAsset);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual(assetVersion2);
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -5348,6 +5380,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchLatestFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true)).toBeNull();

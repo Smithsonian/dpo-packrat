@@ -12,14 +12,9 @@ import * as DBAPI from '../../db';
 import { StorageFactory } from './StorageFactory';
 import { IStorage } from './IStorage';
 
-export type CommitAssetResult = {
+export type AssetStorageResult = {
     asset: DBAPI.Asset | null,
     assetVersion: DBAPI.AssetVersion | null,
-    success: boolean,
-    error: string
-};
-
-export type IngestAssetResult = {
     success: boolean,
     error: string
 };
@@ -52,7 +47,7 @@ export class AssetStorageAdapter {
     static async commitNewAsset(commitWriteStreamInput: STORE.CommitWriteStreamInput,
         FileName: string, FilePath: string, idAssetGroup: number, idVAssetType: number,
         idUserCreator: number, DateCreated: Date):
-        Promise<CommitAssetResult> {
+        Promise<AssetStorageResult> {
 
         const asset: DBAPI.Asset = new DBAPI.Asset({
             FileName,
@@ -73,8 +68,8 @@ export class AssetStorageAdapter {
      */
     static async commitNewAssetVersion(commitWriteStreamInput: STORE.CommitWriteStreamInput,
         asset: DBAPI.Asset, idUserCreator: number, DateCreated: Date):
-        Promise<CommitAssetResult> {
-        const retValue: CommitAssetResult = {
+        Promise<AssetStorageResult> {
+        const retValue: AssetStorageResult = {
             asset: null,
             assetVersion: null,
             success: false,
@@ -125,11 +120,13 @@ export class AssetStorageAdapter {
     }
 
     static async ingestAsset(storageKeyStaged: string, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
-        idSystemObject: number, opInfo: STORE.OperationInfo): Promise<IngestAssetResult> {
+        idSystemObject: number, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
         // Call IStorage.promote
         // Update asset.StorageKey, if needed
         // Update assetVersion.Ingested to true
-        const retValue: IngestAssetResult = {
+        const retValue: AssetStorageResult = {
+            asset,
+            assetVersion,
             success: false,
             error: ''
         };
@@ -190,6 +187,106 @@ export class AssetStorageAdapter {
             return retValue;
         }
 
+        return retValue;
+    }
+
+    static async renameAsset(asset: DBAPI.Asset, fileNameNew: string, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
+        const renameAssetInput: STORE.RenameAssetInput = {
+            storageKey: asset.StorageKey,
+            fileNameOld: asset.FileName,
+            fileNameNew,
+            opInfo
+        };
+        return await this.actOnAssetWorker(asset, opInfo, renameAssetInput, null, null);
+    }
+
+    static async hideAsset(asset: DBAPI.Asset, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
+        const hideAssetInput: STORE.HideAssetInput = {
+            storageKey: asset.StorageKey,
+            fileName: asset.FileName,
+            opInfo
+        };
+        return await this.actOnAssetWorker(asset, opInfo, null, hideAssetInput, null);
+    }
+
+    static async reinstateAsset(asset: DBAPI.Asset, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
+        const reinstateAssetInput: STORE.ReinstateAssetInput = {
+            storageKey: asset.StorageKey,
+            fileName: asset.FileName,
+            opInfo
+        };
+        return await this.actOnAssetWorker(asset, opInfo, null, null, reinstateAssetInput);
+    }
+
+    private static async actOnAssetWorker(asset: DBAPI.Asset, opInfo: STORE.OperationInfo,
+        renameAssetInput: STORE.RenameAssetInput | null,
+        hideAssetInput: STORE.HideAssetInput | null,
+        reinstateAssetInput: STORE.ReinstateAssetInput | null): Promise<AssetStorageResult> {
+        const retValue: AssetStorageResult = {
+            asset,
+            assetVersion: null,
+            success: false,
+            error: ''
+        };
+
+        const storage: IStorage | null = await StorageFactory.getInstance();
+        if (!storage) {
+            retValue.success = false;
+            retValue.error = 'AssetStorageAdapter.actOnAssetWorker: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            return retValue;
+        }
+
+        // Read most recent AssetVersion
+        const assetVersionOld: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(asset.idAsset);
+        if (!assetVersionOld) {
+            retValue.success = false;
+            retValue.error = `AssetStorageAdapter.actOnAssetWorker: Unable to fetch latest AssetVersion for ${asset}`;
+            return retValue;
+        }
+
+        if (renameAssetInput) {
+            const renameAssetResult = await storage.renameAsset(renameAssetInput);
+            if (!renameAssetResult.success) {
+                retValue.success = false;
+                retValue.error = renameAssetResult.error;
+                return retValue;
+            }
+        } else if (hideAssetInput) {
+            const hideAssetResult = await storage.hideAsset(hideAssetInput);
+            if (!hideAssetResult.success) {
+                retValue.success = false;
+                retValue.error = hideAssetResult.error;
+                return retValue;
+            }
+        } else if (reinstateAssetInput) {
+            const reinstateAssetResult = await storage.reinstateAsset(reinstateAssetInput);
+            if (!reinstateAssetResult.success) {
+                retValue.success = false;
+                retValue.error = reinstateAssetResult.error;
+                return retValue;
+            }
+        }
+
+        // Create new AssetVersion
+        const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
+            idAsset: asset.idAsset,
+            idUserCreator: opInfo.idUser,
+            DateCreated: new Date(),
+            StorageChecksum: assetVersionOld.StorageChecksum,
+            StorageSize: assetVersionOld.StorageSize,
+            Ingested: assetVersionOld.Ingested,
+            Version: 1, /* ignored */
+            idAssetVersion: 0
+        });
+
+        if (!await assetVersion.create()) {
+            retValue.success = false;
+            retValue.error = `AssetStorageAdapter.actOnAssetWorker: Unable to create AssetVersion ${JSON.stringify(assetVersion)}`;
+            return retValue;
+        }
+        retValue.asset = asset;
+        retValue.assetVersion = assetVersion;
+        retValue.success = true;
         return retValue;
     }
 }

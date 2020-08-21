@@ -148,6 +148,37 @@ export class LocalStorage implements STORE.IStorage {
         return await ocflObjectInitResults.ocflObject.rename(fileNameOld, fileNameNew, opInfo);
     }
 
+    async hideAsset(hideAssetInput: STORE.HideAssetInput): Promise<STORE.HideAssetResult> {
+        const { storageKey, fileName, opInfo } = hideAssetInput;
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false, false);
+        if (!ocflObjectInitResults.success)
+            return ocflObjectInitResults;
+        else if (!ocflObjectInitResults.ocflObject) {
+            return {
+                success: false,
+                error: 'OCFLObject initialization failure'
+            };
+        }
+
+        return await ocflObjectInitResults.ocflObject.delete(fileName, opInfo);
+    }
+
+    async reinstateAsset(reinstateAssetInput: STORE.ReinstateAssetInput): Promise<STORE.ReinstateAssetResult> {
+        const { storageKey, fileName, opInfo } = reinstateAssetInput;
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false, false);
+        if (!ocflObjectInitResults.success)
+            return ocflObjectInitResults;
+        else if (!ocflObjectInitResults.ocflObject) {
+            return {
+                success: false,
+                error: 'OCFLObject initialization failure'
+            };
+        }
+
+        return await ocflObjectInitResults.ocflObject.reinstate(fileName, opInfo);
+    }
+
+
     async updateMetadata(updateMetadataInput: STORE.UpdateMetadataInput): Promise<STORE.UpdateMetadataResult> {
         const { storageKey, metadata, opInfo } = updateMetadataInput;
         const promoteStagedAssetInput: STORE.PromoteStagedAssetInput = {
