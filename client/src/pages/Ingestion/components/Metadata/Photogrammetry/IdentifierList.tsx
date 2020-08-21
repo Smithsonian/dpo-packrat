@@ -4,8 +4,7 @@ import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { FieldType } from '../../../../../components';
-import { StateIdentifier } from '../../../../../context';
-import { VocabularyOption } from '.';
+import { StateIdentifier, VocabularyOption } from '../../../../../context';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
