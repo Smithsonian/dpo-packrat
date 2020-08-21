@@ -820,7 +820,7 @@ input IngestProject {
 }
 
 input IngestItem {
-  id: Int!
+  id: Int
   name: String!
   entireSubject: Boolean!
 }
