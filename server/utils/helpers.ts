@@ -128,6 +128,28 @@ export class Helpers {
         return ioResults;
     }
 
+    static filesMatch(file1: string, file2: string): IOResults {
+        let ioResults: IOResults;
+        ioResults = Helpers.fileOrDirExists(file1);
+        if (!ioResults.success)
+            return ioResults;
+
+        ioResults = Helpers.fileOrDirExists(file2);
+        if (!ioResults.success)
+            return ioResults;
+
+        try {
+            const file1Buf = fs.readFileSync(file1);
+            const file2Buf = fs.readFileSync(file2);
+            ioResults.success = file1Buf.equals(file2Buf);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('Helpers.ensureFileExists', error);
+            ioResults.success = false;
+            ioResults.error = `Unable to test if files match: ${error}`;
+        }
+        return ioResults;
+    }
+
     static removeFile(filename: string): IOResults {
         const res: IOResults = {
             success: true,
@@ -189,6 +211,30 @@ export class Helpers {
         if (!ioResults.success) /* istanbul ignore next */
             LOG.logger.error(`Unable to create ${description} at ${directory}`);
         return ioResults;
+    }
+
+    static getDirectoryEntriesRecursive(directory: string, maxDepth: number = 32): string[] | null {
+        const dirEntries: string[] = [];
+
+        try {
+            const files: string[] = fs.readdirSync(directory);
+            for (const fileName of files) {
+                const fullPath: string = path.join(directory, fileName);
+                if (fs.statSync(fullPath).isDirectory()) {
+                    if (maxDepth > 0) {
+                        const subDirEntries: string[] | null = Helpers.getDirectoryEntriesRecursive(fullPath, maxDepth - 1);
+                        if (subDirEntries)
+                            for (const subDirEntry of subDirEntries)
+                                dirEntries.push(subDirEntry);
+                    }
+                } else
+                    dirEntries.push(fullPath);
+            }
+        } catch (error) {
+            LOG.logger.error('Helpers.getDirectoryEntriesRecursive', error);
+            return null;
+        }
+        return dirEntries;
     }
 
     static stat(filePath: string): StatResults {
