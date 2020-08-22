@@ -61,6 +61,7 @@ export class ObjectAncestry {
             if (this.systemObjectMap.has(idSystemObjectParent)) {
                 this.noCycles = false;
                 this.validHierarchy = false;
+                LOG.logger.error(`DBAPI.ObjectAncestry.fetchWorker Detected Cycle via ${idSystemObjectParent}`);
                 return true;
             }
 
@@ -79,41 +80,46 @@ export class ObjectAncestry {
                 LOG.logger.error(`DBAPI.ObjectAncestry.fetchWorker Unidentified SystemObject ${idSystemObjectParent}`);
                 return true;
             }
-            if (SOP.CaptureData && !this.pushCaptureData(SOP.CaptureData, childType, parentType))
+            if (SOP.CaptureData && !await this.pushCaptureData(SOP.CaptureData, childType, parentType))
                 return true;
-            else if (SOP.Model && !this.pushModel(SOP.Model, childType, parentType))
+            else if (SOP.Model && !await this.pushModel(SOP.Model, childType, parentType))
                 return true;
-            else if (SOP.Scene && !this.pushScene(SOP.Scene, childType, parentType))
+            else if (SOP.Scene && !await this.pushScene(SOP.Scene, childType, parentType))
                 return true;
-            else if (SOP.IntermediaryFile && !this.pushIntermediaryFile(SOP.IntermediaryFile, childType, parentType))
+            else if (SOP.IntermediaryFile && !await this.pushIntermediaryFile(SOP.IntermediaryFile, childType, parentType))
                 return true;
-            else if (SOP.ProjectDocumentation && !this.pushProjectDocumentation(SOP.ProjectDocumentation, childType, parentType))
+            else if (SOP.ProjectDocumentation && !await this.pushProjectDocumentation(SOP.ProjectDocumentation, childType, parentType))
                 return true;
-            else if (SOP.Scene && !this.pushScene(SOP.Scene, childType, parentType))
+            else if (SOP.Scene && !await this.pushScene(SOP.Scene, childType, parentType))
                 return true;
-            else if (SOP.Item && !this.pushItem(SOP.Item, childType, parentType))
+            else if (SOP.Item && !await this.pushItem(SOP.Item, childType, parentType))
                 return true;
-            else if (SOP.Subject && !this.pushSubject(SOP.Subject, childType, parentType))
+            else if (SOP.Subject && !await this.pushSubject(SOP.Subject, childType, parentType))
                 return true;
-            else if (SOP.Project && !this.pushProject(SOP.Project, childType, parentType))
+            else if (SOP.Project && !await this.pushProject(SOP.Project, childType, parentType))
                 return true;
-            else if (SOP.Unit && !this.pushUnit(SOP.Unit, childType, parentType))
+            else if (SOP.Unit && !await this.pushUnit(SOP.Unit, childType, parentType))
                 return true;
-            else if (SOP.Asset && !this.pushAsset(SOP.Asset, childType, parentType))
+            else if (SOP.Asset && !await this.pushAsset(SOP.Asset, childType, parentType))
                 return true;
-            else if (SOP.AssetVersion && !this.pushAssetVersion(SOP.AssetVersion, childType, parentType))
+            else if (SOP.AssetVersion && !await this.pushAssetVersion(SOP.AssetVersion, childType, parentType))
                 return true;
-            else if (SOP.Actor && !this.pushActor(SOP.Actor, childType, parentType))
+            else if (SOP.Actor && !await this.pushActor(SOP.Actor, childType, parentType))
                 return true;
-            else if (SOP.Stakeholder && !this.pushStakeholder(SOP.Stakeholder, childType, parentType))
+            else if (SOP.Stakeholder && !await this.pushStakeholder(SOP.Stakeholder, childType, parentType))
                 return true;
-            else if (SOP.Workflow && !this.pushWorkflow(SOP.Workflow, childType, parentType))
+            else if (SOP.Workflow && !await this.pushWorkflow(SOP.Workflow, childType, parentType))
                 return true;
-            else if (SOP.WorkflowStep && !this.pushWorkflowStep(SOP.WorkflowStep, childType, parentType))
+            else if (SOP.WorkflowStep && !await this.pushWorkflowStep(SOP.WorkflowStep, childType, parentType))
                 return true;
-            else
+
+            if (parentType.eType == eSystemObjectType.eUnknown)
                 LOG.logger.error(`DBAPI.ObjectAncestry.fetchWorker Unidentified SystemObject type ${JSON.stringify(SOP)}`);
 
+            if (childType)
+                LOG.logger.info(`OA: ${parentType.idSystemObject} ${eSystemObjectType[parentType.eType]} ${parentType.idObject} <- ${childType.idSystemObject} ${eSystemObjectType[childType.eType]} ${childType.idObject}`);
+            else
+                LOG.logger.info(`OA: ${parentType.idSystemObject} ${eSystemObjectType[parentType.eType]} ${parentType.idObject} <- null child`);
             this.systemObjectMap.set(idSystemObjectParent, parentType);
 
             // gather using master systemobjectxref's
