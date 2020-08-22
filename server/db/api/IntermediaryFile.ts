@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { IntermediaryFile as IntermediaryFileBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> implements IntermediaryFileBase {
+export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> implements IntermediaryFileBase, SystemObjectBased {
     idIntermediaryFile!: number;
     DateCreated!: Date;
     idAsset!: number;

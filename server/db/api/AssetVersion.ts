@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { AssetVersion as AssetVersionBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements AssetVersionBase {
+export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements AssetVersionBase, SystemObjectBased {
     idAssetVersion!: number;
     idAsset!: number;
     idUserCreator!: number;

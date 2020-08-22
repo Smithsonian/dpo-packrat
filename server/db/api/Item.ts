@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Item as ItemBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Item extends DBC.DBObject<ItemBase> implements ItemBase {
+export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObjectBased {
     idItem!: number;
     EntireSubject!: boolean;
     idAssetThumbnail!: number | null;

@@ -3697,6 +3697,13 @@ describe('DB Fetch Special Test Suite', () => {
         expect(SOAssetSource).toEqual(systemObjectSubject);
     });
 
+    test('DB Creation: Asset.assignOwner', async () => {
+        let assigned: boolean = false;
+        if (assetThumbnail && subject)
+            assigned = await assetThumbnail.assignOwner(subject);
+        expect(assigned).toBeTruthy();
+    });
+
     test('DB Fetch Special: CaptureData.fetchFromCaptureDataPhoto', async () => {
         let captureDataFetch: DBAPI.CaptureData | null = null;
         if (captureDataPhoto)
