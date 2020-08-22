@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { Asset as AssetBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, Subject, Item, CaptureData, Model, Scene, IntermediaryFile, ProjectDocumentation } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -117,7 +117,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
         }
     }
 
-    /** This method returns the SystemObject to which this asset belongs. Use fetchSourceSystemObject() to retrieve the system object that represents this asset. */
+    /** This method returns the SystemObject to which this asset belongs. Use fetchSystemObject to fetch the SystemObject that represents this asset. */
     async fetchSourceSystemObject(): Promise<SystemObject | null> {
         const { idSystemObject } = this;
         if (!idSystemObject)
@@ -129,5 +129,77 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
             LOG.logger.error('DBAPI.Asset.fetchSourceSystemObject', error);
             return null;
         }
+    }
+
+    // Simplify assigning an asset to an appropriate system object:
+    // Subject: as a thumbnail
+    // Item: as a thumbnail
+    // CaptureData: as a thumbnail, and as an asset representing all or part of a CaptureData set (explicitly connected to CaptureDataFile)
+    // Model: as a thumbnail, and as an asset representing all or part of a Model (explicitly connected to ModelGeometryFile and ModelMVMapFile)
+    // Scene: as a thumbnail, and as an asset representing all or part of a Scene
+    // IntermediaryFile: as an asset representing all or part of an IntermediaryFile
+    // ProjectDocumentation: as an asset representing all or part of a ProjectDocumentation
+
+    /** Updates idSystemObject with the correct value for the specified Subject */
+    async assignOwnerSubject(subject: Subject): Promise<boolean> {
+        const SO: SystemObject | null = await subject.fetchSystemObject();
+        if (!SO)
+            return false;
+        this.idSystemObject = SO.idSystemObject;
+        return this.updateWorker();
+    }
+
+    /** Updates idSystemObject with the correct value for the specified Item */
+    async assignOwnerItem(item: Item): Promise<boolean> {
+        const SO: SystemObject | null = await item.fetchSystemObject();
+        if (!SO)
+            return false;
+        this.idSystemObject = SO.idSystemObject;
+        return this.updateWorker();
+    }
+
+    /** Updates idSystemObject with the correct value for the specified CaptureData */
+    async assignOwnerCaptureData(captureData: CaptureData): Promise<boolean> {
+        const SO: SystemObject | null = await captureData.fetchSystemObject();
+        if (!SO)
+            return false;
+        this.idSystemObject = SO.idSystemObject;
+        return this.updateWorker();
+    }
+
+    /** Updates idSystemObject with the correct value for the specified Model */
+    async assignOwnerModel(model: Model): Promise<boolean> {
+        const SO: SystemObject | null = await model.fetchSystemObject();
+        if (!SO)
+            return false;
+        this.idSystemObject = SO.idSystemObject;
+        return this.updateWorker();
+    }
+
+    /** Updates idSystemObject with the correct value for the specified Scene */
+    async assignOwnerScene(scene: Scene): Promise<boolean> {
+        const SO: SystemObject | null = await scene.fetchSystemObject();
+        if (!SO)
+            return false;
+        this.idSystemObject = SO.idSystemObject;
+        return this.updateWorker();
+    }
+
+    /** Updates idSystemObject with the correct value for the specified IntermediaryFile */
+    async assignOwnerIntermediaryFile(intermediaryFile: IntermediaryFile): Promise<boolean> {
+        const SO: SystemObject | null = await intermediaryFile.fetchSystemObject();
+        if (!SO)
+            return false;
+        this.idSystemObject = SO.idSystemObject;
+        return this.updateWorker();
+    }
+
+    /** Updates idSystemObject with the correct value for the specified ProjectDocumentation */
+    async assignOwnerProjectDocumentation(projectDocumentation: ProjectDocumentation): Promise<boolean> {
+        const SO: SystemObject | null = await projectDocumentation.fetchSystemObject();
+        if (!SO)
+            return false;
+        this.idSystemObject = SO.idSystemObject;
+        return this.updateWorker();
     }
 }
