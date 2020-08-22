@@ -4,10 +4,9 @@
  Interfaces like:  ReadAssetVersion(Asset, AssetVersion)
  */
 
-// import * as fs from 'fs';
 import * as STORE from '../interface';
 import * as DBAPI from '../../db';
-// import * as LOG from '../../utils/logger';
+import * as LOG from '../../utils/logger';
 // import * as H from '../../utils/helpers';
 import { StorageFactory } from './StorageFactory';
 import { IStorage } from './IStorage';
@@ -22,13 +21,16 @@ export type AssetStorageResult = {
 export class AssetStorageAdapter {
     static async readAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<STORE.ReadStreamResult> {
         const storage: IStorage | null = await StorageFactory.getInstance();
-        if (!storage)
+        if (!storage) {
+            const error: string = 'AssetStorageAdapter.readAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            LOG.logger.error(error);
             return {
                 readStream: null,
                 storageHash: null,
                 success: false,
-                error: 'AssetStorageAdapter.readAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()'
+                error
             };
+        }
 
         const readStreamInput: STORE.ReadStreamInput = {
             storageKey: asset.StorageKey,
@@ -80,6 +82,7 @@ export class AssetStorageAdapter {
         if (!storage) {
             retValue.success = false;
             retValue.error = 'AssetStorageAdapter.commitNewAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
@@ -87,6 +90,7 @@ export class AssetStorageAdapter {
         if (!resStorage.success) {
             retValue.success = false;
             retValue.error = resStorage.error;
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
@@ -94,6 +98,7 @@ export class AssetStorageAdapter {
         if (asset.idAsset == 0 && !await asset.create()) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.commitNewAssetVersion: Unable to create Asset ${JSON.stringify(asset)}`;
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
@@ -111,6 +116,7 @@ export class AssetStorageAdapter {
         if (!await assetVersion.create()) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.commitNewAssetVersion: Unable to create AssetVersion ${JSON.stringify(assetVersion)}`;
+            LOG.logger.error(retValue.error);
             return retValue;
         }
         retValue.asset = asset;
@@ -120,6 +126,22 @@ export class AssetStorageAdapter {
     }
 
     static async ingestAsset(storageKeyStaged: string, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
+        SOBased: DBAPI.SystemObjectBased, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
+        const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
+        if (!SO) {
+            const error: string = `Unable to fetch SystemObject for ${SO}`;
+            return {
+                asset,
+                assetVersion,
+                success: false,
+                error
+            };
+            LOG.logger.error(error);
+        }
+        return await AssetStorageAdapter.ingestAssetForSystemObjectID(storageKeyStaged, asset, assetVersion, SO.idSystemObject, opInfo);
+    }
+
+    static async ingestAssetForSystemObjectID(storageKeyStaged: string, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
         idSystemObject: number, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
         // Call IStorage.promote
         // Update asset.StorageKey, if needed
@@ -135,6 +157,7 @@ export class AssetStorageAdapter {
         if (!storage) {
             retValue.success = false;
             retValue.error = 'AssetStorageAdapter.ingestAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
@@ -142,6 +165,7 @@ export class AssetStorageAdapter {
         if (!storageKeyResults.success) {
             retValue.success = false;
             retValue.error = storageKeyResults.error;
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
@@ -149,6 +173,7 @@ export class AssetStorageAdapter {
         if (!await metadata.fetch()) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.ingestAsset: Update to retrieve object ancestry for system object ${idSystemObject}`;
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
@@ -164,6 +189,7 @@ export class AssetStorageAdapter {
         if (!resStorage.success) {
             retValue.success = false;
             retValue.error = resStorage.error;
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
@@ -176,6 +202,7 @@ export class AssetStorageAdapter {
             if (!await asset.update()) {
                 retValue.success = false;
                 retValue.error = `AssetStorageAdapter.ingestAsset: Update to update Asset ${JSON.stringify(asset)}`;
+                LOG.logger.error(retValue.error);
                 return retValue;
             }
         }
@@ -184,6 +211,7 @@ export class AssetStorageAdapter {
         if (!await assetVersion.update()) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.ingestAsset: Update to update AssetVersion ${JSON.stringify(assetVersion)}`;
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
@@ -233,6 +261,7 @@ export class AssetStorageAdapter {
         if (!storage) {
             retValue.success = false;
             retValue.error = 'AssetStorageAdapter.actOnAssetWorker: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
@@ -241,6 +270,7 @@ export class AssetStorageAdapter {
         if (!assetVersionOld) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.actOnAssetWorker: Unable to fetch latest AssetVersion for ${asset}`;
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
@@ -249,6 +279,7 @@ export class AssetStorageAdapter {
             if (!renameAssetResult.success) {
                 retValue.success = false;
                 retValue.error = renameAssetResult.error;
+                LOG.logger.error(retValue.error);
                 return retValue;
             }
         } else if (hideAssetInput) {
@@ -256,6 +287,7 @@ export class AssetStorageAdapter {
             if (!hideAssetResult.success) {
                 retValue.success = false;
                 retValue.error = hideAssetResult.error;
+                LOG.logger.error(retValue.error);
                 return retValue;
             }
         } else if (reinstateAssetInput) {
@@ -263,6 +295,7 @@ export class AssetStorageAdapter {
             if (!reinstateAssetResult.success) {
                 retValue.success = false;
                 retValue.error = reinstateAssetResult.error;
+                LOG.logger.error(retValue.error);
                 return retValue;
             }
         }
@@ -282,6 +315,7 @@ export class AssetStorageAdapter {
         if (!await assetVersion.create()) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.actOnAssetWorker: Unable to create AssetVersion ${JSON.stringify(assetVersion)}`;
+            LOG.logger.error(retValue.error);
             return retValue;
         }
         retValue.asset = asset;
