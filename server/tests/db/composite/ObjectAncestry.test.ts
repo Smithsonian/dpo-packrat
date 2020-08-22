@@ -106,36 +106,36 @@ describe('DB Composite ObjectAncestry Setup', () => {
     });
 
     test('DB Composite DB Object Wiring', async () => {
-        await UTIL.createXrefUnitProject(unit1, project1);
-        await UTIL.createXrefUnitProject(unit2, project1);
+        await UTIL.createXref(unit1, project1);
+        await UTIL.createXref(unit2, project1);
         // Unit-Subject is defined via Subject.idUnit
-        await UTIL.createXrefProjectSubject(project1, subject2);
-        await UTIL.createXrefProjectSubject(project1, subject3);
-        await UTIL.createXrefProjectSubject(project1, subject4);
-        await UTIL.createXrefSubjectItem(subject1, item1);
-        await UTIL.createXrefSubjectItem(subject1, item2);
-        await UTIL.createXrefSubjectItem(subject2, item3);
-        await UTIL.createXrefSubjectItem(subject2, item4);
-        await UTIL.createXrefSubjectItem(subject4, item4);
-        await UTIL.createXrefItemCaptureData(item1, captureData1);
-        await UTIL.createXrefItemModel(item1, model1);
-        await UTIL.createXrefItemScene(item1, scene1);
-        await UTIL.createXrefCaptureDataModel(captureData1, model1);
-        await UTIL.createXrefModelModel(model1, model2);
-        await UTIL.createXrefModelModel(model1, model3);
-        await UTIL.createXrefModelModel(model1, model4);
-        await UTIL.createXrefSceneModel(scene1, model2);
-        await UTIL.createXrefSceneModel(scene1, model3);
-        await UTIL.createXrefSceneModel(scene1, model4);
+        await UTIL.createXref(project1, subject2);
+        await UTIL.createXref(project1, subject3);
+        await UTIL.createXref(project1, subject4);
+        await UTIL.createXref(subject1, item1);
+        await UTIL.createXref(subject1, item2);
+        await UTIL.createXref(subject2, item3);
+        await UTIL.createXref(subject2, item4);
+        await UTIL.createXref(subject4, item4);
+        await UTIL.createXref(item1, captureData1);
+        await UTIL.createXref(item1, model1);
+        await UTIL.createXref(item1, scene1);
+        await UTIL.createXref(captureData1, model1);
+        await UTIL.createXref(model1, model2);
+        await UTIL.createXref(model1, model3);
+        await UTIL.createXref(model1, model4);
+        await UTIL.createXref(scene1, model2);
+        await UTIL.createXref(scene1, model3);
+        await UTIL.createXref(scene1, model4);
 
         // asset1; Thumbnail for subject1
         // asset2; Thumbnail for item1
-        await UTIL.createXrefCaptureDataAsset(captureData1, asset3);
-        await UTIL.createXrefModelAsset(model1, asset4);
-        await UTIL.createXrefModelAsset(model2, asset5);
-        await UTIL.createXrefModelAsset(model3, asset6);
-        await UTIL.createXrefModelAsset(model4, asset7);
-        await UTIL.createXrefSceneAsset(scene1, asset8);
+        await UTIL.createXref(captureData1, asset3);
+        await UTIL.createXref(model1, asset4);
+        await UTIL.createXref(model2, asset5);
+        await UTIL.createXref(model3, asset6);
+        await UTIL.createXref(model4, asset7);
+        await UTIL.createXref(scene1, asset8);
 
         // Asset-AssetVersion is defined via AssetVersion.idAsset
         assetVersion1;

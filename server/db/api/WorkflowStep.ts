@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { WorkflowStep as WorkflowStepBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements WorkflowStepBase {
+export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements WorkflowStepBase, SystemObjectBased {
     idWorkflowStep!: number;
     DateCompleted!: Date | null;
     DateCreated!: Date;

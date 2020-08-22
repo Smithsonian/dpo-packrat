@@ -4,6 +4,10 @@ import { WorkflowStep } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
+export interface SystemObjectBased {
+    fetchSystemObject(): Promise<SystemObject | null>;
+}
+
 export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.SystemObject {
     idActor!: number | null;
     idAsset!: number | null;

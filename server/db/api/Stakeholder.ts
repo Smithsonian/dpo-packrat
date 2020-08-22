@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Stakeholder as StakeholderBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Stakeholder extends DBC.DBObject<StakeholderBase> implements StakeholderBase {
+export class Stakeholder extends DBC.DBObject<StakeholderBase> implements StakeholderBase, SystemObjectBased {
     idStakeholder!: number;
     EmailAddress!: string | null;
     IndividualName!: string;

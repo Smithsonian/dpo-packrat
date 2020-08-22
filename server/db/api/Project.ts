@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Project as ProjectBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
+export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, SystemObjectBased {
     idProject!: number;
     Name!: string;
     Description!: string | null;

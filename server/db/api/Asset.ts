@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Asset as AssetBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject, Subject, Item, CaptureData, Model, Scene, IntermediaryFile, ProjectDocumentation } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
+export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemObjectBased {
     idAsset!: number;
     FileName!: string;
     FilePath!: string;
@@ -140,63 +140,10 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase {
     // IntermediaryFile: as an asset representing all or part of an IntermediaryFile
     // ProjectDocumentation: as an asset representing all or part of a ProjectDocumentation
 
-    /** Updates idSystemObject with the correct value for the specified Subject */
-    async assignOwnerSubject(subject: Subject): Promise<boolean> {
-        const SO: SystemObject | null = await subject.fetchSystemObject();
-        if (!SO)
-            return false;
-        this.idSystemObject = SO.idSystemObject;
-        return this.updateWorker();
-    }
-
-    /** Updates idSystemObject with the correct value for the specified Item */
-    async assignOwnerItem(item: Item): Promise<boolean> {
-        const SO: SystemObject | null = await item.fetchSystemObject();
-        if (!SO)
-            return false;
-        this.idSystemObject = SO.idSystemObject;
-        return this.updateWorker();
-    }
-
-    /** Updates idSystemObject with the correct value for the specified CaptureData */
-    async assignOwnerCaptureData(captureData: CaptureData): Promise<boolean> {
-        const SO: SystemObject | null = await captureData.fetchSystemObject();
-        if (!SO)
-            return false;
-        this.idSystemObject = SO.idSystemObject;
-        return this.updateWorker();
-    }
-
-    /** Updates idSystemObject with the correct value for the specified Model */
-    async assignOwnerModel(model: Model): Promise<boolean> {
-        const SO: SystemObject | null = await model.fetchSystemObject();
-        if (!SO)
-            return false;
-        this.idSystemObject = SO.idSystemObject;
-        return this.updateWorker();
-    }
-
-    /** Updates idSystemObject with the correct value for the specified Scene */
-    async assignOwnerScene(scene: Scene): Promise<boolean> {
-        const SO: SystemObject | null = await scene.fetchSystemObject();
-        if (!SO)
-            return false;
-        this.idSystemObject = SO.idSystemObject;
-        return this.updateWorker();
-    }
-
-    /** Updates idSystemObject with the correct value for the specified IntermediaryFile */
-    async assignOwnerIntermediaryFile(intermediaryFile: IntermediaryFile): Promise<boolean> {
-        const SO: SystemObject | null = await intermediaryFile.fetchSystemObject();
-        if (!SO)
-            return false;
-        this.idSystemObject = SO.idSystemObject;
-        return this.updateWorker();
-    }
-
-    /** Updates idSystemObject with the correct value for the specified ProjectDocumentation */
-    async assignOwnerProjectDocumentation(projectDocumentation: ProjectDocumentation): Promise<boolean> {
-        const SO: SystemObject | null = await projectDocumentation.fetchSystemObject();
+    /** Updates idSystemObject with the correct value for the specified SystemObjectBased object */
+    async assignOwner(soBased: SystemObjectBased): Promise<boolean> {
+        const SO: SystemObject | null = await soBased.fetchSystemObject();
+        /* istanbul ignore if */
         if (!SO)
             return false;
         this.idSystemObject = SO.idSystemObject;

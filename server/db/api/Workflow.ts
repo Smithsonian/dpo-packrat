@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Workflow as WorkflowBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase {
+export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase, SystemObjectBased {
     idWorkflow!: number;
     DateInitiated!: Date;
     DateUpdated!: Date;
