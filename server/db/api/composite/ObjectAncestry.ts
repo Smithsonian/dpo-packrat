@@ -217,6 +217,10 @@ export class ObjectAncestry {
 
         if (this.pushCount++ >= this.maxPushCount)
             return false;
+
+        // Follow link from asset back to owning system object
+        if (asset.idSystemObject)
+            this.systemObjectList.push(asset.idSystemObject);
         return true;
     }
 
