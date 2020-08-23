@@ -1,44 +1,59 @@
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
 import * as DBAPI from '../../../../db';
-import { CreateUserInput, AreCameraSettingsUniformInput } from '../../../../types/graphql';
+import { CreateUserInput, AreCameraSettingsUniformInput, CreateVocabularyInput, CreateVocabularySetInput } from '../../../../types/graphql';
 import { Asset, AssetVersion } from '@prisma/client';
 
 const areCameraSettingsUniformTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
     let createUserInput: () => CreateUserInput;
-    let createAssetInput: () => Asset;
+    let createAssetInput: (idVAssetType: number) => Asset;
     let createAssetVersionInput: (idAsset: number, idUser: number) => AssetVersion;
+    let createVocabularyInput: (idVocabularySet: number) => CreateVocabularyInput;
+    let createVocabularySetInput: () => CreateVocabularySetInput;
 
     beforeAll(() => {
         graphQLApi = utils.graphQLApi;
         createUserInput = utils.createUserInput;
         createAssetInput = utils.createAssetInput;
         createAssetVersionInput = utils.createAssetVersionInput;
+        createVocabularyInput = utils.createVocabularyInput;
+        createVocabularySetInput = utils.createVocabularySetInput;
     });
 
     describe('Query: areCameraSettingsUniform', () => {
         test('should work with valid input', async () => {
-            const assetInput = createAssetInput();
-            const asset = new DBAPI.Asset(assetInput);
+            const vocabularySetArgs: CreateVocabularySetInput = createVocabularySetInput();
+            const { VocabularySet } = await graphQLApi.createVocabularySet(vocabularySetArgs);
+            expect(VocabularySet).toBeTruthy();
 
-            const userInput = createUserInput();
-            const { User } = await graphQLApi.createUser(userInput);
+            if (VocabularySet) {
+                const vocabularyArgs: CreateVocabularyInput = createVocabularyInput(VocabularySet.idVocabularySet);
+                const { Vocabulary } = await graphQLApi.createVocabulary(vocabularyArgs);
+                expect(Vocabulary).toBeTruthy();
 
-            // TODO: KARAN: fix this test
-            const createdAsset = await asset.create();
-            //  expect(createdAsset).toBe(true);
+                if (Vocabulary) {
+                    const assetInput = createAssetInput(Vocabulary.idVocabulary);
+                    const asset = new DBAPI.Asset(assetInput);
 
-            if (createdAsset && User) {
-                const assetVersionInput = createAssetVersionInput(asset.idAsset, User.idUser);
-                const assetVersion = new DBAPI.AssetVersion(assetVersionInput);
-                if (await assetVersion.create()) {
-                    const cameraSettingUniformInput: AreCameraSettingsUniformInput = {
-                        idAssetVersion: assetVersion.idAsset
-                    };
+                    const userInput = createUserInput();
+                    const { User } = await graphQLApi.createUser(userInput);
 
-                    const result = await graphQLApi.areCameraSettingsUniform(cameraSettingUniformInput);
-                    expect(typeof result.isUniform).toBe('boolean');
+                    const createdAsset = await asset.create();
+                    expect(createdAsset).toBe(true);
+
+                    if (createdAsset && User) {
+                        const assetVersionInput = createAssetVersionInput(asset.idAsset, User.idUser);
+                        const assetVersion = new DBAPI.AssetVersion(assetVersionInput);
+                        if (await assetVersion.create()) {
+                            const cameraSettingUniformInput: AreCameraSettingsUniformInput = {
+                                idAssetVersion: assetVersion.idAsset
+                            };
+
+                            const result = await graphQLApi.areCameraSettingsUniform(cameraSettingUniformInput);
+                            expect(typeof result.isUniform).toBe('boolean');
+                        }
+                    }
                 }
             }
         });

@@ -11,7 +11,9 @@ import {
     VocabularyEntry,
     AreCameraSettingsUniformInput,
     CreateUserInput,
-    GetContentsForAssetVersionsInput
+    GetContentsForAssetVersionsInput,
+    CreateVocabularyInput,
+    CreateVocabularySetInput
 } from '../../../../types/graphql';
 import { eVocabularySetID } from '../../../../cache';
 import { Asset, AssetVersion } from '@prisma/client';
@@ -19,11 +21,13 @@ import * as DBAPI from '../../../../db';
 
 const ingestDataTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
-    let createAssetInput: () => Asset;
+    let createAssetInput: (idVAssetType: number) => Asset;
     let createUserInput: () => CreateUserInput;
     let getVocabularyEntryMap: (vocabularyEntries: VocabularyEntry[]) => Map<number, Vocabulary[]>;
     let getInitialEntryWithVocabularies: (vocabularies: Map<number, Vocabulary[]>, eVocabularySetID: eVocabularySetID) => number | null;
     let createAssetVersionInput: (idAsset: number, idUser: number) => AssetVersion;
+    let createVocabularyInput: (idVocabularySet: number) => CreateVocabularyInput;
+    let createVocabularySetInput: () => CreateVocabularySetInput;
 
     beforeAll(() => {
         graphQLApi = utils.graphQLApi;
@@ -32,134 +36,148 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
         getVocabularyEntryMap = utils.getVocabularyEntryMap;
         getInitialEntryWithVocabularies = utils.getInitialEntryWithVocabularies;
         createAssetVersionInput = utils.createAssetVersionInput;
+        createVocabularyInput = utils.createVocabularyInput;
+        createVocabularySetInput = utils.createVocabularySetInput;
     });
 
     describe('Mutation: ingestData', () => {
         test('should work with valid input', async done => {
-            const assetInput = createAssetInput();
-            const asset = new DBAPI.Asset(assetInput);
-            // TODO: KARAN: fix this test
-            // const created = await asset.create();
-            // expect(created).toBe(true);
+            const vocabularySetArgs: CreateVocabularySetInput = createVocabularySetInput();
+            const { VocabularySet } = await graphQLApi.createVocabularySet(vocabularySetArgs);
+            expect(VocabularySet).toBeTruthy();
 
-            const userInput = createUserInput();
-            const { User } = await graphQLApi.createUser(userInput);
+            if (VocabularySet) {
+                const vocabularyArgs: CreateVocabularyInput = createVocabularyInput(VocabularySet.idVocabularySet);
+                const { Vocabulary } = await graphQLApi.createVocabulary(vocabularyArgs);
+                expect(Vocabulary).toBeTruthy();
 
-            if (User) {
-                const assetVersionInput = createAssetVersionInput(asset.idAsset, User.idUser);
-                const assetVersion = new DBAPI.AssetVersion(assetVersionInput);
+                if (Vocabulary) {
+                    const assetInput = createAssetInput(Vocabulary.idVocabulary);
+                    const asset = new DBAPI.Asset(assetInput);
 
-                const searchInput = {
-                    query: 'apollo'
-                };
+                    const created = await asset.create();
+                    expect(created).toBe(true);
 
-                const { SubjectUnitIdentifier } = await graphQLApi.searchIngestionSubjects(searchInput);
-                expect(SubjectUnitIdentifier).toBeTruthy();
+                    const userInput = createUserInput();
+                    const { User } = await graphQLApi.createUser(userInput);
 
-                if (!SubjectUnitIdentifier.length) done();
+                    if (User) {
+                        const assetVersionInput = createAssetVersionInput(asset.idAsset, User.idUser);
+                        const assetVersion = new DBAPI.AssetVersion(assetVersionInput);
 
-                const { idSubject, SubjectName, IdentifierPublic, UnitAbbreviation } = SubjectUnitIdentifier[0];
+                        const searchInput = {
+                            query: 'apollo'
+                        };
 
-                const subject: IngestSubject = {
-                    id: idSubject,
-                    name: SubjectName,
-                    arkId: IdentifierPublic || '',
-                    unit: UnitAbbreviation
-                };
+                        const { SubjectUnitIdentifier } = await graphQLApi.searchIngestionSubjects(searchInput);
+                        expect(SubjectUnitIdentifier).toBeTruthy();
 
-                const projectsInput = {
-                    idSubjects: [idSubject]
-                };
-                const { Project } = await graphQLApi.getIngestionProjectsForSubjects(projectsInput);
-                expect(Project).toBeTruthy();
+                        if (!SubjectUnitIdentifier.length) done();
 
-                const { idProject, Name } = Project[0];
+                        const { idSubject, SubjectName, IdentifierPublic, UnitAbbreviation } = SubjectUnitIdentifier[0];
 
-                const project: IngestProject = {
-                    id: idProject,
-                    name: Name
-                };
+                        const subject: IngestSubject = {
+                            id: idSubject,
+                            name: SubjectName,
+                            arkId: IdentifierPublic || '',
+                            unit: UnitAbbreviation
+                        };
 
-                const item: IngestItem = {
-                    id: null,
-                    name: 'custom item',
-                    entireSubject: true
-                };
+                        const projectsInput = {
+                            idSubjects: [idSubject]
+                        };
+                        const { Project } = await graphQLApi.getIngestionProjectsForSubjects(projectsInput);
+                        expect(Project).toBeTruthy();
 
-                const vocabularyEntriesInput = {
-                    eVocabSetIDs: [eVocabularySetID.eCaptureDataDatasetType, eVocabularySetID.eIdentifierIdentifierType, eVocabularySetID.eCaptureDataFileVariantType]
-                };
+                        const { idProject, Name } = Project[0];
 
-                const { VocabularyEntries } = await graphQLApi.getVocabularyEntries(vocabularyEntriesInput);
+                        const project: IngestProject = {
+                            id: idProject,
+                            name: Name
+                        };
 
-                const vocabularyMap = getVocabularyEntryMap(VocabularyEntries);
+                        const item: IngestItem = {
+                            id: null,
+                            name: 'custom item',
+                            entireSubject: true
+                        };
 
-                const identifierType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eIdentifierIdentifierType) || 0;
-                const variantType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eCaptureDataFileVariantType) || 0;
-                const datasetType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eCaptureDataDatasetType) || 0;
+                        const vocabularyEntriesInput = {
+                            eVocabSetIDs: [eVocabularySetID.eCaptureDataDatasetType, eVocabularySetID.eIdentifierIdentifierType, eVocabularySetID.eCaptureDataFileVariantType]
+                        };
 
-                const identifier: IngestIdentifier = {
-                    id: assetVersion.idAssetVersion,
-                    identifier: 'custom-identifier',
-                    identifierType
-                };
+                        const { VocabularyEntries } = await graphQLApi.getVocabularyEntries(vocabularyEntriesInput);
 
-                const getContentsInput: GetContentsForAssetVersionsInput = {
-                    idAssetVersions: [assetVersion.idAsset]
-                };
+                        const vocabularyMap = getVocabularyEntryMap(VocabularyEntries);
 
-                const { AssetVersionContent } = await graphQLApi.getContentsForAssetVersions(getContentsInput);
-                expect(AssetVersionContent).toBeTruthy();
+                        const identifierType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eIdentifierIdentifierType) || 0;
+                        const variantType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eCaptureDataFileVariantType) || 0;
+                        const datasetType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eCaptureDataDatasetType) || 0;
 
-                let folderName = 'raw';
+                        const identifier: IngestIdentifier = {
+                            id: assetVersion.idAssetVersion,
+                            identifier: 'custom-identifier',
+                            identifierType
+                        };
 
-                if (AssetVersionContent) {
-                    const [assetVersionContent] = AssetVersionContent;
-                    if (assetVersionContent) {
-                        folderName = assetVersionContent.folders[0];
+                        const getContentsInput: GetContentsForAssetVersionsInput = {
+                            idAssetVersions: [assetVersion.idAsset]
+                        };
+
+                        const { AssetVersionContent } = await graphQLApi.getContentsForAssetVersions(getContentsInput);
+                        expect(AssetVersionContent).toBeTruthy();
+
+                        let folderName = 'raw';
+
+                        if (AssetVersionContent) {
+                            const [assetVersionContent] = AssetVersionContent;
+                            if (assetVersionContent) {
+                                folderName = assetVersionContent.folders[0];
+                            }
+                        }
+
+                        const folder: IngestFolder = {
+                            name: folderName,
+                            variantType
+                        };
+
+                        const cameraSettingUniformInput: AreCameraSettingsUniformInput = {
+                            idAssetVersion: assetVersion.idAssetVersion
+                        };
+
+                        const { isUniform } = await graphQLApi.areCameraSettingsUniform(cameraSettingUniformInput);
+
+                        const photogrammetry: PhotogrammetryIngest = {
+                            idAssetVersion: assetVersion.idAssetVersion,
+                            dateCaptured: new Date().toISOString(),
+                            datasetType,
+                            systemCreated: true,
+                            description: 'some description',
+                            cameraSettingUniform: isUniform,
+                            identifiers: [identifier],
+                            folders: [folder],
+                            datasetFieldId: null,
+                            itemPositionType: null,
+                            itemPositionFieldId: null,
+                            itemArrangementFieldId: null,
+                            focusType: null,
+                            lightsourceType: null,
+                            backgroundRemovalMethod: null,
+                            clusterType: null,
+                            clusterGeometryFieldId: null
+                        };
+
+                        const ingestDataInput = {
+                            subjects: [subject],
+                            project,
+                            item,
+                            photogrammetry: [photogrammetry]
+                        };
+
+                        const result = await graphQLApi.ingestData(ingestDataInput);
+                        expect(result.success).toBe(true);
                     }
                 }
-
-                const folder: IngestFolder = {
-                    name: folderName,
-                    variantType
-                };
-
-                const cameraSettingUniformInput: AreCameraSettingsUniformInput = {
-                    idAssetVersion: assetVersion.idAssetVersion
-                };
-
-                const { isUniform } = await graphQLApi.areCameraSettingsUniform(cameraSettingUniformInput);
-
-                const photogrammetry: PhotogrammetryIngest = {
-                    idAssetVersion: assetVersion.idAssetVersion,
-                    dateCaptured: new Date().toISOString(),
-                    datasetType,
-                    systemCreated: true,
-                    description: 'some description',
-                    cameraSettingUniform: isUniform,
-                    identifiers: [identifier],
-                    folders: [folder],
-                    datasetFieldId: null,
-                    itemPositionType: null,
-                    itemPositionFieldId: null,
-                    itemArrangementFieldId: null,
-                    focusType: null,
-                    lightsourceType: null,
-                    backgroundRemovalMethod: null,
-                    clusterType: null,
-                    clusterGeometryFieldId: null
-                };
-
-                const ingestDataInput = {
-                    subjects: [subject],
-                    project,
-                    item,
-                    photogrammetry: [photogrammetry]
-                };
-
-                const result = await graphQLApi.ingestData(ingestDataInput);
-                expect(result.success).toBe(true);
             }
         });
     });
