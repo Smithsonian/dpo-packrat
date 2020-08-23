@@ -137,13 +137,13 @@ class TestSuiteUtils {
         };
     };
 
-    createAssetInput = (): Asset => {
+    createAssetInput = (idVAssetType: number): Asset => {
         return {
             FileName: 'Test Asset Thumbnail',
             FilePath: '/test/asset/path',
             idSystemObject: null,
             idAssetGroup: null,
-            idVAssetType: 0,
+            idVAssetType,
             StorageKey: randomStorageKey('/test/asset/path/'),
             idAsset: 0
         };
