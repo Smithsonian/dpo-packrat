@@ -1044,7 +1044,7 @@ export type IngestItem = {
 };
 
 export type IngestIdentifier = {
-    id: Scalars['Int'];
+    id?: Maybe<Scalars['Int']>;
     identifier: Scalars['String'];
     identifierType: Scalars['Int'];
 };

@@ -87,13 +87,13 @@ function useIngest(): UseIngest {
 
             if (identifiers) {
                 lodash.forEach(identifiers, data => {
-                    const { id, identifier, identifierType } = data;
+                    const { identifier, identifierType } = data;
                     if (!identifierType) {
                         throw Error('Identifer type is null');
                     }
 
                     const identifierData = {
-                        id,
+                        id: null,
                         identifier,
                         identifierType
                     };
