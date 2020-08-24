@@ -71,7 +71,7 @@ function useVocabularyEntries(): UseVocabularyEntries {
     const getInitialEntry = (eVocabularySetID: eVocabularySetID): number | null => {
         const vocabularyEntry = vocabularies.get(eVocabularySetID);
 
-        if (vocabularyEntry) {
+        if (vocabularyEntry && vocabularyEntry.length) {
             return vocabularyEntry[0].idVocabulary;
         }
 
@@ -81,7 +81,7 @@ function useVocabularyEntries(): UseVocabularyEntries {
     const getInitialEntryWithVocabularies = (vocabularies: StateVocabulary, eVocabularySetID: eVocabularySetID): number | null => {
         const vocabularyEntry = vocabularies.get(eVocabularySetID);
 
-        if (vocabularyEntry) {
+        if (vocabularyEntry && vocabularyEntry.length) {
             return vocabularyEntry[0].idVocabulary;
         }
 

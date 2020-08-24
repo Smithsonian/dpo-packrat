@@ -9,12 +9,21 @@ export default async function getIngestionProjectsForSubjects(_: Parent, args: Q
     const Project = await DBAPI.Project.fetchMasterFromSubjects(idSubjects);
 
     if (Project) {
-        return {
-            Project
-        };
+        if (Project.length) {
+            return {
+                Project
+            };
+        }
     }
 
     // TODO: KARAN: if projects are empty after fetchMasterFromSubjects, send all projects
+    const AllProjects = await DBAPI.Project.fetchAll();
+
+    if (AllProjects) {
+        return {
+            Project: AllProjects
+        };
+    }
 
     return {
         Project: []
