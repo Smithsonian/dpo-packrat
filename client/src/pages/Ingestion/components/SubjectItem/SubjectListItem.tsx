@@ -23,7 +23,7 @@ interface SubjectListItemProps {
     name: string;
     selected: boolean;
     onAdd: (subject: StateSubject) => void;
-    onRemove: (id: number) => void;
+    onRemove: (arkId: string) => void;
 }
 
 function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
@@ -41,7 +41,7 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
         onAdd(subject);
     };
 
-    const remove = () => onRemove(id);
+    const remove = () => onRemove(arkId);
 
     return (
         <TableRow>

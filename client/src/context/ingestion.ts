@@ -272,7 +272,7 @@ type ADD_SUBJECT = {
 
 type REMOVE_SUBJECT = {
     type: SUBJECT_ACTIONS.REMOVE_SUBJECT;
-    id: number;
+    arkId: string;
 };
 
 type ProjectDispatchAction = ADD_PROJECTS | UPDATE_PROJECT;
@@ -518,7 +518,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
         case INGESTION_ACTION.SUBJECT.REMOVE_SUBJECT:
             return {
                 ...state,
-                subjects: lodash.filter(subjects, ({ id }) => id !== action.id)
+                subjects: lodash.filter(subjects, ({ arkId }) => arkId !== action.arkId)
             };
 
         case INGESTION_ACTION.PROJECT.ADD_PROJECTS:
