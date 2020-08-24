@@ -10,7 +10,6 @@ type Workflow {
     Project: Project
     UserInitiator: User
     WorkflowTemplate: WorkflowTemplate
-    SystemObject: SystemObject
     WorkflowStep: [WorkflowStep]
 }
 
@@ -25,7 +24,6 @@ type WorkflowStep {
     User: User
     VWorkflowStepType: Vocabulary
     Workflow: Workflow
-    SystemObject: SystemObject
     WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]
 }
 

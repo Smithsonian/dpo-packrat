@@ -1,6 +1,6 @@
 import { Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model,
     Project, ProjectDocumentation, Scene, Stakeholder, Subject, SystemObject,
-    SystemObjectPairs, Unit, Workflow, WorkflowStep, eSystemObjectType } from '../..';
+    SystemObjectPairs, Unit, eSystemObjectType } from '../..';
 import * as LOG from '../../../utils/logger';
 import * as L from 'lodash';
 
@@ -25,8 +25,6 @@ export class ObjectAncestry {
     assetVersion: AssetVersion[] | null = null;
     actor: Actor[] | null = null;
     stakeholder: Stakeholder[] | null = null;
-    workflow: Workflow[] | null = null;
-    workflowStep: WorkflowStep[] | null = null;
 
     validHierarchy: boolean = true;
     noCycles: boolean = true;
@@ -109,10 +107,6 @@ export class ObjectAncestry {
             else if (SOP.Actor && !await this.pushActor(SOP.Actor, childType, parentType))
                 return true;
             else if (SOP.Stakeholder && !await this.pushStakeholder(SOP.Stakeholder, childType, parentType))
-                return true;
-            else if (SOP.Workflow && !await this.pushWorkflow(SOP.Workflow, childType, parentType))
-                return true;
-            else if (SOP.WorkflowStep && !await this.pushWorkflowStep(SOP.WorkflowStep, childType, parentType))
                 return true;
 
             if (parentType.eType == eSystemObjectType.eUnknown)
@@ -296,7 +290,6 @@ export class ObjectAncestry {
         if (childType &&
             (childType.eType != eSystemObjectType.eSubject &&
              childType.eType != eSystemObjectType.eProjectDocumentation &&
-             childType.eType != eSystemObjectType.eWorkflow &&
              childType.eType != eSystemObjectType.eStakeholder))
             this.validHierarchy = false;
 
@@ -404,59 +397,6 @@ export class ObjectAncestry {
 
         if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
-        return true;
-    }
-
-    private async pushWorkflow(workflow: Workflow, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.workflow)
-            this.workflow = [];
-        this.workflow.push(workflow);
-
-        parentType.idObject = workflow.idWorkflow;
-        parentType.eType = eSystemObjectType.eWorkflow;
-        if (childType && childType.eType != eSystemObjectType.eWorkflowStep)
-            this.validHierarchy = false;
-
-        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
-            return false;
-
-        if (workflow.idProject) {
-            const SO: SystemObject | null = await SystemObject.fetchFromProjectID(workflow.idProject);
-            if (SO)
-                this.systemObjectList.push(SO.idSystemObject);
-            else
-                LOG.logger.error(`Missing SystemObject for project ${workflow.idProject} linked from ${JSON.stringify(workflow)}`);
-        }
-        return true;
-    }
-
-    private async pushWorkflowStep(workflowStep: WorkflowStep, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.workflowStep)
-            this.workflowStep = [];
-        this.workflowStep.push(workflowStep);
-
-        parentType.idObject = workflowStep.idWorkflowStep;
-        parentType.eType = eSystemObjectType.eWorkflowStep;
-        if (childType &&
-            (childType.eType != eSystemObjectType.eAsset &&
-             childType.eType != eSystemObjectType.eAssetVersion &&
-             childType.eType != eSystemObjectType.eCaptureData &&
-             childType.eType != eSystemObjectType.eModel &&
-             childType.eType != eSystemObjectType.eScene &&
-             childType.eType != eSystemObjectType.eIntermediaryFile))
-            this.validHierarchy = false;
-
-        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
-            return false;
-
-        if (workflowStep.idWorkflow) {
-            const SO: SystemObject | null = await SystemObject.fetchFromWorkflowID(workflowStep.idWorkflow);
-            if (SO)
-                this.systemObjectList.push(SO.idSystemObject);
-            else
-                LOG.logger.error(`Missing SystemObject for workflow ${workflowStep.idWorkflow} linked from ${JSON.stringify(workflowStep)}`);
-        }
-
         return true;
     }
 }

@@ -23,8 +23,6 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
     idSubject!: number | null;
     idSystemObject!: number;
     idUnit!: number | null;
-    idWorkflow!: number | null;
-    idWorkflowStep!: number | null;
     Retired!: boolean;
 
     constructor(input: P.SystemObject) {
@@ -261,30 +259,6 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
                 await DBC.DBConnection.prisma.systemObject.findOne({ where: { idUnit } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromUnit', error);
-            return null;
-        }
-    }
-
-    static async fetchFromWorkflowID(idWorkflow: number): Promise<SystemObject | null> {
-        if (!idWorkflow)
-            return null;
-        try {
-            return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflow } }), SystemObject);
-        } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromWorkflow', error);
-            return null;
-        }
-    }
-
-    static async fetchFromWorkflowStepID(idWorkflowStep: number): Promise<SystemObject | null> {
-        if (!idWorkflowStep)
-            return null;
-        try {
-            return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflowStep } }), SystemObject);
-        } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromWorkflowStep', error);
             return null;
         }
     }

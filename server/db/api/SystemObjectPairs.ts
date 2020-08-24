@@ -1,8 +1,7 @@
 /* eslint-disable camelcase */
 import * as P from '@prisma/client';
 import { Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model,
-    Project, ProjectDocumentation, Scene, Stakeholder, SystemObject, Subject, Unit,
-    Workflow, WorkflowStep } from '..';
+    Project, ProjectDocumentation, Scene, Stakeholder, SystemObject, Subject, Unit } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -19,9 +18,7 @@ type SystemObjectPairsBase = P.SystemObject
 & { Scene: P.Scene | null}
 & { Stakeholder: P.Stakeholder | null}
 & { Subject: P.Subject | null}
-& { Unit: P.Unit | null}
-& { Workflow: P.Workflow | null}
-& { WorkflowStep: P.WorkflowStep | null};
+& { Unit: P.Unit | null};
 
 type SystemObjectActorBase = P.SystemObject & { Actor: P.Actor | null};
 type SystemObjectAssetBase = P.SystemObject & { Asset_AssetToSystemObject_idAsset: P.Asset | null};
@@ -36,8 +33,6 @@ type SystemObjectSceneBase = P.SystemObject & { Scene: P.Scene | null};
 type SystemObjectStakeholderBase = P.SystemObject & { Stakeholder: P.Stakeholder | null};
 type SystemObjectSubjectBase = P.SystemObject & { Subject: P.Subject | null};
 type SystemObjectUnitBase = P.SystemObject & { Unit: P.Unit | null};
-type SystemObjectWorkflowBase = P.SystemObject & { Workflow: P.Workflow | null};
-type SystemObjectWorkflowStepBase = P.SystemObject & { WorkflowStep: P.WorkflowStep | null};
 
 export class SystemObjectActor extends SystemObject implements SystemObjectActorBase {
     Actor: Actor | null;
@@ -332,50 +327,6 @@ export class SystemObjectUnit extends SystemObject implements SystemObjectUnitBa
     }
 }
 
-export class SystemObjectWorkflow extends SystemObject implements SystemObjectWorkflowBase {
-    Workflow: Workflow | null;
-
-    constructor(input: SystemObjectWorkflowBase) {
-        super(input);
-        this.Workflow = (input.Workflow) ? new Workflow(input.Workflow) : /* istanbul ignore next */ null;
-    }
-
-    static async fetch(idWorkflow: number): Promise<SystemObjectWorkflow | null> {
-        if (!idWorkflow)
-            return null;
-        try {
-            const SOPair: SystemObjectWorkflowBase | null =
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflow, }, include: { Workflow: true, }, });
-            return SOPair ? new SystemObjectWorkflow(SOPair) : null;
-        } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectWorkflow.fetch', error);
-            return null;
-        }
-    }
-}
-
-export class SystemObjectWorkflowStep extends SystemObject implements SystemObjectWorkflowStepBase {
-    WorkflowStep: WorkflowStep | null;
-
-    constructor(input: SystemObjectWorkflowStepBase) {
-        super(input);
-        this.WorkflowStep = (input.WorkflowStep) ? new WorkflowStep(input.WorkflowStep) : /* istanbul ignore next */ null;
-    }
-
-    static async fetch(idWorkflowStep: number): Promise<SystemObjectWorkflowStep | null> {
-        if (!idWorkflowStep)
-            return null;
-        try {
-            const SOPair: SystemObjectWorkflowStepBase | null =
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflowStep, }, include: { WorkflowStep: true, }, });
-            return SOPair ? new SystemObjectWorkflowStep(SOPair) : null;
-        } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectWorkflowStep.fetch', error);
-            return null;
-        }
-    }
-}
-
 export enum eSystemObjectType {
     eUnit,
     eProject,
@@ -390,8 +341,6 @@ export enum eSystemObjectType {
     eAssetVersion,
     eActor,
     eStakeholder,
-    eWorkflow,
-    eWorkflowStep,
     eUnknown
 }
 
@@ -409,8 +358,6 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
     Stakeholder: Stakeholder | null = null;
     Subject: Subject | null = null;
     Unit: Unit | null = null;
-    Workflow: Workflow | null = null;
-    WorkflowStep: WorkflowStep | null = null;
 
     get Asset(): Asset | null {
         return this.Asset_AssetToSystemObject_idAsset;
@@ -434,8 +381,6 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
         if (input.Subject) this.Subject = new Subject(input.Subject);
         if (input.Stakeholder) this.Stakeholder = new Stakeholder(input.Stakeholder);
         if (input.Unit) this.Unit = new Unit(input.Unit);
-        if (input.Workflow) this.Workflow = new Workflow(input.Workflow);
-        if (input.WorkflowStep) this.WorkflowStep = new WorkflowStep(input.WorkflowStep);
     }
 
     static async fetch(idSystemObject: number): Promise<SystemObjectPairs | null> {
@@ -458,9 +403,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                         Scene: true,
                         Stakeholder: true,
                         Subject: true,
-                        Unit: true,
-                        Workflow: true,
-                        WorkflowStep: true
+                        Unit: true
                     },
                 });
             return (SOAPB ? new SystemObjectPairs(SOAPB) : null);
@@ -494,9 +437,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                         Scene: true,
                         Stakeholder: true,
                         Subject: true,
-                        Unit: true,
-                        Workflow: true,
-                        WorkflowStep: true
+                        Unit: true
                     },
                 }), SystemObjectPairs);
         } catch (error) /* istanbul ignore next */ {
@@ -529,9 +470,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                         Scene: true,
                         Stakeholder: true,
                         Subject: true,
-                        Unit: true,
-                        Workflow: true,
-                        WorkflowStep: true
+                        Unit: true
                     },
                 }), SystemObjectPairs);
         } catch (error) /* istanbul ignore next */ {

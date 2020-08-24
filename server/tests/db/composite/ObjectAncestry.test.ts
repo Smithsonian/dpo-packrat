@@ -29,9 +29,6 @@ let projectDocumentation1: DBAPI.ProjectDocumentation;
 let intermediaryFile1: DBAPI.IntermediaryFile;
 let actor1: DBAPI.Actor;
 let stakeholder1: DBAPI.Stakeholder;
-let workflow1: DBAPI.Workflow;
-let workflowStep1: DBAPI.WorkflowStep;
-let workflowTemplate1: DBAPI.WorkflowTemplate;
 let asset1: DBAPI.Asset;
 let asset2: DBAPI.Asset;
 let asset3: DBAPI.Asset;
@@ -133,9 +130,6 @@ describe('DB Composite ObjectAncestry Setup', () => {
 
         actor1 = await UTIL.createActorTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', idUnit: unit1.idUnit, idActor: 0 });
         stakeholder1 = await UTIL.createStakeholderTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', EmailAddress: 'OA Test', PhoneNumberMobile: 'OA Test', PhoneNumberOffice: 'OA Test', MailingAddress: 'OA Test', idStakeholder: 0 });
-        workflowTemplate1 = await UTIL.createWorkflowTemplateTest({ Name: 'OA Test', idWorkflowTemplate: 0 });
-        workflow1 = await UTIL.createWorkflowTest({ idWorkflowTemplate: workflowTemplate1.idWorkflowTemplate, idProject: project1.idProject, idUserInitiator: user1.idUser, DateInitiated: UTIL.nowCleansed(), DateUpdated: UTIL.nowCleansed(), idWorkflow: 0 });
-        workflowStep1 = await UTIL.createWorkflowStepTest({ idWorkflow: workflow1.idWorkflow, idUserOwner: user1.idUser, idVWorkflowStepType: v1.idVocabulary, State: 0, DateCreated: UTIL.nowCleansed(), DateCompleted: UTIL.nowCleansed(), idWorkflowStep: 0 });
     });
 
     test('DB Composite DB Object Wiring', async () => {
@@ -177,9 +171,6 @@ describe('DB Composite ObjectAncestry Setup', () => {
         await UTIL.createXref(captureData1, actor1);
         await UTIL.createXref(project1, stakeholder1);
         await UTIL.createXref(unit1, stakeholder1);
-        await UTIL.createXref(workflow1, workflowStep1);
-        // await UTIL.createXref(workflowStep1, captureData1);
-        // await UTIL.createXref(workflowStep1, model1);
 
         // Asset-AssetVersion is defined via AssetVersion.idAsset
         assetVersion1;
@@ -223,8 +214,6 @@ describe('DB Composite ObjectAncestry.fetch', () => {
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
-        expect(OA.workflow).toBeFalsy();
-        expect(OA.workflowStep).toBeFalsy();
     });
 
     test('DB Composite ObjectAncestry CaptureData', async () => {
@@ -252,8 +241,6 @@ describe('DB Composite ObjectAncestry.fetch', () => {
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
-        expect(OA.workflow).toBeFalsy();
-        expect(OA.workflowStep).toBeFalsy();
     });
 
     test('DB Composite ObjectAncestry Master Model', async () => {
@@ -283,8 +270,6 @@ describe('DB Composite ObjectAncestry.fetch', () => {
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
-        expect(OA.workflow).toBeFalsy();
-        expect(OA.workflowStep).toBeFalsy();
     });
 
     test('DB Composite ObjectAncestry Scene', async () => {
@@ -316,8 +301,6 @@ describe('DB Composite ObjectAncestry.fetch', () => {
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
-        expect(OA.workflow).toBeFalsy();
-        expect(OA.workflowStep).toBeFalsy();
     });
 
     test('DB Composite ObjectAncestry Derived Model', async () => {
@@ -349,8 +332,6 @@ describe('DB Composite ObjectAncestry.fetch', () => {
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
-        expect(OA.workflow).toBeFalsy();
-        expect(OA.workflowStep).toBeFalsy();
     });
 
     test('DB Composite ObjectAncestry IntermediaryFile', async () => {
@@ -380,8 +361,6 @@ describe('DB Composite ObjectAncestry.fetch', () => {
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
-        expect(OA.workflow).toBeFalsy();
-        expect(OA.workflowStep).toBeFalsy();
     });
 
     test('DB Composite ObjectAncestry Asset', async () => {
@@ -411,8 +390,6 @@ describe('DB Composite ObjectAncestry.fetch', () => {
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
-        expect(OA.workflow).toBeFalsy();
-        expect(OA.workflowStep).toBeFalsy();
     });
 
     test('DB Composite ObjectAncestry AssetVersion', async () => {
@@ -444,8 +421,6 @@ describe('DB Composite ObjectAncestry.fetch', () => {
             expect(OA.assetVersion).toEqual(expect.arrayContaining([assetVersion3c]));
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
-        expect(OA.workflow).toBeFalsy();
-        expect(OA.workflowStep).toBeFalsy();
     });
 });
 
@@ -464,8 +439,6 @@ describe('DB Composite ObjectAncestry.fetch Invalid', () => {
         await UTIL.createXref(assetVersion1, subject4);
         await UTIL.createXref(actor1, subject4);
         await UTIL.createXref(stakeholder1, subject4);
-        await UTIL.createXref(workflow1, subject4);
-        await UTIL.createXref(workflowStep1, subject4);
         await testObjectAncestryFetch(subject4, false, true);
     });
 
@@ -536,7 +509,5 @@ function testAssetIDs(assetExpected: DBAPI.Asset[], assetReceived: DBAPI.Asset[]
         expect(OA.assetVersion).toBeFalsy();
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
-        expect(OA.workflow).toBeFalsy();
-        expect(OA.workflowStep).toBeFalsy();
     });
 */

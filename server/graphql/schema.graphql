@@ -293,8 +293,6 @@ type SystemObject {
   idStakeholder: Int
   idSubject: Int
   idUnit: Int
-  idWorkflow: Int
-  idWorkflowStep: Int
   Actor: Actor
   Asset: Asset
   AssetVersion: AssetVersion
@@ -308,8 +306,6 @@ type SystemObject {
   Stakeholder: Stakeholder
   Subject: Subject
   Unit: Unit
-  Workflow: Workflow
-  WorkflowStep: WorkflowStep
   AccessContextObject: [AccessContextObject]
   Identifier: [Identifier]
   LicenseAssignment: [LicenseAssignment]
@@ -494,7 +490,6 @@ type Workflow {
   Project: Project
   UserInitiator: User
   WorkflowTemplate: WorkflowTemplate
-  SystemObject: SystemObject
   WorkflowStep: [WorkflowStep]
 }
 
@@ -509,7 +504,6 @@ type WorkflowStep {
   User: User
   VWorkflowStepType: Vocabulary
   Workflow: Workflow
-  SystemObject: SystemObject
   WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]
 }
 
