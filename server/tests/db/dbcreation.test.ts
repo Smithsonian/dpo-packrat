@@ -299,15 +299,11 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: WorkflowTemplate', async () => {
-        workflowTemplate = new DBAPI.WorkflowTemplate({
+        workflowTemplate = await UTIL.createWorkflowTemplateTest({
             Name: 'Test Workflow Template',
             idWorkflowTemplate: 0
         });
         expect(workflowTemplate).toBeTruthy();
-        if (workflowTemplate) {
-            expect(await workflowTemplate.create()).toBeTruthy();
-            expect(workflowTemplate.idWorkflowTemplate).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Scene', async () => {
@@ -453,31 +449,23 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Actor With Unit', async () => {
         if (unit)
-            actorWithUnit = new DBAPI.Actor({
+            actorWithUnit = await UTIL.createActorTest({
                 IndividualName: 'Test Actor Name',
                 OrganizationName: 'Test Actor Org',
                 idUnit:  unit.idUnit,
                 idActor: 0
             });
         expect(actorWithUnit).toBeTruthy();
-        if (actorWithUnit) {
-            expect(await actorWithUnit.create()).toBeTruthy();
-            expect(actorWithUnit.idActor).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Actor Without Unit', async () => {
-        actorWithOutUnit = await new DBAPI.Actor({
+        actorWithOutUnit = await UTIL.createActorTest({
             IndividualName: 'Test Actor Name',
             OrganizationName: 'Test Actor Org',
             idUnit: null,
             idActor: 0
         });
         expect(actorWithOutUnit).toBeTruthy();
-        if (actorWithOutUnit) {
-            expect(await actorWithOutUnit.create()).toBeTruthy();
-            expect(actorWithOutUnit.idActor).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Asset Without Asset Group', async () => {
@@ -681,16 +669,12 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: IntermediaryFile', async () => {
         if (assetThumbnail)
-            intermediaryFile = new DBAPI.IntermediaryFile({
+            intermediaryFile = await UTIL.createIntermediaryFileTest({
                 idAsset: assetThumbnail.idAsset,
                 DateCreated: UTIL.nowCleansed(),
                 idIntermediaryFile: 0
             });
         expect(intermediaryFile).toBeTruthy();
-        if (intermediaryFile) {
-            expect(await intermediaryFile.create()).toBeTruthy();
-            expect(intermediaryFile.idIntermediaryFile).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Item', async () => {
@@ -1216,7 +1200,7 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Stakeholder', async () => {
-        stakeholder = new DBAPI.Stakeholder({
+        stakeholder = await UTIL.createStakeholderTest({
             IndividualName: 'Test Stakeholder Name',
             OrganizationName: 'Test Stakeholder Org',
             EmailAddress: 'Test Email',
@@ -1264,7 +1248,7 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Workflow', async () => {
         if (workflowTemplate && project && user)
-            workflow = new DBAPI.Workflow({
+            workflow = await UTIL.createWorkflowTest({
                 idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
                 idProject: project.idProject,
                 idUserInitiator: user.idUser,
@@ -1281,7 +1265,7 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Workflow With Nulls', async () => {
         if (workflowTemplate)
-            workflowNulls = new DBAPI.Workflow({
+            workflowNulls = await UTIL.createWorkflowTest({
                 idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
                 idProject: null,
                 idUserInitiator: null,
@@ -1298,7 +1282,7 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: WorkflowStep', async () => {
         if (workflow && user && vocabulary)
-            workflowStep = new DBAPI.WorkflowStep({
+            workflowStep = await UTIL.createWorkflowStepTest({
                 idWorkflow: workflow.idWorkflow,
                 idUserOwner: user.idUser,
                 idVWorkflowStepType: vocabulary.idVocabulary,

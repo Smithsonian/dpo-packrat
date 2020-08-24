@@ -1,15 +1,21 @@
+export * from './Actor.util';
 export * from './Asset.util';
 export * from './AssetVersion.util';
 export * from './CaptureData.util';
+export * from './IntermediaryFile.util';
 export * from './Item.util';
 export * from './Model.util';
 export * from './Project.util';
 export * from './ProjectDocumentation.util';
 export * from './Scene.util';
-export * from './SystemObjectXref.util';
+export * from './Stakeholder.util';
 export * from './Subject.util';
+export * from './SystemObjectXref.util';
 export * from './Unit.util';
 export * from './User.util';
+export * from './Workflow.util';
+export * from './WorkflowStep.util';
+export * from './WorkflowTemplate.util';
 
 export function randomStorageKey(baseName: string): string {
     return baseName + (Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));

@@ -43,6 +43,7 @@ export class ObjectAncestry {
     async fetch(): Promise<boolean> {
         if (!this.idSystemObject)
             return true;
+        LOG.logger.info(`OA: ${this.idSystemObject}`);
         return this.fetchWorker(null, this.idSystemObject);
     }
 
@@ -58,12 +59,13 @@ export class ObjectAncestry {
     private async fetchWorker(childType: SystemObjectIDType | null, idSystemObjectParent: number): Promise<boolean> {
         try {
             // detect cycle; if so, record and short-circuit
-            if (this.systemObjectMap.has(idSystemObjectParent)) {
+            if (childType && idSystemObjectParent == this.idSystemObject) {
                 this.noCycles = false;
                 this.validHierarchy = false;
                 LOG.logger.error(`DBAPI.ObjectAncestry.fetchWorker Detected Cycle via ${idSystemObjectParent}`);
                 return true;
-            }
+            } else if (this.systemObjectMap.has(idSystemObjectParent))
+                return true;
 
             // Determine what kind of object this is
             // push to the appropriate list
@@ -116,10 +118,11 @@ export class ObjectAncestry {
             if (parentType.eType == eSystemObjectType.eUnknown)
                 LOG.logger.error(`DBAPI.ObjectAncestry.fetchWorker Unidentified SystemObject type ${JSON.stringify(SOP)}`);
 
+            const valid: string = (this.validHierarchy ? '' : 'INVALID HIERARCHY ') + (this.noCycles ? '' : 'CYCLE ');
             if (childType)
-                LOG.logger.info(`OA: ${parentType.idSystemObject} ${eSystemObjectType[parentType.eType]} ${parentType.idObject} <- ${childType.idSystemObject} ${eSystemObjectType[childType.eType]} ${childType.idObject}`);
+                LOG.logger.info(`OA: ${valid}${parentType.idSystemObject} ${eSystemObjectType[parentType.eType]} ${parentType.idObject} <- ${childType.idSystemObject} ${eSystemObjectType[childType.eType]} ${childType.idObject}`);
             else
-                LOG.logger.info(`OA: ${parentType.idSystemObject} ${eSystemObjectType[parentType.eType]} ${parentType.idObject} <- null child`);
+                LOG.logger.info(`OA: ${valid}${parentType.idSystemObject} ${eSystemObjectType[parentType.eType]} ${parentType.idObject} <- null child`);
             this.systemObjectMap.set(idSystemObjectParent, parentType);
 
             // gather using master systemobjectxref's
@@ -144,70 +147,26 @@ export class ObjectAncestry {
         return true;
     }
 
-    private async pushIntermediaryFile(intermediaryFile: IntermediaryFile, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.intermediaryFile)
-            this.intermediaryFile = [];
-        this.intermediaryFile.push(intermediaryFile);
+    private async pushActor(actor: Actor, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
+        if (!this.actor)
+            this.actor = [];
+        this.actor.push(actor);
 
-        parentType.idObject = intermediaryFile.idIntermediaryFile;
-        parentType.eType = eSystemObjectType.eIntermediaryFile;
+        parentType.idObject = actor.idActor;
+        parentType.eType = eSystemObjectType.eActor;
         if (childType)
             this.validHierarchy = false;
 
-        if (this.pushCount++ >= this.maxPushCount)
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
-        return true;
-    }
 
-    private async pushScene(scene: Scene, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.scene)
-            this.scene = [];
-        this.scene.push(scene);
-
-        parentType.idObject = scene.idScene;
-        parentType.eType = eSystemObjectType.eScene;
-        if (!childType ||
-            (childType.eType != eSystemObjectType.eAsset &&
-             childType.eType != eSystemObjectType.eModel))
-            this.validHierarchy = false;
-
-        if (this.pushCount++ >= this.maxPushCount)
-            return false;
-        return true;
-    }
-
-    private async pushModel(model: Model, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.model)
-            this.model = [];
-        this.model.push(model);
-
-        parentType.idObject = model.idModel;
-        parentType.eType = eSystemObjectType.eModel;
-        if (!childType ||
-            (childType.eType != eSystemObjectType.eAsset &&
-             childType.eType != eSystemObjectType.eScene &&
-             childType.eType != eSystemObjectType.eModel))
-            this.validHierarchy = false;
-
-        if (this.pushCount++ >= this.maxPushCount)
-            return false;
-        return true;
-    }
-
-    private async pushCaptureData(captureData: CaptureData, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.captureData)
-            this.captureData = [];
-        this.captureData.push(captureData);
-
-        parentType.idObject = captureData.idCaptureData;
-        parentType.eType = eSystemObjectType.eCaptureData;
-        if (!childType ||
-            (childType.eType != eSystemObjectType.eAsset &&
-             childType.eType != eSystemObjectType.eModel))
-            this.validHierarchy = false;
-
-        if (this.pushCount++ >= this.maxPushCount)
-            return false;
+        if (actor.idUnit) {
+            const SO: SystemObject | null = await SystemObject.fetchFromUnitID(actor.idUnit);
+            if (SO)
+                this.systemObjectList.push(SO.idSystemObject);
+            else
+                LOG.logger.error(`Missing SystemObject for unit ${actor.idUnit} linked from ${JSON.stringify(actor)}`);
+        }
         return true;
     }
 
@@ -218,10 +177,10 @@ export class ObjectAncestry {
 
         parentType.idObject = asset.idAsset;
         parentType.eType = eSystemObjectType.eAsset;
-        if (!childType || childType.eType != eSystemObjectType.eAssetVersion)
+        if (childType && childType.eType != eSystemObjectType.eAssetVersion)
             this.validHierarchy = false;
 
-        if (this.pushCount++ >= this.maxPushCount)
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
 
         // Follow link from asset back to owning system object
@@ -240,7 +199,7 @@ export class ObjectAncestry {
         if (childType)
             this.validHierarchy = false;
 
-        if (this.pushCount++ >= this.maxPushCount)
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
 
         if (assetVersion.idAsset) {
@@ -253,80 +212,38 @@ export class ObjectAncestry {
         return true;
     }
 
-    private async pushActor(actor: Actor, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.actor)
-            this.actor = [];
-        this.actor.push(actor);
+    private async pushCaptureData(captureData: CaptureData, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
+        if (!this.captureData)
+            this.captureData = [];
+        this.captureData.push(captureData);
 
-        parentType.idObject = actor.idActor;
-        parentType.eType = eSystemObjectType.eActor;
-        if (childType)
+        parentType.idObject = captureData.idCaptureData;
+        parentType.eType = eSystemObjectType.eCaptureData;
+        if (childType &&
+            (childType.eType != eSystemObjectType.eAsset &&
+             childType.eType != eSystemObjectType.eModel &&
+             childType.eType != eSystemObjectType.eActor))
             this.validHierarchy = false;
 
-        if (this.pushCount++ >= this.maxPushCount)
-            return false;
-
-        if (actor.idUnit) {
-            const SO: SystemObject | null = await SystemObject.fetchFromUnitID(actor.idUnit);
-            if (SO)
-                this.systemObjectList.push(SO.idSystemObject);
-            else
-                LOG.logger.error(`Missing SystemObject for unit ${actor.idUnit} linked from ${JSON.stringify(actor)}`);
-        }
-        return true;
-    }
-
-    private async pushStakeholder(stakeholder: Stakeholder, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.stakeholder)
-            this.stakeholder = [];
-        this.stakeholder.push(stakeholder);
-
-        parentType.idObject = stakeholder.idStakeholder;
-        parentType.eType = eSystemObjectType.eStakeholder;
-        if (childType)
-            this.validHierarchy = false;
-
-        if (this.pushCount++ >= this.maxPushCount)
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
         return true;
     }
 
-    private async pushWorkflow(workflow: Workflow, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.workflow)
-            this.workflow = [];
-        this.workflow.push(workflow);
+    private async pushIntermediaryFile(intermediaryFile: IntermediaryFile, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
+        if (!this.intermediaryFile)
+            this.intermediaryFile = [];
+        this.intermediaryFile.push(intermediaryFile);
 
-        parentType.idObject = workflow.idWorkflow;
-        parentType.eType = eSystemObjectType.eWorkflow;
-        if (!childType || childType.eType != eSystemObjectType.eWorkflowStep)
+        parentType.idObject = intermediaryFile.idIntermediaryFile;
+        parentType.eType = eSystemObjectType.eIntermediaryFile;
+        if (childType &&
+            (childType.eType != eSystemObjectType.eAsset &&
+             childType.eType != eSystemObjectType.eActor))
             this.validHierarchy = false;
 
-        if (this.pushCount++ >= this.maxPushCount)
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
-        return true;
-    }
-
-    private async pushWorkflowStep(workflowStep: WorkflowStep, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.workflowStep)
-            this.workflowStep = [];
-        this.workflowStep.push(workflowStep);
-
-        parentType.idObject = workflowStep.idWorkflowStep;
-        parentType.eType = eSystemObjectType.eWorkflowStep;
-        if (childType)
-            this.validHierarchy = false;
-
-        if (this.pushCount++ >= this.maxPushCount)
-            return false;
-
-        if (workflowStep.idWorkflow) {
-            const SO: SystemObject | null = await SystemObject.fetchFromWorkflowID(workflowStep.idWorkflow);
-            if (SO)
-                this.systemObjectList.push(SO.idSystemObject);
-            else
-                LOG.logger.error(`Missing SystemObject for workflow ${workflowStep.idWorkflow} linked from ${JSON.stringify(workflowStep)}`);
-        }
-
         return true;
     }
 
@@ -337,41 +254,54 @@ export class ObjectAncestry {
 
         parentType.idObject = item.idItem;
         parentType.eType = eSystemObjectType.eItem;
-        if (!childType ||
+        if (childType &&
             (childType.eType != eSystemObjectType.eAsset &&
              childType.eType != eSystemObjectType.eCaptureData &&
              childType.eType != eSystemObjectType.eModel &&
-             childType.eType != eSystemObjectType.eScene))
+             childType.eType != eSystemObjectType.eScene &&
+             childType.eType != eSystemObjectType.eIntermediaryFile))
             this.validHierarchy = false;
 
-        if (this.pushCount++ >= this.maxPushCount)
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
         return true;
     }
 
-    private async pushSubject(subject: Subject, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.subject)
-            this.subject = [];
-        this.subject.push(subject);
+    private async pushModel(model: Model, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
+        if (!this.model)
+            this.model = [];
+        this.model.push(model);
 
-        parentType.idObject = subject.idSubject;
-        parentType.eType = eSystemObjectType.eSubject;
-        if (!childType ||
+        parentType.idObject = model.idModel;
+        parentType.eType = eSystemObjectType.eModel;
+        if (childType &&
             (childType.eType != eSystemObjectType.eAsset &&
-             childType.eType != eSystemObjectType.eItem))
+             childType.eType != eSystemObjectType.eScene &&
+             childType.eType != eSystemObjectType.eModel &&
+             childType.eType != eSystemObjectType.eActor))
             this.validHierarchy = false;
 
-        if (this.pushCount++ >= this.maxPushCount)
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
+        return true;
+    }
 
-        if (subject.idUnit) {
-            const SO: SystemObject | null = await SystemObject.fetchFromUnitID(subject.idUnit);
-            if (SO)
-                this.systemObjectList.push(SO.idSystemObject);
-            else
-                LOG.logger.error(`Missing SystemObject for unit ${subject.idUnit} linked from ${JSON.stringify(subject)}`);
-        }
+    private async pushProject(project: Project, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
+        if (!this.project)
+            this.project = [];
+        this.project.push(project);
 
+        parentType.idObject = project.idProject;
+        parentType.eType = eSystemObjectType.eProject;
+        if (childType &&
+            (childType.eType != eSystemObjectType.eSubject &&
+             childType.eType != eSystemObjectType.eProjectDocumentation &&
+             childType.eType != eSystemObjectType.eWorkflow &&
+             childType.eType != eSystemObjectType.eStakeholder))
+            this.validHierarchy = false;
+
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
+            return false;
         return true;
     }
 
@@ -382,10 +312,10 @@ export class ObjectAncestry {
 
         parentType.idObject = projectDocumentation.idProjectDocumentation;
         parentType.eType = eSystemObjectType.eProjectDocumentation;
-        if (childType)
+        if (childType && childType.eType != eSystemObjectType.eAsset)
             this.validHierarchy = false;
 
-        if (this.pushCount++ >= this.maxPushCount)
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
 
         if (projectDocumentation.idProject) {
@@ -399,20 +329,62 @@ export class ObjectAncestry {
         return true;
     }
 
-    private async pushProject(project: Project, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
-        if (!this.project)
-            this.project = [];
-        this.project.push(project);
+    private async pushScene(scene: Scene, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
+        if (!this.scene)
+            this.scene = [];
+        this.scene.push(scene);
 
-        parentType.idObject = project.idProject;
-        parentType.eType = eSystemObjectType.eProject;
-        if (!childType ||
-            (childType.eType != eSystemObjectType.eSubject &&
-             childType.eType != eSystemObjectType.eProjectDocumentation))
+        parentType.idObject = scene.idScene;
+        parentType.eType = eSystemObjectType.eScene;
+        if (childType &&
+            (childType.eType != eSystemObjectType.eAsset &&
+             childType.eType != eSystemObjectType.eModel &&
+             childType.eType != eSystemObjectType.eActor))
             this.validHierarchy = false;
 
-        if (this.pushCount++ >= this.maxPushCount)
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
+        return true;
+    }
+
+    private async pushStakeholder(stakeholder: Stakeholder, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
+        if (!this.stakeholder)
+            this.stakeholder = [];
+        this.stakeholder.push(stakeholder);
+
+        parentType.idObject = stakeholder.idStakeholder;
+        parentType.eType = eSystemObjectType.eStakeholder;
+        if (childType)
+            this.validHierarchy = false;
+
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
+            return false;
+        return true;
+    }
+
+    private async pushSubject(subject: Subject, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
+        if (!this.subject)
+            this.subject = [];
+        this.subject.push(subject);
+
+        parentType.idObject = subject.idSubject;
+        parentType.eType = eSystemObjectType.eSubject;
+        if (childType &&
+            (childType.eType != eSystemObjectType.eAsset &&
+             childType.eType != eSystemObjectType.eItem))
+            this.validHierarchy = false;
+
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
+            return false;
+
+        if (subject.idUnit) {
+            const SO: SystemObject | null = await SystemObject.fetchFromUnitID(subject.idUnit);
+            if (SO)
+                this.systemObjectList.push(SO.idSystemObject);
+            else
+                LOG.logger.error(`Missing SystemObject for unit ${subject.idUnit} linked from ${JSON.stringify(subject)}`);
+        }
+
         return true;
     }
 
@@ -423,13 +395,68 @@ export class ObjectAncestry {
 
         parentType.idObject = unit.idUnit;
         parentType.eType = eSystemObjectType.eUnit;
-        if (!childType ||
+        if (childType &&
             (childType.eType != eSystemObjectType.eSubject &&
-             childType.eType != eSystemObjectType.eProject))
+             childType.eType != eSystemObjectType.eProject &&
+             childType.eType != eSystemObjectType.eActor &&
+             childType.eType != eSystemObjectType.eStakeholder))
             this.validHierarchy = false;
 
-        if (this.pushCount++ >= this.maxPushCount)
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
             return false;
+        return true;
+    }
+
+    private async pushWorkflow(workflow: Workflow, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
+        if (!this.workflow)
+            this.workflow = [];
+        this.workflow.push(workflow);
+
+        parentType.idObject = workflow.idWorkflow;
+        parentType.eType = eSystemObjectType.eWorkflow;
+        if (childType && childType.eType != eSystemObjectType.eWorkflowStep)
+            this.validHierarchy = false;
+
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
+            return false;
+
+        if (workflow.idProject) {
+            const SO: SystemObject | null = await SystemObject.fetchFromProjectID(workflow.idProject);
+            if (SO)
+                this.systemObjectList.push(SO.idSystemObject);
+            else
+                LOG.logger.error(`Missing SystemObject for project ${workflow.idProject} linked from ${JSON.stringify(workflow)}`);
+        }
+        return true;
+    }
+
+    private async pushWorkflowStep(workflowStep: WorkflowStep, childType: SystemObjectIDType | null, parentType: SystemObjectIDType): Promise<boolean> {
+        if (!this.workflowStep)
+            this.workflowStep = [];
+        this.workflowStep.push(workflowStep);
+
+        parentType.idObject = workflowStep.idWorkflowStep;
+        parentType.eType = eSystemObjectType.eWorkflowStep;
+        if (childType &&
+            (childType.eType != eSystemObjectType.eAsset &&
+             childType.eType != eSystemObjectType.eAssetVersion &&
+             childType.eType != eSystemObjectType.eCaptureData &&
+             childType.eType != eSystemObjectType.eModel &&
+             childType.eType != eSystemObjectType.eScene &&
+             childType.eType != eSystemObjectType.eIntermediaryFile))
+            this.validHierarchy = false;
+
+        if (this.pushCount++ >= this.maxPushCount) /* istanbul ignore next */
+            return false;
+
+        if (workflowStep.idWorkflow) {
+            const SO: SystemObject | null = await SystemObject.fetchFromWorkflowID(workflowStep.idWorkflow);
+            if (SO)
+                this.systemObjectList.push(SO.idSystemObject);
+            else
+                LOG.logger.error(`Missing SystemObject for workflow ${workflowStep.idWorkflow} linked from ${JSON.stringify(workflowStep)}`);
+        }
+
         return true;
     }
 }
