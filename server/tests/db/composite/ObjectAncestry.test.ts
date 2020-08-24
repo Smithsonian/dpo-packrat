@@ -1,7 +1,7 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as UTIL from '../api';
-// import * as LOG from '../../utils/logger';
+import * as LOG from '../../utils/logger';
 
 afterAll(async done => {
     done();
@@ -11,6 +11,7 @@ let user1: DBAPI.User;
 let unit1: DBAPI.Unit;
 let unit2: DBAPI.Unit;
 let project1: DBAPI.Project;
+let project2: DBAPI.Project;
 let subject1: DBAPI.Subject;
 let subject2: DBAPI.Subject;
 let subject3: DBAPI.Subject;
@@ -20,6 +21,7 @@ let item2: DBAPI.Item;
 let item3: DBAPI.Item;
 let item4: DBAPI.Item;
 let captureData1: DBAPI.CaptureData;
+let captureData2: DBAPI.CaptureData;
 let model1: DBAPI.Model;
 let model2: DBAPI.Model;
 let model3: DBAPI.Model;
@@ -28,7 +30,9 @@ let scene1: DBAPI.Scene;
 let projectDocumentation1: DBAPI.ProjectDocumentation;
 let intermediaryFile1: DBAPI.IntermediaryFile;
 let actor1: DBAPI.Actor;
+let actor2: DBAPI.Actor;
 let stakeholder1: DBAPI.Stakeholder;
+let stakeholder2: DBAPI.Stakeholder;
 let asset1: DBAPI.Asset;
 let asset2: DBAPI.Asset;
 let asset3: DBAPI.Asset;
@@ -69,6 +73,7 @@ describe('DB Composite ObjectAncestry Setup', () => {
         unit1 = await UTIL.createUnitTest({ Name: 'DPO', Abbreviation: 'DPO', ARKPrefix: 'http://dpo/', idUnit: 0 });
         unit2 = await UTIL.createUnitTest({ Name: 'NMNH', Abbreviation: 'NMNH', ARKPrefix: 'http://nmnh/', idUnit: 0 });
         project1 = await UTIL.createProjectTest({ Name: 'OA Test', Description: 'OA Test', idProject: 0 });
+        project2 = await UTIL.createProjectTest({ Name: 'OA Test', Description: 'OA Test', idProject: 0 });
 
         asset1 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         assetVersion1 = await UTIL.createAssetVersionTest({ idAsset: asset1.idAsset, idUserCreator: user1.idUser, DateCreated: UTIL.nowCleansed(), StorageChecksum: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, Version: 0 });
@@ -92,6 +97,8 @@ describe('DB Composite ObjectAncestry Setup', () => {
         assetVersion3c = await UTIL.createAssetVersionTest({ idAsset: asset3.idAsset, idUserCreator: user1.idUser, DateCreated: UTIL.nowCleansed(), StorageChecksum: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, Version: 0 });
         captureData1 = await UTIL.createCaptureDataTest({ idVCaptureMethod: v1.idVocabulary, DateCaptured: UTIL.nowCleansed(), Description: 'OA Test', idAssetThumbnail: null, idCaptureData: 0 });
         assigned = await asset3.assignOwner(captureData1); expect(assigned).toBeTruthy();
+
+        captureData2 = await UTIL.createCaptureDataTest({ idVCaptureMethod: v1.idVocabulary, DateCaptured: UTIL.nowCleansed(), Description: 'OA Test', idAssetThumbnail: null, idCaptureData: 0 });
 
         asset4 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         assetVersion4 = await UTIL.createAssetVersionTest({ idAsset: asset4.idAsset, idUserCreator: user1.idUser, DateCreated: UTIL.nowCleansed(), StorageChecksum: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, Version: 0 });
@@ -129,25 +136,31 @@ describe('DB Composite ObjectAncestry Setup', () => {
         assigned = await asset10.assignOwner(intermediaryFile1); expect(assigned).toBeTruthy();
 
         actor1 = await UTIL.createActorTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', idUnit: unit1.idUnit, idActor: 0 });
+        actor2 = await UTIL.createActorTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', idUnit: 0, idActor: 0 });
         stakeholder1 = await UTIL.createStakeholderTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', EmailAddress: 'OA Test', PhoneNumberMobile: 'OA Test', PhoneNumberOffice: 'OA Test', MailingAddress: 'OA Test', idStakeholder: 0 });
+        stakeholder2 = await UTIL.createStakeholderTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', EmailAddress: 'OA Test', PhoneNumberMobile: 'OA Test', PhoneNumberOffice: 'OA Test', MailingAddress: 'OA Test', idStakeholder: 0 });
     });
 
     test('DB Composite DB Object Wiring', async () => {
         await UTIL.createXref(unit1, project1);
         await UTIL.createXref(unit2, project1);
+        await UTIL.createXref(unit2, project2);
         // Unit-Subject is defined via Subject.idUnit
         await UTIL.createXref(project1, subject2);
         await UTIL.createXref(project1, subject3);
         await UTIL.createXref(project1, subject4);
+        await UTIL.createXref(project2, subject4);
         await UTIL.createXref(subject1, item1);
         await UTIL.createXref(subject1, item2);
         await UTIL.createXref(subject2, item3);
         await UTIL.createXref(subject2, item4);
         await UTIL.createXref(subject4, item4);
         await UTIL.createXref(item1, captureData1);
+        await UTIL.createXref(item1, captureData2);
         await UTIL.createXref(item1, model1);
         await UTIL.createXref(item1, scene1);
         await UTIL.createXref(captureData1, model1);
+        await UTIL.createXref(captureData2, model1);
         await UTIL.createXref(model1, model2);
         await UTIL.createXref(model1, model3);
         await UTIL.createXref(model1, model4);
@@ -169,8 +182,11 @@ describe('DB Composite ObjectAncestry Setup', () => {
 
         // Unit-Actor is defined via Actor.idUnit
         await UTIL.createXref(captureData1, actor1);
+        await UTIL.createXref(captureData1, actor2);
         await UTIL.createXref(project1, stakeholder1);
+        await UTIL.createXref(project1, stakeholder2);
         await UTIL.createXref(unit1, stakeholder1);
+        await UTIL.createXref(unit2, stakeholder2);
 
         // Asset-AssetVersion is defined via AssetVersion.idAsset
         assetVersion1;
@@ -259,7 +275,7 @@ describe('DB Composite ObjectAncestry.fetch', () => {
             expect(OA.item).toEqual(expect.arrayContaining([item1]));
         expect(OA.captureData).toBeTruthy();
         if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([captureData1]));
+            expect(OA.captureData).toEqual(expect.arrayContaining([captureData1, captureData2]));
         expect(OA.model).toBeTruthy();
         if (OA.model)
             expect(OA.model).toEqual(expect.arrayContaining([model1]));
@@ -288,7 +304,7 @@ describe('DB Composite ObjectAncestry.fetch', () => {
             expect(OA.item).toEqual(expect.arrayContaining([item1]));
         expect(OA.captureData).toBeTruthy();
         if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([captureData1]));
+            expect(OA.captureData).toEqual(expect.arrayContaining([captureData1, captureData2]));
         expect(OA.model).toBeTruthy();
         if (OA.model)
             expect(OA.model).toEqual(expect.arrayContaining([model1]));
@@ -319,7 +335,7 @@ describe('DB Composite ObjectAncestry.fetch', () => {
             expect(OA.item).toEqual(expect.arrayContaining([item1]));
         expect(OA.captureData).toBeTruthy();
         if (OA.captureData)
-            expect(OA.captureData).toEqual(expect.arrayContaining([captureData1]));
+            expect(OA.captureData).toEqual(expect.arrayContaining([captureData1, captureData2]));
         expect(OA.model).toBeTruthy();
         if (OA.model)
             expect(OA.model).toEqual(expect.arrayContaining([model1, model2]));
@@ -422,13 +438,123 @@ describe('DB Composite ObjectAncestry.fetch', () => {
         expect(OA.actor).toBeFalsy();
         expect(OA.stakeholder).toBeFalsy();
     });
+
+    test('DB Composite ObjectAncestry Actor 1', async () => {
+        const OA: DBAPI.ObjectAncestry | null = await testObjectAncestryFetch(actor1);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeTruthy();
+        if (OA.unit)
+            expect(OA.unit).toEqual(expect.arrayContaining([unit1]));
+        expect(OA.project).toBeFalsy();
+        expect(OA.subject).toBeTruthy();
+        if (OA.subject)
+            expect(OA.subject).toEqual(expect.arrayContaining([subject1]));
+        expect(OA.item).toBeTruthy();
+        if (OA.item)
+            expect(OA.item).toEqual(expect.arrayContaining([item1]));
+        expect(OA.captureData).toBeTruthy();
+        if (OA.captureData)
+            expect(OA.captureData).toEqual(expect.arrayContaining([captureData1]));
+        expect(OA.model).toBeFalsy();
+        expect(OA.scene).toBeFalsy();
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeFalsy();
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeTruthy();
+        if (OA.actor)
+            expect(OA.actor).toEqual(expect.arrayContaining([actor1]));
+        expect(OA.stakeholder).toBeFalsy();
+    });
+
+    test('DB Composite ObjectAncestry Actor 2', async () => {
+        const OA: DBAPI.ObjectAncestry | null = await testObjectAncestryFetch(actor2);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeTruthy();
+        if (OA.unit)
+            expect(OA.unit).toEqual(expect.arrayContaining([unit1]));
+        expect(OA.project).toBeFalsy();
+        expect(OA.subject).toBeTruthy();
+        if (OA.subject)
+            expect(OA.subject).toEqual(expect.arrayContaining([subject1]));
+        expect(OA.item).toBeTruthy();
+        if (OA.item)
+            expect(OA.item).toEqual(expect.arrayContaining([item1]));
+        expect(OA.captureData).toBeTruthy();
+        if (OA.captureData)
+            expect(OA.captureData).toEqual(expect.arrayContaining([captureData1]));
+        expect(OA.model).toBeFalsy();
+        expect(OA.scene).toBeFalsy();
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeFalsy();
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeTruthy();
+        if (OA.actor)
+            expect(OA.actor).toEqual(expect.arrayContaining([actor2]));
+        expect(OA.stakeholder).toBeFalsy();
+    });
+
+    test('DB Composite ObjectAncestry Stakeholder', async () => {
+        const OA: DBAPI.ObjectAncestry | null = await testObjectAncestryFetch(stakeholder1);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeTruthy();
+        if (OA.unit)
+            expect(OA.unit).toEqual(expect.arrayContaining([unit1, unit2]));
+        expect(OA.project).toBeTruthy();
+        if (OA.project)
+            expect(OA.project).toEqual(expect.arrayContaining([project1]));
+        expect(OA.subject).toBeFalsy();
+        expect(OA.item).toBeFalsy();
+        expect(OA.captureData).toBeFalsy();
+        expect(OA.model).toBeFalsy();
+        expect(OA.scene).toBeFalsy();
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeFalsy();
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeFalsy();
+        expect(OA.stakeholder).toBeTruthy();
+        if (OA.stakeholder)
+            expect(OA.stakeholder).toEqual(expect.arrayContaining([stakeholder1]));
+    });
+
+    test('DB Composite ObjectAncestry Subject', async () => {
+        const OA: DBAPI.ObjectAncestry | null = await testObjectAncestryFetch(subject4);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeTruthy();
+        if (OA.unit)
+            expect(OA.unit).toEqual(expect.arrayContaining([unit2]));
+        expect(OA.project).toBeTruthy();
+        if (OA.project)
+            expect(OA.project).toEqual(expect.arrayContaining([project1, project2]));
+        expect(OA.subject).toBeTruthy();
+        if (OA.subject)
+            expect(OA.subject).toEqual(expect.arrayContaining([subject4]));
+        expect(OA.item).toBeFalsy();
+        expect(OA.captureData).toBeFalsy();
+        expect(OA.model).toBeFalsy();
+        expect(OA.scene).toBeFalsy();
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeFalsy();
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeFalsy();
+        expect(OA.stakeholder).toBeFalsy();
+    });
+
 });
 
 // ************************************************************
 // Keep these last, as these mess up the hierarchy!
 // ************************************************************
 describe('DB Composite ObjectAncestry.fetch Invalid', () => {
-    test('DB Composite Invalid Object Wiring 1', async () => {
+    test('DB Composite ObjectAncestry Invalid Object Wiring 1', async () => {
+        LOG.logger.info('NOTICE: Errors that follow are due to invalid wiring and are expected!');
         await UTIL.createXref(intermediaryFile1, subject4);
         await UTIL.createXref(projectDocumentation1, subject4);
         await UTIL.createXref(scene1, subject4);
@@ -442,25 +568,35 @@ describe('DB Composite ObjectAncestry.fetch Invalid', () => {
         await testObjectAncestryFetch(subject4, false, true);
     });
 
-    test('DB Composite Invalid Object Wiring 2', async () => {
+    test('DB Composite ObjectAncestry Invalid Object Wiring 2', async () => {
         await UTIL.createXref(subject4, stakeholder1);
         await testObjectAncestryFetch(stakeholder1, false, false);
     });
 
-    test('DB Composite Invalid Object Wiring 3', async () => {
+    test('DB Composite ObjectAncestry Invalid Object Wiring 3', async () => {
         await UTIL.createXref(project1, actor1);
         await UTIL.createXref(unit1, actor1);
         await testObjectAncestryFetch(actor1, false, true);
     });
 
-    test('DB Composite Simple Cycle', async () => {
+    test('DB Composite ObjectAncestry Invalid Object Wiring 4', async () => {
+        await UTIL.createXref(unit1, item1);
+        await testObjectAncestryFetch(item1, false, true);
+    });
+
+    test('DB Composite ObjectAncestry Simple Cycle', async () => {
         await UTIL.createXref(scene1, scene1);
         await testObjectAncestryFetch(scene1, false, false);
     });
 
-    test('DB Composite Complex Cycle', async () => {
+    test('DB Composite ObjectAncestry Complex Cycle', async () => {
         await UTIL.createXref(model1, captureData1); // already wired captureData1 <- model1
         await testObjectAncestryFetch(model1, false, false);
+    });
+
+    test('DB Composite ObjectAncestry Invalid Input', async () => {
+        const OA: DBAPI.ObjectAncestry = new DBAPI.ObjectAncestry(0);
+        expect(await OA.fetch()).toBeTruthy();
     });
 });
 
