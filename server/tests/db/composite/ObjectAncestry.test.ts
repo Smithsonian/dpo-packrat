@@ -1,7 +1,7 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as UTIL from '../api';
-import * as LOG from '../../utils/logger';
+import * as LOG from '../../../utils/logger';
 
 afterAll(async done => {
     done();
