@@ -826,7 +826,7 @@ input IngestItem {
 }
 
 input IngestIdentifier {
-  id: Int!
+  id: Int
   identifier: String!
   identifierType: Int!
 }
