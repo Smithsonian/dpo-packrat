@@ -554,8 +554,6 @@ model SystemObject {
   idProjectDocumentation                                                Int?                              @unique
   idActor                                                               Int?                              @unique
   idStakeholder                                                         Int?                              @unique
-  idWorkflow                                                            Int?                              @unique
-  idWorkflowStep                                                        Int?                              @unique
   Retired                                                               Boolean
   Actor                                                                 Actor?                            @relation(fields: [idActor], references: [idActor])
   Asset_AssetToSystemObject_idAsset                                     Asset?                            @relation("AssetToSystemObject_idAsset", fields: [idAsset], references: [idAsset])
@@ -570,8 +568,6 @@ model SystemObject {
   Stakeholder                                                           Stakeholder?                      @relation(fields: [idStakeholder], references: [idStakeholder])
   Subject                                                               Subject?                          @relation(fields: [idSubject], references: [idSubject])
   Unit                                                                  Unit?                             @relation(fields: [idUnit], references: [idUnit])
-  Workflow                                                              Workflow?                         @relation(fields: [idWorkflow], references: [idWorkflow])
-  WorkflowStep                                                          WorkflowStep?                     @relation(fields: [idWorkflowStep], references: [idWorkflowStep])
   AccessContextObject                                                   AccessContextObject[]
   Asset_Asset_idSystemObjectToSystemObject                              Asset[]                           @relation("Asset_idSystemObjectToSystemObject")
   Identifier                                                            Identifier[]
@@ -596,8 +592,6 @@ model SystemObject {
   @@index([idStakeholder], name: "SystemObject_idStakeholder")
   @@index([idSubject], name: "SystemObject_idSubject")
   @@index([idUnit], name: "SystemObject_idUnit")
-  @@index([idWorkflow], name: "SystemObject_idWorkflow")
-  @@index([idWorkflowStep], name: "SystemObject_idWorkflowStep")
 }
 
 model SystemObjectVersion {
@@ -722,7 +716,6 @@ model Workflow {
   Project            Project?         @relation(fields: [idProject], references: [idProject])
   User               User?            @relation(fields: [idUserInitiator], references: [idUser])
   WorkflowTemplate   WorkflowTemplate @relation(fields: [idWorkflowTemplate], references: [idWorkflowTemplate])
-  SystemObject       SystemObject?
   WorkflowStep       WorkflowStep[]
 
   @@index([idProject], name: "Workflow_idProject")
@@ -741,7 +734,6 @@ model WorkflowStep {
   User                         User                           @relation(fields: [idUserOwner], references: [idUser])
   Vocabulary                   Vocabulary                     @relation(fields: [idVWorkflowStepType], references: [idVocabulary])
   Workflow                     Workflow                       @relation(fields: [idWorkflow], references: [idWorkflow])
-  SystemObject                 SystemObject?
   WorkflowStepSystemObjectXref WorkflowStepSystemObjectXref[]
 
   @@index([State, idWorkflow], name: "WorkflowStep_State_idWorkflow")

@@ -405,8 +405,6 @@ CREATE TABLE IF NOT EXISTS `SystemObject` (
   `idProjectDocumentation` int(11) UNIQUE DEFAULT NULL,
   `idActor` int(11) UNIQUE DEFAULT NULL,
   `idStakeholder` int(11) UNIQUE DEFAULT NULL,
-  `idWorkflow` int(11) UNIQUE DEFAULT NULL,
-  `idWorkflowStep` int(11) UNIQUE DEFAULT NULL,
   `Retired` boolean NOT NULL,
   PRIMARY KEY (`idSystemObject`),
   KEY `SystemObject_idUnit` (`idUnit`),
@@ -421,8 +419,6 @@ CREATE TABLE IF NOT EXISTS `SystemObject` (
   KEY `SystemObject_idProjectDocumentation` (`idProjectDocumentation`),
   KEY `SystemObject_idActor` (`idActor`),
   KEY `SystemObject_idStakeholder` (`idStakeholder`),
-  KEY `SystemObject_idWorkflow` (`idWorkflow`),
-  KEY `SystemObject_idWorkflowStep` (`idWorkflowStep`),
   KEY `SystemObject_idScene` (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
@@ -992,16 +988,6 @@ ADD CONSTRAINT `fk_systemobject_actor1`
 ADD CONSTRAINT `fk_systemobject_stakeholder1`
   FOREIGN KEY (`idStakeholder`)
   REFERENCES `Packrat`.`Stakeholder` (`idStakeholder`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_systemobject_workflow1`
-  FOREIGN KEY (`idWorkflow`)
-  REFERENCES `Packrat`.`Workflow` (`idWorkflow`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_systemobject_workflowstep1`
-  FOREIGN KEY (`idWorkflowStep`)
-  REFERENCES `Packrat`.`WorkflowStep` (`idWorkflowStep`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
