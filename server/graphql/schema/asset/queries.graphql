@@ -1,6 +1,7 @@
 type Query {
     getAsset(input: GetAssetInput!): GetAssetResult!
     getUploadedAssetVersion: GetUploadedAssetVersionResult!
+    getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
 }
 
 input GetAssetInput {
@@ -13,4 +14,18 @@ type GetAssetResult {
 
 type GetUploadedAssetVersionResult {
     AssetVersion: [AssetVersion]!
+}
+
+input GetContentsForAssetVersionsInput {
+    idAssetVersions: [Int!]!
+}
+
+type AssetVersionContent {
+    idAssetVersion: Int!
+    folders: [String!]!
+    all: [String!]!
+}
+
+type GetContentsForAssetVersionsResult {
+    AssetVersionContent: [AssetVersionContent!]!
 }

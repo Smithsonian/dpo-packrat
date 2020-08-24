@@ -1,6 +1,7 @@
 import * as DBAPI from '../../db';
 import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
+import { randomStorageKey, nowCleansed } from './utils';
 
 afterAll(async done => {
     await DBC.DBConnection.disconnect();
@@ -5555,13 +5556,3 @@ describe('DB Null/Zero ID Test', () => {
         await expect(SO.update()).rejects.toThrow('DBAPI.SystemObject.update() should never be called');
     });
 });
-
-function randomStorageKey(baseName: string) {
-    return baseName + (Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
-}
-
-function nowCleansed(): Date {
-    const date: Date = new Date();
-    date.setMilliseconds(0);
-    return date;
-}

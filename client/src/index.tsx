@@ -14,6 +14,7 @@ import { About, Home, Login } from './pages';
 import theme from './theme';
 import { getAuthenticatedUser } from './utils/auth';
 import { AliveScope } from 'react-activation';
+import * as serviceWorker from './serviceWorker';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
@@ -76,5 +77,5 @@ function App(): React.ReactElement {
     );
 }
 
-
+serviceWorker.unregister();
 ReactDOM.render(<App />, document.getElementById('root'));

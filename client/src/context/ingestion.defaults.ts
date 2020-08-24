@@ -10,6 +10,7 @@ export const defaultItem: StateItem = {
 export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     systemCreated: true,
     identifiers: [],
+    folders: [],
     description: '',
     dateCaptured: new Date(),
     datasetType: null,

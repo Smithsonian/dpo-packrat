@@ -57,7 +57,7 @@ function Ingestion(): React.ReactElement {
         }
 
         if (url.includes(INGESTION_ROUTES_TYPE.METADATA)) {
-            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.UPLOADS) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
         }
 
         if (allowChange) return true;

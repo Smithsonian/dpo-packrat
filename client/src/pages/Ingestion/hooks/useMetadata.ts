@@ -1,6 +1,22 @@
 import { useContext } from 'react';
-import { AppContext, FileId, StateMetadata, PhotogrammetryFields, METADATA_ACTIONS, IngestionDispatchAction, AssetType } from '../../../context';
+import {
+    AppContext,
+    FileId,
+    StateMetadata,
+    PhotogrammetryFields,
+    METADATA_ACTIONS,
+    IngestionDispatchAction,
+    AssetType,
+    StateFolder,
+    StateVocabulary,
+    StateIdentifier
+} from '../../../context';
 import lodash from 'lodash';
+import { GetContentsForAssetVersionsDocument, AreCameraSettingsUniformDocument } from '../../../types/graphql';
+import { apolloClient } from '../../../graphql';
+import { eVocabularySetID } from '../../../types/server';
+import useVocabularyEntries from './useVocabularyEntries';
+import { toast } from 'react-toastify';
 
 type MetadataInfo = {
     metadata: StateMetadata;
@@ -16,10 +32,12 @@ type FieldErrors = {
 };
 
 interface UseMetadata {
+    getSelectedIdentifiers: (metadata: StateMetadata) => StateIdentifier[] | undefined;
     getFieldErrors: (metadata: StateMetadata) => FieldErrors;
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
     getMetadataInfo: (id: FileId) => MetadataInfo;
     updatePhotogrammetryFields: (metadataIndex: number, values: PhotogrammetryFields) => void;
+    updateMetadataFolders: (vocabularies: StateVocabulary) => Promise<void>;
 }
 
 function useMetadata(): UseMetadata {
@@ -27,6 +45,13 @@ function useMetadata(): UseMetadata {
         ingestion: { metadatas },
         ingestionDispatch
     } = useContext(AppContext);
+
+    const { getInitialEntryWithVocabularies } = useVocabularyEntries();
+
+    // TODO: KARAN: replace index with fileId this afterwards
+    const idAssetVersions: number[] = [...metadatas].map((_, index) => index);
+
+    const getSelectedIdentifiers = (metadata: StateMetadata): StateIdentifier[] | undefined => lodash.filter(metadata.photogrammetry.identifiers, { selected: true });
 
     const getFieldErrors = (metadata: StateMetadata): FieldErrors => {
         const errors: FieldErrors = {
@@ -84,11 +109,111 @@ function useMetadata(): UseMetadata {
         ingestionDispatch(updateMetadataFieldsAction);
     };
 
+    const updateMetadataFolders = async (vocabularies: StateVocabulary): Promise<void> => {
+        const getInitialVocabularyEntry = (eVocabularySetID: eVocabularySetID) => getInitialEntryWithVocabularies(vocabularies, eVocabularySetID);
+
+        const defaultIdentifier: StateIdentifier = {
+            id: 0,
+            identifier: '',
+            identifierType: getInitialVocabularyEntry(eVocabularySetID.eIdentifierIdentifierType),
+            selected: false
+        };
+
+        const defaultVocabularyFields = {
+            datasetType: getInitialVocabularyEntry(eVocabularySetID.eCaptureDataDatasetType),
+            identifiers: [defaultIdentifier]
+        };
+
+        const variables = {
+            input: {
+                idAssetVersions
+            }
+        };
+
+        const { data } = await apolloClient.query({
+            query: GetContentsForAssetVersionsDocument,
+            variables
+        });
+
+        const { getContentsForAssetVersions } = data;
+        const { AssetVersionContent } = getContentsForAssetVersions;
+
+        let updatedMetadatas = await updateCameraSettings(metadatas);
+
+        AssetVersionContent.forEach(({ idAssetVersion, folders }, index: number) => {
+            const stateFolders: StateFolder[] = folders.map((folder, index: number) => ({
+                id: index,
+                name: folder,
+                variantType: getInitialVocabularyEntry(eVocabularySetID.eCaptureDataFileVariantType)
+            }));
+
+            updatedMetadatas = updatedMetadatas.map(metadata => {
+                const { photogrammetry } = metadata;
+                // TODO: KARAN: replace index with fileId this afterwards
+                if (index === idAssetVersion) {
+                    return {
+                        ...metadata,
+                        photogrammetry: {
+                            ...photogrammetry,
+                            ...defaultVocabularyFields,
+                            folders: stateFolders
+                        }
+                    };
+                }
+
+                return metadata;
+            });
+        });
+
+        const updateMetadataFieldsAction: IngestionDispatchAction = {
+            type: METADATA_ACTIONS.UPDATE_METADATA_FIELDS,
+            metadatas: updatedMetadatas
+        };
+
+        ingestionDispatch(updateMetadataFieldsAction);
+    };
+
+    const updateCameraSettings = async (metadatas: StateMetadata[]): Promise<StateMetadata[]> => {
+        const updatedMetadatas = metadatas.slice();
+
+        for (let i = 0; i < updatedMetadatas.length; i++) {
+            const metadata = updatedMetadatas[i];
+            const { file, photogrammetry } = metadata;
+
+            if (file.type === AssetType.Photogrammetry) {
+                // TODO: KARAN: replace index with fileId this afterwards
+                const variables = {
+                    input: {
+                        idAssetVersion: i
+                    }
+                };
+
+                try {
+                    const { data } = await apolloClient.query({
+                        query: AreCameraSettingsUniformDocument,
+                        variables
+                    });
+
+                    const { areCameraSettingsUniform } = data;
+                    const { isUniform } = areCameraSettingsUniform;
+
+                    photogrammetry.cameraSettingUniform = isUniform;
+                } catch {
+                    toast.error('Failed to retrieve camera settings details');
+                }
+            }
+        }
+
+        return updatedMetadatas;
+    };
+
     return {
+        getSelectedIdentifiers,
         getFieldErrors,
         getCurrentMetadata,
         getMetadataInfo,
-        updatePhotogrammetryFields
+        updatePhotogrammetryFields,
+        updateMetadataFolders
     };
 }
 
