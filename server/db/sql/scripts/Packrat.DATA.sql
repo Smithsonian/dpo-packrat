@@ -17,9 +17,11 @@ INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelGeometryFile.Mo
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelProcessingActionStep.ActionMethod', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelUVMapChannel.UVMapType', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Identifier.IdentifierType', 1);
+INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Identifier.IdentifierTypeActor', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Metadata.MetadataSource', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('WorkflowStep.WorkflowStepType', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Asset.AssetType', 1);
+
 
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 1, 'Photogrammetry');
@@ -98,34 +100,31 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (15, 10, 'Hole 
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (15, 11, 'Reflection');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (15, 12, 'Refraction');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 1, 'ARK');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 2, 'Unit CMS ID');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 1, 'Capture Data Set: Photogrammetry');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 2, 'Capture Data Set: Diconde');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 3, 'Capture Data Set: Dicom');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 4, 'Capture Data Set: Laser Line');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 5, 'Capture Data Set: Spherical Laser');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 6, 'Capture Data Set: Structured Light');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 7, 'Capture Data Set: Other');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 8, 'Capture Data File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 9, 'Model');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 10, 'Model Geometry File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 11, 'Model UV Map File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 12, 'Scene');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 13, 'Project Documentation');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 14, 'Intermediary File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 15, 'Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 2, 'DOI');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 3, 'Unit CMS ID');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (17, 1, 'ORCID');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (17, 2, 'ISNI');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 1, 'Capture Data Set: Photogrammetry');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 2, 'Capture Data Set: Diconde');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 3, 'Capture Data Set: Dicom');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 4, 'Capture Data Set: Laser Line');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 5, 'Capture Data Set: Spherical Laser');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 6, 'Capture Data Set: Structured Light');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 7, 'Capture Data Set: Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 8, 'Capture Data File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 9, 'Model');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 10, 'Model Geometry File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 11, 'Model UV Map File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 12, 'Scene');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 13, 'Project Documentation');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 14, 'Intermediary File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 15, 'Other');
 
-SELECT idVocabulary 
-INTO @idVocabARK 
-FROM Vocabulary 
-WHERE Term = 'ARK'
-  AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
+SELECT idVocabulary INTO @idVocabARK FROM Vocabulary 
+WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
 
-SELECT idVocabulary 
-INTO @idVocabCMSUnitID 
-FROM Vocabulary 
-WHERE Term = 'Unit CMS ID'
-  AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
+SELECT idVocabulary INTO @idVocabCMSUnitID FROM Vocabulary 
+WHERE Term = 'Unit CMS ID' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
 
 INSERT INTO Unit (Name, Abbreviation, ARKPrefix) VALUES ('Anacostia Museum/Center for African American History and Culture', 'ACM', 'ark:/65665/oh6'); INSERT INTO SystemObject (idUnit, Retired) VALUES (LAST_INSERT_ID(), 0);
 INSERT INTO Unit (Name, Abbreviation, ARKPrefix) VALUES ('Architectural History and Historic Preservation', 'AHHP', ''); INSERT INTO SystemObject (idUnit, Retired) VALUES (LAST_INSERT_ID(), 0);

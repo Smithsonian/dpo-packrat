@@ -209,7 +209,7 @@ export class Helpers {
         if (ioResults.success)
             return ioResults;
 
-        LOG.logger.info(`${description} does not exist at ${directory}; creating it`);
+        LOG.logger.info(`Creating ${description} as it does not exist at ${directory}`);
         ioResults = Helpers.createDirectory(directory);
         /* istanbul ignore if */
         if (!ioResults.success)

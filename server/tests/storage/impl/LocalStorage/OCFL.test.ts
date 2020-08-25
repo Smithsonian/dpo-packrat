@@ -107,7 +107,7 @@ describe('OCFL Object', () => {
     test('OCFL Object.addOrUpdate', async () => {
         await testAddOrUpdate(ocflObject, OHTS.captureData1, 16384);
         await testAddOrUpdate(ocflObject, OHTS.model1, 65536);
-        await testAddOrUpdate(ocflObject, OHTS.scene1, 36);
+        await testAddOrUpdate(ocflObject, OHTS.captureData1, 36);
     });
 
     /*
