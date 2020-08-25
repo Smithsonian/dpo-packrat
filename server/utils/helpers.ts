@@ -89,8 +89,10 @@ export class Helpers {
         };
 
         try {
-            if (!fs.existsSync(name))
+            if (!fs.existsSync(name)) {
                 res.success = false;
+                res.error = `${name} does not exist`;
+            }
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.fileExists', error);
             res.success = false;
@@ -207,7 +209,7 @@ export class Helpers {
         if (ioResults.success)
             return ioResults;
 
-        LOG.logger.info(`${description} does not exist; creating it`);
+        LOG.logger.info(`${description} does not exist at ${directory}; creating it`);
         ioResults = Helpers.createDirectory(directory);
         /* istanbul ignore if */
         if (!ioResults.success)
@@ -301,5 +303,11 @@ export class Helpers {
                 error: JSON.stringify(error)
             };
         }
+    }
+
+    static async sleep(ms: number): Promise<void> {
+        return new Promise((resolve) => {
+            setTimeout(resolve, ms);
+        });
     }
 }

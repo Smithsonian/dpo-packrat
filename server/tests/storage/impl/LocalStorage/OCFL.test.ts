@@ -1,13 +1,23 @@
 import * as path from 'path';
+import * as fs from 'fs-extra';
+import * as crypto from 'crypto';
+import * as STR from 'stream';
+
 import * as OR from '../../../../storage/impl/LocalStorage/OCFLRoot';
 import * as OO from '../../../../storage/impl/LocalStorage/OCFLObject';
 import * as ST from '../../../../storage/impl/LocalStorage/SharedTypes';
+import * as DBAPI from '../../../../db';
 import * as H from '../../../../utils/helpers';
 import * as LOG from '../../../../utils/logger';
+import { OperationInfo } from '../../../../storage/interface/IStorage';
+import { ObjectHierarchyTestSetup } from '../../../db/composite/ObjectHierarchy.setup';
 
+
+const OHTS: ObjectHierarchyTestSetup = new ObjectHierarchyTestSetup();
 const ocflRoot: OR.OCFLRoot = new OR.OCFLRoot();
 let ocflObject: OO.OCFLObject | null = null;
 let ocflStorageRoot: string;
+let opInfo: OperationInfo;
 
 beforeAll(() => {
     ocflStorageRoot = path.join('var', 'test', H.Helpers.randomSlug());
@@ -16,7 +26,9 @@ beforeAll(() => {
 
 afterAll(async done => {
     LOG.logger.info(`Removing test storage root from ${path.resolve(ocflStorageRoot)}`);
-    H.Helpers.removeDirectory(ocflStorageRoot, true);
+    // H.Helpers.removeDirectory(ocflStorageRoot, true);
+    jest.setTimeout(3000);
+    await H.Helpers.sleep(2000);
     done();
 });
 
@@ -35,19 +47,23 @@ describe('OCFL Setup', () => {
         ioResults = await ocflRoot.validate();
         expect(ioResults.success).toBeTruthy();
     });
+
+    test('Object Hierarchy Test Setup', async() => {
+        await OHTS.initialize();
+        await OHTS.wire();
+        opInfo = {
+            message: '1',
+            idUser: OHTS.user1 ? OHTS.user1.idUser : 0,
+            userEmailAddress: OHTS.user1 ? OHTS.user1.EmailAddress : '',
+            userName: OHTS.user1 ? OHTS.user1.Name : ''
+        };
+    });
 });
 
 describe('OCFL OCFLRoot', () => {
     test('OCFL OCFLRoot.computeWriteStreamLocation', async () => {
-        const res: OR.ComputeWriteStreamLocationResults = ocflRoot.computeWriteStreamLocation();
-        expect(res.ioResults.success).toBeTruthy();
-
-        LOG.logger.info(`Created write location at ${path.resolve(res.locationPrivate)}`);
-        const directoryName: string = path.dirname(res.locationPrivate);
-        let ioResults: H.IOResults = H.Helpers.fileOrDirExists(directoryName);
-        expect(ioResults.success).toBeTruthy();
-
-        ioResults = H.Helpers.removeDirectory(directoryName);
+        const directoryName: string = createUploadLocation(ocflRoot);
+        const ioResults: H.IOResults = H.Helpers.removeDirectory(directoryName);
         expect(ioResults.success).toBeTruthy();
     });
 
@@ -88,13 +104,13 @@ describe('OCFL OCFLRoot', () => {
 });
 
 describe('OCFL Object', () => {
-    if (!ocflObject)
-        return;
-    test('OCFL Object.xxx', async () => {
+    test('OCFL Object.addOrUpdate', async () => {
+        await testAddOrUpdate(ocflObject, OHTS.captureData1, 16384);
+        await testAddOrUpdate(ocflObject, OHTS.model1, 65536);
+        await testAddOrUpdate(ocflObject, OHTS.scene1, 36);
     });
 
     /*
-
     async addOrUpdate(pathOnDisk: string | null, fileName: string | null, metadata: any | null, opInfo: OperationInfo): Promise<H.IOResults> {
     async rename(fileNameOld: string, fileNameNew: string, opInfo: OperationInfo): Promise<H.IOResults> {
     async delete(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
@@ -108,6 +124,7 @@ describe('OCFL Object', () => {
     static versionFolderName(version: number): string {
     fileHash(fileName: string, version: number): string {
     fileLocation(fileName: string, version: number): string {
+    headVersion(): number {
 
     test('OCFL Object.xxx', async () => {
     });
@@ -148,3 +165,100 @@ describe('OCFL Teardown', () => {
         expect(results.success).toBeFalsy();
     });
 });
+
+
+function createUploadLocation(ocflRoot: OR.OCFLRoot): string {
+    // identify location to which we'll write our temporary data (as if we were streaming content here)
+    const res: OR.ComputeWriteStreamLocationResults = ocflRoot.computeWriteStreamLocation();
+    expect(res.ioResults.success).toBeTruthy();
+
+    LOG.logger.info(`Created write location at ${path.resolve(res.locationPrivate)}`);
+    const directoryName: string = path.dirname(res.locationPrivate);
+    const ioResults: H.IOResults = H.Helpers.fileOrDirExists(directoryName);
+    expect(ioResults.success).toBeTruthy();
+
+    return directoryName;
+}
+
+// inspired by https://stackoverflow.com/questions/57506770/how-to-write-a-large-amount-of-random-bytes-to-file
+async function createRandomFile(directoryName: string, fileName: string, fileSize: number): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+        try {
+            const fullPath: string = path.join(directoryName, fileName);
+            const stream: STR.Writable = fs.createWriteStream(fullPath);
+            let bytesRemaining: number = fileSize;
+
+            do {
+                const chunkSize: number = bytesRemaining > 1024 ? 1024 : bytesRemaining;
+                const buffer = crypto.randomBytes(chunkSize);
+
+                bytesRemaining -= chunkSize;
+                stream.write(buffer);
+            } while (bytesRemaining > 0);
+
+            stream.end();
+            stream.on('finish', () => { resolve(fullPath); });
+            stream.on('error', reject);
+        } catch (error) {
+            LOG.logger.error('OCFL.test.ts createRandomFile() error', error);
+            reject(error);
+        }
+    });
+}
+
+async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.SystemObjectBased | null, fileSize: number): Promise<void> {
+    expect(ocflObject).toBeTruthy();
+    if (!ocflObject)
+        return;
+    // construct metadata for addOrUpdate
+    const metadataOA: DBAPI.ObjectAncestry | null = await ObjectHierarchyTestSetup.testObjectAncestryFetch(SOBased);
+
+    // identify location to which we'll write our temporary data (as if we were streaming content here); write data
+    const directoryName: string = createUploadLocation(ocflRoot);
+    const fileName: string = H.Helpers.randomSlug();
+    const pathOnDisk: string = await createRandomFile(directoryName, fileName, fileSize);
+
+    // Add content
+    let ioResults: H.IOResults = await ocflObject.addOrUpdate(pathOnDisk, fileName, metadataOA, opInfo);
+    if (!ioResults.success)
+        LOG.logger.error(ioResults.error);
+    expect(ioResults.success).toBeTruthy();
+
+    // Internal Validation
+    ioResults = await ocflObject.validate();
+    if (!ioResults.success)
+        LOG.logger.error(ioResults.error);
+    expect(ioResults.success).toBeTruthy();
+
+    // External validation
+    LOG.logger.info(`OCFL Object Root Validations: ${ocflObject.objectRoot}`);
+    ioResults = H.Helpers.fileOrDirExists(path.join(ocflObject.objectRoot, ST.OCFLStorageObjectNamasteFilename));
+    expect(ioResults.success).toBeTruthy();
+    ioResults = H.Helpers.fileOrDirExists(path.join(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryFilename));
+    expect(ioResults.success).toBeTruthy();
+    ioResults = H.Helpers.fileOrDirExists(path.join(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryDigestFilename));
+    expect(ioResults.success).toBeTruthy();
+
+    const version: number = ocflObject.headVersion();
+    const versionRoot: string = ocflObject.versionRoot(version);
+    LOG.logger.info(`OCFL Object Version Root Validations: ${versionRoot}`);
+    ioResults = H.Helpers.fileOrDirExists(versionRoot);
+    expect(ioResults.success).toBeTruthy();
+    ioResults = H.Helpers.fileOrDirExists(path.join(versionRoot, ST.OCFLStorageObjectInventoryFilename));
+    expect(ioResults.success).toBeTruthy();
+    ioResults = H.Helpers.fileOrDirExists(path.join(versionRoot, ST.OCFLStorageObjectInventoryDigestFilename));
+    expect(ioResults.success).toBeTruthy();
+
+    const contentRoot: string = ocflObject.versionContentFullPath(version);
+    LOG.logger.info(`OCFL Object Content Root Validations: ${contentRoot}`);
+    ioResults = H.Helpers.fileOrDirExists(contentRoot);
+    expect(ioResults.success).toBeTruthy();
+    ioResults = H.Helpers.fileOrDirExists(path.join(contentRoot, ST.OCFLMetadataFilename));
+    expect(ioResults.success).toBeTruthy();
+    ioResults = H.Helpers.fileOrDirExists(path.join(contentRoot, fileName));
+    expect(ioResults.success).toBeTruthy();
+
+    // cleanup temporary upload location
+    ioResults = H.Helpers.removeDirectory(directoryName, true);
+    expect(ioResults.success).toBeTruthy();
+}

@@ -9,9 +9,9 @@ export async function createSystemObjectXrefTest(base: SystemObjectXrefBase): Pr
     return systemObjectXref;
 }
 
-export async function createXref(master: DBAPI.SystemObjectBased, derived: DBAPI.SystemObjectBased): Promise<DBAPI.SystemObjectXref> {
-    const SOMaster: DBAPI.SystemObject | null = await master.fetchSystemObject();
-    const SODerived: DBAPI.SystemObject | null = await derived.fetchSystemObject();
+export async function createXref(master: DBAPI.SystemObjectBased | null, derived: DBAPI.SystemObjectBased | null): Promise<DBAPI.SystemObjectXref> {
+    const SOMaster: DBAPI.SystemObject | null = master ? await master.fetchSystemObject() : null;
+    const SODerived: DBAPI.SystemObject | null = derived ? await derived.fetchSystemObject() : null;
     expect(SOMaster).toBeTruthy();
     expect(SODerived).toBeTruthy();
     return await createSystemObjectXrefTest({

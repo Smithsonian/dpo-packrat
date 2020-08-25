@@ -192,7 +192,6 @@ describe('Utils: Helpers', () => {
         const res: H.IOResults = H.Helpers.copyFile(filePath5, copiedFile);
         expect(res.success).toBeTruthy();
 
-        // static getDirectoryEntriesRecursive(directory: string, maxDepth: number = 32): string[] | null {
         const dirNotRecursive: string[] | null = H.Helpers.getDirectoryEntriesRecursive(directoryPath, 0);
         expect(dirNotRecursive).toBeTruthy();
         expect(dirNotRecursive).toEqual(expect.arrayContaining([filePath, filePath2, filePath5]));
@@ -217,6 +216,10 @@ describe('Utils: Helpers', () => {
         RS.destroy();
     });
     */
+
+    test('Utils: Helpers.removeFile', async () => {
+        await H.Helpers.sleep(50);
+    });
 
     test('Utils: Helpers.removeFile', () => {
         let res: H.IOResults = H.Helpers.removeFile(filePath);
