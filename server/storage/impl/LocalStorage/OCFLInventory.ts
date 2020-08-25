@@ -93,11 +93,14 @@ export class OCFLInventoryManifest {
     getEntries(): OCFLInventoryManifestEntry[] {
         const entries: OCFLInventoryManifestEntry[] = [];
         for (const hash in this) {
+            // LOG.logger.info(`OCFLInventoryManifest.getEntries hash = ${hash}; value = ${JSON.stringify(this[hash])}`);
             if (!Array.isArray(this[hash]))
                 continue;
             const files: Array<string> = <Array<string>><unknown>this[hash];
+            // LOG.logger.info(`OCFLInventoryManifest.getEntries pushing hash = ${hash}; files = ${JSON.stringify(files)}`);
             entries.push ({ hash, files });
         }
+        // LOG.logger.info(`OCFLInventoryManifest.getEntries returning ${JSON.stringify(entries)}`);
         return entries;
     }
 
@@ -105,7 +108,8 @@ export class OCFLInventoryManifest {
     getFileMap(): Map<string, string> {
         const fileMap: Map<string, string> = new Map<string, string>(); // map of fileName -> hash
         for (const manifestEntry of this.getEntries()) {
-            for (const fileName of manifestEntry.hash)
+            // LOG.logger.info(`OCFLInventoryManifest.getFileMap manifestEntry = ${JSON.stringify(manifestEntry)}`);
+            for (const fileName of manifestEntry.files)
                 fileMap.set(fileName, manifestEntry.hash);
         }
         return fileMap;
@@ -175,6 +179,15 @@ export type OCFLInventoryReadResults = {
     error: string;
 };
 
+export type OCFLInventoryType = {
+    id: string;
+    head: string;
+    digestAlgorithm: string;
+    type: string;
+    manifest: OCFLInventoryManifest;
+    versions: OCFLInventoryVersions;
+};
+
 /** Represents an OCFL Inventory file found both in the object root and in each version root.
  * The object root inventory matches the one found in the "head" version -- the most recent version.
  * Usage For New Items:
@@ -186,7 +199,7 @@ export type OCFLInventoryReadResults = {
  *      - Call recordContent() once for each file present in the asset
  *      - Persist via writeToDisk().  Note that OCFL wants you to place this both in the object root and in the latest version folder
  */
-export class OCFLInventory {
+export class OCFLInventory implements OCFLInventoryType {
     id: string = '';
     head: string = '';
     digestAlgorithm: string = ST.OCFLDigestAlgorithm;
@@ -194,8 +207,13 @@ export class OCFLInventory {
     manifest: OCFLInventoryManifest = new OCFLInventoryManifest();
     versions: OCFLInventoryVersions = new OCFLInventoryVersions();
 
-    constructor(id: string) {
-        this.id = id;
+    copy(source: OCFLInventoryType): void {
+        this.id = source.id;
+        this.head = source.head;
+        this.digestAlgorithm = source.digestAlgorithm;
+        this.type = source.type;
+        Object.assign(this.manifest, source.manifest);
+        Object.assign(this.versions, source.versions);
     }
 
     get headVersion(): number {
@@ -236,6 +254,7 @@ export class OCFLInventory {
     }
 
     async validate(ocflObject: OCFLObject, isRootInventory: boolean): Promise<H.IOResults> {
+        // LOG.logger.info(`OCFLInventory.validate ${JSON.stringify(this)}`);
         let results: H.IOResults;
 
         // Confirm conformance to spec
@@ -283,6 +302,7 @@ export class OCFLInventory {
             }
         }
 
+        // LOG.logger.info('OCFLInventory.validate done');
         results.success = true;
         return results;
     }
@@ -354,21 +374,27 @@ export class OCFLInventory {
         };
 
         const dest: string = OCFLInventory.inventoryFilePath(ocflObject, version);
+        // LOG.logger.info(`OCFLInventory.readFromDiskWorker ${dest}`);
         const ioResults = H.Helpers.fileOrDirExists(dest);
         if (!ioResults.success) {
             retValue.success = false;
             retValue.error = ioResults.error;
+            LOG.logger.error(retValue.error);
             return retValue;
         }
 
         try {
-            retValue.ocflInventory = JSON.parse(fs.readFileSync(dest, { encoding: 'utf8' }));
+            retValue.ocflInventory = new OCFLInventory();
+            retValue.ocflInventory.copy(JSON.parse(fs.readFileSync(dest, { encoding: 'utf8' })));
+            retValue.success = true;
         } catch (error) {
             LOG.logger.error('OCFLInventory.readFromDisk', error);
             retValue.success = false;
             retValue.error = JSON.stringify(error);
+            LOG.logger.error(retValue.error);
         }
 
+        // LOG.logger.info(`OCFLInventory.readFromDiskWorker ${dest} done`);
         return retValue;
     }
 }

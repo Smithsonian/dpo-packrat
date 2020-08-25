@@ -5,6 +5,7 @@ import { OperationInfo } from '../../interface/IStorage';
 import * as INV from './OCFLInventory';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
+import * as LOG from '../../../utils/logger';
 
 export type OCFLObjectInitResults = {
     ocflObject: OCFLObject | null,
@@ -94,6 +95,11 @@ export class OCFLObject {
 
             // Update Inventory
             this._ocflInventory.addContent(path.join(contentPath, fileName), fileName, hashResults.hash);
+
+            // Ensure new version folder exists
+            results = H.Helpers.initializeDirectory(destFolder, 'OCFL Object new version folder');
+            if (!results.success)
+                return results;
 
             // Move file to new version folder
             results = H.Helpers.moveFile(pathOnDisk, path.join(destFolder, fileName));
@@ -293,7 +299,7 @@ export class OCFLObject {
         let invResults = INV.OCFLInventory.readFromDisk(this);
         if (!invResults.success || !invResults.ocflInventory) {
             ioResults.success = false;
-            ioResults.error = invResults.error ? invResults.error : `Failed to read inventory for ${this}`;
+            ioResults.error = invResults.error ? invResults.error : `Failed to read inventory for ${JSON.stringify(this)}`;
             return ioResults;
         }
 
@@ -301,32 +307,39 @@ export class OCFLObject {
         const maxVersion: number = ocflInventoryRoot.headVersion;
         if (maxVersion <= 0) {
             ioResults.success = false;
-            ioResults.error = `Invalid inventory file for ${this}`;
+            ioResults.error = `Invalid inventory file for ${JSON.stringify(this)}`;
+            LOG.logger.error(ioResults.error);
             return ioResults;
         }
         ioResults = await ocflInventoryRoot.validate(this, true);
-        if (!ioResults.success)
+        if (!ioResults.success) {
+            LOG.logger.error(ioResults.error);
             return ioResults;
+        }
 
         // Validate each inventory
         for (let version: number = 1; version <= maxVersion; version++) {
             invResults = INV.OCFLInventory.readFromDiskVersion(this, version);
             if (!invResults.success || !invResults.ocflInventory) {
                 ioResults.success = false;
-                ioResults.error = invResults.error ? invResults.error : `Failed to read inventory for ${this}, version ${version}`;
+                ioResults.error = invResults.error ? invResults.error : `Failed to read inventory for ${JSON.stringify(this)}, version ${version}`;
+                LOG.logger.error(ioResults.error);
                 return ioResults;
             }
 
             const ocflInventory: INV.OCFLInventory = invResults.ocflInventory;
             ioResults = await ocflInventory.validate(this, false);
-            if (!ioResults.success)
+            if (!ioResults.success) {
+                LOG.logger.error(ioResults.error);
                 return ioResults;
+            }
 
             // Confirm root inventory matches latest version inventory
             if (ocflInventory.headVersion == ocflInventoryRoot.headVersion) {
                 if (!L.isEqual(ocflInventory, ocflInventoryRoot)) {
                     ioResults.success = false;
-                    ioResults.error = `Root inventory ${ocflInventoryRoot} does not match head inventory ${ocflInventory}`;
+                    ioResults.error = `Root inventory ${JSON.stringify(ocflInventoryRoot)} does not match head inventory ${JSON.stringify(ocflInventory)}`;
+                    LOG.logger.error(ioResults.error);
                     return ioResults;
                 }
             }
@@ -338,37 +351,50 @@ export class OCFLObject {
         if (!fileList) {
             ioResults.success = false;
             ioResults.error = `Unable to read filelist from directory from ${this._objectRoot}`;
+            LOG.logger.error(ioResults.error);
             return ioResults;
         }
 
-        for (const fileName in fileList) {
-            // Skip Inventory and Inventory Digest
+        for (const fileName of fileList) {
+            const relName: string = path.relative(this._objectRoot, fileName);
             const baseName: string = path.basename(fileName);
-            if (baseName == ST.OCFLStorageObjectInventoryFilename || baseName == ST.OCFLStorageObjectInventoryDigestFilename)
+            // LOG.logger.info(`Examining ${fileName}; relName ${relName}; basename ${baseName}`);
+
+            // Skip Inventory, Inventory Digest, and Namaste file
+            if (baseName == ST.OCFLStorageObjectInventoryFilename ||
+                baseName == ST.OCFLStorageObjectInventoryDigestFilename ||
+                baseName == ST.OCFLStorageObjectNamasteFilename)
                 continue;
 
-            const hash: string | undefined = fileMap.get(fileName);
+            const hash: string | undefined = fileMap.get(relName);
             if (!hash) {
                 ioResults.success = false;
-                ioResults.error = `No hash found in manifest for ${fileName}`;
+                ioResults.error = `No hash found for ${relName} in manifest ${JSON.stringify(fileMap)}`;
+                LOG.logger.error(ioResults.error);
                 return ioResults;
             }
 
-            const fullPath: string = path.join(this._objectRoot, fileName);
-            ioResults = H.Helpers.fileOrDirExists(fullPath);
-            if (!ioResults.success)
+            ioResults = H.Helpers.fileOrDirExists(fileName);
+            if (!ioResults.success) {
+                LOG.logger.error(ioResults.error);
                 return ioResults;
-            const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(fullPath, ST.OCFLDigestAlgorithm);
-            if (!hashResults.success)
+            }
+
+            const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(fileName, ST.OCFLDigestAlgorithm);
+            if (!hashResults.success) {
+                LOG.logger.error(hashResults.error);
                 return hashResults;
+            }
 
             if (hash != hashResults.hash) {
                 ioResults.success = false;
-                ioResults.error = `Computed hash for ${fullPath} does not match; expected ${hash}; observed ${hashResults.hash}`;
+                ioResults.error = `Computed hash for ${fileName} does not match; expected ${hash}; observed ${hashResults.hash}`;
+                LOG.logger.error(ioResults.error);
                 return ioResults;
             }
         }
 
+        ioResults.success = true;
         return ioResults;
     }
 
@@ -398,6 +424,10 @@ export class OCFLObject {
 
     fileLocation(fileName: string, version: number): string {
         return path.join(this.versionContentFullPath(version), fileName);
+    }
+
+    headVersion(): number {
+        return this._ocflInventory ? this._ocflInventory.headVersion : 0;
     }
 
     private async initializeStructure(): Promise<H.IOResults> {
@@ -431,8 +461,10 @@ export class OCFLObject {
                     };
                 }
                 this._ocflInventory = results.ocflInventory;
-            } else
-                this._ocflInventory = new INV.OCFLInventory(this._storageKey);
+            } else {
+                this._ocflInventory = new INV.OCFLInventory();
+                this._ocflInventory.id = this._storageKey;
+            }
         }
         return {
             success: true,
@@ -440,3 +472,4 @@ export class OCFLObject {
         };
     }
 }
+
