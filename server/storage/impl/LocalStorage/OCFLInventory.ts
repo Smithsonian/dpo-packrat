@@ -1,5 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as L from 'lodash';
 import { OperationInfo } from '../../interface/IStorage';
 import { OCFLObject } from './OCFLObject';
 import * as ST from './SharedTypes';
@@ -18,21 +19,33 @@ export type OCFLInventoryManifestEntry = {
  * For the version state manifest, the filenames are just the logical portion of the name,
  * e.g. LogicalPath/LogicalFilename.ext. */
 export class OCFLInventoryManifest {
-    addContent(filename: string, hash: string): void {
+    addContent(fileName: string, hash: string): void {
         hash = hash.toLowerCase();
+        // LOG.logger.info(`OCFLInventoryManifest.addContent ${fileName}: ${hash}`);
+
+        // Look for fileName in existing data
+        const fileMap: Map<string, string> = this.getFileMap();
+        const existingHash: string | undefined = fileMap.get(fileName);
+        if (existingHash) {                     // if we found it,
+            if (existingHash === hash)          // and it matches our added hash
+                return;                         // we're all done
+            this.removeContent(fileName, existingHash); // otherwise, yank old entry
+        }
+
         if (!this[hash])
-            this[hash] = [filename];
+            this[hash] = [fileName];
         else
-            this[hash].push(filename);
+            this[hash].push(fileName);
     }
 
-    removeContent(filename: string, hash: string): boolean {
+    removeContent(fileName: string, hash: string): boolean {
+        // LOG.logger.info(`OCFLInventoryManifest.removeContent ${fileName}: ${hash}`);
         hash = hash.toLowerCase();
         if (!this[hash])    // if we can't find this hash
             return false;   // error
 
         const stringArray: Array<string> = <Array<string>><unknown>this[hash];
-        const matchIndex = stringArray.indexOf(filename);
+        const matchIndex = stringArray.indexOf(fileName);
         if (matchIndex == -1)   // if we can't find our filename in the array
             return false;       // error
 
@@ -76,10 +89,10 @@ export class OCFLInventoryManifest {
             const stringArray: Array<string> = <Array<string>><unknown>this[hash];
             for (const name of stringArray) {
                 // strip off v###/content/ and look for exact match on remainder
-                const contentIndex = name.indexOf('/content/');
+                const contentIndex = name.indexOf('/' + ST.OCFLStorageObjectContentFolder + '/');
                 if (contentIndex == -1)
                     continue;
-                if (name.substring(contentIndex + 9) === fileName)
+                if (name.substring(contentIndex + ST.OCFLStorageObjectContentFolder.length + 2) === fileName) // + 2 for slashes
                     matches.push({ path: name, hash });
             }
         }
@@ -114,6 +127,11 @@ export class OCFLInventoryManifest {
         }
         return fileMap;
     }
+
+    copy(prevState: OCFLInventoryManifest): void {
+        for (const manifestEntry of prevState.getEntries())
+            this[manifestEntry.hash] = L.clone(manifestEntry.files);
+    }
 }
 
 export class OFCLInventoryUser {
@@ -144,10 +162,16 @@ export class OCFLInventoryVersion {
 /** Container object for OCFLInventoryVersion(s).  Note that each version is storage as a property, value pair.
  * The property is the string "v1", "v2", etc -- the version number; the value is an OCFLInventoryVersion object */
 export class OCFLInventoryVersions {
-    addVersion(version: string, opInfo: OperationInfo): boolean {
+    addVersion(version: string, oldVersion: string, opInfo: OperationInfo): boolean {
         if (this[version])
             return false;
         this[version] = new OCFLInventoryVersion(opInfo);
+
+        if (oldVersion && this[oldVersion]) {
+            const prevState: OCFLInventoryManifest | undefined = this[oldVersion].state;
+            if (prevState)
+                this[version].state.copy(prevState);
+        }
         return true;
     }
 
@@ -166,7 +190,14 @@ export class OCFLInventoryVersions {
         return inventoryVersion.state.removeContent(logicalPath, hash);
     }
 
-    getInventoryVersion(version: string): OCFLInventoryVersion | null {
+    getHashForFilename(version: string, fileName: string): string {
+        const inventoryVersion: OCFLInventoryVersion | null = this.getInventoryVersion(version);
+        if (!inventoryVersion || !inventoryVersion.state)
+            return '';
+        return inventoryVersion.state.getHashForFilename(fileName);
+    }
+
+    private getInventoryVersion(version: string): OCFLInventoryVersion | null {
         if (!this[version])
             return null;
         return <OCFLInventoryVersion>(this[version]);
@@ -222,17 +253,17 @@ export class OCFLInventory implements OCFLInventoryType {
 
     hash(fileName: string, version: number): string {
         const versionString: string = OCFLObject.versionFolderName(version);
-        const ocflInventoryVersion: OCFLInventoryVersion | null = this.versions.getInventoryVersion(versionString);
-        if (!ocflInventoryVersion || !ocflInventoryVersion.state)
-            return '';
-        return ocflInventoryVersion.state.getHashForFilename(fileName);
+        return this.versions.getHashForFilename(versionString, fileName);
     }
 
     /** Call this before recording content! */
     addVersion(opInfo: OperationInfo): void {
-        const version: number = 1 + this.headVersion;
+        const oldVersion: number = this.headVersion;
+        const version: number = oldVersion + 1;
+        const oldVersionString: string = (oldVersion > 0) ? OCFLObject.versionFolderName(oldVersion) : '';
+
         this.head = OCFLObject.versionFolderName(version);
-        this.versions.addVersion(this.head, opInfo);
+        this.versions.addVersion(this.head, oldVersionString, opInfo);
     }
 
     /**
