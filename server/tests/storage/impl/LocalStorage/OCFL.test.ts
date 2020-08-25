@@ -1,15 +1,12 @@
 import * as path from 'path';
-
 import * as OR from '../../../../storage/impl/LocalStorage/OCFLRoot';
 import * as OO from '../../../../storage/impl/LocalStorage/OCFLObject';
 import * as ST from '../../../../storage/impl/LocalStorage/SharedTypes';
 import * as H from '../../../../utils/helpers';
-// import * as DBAPI from '../../../db';
-// import * as CACHE from '../../../cache';
-// import * as UTIL from '../api';
 import * as LOG from '../../../../utils/logger';
 
 const ocflRoot: OR.OCFLRoot = new OR.OCFLRoot();
+let ocflObject: OO.OCFLObject | null = null;
 let ocflStorageRoot: string;
 
 beforeAll(() => {
@@ -79,15 +76,54 @@ describe('OCFL OCFLRoot', () => {
         expect(location.toLowerCase()).toEqual(path.join(ocflStorageRoot, ST.OCFLStorageRootFolderStaging, '/35/6A/19/356A192B7913B04C54574D18C28D46E6395428AB').toLowerCase());
     });
 
-    test('OCFL OCFLRoot.computeLocationRoot', async () => {
+    test('OCFL OCFLRoot.ocflObject', async () => {
         const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
         let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, true, true);  // Attempt to read a non-existant object root
         expect(initRes.success).toBeFalsy();
 
         initRes = await ocflRoot.ocflObject(storageKey, true, false); // Attempt to write a non-existant object root
         expect(initRes.success).toBeTruthy();
+        ocflObject = initRes.ocflObject;
+    });
+});
+
+describe('OCFL Object', () => {
+    if (!ocflObject)
+        return;
+    test('OCFL Object.xxx', async () => {
     });
 
+    /*
+
+    async addOrUpdate(pathOnDisk: string | null, fileName: string | null, metadata: any | null, opInfo: OperationInfo): Promise<H.IOResults> {
+    async rename(fileNameOld: string, fileNameNew: string, opInfo: OperationInfo): Promise<H.IOResults> {
+    async delete(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
+    async delete(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
+    async purge(fileName: string): Promise<H.IOResults> {
+    async validate(): Promise<H.IOResults> {
+    get objectRoot(): string {
+    versionRoot(version: number): string {
+    versionContentFullPath(version: number): string {
+    versionContentPartialPath(version: number): string {
+    static versionFolderName(version: number): string {
+    fileHash(fileName: string, version: number): string {
+    fileLocation(fileName: string, version: number): string {
+
+    test('OCFL Object.xxx', async () => {
+    });
+
+    test('OCFL Object.xxx', async () => {
+    });
+
+    test('OCFL Object.xxx', async () => {
+    });
+
+    test('OCFL Object.xxx', async () => {
+    });
+    */
+});
+
+describe('OCFL Teardown', () => {
     // Destructive test -- leave until end!
     test('OCFL OCFLRoot.validate', async () => {
         let results: H.IOResults;
