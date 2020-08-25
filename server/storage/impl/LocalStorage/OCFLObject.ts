@@ -2,7 +2,6 @@
 import * as path from 'path';
 import * as L from 'lodash';
 import { OperationInfo } from '../../interface/IStorage';
-import { OCFLRoot } from './OCFLRoot';
 import * as INV from './OCFLInventory';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
@@ -14,24 +13,17 @@ export type OCFLObjectInitResults = {
 };
 
 export class OCFLObject {
-    private _ocflRoot: OCFLRoot;
     private _storageKey: string = '';
-    private _staging: boolean = false;
     private _forReading: boolean = false;
 
     private _objectRoot: string = '';
     private _ocflInventory: INV.OCFLInventory | null = null;
     private _newObject: boolean = false;
 
-    constructor(ocflRoot: OCFLRoot) {
-        this._ocflRoot = ocflRoot;
-    }
-
-    async initialize(storageKey: string, staging: boolean, forReading: boolean): Promise<OCFLObjectInitResults> {
+    async initialize(storageKey: string, objectRoot: string, forReading: boolean): Promise<OCFLObjectInitResults> {
         this._storageKey = storageKey;
-        this._staging = staging;
+        this._objectRoot = objectRoot;
         this._forReading = forReading;
-        this._objectRoot = this.computeObjectRoot(this._storageKey, this._staging);
 
         const retValue: OCFLObjectInitResults = {
             ocflObject: null,
@@ -382,10 +374,6 @@ export class OCFLObject {
 
     get objectRoot(): string {
         return this._objectRoot;
-    }
-
-    private computeObjectRoot(storageKey: string, staging: boolean): string {
-        return this._ocflRoot.computeLocationObjectRoot(storageKey, staging);
     }
 
     versionRoot(version: number): string {

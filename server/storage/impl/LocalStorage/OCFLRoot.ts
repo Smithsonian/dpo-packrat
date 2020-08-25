@@ -92,8 +92,9 @@ export class OCFLRoot {
     }
 
     async ocflObject(storageKey: string, staging: boolean, forReading: boolean): Promise<OO.OCFLObjectInitResults> {
-        const ocflObject: OO.OCFLObject = new OO.OCFLObject(this);
-        return await ocflObject.initialize(storageKey, staging, forReading);
+        const ocflObject: OO.OCFLObject = new OO.OCFLObject();
+        const objectRoot: string = this.computeLocationObjectRoot(storageKey, staging);
+        return await ocflObject.initialize(storageKey, objectRoot, forReading);
     }
 
     private async initializeStorageRoot(): Promise<H.IOResults> {
