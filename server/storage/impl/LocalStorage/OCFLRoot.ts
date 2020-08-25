@@ -18,9 +18,6 @@ export class OCFLRoot {
 
     constructor() { }
 
-    // For example, the idAsset == 1 yields the SHA1 hash of 356A192B7913B04C54574D18C28D46E6395428AB.  This will yield the path:
-    // /35/6A/19/356A192B7913B04C54574D18C28D46E6395428AB (the entire hash is repeated at the of the n-tuple).
-
     computeLocationRepoRoot(): string {
         return this.storageRootRepo;
     }
@@ -35,6 +32,8 @@ export class OCFLRoot {
     }
 
     /** Computes an abstract storage key folder */
+    // For example, the idAsset == 1 yields the SHA1 hash of 356A192B7913B04C54574D18C28D46E6395428AB.  This will yield the path:
+    // /35/6A/19/356A192B7913B04C54574D18C28D46E6395428AB (the entire hash is repeated at the of the n-tuple).
     private computeStorageKeyFolder(storageKey: string): string {
         return path.join(storageKey.substring(0, 2), storageKey.substring(2, 4), storageKey.substring(4, 6), storageKey);
     }
@@ -59,6 +58,7 @@ export class OCFLRoot {
         const fileName: string      = H.Helpers.randomSlug();
         const directoryPath: string = path.join(this.computeLocationStagingRoot(), directoryName);
         results.ioResults = H.Helpers.createDirectory(directoryPath);
+        /* istanbul ignore else */
         if (results.ioResults.success) {
             results.locationPublic = path.join(directoryName, fileName);    // Partial path
             results.locationPrivate = path.join(directoryPath, fileName);   // Full path
@@ -67,21 +67,24 @@ export class OCFLRoot {
     }
 
     async initialize(storageRoot: string): Promise<H.IOResults> {
-        this.storageRoot = storageRoot;                                 // single spot under which our files are stored
-        this.storageRootRepo = path.join(storageRoot, 'REPO/');         // root of OCFL repository
-        this.storageRootStaging = path.join(storageRoot, 'STAGING/');   // root of staging area -- should be on the same volume as the OCFL repository so that move operations are fast
+        this.storageRoot = storageRoot;                                                     // single spot under which our files are stored
+        this.storageRootRepo = path.join(storageRoot, ST.OCFLStorageRootFolderRepository);  // root of OCFL repository
+        this.storageRootStaging = path.join(storageRoot, ST.OCFLStorageRootFolderStaging);  // root of staging area -- should be on the same volume as the OCFL repository so that move operations are fast
         LOG.logger.info(`OCFL Storage initialization: Storage Root = ${this.storageRoot}`);
         LOG.logger.info(`OCFL Storage initialization: Repo Root    = ${this.storageRootRepo}`);
         LOG.logger.info(`OCFL Storage initialization: Staging Root = ${this.storageRootStaging}`);
 
         let ioResults: H.IOResults;
-        ioResults = H.Helpers.initializeDirectory(this.storageRoot, 'Local Storage Root');
+        ioResults = H.Helpers.initializeDirectory(this.storageRoot, 'Storage Root');
+        /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
         ioResults = H.Helpers.initializeDirectory(this.storageRootRepo, 'OCFL Storage Root');
+        /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
-        ioResults = H.Helpers.initializeDirectory(this.storageRootStaging, 'Staging Root');
+        ioResults = H.Helpers.initializeDirectory(this.storageRootStaging, 'OCFL Staging Root');
+        /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
 
@@ -98,18 +101,43 @@ export class OCFLRoot {
         let source: string          = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootNamasteFilename);
         let dest: string            = path.join(this.storageRootRepo, ST.OCFLStorageRootNamasteFilename);
         let ioResults: H.IOResults  = H.Helpers.initializeFile(source, dest, 'OCFL Root Namaste File');
+        /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootLayoutFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootLayoutFilename);
         ioResults   = H.Helpers.initializeFile(source, dest, 'OCFL Root Layout File');
+        /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootSpecFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootSpecFilename);
         ioResults   = H.Helpers.initializeFile(source, dest, 'OCFL Root Spec File');
+        /* istanbul ignore if */
+        if (!ioResults.success)
+            return ioResults;
+
+        return ioResults;
+    }
+
+    async validate(): Promise<H.IOResults> {
+        let source: string          = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootNamasteFilename);
+        let dest: string            = path.join(this.storageRootRepo, ST.OCFLStorageRootNamasteFilename);
+        let ioResults: H.IOResults  = H.Helpers.filesMatch(source, dest);
+        if (!ioResults.success)
+            return ioResults;
+
+        source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootLayoutFilename);
+        dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootLayoutFilename);
+        ioResults   = H.Helpers.filesMatch(source, dest);
+        if (!ioResults.success)
+            return ioResults;
+
+        source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootSpecFilename);
+        dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootSpecFilename);
+        ioResults   = H.Helpers.filesMatch(source, dest);
         if (!ioResults.success)
             return ioResults;
 

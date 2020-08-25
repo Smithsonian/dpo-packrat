@@ -123,7 +123,8 @@ export class Helpers {
 
         LOG.logger.info(`${description} does not exist; creating it`);
         ioResults = source ? Helpers.copyFile(source, dest) : Helpers.ensureFileExists(dest);
-        if (!ioResults.success) /* istanbul ignore next */
+        /* istanbul ignore if */
+        if (!ioResults.success)
             LOG.logger.error(`Unable to create ${description} at ${dest}`);
         return ioResults;
     }
@@ -175,7 +176,7 @@ export class Helpers {
 
         try {
             if (!fs.existsSync(directory))
-                fs.mkdirSync(directory);
+                fs.mkdirsSync(directory);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.createDirectory', error);
             res.success = false;
@@ -184,7 +185,7 @@ export class Helpers {
         return res;
     }
 
-    static removeDirectory(directory: string): IOResults {
+    static removeDirectory(directory: string, recursive: boolean = false): IOResults {
         const res: IOResults = {
             success: true,
             error: ''
@@ -192,7 +193,7 @@ export class Helpers {
 
         try {
             if (fs.existsSync(directory))
-                fs.rmdirSync(directory);
+                fs.rmdirSync(directory, { recursive });
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.removeDirectory', error);
             res.success = false;
@@ -208,7 +209,8 @@ export class Helpers {
 
         LOG.logger.info(`${description} does not exist; creating it`);
         ioResults = Helpers.createDirectory(directory);
-        if (!ioResults.success) /* istanbul ignore next */
+        /* istanbul ignore if */
+        if (!ioResults.success)
             LOG.logger.error(`Unable to create ${description} at ${directory}`);
         return ioResults;
     }
@@ -223,6 +225,7 @@ export class Helpers {
                 if (fs.statSync(fullPath).isDirectory()) {
                     if (maxDepth > 0) {
                         const subDirEntries: string[] | null = Helpers.getDirectoryEntriesRecursive(fullPath, maxDepth - 1);
+                        /* istanbul ignore next */
                         if (subDirEntries)
                             for (const subDirEntry of subDirEntries)
                                 dirEntries.push(subDirEntry);
@@ -230,7 +233,7 @@ export class Helpers {
                 } else
                     dirEntries.push(fullPath);
             }
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.getDirectoryEntriesRecursive', error);
             return null;
         }
@@ -290,7 +293,7 @@ export class Helpers {
         try {
             fs.writeJsonSync(dest, obj);
             return await Helpers.computeHashFromFile(dest, hashMethod);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.writeJsonAndComputeHash', error);
             return {
                 hash: '',

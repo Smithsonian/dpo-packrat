@@ -1,6 +1,6 @@
+import * as path from 'path';
 // import * as fs from 'fs';
 // import { /* PassThrough, */ Stream } from 'stream';
-// import * as path from 'path';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
@@ -32,16 +32,14 @@ describe('Utils: Helpers', () => {
     });
 
     // jest.mock('fs');
-    const directoryPath: string = H.Helpers.randomSlug();
+    const directoryPath: string = path.join('var', 'test', H.Helpers.randomSlug());
     const filePath: string = H.Helpers.randomFilename(directoryPath, '');
     const filePath2: string = H.Helpers.randomFilename(directoryPath, '');
     const filePath3: string = H.Helpers.randomFilename(directoryPath, '');
     const filePath4: string = H.Helpers.randomFilename(directoryPath, '');
-    // LOG.logger.info(`directoryPath = ${directoryPath}`);
-    // LOG.logger.info(`filePath      = ${filePath}`);
-    // LOG.logger.info(`filePath2     = ${filePath2}`);
-    // LOG.logger.info(`filePath3     = ${filePath3}`);
-    // LOG.logger.info(`filePath4     = ${filePath4}`);
+    const filePath5: string = H.Helpers.randomFilename(directoryPath, '');
+    const dirNestEmpty: string = path.join(directoryPath, H.Helpers.randomSlug());
+    const dirNestNotEmpty: string = path.join(directoryPath, H.Helpers.randomSlug());
 
     test('Utils: Helpers.randomSlug', () => {
         const s1: string = H.Helpers.randomSlug();
@@ -111,6 +109,24 @@ describe('Utils: Helpers', () => {
         expect(res.success).toBeFalsy();
     });
 
+    test('Utils: Helpers.computeHashFromString', async () => {
+        const toHash: string = '';
+        const hash: string = H.Helpers.computeHashFromString(toHash, 'sha512');
+        expect(hash).toBe('cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e');
+    });
+
+    test('Utils: Helpers.writeJsonAndComputeHash', async () => {
+        const obj = {
+            abba: 1,
+            dabba: 'doo'
+        };
+        const res1: H.HashResults = await H.Helpers.writeJsonAndComputeHash(filePath5, obj, 'sha512');
+        expect(res1.success).toBeTruthy();
+        const res2: H.HashResults = await H.Helpers.computeHashFromFile(filePath5, 'sha512');
+        expect(res2.success).toBeTruthy();
+        expect(res1.hash).toEqual(res2.hash);
+    });
+
     test('Utils: Helpers.copyFile', () => {
         let res: H.IOResults = H.Helpers.copyFile(filePath, filePath2);
         expect(res.success).toBeTruthy();
@@ -126,6 +142,64 @@ describe('Utils: Helpers', () => {
         expect(res.success).toBeTruthy();
         res = H.Helpers.fileOrDirExists(filePath3);
         expect(res.success).toBeFalsy();
+    });
+
+    test('Utils: Helpers.initializeFile', () => {
+        let res: H.IOResults;
+        res = H.Helpers.initializeFile(filePath5, filePath, 'Destination exists');
+        expect(res.success).toBeTruthy();
+        res = H.Helpers.initializeFile(filePath5, filePath4, 'Destination does not exist, source exists');
+        expect(res.success).toBeTruthy();
+        res = H.Helpers.removeFile(filePath4);
+        expect(res.success).toBeTruthy();
+        res = H.Helpers.initializeFile(null, filePath4, 'Destination does not exist, no source');
+        expect(res.success).toBeTruthy();
+        res = H.Helpers.removeFile(filePath4);
+        expect(res.success).toBeTruthy();
+    });
+
+    test('Utils: Helpers.filesMatch', () => {
+        let res: H.IOResults = H.Helpers.filesMatch(filePath, filePath3);
+        expect(res.success).toBeFalsy();
+        res = H.Helpers.filesMatch(filePath3, filePath);
+        expect(res.success).toBeFalsy();
+        res = H.Helpers.filesMatch(filePath2, filePath5);
+        expect(res.success).toBeFalsy();
+        res = H.Helpers.filesMatch(filePath, filePath2);
+        expect(res.success).toBeTruthy();
+    });
+
+    test('Utils: Helpers.initializeDirectory', () => {
+        let res: H.IOResults = H.Helpers.initializeDirectory(dirNestEmpty, 'Nested Directory, Empty');
+        expect(res.success).toBeTruthy();
+        res = H.Helpers.initializeDirectory(dirNestNotEmpty, 'Nested Directory, Not Empty');
+        expect(res.success).toBeTruthy();
+        res = H.Helpers.initializeDirectory(dirNestNotEmpty, 'Nested Directory, Not Empty');
+        expect(res.success).toBeTruthy();
+    });
+
+    test('Utils: Helpers.moveFile', () => {
+        const moveDest: string = path.join(dirNestNotEmpty, path.basename(filePath5));
+        let res: H.IOResults;
+        res = H.Helpers.moveFile(filePath5, moveDest);
+        expect(res.success).toBeTruthy();
+        res = H.Helpers.moveFile(moveDest, filePath5);
+        expect(res.success).toBeTruthy();
+    });
+
+    test('Utils: Helpers.getDirectoryEntriesRecursive', () => {
+        const copiedFile: string = H.Helpers.randomFilename(dirNestNotEmpty, '');
+        const res: H.IOResults = H.Helpers.copyFile(filePath5, copiedFile);
+        expect(res.success).toBeTruthy();
+
+        // static getDirectoryEntriesRecursive(directory: string, maxDepth: number = 32): string[] | null {
+        const dirNotRecursive: string[] | null = H.Helpers.getDirectoryEntriesRecursive(directoryPath, 0);
+        expect(dirNotRecursive).toBeTruthy();
+        expect(dirNotRecursive).toEqual(expect.arrayContaining([filePath, filePath2, filePath5]));
+
+        const dirRecursive: string[] | null = H.Helpers.getDirectoryEntriesRecursive(directoryPath);
+        expect(dirRecursive).toBeTruthy();
+        expect(dirRecursive).toEqual(expect.arrayContaining([filePath, filePath2, filePath5, copiedFile]));
     });
 
     /*
@@ -158,7 +232,9 @@ describe('Utils: Helpers', () => {
     test('Utils: Helpers.removeDirectory', () => {
         let res: H.IOResults = H.Helpers.removeDirectory(filePath);
         expect(res.success).toBeTruthy();    // removing a non-existant directory suceeds
-        res = H.Helpers.removeDirectory(directoryPath);
+        res = H.Helpers.removeDirectory(directoryPath, false); // removing a non-empty directory fails, when not in recurse mode
+        expect(res.success).toBeFalsy();
+        res = H.Helpers.removeDirectory(directoryPath, true);
         expect(res.success).toBeTruthy();
     });
 });
