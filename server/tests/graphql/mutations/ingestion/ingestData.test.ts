@@ -41,6 +41,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
     });
 
     describe('Mutation: ingestData', () => {
+        jest.setTimeout(30000);
         test('should work with valid input', async done => {
             const vocabularySetArgs: CreateVocabularySetInput = createVocabularySetInput();
             const { VocabularySet } = await graphQLApi.createVocabularySet(vocabularySetArgs);
