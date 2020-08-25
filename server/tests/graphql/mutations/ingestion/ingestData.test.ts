@@ -177,6 +177,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         const result = await graphQLApi.ingestData(ingestDataInput);
                         expect(result.success).toBe(true);
+                        done();
                     }
                 }
             }
