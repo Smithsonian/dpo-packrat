@@ -92,7 +92,7 @@ describe('OCFL OCFLRoot', () => {
         expect(location.toLowerCase()).toEqual(path.join(ocflStorageRoot, ST.OCFLStorageRootFolderStaging, '/35/6A/19/356A192B7913B04C54574D18C28D46E6395428AB').toLowerCase());
     });
 
-    test('OCFL OCFLRoot.ocflObject', async () => {
+    test('OCFL OCFLRoot.ocflObject New', async () => {
         const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
         let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, true, true);  // Attempt to read a non-existant object root
         expect(initRes.success).toBeFalsy();
@@ -107,44 +107,129 @@ describe('OCFL Object', () => {
     let fileName1: string = '';
     let fileName2: string = '';
     let fileName3: string = '';
+    let fileName4: string = ''; // non-existing file
+    let fileName1Orig: string = '';
 
     test('OCFL Object.addOrUpdate', async () => {
-        fileName1 = await testAddOrUpdate(ocflObject, OHTS.captureData1, 16384);
-        fileName2 = await testAddOrUpdate(ocflObject, OHTS.model1, 65536);
-        fileName3 = await testAddOrUpdate(ocflObject, OHTS.captureData1, 36);
+        fileName1 = await testAddOrUpdate(ocflObject, OHTS.captureData1, 16384, true); fileName1Orig = fileName1;
+        fileName2 = await testAddOrUpdate(ocflObject, OHTS.model1, 65536, true);
+        fileName3 = await testAddOrUpdate(ocflObject, OHTS.captureData1, 36, true);
+        fileName4 = await testAddOrUpdate(ocflObject, OHTS.captureData1, 0, false); // 0 -> do not create file, but do return a random name; should fail
+        await testAddOrUpdate(ocflObject, null, 0, false); // 0 -> do not create file, but do return a random name; should fail
     });
 
     test('OCFL Object.rename', async () => {
         fileName1 = await testRename(ocflObject, fileName1, true);
         fileName2 = await testRename(ocflObject, fileName2, true);
         fileName3 = await testRename(ocflObject, fileName3, true);
-        await testRename(ocflObject, H.Helpers.randomSlug(), false);
+        fileName4 = await testRename(ocflObject, fileName4, false); // should fail for non-existing files
     });
 
     test('OCFL Object.delete', async () => {
         await testDelete(ocflObject, fileName1, true);
         await testDelete(ocflObject, fileName2, true);
         await testDelete(ocflObject, fileName3, true);
-        await testDelete(ocflObject, fileName3, false);
+        await testDelete(ocflObject, fileName3, false); // should fail second time
+        await testDelete(ocflObject, fileName4, false); // should fail for non-existing files
     });
 
-    /*
-    test('OCFL Object.xxx', async () => {
+    test('OCFL Object.reinstate', async () => {
+        await testReinstate(ocflObject, fileName1, true);
+        await testReinstate(ocflObject, fileName2, true);
+        await testReinstate(ocflObject, fileName3, true);
+        await testReinstate(ocflObject, fileName3, true); // OCFL implementation notes say this should fail second time; I say it's ok
+        await testReinstate(ocflObject, fileName4, false); // should fail for non-existing files
     });
-    async delete(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
-    async reinstate(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
-    async purge(fileName: string): Promise<H.IOResults> {
-    async validate(): Promise<H.IOResults> {
-    get objectRoot(): string {
-    versionRoot(version: number): string {
-    versionContentFullPath(version: number): string {
-    versionContentPartialPath(version: number): string {
-    static versionFolderName(version: number): string {
-    fileHash(fileName: string, version: number): string {
-    fileLocation(fileName: string, version: number): string {
-    headVersion(): number {
 
-    */
+    test('OCFL Object.purge', async () => {
+        await testPurge(ocflObject, fileName1, false); // not implemented
+    });
+
+    test('OCFL OCFLRoot.ocflObject Existing', async () => {
+        const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
+        let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, true, true);  // Attempt to read an existing object root
+        expect(initRes.success).toBeTruthy();
+        await testValidate(initRes.ocflObject, 1, 'unmodified');
+
+        initRes = await ocflRoot.ocflObject(storageKey, true, false); // Attempt to write an existing object root
+        expect(initRes.success).toBeTruthy();
+        await testValidate(initRes.ocflObject, 1, 'unmodified');
+    });
+
+    test('OCFL Object.fileLocationAndHash', async () => {
+        expect(ocflObject).toBeTruthy();
+        if (!ocflObject)
+            return;
+
+        let pathAndHash: OO.OCFLPathAndHash | null;
+        pathAndHash = ocflObject.fileLocationAndHash(fileName4, 1); // non-existing file
+        expect(pathAndHash).toBeFalsy();
+
+        pathAndHash = ocflObject.fileLocationAndHash(fileName4, -1); // non-existing file, most recent version
+        expect(pathAndHash).toBeFalsy();
+
+        pathAndHash = ocflObject.fileLocationAndHash(fileName1, 1); // invalid version for this name
+        expect(pathAndHash).toBeFalsy();
+
+        pathAndHash = ocflObject.fileLocationAndHash(fileName1Orig, 1); // valid, old version
+        expect(pathAndHash).toBeTruthy();
+        if (pathAndHash)
+            expect(pathAndHash.path).toEqual(path.join(ocflObject.versionContentFullPath(1), fileName1Orig));
+
+        pathAndHash = ocflObject.fileLocationAndHash(fileName1, 10); // valid, old version
+        expect(pathAndHash).toBeTruthy();
+        if (pathAndHash)
+            expect(pathAndHash.path).toEqual(path.join(ocflObject.versionContentFullPath(10), fileName1));
+
+        pathAndHash = ocflObject.fileLocationAndHash(fileName1, -1); // valid, most recent version
+        expect(pathAndHash).toBeTruthy();
+        if (pathAndHash)
+            expect(pathAndHash.path).toEqual(path.join(ocflObject.versionContentFullPath(10), fileName1));
+    });
+
+    test('OCFL Object Other Methods', async () => {
+        expect(ocflObject).toBeTruthy();
+        if (!ocflObject)
+            return;
+        const objectRoot: string = ocflObject.objectRoot;
+        const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
+        expect(objectRoot).toContain(storageKey);
+
+        const versionRoot: string = ocflObject.versionRoot(1);
+        expect(versionRoot).toEqual(path.join(objectRoot, 'v1'));
+
+        const versionContentFullPath: string = ocflObject.versionContentFullPath(1);
+        expect(versionContentFullPath).toEqual(path.join(objectRoot, 'v1', ST.OCFLStorageObjectContentFolder));
+
+        const versionContentPartialPath: string = OO.OCFLObject.versionContentPartialPath(1);
+        expect(versionContentPartialPath).toEqual(path.join('v1', ST.OCFLStorageObjectContentFolder));
+
+        const versionFolderName: string = OO.OCFLObject.versionFolderName(1);
+        expect(versionFolderName).toEqual('v1');
+
+        const fileLocationExplicit: string = ocflObject.fileLocationExplicit(fileName1, 1);
+        expect(fileLocationExplicit).toEqual(path.join(objectRoot, versionContentPartialPath, fileName1));
+
+        const headVersion: number = ocflObject.headVersion();
+        expect(headVersion).toEqual(13);
+    });
+
+    test('OCFL Object.validate', async () => {
+        await testValidate(ocflObject, 1, 'unmodified');
+        await testValidate(ocflObject, 2, 'missing namaste file');
+        await testValidate(ocflObject, 3, 'invalid namaste file');
+        await testValidate(ocflObject, 4, 'missing root inventory');
+        await testValidate(ocflObject, 5, 'missing root digest');
+        await testValidate(ocflObject, 6, 'invalid root inventory');
+        await testValidate(ocflObject, 7, 'invalid root digest');
+        await testValidate(ocflObject, 8, 'missing version inventory');
+        await testValidate(ocflObject, 9, 'missing file in version folder');
+        await testValidate(ocflObject, 10, 'additional file in version folder');
+        await testValidate(ocflObject, 11, 'missing object root directory');
+        await testValidate(ocflObject, 12, 'modified version file');
+        await testValidate(ocflObject, 13, 'root inventory does not match head inventory');
+        await testValidate(ocflObject, 14, 'version inventory has wrong version number');
+    });
 });
 
 describe('OCFL Teardown', () => {
@@ -213,24 +298,31 @@ async function createRandomFile(directoryName: string, fileName: string, fileSiz
     });
 }
 
-async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.SystemObjectBased | null, fileSize: number): Promise<string> {
+async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.SystemObjectBased | null, fileSize: number, expectSuccess: boolean): Promise<string> {
     expect(ocflObject).toBeTruthy();
     if (!ocflObject)
         return '';
 
     // construct metadata for addOrUpdate
-    const metadataOA: DBAPI.ObjectAncestry | null = await ObjectHierarchyTestSetup.testObjectAncestryFetch(SOBased);
+    const metadataOA: DBAPI.ObjectAncestry | null = SOBased ? await ObjectHierarchyTestSetup.testObjectAncestryFetch(SOBased) : null;
 
     // identify location to which we'll write our temporary data (as if we were streaming content here); write data
     const directoryName: string = createUploadLocation(ocflRoot);
-    const fileName: string = H.Helpers.randomSlug();
-    const pathOnDisk: string = await createRandomFile(directoryName, fileName, fileSize);
+    const fileName: string = (SOBased != null || fileSize > 0) ? H.Helpers.randomSlug() : '';
+    const pathOnDisk: string = (fileSize > 0)
+        ? await createRandomFile(directoryName, fileName, fileSize) // create a file
+        : path.join(directoryName, fileName);                       // just yield a filenmae
 
     // Add content
+    LOG.logger.info(`addOrUpdate ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`);
     let ioResults: H.IOResults = await ocflObject.addOrUpdate(pathOnDisk, fileName, metadataOA, opInfo);
-    if (!ioResults.success)
-        LOG.logger.error(ioResults.error);
-    expect(ioResults.success).toBeTruthy();
+    expect(expectSuccess === ioResults.success).toBeTruthy();
+    if (!ioResults.success) {
+        if (expectSuccess)
+            LOG.logger.error(ioResults.error);
+        else
+            return fileName;
+    }
 
     // Internal Validation
     ioResults = await ocflObject.validate();
@@ -279,6 +371,7 @@ async function testRename(ocflObject: OO.OCFLObject | null, fileNameOld: string,
         return '';
 
     const fileNameNew: string = H.Helpers.randomSlug();
+    LOG.logger.info(`testRename ${fileNameOld} to ${fileNameNew}: Expected ${expectSuccess ? 'success' : 'failure'}`);
     const ioResults: H.IOResults = await ocflObject.rename(fileNameOld, fileNameNew, opInfo);
     if (!ioResults.success && expectSuccess)
         LOG.logger.error(ioResults.error);
@@ -291,9 +384,177 @@ async function testDelete(ocflObject: OO.OCFLObject | null, fileName: string, ex
     if (!ocflObject)
         return;
 
+    LOG.logger.info(`testDelete ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`);
     const ioResults: H.IOResults = await ocflObject.delete(fileName, opInfo);
     if (!ioResults.success && expectSuccess)
         LOG.logger.error(ioResults.error);
     expect(expectSuccess === ioResults.success).toBeTruthy();
 }
 
+async function testReinstate(ocflObject: OO.OCFLObject | null, fileName: string, expectSuccess: boolean): Promise<void> {
+    expect(ocflObject).toBeTruthy();
+    if (!ocflObject)
+        return;
+
+    LOG.logger.info(`testReinstate ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`);
+    const ioResults: H.IOResults = await ocflObject.reinstate(fileName, -1, opInfo);
+    if (!ioResults.success && expectSuccess)
+        LOG.logger.error(ioResults.error);
+    expect(expectSuccess === ioResults.success).toBeTruthy();
+}
+
+async function testPurge(ocflObject: OO.OCFLObject | null, fileName: string, expectSuccess: boolean): Promise<void> {
+    expect(ocflObject).toBeTruthy();
+    if (!ocflObject)
+        return;
+
+    LOG.logger.info(`testPurge ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`);
+    const ioResults: H.IOResults = await ocflObject.purge(fileName);
+    if (!ioResults.success && expectSuccess)
+        LOG.logger.error(ioResults.error);
+    expect(expectSuccess === ioResults.success).toBeTruthy();
+}
+
+async function testValidate(ocflObject: OO.OCFLObject | null, testMode: number, testCase: string): Promise<void> {
+    expect(ocflObject).toBeTruthy();
+    if (!ocflObject)
+        return;
+
+    let expectSuccess: boolean = true;
+    let sourceFile: string = '';
+    let destFile: string = '';
+    let ioResults: H.IOResults;
+
+    // modify
+    switch (testMode) {
+        case 1: {       // unmodified, and thus valid object
+            expectSuccess = true;
+        } break;
+        case 2: {       // missing namaste file
+            sourceFile  = path.join(ocflObject.objectRoot, ST.OCFLStorageObjectNamasteFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), '');
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+            expectSuccess = false;
+        } break;
+        case 3: {       // tweaked namaste file
+            sourceFile  = path.join(ocflObject.objectRoot, ST.OCFLStorageObjectNamasteFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), ''); // save file
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+
+            expect(await createRandomFile(ocflObject.objectRoot, ST.OCFLStorageObjectNamasteFilename, 500)).toBeTruthy(); // create random replacement
+            expectSuccess = false;
+        } break;
+        case 4: {       // missing root inventory
+            sourceFile  = path.join(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), '');
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+            expectSuccess = false;
+        } break;
+        case 5: {       // missing root digest
+            sourceFile  = path.join(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryDigestFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), '');
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+            expectSuccess = false;
+        } break;
+        case 6: {       // invalid root inventory
+            sourceFile  = path.join(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), ''); // save file
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+
+            expect(await createRandomFile(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryFilename, 500)).toBeTruthy(); // create random replacement
+            expectSuccess = false;
+        } break;
+        case 7: {       // invalid root digest
+            sourceFile  = path.join(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryDigestFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), '');
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+
+            expect(await createRandomFile(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryDigestFilename, 500)).toBeTruthy(); // create random replacement
+            expectSuccess = false;
+        } break;
+        case 8: {       // missing version inventory
+            sourceFile  = path.join(ocflObject.versionRoot(1), ST.OCFLStorageObjectInventoryFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), '');
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+            expectSuccess = false;
+        } break;
+        case 9: {       // missing file in version folder
+            sourceFile  = path.join(ocflObject.versionContentFullPath(1), ST.OCFLMetadataFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), '');
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+            expectSuccess = false;
+        } break;
+        case 10: {      // additional file in version folder
+            destFile = await createRandomFile(ocflObject.versionContentFullPath(1), H.Helpers.randomSlug(), 500); // create random file
+            expect(destFile).toBeTruthy();
+            expectSuccess = false;
+        } break;
+        case 11: {      // missing object root directory
+            sourceFile  = ocflObject.objectRoot;
+            destFile    = ocflObject.objectRoot + H.Helpers.randomSlug();
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+            expectSuccess = false;
+        } break;
+        case 12: {       // modified version file
+            sourceFile  = path.join(ocflObject.versionContentFullPath(1), ST.OCFLMetadataFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), '');
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+
+            expect(await createRandomFile(ocflObject.versionContentFullPath(1), ST.OCFLMetadataFilename, 500)).toBeTruthy(); // create random replacement
+            expectSuccess = false;
+        } break;
+        case 13: {       // root inventory does not match head inventory
+            sourceFile  = path.join(ocflObject.versionRoot(ocflObject.headVersion()), ST.OCFLStorageObjectInventoryFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), '');
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+
+            const oldVersionInv: string = path.join(ocflObject.versionRoot(1), ST.OCFLStorageObjectInventoryFilename);
+            ioResults   = H.Helpers.copyFile(oldVersionInv, sourceFile);
+            expect(ioResults.success).toBeTruthy();
+            LOG.logger.info(`Copied ${oldVersionInv} to ${sourceFile}`);
+            expectSuccess = false;
+        } break;
+        case 14: {       // version inventory has wrong version number
+            sourceFile  = path.join(ocflObject.versionRoot(1), ST.OCFLStorageObjectInventoryFilename);
+            destFile    = H.Helpers.randomFilename(ocflRoot.computeLocationRoot(true), '');
+            ioResults   = H.Helpers.moveFile(sourceFile, destFile);
+            expect(ioResults.success).toBeTruthy();
+
+            const oldVersionInv: string = path.join(ocflObject.versionRoot(2), ST.OCFLStorageObjectInventoryFilename);
+            ioResults   = H.Helpers.copyFile(oldVersionInv, sourceFile);
+            expect(ioResults.success).toBeTruthy();
+            LOG.logger.info(`Copied ${oldVersionInv} to ${sourceFile}`);
+            expectSuccess = false;
+        } break;
+        default: {
+            LOG.logger.error(`testValidate Unimplemented test case ${testMode}: {${testCase}}`);
+            expect(false).toBeTruthy();
+        } break;
+    }
+
+    LOG.logger.info(`testValidate mode ${testMode} (${testCase}): Expected ${expectSuccess ? 'success' : 'failure'}`);
+    ioResults = await ocflObject.validate();
+    if (!ioResults.success && expectSuccess)
+        LOG.logger.error(ioResults.error);
+    expect(expectSuccess === ioResults.success).toBeTruthy();
+
+    // reset
+    if (destFile != '' && sourceFile != '') {
+        ioResults = H.Helpers.moveFile(destFile, sourceFile);
+        expect(ioResults.success).toBeTruthy();
+    } else if (destFile != '') {
+        ioResults = H.Helpers.removeFile(destFile);
+        expect(ioResults.success).toBeTruthy();
+    }
+}

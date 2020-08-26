@@ -280,7 +280,7 @@ export class Helpers {
             stream.on('error', () => {
                 // do we need to perform cleanup?
                 res.success = false;
-                res.error = 'Stream Error';
+                res.error = 'Helpers.computeHashFromFile() Stream Error';
                 resolve(res);
             });
         });

@@ -2,7 +2,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as L from 'lodash';
 import { OperationInfo } from '../../interface/IStorage';
-import { OCFLObject } from './OCFLObject';
+import { OCFLObject, OCFLPathAndHash } from './OCFLObject';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
@@ -10,11 +10,6 @@ import * as LOG from '../../../utils/logger';
 export type OCFLInventoryManifestEntry = {
     hash: string;
     files: string[];
-};
-
-export type OCFLInventoryManifestPathAndHash = {
-    path: string;
-    hash: string;
 };
 
 /** Represents manifest information for either the entire inventory file or for a version state block.
@@ -85,9 +80,9 @@ export class OCFLInventoryManifest {
         return '';
     }
 
-    getLatestContentPathAndHash(fileName: string): OCFLInventoryManifestPathAndHash {
+    getLatestContentPathAndHash(fileName: string): OCFLPathAndHash {
         // Walk properties; for each, walk value arrays; for each value, look for a match
-        const matches: OCFLInventoryManifestPathAndHash[] = [];
+        const matches: OCFLPathAndHash[] = [];
         for (const hash in this) {
             if (!Array.isArray(this[hash]))
                 continue;
@@ -106,7 +101,18 @@ export class OCFLInventoryManifest {
 
         if (matches.length == 0)
             return { path: '', hash: '' };
-        matches.sort((s1, s2) => s2.path.localeCompare(s1.path)); // sort descending
+        matches.sort((s1, s2) => {                      // sort descending on version folder number
+            const regex = /v(\d+)[\\/]content[\\/](.+)/;
+            const s1Match = regex.exec(s1.path);
+            const s2Match = regex.exec(s2.path);
+            if (!s1Match || s1Match.length < 2)
+                return -1;
+            if (!s2Match || s2Match.length < 2)
+                return 1;
+            const s1Version = parseInt(s1Match[1]);
+            const s2Version = parseInt(s2Match[1]);
+            return s2Version - s1Version;
+        });
         return matches[0];
     }
 
@@ -265,11 +271,6 @@ export class OCFLInventory implements OCFLInventoryType {
         return (!this.head) ? 0 : parseInt(this.head.substring(1));
     }
 
-    hash(fileName: string, version: number): string {
-        const versionString: string = OCFLObject.versionFolderName(version);
-        return this.versions.getHashForFilename(versionString, fileName);
-    }
-
     /** Call this before recording content! */
     addVersion(opInfo: OperationInfo): void {
         const oldVersion: number = this.headVersion;
@@ -293,7 +294,7 @@ export class OCFLInventory implements OCFLInventoryType {
         return retValue;
     }
 
-    getContentPathAndHash(fileName: string, version: number = -1): OCFLInventoryManifestPathAndHash {
+    getContentPathAndHash(fileName: string, version: number = -1): OCFLPathAndHash {
         if (version == -1)
             return this.manifest.getLatestContentPathAndHash(fileName);
 
@@ -355,7 +356,7 @@ export class OCFLInventory implements OCFLInventoryType {
             const digestContents: string = fs.readFileSync(digestFilename);
             if (digestContentsExpected != digestContents) {
                 results.success = false;
-                results.error = `Inventory digest ${digestFilename} did not have expected contents; expected ${digestContentsExpected}; found ${digestContents}`;
+                results.error = `Inventory digest ${digestFilename} did not have expected contents`;
                 return results;
             }
         } catch (error) {
