@@ -88,6 +88,7 @@ export class OCFLObject {
         }
 
         // Read current inventory, if any
+        /* istanbul ignore next */
         if (!this._ocflInventory) {
             results.success = false;
             results.error = 'Unable to compute OCFL Inventory';
@@ -96,7 +97,7 @@ export class OCFLObject {
 
         const version: number = this._ocflInventory.headVersion;
         const destFolder: string = this.versionContentFullPath(version);
-        const contentPath: string = this.versionContentPartialPath(version);
+        const contentPath: string = OCFLObject.versionContentPartialPath(version);
         let hashResults: H.HashResults;
 
         if (pathOnDisk && fileName) {
@@ -150,17 +151,38 @@ export class OCFLObject {
         if (!results.success)
             return results;
 
-        results = await this.renameWorker(fileNameOld, fileNameNew);
+        results = await this.renameReinstateWorker(fileNameOld, fileNameNew, -1); // -1 means most recent version
         if (!results.success)
             this.rollbackVersion();
         return results;
     }
 
-    async renameWorker(fileNameOld: string, fileNameNew: string): Promise<H.IOResults> {
+    /**
+     * Reinstatement: Makes content from a version earlier than the previous version available in the current version
+     * of an OCFL Object. The content must exist in an earlier version (removed "and not the previous version"). The file path may
+     * exist in the previous version, effectively updating the file path with older content, or it may not, effectively
+     * adding the older content as a new file.
+     * @param fileName File to reinstate
+     * @param version Version number to reinstate; -1 means most recent version
+     */
+    async reinstate(fileName: string, version: number, opInfo: OperationInfo): Promise<H.IOResults> {
+        // Prepare new version in inventory
+        let results: H.IOResults = this.addVersion(opInfo);
+        if (!results.success)
+            return results;
+
+        results = await this.renameReinstateWorker(fileName, fileName, version);
+        if (!results.success)
+            this.rollbackVersion();
+        return results;
+    }
+
+    async renameReinstateWorker(fileNameOld: string, fileNameNew: string, versionToReinstate: number): Promise<H.IOResults> {
         let results: H.IOResults;
 
         // update inventory with new version
         // Read current inventory, if any
+        /* istanbul ignore next */
         if (!this._ocflInventory) {
             return {
                 success: false,
@@ -168,8 +190,8 @@ export class OCFLObject {
             };
         }
 
-        // find most recent version of old file in inventory -- locate path
-        const { path: contentPathSource, hash } = this._ocflInventory.manifest.getLatestContentPathAndHash(fileNameOld);
+        // find the versionToReinstate of old file in inventory; -1 -> most recent version
+        const { path: contentPathSource, hash } = this._ocflInventory.getContentPathAndHash(fileNameOld, versionToReinstate);
         if (!contentPathSource) {
             return {
                 success: false,
@@ -188,7 +210,7 @@ export class OCFLObject {
             return results;
 
         // record copied, renamed file
-        const contentPathDest: string = path.join(this.versionContentPartialPath(version), fileNameNew);
+        const contentPathDest: string = path.join(OCFLObject.versionContentPartialPath(version), fileNameNew);
         // LOG.logger.info(`Calling OFCLInventory.addContent for ${fileNameNew} at ${contentPathDest}`);
         this._ocflInventory.addContent(contentPathDest, fileNameNew, hash);
 
@@ -216,7 +238,6 @@ export class OCFLObject {
     /**
      * Deletion: Removes a file path and corresponding content from the current version of an OCFL Object.
      * The path and content remain available in earlier versions of the object.
-     * @param fileName
      */
     async delete(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
         // Prepare new version in inventory
@@ -233,6 +254,7 @@ export class OCFLObject {
     async deleteWorker(fileName: string): Promise<H.IOResults> {
         // update inventory with new version
         // Read current inventory, if any
+        /* istanbul ignore next */
         if (!this._ocflInventory) {
             return {
                 success: false,
@@ -241,7 +263,7 @@ export class OCFLObject {
         }
 
         // find most recent version of old file in inventory -- locate path
-        const { path: contentPathSource, hash } = this._ocflInventory.manifest.getLatestContentPathAndHash(fileName);
+        const { path: contentPathSource, hash } = this._ocflInventory.getContentPathAndHash(fileName);
         if (!contentPathSource) {
             return {
                 success: false,
@@ -267,16 +289,6 @@ export class OCFLObject {
             return results;
 
         return results;
-    }
-
-    /**
-     * Reinstatement: Makes content from a version earlier than the previous version available in the current version of an OCFL Object.
-     * The content must exist in an earlier version, and not the previous version. The file path may exist in the previous version,
-     * effectively updating the file path with older content, or it may not, effectively adding the older content as a new file.
-     * @param fileName
-     */
-    async reinstate(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
-        return this.rename(fileName, fileName, opInfo);
     }
 
     /**
@@ -429,18 +441,18 @@ export class OCFLObject {
         return this._objectRoot;
     }
 
-    /** e.g. STORAGEROOT\REPO\35\6a\19\356a192b7913b04c54574d18c28d46e6395428ab\v1 */
+    /** e.g. STORAGEROOT/REPO/35/6a/19/356a192b7913b04c54574d18c28d46e6395428ab/v1 */
     versionRoot(version: number): string {
         return path.join(this._objectRoot, OCFLObject.versionFolderName(version));
     }
 
-    /** e.g. STORAGEROOT\REPO\35\6a\19\356a192b7913b04c54574d18c28d46e6395428ab\v1\content */
+    /** e.g. STORAGEROOT/REPO/35/6a/19/356a192b7913b04c54574d18c28d46e6395428ab/v1/content */
     versionContentFullPath(version: number): string {
         return path.join(this.versionRoot(version), ST.OCFLStorageObjectContentFolder);
     }
 
-    /** e.g. v1\content */
-    versionContentPartialPath(version: number): string {
+    /** e.g. v1/content */
+    static versionContentPartialPath(version: number): string {
         return path.join(OCFLObject.versionFolderName(version), ST.OCFLStorageObjectContentFolder);
     }
 
@@ -505,6 +517,7 @@ export class OCFLObject {
 
     private addVersion(opInfo: OperationInfo): H.IOResults {
         // Read current inventory, if any
+        /* istanbul ignore next */
         if (!this._ocflInventory)
             return {
                 success: false,
@@ -526,6 +539,7 @@ export class OCFLObject {
             error: ''
         };
 
+        /* istanbul ignore next */
         if (!this._ocflInventory) {
             retValue.success = false;
             retValue.error = 'Unable to compute OCFL Inventory';
@@ -533,8 +547,11 @@ export class OCFLObject {
         }
 
         const version: number = this._ocflInventory.headVersion;
-        const destFolder: string = this.versionRoot(version);
-        retValue = H.Helpers.removeDirectory(destFolder, true);
+        if (version) {
+            const destFolder: string = this.versionRoot(version);
+            retValue = H.Helpers.removeDirectory(destFolder, true);
+        }
+        /* istanbul ignore next */
         if (!this._ocflInventory.rollbackVersion()) {
             retValue.success = false;
             retValue.error = 'OCL Object Unable to roll back Inventory version';
