@@ -64,26 +64,35 @@ export class OCFLObject {
      * @param opInfo Operation Info, specifying a message and user context for the operation
      */
     async addOrUpdate(pathOnDisk: string | null, fileName: string | null, metadata: any | null, opInfo: OperationInfo): Promise<H.IOResults> {
+        // Prepare new version in inventory
+        let results: H.IOResults = this.addVersion(opInfo);
+        if (!results.success)
+            return results;
+
+        results = await this.addOrUpdateWorker(pathOnDisk, fileName, metadata);
+        if (!results.success)
+            this.rollbackVersion();
+        return results;
+    }
+
+    private async addOrUpdateWorker (pathOnDisk: string | null, fileName: string | null, metadata: any | null): Promise<H.IOResults> {
         let results: H.IOResults = {
             success: false,
             error: ''
         };
 
         if (!pathOnDisk && !fileName && !metadata) {
+            results.success = false;
             results.error = 'No information specified';
             return results;
         }
 
         // Read current inventory, if any
         if (!this._ocflInventory) {
+            results.success = false;
             results.error = 'Unable to compute OCFL Inventory';
             return results;
         }
-
-        // Prepare new version in inventory
-        results = this.addVersion(opInfo);
-        if (!results.success)
-            return results;
 
         const version: number = this._ocflInventory.headVersion;
         const destFolder: string = this.versionContentFullPath(version);
@@ -136,6 +145,18 @@ export class OCFLObject {
      * @param fileNameNew
      */
     async rename(fileNameOld: string, fileNameNew: string, opInfo: OperationInfo): Promise<H.IOResults> {
+        // Prepare new version in inventory
+        let results: H.IOResults = this.addVersion(opInfo);
+        if (!results.success)
+            return results;
+
+        results = await this.renameWorker(fileNameOld, fileNameNew);
+        if (!results.success)
+            this.rollbackVersion();
+        return results;
+    }
+
+    async renameWorker(fileNameOld: string, fileNameNew: string): Promise<H.IOResults> {
         let results: H.IOResults;
 
         // update inventory with new version
@@ -155,11 +176,6 @@ export class OCFLObject {
                 error: `OCFLObject.rename: Unable to locate old file ${fileNameOld}`
             };
         }
-
-        // Prepare new version in inventory
-        results = this.addVersion(opInfo);
-        if (!results.success)
-            return results;
 
         const version: number = this._ocflInventory.headVersion;
 
@@ -203,8 +219,18 @@ export class OCFLObject {
      * @param fileName
      */
     async delete(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
-        let results: H.IOResults;
+        // Prepare new version in inventory
+        let results: H.IOResults = this.addVersion(opInfo);
+        if (!results.success)
+            return results;
 
+        results = await this.deleteWorker(fileName);
+        if (!results.success)
+            this.rollbackVersion();
+        return results;
+    }
+
+    async deleteWorker(fileName: string): Promise<H.IOResults> {
         // update inventory with new version
         // Read current inventory, if any
         if (!this._ocflInventory) {
@@ -223,11 +249,6 @@ export class OCFLObject {
             };
         }
 
-        // Prepare new version in inventory
-        results = this.addVersion(opInfo);
-        if (!results.success)
-            return results;
-
         // remove old file from inventory
         if (!this._ocflInventory.removeContent(contentPathSource, fileName, hash))
             return {
@@ -236,7 +257,7 @@ export class OCFLObject {
             };
 
         // Save Inventory and Inventory Digest to new version folder
-        results = await this._ocflInventory.writeToDiskVersion(this);
+        let results: H.IOResults = await this._ocflInventory.writeToDiskVersion(this);
         if (!results.success)
             return results;
 
@@ -408,18 +429,22 @@ export class OCFLObject {
         return this._objectRoot;
     }
 
+    /** e.g. STORAGEROOT\REPO\35\6a\19\356a192b7913b04c54574d18c28d46e6395428ab\v1 */
     versionRoot(version: number): string {
         return path.join(this._objectRoot, OCFLObject.versionFolderName(version));
     }
 
+    /** e.g. STORAGEROOT\REPO\35\6a\19\356a192b7913b04c54574d18c28d46e6395428ab\v1\content */
     versionContentFullPath(version: number): string {
         return path.join(this.versionRoot(version), ST.OCFLStorageObjectContentFolder);
     }
 
+    /** e.g. v1\content */
     versionContentPartialPath(version: number): string {
         return path.join(OCFLObject.versionFolderName(version), ST.OCFLStorageObjectContentFolder);
     }
 
+    /** e.g. v1 */
     static versionFolderName(version: number): string {
         return `v${version}`;
     }
@@ -493,6 +518,30 @@ export class OCFLObject {
         const version: number = this._ocflInventory.headVersion;
         const destFolder: string = this.versionContentFullPath(version);
         return H.Helpers.initializeDirectory(destFolder, 'OCFL Object new version folder');
+    }
+
+    private rollbackVersion(): H.IOResults {
+        let retValue: H.IOResults = {
+            success: false,
+            error: ''
+        };
+
+        if (!this._ocflInventory) {
+            retValue.success = false;
+            retValue.error = 'Unable to compute OCFL Inventory';
+            return retValue;
+        }
+
+        const version: number = this._ocflInventory.headVersion;
+        const destFolder: string = this.versionRoot(version);
+        retValue = H.Helpers.removeDirectory(destFolder, true);
+        if (!this._ocflInventory.rollbackVersion()) {
+            retValue.success = false;
+            retValue.error = 'OCL Object Unable to roll back Inventory version';
+            return retValue;
+        }
+        retValue.success = true;
+        return retValue;
     }
 }
 

@@ -178,6 +178,13 @@ export class OCFLInventoryVersions {
         return true;
     }
 
+    removeVersion(version: string): boolean {
+        if (!this[version])
+            return false;
+        delete this[version];
+        return true;
+    }
+
     addContentToState(version: string, logicalPath: string, hash: string): boolean {
         const inventoryVersion: OCFLInventoryVersion | null = this.getInventoryVersion(version);
         if (!inventoryVersion)
@@ -267,6 +274,16 @@ export class OCFLInventory implements OCFLInventoryType {
 
         this.head = OCFLObject.versionFolderName(version);
         this.versions.addVersion(this.head, oldVersionString, opInfo);
+    }
+
+    /** Call this when a transaction fails */
+    rollbackVersion(): boolean {
+        if (this.headVersion <= 0)
+            return true;
+        const oldVersion: number = this.headVersion - 1;
+        const oldVersionString: string = (oldVersion > 0) ? OCFLObject.versionFolderName(oldVersion) : '';
+        this.head = oldVersionString;
+        return this.versions.removeVersion(this.head);
     }
 
     /**
