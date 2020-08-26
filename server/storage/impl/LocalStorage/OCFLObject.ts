@@ -81,7 +81,10 @@ export class OCFLObject {
         }
 
         // Prepare new version in inventory
-        this._ocflInventory.addVersion(opInfo);
+        results = this.addVersion(opInfo);
+        if (!results.success)
+            return results;
+
         const version: number = this._ocflInventory.headVersion;
         const destFolder: string = this.versionContentFullPath(version);
         const contentPath: string = this.versionContentPartialPath(version);
@@ -95,11 +98,6 @@ export class OCFLObject {
 
             // Update Inventory
             this._ocflInventory.addContent(path.join(contentPath, fileName), fileName, hashResults.hash);
-
-            // Ensure new version folder exists
-            results = H.Helpers.initializeDirectory(destFolder, 'OCFL Object new version folder');
-            if (!results.success)
-                return results;
 
             // Move file to new version folder
             results = H.Helpers.moveFile(pathOnDisk, path.join(destFolder, fileName));
@@ -159,21 +157,27 @@ export class OCFLObject {
         }
 
         // Prepare new version in inventory
-        this._ocflInventory.addVersion(opInfo);
+        results = this.addVersion(opInfo);
+        if (!results.success)
+            return results;
+
         const version: number = this._ocflInventory.headVersion;
 
         // copy old file to new file in new version
         const fullPathSource: string = path.join(this._objectRoot, contentPathSource);
         const fullPathDest: string = this.fileLocation(fileNameNew, version);
+        // LOG.logger.info(`Copying ${fullPathSource} to ${fullPathDest}`);
         results = H.Helpers.copyFile(fullPathSource, fullPathDest, false);
         if (!results.success)
             return results;
 
         // record copied, renamed file
         const contentPathDest: string = path.join(this.versionContentPartialPath(version), fileNameNew);
+        // LOG.logger.info(`Calling OFCLInventory.addContent for ${fileNameNew} at ${contentPathDest}`);
         this._ocflInventory.addContent(contentPathDest, fileNameNew, hash);
 
         // remove old file from inventory, if we're changing names (reinstate uses this code, with fileNameOld === fileNameNew)
+        // LOG.logger.info(`Calling OFCLInventory.removeContent for ${fileNameOld} at ${contentPathSource}`);
         if (fileNameOld != fileNameNew && !this._ocflInventory.removeContent(contentPathSource, fileNameOld, hash))
             return {
                 success: false,
@@ -220,7 +224,9 @@ export class OCFLObject {
         }
 
         // Prepare new version in inventory
-        this._ocflInventory.addVersion(opInfo);
+        results = this.addVersion(opInfo);
+        if (!results.success)
+            return results;
 
         // remove old file from inventory
         if (!this._ocflInventory.removeContent(contentPathSource, fileName, hash))
@@ -470,6 +476,23 @@ export class OCFLObject {
             success: true,
             error: ''
         };
+    }
+
+    private addVersion(opInfo: OperationInfo): H.IOResults {
+        // Read current inventory, if any
+        if (!this._ocflInventory)
+            return {
+                success: false,
+                error: 'Unable to compute OCFL Inventory',
+            };
+
+        // Prepare new version in inventory
+        this._ocflInventory.addVersion(opInfo);
+
+        // Ensure new version folder exists
+        const version: number = this._ocflInventory.headVersion;
+        const destFolder: string = this.versionContentFullPath(version);
+        return H.Helpers.initializeDirectory(destFolder, 'OCFL Object new version folder');
     }
 }
 

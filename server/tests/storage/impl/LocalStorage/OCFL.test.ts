@@ -104,17 +104,26 @@ describe('OCFL OCFLRoot', () => {
 });
 
 describe('OCFL Object', () => {
+    let fileName1: string = '';
+    let fileName2: string = '';
+    let fileName3: string = '';
+
     test('OCFL Object.addOrUpdate', async () => {
-        await testAddOrUpdate(ocflObject, OHTS.captureData1, 16384);
-        await testAddOrUpdate(ocflObject, OHTS.model1, 65536);
-        await testAddOrUpdate(ocflObject, OHTS.captureData1, 36);
+        fileName1 = await testAddOrUpdate(ocflObject, OHTS.captureData1, 16384);
+        fileName2 = await testAddOrUpdate(ocflObject, OHTS.model1, 65536);
+        fileName3 = await testAddOrUpdate(ocflObject, OHTS.captureData1, 36);
+    });
+
+    test('OCFL Object.rename', async () => {
+        fileName1 = await testRename(ocflObject, fileName1, true);
+        fileName2 = await testRename(ocflObject, fileName2, true);
+        fileName3 = await testRename(ocflObject, fileName3, true);
+        await testRename(ocflObject, H.Helpers.randomSlug(), false);
     });
 
     /*
-    async addOrUpdate(pathOnDisk: string | null, fileName: string | null, metadata: any | null, opInfo: OperationInfo): Promise<H.IOResults> {
-    async rename(fileNameOld: string, fileNameNew: string, opInfo: OperationInfo): Promise<H.IOResults> {
     async delete(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
-    async delete(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
+    async reinstate(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
     async purge(fileName: string): Promise<H.IOResults> {
     async validate(): Promise<H.IOResults> {
     get objectRoot(): string {
@@ -172,7 +181,7 @@ function createUploadLocation(ocflRoot: OR.OCFLRoot): string {
     const res: OR.ComputeWriteStreamLocationResults = ocflRoot.computeWriteStreamLocation();
     expect(res.ioResults.success).toBeTruthy();
 
-    LOG.logger.info(`Created write location at ${path.resolve(res.locationPrivate)}`);
+    // LOG.logger.info(`Created write location at ${path.resolve(res.locationPrivate)}`);
     const directoryName: string = path.dirname(res.locationPrivate);
     const ioResults: H.IOResults = H.Helpers.fileOrDirExists(directoryName);
     expect(ioResults.success).toBeTruthy();
@@ -206,10 +215,11 @@ async function createRandomFile(directoryName: string, fileName: string, fileSiz
     });
 }
 
-async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.SystemObjectBased | null, fileSize: number): Promise<void> {
+async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.SystemObjectBased | null, fileSize: number): Promise<string> {
     expect(ocflObject).toBeTruthy();
     if (!ocflObject)
-        return;
+        return '';
+
     // construct metadata for addOrUpdate
     const metadataOA: DBAPI.ObjectAncestry | null = await ObjectHierarchyTestSetup.testObjectAncestryFetch(SOBased);
 
@@ -231,7 +241,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     expect(ioResults.success).toBeTruthy();
 
     // External validation
-    LOG.logger.info(`OCFL Object Root Validations: ${ocflObject.objectRoot}`);
+    // LOG.logger.info(`OCFL Object Root Validations: ${ocflObject.objectRoot}`);
     ioResults = H.Helpers.fileOrDirExists(path.join(ocflObject.objectRoot, ST.OCFLStorageObjectNamasteFilename));
     expect(ioResults.success).toBeTruthy();
     ioResults = H.Helpers.fileOrDirExists(path.join(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryFilename));
@@ -241,7 +251,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
 
     const version: number = ocflObject.headVersion();
     const versionRoot: string = ocflObject.versionRoot(version);
-    LOG.logger.info(`OCFL Object Version Root Validations: ${versionRoot}`);
+    // LOG.logger.info(`OCFL Object Version Root Validations: ${versionRoot}`);
     ioResults = H.Helpers.fileOrDirExists(versionRoot);
     expect(ioResults.success).toBeTruthy();
     ioResults = H.Helpers.fileOrDirExists(path.join(versionRoot, ST.OCFLStorageObjectInventoryFilename));
@@ -250,7 +260,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     expect(ioResults.success).toBeTruthy();
 
     const contentRoot: string = ocflObject.versionContentFullPath(version);
-    LOG.logger.info(`OCFL Object Content Root Validations: ${contentRoot}`);
+    // LOG.logger.info(`OCFL Object Content Root Validations: ${contentRoot}`);
     ioResults = H.Helpers.fileOrDirExists(contentRoot);
     expect(ioResults.success).toBeTruthy();
     ioResults = H.Helpers.fileOrDirExists(path.join(contentRoot, ST.OCFLMetadataFilename));
@@ -261,4 +271,19 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     // cleanup temporary upload location
     ioResults = H.Helpers.removeDirectory(directoryName, true);
     expect(ioResults.success).toBeTruthy();
+
+    return fileName;
+}
+
+async function testRename(ocflObject: OO.OCFLObject | null, fileNameOld: string, expectSuccess: boolean): Promise<string> {
+    expect(ocflObject).toBeTruthy();
+    if (!ocflObject)
+        return '';
+
+    const fileNameNew: string = H.Helpers.randomSlug();
+    const ioResults: H.IOResults = await ocflObject.rename(fileNameOld, fileNameNew, opInfo);
+    if (!ioResults.success && expectSuccess)
+        LOG.logger.error(ioResults.error);
+    expect(expectSuccess === ioResults.success).toBeTruthy();
+    return ioResults.success ? fileNameNew : fileNameOld;
 }

@@ -49,7 +49,8 @@ export class OCFLInventoryManifest {
         if (matchIndex == -1)   // if we can't find our filename in the array
             return false;       // error
 
-        stringArray.splice(matchIndex);     // yank our item
+        // LOG.logger.info(`OCFLInventory.Manifest.removeContent found ${fileName} at ${matchIndex} in ${JSON.stringify(stringArray)}`);
+        stringArray.splice(matchIndex, 1);     // yank our item
         if (stringArray.length > 0)
             this[hash] = stringArray;       // if there are still entries, record the updated list
         else
@@ -88,8 +89,10 @@ export class OCFLInventoryManifest {
                 continue;
             const stringArray: Array<string> = <Array<string>><unknown>this[hash];
             for (const name of stringArray) {
-                // strip off v###/content/ and look for exact match on remainder
-                const contentIndex = name.indexOf('/' + ST.OCFLStorageObjectContentFolder + '/');
+                // strip off v###/content/ and look for exact match on remainder ... check for both Windows and Unix path separators
+                let contentIndex = name.indexOf('/' + ST.OCFLStorageObjectContentFolder + '/');
+                if (contentIndex == -1)
+                    contentIndex = name.indexOf('\\' + ST.OCFLStorageObjectContentFolder + '\\');
                 if (contentIndex == -1)
                     continue;
                 if (name.substring(contentIndex + ST.OCFLStorageObjectContentFolder.length + 2) === fileName) // + 2 for slashes
@@ -277,8 +280,9 @@ export class OCFLInventory implements OCFLInventoryType {
     }
 
     removeContent(contentPath: string, logicalPath: string, hash: string): boolean {
-        if (!this.manifest.removeContent(contentPath, hash))
-            return false;
+        contentPath;
+        // if (!this.manifest.removeContent(contentPath, hash))
+        //     return false;
         if (!this.versions.removeContentFromState(this.head, logicalPath, hash))
             return false;
         return true;
