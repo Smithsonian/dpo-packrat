@@ -121,7 +121,16 @@ describe('OCFL Object', () => {
         await testRename(ocflObject, H.Helpers.randomSlug(), false);
     });
 
+    test('OCFL Object.delete', async () => {
+        await testDelete(ocflObject, fileName1, true);
+        await testDelete(ocflObject, fileName2, true);
+        await testDelete(ocflObject, fileName3, true);
+        await testDelete(ocflObject, fileName3, false);
+    });
+
     /*
+    test('OCFL Object.xxx', async () => {
+    });
     async delete(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
     async reinstate(fileName: string, opInfo: OperationInfo): Promise<H.IOResults> {
     async purge(fileName: string): Promise<H.IOResults> {
@@ -135,17 +144,6 @@ describe('OCFL Object', () => {
     fileLocation(fileName: string, version: number): string {
     headVersion(): number {
 
-    test('OCFL Object.xxx', async () => {
-    });
-
-    test('OCFL Object.xxx', async () => {
-    });
-
-    test('OCFL Object.xxx', async () => {
-    });
-
-    test('OCFL Object.xxx', async () => {
-    });
     */
 });
 
@@ -287,3 +285,15 @@ async function testRename(ocflObject: OO.OCFLObject | null, fileNameOld: string,
     expect(expectSuccess === ioResults.success).toBeTruthy();
     return ioResults.success ? fileNameNew : fileNameOld;
 }
+
+async function testDelete(ocflObject: OO.OCFLObject | null, fileName: string, expectSuccess: boolean): Promise<void> {
+    expect(ocflObject).toBeTruthy();
+    if (!ocflObject)
+        return;
+
+    const ioResults: H.IOResults = await ocflObject.delete(fileName, opInfo);
+    if (!ioResults.success && expectSuccess)
+        LOG.logger.error(ioResults.error);
+    expect(expectSuccess === ioResults.success).toBeTruthy();
+}
+
