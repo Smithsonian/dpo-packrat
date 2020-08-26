@@ -80,6 +80,7 @@ export type HideAssetResult = {
 export type ReinstateAssetInput = {
     storageKey: string,
     fileName: string,
+    version: number,
     opInfo: OperationInfo
 };
 
@@ -153,7 +154,7 @@ export interface IStorage {
     hideAsset(hideAssetInput: HideAssetInput): Promise<HideAssetResult>;
 
     /**
-     * Reinstates the specified asset
+     * Reinstates the specified asset; pass in -1 for version to reinstate to most recent version
      */
     reinstateAsset(reinstateAssetInput: ReinstateAssetInput): Promise<ReinstateAssetResult>;
 
