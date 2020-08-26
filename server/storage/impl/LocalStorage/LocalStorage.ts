@@ -35,10 +35,17 @@ export class LocalStorage implements STORE.IStorage {
             retValue.error = ocflObjectInitResults.error;
             return retValue;
         }
-        retValue.storageHash = ocflObjectInitResults.ocflObject.fileHash(fileName, version);
+
+        const pathAndHash: OO.OCFLPathAndHash | null = ocflObjectInitResults.ocflObject.fileLocationAndHash(fileName, version);
+        if (!pathAndHash) {
+            retValue.success = false;
+            retValue.error = `LocalStorage.readStream unable to compute path and hash for ${fileName} version ${version}`;
+            return retValue;
+        }
+        retValue.storageHash = pathAndHash.hash;
 
         try {
-            retValue.readStream = fs.createReadStream(ocflObjectInitResults.ocflObject.fileLocation(fileName, version));
+            retValue.readStream = fs.createReadStream(pathAndHash.path);
             retValue.success = true;
             retValue.error = '';
         } catch (error) {
