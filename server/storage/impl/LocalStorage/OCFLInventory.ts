@@ -12,6 +12,11 @@ export type OCFLInventoryManifestEntry = {
     files: string[];
 };
 
+export type OCFLInventoryManifestPathAndHash = {
+    path: string;
+    hash: string;
+};
+
 /** Represents manifest information for either the entire inventory file or for a version state block.
  * Either way, this is an object whose property keys are file hashes and whose values are the list of
  * files with that hash. For the inventory file manifest, the filenames are the partial path to the file,
@@ -80,10 +85,9 @@ export class OCFLInventoryManifest {
         return '';
     }
 
-    getLatestContentPathAndHash(fileName: string): { path: string, hash: string } {
-        // Walk properties
-        // For each, walk value arrays
-        const matches: { path: string, hash: string }[] = [];
+    getLatestContentPathAndHash(fileName: string): OCFLInventoryManifestPathAndHash {
+        // Walk properties; for each, walk value arrays; for each value, look for a match
+        const matches: OCFLInventoryManifestPathAndHash[] = [];
         for (const hash in this) {
             if (!Array.isArray(this[hash]))
                 continue;
@@ -282,8 +286,29 @@ export class OCFLInventory implements OCFLInventoryType {
             return true;
         const oldVersion: number = this.headVersion - 1;
         const oldVersionString: string = (oldVersion > 0) ? OCFLObject.versionFolderName(oldVersion) : '';
+
+        const retValue: boolean = this.versions.removeVersion(this.head);
+
         this.head = oldVersionString;
-        return this.versions.removeVersion(this.head);
+        return retValue;
+    }
+
+    getContentPathAndHash(fileName: string, version: number = -1): OCFLInventoryManifestPathAndHash {
+        if (version == -1)
+            return this.manifest.getLatestContentPathAndHash(fileName);
+
+        const versionString: string = OCFLObject.versionFolderName(version);
+        const hash: string = this.versions.getHashForFilename(versionString, fileName);
+        if (hash)
+            return {
+                path: path.join(OCFLObject.versionContentPartialPath(version), fileName),
+                hash
+            };
+        else
+            return {
+                path: '',
+                hash: ''
+            };
     }
 
     /**

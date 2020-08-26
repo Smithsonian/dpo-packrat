@@ -165,7 +165,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async reinstateAsset(reinstateAssetInput: STORE.ReinstateAssetInput): Promise<STORE.ReinstateAssetResult> {
-        const { storageKey, fileName, opInfo } = reinstateAssetInput;
+        const { storageKey, fileName, version, opInfo } = reinstateAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false, false);
         if (!ocflObjectInitResults.success)
             return ocflObjectInitResults;
@@ -176,7 +176,7 @@ export class LocalStorage implements STORE.IStorage {
             };
         }
 
-        return await ocflObjectInitResults.ocflObject.reinstate(fileName, opInfo);
+        return await ocflObjectInitResults.ocflObject.reinstate(fileName, version, opInfo);
     }
 
 
