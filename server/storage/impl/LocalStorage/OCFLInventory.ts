@@ -46,6 +46,7 @@ export class OCFLInventoryManifest {
 
         const stringArray: Array<string> = <Array<string>><unknown>this[hash];
         const matchIndex = stringArray.indexOf(fileName);
+        /* istanbul ignore if */
         if (matchIndex == -1)   // if we can't find our filename in the array
             return false;       // error
 
@@ -58,17 +59,20 @@ export class OCFLInventoryManifest {
         return true;
     }
 
+    /*
     getFilenameForHash(hash: string): string[] {
         hash = hash.toLowerCase();
         if (!this[hash])
             return [];
         return this[hash];
     }
+    */
 
     getHashForFilename(fileName: string): string {
         // Walk properties
         // For each, walk value arrays
         for (const hash in this) {
+            /* istanbul ignore if */
             if (!Array.isArray(this[hash]))
                 continue;
             const stringArray: Array<string> = <Array<string>><unknown>this[hash];
@@ -84,14 +88,17 @@ export class OCFLInventoryManifest {
         // Walk properties; for each, walk value arrays; for each value, look for a match
         const matches: OCFLPathAndHash[] = [];
         for (const hash in this) {
+            /* istanbul ignore if */
             if (!Array.isArray(this[hash]))
                 continue;
             const stringArray: Array<string> = <Array<string>><unknown>this[hash];
             for (const name of stringArray) {
                 // strip off v###/content/ and look for exact match on remainder ... check for both Windows and Unix path separators
                 let contentIndex = name.indexOf('/' + ST.OCFLStorageObjectContentFolder + '/');
+                /* istanbul ignore next */
                 if (contentIndex == -1)
                     contentIndex = name.indexOf('\\' + ST.OCFLStorageObjectContentFolder + '\\');
+                /* istanbul ignore if */
                 if (contentIndex == -1)
                     continue;
                 if (name.substring(contentIndex + ST.OCFLStorageObjectContentFolder.length + 2) === fileName) // + 2 for slashes
@@ -105,8 +112,10 @@ export class OCFLInventoryManifest {
             const regex = /v(\d+)[\\/]content[\\/](.+)/;
             const s1Match = regex.exec(s1.path);
             const s2Match = regex.exec(s2.path);
+            /* istanbul ignore if */
             if (!s1Match || s1Match.length < 2)
                 return -1;
+            /* istanbul ignore if */
             if (!s2Match || s2Match.length < 2)
                 return 1;
             const s1Version = parseInt(s1Match[1]);
@@ -120,6 +129,7 @@ export class OCFLInventoryManifest {
         const entries: OCFLInventoryManifestEntry[] = [];
         for (const hash in this) {
             // LOG.logger.info(`OCFLInventoryManifest.getEntries hash = ${hash}; value = ${JSON.stringify(this[hash])}`);
+            /* istanbul ignore if */
             if (!Array.isArray(this[hash]))
                 continue;
             const files: Array<string> = <Array<string>><unknown>this[hash];
@@ -176,12 +186,14 @@ export class OCFLInventoryVersion {
  * The property is the string "v1", "v2", etc -- the version number; the value is an OCFLInventoryVersion object */
 export class OCFLInventoryVersions {
     addVersion(version: string, oldVersion: string, opInfo: OperationInfo): boolean {
+        /* istanbul ignore if */
         if (this[version])
             return false;
         this[version] = new OCFLInventoryVersion(opInfo);
 
         if (oldVersion && this[oldVersion]) {
             const prevState: OCFLInventoryManifest | undefined = this[oldVersion].state;
+            /* istanbul ignore else */
             if (prevState)
                 this[version].state.copy(prevState);
         }
@@ -189,6 +201,7 @@ export class OCFLInventoryVersions {
     }
 
     removeVersion(version: string): boolean {
+        /* istanbul ignore if */
         if (!this[version])
             return false;
         delete this[version];
@@ -197,6 +210,7 @@ export class OCFLInventoryVersions {
 
     addContentToState(version: string, logicalPath: string, hash: string): boolean {
         const inventoryVersion: OCFLInventoryVersion | null = this.getInventoryVersion(version);
+        /* istanbul ignore if */
         if (!inventoryVersion)
             return false;
         inventoryVersion.state.addContent(logicalPath, hash);
@@ -205,6 +219,7 @@ export class OCFLInventoryVersions {
 
     removeContentFromState(version: string, logicalPath: string, hash: string): boolean {
         const inventoryVersion: OCFLInventoryVersion | null = this.getInventoryVersion(version);
+        /* istanbul ignore if */
         if (!inventoryVersion)
             return false;
         return inventoryVersion.state.removeContent(logicalPath, hash);
@@ -212,12 +227,14 @@ export class OCFLInventoryVersions {
 
     getHashForFilename(version: string, fileName: string): string {
         const inventoryVersion: OCFLInventoryVersion | null = this.getInventoryVersion(version);
+        /* istanbul ignore if */
         if (!inventoryVersion || !inventoryVersion.state)
             return '';
         return inventoryVersion.state.getHashForFilename(fileName);
     }
 
     private getInventoryVersion(version: string): OCFLInventoryVersion | null {
+        /* istanbul ignore if */
         if (!this[version])
             return null;
         return <OCFLInventoryVersion>(this[version]);
@@ -283,10 +300,11 @@ export class OCFLInventory implements OCFLInventoryType {
 
     /** Call this when a transaction fails */
     rollbackVersion(): boolean {
+        /* istanbul ignore if */
         if (this.headVersion <= 0)
             return true;
         const oldVersion: number = this.headVersion - 1;
-        const oldVersionString: string = (oldVersion > 0) ? OCFLObject.versionFolderName(oldVersion) : '';
+        const oldVersionString: string = (oldVersion > 0) ? OCFLObject.versionFolderName(oldVersion) : /* istanbul ignore next */ '';
 
         const retValue: boolean = this.versions.removeVersion(this.head);
 
@@ -324,6 +342,7 @@ export class OCFLInventory implements OCFLInventoryType {
 
     removeContent(contentPath: string, logicalPath: string, hash: string): boolean {
         contentPath;
+        // content must remain in the manifest for older versions!
         // if (!this.manifest.removeContent(contentPath, hash))
         //     return false;
         if (!this.versions.removeContentFromState(this.head, logicalPath, hash))
@@ -339,6 +358,7 @@ export class OCFLInventory implements OCFLInventoryType {
         // Confirm inventory hash exists, is well-formed, and matches inventory
         const inventoryFilename: string = OCFLInventory.inventoryFilePath(ocflObject, isRootInventory ? 0 : this.headVersion);
         results = H.Helpers.fileOrDirExists(inventoryFilename);
+        /* istanbul ignore if */
         if (!results.success)
             return results;
 
@@ -348,6 +368,7 @@ export class OCFLInventory implements OCFLInventoryType {
             return results;
 
         let hashResults: H.HashResults = await H.Helpers.computeHashFromFile(inventoryFilename, ST.OCFLDigestAlgorithm);
+        /* istanbul ignore if */
         if (!hashResults.success)
             return hashResults;
 
@@ -359,7 +380,7 @@ export class OCFLInventory implements OCFLInventoryType {
                 results.error = `Inventory digest ${digestFilename} did not have expected contents`;
                 return results;
             }
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             results.success = false;
             results.error = `OCFLInventory.validate failed to read digestFile ${digestFilename}: ${error}`;
             LOG.logger.error(results.error, error);
@@ -402,6 +423,7 @@ export class OCFLInventory implements OCFLInventoryType {
     async writeToDiskWorker(ocflObject: OCFLObject, version: number): Promise<H.IOResults> {
         const dest: string = OCFLInventory.inventoryFilePath(ocflObject, version);
         const hashResults: H.HashResults = await H.Helpers.writeJsonAndComputeHash(dest, this, ST.OCFLDigestAlgorithm);
+        /* istanbul ignore if */
         if (!hashResults.success)
             return hashResults;
 
@@ -415,7 +437,7 @@ export class OCFLInventory implements OCFLInventoryType {
                 success: true,
                 error: ''
             };
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('OCFLInventory.writeToDesk', error);
             return {
                 success: false,
