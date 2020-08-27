@@ -39,8 +39,8 @@ export class OCFLRoot {
     }
 
     /** Computes path to OCFL object root */
-    computeLocationObjectRoot(storageKey: string, staging: boolean): string {
-        return path.join(this.computeLocationRoot(staging), this.computeStorageKeyFolder(storageKey));
+    computeLocationObjectRoot(storageKey: string): string {
+        return path.join(this.storageRootRepo, this.computeStorageKeyFolder(storageKey));
     }
 
     /** Computes a random directory and filename in the staging area */
@@ -91,9 +91,9 @@ export class OCFLRoot {
         return await this.initializeStorageRoot();
     }
 
-    async ocflObject(storageKey: string, staging: boolean, forReading: boolean): Promise<OO.OCFLObjectInitResults> {
+    async ocflObject(storageKey: string, forReading: boolean): Promise<OO.OCFLObjectInitResults> {
         const ocflObject: OO.OCFLObject = new OO.OCFLObject();
-        const objectRoot: string = this.computeLocationObjectRoot(storageKey, staging);
+        const objectRoot: string = this.computeLocationObjectRoot(storageKey);
         return await ocflObject.initialize(storageKey, objectRoot, forReading);
     }
 

@@ -504,6 +504,7 @@ export class OCFLObject {
         return path.join(this.versionContentFullPath(version), fileName);
     }
 
+    /** version == -1 -> most recent version */
     fileLocationAndHash(fileName: string, version: number): OCFLPathAndHash | null {
         /* istanbul ignore next */
         if (!this._ocflInventory)
