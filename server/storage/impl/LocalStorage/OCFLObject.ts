@@ -20,16 +20,16 @@ export type OCFLPathAndHash = {
 
 export class OCFLObject {
     private _storageKey: string = '';
-    private _forReading: boolean = false;
+    private _createIfMissing: boolean = false;
 
     private _objectRoot: string = '';
     private _ocflInventory: INV.OCFLInventory | null = null;
     private _newObject: boolean = false;
 
-    async initialize(storageKey: string, objectRoot: string, forReading: boolean): Promise<OCFLObjectInitResults> {
+    async initialize(storageKey: string, objectRoot: string, createIfMissing: boolean): Promise<OCFLObjectInitResults> {
         this._storageKey = storageKey;
         this._objectRoot = objectRoot;
-        this._forReading = forReading;
+        this._createIfMissing = createIfMissing;
 
         const retValue: OCFLObjectInitResults = {
             ocflObject: null,
@@ -410,7 +410,7 @@ export class OCFLObject {
             // Confirm inventory version number matches
             if (version != ocflInventory.headVersion) {
                 ioResults.success = false;
-                ioResults.error = `Invalid inventory version file for ${this._storageKey}, version ${version}`;
+                ioResults.error = `Invalid inventory version for ${this._storageKey}: observed ${ocflInventory.headVersion}, expected ${version}`;
                 LOG.logger.error(ioResults.error);
                 return ioResults;
             }
@@ -538,7 +538,7 @@ export class OCFLObject {
         ioResults = H.Helpers.fileOrDirExists(this._objectRoot);
         if (!ioResults.success)
             this._newObject = true;
-        if (!this._forReading)
+        if (this._createIfMissing)
             ioResults = H.Helpers.initializeDirectory(this._objectRoot, 'OCFL Object Root');
         if (!ioResults.success)
             return ioResults;
@@ -546,9 +546,9 @@ export class OCFLObject {
         // Ensure initialization of OCFL Object Root "NAMASTE" file
         const source: string = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageObjectNamasteFilename);
         const dest: string = path.join(this._objectRoot, ST.OCFLStorageObjectNamasteFilename);
-        ioResults = this._forReading
-            ? H.Helpers.fileOrDirExists(dest)
-            : H.Helpers.initializeFile(source, dest, 'OCFL Object Root Namaste File');
+        ioResults = this._createIfMissing
+            ? H.Helpers.initializeFile(source, dest, 'OCFL Object Root Namaste File')
+            : H.Helpers.fileOrDirExists(dest);
         return ioResults;
     }
 

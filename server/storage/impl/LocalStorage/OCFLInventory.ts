@@ -180,6 +180,7 @@ export class OCFLInventoryVersion {
     revive(source: any): void {
         Object.assign(this, source);
         this.state = new OCFLInventoryManifest();
+        /* istanbul ignore else */
         if (source['state'])
             this.state.revive(source['state']);
     }
