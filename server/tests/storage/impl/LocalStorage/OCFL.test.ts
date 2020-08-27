@@ -88,10 +88,10 @@ describe('OCFL OCFLRoot', () => {
 
     test('OCFL OCFLRoot.ocflObject New', async () => {
         const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
-        let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, true);  // Attempt to read a non-existant object root
+        let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, false);  // Don't create if missing, non-existant object root
         expect(initRes.success).toBeFalsy();
 
-        initRes = await ocflRoot.ocflObject(storageKey, false); // Attempt to write a non-existant object root
+        initRes = await ocflRoot.ocflObject(storageKey, true); // Do create if missing, non-existant object root
         expect(initRes.success).toBeTruthy();
         ocflObject = initRes.ocflObject;
     });
@@ -141,13 +141,46 @@ describe('OCFL Object', () => {
 
     test('OCFL OCFLRoot.ocflObject Existing', async () => {
         const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
-        let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, true);  // Attempt to read an existing object root
+        let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, false);  // Don't create if missing
         expect(initRes.success).toBeTruthy();
         await testValidate(initRes.ocflObject, 1, 'unmodified');
 
-        initRes = await ocflRoot.ocflObject(storageKey, false); // Attempt to write an existing object root
+        initRes = await ocflRoot.ocflObject(storageKey, true); // Do create if missing
         expect(initRes.success).toBeTruthy();
         await testValidate(initRes.ocflObject, 1, 'unmodified');
+
+        expect(initRes.ocflObject).toBeTruthy();
+        if (!initRes.ocflObject)
+            return;
+
+        // add, rename, delete, reinstate with new OCFLObjects
+        let fileName5: string = await testAddOrUpdate(initRes.ocflObject, OHTS.captureData1, 16384, true);
+        initRes = await ocflRoot.ocflObject(storageKey, false); // Don't create if missing
+        expect(initRes.success).toBeTruthy();
+        expect(initRes.ocflObject).toBeTruthy();
+        if (!initRes.ocflObject)
+            return;
+
+        fileName5 = await testRename(initRes.ocflObject, fileName5, true);
+        initRes = await ocflRoot.ocflObject(storageKey, false); // Don't create if missing
+        expect(initRes.success).toBeTruthy();
+        expect(initRes.ocflObject).toBeTruthy();
+        if (!initRes.ocflObject)
+            return;
+
+        await testDelete(initRes.ocflObject, fileName5, true);
+        initRes = await ocflRoot.ocflObject(storageKey, false); // Don't create if missing
+        expect(initRes.success).toBeTruthy();
+        expect(initRes.ocflObject).toBeTruthy();
+        if (!initRes.ocflObject)
+            return;
+
+        await testReinstate(initRes.ocflObject, fileName5, true);
+        initRes = await ocflRoot.ocflObject(storageKey, false); // Don't create if missing
+        expect(initRes.success).toBeTruthy();
+        expect(initRes.ocflObject).toBeTruthy();
+        if (!initRes.ocflObject)
+            return;
     });
 
     test('OCFL Object.fileLocationAndHash', async () => {
@@ -209,6 +242,12 @@ describe('OCFL Object', () => {
     });
 
     test('OCFL Object.validate', async () => {
+        const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
+        const initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, false);  // Don't create if missing
+        expect(initRes.success).toBeTruthy();
+        expect(initRes.ocflObject).toBeTruthy();
+        ocflObject = initRes.ocflObject;
+
         await testValidate(ocflObject, 1, 'unmodified');
         await testValidate(ocflObject, 2, 'missing namaste file');
         await testValidate(ocflObject, 3, 'invalid namaste file');
@@ -516,7 +555,6 @@ async function testValidate(ocflObject: OO.OCFLObject | null, testMode: number, 
             const oldVersionInv: string = path.join(ocflObject.versionRoot(1), ST.OCFLStorageObjectInventoryFilename);
             ioResults   = H.Helpers.copyFile(oldVersionInv, sourceFile);
             expect(ioResults.success).toBeTruthy();
-            LOG.logger.info(`Copied ${oldVersionInv} to ${sourceFile}`);
             expectSuccess = false;
         } break;
         case 14: {       // version inventory has wrong version number
@@ -528,7 +566,6 @@ async function testValidate(ocflObject: OO.OCFLObject | null, testMode: number, 
             const oldVersionInv: string = path.join(ocflObject.versionRoot(2), ST.OCFLStorageObjectInventoryFilename);
             ioResults   = H.Helpers.copyFile(oldVersionInv, sourceFile);
             expect(ioResults.success).toBeTruthy();
-            LOG.logger.info(`Copied ${oldVersionInv} to ${sourceFile}`);
             expectSuccess = false;
         } break;
         default: {

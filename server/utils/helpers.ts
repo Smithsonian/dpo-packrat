@@ -264,7 +264,7 @@ export class Helpers {
     static async computeHashFromFile(filePath: string, hashMethod: string): Promise<HashResults> {
         const res: HashResults = {
             hash: '',
-            success: true,
+            success: false,
             error: ''
         };
         const hash      = crypto.createHash(hashMethod);
@@ -273,6 +273,7 @@ export class Helpers {
 
         return new Promise<HashResults>((resolve) => {
             stream.on('end', () => {
+                res.success = true;
                 res.hash = hash.digest('hex');
                 resolve(res);
             });

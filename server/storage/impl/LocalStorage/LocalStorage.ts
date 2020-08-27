@@ -32,7 +32,7 @@ export class LocalStorage implements STORE.IStorage {
         let fileHash: string;
         const { storageKey, fileName, version, staging } = readStreamInput;
         if (!staging) { // non-staging files are found under OCFL's Repository Root and accessed via OCFLObject's; storageKey essentially specifies a folder path
-            const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, true);
+            const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
             if (!ocflObjectInitResults.success || !ocflObjectInitResults.ocflObject) {
                 retValue.success = false;
                 retValue.error = ocflObjectInitResults.error;
@@ -66,7 +66,7 @@ export class LocalStorage implements STORE.IStorage {
             retValue.readStream = fs.createReadStream(filePath);
             retValue.success = true;
             retValue.error = '';
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('LocalStorage.readStream', error);
             retValue.success = false;
             retValue.error = JSON.stringify(error);
@@ -85,6 +85,7 @@ export class LocalStorage implements STORE.IStorage {
         // Compute random directory path and name in staging folder
         // Provide this as the storage key which clients must pass back to us
         const res: ComputeWriteStreamLocationResults = this.ocflRoot.computeWriteStreamLocation();
+        /* istanbul ignore if */
         if (!res.ioResults.success) {
             retValue.success = false;
             retValue.error = res.ioResults.error;
@@ -96,7 +97,7 @@ export class LocalStorage implements STORE.IStorage {
             retValue.storageKey = res.locationPublic;
             retValue.success = true;
             retValue.error = '';
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('LocalStorage.writeStream', error);
             retValue.success = false;
             retValue.error = JSON.stringify(error);
@@ -131,6 +132,7 @@ export class LocalStorage implements STORE.IStorage {
 
         // Compute filesize
         const statResults: H.StatResults = H.Helpers.stat(filePath);
+        /* istanbul ignore if */
         if (!statResults.success || !statResults.stat) {
             retValue.success = false;
             retValue.error = `Unable to compute file stats: ${statResults.error}`;
@@ -145,7 +147,8 @@ export class LocalStorage implements STORE.IStorage {
 
     async promoteStagedAsset(promoteStagedAssetInput: STORE.PromoteStagedAssetInput): Promise<STORE.PromoteStagedAssetResult> {
         const { storageKeyStaged, storageKeyFinal, fileName, metadata, opInfo } = promoteStagedAssetInput;
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, false);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, true);
+        /* istanbul ignore next */
         if (!ocflObjectInitResults.success)
             return ocflObjectInitResults;
         else if (!ocflObjectInitResults.ocflObject) {
@@ -156,15 +159,16 @@ export class LocalStorage implements STORE.IStorage {
         }
 
         const pathOnDisk: string = path.join(this.ocflRoot.computeLocationStagingRoot(), storageKeyStaged);
-        const PSAR: STORE.PromoteStagedAssetResult = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, fileName, metadata, opInfo); // moves staged file
+        const PSAR: STORE.PromoteStagedAssetResult = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, fileName, metadata, opInfo); // moves staged file, if present
         if (!PSAR.success)
             return PSAR;
-        return H.Helpers.removeDirectory(path.dirname(pathOnDisk), false); // cleanup staged directory
+        return (fileName) ? H.Helpers.removeDirectory(path.dirname(pathOnDisk), false) : PSAR; // cleanup staged directory if we have a staged file
     }
 
     async renameAsset(renameAssetInput: STORE.RenameAssetInput): Promise<STORE.RenameAssetResult> {
         const { storageKey, fileNameOld, fileNameNew, opInfo } = renameAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
+        /* istanbul ignore else */
         if (!ocflObjectInitResults.success)
             return ocflObjectInitResults;
         else if (!ocflObjectInitResults.ocflObject) {
@@ -180,6 +184,7 @@ export class LocalStorage implements STORE.IStorage {
     async hideAsset(hideAssetInput: STORE.HideAssetInput): Promise<STORE.HideAssetResult> {
         const { storageKey, fileName, opInfo } = hideAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
+        /* istanbul ignore else */
         if (!ocflObjectInitResults.success)
             return ocflObjectInitResults;
         else if (!ocflObjectInitResults.ocflObject) {
@@ -195,6 +200,7 @@ export class LocalStorage implements STORE.IStorage {
     async reinstateAsset(reinstateAssetInput: STORE.ReinstateAssetInput): Promise<STORE.ReinstateAssetResult> {
         const { storageKey, fileName, version, opInfo } = reinstateAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
+        /* istanbul ignore else */
         if (!ocflObjectInitResults.success)
             return ocflObjectInitResults;
         else if (!ocflObjectInitResults.ocflObject) {
@@ -225,7 +231,8 @@ export class LocalStorage implements STORE.IStorage {
             error: ''
         };
 
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, true);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
+        /* istanbul ignore else */
         if (!ocflObjectInitResults.success) {
             retValue.success = false;
             retValue.error = ocflObjectInitResults.error;
@@ -237,6 +244,7 @@ export class LocalStorage implements STORE.IStorage {
         }
 
         const ioResults = await ocflObjectInitResults.ocflObject.validate();
+        /* istanbul ignore next */
         if (!ioResults.success) {
             retValue.success = false;
             retValue.error = ioResults.error;
