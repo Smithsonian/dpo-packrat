@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as L from 'lodash';
@@ -19,6 +21,10 @@ export type OCFLInventoryManifestEntry = {
  * For the version state manifest, the filenames are just the logical portion of the name,
  * e.g. LogicalPath/LogicalFilename.ext. */
 export class OCFLInventoryManifest {
+    revive(source: any): void {
+        Object.assign(this, source);
+    }
+
     addContent(fileName: string, hash: string): void {
         hash = hash.toLowerCase();
         // LOG.logger.info(`OCFLInventoryManifest.addContent ${fileName}: ${hash}`);
@@ -171,7 +177,14 @@ export class OFCLInventoryUser {
  * are file hashes, and whose values are the list of files that have that hash. Each file is represented by the logical
  * path to the content -- not using version numbers and "content" folders */
 export class OCFLInventoryVersion {
-    constructor(opInfo: OperationInfo) {
+    revive(source: any): void {
+        Object.assign(this, source);
+        this.state = new OCFLInventoryManifest();
+        if (source['state'])
+            this.state.revive(source['state']);
+    }
+
+    setOperationInfo(opInfo: OperationInfo) {
         this.created = new Date().toISOString();
         this.message = opInfo.message;
         this.user = new OFCLInventoryUser(opInfo.userEmailAddress, opInfo.userName);
@@ -185,11 +198,24 @@ export class OCFLInventoryVersion {
 /** Container object for OCFLInventoryVersion(s).  Note that each version is storage as a property, value pair.
  * The property is the string "v1", "v2", etc -- the version number; the value is an OCFLInventoryVersion object */
 export class OCFLInventoryVersions {
+    revive(source: any): void {
+        for (const version in source) {
+            const ocflInventoryVersion: OCFLInventoryVersion = new OCFLInventoryVersion();
+            ocflInventoryVersion.revive(source[version]);
+            this[version] = ocflInventoryVersion;
+        }
+        // Object.assign(this, source);
+        // All of our object properties are versions and handled above
+    }
+
     addVersion(version: string, oldVersion: string, opInfo: OperationInfo): boolean {
         /* istanbul ignore if */
         if (this[version])
             return false;
-        this[version] = new OCFLInventoryVersion(opInfo);
+
+        const ocflInventoryVersion: OCFLInventoryVersion = new OCFLInventoryVersion();
+        ocflInventoryVersion.setOperationInfo(opInfo);
+        this[version] = ocflInventoryVersion;
 
         if (oldVersion && this[oldVersion]) {
             const prevState: OCFLInventoryManifest | undefined = this[oldVersion].state;
@@ -275,13 +301,13 @@ export class OCFLInventory implements OCFLInventoryType {
     manifest: OCFLInventoryManifest = new OCFLInventoryManifest();
     versions: OCFLInventoryVersions = new OCFLInventoryVersions();
 
-    copy(source: OCFLInventoryType): void {
+    revive(source: OCFLInventoryType): void {
         this.id = source.id;
         this.head = source.head;
         this.digestAlgorithm = source.digestAlgorithm;
         this.type = source.type;
-        Object.assign(this.manifest, source.manifest);
-        Object.assign(this.versions, source.versions);
+        this.manifest.revive(source.manifest);
+        this.versions.revive(source.versions);
     }
 
     get headVersion(): number {
@@ -312,6 +338,7 @@ export class OCFLInventory implements OCFLInventoryType {
         return retValue;
     }
 
+    /** version == -1 -> most recent version */
     getContentPathAndHash(fileName: string, version: number = -1): OCFLPathAndHash {
         if (version == -1)
             return this.manifest.getLatestContentPathAndHash(fileName);
@@ -485,7 +512,7 @@ export class OCFLInventory implements OCFLInventoryType {
 
         try {
             retValue.ocflInventory = new OCFLInventory();
-            retValue.ocflInventory.copy(JSON.parse(fs.readFileSync(dest, { encoding: 'utf8' })));
+            retValue.ocflInventory.revive(JSON.parse(fs.readFileSync(dest, { encoding: 'utf8' })));
             retValue.success = true;
         } catch (error) {
             LOG.logger.error('OCFLInventory.readFromDisk', error);

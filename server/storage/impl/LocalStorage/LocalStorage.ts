@@ -28,24 +28,42 @@ export class LocalStorage implements STORE.IStorage {
             error: ''
         };
 
+        let filePath: string;
+        let fileHash: string;
         const { storageKey, fileName, version, staging } = readStreamInput;
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, staging, true);
-        if (!ocflObjectInitResults.success || !ocflObjectInitResults.ocflObject) {
-            retValue.success = false;
-            retValue.error = ocflObjectInitResults.error;
-            return retValue;
+        if (!staging) { // non-staging files are found under OCFL's Repository Root and accessed via OCFLObject's; storageKey essentially specifies a folder path
+            const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, true);
+            if (!ocflObjectInitResults.success || !ocflObjectInitResults.ocflObject) {
+                retValue.success = false;
+                retValue.error = ocflObjectInitResults.error;
+                return retValue;
+            }
+
+            // LOG.logger.info(`OCFLObject:\n${JSON.stringify(ocflObjectInitResults.ocflObject)}`);
+            const pathAndHash: OO.OCFLPathAndHash | null = ocflObjectInitResults.ocflObject.fileLocationAndHash(fileName, version);
+            if (!pathAndHash) {
+                retValue.success = false;
+                retValue.error = `LocalStorage.readStream unable to compute path and hash for ${fileName} version ${version}`;
+                return retValue;
+            }
+            filePath = pathAndHash.path;
+            fileHash = pathAndHash.hash;
+        } else { // staging files are found under the OCFL staging root, located in the directory and file specified by storageKey
+            filePath = path.join(this.ocflRoot.computeLocationStagingRoot(), storageKey);
+            const hashResults = await H.Helpers.computeHashFromFile(filePath, ST.OCFLDigestAlgorithm);
+            if (!hashResults.success) {
+                retValue.success = false;
+                retValue.error = hashResults.error;
+                LOG.logger.error(retValue.error);
+                return retValue;
+            }
+            fileHash = hashResults.hash;
         }
 
-        const pathAndHash: OO.OCFLPathAndHash | null = ocflObjectInitResults.ocflObject.fileLocationAndHash(fileName, version);
-        if (!pathAndHash) {
-            retValue.success = false;
-            retValue.error = `LocalStorage.readStream unable to compute path and hash for ${fileName} version ${version}`;
-            return retValue;
-        }
-        retValue.storageHash = pathAndHash.hash;
+        retValue.storageHash = fileHash;
 
         try {
-            retValue.readStream = fs.createReadStream(pathAndHash.path);
+            retValue.readStream = fs.createReadStream(filePath);
             retValue.success = true;
             retValue.error = '';
         } catch (error) {
@@ -87,7 +105,7 @@ export class LocalStorage implements STORE.IStorage {
         return retValue;
     }
 
-    async commitWriteStream(writeStreamCloseInput: STORE.CommitWriteStreamInput): Promise<STORE.CommitWriteStreamResult> {
+    async commitWriteStream(CommitWriteStreamInput: STORE.CommitWriteStreamInput): Promise<STORE.CommitWriteStreamResult> {
         const retValue: STORE.CommitWriteStreamResult = {
             storageHash: null,
             storageSize: null,
@@ -96,7 +114,7 @@ export class LocalStorage implements STORE.IStorage {
         };
 
         // Compute hash
-        const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), writeStreamCloseInput.storageKey);
+        const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), CommitWriteStreamInput.storageKey);
         const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(filePath, ST.OCFLDigestAlgorithm);
         if (!hashResults.success) {
             retValue.success = false;
@@ -105,9 +123,9 @@ export class LocalStorage implements STORE.IStorage {
         }
 
         // Validate computed hash
-        if (writeStreamCloseInput.storageHash && writeStreamCloseInput.storageHash != hashResults.hash) {
+        if (CommitWriteStreamInput.storageHash && CommitWriteStreamInput.storageHash != hashResults.hash) {
             retValue.success = false;
-            retValue.error = `Computed hash ${hashResults.hash} does not match specified hash ${writeStreamCloseInput.storageHash}`;
+            retValue.error = `Computed hash ${hashResults.hash} does not match specified hash ${CommitWriteStreamInput.storageHash}`;
             return retValue;
         }
 
@@ -127,7 +145,7 @@ export class LocalStorage implements STORE.IStorage {
 
     async promoteStagedAsset(promoteStagedAssetInput: STORE.PromoteStagedAssetInput): Promise<STORE.PromoteStagedAssetResult> {
         const { storageKeyStaged, storageKeyFinal, fileName, metadata, opInfo } = promoteStagedAssetInput;
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, false, false);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, false);
         if (!ocflObjectInitResults.success)
             return ocflObjectInitResults;
         else if (!ocflObjectInitResults.ocflObject) {
@@ -138,12 +156,15 @@ export class LocalStorage implements STORE.IStorage {
         }
 
         const pathOnDisk: string = path.join(this.ocflRoot.computeLocationStagingRoot(), storageKeyStaged);
-        return await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, fileName, metadata, opInfo);
+        const PSAR: STORE.PromoteStagedAssetResult = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, fileName, metadata, opInfo); // moves staged file
+        if (!PSAR.success)
+            return PSAR;
+        return H.Helpers.removeDirectory(path.dirname(pathOnDisk), false); // cleanup staged directory
     }
 
     async renameAsset(renameAssetInput: STORE.RenameAssetInput): Promise<STORE.RenameAssetResult> {
         const { storageKey, fileNameOld, fileNameNew, opInfo } = renameAssetInput;
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false, false);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
         if (!ocflObjectInitResults.success)
             return ocflObjectInitResults;
         else if (!ocflObjectInitResults.ocflObject) {
@@ -158,7 +179,7 @@ export class LocalStorage implements STORE.IStorage {
 
     async hideAsset(hideAssetInput: STORE.HideAssetInput): Promise<STORE.HideAssetResult> {
         const { storageKey, fileName, opInfo } = hideAssetInput;
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false, false);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
         if (!ocflObjectInitResults.success)
             return ocflObjectInitResults;
         else if (!ocflObjectInitResults.ocflObject) {
@@ -173,7 +194,7 @@ export class LocalStorage implements STORE.IStorage {
 
     async reinstateAsset(reinstateAssetInput: STORE.ReinstateAssetInput): Promise<STORE.ReinstateAssetResult> {
         const { storageKey, fileName, version, opInfo } = reinstateAssetInput;
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false, false);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
         if (!ocflObjectInitResults.success)
             return ocflObjectInitResults;
         else if (!ocflObjectInitResults.ocflObject) {
@@ -185,7 +206,6 @@ export class LocalStorage implements STORE.IStorage {
 
         return await ocflObjectInitResults.ocflObject.reinstate(fileName, version, opInfo);
     }
-
 
     async updateMetadata(updateMetadataInput: STORE.UpdateMetadataInput): Promise<STORE.UpdateMetadataResult> {
         const { storageKey, metadata, opInfo } = updateMetadataInput;
@@ -205,7 +225,7 @@ export class LocalStorage implements STORE.IStorage {
             error: ''
         };
 
-        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false, true);
+        const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, true);
         if (!ocflObjectInitResults.success) {
             retValue.success = false;
             retValue.error = ocflObjectInitResults.error;
@@ -230,7 +250,7 @@ export class LocalStorage implements STORE.IStorage {
     async computeStorageKey(uniqueID: string): Promise<STORE.ComputeStorageKeyResult> {
         const retValue: STORE.ComputeStorageKeyResult = {
             storageKey: '',
-            success: false,
+            success: true,
             error: ''
         };
 
@@ -276,48 +296,4 @@ export class LocalStorage implements STORE.IStorage {
     1. Robust storage.
     2. Transparent storage: be able to know what is stored simply by walking the storage hierarchy.
     3. Metadata storage: provide on-disk backups of relational data present in the DB.
-*/
-
-/*
-        // Compute Object Ancestry for this asset;
-        let storageKey: string = '';
-        const OA: DBAPI.ObjectAncestry | null = (asset.idAsset && asset.idSystemObject) ? new DBAPI.ObjectAncestry(asset.idSystemObject) : null;
-        if (OA && await OA.fetch() && (OA.unit || OA.project)) {
-            // use Object Ancestry to compute storageKey
-            // 1. ${Unit}/${SubjectARK}/${AssetType}/${AssetID}/
-            // 2. ${Project}/${AssetType}/${AssetID}/
-            const unitKey: string | null = (OA.unit) ? (OA.unit[0].Abbreviation ? OA.unit[0].Abbreviation : OA.unit[0].Name) : null;
-            const subjectKey: string | null = (OA.subject) ? await this.computeSubjectStorageKeyComponent(OA.subject[0]) : null;
-            const assetTypeKey: string = this.computeAssetTypeKeyComponent(OA);
-            if (unitKey && subjectKey) {
-                const itemKey: string | null = (OA.item) ? OA.item[0].Name : null;
-                storageKey = `${unitKey}/${subjectKey}/${itemKey}/${assetTypeKey}/${asset.idAsset}`;
-            } else {
-                const projectKey: string | null = (OA.project) ? OA.project[0].Name : null;
-                storageKey = `${projectKey}/${assetTypeKey}/${asset.idAsset}`;
-            }
-        } else {
-            // Either this asset hasn't been ingested yet, or we could not compute a Unit or Project
-            // Compute storageKey for non-ingested asset
-            // OCFLRoot.tempStorageRoot + tempfoldername
-        }
-
-    private async computeSubjectStorageKeyComponent(subject: DBAPI.Subject): Promise<string> {
-        const subjectIdentifier: DBAPI.Identifier | null = await DBAPI.Identifier.fetchFromSubjectPreferred(subject.idSubject);
-        return subjectIdentifier ? subjectIdentifier.IdentifierValue : subject.Name; // default in the event there is no Identifier
-    }
-
-    private computeAssetTypeKeyComponent(OA: DBAPI.ObjectAncestry): string {
-        if (OA.captureData)
-            return 'CD';
-        if (OA.model)
-            return 'ML';
-        if (OA.scene)
-            return 'SC';
-        if (OA.intermediaryFile)
-            return 'IF';
-        if (OA.projectDocumentation)
-            return 'PD';
-        return 'AO';
-    }
 */

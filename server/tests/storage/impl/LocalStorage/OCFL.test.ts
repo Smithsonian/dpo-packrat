@@ -3,15 +3,14 @@ import * as fs from 'fs-extra';
 import * as crypto from 'crypto';
 import * as STR from 'stream';
 
+import { OperationInfo } from '../../../../storage/interface/IStorage';
 import * as OR from '../../../../storage/impl/LocalStorage/OCFLRoot';
 import * as OO from '../../../../storage/impl/LocalStorage/OCFLObject';
 import * as ST from '../../../../storage/impl/LocalStorage/SharedTypes';
 import * as DBAPI from '../../../../db';
 import * as H from '../../../../utils/helpers';
 import * as LOG from '../../../../utils/logger';
-import { OperationInfo } from '../../../../storage/interface/IStorage';
 import { ObjectHierarchyTestSetup } from '../../../db/composite/ObjectHierarchy.setup';
-
 
 const OHTS: ObjectHierarchyTestSetup = new ObjectHierarchyTestSetup();
 const ocflRoot: OR.OCFLRoot = new OR.OCFLRoot();
@@ -32,9 +31,6 @@ afterAll(async done => {
     done();
 });
 
-// *******************************************************************
-// OCFL OCFLRoot
-// *******************************************************************
 describe('OCFL Setup', () => {
     test('OCFL OCFLRoot Setup', async () => {
         let ioResults: H.IOResults = H.Helpers.createDirectory(ocflStorageRoot);
@@ -86,18 +82,16 @@ describe('OCFL OCFLRoot', () => {
 
     test('OCFL OCFLRoot.computeLocationObjectRoot', async () => {
         const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
-        let location: string = ocflRoot.computeLocationObjectRoot(storageKey, false);
+        const location: string = ocflRoot.computeLocationObjectRoot(storageKey);
         expect(location.toLowerCase()).toEqual(path.join(ocflStorageRoot, ST.OCFLStorageRootFolderRepository, '/35/6A/19/356A192B7913B04C54574D18C28D46E6395428AB').toLowerCase());
-        location = ocflRoot.computeLocationObjectRoot(storageKey, true);
-        expect(location.toLowerCase()).toEqual(path.join(ocflStorageRoot, ST.OCFLStorageRootFolderStaging, '/35/6A/19/356A192B7913B04C54574D18C28D46E6395428AB').toLowerCase());
     });
 
     test('OCFL OCFLRoot.ocflObject New', async () => {
         const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
-        let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, true, true);  // Attempt to read a non-existant object root
+        let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, true);  // Attempt to read a non-existant object root
         expect(initRes.success).toBeFalsy();
 
-        initRes = await ocflRoot.ocflObject(storageKey, true, false); // Attempt to write a non-existant object root
+        initRes = await ocflRoot.ocflObject(storageKey, false); // Attempt to write a non-existant object root
         expect(initRes.success).toBeTruthy();
         ocflObject = initRes.ocflObject;
     });
@@ -147,11 +141,11 @@ describe('OCFL Object', () => {
 
     test('OCFL OCFLRoot.ocflObject Existing', async () => {
         const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
-        let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, true, true);  // Attempt to read an existing object root
+        let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, true);  // Attempt to read an existing object root
         expect(initRes.success).toBeTruthy();
         await testValidate(initRes.ocflObject, 1, 'unmodified');
 
-        initRes = await ocflRoot.ocflObject(storageKey, true, false); // Attempt to write an existing object root
+        initRes = await ocflRoot.ocflObject(storageKey, false); // Attempt to write an existing object root
         expect(initRes.success).toBeTruthy();
         await testValidate(initRes.ocflObject, 1, 'unmodified');
     });
