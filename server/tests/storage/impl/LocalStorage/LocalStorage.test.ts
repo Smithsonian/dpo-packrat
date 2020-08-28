@@ -204,32 +204,6 @@ describe('LocalStorage Error Conditions', () => {
     });
 });
 
-async function createRandomFile(stream: STR.Writable, fileSize: number): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-        try {
-            const hash = crypto.createHash('sha512');
-
-            let bytesRemaining: number = fileSize;
-
-            do {
-                const chunkSize: number = bytesRemaining > 1024 ? 1024 : bytesRemaining;
-                const buffer = crypto.randomBytes(chunkSize);
-
-                bytesRemaining -= chunkSize;
-                stream.write(buffer);
-                hash.write(buffer);
-            } while (bytesRemaining > 0);
-
-            stream.end();
-            stream.on('finish', () => { resolve(hash.digest('hex')); });
-            stream.on('error', reject);
-        } catch (error) {
-            LOG.logger.error('LocalStorage.test.ts createRandomFile() error', error);
-            reject(error);
-        }
-    });
-}
-
 async function readStreamAndComputeHash(stream: STR.Readable): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         try {
@@ -271,7 +245,7 @@ async function testWriteStream(fileSize: number): Promise<LocalStorageTestCase> 
         return LSTC;
 
     LSTC.storageKeyStaging = WSR.storageKey;
-    LSTC.storageHash = await createRandomFile(WSR.writeStream, fileSize);
+    LSTC.storageHash = await H.Helpers.createRandomFile(WSR.writeStream, fileSize);
     expect(LSTC.storageHash).toBeTruthy();
     return LSTC;
 }

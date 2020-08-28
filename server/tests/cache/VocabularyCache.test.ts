@@ -85,21 +85,26 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 const vocabulary: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
 
                 switch (eVocabID) {
-                    case eVocabularyID.eIdentifierIdentifierTypeARK:
-                        expect(vocabulary).toBeTruthy();
-                        /* istanbul ignore else */
-                        if (vocabulary)
-                            expect(vocabulary.Term).toEqual('ARK');
-                        break;
-                    case eVocabularyID.eIdentifierIdentifierTypeUnitCMSID:
-                        expect(vocabulary).toBeTruthy();
-                        /* istanbul ignore else */
-                        if (vocabulary)
-                            expect(vocabulary.Term).toEqual('Unit CMS ID');
-                        break;
-                    case eVocabularyID.eNone:
-                        expect(vocabulary).toBeFalsy();
-                        break;
+                    case eVocabularyID.eIdentifierIdentifierTypeARK: testVocabulary(vocabulary, 'ARK'); break;
+                    case eVocabularyID.eIdentifierIdentifierTypeDOI: testVocabulary(vocabulary, 'DOI'); break;
+                    case eVocabularyID.eIdentifierIdentifierTypeUnitCMSID: testVocabulary(vocabulary, 'Unit CMS ID'); break;
+                    case eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry: testVocabulary(vocabulary, 'Capture Data Set: Photogrammetry'); break;
+                    case eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde: testVocabulary(vocabulary, 'Capture Data Set: Diconde'); break;
+                    case eVocabularyID.eAssetAssetTypeCaptureDataSetDicom: testVocabulary(vocabulary, 'Capture Data Set: Dicom'); break;
+                    case eVocabularyID.eAssetAssetTypeCaptureDataSetLaserLine: testVocabulary(vocabulary, 'Capture Data Set: Laser Line'); break;
+                    case eVocabularyID.eAssetAssetTypeCaptureDataSetSphericalLaser: testVocabulary(vocabulary, 'Capture Data Set: Spherical Laser'); break;
+                    case eVocabularyID.eAssetAssetTypeCaptureDataSetStructuredLight: testVocabulary(vocabulary, 'Capture Data Set: Structured Light'); break;
+                    case eVocabularyID.eAssetAssetTypeCaptureDataSetOther: testVocabulary(vocabulary, 'Capture Data Set: Other'); break;
+                    case eVocabularyID.eAssetAssetTypeCaptureDataFile: testVocabulary(vocabulary, 'Capture Data File'); break;
+                    case eVocabularyID.eAssetAssetTypeModel: testVocabulary(vocabulary, 'Model'); break;
+                    case eVocabularyID.eAssetAssetTypeModelGeometryFile: testVocabulary(vocabulary, 'Model Geometry File'); break;
+                    case eVocabularyID.eAssetAssetTypeModelUVMapFile: testVocabulary(vocabulary, 'Model UV Map File'); break;
+                    case eVocabularyID.eAssetAssetTypeScene: testVocabulary(vocabulary, 'Scene'); break;
+                    case eVocabularyID.eAssetAssetTypeProjectDocumentation: testVocabulary(vocabulary, 'Project Documentation'); break;
+                    case eVocabularyID.eAssetAssetTypeIntermediaryFile: testVocabulary(vocabulary, 'Intermediary File'); break;
+                    case eVocabularyID.eAssetAssetTypeOther: testVocabulary(vocabulary, 'Other'); break;
+
+                    case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                 }
             }
         });
@@ -241,6 +246,13 @@ function vocabularyCacheTestClearFlush(): void {
             await VocabularyCache.flush();
         });
     });
+}
+
+function testVocabulary(vocabulary: DB.Vocabulary | undefined, termExpected: string): void {
+    expect(vocabulary).toBeTruthy();
+    /* istanbul ignore else */
+    if (vocabulary)
+        expect(vocabulary.Term).toEqual(termExpected);
 }
 
 export default vocabularyCacheTest;

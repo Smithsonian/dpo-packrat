@@ -41,6 +41,36 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
         throw new ReferenceError('DBAPI.SystemObject.update() should never be called; used the explict update methods of objects linked to SystemObject');
     }
 
+    async retireObject(): Promise<boolean> {
+        if (this.Retired)
+            return true;
+        this.Retired = true;
+        return this.updateRetired();
+    }
+
+    async reinstateObject(): Promise<boolean> {
+        if (!this.Retired)
+            return true;
+        this.Retired = false;
+        return this.updateRetired();
+    }
+
+    private async updateRetired(): Promise<boolean> {
+        try {
+            const { idSystemObject, Retired } = this;
+            const retValue: boolean = await DBC.DBConnection.prisma.systemObject.update({
+                where: { idSystemObject, },
+                data: {
+                    Retired
+                },
+            }) ? true : /* istanbul ignore next */ false;
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.SystemObject.updateRetired', error);
+            return false;
+        }
+    }
+
     static async fetch(idSystemObject: number): Promise<SystemObject | null> {
         if (!idSystemObject)
             return null;
