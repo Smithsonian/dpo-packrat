@@ -33,7 +33,7 @@ export class AssetStorageAdapter {
         }
 
         const readStreamInput: STORE.ReadStreamInput = {
-            storageKey: asset.StorageKey,
+            storageKey: assetVersion.Ingested ? asset.StorageKey : assetVersion.StorageKeyStaging,
             fileName: asset.FileName,
             version: assetVersion.Version,
             staging: !assetVersion.Ingested
@@ -57,7 +57,7 @@ export class AssetStorageAdapter {
             idAssetGroup,
             idVAssetType,
             idSystemObject: null,
-            StorageKey: commitWriteStreamInput.storageKey,
+            StorageKey: '',
             idAsset: 0
         });
 
@@ -86,7 +86,7 @@ export class AssetStorageAdapter {
             return retValue;
         }
 
-        const resStorage = await storage.commitWriteStream(commitWriteStreamInput);
+        const resStorage: STORE.CommitWriteStreamResult = await storage.commitWriteStream(commitWriteStreamInput);
         if (!resStorage.success) {
             retValue.success = false;
             retValue.error = resStorage.error;
@@ -95,25 +95,31 @@ export class AssetStorageAdapter {
         }
 
         // Create Asset if necessary
-        if (asset.idAsset == 0 && !await asset.create()) /* istanbul ignore next */ {
-            retValue.success = false;
-            retValue.error = `AssetStorageAdapter.commitNewAssetVersion: Unable to create Asset ${JSON.stringify(asset)}`;
-            LOG.logger.error(retValue.error);
-            return retValue;
+        if (asset.idAsset == 0) {
+            /* istanbul ignore if */
+            if (!await asset.create()) {
+                retValue.success = false;
+                retValue.error = `AssetStorageAdapter.commitNewAssetVersion: Unable to create Asset ${JSON.stringify(asset)}`;
+                LOG.logger.error(retValue.error);
+                return retValue;
+            }
         }
 
         const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
             idAsset: asset.idAsset,
+            Version: 1, /* ignored */
+            FileName: asset.FileName,
             idUserCreator,
             DateCreated,
-            StorageChecksum: resStorage.storageHash ? resStorage.storageHash : '',
-            StorageSize: resStorage.storageSize ? resStorage.storageSize : 0,
+            StorageHash: resStorage.storageHash ? resStorage.storageHash : /* istanbul ignore next */ '',
+            StorageSize: resStorage.storageSize ? resStorage.storageSize : /* istanbul ignore next */ 0,
+            StorageKeyStaging: commitWriteStreamInput.storageKey,
             Ingested: false,
-            Version: 1, /* ignored */
             idAssetVersion: 0
         });
 
-        if (!await assetVersion.create()) /* istanbul ignore next */ {
+        /* istanbul ignore if */
+        if (!await assetVersion.create()) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.commitNewAssetVersion: Unable to create AssetVersion ${JSON.stringify(assetVersion)}`;
             LOG.logger.error(retValue.error);
@@ -125,9 +131,10 @@ export class AssetStorageAdapter {
         return retValue;
     }
 
-    static async ingestAsset(storageKeyStaged: string, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
+    static async ingestAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
         SOBased: DBAPI.SystemObjectBased, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
         const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
+        /* istanbul ignore if */
         if (!SO) {
             const error: string = `Unable to fetch SystemObject for ${SO}`;
             return {
@@ -138,10 +145,10 @@ export class AssetStorageAdapter {
             };
             LOG.logger.error(error);
         }
-        return await AssetStorageAdapter.ingestAssetForSystemObjectID(storageKeyStaged, asset, assetVersion, SO.idSystemObject, opInfo);
+        return await AssetStorageAdapter.ingestAssetForSystemObjectID(asset, assetVersion, SO.idSystemObject, opInfo);
     }
 
-    static async ingestAssetForSystemObjectID(storageKeyStaged: string, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
+    static async ingestAssetForSystemObjectID(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
         idSystemObject: number, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
         // Call IStorage.promote
         // Update asset.StorageKey, if needed
@@ -161,15 +168,19 @@ export class AssetStorageAdapter {
             return retValue;
         }
 
-        const storageKeyResults = await storage.computeStorageKey(asset.idAsset.toString());
-        if (!storageKeyResults.success) {
-            retValue.success = false;
-            retValue.error = storageKeyResults.error;
-            LOG.logger.error(retValue.error);
-            return retValue;
+        let storageKey: string = (asset.idAsset > 0 && asset.StorageKey != '') ? asset.StorageKey : '';
+        if (!storageKey) {
+            const storageKeyResults = await storage.computeStorageKey(asset.idAsset.toString()); /* istanbul ignore next */
+            if (!storageKeyResults.success) {
+                retValue.success = false;
+                retValue.error = storageKeyResults.error;
+                LOG.logger.error(retValue.error);
+                return retValue;
+            } else
+                storageKey = storageKeyResults.storageKey;
         }
 
-        const metadata: DBAPI.ObjectAncestry = new DBAPI.ObjectAncestry(idSystemObject);
+        const metadata: DBAPI.ObjectAncestry = new DBAPI.ObjectAncestry(idSystemObject); /* istanbul ignore next */
         if (!await metadata.fetch()) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.ingestAsset: Update to retrieve object ancestry for system object ${idSystemObject}`;
@@ -178,8 +189,8 @@ export class AssetStorageAdapter {
         }
 
         const promoteStagedAssetInput: STORE.PromoteStagedAssetInput = {
-            storageKeyStaged,
-            storageKeyFinal: storageKeyResults.storageKey,
+            storageKeyStaged: assetVersion.StorageKeyStaging,
+            storageKeyFinal: storageKey,
             fileName: asset.FileName,
             metadata,
             opInfo
@@ -194,11 +205,17 @@ export class AssetStorageAdapter {
         }
 
         // Update Asset if new information is being provided here
-        // This should only be happening the first time we ingest
-        if (asset.idSystemObject != idSystemObject ||
-            asset.StorageKey != storageKeyResults.storageKey) {
+        // StorageKey should be updated only the first time we ingest
+        let updateAsset: boolean = false;
+        if (asset.idSystemObject != idSystemObject) {
             asset.idSystemObject = idSystemObject;
-            asset.StorageKey = storageKeyResults.storageKey;
+            updateAsset = true;
+        }
+        if (asset.StorageKey != storageKey) {
+            asset.StorageKey = storageKey;
+            updateAsset = true;
+        }
+        if (updateAsset) /* istanbul ignore next */ {
             if (!await asset.update()) {
                 retValue.success = false;
                 retValue.error = `AssetStorageAdapter.ingestAsset: Update to update Asset ${JSON.stringify(asset)}`;
@@ -208,6 +225,7 @@ export class AssetStorageAdapter {
         }
 
         assetVersion.Ingested = true;
+        assetVersion.StorageKeyStaging = ''; /* istanbul ignore next */
         if (!await assetVersion.update()) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.ingestAsset: Update to update AssetVersion ${JSON.stringify(assetVersion)}`;
@@ -227,10 +245,11 @@ export class AssetStorageAdapter {
             opInfo
         };
 
-        const ASR = await this.actOnAssetWorker(asset, opInfo, renameAssetInput, null, null);
+        const ASR: STORE.AssetStorageResult = await this.actOnAssetWorker(asset, opInfo, renameAssetInput, null, null);
+        /* istanbul ignore else */
         if (ASR.success) {
             // TODO: handle later failures by rolling back storage system change
-            asset.FileName = fileNameNew;
+            asset.FileName = fileNameNew; /* istanbul ignore next */
             if (!await asset.update())
                 return {
                     success: false,
@@ -249,11 +268,11 @@ export class AssetStorageAdapter {
             opInfo
         };
         const ASR = await this.actOnAssetWorker(asset, opInfo, null, hideAssetInput, null);
-
+        /* istanbul ignore else */
         if (ASR.success) {
             // TODO: handle later failures by rolling back storage system change
             // Mark this asset as retired
-            const SO: DBAPI.SystemObject | null = await asset.fetchSystemObject();
+            const SO: DBAPI.SystemObject | null = await asset.fetchSystemObject(); /* istanbul ignore next */
             if (SO == null)
                 return {
                     success: false,
@@ -262,6 +281,7 @@ export class AssetStorageAdapter {
                     assetVersion: null
                 };
 
+            /* istanbul ignore next */
             if (!await SO.retireObject())
                 return {
                     success: false,
@@ -276,16 +296,16 @@ export class AssetStorageAdapter {
     static async reinstateAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion | null, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
         const reinstateAssetInput: STORE.ReinstateAssetInput = {
             storageKey: asset.StorageKey,
-            fileName: asset.FileName,
+            fileName: assetVersion ? assetVersion.FileName : asset.FileName,
             version: assetVersion ? assetVersion.Version : -1, // -1 means the most recent version
             opInfo
         };
         const ASR = await this.actOnAssetWorker(asset, opInfo, null, null, reinstateAssetInput);
-
+        /* istanbul ignore else */
         if (ASR.success) {
             // TODO: handle later failures by rolling back storage system change
             // Mark this asset as not retired
-            const SO: DBAPI.SystemObject | null = await asset.fetchSystemObject();
+            const SO: DBAPI.SystemObject | null = await asset.fetchSystemObject(); /* istanbul ignore next */
             if (SO == null)
                 return {
                     success: false,
@@ -293,7 +313,7 @@ export class AssetStorageAdapter {
                     asset,
                     assetVersion
                 };
-
+            /* istanbul ignore next */
             if (!await SO.reinstateObject())
                 return {
                     success: false,
@@ -316,6 +336,7 @@ export class AssetStorageAdapter {
             success: false,
             error: ''
         };
+        let fileNameNew: string = '';
 
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
@@ -326,7 +347,7 @@ export class AssetStorageAdapter {
         }
 
         // Read most recent AssetVersion
-        const assetVersionOld: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(asset.idAsset);
+        const assetVersionOld: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(asset.idAsset); /* istanbul ignore next */
         if (!assetVersionOld) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.actOnAssetWorker: Unable to fetch latest AssetVersion for ${asset}`;
@@ -335,22 +356,23 @@ export class AssetStorageAdapter {
         }
 
         if (renameAssetInput) {
-            const renameAssetResult = await storage.renameAsset(renameAssetInput);
+            const renameAssetResult = await storage.renameAsset(renameAssetInput); /* istanbul ignore next */
             if (!renameAssetResult.success) {
                 retValue.success = false;
                 retValue.error = renameAssetResult.error;
                 LOG.logger.error(retValue.error);
                 return retValue;
             }
+            fileNameNew = renameAssetInput.fileNameNew;
         } else if (hideAssetInput) {
-            const hideAssetResult = await storage.hideAsset(hideAssetInput);
+            const hideAssetResult = await storage.hideAsset(hideAssetInput); /* istanbul ignore next */
             if (!hideAssetResult.success) {
                 retValue.success = false;
                 retValue.error = hideAssetResult.error;
                 LOG.logger.error(retValue.error);
                 return retValue;
             }
-        } else if (reinstateAssetInput) {
+        } else /* istanbul ignore next */ if (reinstateAssetInput) {
             const reinstateAssetResult = await storage.reinstateAsset(reinstateAssetInput);
             if (!reinstateAssetResult.success) {
                 retValue.success = false;
@@ -363,16 +385,19 @@ export class AssetStorageAdapter {
         // Create new AssetVersion
         const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
             idAsset: asset.idAsset,
+            Version: 1, /* ignored */
+            FileName: fileNameNew ? fileNameNew : assetVersionOld.FileName,
             idUserCreator: opInfo.idUser,
             DateCreated: new Date(),
-            StorageChecksum: assetVersionOld.StorageChecksum,
+            StorageHash: assetVersionOld.StorageHash,
             StorageSize: assetVersionOld.StorageSize,
+            StorageKeyStaging: assetVersionOld.StorageKeyStaging,
             Ingested: assetVersionOld.Ingested,
-            Version: 1, /* ignored */
             idAssetVersion: 0
         });
 
-        if (!await assetVersion.create()) /* istanbul ignore next */ {
+        /* istanbul ignore next */
+        if (!await assetVersion.create()) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.actOnAssetWorker: Unable to create AssetVersion ${JSON.stringify(assetVersion)}`;
             LOG.logger.error(retValue.error);

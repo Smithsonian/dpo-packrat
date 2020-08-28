@@ -125,11 +125,11 @@ export class Helpers {
         if (ioResults.success)
             return ioResults;
 
-        LOG.logger.info(`${description} does not exist; creating it`);
+        LOG.logger.info(`${description} Creating ${dest}`);
         ioResults = source ? Helpers.copyFile(source, dest) : Helpers.ensureFileExists(dest);
         /* istanbul ignore if */
         if (!ioResults.success)
-            LOG.logger.error(`Unable to create ${description} at ${dest}`);
+            LOG.logger.error(`${description} Unable to create ${dest}`);
         return ioResults;
     }
 
@@ -238,11 +238,11 @@ export class Helpers {
         if (ioResults.success)
             return ioResults;
 
-        LOG.logger.info(`Creating ${description} as it does not exist at ${directory}`);
+        LOG.logger.info(`${description} Creating ${directory}`);
         ioResults = Helpers.createDirectory(directory);
         /* istanbul ignore if */
         if (!ioResults.success)
-            LOG.logger.error(`Unable to create ${description} at ${directory}`);
+            LOG.logger.error(`${description} Unable to create ${directory}`);
         return ioResults;
     }
 

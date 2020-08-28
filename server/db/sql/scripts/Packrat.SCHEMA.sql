@@ -83,17 +83,20 @@ CREATE TABLE IF NOT EXISTS `AssetGroup` (
 CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `idAssetVersion` int(11) NOT NULL AUTO_INCREMENT,
   `idAsset` int(11) NOT NULL,
+  `Version` int(11) NOT NULL,
+  `FileName` varchar(512) NOT NULL,
   `idUserCreator` int(11) NOT NULL,
   `DateCreated` datetime NOT NULL,
-  `StorageChecksum` varchar(128) NOT NULL,
+  `StorageHash` varchar(128) NOT NULL,
   `StorageSize` bigint(20) NOT NULL DEFAULT 0,
+  `StorageKeyStaging` varchar(512) NOT NULL,
   `Ingested` boolean NOT NULL,
-  `Version` int(11) NOT NULL,
   PRIMARY KEY (`idAssetVersion`),
   KEY `AssetVersion_idAsset_Version` (`idAsset`,`Version`),
-  KEY `AssetVersion_StorageChecksum` (`StorageChecksum`),
+  KEY `AssetVersion_StorageHash` (`StorageHash`),
   KEY `AssetVersion_Ingested_idUserCreator` (`Ingested`,`idUserCreator`),
-  KEY `AssetVersion_idUserCreator_Ingested` (`idUserCreator`,`Ingested`)
+  KEY `AssetVersion_idUserCreator_Ingested` (`idUserCreator`,`Ingested`),
+  KEY `AssetVersion_StorageKeyStaging` (`StorageKeyStaging`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `CaptureData` (

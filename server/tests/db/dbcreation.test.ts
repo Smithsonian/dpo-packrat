@@ -486,13 +486,15 @@ describe('DB Creation Test Suite', () => {
         if (assetThumbnail && user)
             assetVersion = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FilePath,
                 idUserCreator: user.idUser,
                 DateCreated: UTIL.nowCleansed(),
-                StorageChecksum: 'Asset Checksum',
+                StorageHash: 'Asset Checksum',
                 StorageSize: 50,
-                idAssetVersion: 0,
+                StorageKeyStaging: '',
                 Ingested: true,
-                Version: 0
+                idAssetVersion: 0
             });
         expect(assetVersion).toBeTruthy();
     });
@@ -501,13 +503,15 @@ describe('DB Creation Test Suite', () => {
         if (assetThumbnail && user)
             assetVersionNotIngested = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FilePath,
                 idUserCreator: user.idUser,
                 DateCreated: UTIL.nowCleansed(),
-                StorageChecksum: 'Asset Checksum',
+                StorageHash: 'Asset Checksum',
                 StorageSize: 50,
-                idAssetVersion: 0,
+                StorageKeyStaging: '',
                 Ingested: false,
-                Version: 0
+                idAssetVersion: 0
             });
         expect(assetVersionNotIngested).toBeTruthy();
     });
@@ -1708,13 +1712,15 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail && user)
             assetVersion2 = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FileName,
                 idUserCreator: user.idUser,
                 DateCreated: UTIL.nowCleansed(),
-                StorageChecksum: 'Asset Checksum',
+                StorageHash: 'Asset Checksum',
                 StorageSize: 50,
-                idAssetVersion: 0,
+                StorageKeyStaging: '',
                 Ingested: true,
-                Version: 0
+                idAssetVersion: 0
             });
         expect(assetVersion2).toBeTruthy();
     });
@@ -4878,6 +4884,8 @@ describe('DB Update Test Suite', () => {
             expect(systemObjectItem.Retired).toBeFalsy();
             expect(await systemObjectItem.retireObject()).toBeTruthy();
             expect(systemObjectItem.Retired).toBeTruthy();
+            expect(await systemObjectItem.retireObject()).toBeTruthy(); // one more time
+            expect(systemObjectItem.Retired).toBeTruthy();
 
             const systemObjectFetch: DBAPI.SystemObject | null = item ? await item.fetchSystemObject() : null;
             expect(systemObjectFetch).toBeTruthy();
@@ -4890,6 +4898,8 @@ describe('DB Update Test Suite', () => {
         if (systemObjectItem) {
             expect(systemObjectItem.Retired).toBeTruthy();
             expect(await systemObjectItem.reinstateObject()).toBeTruthy();
+            expect(systemObjectItem.Retired).toBeFalsy();
+            expect(await systemObjectItem.reinstateObject()).toBeTruthy(); // one more time
             expect(systemObjectItem.Retired).toBeFalsy();
 
             const systemObjectFetch: DBAPI.SystemObject | null = item ? await item.fetchSystemObject() : null;

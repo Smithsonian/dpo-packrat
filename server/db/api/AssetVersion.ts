@@ -7,12 +7,14 @@ import * as LOG from '../../utils/logger';
 export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements AssetVersionBase, SystemObjectBased {
     idAssetVersion!: number;
     idAsset!: number;
+    Version!: number;
+    FileName!: string;
     idUserCreator!: number;
     DateCreated!: Date;
-    StorageChecksum!: string;
+    StorageHash!: string;
     StorageSize!: number;
+    StorageKeyStaging!: string;
     Ingested!: boolean;
-    Version!: number;
 
     constructor(input: AssetVersionBase) {
         super(input);
@@ -25,19 +27,21 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     // until Prisma has fixed this issue.  https://mariadb.com/kb/en/getting-started-with-the-nodejs-connector/
     protected async createWorker(): Promise<boolean> {
         try {
-            const { DateCreated, idAsset, idUserCreator, StorageChecksum, StorageSize, Ingested } = this;
+            const { DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested } = this;
             const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset);
 
             ({ idAssetVersion: this.idAssetVersion, DateCreated: this.DateCreated, idAsset: this.idAsset,
-                idUserCreator: this.idUserCreator, StorageChecksum: this.StorageChecksum,
-                StorageSize: this.StorageSize, Ingested: this.Ingested, Version: this.Version } =
+                FileName: this.FileName, idUserCreator: this.idUserCreator, StorageHash: this.StorageHash, StorageSize: this.StorageSize,
+                StorageKeyStaging: this.StorageKeyStaging, Ingested: this.Ingested, Version: this.Version } =
                 await DBC.DBConnection.prisma.assetVersion.create({
                     data: {
                         Asset:              { connect: { idAsset }, },
                         User:               { connect: { idUser: idUserCreator }, },
+                        FileName,
                         DateCreated,
-                        StorageChecksum,
+                        StorageHash,
                         StorageSize,
+                        StorageKeyStaging,
                         Ingested,
                         Version: nextVersion ? nextVersion : /* istanbul ignore next */ 1,
                         SystemObject:       { create: { Retired: false }, },
@@ -52,9 +56,9 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         /*
          * NOT WORKING:
         try {
-            const { idAsset, idUserCreator, DateCreated, StorageChecksum, StorageSize, Ingested } = this;
+            const { idAsset, FileName, idUserCreator, DateCreated, StorageHash, StorageSize, StorageKeyStaging, Ingested } = this;
             const assetVersion: AssetVersion[] | null = DBC.CopyArray<AssetVersionBase, AssetVersion>(
-                await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`CALL AssetVersionCreate(${idAsset}, ${idUserCreator}, ${DateCreated}, ${StorageChecksum}, ${StorageSize}, ${Ingested})`, AssetVersion);
+                await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`CALL AssetVersionCreate(${idAsset}, ${FileName}, ${idUserCreator}, ${DateCreated}, ${StorageHash}, ${StorageSize}, ${StorageKeyStaging}, ${Ingested})`, AssetVersion);
             if (assetVersion && assetVersion.length == 1) {
                 this.idAssetVersion = assetVersion[0].idAssetVersion;
                 this.Version = assetVersion[0].Version;
@@ -87,15 +91,17 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAssetVersion, DateCreated, idAsset, idUserCreator, StorageChecksum, StorageSize, Ingested, Version } = this;
+            const { idAssetVersion, DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging, Ingested, Version } = this;
             return await DBC.DBConnection.prisma.assetVersion.update({
                 where: { idAssetVersion, },
                 data: {
                     Asset:              { connect: { idAsset }, },
                     User:               { connect: { idUser: idUserCreator }, },
+                    FileName,
                     DateCreated,
-                    StorageChecksum,
+                    StorageHash,
                     StorageSize,
+                    StorageKeyStaging,
                     Ingested,
                     Version,
                 },
@@ -173,10 +179,12 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return new AssetVersion({
                 idAssetVersion: assetVersion.idAssetVersion,
                 idAsset: assetVersion.idAsset,
+                FileName: assetVersion.FileName,
                 idUserCreator: assetVersion.idUserCreator,
                 DateCreated: new Date(assetVersion.DateCreated),
-                StorageChecksum: assetVersion.StorageChecksum,
+                StorageHash: assetVersion.StorageHash,
                 StorageSize: assetVersion.StorageSize,
+                StorageKeyStaging: assetVersion.StorageKeyStaging,
                 Ingested: assetVersion.Ingested ? true : false,
                 Version: assetVersion.Version
             });
@@ -193,7 +201,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.fetchFromUser', error);
+            LOG.logger.error('DBAPI.AssetVersion.fetchFromUser', error);
             return null;
         }
     }
@@ -205,7 +213,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator, Ingested } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.fetchFromUserByIngested', error);
+            LOG.logger.error('DBAPI.AssetVersion.fetchFromUserByIngested', error);
             return null;
         }
     }
@@ -215,7 +223,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { Ingested } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.fetchByIngested', error);
+            LOG.logger.error('DBAPI.AssetVersion.fetchByIngested', error);
             return null;
         }
     }

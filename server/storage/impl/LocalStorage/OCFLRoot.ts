@@ -79,11 +79,11 @@ export class OCFLRoot {
         /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
-        ioResults = H.Helpers.initializeDirectory(this.storageRootRepo, 'OCFL Storage Root');
+        ioResults = H.Helpers.initializeDirectory(this.storageRootRepo, 'Storage OCFLRoot');
         /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
-        ioResults = H.Helpers.initializeDirectory(this.storageRootStaging, 'OCFL Staging Root');
+        ioResults = H.Helpers.initializeDirectory(this.storageRootStaging, 'Storage Staging Root');
         /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;

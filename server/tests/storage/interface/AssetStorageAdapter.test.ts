@@ -1,6 +1,4 @@
-// import * as path from 'path';
-// import * as crypto from 'crypto';
-// import * as STR from 'stream';
+import * as path from 'path';
 
 import * as STORE from '../../../storage/interface/';
 import * as ST from '../../../storage/impl/LocalStorage/SharedTypes';
@@ -9,10 +7,10 @@ import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
+import Config from '../../../config';
 import { ObjectHierarchyTestSetup } from '../../db/composite/ObjectHierarchy.setup';
 
 type AssetStorageAdapterTestCase = {
-    storageKeyStaging: string;
     asset: DBAPI.Asset,
     assetVersion: DBAPI.AssetVersion,
     SOBased: DBAPI.SystemObjectBased | null
@@ -22,13 +20,20 @@ const OHTS: ObjectHierarchyTestSetup = new ObjectHierarchyTestSetup();
 let vAssetType: DBAPI.Vocabulary;
 let opInfo: STORE.OperationInfo;
 let TestCase1: AssetStorageAdapterTestCase;
+let storageRootOrig: string;
+let storageRootNew: string;
 
-// beforeAll(() => {
-// });
+beforeAll(() => {
+    storageRootOrig = Config.storage.root;
+    storageRootNew = path.join('var', 'test', H.Helpers.randomSlug());
+    Config.storage.root = storageRootNew;
+});
 
 afterAll(async done => {
-    jest.setTimeout(3000);
-    await H.Helpers.sleep(2000);
+    Config.storage.root = storageRootOrig;
+    H.Helpers.removeDirectory(storageRootNew, true);
+    // jest.setTimeout(3000);
+    // await H.Helpers.sleep(2000);
     done();
 });
 
@@ -62,9 +67,6 @@ describe('AssetStorageAdapter Methods', () => {
         await testReadAsset(TestCase1, true);
     });
 
-    /*
-    // Adding a new version doesn't work right!
-    // We need to circle back here and handle uploads separately from Assets and AssetVersions. Boo.
     test('AssetStorageAdapter.commitNewAsset 2', async() => {
         TestCase1 = await testCommitNewAsset(TestCase1, 12000, OHTS.model1);
         await testReadAsset(TestCase1, true);
@@ -74,7 +76,16 @@ describe('AssetStorageAdapter Methods', () => {
         await testIngestAsset(TestCase1, true);
         await testReadAsset(TestCase1, true);
     });
-    */
+
+    test('AssetStorageAdapter.commitNewAsset 3', async() => {
+        TestCase1 = await testCommitNewAsset(TestCase1, 14000, OHTS.model1); // don't change metadata this time for fuller code coverage
+        await testReadAsset(TestCase1, true);
+    });
+
+    test('AssetStorageAdapter.ingestAsset 3', async() => {
+        await testIngestAsset(TestCase1, true);
+        await testReadAsset(TestCase1, true);
+    });
 
     test('AssetStorageAdapter.renameAsset', async() => {
         await testRenameAsset(TestCase1, true);
@@ -90,21 +101,35 @@ describe('AssetStorageAdapter Methods', () => {
         await testReinstateAsset(TestCase1, -1, true);
         await testReadAsset(TestCase1, true);
     });
+
+    test('AssetStorageAdapter.hideAsset', async() => {
+        await testHideAsset(TestCase1, true);
+        await testReadAsset(TestCase1, false); // Expected failure as asset was hidden
+    });
+
+    test('AssetStorageAdapter.reinstateAsset', async() => {
+        await testReinstateAsset(TestCase1, 4, true);
+        await testReadAsset(TestCase1, true);
+    });
 });
 
 describe('AssetStorageAdapter Failures', () => {
     test('AssetStorageAdapter.commitNewAsset failure', async() => {
         await testCommitNewAssetFailure(TestCase1);
     });
+
+    test('AssetStorageAdapter.ingestAsset failure', async() => {
+        await testIngestAssetFailure(TestCase1);
+    });
 });
 
 async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, fileSize: number, SOBased: DBAPI.SystemObjectBased | null): Promise<AssetStorageAdapterTestCase> {
     let newAsset: boolean;
     if (!TestCase) {
+        const fileName: string = H.Helpers.randomSlug();
         TestCase = {
-            storageKeyStaging: '',
-            asset: new DBAPI.Asset({ idAsset: 0, FileName: H.Helpers.randomSlug(), FilePath: H.Helpers.randomSlug(), idAssetGroup: null, idVAssetType: vAssetType.idVocabulary, idSystemObject: null, StorageKey: '' }),
-            assetVersion: new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageChecksum: '', StorageSize: 0, Ingested: false, Version: 1 }),
+            asset: new DBAPI.Asset({ idAsset: 0, FileName: fileName, FilePath: H.Helpers.randomSlug(), idAssetGroup: null, idVAssetType: vAssetType.idVocabulary, idSystemObject: null, StorageKey: '' }),
+            assetVersion: new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileName, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: 0, StorageKeyStaging: '', Ingested: false, Version: 1 }),
             SOBased
         };
         newAsset = true;
@@ -131,13 +156,13 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         return TestCase;
 
     // record storage key & stream bits to storage system
-    TestCase.storageKeyStaging = WSR.storageKey;
+    TestCase.assetVersion.StorageKeyStaging = WSR.storageKey;
     const storageHash: string = await H.Helpers.createRandomFile(WSR.writeStream, fileSize);
     expect(storageHash).toBeTruthy();
 
     // Use STORE.AssetStorageAdapter.commitNewAsset();
     const CWSI: STORE.CommitWriteStreamInput = {
-        storageKey: TestCase.storageKeyStaging,
+        storageKey: TestCase.assetVersion.StorageKeyStaging,
         storageHash
     };
 
@@ -159,12 +184,10 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
     expect(ASR.asset).toBeTruthy();
     expect(ASR.assetVersion).toBeTruthy();
     if (ASR.asset) {
-        LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset Asset = ${JSON.stringify(ASR.asset)}`);
         TestCase.asset = ASR.asset;
         expect(TestCase.asset.idAsset).toBeGreaterThan(0);
     }
     if (ASR.assetVersion) {
-        LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset AssetVersion = ${JSON.stringify(ASR.assetVersion)}`);
         TestCase.assetVersion = ASR.assetVersion;
         expect(TestCase.assetVersion.idAssetVersion).toBeGreaterThan(0);
         expect(TestCase.assetVersion.idAsset).toEqual(TestCase.asset.idAsset);
@@ -185,14 +208,14 @@ async function testReadAsset(TestCase: AssetStorageAdapterTestCase, expectSucces
         return !expectSuccess;
 
     expect(RSR.readStream).toBeTruthy();
-    expect(RSR.storageHash).toEqual(TestCase.assetVersion.StorageChecksum);
+    expect(RSR.storageHash).toEqual(TestCase.assetVersion.StorageHash);
     if (!RSR.readStream)
         return false;
 
     const hashResults: H.HashResults = await H.Helpers.computeHashFromStream(RSR.readStream, ST.OCFLDigestAlgorithm);
     expect(hashResults.success).toBeTruthy();
     expect(hashResults.hash).toEqual(RSR.storageHash);
-    expect(hashResults.hash).toEqual(TestCase.assetVersion.StorageChecksum);
+    expect(hashResults.hash).toEqual(TestCase.assetVersion.StorageHash);
     return true;
 }
 
@@ -202,8 +225,7 @@ async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
         return false;
 
     LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
-    const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.ingestAsset(TestCase.asset.StorageKey,
-        TestCase.asset, TestCase.assetVersion, TestCase.SOBased, opInfo);
+    const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.ingestAsset(TestCase.asset, TestCase.assetVersion, TestCase.SOBased, opInfo);
 
     if (!ASR.success && expectSuccess)
         LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset: ${ASR.error}`);
@@ -211,7 +233,7 @@ async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
     if (!ASR.success)
         return !expectSuccess;
 
-    TestCase.storageKeyStaging = ''; // no longer staged
+    expect(TestCase.assetVersion.StorageKeyStaging).toEqual('');
     expect(TestCase.assetVersion.Ingested).toBeTruthy();
     return true;
 }
@@ -321,3 +343,19 @@ async function testCommitNewAssetFailure(TestCase: AssetStorageAdapterTestCase):
     expect(ASR.success).toBeFalsy();
     return !ASR.success;
 }
+
+async function testIngestAssetFailure(TestCase: AssetStorageAdapterTestCase): Promise<boolean> {
+    expect(TestCase.SOBased).toBeTruthy();
+    if (!TestCase.SOBased)
+        return false;
+
+    const storageKeyStagingOld: string = TestCase.assetVersion.StorageKeyStaging;
+    TestCase.assetVersion.StorageKeyStaging = H.Helpers.randomSlug();
+    LOG.logger.info('AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting Failure)');
+    const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.ingestAsset(TestCase.asset, TestCase.assetVersion, TestCase.SOBased, opInfo);
+    TestCase.assetVersion.StorageKeyStaging = storageKeyStagingOld;
+
+    expect(ASR.success).toBeFalsy();
+    return !ASR.success;
+}
+
