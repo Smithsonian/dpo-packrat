@@ -17,6 +17,7 @@ const ocflRoot: OR.OCFLRoot = new OR.OCFLRoot();
 let ocflObject: OO.OCFLObject | null = null;
 let ocflStorageRoot: string;
 let opInfo: OperationInfo;
+const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
 
 beforeAll(() => {
     ocflStorageRoot = path.join('var', 'test', H.Helpers.randomSlug());
@@ -26,7 +27,7 @@ beforeAll(() => {
 afterAll(async done => {
     LOG.logger.info(`Removing test storage root from ${path.resolve(ocflStorageRoot)}`);
     H.Helpers.removeDirectory(ocflStorageRoot, true);
-    jest.setTimeout(3000);
+    jest.setTimeout(5000);
     await H.Helpers.sleep(2000);
     done();
 });
@@ -81,13 +82,11 @@ describe('OCFL OCFLRoot', () => {
     });
 
     test('OCFL OCFLRoot.computeLocationObjectRoot', async () => {
-        const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
         const location: string = ocflRoot.computeLocationObjectRoot(storageKey);
         expect(location.toLowerCase()).toEqual(path.join(ocflStorageRoot, ST.OCFLStorageRootFolderRepository, '/35/6A/19/356A192B7913B04C54574D18C28D46E6395428AB').toLowerCase());
     });
 
     test('OCFL OCFLRoot.ocflObject New', async () => {
-        const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
         let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, false);  // Don't create if missing, non-existant object root
         expect(initRes.success).toBeFalsy();
 
@@ -139,8 +138,8 @@ describe('OCFL Object', () => {
         await testPurge(ocflObject, fileName1, false); // not implemented
     });
 
-    test('OCFL OCFLRoot.ocflObject Existing', async () => {
-        const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
+    test('OCFL OCFLRoot.ocflObject Existing 1', async () => {
+        jest.setTimeout(30000); // this is needed here, for some reason, when running in my container
         let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, false);  // Don't create if missing
         expect(initRes.success).toBeTruthy();
         await testValidate(initRes.ocflObject, 1, 'unmodified');
@@ -290,7 +289,6 @@ describe('OCFL Teardown', () => {
         expect(results.success).toBeFalsy();
     });
 });
-
 
 function createUploadLocation(ocflRoot: OR.OCFLRoot): string {
     // identify location to which we'll write our temporary data (as if we were streaming content here)
