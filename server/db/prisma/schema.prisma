@@ -120,20 +120,23 @@ model AssetGroup {
 }
 
 model AssetVersion {
-  idAssetVersion  Int           @default(autoincrement()) @id
-  idAsset         Int
-  idUserCreator   Int
-  DateCreated     DateTime
-  StorageChecksum String
-  StorageSize     Int           @default(0)
-  Ingested        Boolean
-  Version         Int
-  Asset           Asset         @relation(fields: [idAsset], references: [idAsset])
-  User            User          @relation(fields: [idUserCreator], references: [idUser])
-  SystemObject    SystemObject?
+  idAssetVersion    Int           @default(autoincrement()) @id
+  idAsset           Int
+  Version           Int
+  FileName          String
+  idUserCreator     Int
+  DateCreated       DateTime
+  StorageHash       String
+  StorageSize       Int           @default(0)
+  StorageKeyStaging String
+  Ingested          Boolean
+  Asset             Asset         @relation(fields: [idAsset], references: [idAsset])
+  User              User          @relation(fields: [idUserCreator], references: [idUser])
+  SystemObject      SystemObject?
 
   @@index([Ingested, idUserCreator], name: "AssetVersion_Ingested_idUserCreator")
-  @@index([StorageChecksum], name: "AssetVersion_StorageChecksum")
+  @@index([StorageHash], name: "AssetVersion_StorageHash")
+  @@index([StorageKeyStaging], name: "AssetVersion_StorageKeyStaging")
   @@index([idAsset, Version], name: "AssetVersion_idAsset_Version")
   @@index([idUserCreator, Ingested], name: "AssetVersion_idUserCreator_Ingested")
 }

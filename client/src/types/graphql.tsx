@@ -86,8 +86,10 @@ export type AssetVersion = {
     DateCreated: Scalars['DateTime'];
     idAsset: Scalars['Int'];
     idUserCreator: Scalars['Int'];
-    StorageChecksum: Scalars['String'];
+    StorageHash: Scalars['String'];
     StorageSize: Scalars['Int'];
+    StorageKeyStaging: Scalars['String'];
+    FileName: Scalars['String'];
     Ingested: Scalars['Boolean'];
     Version: Scalars['Int'];
     Asset?: Maybe<Asset>;

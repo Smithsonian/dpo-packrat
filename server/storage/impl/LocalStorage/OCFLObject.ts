@@ -539,7 +539,7 @@ export class OCFLObject {
         if (!ioResults.success)
             this._newObject = true;
         if (this._createIfMissing)
-            ioResults = H.Helpers.initializeDirectory(this._objectRoot, 'OCFL Object Root');
+            ioResults = H.Helpers.initializeDirectory(this._objectRoot, 'OCFLObject Root');
         if (!ioResults.success)
             return ioResults;
 
@@ -547,7 +547,7 @@ export class OCFLObject {
         const source: string = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageObjectNamasteFilename);
         const dest: string = path.join(this._objectRoot, ST.OCFLStorageObjectNamasteFilename);
         ioResults = this._createIfMissing
-            ? H.Helpers.initializeFile(source, dest, 'OCFL Object Root Namaste File')
+            ? H.Helpers.initializeFile(source, dest, 'OCFLObject Root Namaste File')
             : H.Helpers.fileOrDirExists(dest);
         return ioResults;
     }
@@ -591,7 +591,7 @@ export class OCFLObject {
         // Ensure new version folder exists
         const version: number = this._ocflInventory.headVersion;
         const destFolder: string = this.versionContentFullPath(version);
-        return H.Helpers.initializeDirectory(destFolder, 'OCFL Object new version folder');
+        return H.Helpers.initializeDirectory(destFolder, 'OCFLObject Version');
     }
 
     private rollbackVersion(): H.IOResults {

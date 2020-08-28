@@ -62,8 +62,10 @@ type AssetVersion {
   DateCreated: DateTime!
   idAsset: Int!
   idUserCreator: Int!
-  StorageChecksum: String!
+  StorageHash: String!
   StorageSize: Int!
+  StorageKeyStaging: String!
+  FileName: String!
   Ingested: Boolean!
   Version: Int!
   Asset: Asset

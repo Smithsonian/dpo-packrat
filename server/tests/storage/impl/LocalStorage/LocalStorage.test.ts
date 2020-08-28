@@ -39,8 +39,8 @@ beforeAll(() => {
 afterAll(async done => {
     LOG.logger.info(`Removing test storage root from ${path.resolve(ocflStorageRoot)}`);
     H.Helpers.removeDirectory(ocflStorageRoot, true);
-    jest.setTimeout(3000);
-    await H.Helpers.sleep(2000);
+    // jest.setTimeout(3000);
+    // await H.Helpers.sleep(2000);
     done();
 });
 
