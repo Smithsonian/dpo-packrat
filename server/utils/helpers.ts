@@ -7,6 +7,8 @@ import * as path from 'path';
 import { Stats } from 'fs';
 import * as fs from 'fs-extra';
 import * as crypto from 'crypto';
+import * as STR from 'stream';
+
 import * as LOG from './logger';
 
 export type IOResults = {
@@ -153,6 +155,33 @@ export class Helpers {
         return ioResults;
     }
 
+    /** Streams fileSize random bytes to stream; returns the sha512 hash on success */
+    static async createRandomFile(stream: STR.Writable, fileSize: number): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            try {
+                const hash = crypto.createHash('sha512');
+
+                let bytesRemaining: number = fileSize;
+
+                do {
+                    const chunkSize: number = bytesRemaining > 1024 ? 1024 : bytesRemaining;
+                    const buffer = crypto.randomBytes(chunkSize);
+
+                    bytesRemaining -= chunkSize;
+                    stream.write(buffer);
+                    hash.write(buffer);
+                } while (bytesRemaining > 0);
+
+                stream.end();
+                stream.on('finish', () => { resolve(hash.digest('hex')); });
+                stream.on('error', reject);
+            } catch (error) {
+                LOG.logger.error('Helpers.createRandomFile() error', error);
+                reject(error);
+            }
+        });
+    }
+
     static removeFile(filename: string): IOResults {
         const res: IOResults = {
             success: true,
@@ -259,32 +288,51 @@ export class Helpers {
         return res;
     }
 
+    static async computeHashFromFile(filePath: string, hashMethod: string): Promise<HashResults> {
+        try {
+            return await Helpers.computeHashFromStream(fs.createReadStream(filePath), hashMethod);
+        } catch (error) {
+            return {
+                success: false,
+                hash: '',
+                error: `Helpers.computeHashFromFile: ${JSON.stringify(error)}`
+            };
+        }
+    }
+
     // Adapted from https://stackoverflow.com/questions/33599688/how-to-use-es8-async-await-with-streams
     /** Computes a hash from a file. @param hashMethod Pass in 'sha512' or 'sha1', for example */
-    static async computeHashFromFile(filePath: string, hashMethod: string): Promise<HashResults> {
-        const res: HashResults = {
-            hash: '',
-            success: false,
-            error: ''
-        };
-        const hash      = crypto.createHash(hashMethod);
-        const stream    = fs.createReadStream(filePath);
-        stream.pipe(hash);
+    static async computeHashFromStream(stream: STR.Readable, hashMethod: string): Promise<HashResults> {
+        try {
+            const res: HashResults = {
+                hash: '',
+                success: false,
+                error: ''
+            };
+            const hash      = crypto.createHash(hashMethod);
+            stream.pipe(hash);
 
-        return new Promise<HashResults>((resolve) => {
-            stream.on('end', () => {
-                res.success = true;
-                res.hash = hash.digest('hex');
-                resolve(res);
-            });
+            return new Promise<HashResults>((resolve) => {
+                stream.on('end', () => {
+                    res.success = true;
+                    res.hash = hash.digest('hex');
+                    resolve(res);
+                });
 
-            stream.on('error', () => {
-                // do we need to perform cleanup?
-                res.success = false;
-                res.error = 'Helpers.computeHashFromFile() Stream Error';
-                resolve(res);
+                stream.on('error', () => {
+                    // do we need to perform cleanup?
+                    res.success = false;
+                    res.error = 'Helpers.computeHashFromFile() Stream Error';
+                    resolve(res);
+                });
             });
-        });
+        } catch (error) {
+            return {
+                success: false,
+                hash: '',
+                error: `Helpers.computeHashFromFile: ${JSON.stringify(error)}`
+            };
+        }
     }
 
     static computeHashFromString(input: string, hashMethod: string): string {

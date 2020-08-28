@@ -4873,6 +4873,32 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: SystemObject.retireObject', async () => {
+        if (systemObjectItem) {
+            expect(systemObjectItem.Retired).toBeFalsy();
+            expect(await systemObjectItem.retireObject()).toBeTruthy();
+            expect(systemObjectItem.Retired).toBeTruthy();
+
+            const systemObjectFetch: DBAPI.SystemObject | null = item ? await item.fetchSystemObject() : null;
+            expect(systemObjectFetch).toBeTruthy();
+            if (systemObjectFetch)
+                expect(systemObjectFetch.Retired).toBeTruthy();
+        }
+    });
+
+    test('DB Update: SystemObject.reinstateObject', async () => {
+        if (systemObjectItem) {
+            expect(systemObjectItem.Retired).toBeTruthy();
+            expect(await systemObjectItem.reinstateObject()).toBeTruthy();
+            expect(systemObjectItem.Retired).toBeFalsy();
+
+            const systemObjectFetch: DBAPI.SystemObject | null = item ? await item.fetchSystemObject() : null;
+            expect(systemObjectFetch).toBeTruthy();
+            if (systemObjectFetch)
+                expect(systemObjectFetch.Retired).toBeFalsy();
+        }
+    });
+
     test('DB Update: SystemObjectVersion.update', async () => {
         let bUpdated: boolean = false;
         if (systemObjectVersion) {

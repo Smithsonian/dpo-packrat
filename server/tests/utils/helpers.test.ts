@@ -1,6 +1,7 @@
 import * as path from 'path';
-// import * as fs from 'fs';
-// import { /* PassThrough, */ Stream } from 'stream';
+import * as STR from 'stream';
+// import { /* PassThrough */ } from 'stream';
+import * as fs from 'fs';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
@@ -38,6 +39,7 @@ describe('Utils: Helpers', () => {
     const filePath3: string = H.Helpers.randomFilename(directoryPath, '');
     const filePath4: string = H.Helpers.randomFilename(directoryPath, '');
     const filePath5: string = H.Helpers.randomFilename(directoryPath, '');
+    const filePathRandom: string = H.Helpers.randomFilename(directoryPath, '');
     const dirNestEmpty: string = path.join(directoryPath, H.Helpers.randomSlug());
     const dirNestNotEmpty: string = path.join(directoryPath, H.Helpers.randomSlug());
 
@@ -169,6 +171,18 @@ describe('Utils: Helpers', () => {
         expect(res.success).toBeTruthy();
     });
 
+    test('Utils: Helpers.createRandomFile', async () => {
+        try {
+            const WS: STR.Writable = fs.createWriteStream(filePathRandom);
+            expect(WS).toBeTruthy();
+            const hash: string = await H.Helpers.createRandomFile(WS, 10000);
+            expect(hash).toBeTruthy();
+        } catch (error) {
+            LOG.logger.error(`Helpers.createRandomeFile test failed: ${JSON.stringify(error)}`);
+            expect(false).toBeTruthy();
+        }
+    });
+
     test('Utils: Helpers.initializeDirectory', () => {
         let res: H.IOResults = H.Helpers.initializeDirectory(dirNestEmpty, 'Nested Directory, Empty');
         expect(res.success).toBeTruthy();
@@ -194,11 +208,11 @@ describe('Utils: Helpers', () => {
 
         const dirNotRecursive: string[] | null = H.Helpers.getDirectoryEntriesRecursive(directoryPath, 0);
         expect(dirNotRecursive).toBeTruthy();
-        expect(dirNotRecursive).toEqual(expect.arrayContaining([filePath, filePath2, filePath5]));
+        expect(dirNotRecursive).toEqual(expect.arrayContaining([filePath, filePath2, filePath5, filePathRandom]));
 
         const dirRecursive: string[] | null = H.Helpers.getDirectoryEntriesRecursive(directoryPath);
         expect(dirRecursive).toBeTruthy();
-        expect(dirRecursive).toEqual(expect.arrayContaining([filePath, filePath2, filePath5, copiedFile]));
+        expect(dirRecursive).toEqual(expect.arrayContaining([filePath, filePath2, filePath5, filePathRandom, copiedFile]));
     });
 
     /*
@@ -230,6 +244,8 @@ describe('Utils: Helpers', () => {
         expect(res.success).toBeTruthy();
         res = H.Helpers.removeFile(filePath4);
         expect(res.success).toBeTruthy();            // removing a non-existant file succeeds
+        res = H.Helpers.removeFile(filePathRandom);
+        expect(res.success).toBeTruthy();
     });
 
     test('Utils: Helpers.removeDirectory', () => {

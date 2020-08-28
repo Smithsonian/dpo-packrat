@@ -20,7 +20,7 @@ export type AssetStorageResult = {
 
 export class AssetStorageAdapter {
     static async readAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<STORE.ReadStreamResult> {
-        const storage: IStorage | null = await StorageFactory.getInstance();
+        const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             const error: string = 'AssetStorageAdapter.readAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
             LOG.logger.error(error);
@@ -47,7 +47,7 @@ export class AssetStorageAdapter {
      * Creates and persists Asset and AssetVersion
      */
     static async commitNewAsset(commitWriteStreamInput: STORE.CommitWriteStreamInput,
-        FileName: string, FilePath: string, idAssetGroup: number, idVAssetType: number,
+        FileName: string, FilePath: string, idAssetGroup: number | null, idVAssetType: number,
         idUserCreator: number, DateCreated: Date):
         Promise<AssetStorageResult> {
 
@@ -78,7 +78,7 @@ export class AssetStorageAdapter {
             error: ''
         };
 
-        const storage: IStorage | null = await StorageFactory.getInstance();
+        const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             retValue.success = false;
             retValue.error = 'AssetStorageAdapter.commitNewAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
@@ -95,7 +95,7 @@ export class AssetStorageAdapter {
         }
 
         // Create Asset if necessary
-        if (asset.idAsset == 0 && !await asset.create()) {
+        if (asset.idAsset == 0 && !await asset.create()) /* istanbul ignore next */ {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.commitNewAssetVersion: Unable to create Asset ${JSON.stringify(asset)}`;
             LOG.logger.error(retValue.error);
@@ -113,7 +113,7 @@ export class AssetStorageAdapter {
             idAssetVersion: 0
         });
 
-        if (!await assetVersion.create()) {
+        if (!await assetVersion.create()) /* istanbul ignore next */ {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.commitNewAssetVersion: Unable to create AssetVersion ${JSON.stringify(assetVersion)}`;
             LOG.logger.error(retValue.error);
@@ -153,7 +153,7 @@ export class AssetStorageAdapter {
             error: ''
         };
 
-        const storage: IStorage | null = await StorageFactory.getInstance();
+        const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             retValue.success = false;
             retValue.error = 'AssetStorageAdapter.ingestAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
@@ -215,6 +215,7 @@ export class AssetStorageAdapter {
             return retValue;
         }
 
+        retValue.success = true;
         return retValue;
     }
 
@@ -225,7 +226,20 @@ export class AssetStorageAdapter {
             fileNameNew,
             opInfo
         };
-        return await this.actOnAssetWorker(asset, opInfo, renameAssetInput, null, null);
+
+        const ASR = await this.actOnAssetWorker(asset, opInfo, renameAssetInput, null, null);
+        if (ASR.success) {
+            // TODO: handle later failures by rolling back storage system change
+            asset.FileName = fileNameNew;
+            if (!await asset.update())
+                return {
+                    success: false,
+                    error: `AssetStorageAdapter.renameAsset: Unable to update Asset.FileName ${JSON.stringify(asset)}`,
+                    asset,
+                    assetVersion: null
+                };
+        }
+        return ASR;
     }
 
     static async hideAsset(asset: DBAPI.Asset, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
@@ -234,16 +248,62 @@ export class AssetStorageAdapter {
             fileName: asset.FileName,
             opInfo
         };
-        return await this.actOnAssetWorker(asset, opInfo, null, hideAssetInput, null);
+        const ASR = await this.actOnAssetWorker(asset, opInfo, null, hideAssetInput, null);
+
+        if (ASR.success) {
+            // TODO: handle later failures by rolling back storage system change
+            // Mark this asset as retired
+            const SO: DBAPI.SystemObject | null = await asset.fetchSystemObject();
+            if (SO == null)
+                return {
+                    success: false,
+                    error: `AssetStorageAdapter.hideAsset: Unable to retrieve SystemObject for Asset ${JSON.stringify(asset)}`,
+                    asset,
+                    assetVersion: null
+                };
+
+            if (!await SO.retireObject())
+                return {
+                    success: false,
+                    error: `AssetStorageAdapter.hideAsset: Unable to mark SystemObject as retired for Asset ${JSON.stringify(asset)}`,
+                    asset,
+                    assetVersion: null
+                };
+        }
+        return ASR;
     }
 
-    static async reinstateAsset(asset: DBAPI.Asset, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
+    static async reinstateAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion | null, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
         const reinstateAssetInput: STORE.ReinstateAssetInput = {
             storageKey: asset.StorageKey,
             fileName: asset.FileName,
+            version: assetVersion ? assetVersion.Version : -1, // -1 means the most recent version
             opInfo
         };
-        return await this.actOnAssetWorker(asset, opInfo, null, null, reinstateAssetInput);
+        const ASR = await this.actOnAssetWorker(asset, opInfo, null, null, reinstateAssetInput);
+
+        if (ASR.success) {
+            // TODO: handle later failures by rolling back storage system change
+            // Mark this asset as not retired
+            const SO: DBAPI.SystemObject | null = await asset.fetchSystemObject();
+            if (SO == null)
+                return {
+                    success: false,
+                    error: `AssetStorageAdapter.reinstateAsset: Unable to retrieve SystemObject for Asset ${JSON.stringify(asset)}`,
+                    asset,
+                    assetVersion
+                };
+
+            if (!await SO.reinstateObject())
+                return {
+                    success: false,
+                    error: `AssetStorageAdapter.reinstateAsset: Unable to mark SystemObject as not retired for Asset ${JSON.stringify(asset)}`,
+                    asset,
+                    assetVersion
+                };
+        }
+
+        return ASR;
     }
 
     private static async actOnAssetWorker(asset: DBAPI.Asset, opInfo: STORE.OperationInfo,
@@ -257,7 +317,7 @@ export class AssetStorageAdapter {
             error: ''
         };
 
-        const storage: IStorage | null = await StorageFactory.getInstance();
+        const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             retValue.success = false;
             retValue.error = 'AssetStorageAdapter.actOnAssetWorker: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
@@ -312,7 +372,7 @@ export class AssetStorageAdapter {
             idAssetVersion: 0
         });
 
-        if (!await assetVersion.create()) {
+        if (!await assetVersion.create()) /* istanbul ignore next */ {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.actOnAssetWorker: Unable to create AssetVersion ${JSON.stringify(assetVersion)}`;
             LOG.logger.error(retValue.error);
