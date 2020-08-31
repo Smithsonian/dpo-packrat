@@ -2,7 +2,7 @@
 import { Box, Breadcrumbs, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import * as qs from 'query-string';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { MdNavigateNext } from 'react-icons/md';
 import { Redirect, useHistory, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
@@ -12,6 +12,7 @@ import { AppContext, AssetType, FileId, StateItem, StateMetadata, StateProject }
 import useItem from '../../hooks/useItem';
 import useMetadata from '../../hooks/useMetadata';
 import useProject from '../../hooks/useProject';
+import useIngest from '../../hooks/useIngest';
 import Photogrammetry from './Photogrammetry';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -45,9 +46,12 @@ function Metadata(): React.ReactElement {
     const { metadatas } = ingestion;
     const history = useHistory();
 
+    const [ingestionLoading, setIngestionLoading] = useState(false);
+
     const { getSelectedProject } = useProject();
     const { getSelectedItem } = useItem();
     const { getFieldErrors, getMetadataInfo } = useMetadata();
+    const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
 
     const metadataLength = metadatas.length;
     const query = qs.parse(search) as QueryParams;
@@ -65,9 +69,37 @@ function Metadata(): React.ReactElement {
         history.goBack();
     };
 
-    const onNext = () => {
+    const onNext = async () => {
         const { photogrammetry } = getFieldErrors(metadata);
+        const { photogrammetry: { datasetType, description, systemCreated, identifiers } } = metadata;
         let hasError: boolean = false;
+
+        if (!datasetType) {
+            toast.warn('Please select a valid dataset type', { autoClose: false });
+        }
+
+        if (!systemCreated) {
+            hasError = true;
+        }
+
+        identifiers.forEach(({ identifier, selected }) => {
+            if (selected) {
+                hasError = false;
+                if (identifier.trim() === '') {
+                    toast.warn('Please provide a valid identifier', { autoClose: false });
+                    hasError = true;
+                }
+            }
+        });
+
+        if (hasError && !systemCreated) {
+            toast.warn('Should select/provide at least 1 identifier', { autoClose: false });
+        }
+
+        if (description.trim() === '') {
+            toast.warn('Description cannot be empty', { autoClose: false });
+            hasError = true;
+        }
 
         for (const fieldValue of Object.values(photogrammetry)) {
             if (fieldValue) {
@@ -75,14 +107,19 @@ function Metadata(): React.ReactElement {
             }
         }
 
-        if (hasError) {
-            toast.warn('Please address all the errors');
-            return;
-        }
+        if (hasError) return;
 
         if (isLast) {
-            console.log(metadatas);
-            alert('Finished');
+            setIngestionLoading(true);
+            const success: boolean = await ingestPhotogrammetryData();
+            setIngestionLoading(false);
+
+            if (success) {
+                toast.success('Ingestion complete');
+                ingestionComplete();
+            } else {
+                toast.error('Ingestion failed, please try again later');
+            }
         } else {
             const nextMetadata = metadatas[metadataIndex + 1];
             const { file: { id, type } } = nextMetadata;
@@ -107,6 +144,7 @@ function Metadata(): React.ReactElement {
                 {getMetadataComponent(metadataIndex)}
             </Box>
             <SidebarBottomNavigator
+                rightLoading={ingestionLoading}
                 leftLabel='Previous'
                 onClickLeft={onPrevious}
                 rightLabel={isLast ? 'Finish' : 'Next'}

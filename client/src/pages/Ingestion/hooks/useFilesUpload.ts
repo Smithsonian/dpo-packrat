@@ -1,9 +1,9 @@
 import { useCallback, useContext } from 'react';
 import { toast } from 'react-toastify';
 import { AppContext, AssetType, METADATA_ACTIONS, StateMetadata } from '../../../context';
-import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus, IngestionUploadResponse, IngestionUploadStatus } from '../../../context';
+import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus } from '../../../context';
 import { apolloUploader } from '../../../graphql';
-import { UploadAssetDocument } from '../../../types/graphql';
+import { UploadAssetDocument, UploadAssetMutation, UploadStatus } from '../../../types/graphql';
 import lodash from 'lodash';
 import { defaultPhotogrammetryFields } from '../../../context';
 
@@ -208,7 +208,7 @@ const useFilesUpload = (): UseFilesUpload => {
                     ingestionDispatch(setCancel);
                 };
 
-                const { data }: IngestionUploadResponse = await apolloUploader({
+                const { data } = await apolloUploader({
                     mutation: UploadAssetDocument,
                     variables: { file, type },
                     useUpload: true,
@@ -216,15 +216,17 @@ const useFilesUpload = (): UseFilesUpload => {
                     onCancel
                 });
 
-                const { uploadAsset } = data;
+                const { uploadAsset }: UploadAssetMutation = data;
 
-                if (uploadAsset.status === IngestionUploadStatus.COMPLETE) {
-                    ingestionDispatch(successAction);
-                    toast.success(`Upload finished for ${file.name}`);
-                } else if (uploadAsset.status === IngestionUploadStatus.FAILED) {
-                    const error = `Upload failed for ${file.name}`;
-                    toast.error(error);
-                    ingestionDispatch(errorAction);
+                if (uploadAsset) {
+                    if (uploadAsset.status === UploadStatus.Complete) {
+                        ingestionDispatch(successAction);
+                        toast.success(`Upload finished for ${file.name}`);
+                    } else if (uploadAsset.status === UploadStatus.Failed) {
+                        const error = `Upload failed for ${file.name}`;
+                        toast.error(error);
+                        ingestionDispatch(errorAction);
+                    }
                 }
             } catch ({ message }) {
                 const file = getFile(id);

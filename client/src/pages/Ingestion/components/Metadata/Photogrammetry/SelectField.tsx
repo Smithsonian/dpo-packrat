@@ -2,11 +2,11 @@ import { MenuItem, Select } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { FieldType } from '../../../../../components';
-import { VocabularyOption } from './index';
+import { VocabularyOption } from '../../../../../context';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     select: {
-        minWidth: 240,
+        width: '54%',
         padding: '0px 10px',
         background: palette.background.paper,
         border: `1px solid ${palette.primary.contrastText}`,
@@ -21,19 +21,27 @@ interface SelectFieldProps {
     name: string;
     options: VocabularyOption[];
     required?: boolean;
+    error?: boolean;
+    width?: string;
     onChange: (event: React.ChangeEvent<unknown>) => void;
 }
 
 function SelectField(props: SelectFieldProps): React.ReactElement {
-    const { label, value, name, required, options, onChange } = props;
+    const { label, value, name, width, required, error, options, onChange } = props;
 
     const classes = useStyles();
-
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
-        <FieldType required={required ? required : false} label={label} direction='row' containerProps={rowFieldProps}>
+        <FieldType
+            required={required ? required : false}
+            error={error || false}
+            label={label}
+            direction='row'
+            containerProps={rowFieldProps}
+            width={width || undefined}
+        >
             <Select
                 value={value}
                 className={classes.select}

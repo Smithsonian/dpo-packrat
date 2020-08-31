@@ -68,7 +68,13 @@ import {
     GetIngestionProjectsForSubjectsInput,
     GetIngestionProjectsForSubjectsResult,
     GetVocabularyEntriesInput,
-    GetVocabularyEntriesResult
+    GetVocabularyEntriesResult,
+    GetContentsForAssetVersionsInput,
+    GetContentsForAssetVersionsResult,
+    AreCameraSettingsUniformInput,
+    AreCameraSettingsUniformResult,
+    IngestDataInput,
+    IngestDataResult
 } from '../../types/graphql';
 
 // Queries
@@ -92,6 +98,8 @@ import searchIngestionSubjects from './queries/unit/searchIngestionSubjects';
 import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSubjects';
 import getIngestionProjectsForSubjects from './queries/unit/getIngestionProjectsForSubjects';
 import getVocabularyEntries from './queries/vocabulary/getVocabularyEntries';
+import getContentsForAssetVersions from './queries/asset/getContentsForAssetVersions';
+import areCameraSettingsUniform from './queries/ingestion/areCameraSettingsUniform';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -106,6 +114,7 @@ import createSubject from './mutations/unit/createSubject';
 import createVocabulary from './mutations/vocabulary/createVocabulary';
 import createVocabularySet from './mutations/vocabulary/createVocabularySet';
 import uploadAsset from './mutations/asset/uploadAsset';
+import ingestData from './mutations/ingestion/ingestData';
 
 import { Context } from '../../types/resolvers';
 
@@ -141,7 +150,10 @@ const allQueries = {
     searchIngestionSubjects,
     getIngestionItemsForSubjects,
     getIngestionProjectsForSubjects,
-    getVocabularyEntries
+    getVocabularyEntries,
+    getContentsForAssetVersions,
+    areCameraSettingsUniform,
+    ingestData
 };
 
 type GraphQLRequest = {
@@ -344,6 +356,36 @@ class GraphQLApi {
 
     async getVocabularyEntries(input: GetVocabularyEntriesInput, context?: Context): Promise<GetVocabularyEntriesResult> {
         const operationName = 'getVocabularyEntries';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getContentsForAssetVersions(input: GetContentsForAssetVersionsInput, context?: Context): Promise<GetContentsForAssetVersionsResult> {
+        const operationName = 'getContentsForAssetVersions';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async areCameraSettingsUniform(input: AreCameraSettingsUniformInput, context?: Context): Promise<AreCameraSettingsUniformResult> {
+        const operationName = 'areCameraSettingsUniform';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async ingestData(input: IngestDataInput, context?: Context): Promise<IngestDataResult> {
+        const operationName = 'ingestData';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

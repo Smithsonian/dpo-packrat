@@ -51,3 +51,8 @@ services:
             - $PACKRAT_DB_PORT:3306
         env_file:
             - .env
+networks:
+    default:
+        ipam:
+            config:
+                - subnet: 192.168.4.0/24
