@@ -554,7 +554,6 @@ export type Workflow = {
     Project?: Maybe<Project>;
     UserInitiator?: Maybe<User>;
     WorkflowTemplate?: Maybe<WorkflowTemplate>;
-    SystemObject?: Maybe<SystemObject>;
     WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 
@@ -570,7 +569,6 @@ export type WorkflowStep = {
     User?: Maybe<User>;
     VWorkflowStepType?: Maybe<Vocabulary>;
     Workflow?: Maybe<Workflow>;
-    SystemObject?: Maybe<SystemObject>;
     WorkflowStepSystemObjectXref?: Maybe<Array<Maybe<WorkflowStepSystemObjectXref>>>;
 };
 
