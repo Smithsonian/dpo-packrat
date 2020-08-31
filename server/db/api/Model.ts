@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Model as ModelBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Model extends DBC.DBObject<ModelBase> implements ModelBase {
+export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemObjectBased {
     idModel!: number;
     Authoritative!: boolean;
     DateCreated!: Date;

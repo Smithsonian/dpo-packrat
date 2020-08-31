@@ -15,29 +15,32 @@ function configureLogger(logPath: string | null): void {
     if (!logPath)
         logPath = Config.log.root ? Config.log.root : /* istanbul ignore next */ './var/logs';
 
-    logger = winston.createLogger({
-        level: 'verbose',
-        format: winston.format.combine(
-            winston.format.errors({ stack: true }), // emit stack trace when Error objects are passed in
-            winston.format.timestamp(),
-            // winston.format.colorize(),
-            winston.format.json()
-        ),
-        transports: [
-            new winston.transports.File({
-                filename: path.join(logPath, 'PackratCombined.log'),
-                maxsize: 10485760 // 10MB
-            }),
-            new winston.transports.File({
-                filename: path.join(logPath, 'PackratError.log'),
-                level: 'error',
-                maxsize: 10485760 // 10MB
-            }),
-        ]
-    });
-
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
+        logger = winston.createLogger({
+            level: 'verbose',
+            format: winston.format.combine(
+                winston.format.errors({ stack: true }), // emit stack trace when Error objects are passed in
+                /*
+                winston.format.timestamp(),
+                // winston.format.colorize(),
+                winston.format.json()
+                */
+                winston.format.simple()
+            ),
+            transports: [
+                new winston.transports.File({
+                    filename: path.join(logPath, 'PackratCombined.log'),
+                    maxsize: 10485760 // 10MB
+                }),
+                new winston.transports.File({
+                    filename: path.join(logPath, 'PackratError.log'),
+                    level: 'error',
+                    maxsize: 10485760 // 10MB
+                }),
+            ]
+        });
+
         logger.add(new winston.transports.Console({
             // format: winston.format.simple(), // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
             format: winston.format.combine(
@@ -47,6 +50,26 @@ function configureLogger(logPath: string | null): void {
                 winston.format.simple()
             )
         }));
+    } else {
+        logger = winston.createLogger({
+            level: 'verbose',
+            format: winston.format.combine(
+                winston.format.errors({ stack: true }), // emit stack trace when Error objects are passed in
+                winston.format.timestamp(),
+                winston.format.json()
+            ),
+            transports: [
+                new winston.transports.File({
+                    filename: path.join(logPath, 'PackratCombined.log'),
+                    maxsize: 10485760 // 10MB
+                }),
+                new winston.transports.File({
+                    filename: path.join(logPath, 'PackratError.log'),
+                    level: 'error',
+                    maxsize: 10485760 // 10MB
+                }),
+            ]
+        });
     }
 
     try {
@@ -68,3 +91,10 @@ configureLogger(null);
 export function getRequestLogger(): winston.Logger {
     return logger.child({ requestID: LoggerRequestID++ });
 }
+
+/*
+function plainFormat(info) {
+    const formattedDate = info.timestamp.replace('T', ' ').replace('Z', '');
+    return `${formattedDate}: ${info.level} ${info.message};`;
+}
+*/

@@ -1,6 +1,6 @@
 import { Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { memo } from 'react';
 import { INGESTION_ROUTES_TYPE } from '../../../constants';
 import { Colors } from '../../../theme';
 import { Link } from 'react-router-dom';
@@ -47,4 +47,4 @@ function SidebarMenuOption(props: SidebarMenuOptionProps): React.ReactElement {
     );
 }
 
-export default SidebarMenuOption;
+export default memo(SidebarMenuOption);

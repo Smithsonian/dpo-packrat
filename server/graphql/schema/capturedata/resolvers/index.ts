@@ -10,7 +10,7 @@ import createCaptureDataPhoto from './mutations/createCaptureDataPhoto';
 const resolvers = {
     Query: {
         getCaptureData,
-        getCaptureDataPhoto,
+        getCaptureDataPhoto
     },
     Mutation: {
         createCaptureData,

@@ -1,4 +1,4 @@
-import { ApolloProvider } from '@apollo/react-hooks';
+import { ApolloProvider } from '@apollo/client';
 import { Box, CircularProgress, ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
@@ -13,6 +13,7 @@ import { apolloClient } from './graphql';
 import { About, Home, Login } from './pages';
 import theme from './theme';
 import { getAuthenticatedUser } from './utils/auth';
+import { AliveScope } from 'react-activation';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
@@ -30,6 +31,7 @@ function AppRouter(): React.ReactElement {
         initialize();
     }, [initialize]);
 
+
     return (
         <Router>
             {loading ? (
@@ -41,7 +43,11 @@ function AppRouter(): React.ReactElement {
                     <Switch>
                         <PublicRoute restricted exact path={ROUTES.LOGIN} component={Login} />
                         <PublicRoute exact path={ROUTES.ABOUT} component={About} />
-                        <PrivateRoute path={ROUTES.HOME} component={Home} />
+                        <PrivateRoute path={ROUTES.HOME}>
+                            <AliveScope>
+                                <Home />
+                            </AliveScope>
+                        </PrivateRoute>
                     </Switch>
                 </React.Fragment>
             )}
@@ -71,9 +77,4 @@ function App(): React.ReactElement {
 }
 
 
-ReactDOM.render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>,
-    document.getElementById('root')
-);
+ReactDOM.render(<App />, document.getElementById('root'));

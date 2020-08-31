@@ -16,7 +16,8 @@ export class StorageFactory {
                 case STORAGE_TYPE.LOCAL: {
                     const LS: LocalStorage = new LocalStorage();
                     const IOR: IOResults = await LS.initialize(Config.storage.root);
-                    if (IOR.ok)
+                    /* istanbul ignore else */
+                    if (IOR.success)
                         StorageFactory.instance = LS;
                     else
                         LOG.logger.error(`Error encountered in StorageFactory.getInstance while initializing LocalStorage: ${IOR.error}`);

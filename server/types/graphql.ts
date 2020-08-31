@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type Maybe<T> = T | null;
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
     ID: string;
@@ -8,6 +9,7 @@ export type Scalars = {
     Int: number;
     Float: number;
     DateTime: any;
+    Upload: any;
 };
 
 export type AccessAction = {
@@ -64,9 +66,12 @@ export type Asset = {
     FileName: Scalars['String'];
     FilePath: Scalars['String'];
     idAssetGroup?: Maybe<Scalars['Int']>;
+    idSystemObject?: Maybe<Scalars['Int']>;
     StorageKey: Scalars['String'];
     AssetGroup?: Maybe<AssetGroup>;
+    SystemObjectSource?: Maybe<SystemObject>;
     AssetVersion?: Maybe<Array<Maybe<AssetVersion>>>;
+    VAssetType?: Maybe<Vocabulary>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -76,9 +81,12 @@ export type AssetVersion = {
     DateCreated: Scalars['DateTime'];
     idAsset: Scalars['Int'];
     idUserCreator: Scalars['Int'];
-    StorageChecksum: Scalars['String'];
+    StorageHash: Scalars['String'];
     StorageSize: Scalars['Int'];
+    StorageKeyStaging: Scalars['String'];
+    FileName: Scalars['String'];
     Ingested: Scalars['Boolean'];
+    Version: Scalars['Int'];
     Asset?: Maybe<Asset>;
     User?: Maybe<User>;
     SystemObject?: Maybe<SystemObject>;
@@ -455,9 +463,9 @@ export type Subject = {
     idIdentifierPreferred?: Maybe<Scalars['Int']>;
     GeoLocation?: Maybe<GeoLocation>;
     Unit?: Maybe<Unit>;
+    IdentifierPreferred?: Maybe<Identifier>;
     Item?: Maybe<Array<Maybe<Item>>>;
     SystemObject?: Maybe<SystemObject>;
-    IdentifierPreferred?: Maybe<Identifier>;
 };
 
 export type Item = {
@@ -469,6 +477,7 @@ export type Item = {
     idGeoLocation?: Maybe<Scalars['Int']>;
     AssetThumbnail?: Maybe<Asset>;
     GeoLocation?: Maybe<GeoLocation>;
+    Subject?: Maybe<Subject>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -581,17 +590,23 @@ export type Query = {
     __typename?: 'Query';
     getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
+    getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
     getScene: GetSceneResult;
+    searchIngestionSubjects: SearchIngestionSubjectsResult;
+    getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
+    getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getUnit: GetUnitResult;
     getProject: GetProjectResult;
     getSubject: GetSubjectResult;
     getItem: GetItemResult;
+    getCurrentUser: GetCurrentUserResult;
     getUser: GetUserResult;
     getVocabulary: GetVocabularyResult;
+    getVocabularyEntries: GetVocabularyEntriesResult;
     getWorkflow: GetWorkflowResult;
 };
 
@@ -623,6 +638,18 @@ export type QueryGetSceneArgs = {
     input: GetSceneInput;
 };
 
+export type QuerySearchIngestionSubjectsArgs = {
+    input: SearchIngestionSubjectsInput;
+};
+
+export type QueryGetIngestionItemsForSubjectsArgs = {
+    input: GetIngestionItemsForSubjectsInput;
+};
+
+export type QueryGetIngestionProjectsForSubjectsArgs = {
+    input: GetIngestionProjectsForSubjectsInput;
+};
+
 export type QueryGetUnitArgs = {
     input: GetUnitInput;
 };
@@ -647,6 +674,10 @@ export type QueryGetVocabularyArgs = {
     input: GetVocabularyInput;
 };
 
+export type QueryGetVocabularyEntriesArgs = {
+    input: GetVocabularyEntriesInput;
+};
+
 export type QueryGetWorkflowArgs = {
     input: GetWorkflowInput;
 };
@@ -669,17 +700,22 @@ export type GetAssetResult = {
     Asset?: Maybe<Asset>;
 };
 
-export type GetCaptureDataInput = {
-    idCaptureData: Scalars['Int'];
+export type GetUploadedAssetVersionResult = {
+    __typename?: 'GetUploadedAssetVersionResult';
+    AssetVersion: Array<Maybe<AssetVersion>>;
 };
 
-export type GetCaptureDataPhotoInput = {
-    idCaptureDataPhoto: Scalars['Int'];
+export type GetCaptureDataInput = {
+    idCaptureData: Scalars['Int'];
 };
 
 export type GetCaptureDataResult = {
     __typename?: 'GetCaptureDataResult';
     CaptureData?: Maybe<CaptureData>;
+};
+
+export type GetCaptureDataPhotoInput = {
+    idCaptureDataPhoto: Scalars['Int'];
 };
 
 export type GetCaptureDataPhotoResult = {
@@ -712,6 +748,42 @@ export type GetSceneInput = {
 export type GetSceneResult = {
     __typename?: 'GetSceneResult';
     Scene?: Maybe<Scene>;
+};
+
+export type SubjectUnitIdentifier = {
+    __typename?: 'SubjectUnitIdentifier';
+    idSubject: Scalars['Int'];
+    SubjectName: Scalars['String'];
+    UnitAbbreviation: Scalars['String'];
+    IdentifierPublic?: Maybe<Scalars['String']>;
+    IdentifierCollection?: Maybe<Scalars['String']>;
+};
+
+export type SearchIngestionSubjectsInput = {
+    query: Scalars['String'];
+};
+
+export type SearchIngestionSubjectsResult = {
+    __typename?: 'SearchIngestionSubjectsResult';
+    SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
+};
+
+export type GetIngestionItemsForSubjectsInput = {
+    idSubjects: Array<Scalars['Int']>;
+};
+
+export type GetIngestionItemsForSubjectsResult = {
+    __typename?: 'GetIngestionItemsForSubjectsResult';
+    Item: Array<Item>;
+};
+
+export type GetIngestionProjectsForSubjectsInput = {
+    idSubjects: Array<Scalars['Int']>;
+};
+
+export type GetIngestionProjectsForSubjectsResult = {
+    __typename?: 'GetIngestionProjectsForSubjectsResult';
+    Project: Array<Project>;
 };
 
 export type GetUnitInput = {
@@ -750,6 +822,11 @@ export type GetItemResult = {
     Item?: Maybe<Item>;
 };
 
+export type GetCurrentUserResult = {
+    __typename?: 'GetCurrentUserResult';
+    User?: Maybe<User>;
+};
+
 export type GetUserInput = {
     idUser: Scalars['Int'];
 };
@@ -768,6 +845,21 @@ export type GetVocabularyResult = {
     Vocabulary?: Maybe<Vocabulary>;
 };
 
+export type GetVocabularyEntriesInput = {
+    eVocabSetIDs: Array<Scalars['Int']>;
+};
+
+export type VocabularyEntry = {
+    __typename?: 'VocabularyEntry';
+    eVocabSetID: Scalars['Int'];
+    Vocabulary: Array<Vocabulary>;
+};
+
+export type GetVocabularyEntriesResult = {
+    __typename?: 'GetVocabularyEntriesResult';
+    VocabularyEntries: Array<VocabularyEntry>;
+};
+
 export type GetWorkflowInput = {
     idWorkflow: Scalars['Int'];
 };
@@ -777,8 +869,14 @@ export type GetWorkflowResult = {
     Workflow?: Maybe<Workflow>;
 };
 
+export enum AssetType {
+    Diconde = 'Diconde',
+    Photogrammetry = 'Photogrammetry'
+}
+
 export type Mutation = {
     __typename?: 'Mutation';
+    uploadAsset: UploadAssetResult;
     createCaptureData: CreateCaptureDataResult;
     createCaptureDataPhoto: CreateCaptureDataPhotoResult;
     createModel: CreateModelResult;
@@ -790,6 +888,11 @@ export type Mutation = {
     createUser: CreateUserResult;
     createVocabulary: CreateVocabularyResult;
     createVocabularySet: CreateVocabularySetResult;
+};
+
+export type MutationUploadAssetArgs = {
+    file: Scalars['Upload'];
+    type: AssetType;
 };
 
 export type MutationCreateCaptureDataArgs = {
@@ -836,11 +939,32 @@ export type MutationCreateVocabularySetArgs = {
     input: CreateVocabularySetInput;
 };
 
+export type UploadAssetInput = {
+    __typename?: 'UploadAssetInput';
+    file: Scalars['Upload'];
+    type: AssetType;
+};
+
+export enum UploadStatus {
+    Complete = 'COMPLETE',
+    Failed = 'FAILED'
+}
+
+export type UploadAssetResult = {
+    __typename?: 'UploadAssetResult';
+    status: UploadStatus;
+};
+
 export type CreateCaptureDataInput = {
     idVCaptureMethod: Scalars['Int'];
     DateCaptured: Scalars['DateTime'];
     Description: Scalars['String'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
+};
+
+export type CreateCaptureDataResult = {
+    __typename?: 'CreateCaptureDataResult';
+    CaptureData?: Maybe<CaptureData>;
 };
 
 export type CreateCaptureDataPhotoInput = {
@@ -856,11 +980,6 @@ export type CreateCaptureDataPhotoInput = {
     idVFocusType?: Maybe<Scalars['Int']>;
     idVLightSourceType?: Maybe<Scalars['Int']>;
     idVClusterType?: Maybe<Scalars['Int']>;
-};
-
-export type CreateCaptureDataResult = {
-    __typename?: 'CreateCaptureDataResult';
-    CaptureData?: Maybe<CaptureData>;
 };
 
 export type CreateCaptureDataPhotoResult = {

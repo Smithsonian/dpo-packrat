@@ -62,8 +62,10 @@ type AssetVersion {
   DateCreated: DateTime!
   idAsset: Int!
   idUserCreator: Int!
-  StorageChecksum: String!
+  StorageHash: String!
   StorageSize: Int!
+  StorageKeyStaging: String!
+  FileName: String!
   Ingested: Boolean!
   Version: Int!
   Asset: Asset
@@ -293,8 +295,6 @@ type SystemObject {
   idStakeholder: Int
   idSubject: Int
   idUnit: Int
-  idWorkflow: Int
-  idWorkflowStep: Int
   Actor: Actor
   Asset: Asset
   AssetVersion: AssetVersion
@@ -308,8 +308,6 @@ type SystemObject {
   Stakeholder: Stakeholder
   Subject: Subject
   Unit: Unit
-  Workflow: Workflow
-  WorkflowStep: WorkflowStep
   AccessContextObject: [AccessContextObject]
   Identifier: [Identifier]
   LicenseAssignment: [LicenseAssignment]
@@ -428,6 +426,7 @@ type Item {
   idGeoLocation: Int
   AssetThumbnail: Asset
   GeoLocation: GeoLocation
+  Subject: Subject
   SystemObject: SystemObject
 }
 
@@ -472,6 +471,7 @@ type Vocabulary {
   idVocabulary: Int!
   idVocabularySet: Int!
   SortOrder: Int!
+  Term: String!
   VocabularySet: VocabularySet
 }
 
@@ -492,7 +492,6 @@ type Workflow {
   Project: Project
   UserInitiator: User
   WorkflowTemplate: WorkflowTemplate
-  SystemObject: SystemObject
   WorkflowStep: [WorkflowStep]
 }
 
@@ -507,7 +506,6 @@ type WorkflowStep {
   User: User
   VWorkflowStepType: Vocabulary
   Workflow: Workflow
-  SystemObject: SystemObject
   WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]
 }
 
@@ -529,17 +527,23 @@ type WorkflowTemplate {
 type Query {
   getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
+  getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
+  getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
+  getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getProject(input: GetProjectInput!): GetProjectResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
   getItem(input: GetItemInput!): GetItemResult!
+  getCurrentUser: GetCurrentUserResult!
   getUser(input: GetUserInput!): GetUserResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
+  getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
 }
 
@@ -557,6 +561,10 @@ input GetAssetInput {
 
 type GetAssetResult {
   Asset: Asset
+}
+
+type GetUploadedAssetVersionResult {
+  AssetVersion: [AssetVersion]!
 }
 
 input GetCaptureDataInput {
@@ -599,6 +607,38 @@ type GetSceneResult {
   Scene: Scene
 }
 
+type SubjectUnitIdentifier {
+  idSubject: Int!
+  SubjectName: String!
+  UnitAbbreviation: String!
+  IdentifierPublic: String
+  IdentifierCollection: String
+}
+
+input SearchIngestionSubjectsInput {
+  query: String!
+}
+
+type SearchIngestionSubjectsResult {
+  SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
+}
+
+input GetIngestionItemsForSubjectsInput {
+  idSubjects: [Int!]!
+}
+
+type GetIngestionItemsForSubjectsResult {
+  Item: [Item!]!
+}
+
+input GetIngestionProjectsForSubjectsInput {
+  idSubjects: [Int!]!
+}
+
+type GetIngestionProjectsForSubjectsResult {
+  Project: [Project!]!
+}
+
 input GetUnitInput {
   idUnit: Int!
 }
@@ -631,6 +671,10 @@ type GetItemResult {
   Item: Item
 }
 
+type GetCurrentUserResult {
+  User: User
+}
+
 input GetUserInput {
   idUser: Int!
 }
@@ -647,6 +691,19 @@ type GetVocabularyResult {
   Vocabulary: Vocabulary
 }
 
+input GetVocabularyEntriesInput {
+  eVocabSetIDs: [Int!]!
+}
+
+type VocabularyEntry {
+  eVocabSetID: Int!
+  Vocabulary: [Vocabulary!]!
+}
+
+type GetVocabularyEntriesResult {
+  VocabularyEntries: [VocabularyEntry!]!
+}
+
 input GetWorkflowInput {
   idWorkflow: Int!
 }
@@ -655,7 +712,15 @@ type GetWorkflowResult {
   Workflow: Workflow
 }
 
+scalar Upload
+
+enum AssetType {
+  Diconde
+  Photogrammetry
+}
+
 type Mutation {
+  uploadAsset(file: Upload!, type: AssetType!): UploadAssetResult!
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
   createModel(input: CreateModelInput!): CreateModelResult!
@@ -669,11 +734,29 @@ type Mutation {
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
 }
 
+type UploadAssetInput {
+  file: Upload!
+  type: AssetType!
+}
+
+enum UploadStatus {
+  COMPLETE
+  FAILED
+}
+
+type UploadAssetResult {
+  status: UploadStatus!
+}
+
 input CreateCaptureDataInput {
   idVCaptureMethod: Int!
   DateCaptured: DateTime!
   Description: String!
   idAssetThumbnail: Int
+}
+
+type CreateCaptureDataResult {
+  CaptureData: CaptureData
 }
 
 input CreateCaptureDataPhotoInput {
@@ -689,10 +772,6 @@ input CreateCaptureDataPhotoInput {
   idVFocusType: Int
   idVLightSourceType: Int
   idVClusterType: Int
-}
-
-type CreateCaptureDataResult {
-  CaptureData: CaptureData
 }
 
 type CreateCaptureDataPhotoResult {

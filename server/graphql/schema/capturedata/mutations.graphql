@@ -1,4 +1,5 @@
 scalar DateTime
+scalar Upload
 
 type Mutation {
     createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!

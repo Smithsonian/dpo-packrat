@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Project as ProjectBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
+export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, SystemObjectBased {
     idProject!: number;
     Name!: string;
     Description!: string | null;
@@ -129,8 +129,6 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
 
     /**
      * Computes the array of projects that are connected to any of the specified project documentation.
-     * Projects are connected to system objects; we examine those system objects which are in a *master* relationship
-     * to system objects connected to any of the specified project documentation.
      * @param idProjectDocumentations Array of ProjectDocumentation.idProjectDocumentation
      */
     static async fetchMasterFromProjectDocumentations(idProjectDocumentations: number[]): Promise<Project[] | null> {
@@ -141,10 +139,8 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
                 await DBC.DBConnection.prisma.$queryRaw<Project[]>`
                 SELECT DISTINCT P.*
                 FROM Project AS P
-                JOIN SystemObject AS SOP ON (P.idProject = SOP.idProject)
-                JOIN SystemObjectXref AS SOX ON (SOP.idSystemObject = SOX.idSystemObjectMaster)
-                JOIN SystemObject AS SOPD ON (SOX.idSystemObjectDerived = SOPD.idSystemObject)
-                WHERE SOPD.idProjectDocumentation IN (${join(idProjectDocumentations)})`, Project);
+                JOIN ProjectDocumentation AS PD ON (PD.idProject = P.idProject)
+                WHERE PD.idProjectDocumentation IN (${join(idProjectDocumentations)})`, Project);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.PRoject.fetchMasterFromProjectDocumentations', error);
             return null;
