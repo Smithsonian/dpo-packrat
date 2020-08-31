@@ -3,7 +3,7 @@ import { Box, Typography, Select, MenuItem, CircularProgress } from '@material-u
 import { green, red, yellow, grey, blue } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 import { IoIosCloseCircle } from 'react-icons/io';
-import { FaRedo, FaRegCircle, FaDotCircle } from 'react-icons/fa';
+import { FaRedo, FaRegCircle, FaCheckCircle } from 'react-icons/fa';
 import { MdFileUpload } from 'react-icons/md';
 import Colors, { colorWithOpacity } from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
@@ -146,7 +146,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         options = (
             <>
                 {!selected && <FaRegCircle className={classes.option} size={24} color={grey[500]} />}
-                {selected && <FaDotCircle className={classes.option} size={24} color={blue[500]} />}
+                {selected && <FaCheckCircle className={classes.option} size={24} color={blue[500]} />}
             </>
         );
     }

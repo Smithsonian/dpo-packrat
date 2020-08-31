@@ -16,8 +16,13 @@ import {
     CreateSceneInput,
     CreateModelInput,
     CreateCaptureDataInput,
-    CreateCaptureDataPhotoInput
+    CreateCaptureDataPhotoInput,
+    VocabularyEntry,
+    Vocabulary
 } from '../../../types/graphql';
+import { Asset, AssetVersion } from '@prisma/client';
+import { randomStorageKey, nowCleansed } from '../../db/utils';
+import { eVocabularySetID } from '../../../cache';
 
 class TestSuiteUtils {
     graphQLApi!: GraphQLApi;
@@ -130,6 +135,53 @@ class TestSuiteUtils {
             idVLightSourceType: idVocabulary,
             idVClusterType: idVocabulary
         };
+    };
+
+    createAssetInput = (idVAssetType: number): Asset => {
+        return {
+            FileName: 'Test Asset Thumbnail',
+            FilePath: '/test/asset/path',
+            idSystemObject: null,
+            idAssetGroup: null,
+            idVAssetType,
+            StorageKey: randomStorageKey('/test/asset/path/'),
+            idAsset: 0
+        };
+    };
+
+    createAssetVersionInput = (idAsset: number, idUser: number): AssetVersion => {
+        return {
+            idAsset,
+            FileName: 'Test file',
+            idUserCreator: idUser,
+            DateCreated: nowCleansed(),
+            StorageHash: 'Asset Checksum',
+            StorageKeyStaging: '',
+            StorageSize: 50,
+            idAssetVersion: 0,
+            Ingested: false,
+            Version: 0
+        };
+    };
+
+    getVocabularyEntryMap = (vocabularyEntries: VocabularyEntry[]): Map<number, Vocabulary[]> => {
+        const vocabularyMap = new Map<number, Vocabulary[]>();
+
+        vocabularyEntries.forEach(({ eVocabSetID, Vocabulary }) => {
+            vocabularyMap.set(eVocabSetID, Vocabulary);
+        });
+
+        return vocabularyMap;
+    };
+
+    getInitialEntryWithVocabularies = (vocabularies: Map<number, Vocabulary[]>, eVocabularyID: eVocabularySetID): number | null => {
+        const vocabularyEntry = vocabularies.get(eVocabularyID);
+
+        if (vocabularyEntry) {
+            return vocabularyEntry[0].idVocabulary;
+        }
+
+        return null;
     };
 }
 

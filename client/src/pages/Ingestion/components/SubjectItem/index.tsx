@@ -5,13 +5,15 @@ import { Redirect, useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { AppContext } from '../../../../context';
+import { AppContext, StateVocabulary } from '../../../../context';
 import useItem from '../../hooks/useItem';
 import useProject from '../../hooks/useProject';
 import ItemList from './ItemList';
 import ProjectList from './ProjectList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
+import useVocabularyEntries from '../../hooks/useVocabularyEntries';
+import useMetadata from '../../hooks/useMetadata';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -45,8 +47,12 @@ function SubjectItem(): React.ReactElement {
     const [subjectError, setSubjectError] = useState(false);
     const [projectError, setProjectError] = useState(false);
     const [itemError, setItemError] = useState(false);
+    const [metadataStepLoading, setMetadataStepLoading] = useState(false);
 
     const selectedItem = getSelectedItem();
+
+    const { updateVocabularyEntries } = useVocabularyEntries();
+    const { updateMetadataFolders } = useMetadata();
 
     useEffect(() => {
         if (subjects.length > 0) {
@@ -68,13 +74,13 @@ function SubjectItem(): React.ReactElement {
         }
     }, [selectedItem]);
 
-    const onNext = (): void => {
+    const onNext = async (): Promise<void> => {
         let error: boolean = false;
 
         if (!subjects.length) {
             error = true;
             setSubjectError(true);
-            toast.warn('Please provide at least one subject');
+            toast.warn('Please provide at least one subject', { autoClose: false });
         }
 
         const selectedProject = getSelectedProject();
@@ -82,22 +88,35 @@ function SubjectItem(): React.ReactElement {
         if (!selectedProject) {
             error = true;
             setProjectError(true);
-            toast.warn('Please select a project');
+            toast.warn('Please select a project', { autoClose: false });
         }
 
         if (!selectedItem) {
             error = true;
             setItemError(true);
-            toast.warn('Please select or provide an item');
+            toast.warn('Please select or provide an item', { autoClose: false });
         }
 
         if (selectedItem?.name.trim() === '') {
             error = true;
             setItemError(true);
-            toast.warn('Please provide a valid name for item');
+            toast.warn('Please provide a valid name for item', { autoClose: false });
         }
 
         if (error) return;
+
+        try {
+            setMetadataStepLoading(true);
+            const vocabularies: StateVocabulary = await updateVocabularyEntries();
+
+            await updateMetadataFolders(vocabularies);
+
+            setMetadataStepLoading(false);
+        } catch (error) {
+            toast.error(error);
+            setMetadataStepLoading(false);
+            return;
+        }
 
         const { file: { id, type } } = metadatas[0];
         const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
@@ -138,6 +157,7 @@ function SubjectItem(): React.ReactElement {
                 </FieldType>
             </Box>
             <SidebarBottomNavigator
+                rightLoading={metadataStepLoading}
                 leftLabel='Previous'
                 leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)}
                 rightLabel='Next'
