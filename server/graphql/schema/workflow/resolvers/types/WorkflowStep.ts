@@ -14,9 +14,6 @@ const WorkflowStep = {
     Workflow: async (parent: Parent): Promise<DBAPI.Workflow | null> => {
         return await DBAPI.Workflow.fetch(parent.idWorkflow);
     },
-    SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
-        return await DBAPI.SystemObject.fetchFromWorkflowStepID(parent.idWorkflowStep);
-    },
     WorkflowStepSystemObjectXref: async (parent: Parent): Promise<DBAPI.WorkflowStepSystemObjectXref[] | null> => {
         return await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep(parent.idWorkflowStep);
     }

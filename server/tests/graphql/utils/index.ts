@@ -152,9 +152,11 @@ class TestSuiteUtils {
     createAssetVersionInput = (idAsset: number, idUser: number): AssetVersion => {
         return {
             idAsset,
+            FileName: '',
             idUserCreator: idUser,
             DateCreated: nowCleansed(),
-            StorageChecksum: 'Asset Checksum',
+            StorageHash: 'Asset Checksum',
+            StorageKeyStaging: '',
             StorageSize: 50,
             idAssetVersion: 0,
             Ingested: false,
