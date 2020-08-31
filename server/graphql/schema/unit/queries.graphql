@@ -1,8 +1,43 @@
 type Query {
+    searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
+    getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
+    getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
     getUnit(input: GetUnitInput!): GetUnitResult!
     getProject(input: GetProjectInput!): GetProjectResult!
-    getSubject(input: GetSubjectInput!): GetUnitResult!
+    getSubject(input: GetSubjectInput!): GetSubjectResult!
     getItem(input: GetItemInput!): GetItemResult!
+}
+
+type SubjectUnitIdentifier {
+    idSubject: Int!
+    SubjectName: String!
+    UnitAbbreviation: String!
+    IdentifierPublic: String
+    IdentifierCollection: String
+}
+
+input SearchIngestionSubjectsInput {
+    query: String!
+}
+
+type SearchIngestionSubjectsResult {
+    SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
+}
+
+input GetIngestionItemsForSubjectsInput {
+    idSubjects: [Int!]!
+}
+
+type GetIngestionItemsForSubjectsResult {
+    Item: [Item!]!
+}
+
+input GetIngestionProjectsForSubjectsInput {
+    idSubjects: [Int!]!
+}
+
+type GetIngestionProjectsForSubjectsResult {
+    Project: [Project!]!
 }
 
 input GetUnitInput {

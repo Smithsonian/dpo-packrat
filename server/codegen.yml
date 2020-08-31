@@ -1,5 +1,6 @@
 overwrite: true
 schema: "http://localhost:4000/graphql"
+documents: ["./graphql/api/queries/**/**.ts", "./graphql/api/mutations/**/**.ts"]
 generates:
   ./graphql/schema.graphql:
     plugins:
@@ -7,3 +8,8 @@ generates:
   ./types/graphql.ts:
     plugins:
       - typescript
+  ../client/src/types/graphql.tsx:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo

@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
-import { Workflow as WorkflowBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { Workflow as WorkflowBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -36,7 +35,6 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
                         User:               idUserInitiator ? { connect: { idUser: idUserInitiator }, } : undefined,
                         DateInitiated,
                         DateUpdated,
-                        SystemObject:       { create: { Retired: false }, },
                     },
                 }));
             return true;
@@ -64,17 +62,6 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.update', error);
             return false;
-        }
-    }
-
-    async fetchSystemObject(): Promise<SystemObject | null> {
-        try {
-            const { idWorkflow } = this;
-            return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflow, }, }), SystemObject);
-        } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.workflow.fetchSystemObject', error);
-            return null;
         }
     }
 

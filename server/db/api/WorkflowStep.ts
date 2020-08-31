@@ -33,7 +33,6 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                         State,
                         DateCreated,
                         DateCompleted,
-                        SystemObject:       { create: { Retired: false }, },
                     },
                 }));
             return true;
@@ -71,18 +70,6 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                 await DBC.DBConnection.prisma.workflowStep.findOne({ where: { idWorkflowStep, }, }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetch', error);
-            return null;
-        }
-    }
-
-    async fetchSystemObject(): Promise<SystemObject | null> {
-        try {
-            const { idWorkflowStep } = this;
-            return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne(
-                    { where: { idWorkflowStep, }, }), SystemObject);
-        } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStep.fetchSystemObject', error);
             return null;
         }
     }

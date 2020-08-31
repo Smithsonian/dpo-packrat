@@ -3,10 +3,12 @@ import VocabularySet from './types/VocabularySet';
 import getVocabulary from './queries/getVocabulary';
 import createVocabulary from './mutations/createVocabulary';
 import createVocabularySet from './mutations/createVocabularySet';
+import getVocabularyEntries from './queries/getVocabularyEntries';
 
 const resolvers = {
     Query: {
-        getVocabulary
+        getVocabulary,
+        getVocabularyEntries
     },
     Mutation: {
         createVocabulary,

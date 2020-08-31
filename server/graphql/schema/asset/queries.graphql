@@ -1,5 +1,6 @@
 type Query {
     getAsset(input: GetAssetInput!): GetAssetResult!
+    getUploadedAssetVersion: GetUploadedAssetVersionResult!
 }
 
 input GetAssetInput {
@@ -8,4 +9,8 @@ input GetAssetInput {
 
 type GetAssetResult {
     Asset: Asset
+}
+
+type GetUploadedAssetVersionResult {
+    AssetVersion: [AssetVersion]!
 }

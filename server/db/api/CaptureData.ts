@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { CaptureData as CaptureDataBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class CaptureData extends DBC.DBObject<CaptureDataBase> implements CaptureDataBase {
+export class CaptureData extends DBC.DBObject<CaptureDataBase> implements CaptureDataBase, SystemObjectBased {
     idCaptureData!: number;
     idVCaptureMethod!: number;
     DateCaptured!: Date;

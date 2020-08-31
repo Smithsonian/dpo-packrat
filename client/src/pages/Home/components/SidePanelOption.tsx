@@ -1,6 +1,6 @@
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { memo } from 'react';
 import { FaChartLine, FaClipboardCheck, FaClipboardList, FaCog, FaFileUpload } from 'react-icons/fa';
 import { MdInsertChart } from 'react-icons/md';
 import { HOME_ROUTES, resolveRoute } from '../../../constants';
@@ -110,4 +110,4 @@ function MenuOptionIcon({ type, color }: MenuOptionIconProps) {
     }
 }
 
-export default SidePanelOption;
+export default memo(SidePanelOption);

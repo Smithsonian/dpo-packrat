@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Unit as UnitBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Unit extends DBC.DBObject<UnitBase> implements UnitBase {
+export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObjectBased {
     idUnit!: number;
     Abbreviation!: string | null;
     ARKPrefix!: string | null;

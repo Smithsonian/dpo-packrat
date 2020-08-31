@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Scene as SceneBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Scene extends DBC.DBObject<SceneBase> implements SceneBase {
+export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemObjectBased {
     idScene!: number;
     HasBeenQCd!: boolean;
     idAssetThumbnail!: number | null;

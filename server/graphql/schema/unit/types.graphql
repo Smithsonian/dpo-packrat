@@ -69,7 +69,6 @@ type Subject {
 type Item {
     idItem: Int!
     EntireSubject: Boolean!
-    idSubject: Int!
     Name: String!
     idAssetThumbnail: Int
     idGeoLocation: Int
