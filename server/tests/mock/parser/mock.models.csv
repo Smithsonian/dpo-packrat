@@ -1,0 +1,2 @@
+import_row_id,import_parent_id,date_of_creation,derived_from,creation_method,units,model_purpose,file_path
+1,1,2019-04-28,1,scan_to_mesh,millimeter,master,model/nmnh_sea_turtle-master.obj
