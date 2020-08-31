@@ -69,4 +69,8 @@ services:
             - .env
         volumes:
             - ./server/db/sql:/app/
-    
+networks:
+    default:
+        ipam:
+            config:
+                - subnet: 192.168.4.0/24
