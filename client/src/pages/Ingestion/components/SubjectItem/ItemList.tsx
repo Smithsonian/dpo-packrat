@@ -16,7 +16,8 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
         position: 'sticky',
         top: 0,
         backgroundColor: palette.background.paper,
-        color: palette.primary.contrastText
+        color: palette.primary.contrastText,
+        zIndex: 10
     },
     body: {
         overflow: 'auto'

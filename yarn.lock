@@ -6381,6 +6381,14 @@ csstype@^3.0.2:
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.0.2.tgz#ee5ff8f208c8cd613b389f7b222c9801ca62b3f7"
   integrity sha512-ofovWglpqoqbfLNOTBNZLSbMuGrblAf1efvvArGKOZMBrIoJeu5UsAipQolkijtyQx5MtAzT/J9IHj/CEY1mJw==
 
+csv-parser@^2.3.3:
+  version "2.3.3"
+  resolved "https://registry.yarnpkg.com/csv-parser/-/csv-parser-2.3.3.tgz#978120ca14f879a17a8b977d9448daa738a38f65"
+  integrity sha512-czcyxc4/3Tt63w0oiK1zsnRgRD4PkqWaRSJ6eef63xC0f+5LVLuGdSYEcJwGp2euPgRHx+jmlH2Lb49anb1CGQ==
+  dependencies:
+    minimist "^1.2.0"
+    through2 "^3.0.1"
+
 currently-unhandled@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/currently-unhandled/-/currently-unhandled-0.4.1.tgz#988df33feab191ef799a61369dd76c17adf957ea"
@@ -15664,7 +15672,7 @@ through2@^2.0.0, through2@^2.0.1, through2@^2.0.2:
     readable-stream "~2.3.6"
     xtend "~4.0.1"
 
-through2@^3.0.0:
+through2@^3.0.0, through2@^3.0.1:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/through2/-/through2-3.0.2.tgz#99f88931cfc761ec7678b41d5d7336b5b6a07bf4"
   integrity sha512-enaDQ4MUyP2W6ZyT6EsMzqBPZaM/avg8iuo+l2d3QCs0J+6RaqkHV/2/lOwDTueBHeJ/2LG9lrLW3d5rWPucuQ==

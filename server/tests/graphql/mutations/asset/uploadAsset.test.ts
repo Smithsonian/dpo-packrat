@@ -27,7 +27,7 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
                 };
 
                 const filename: string = 'mock.upload.ts';
-                const path: string = join(__dirname, `${filename}`);
+                const path: string = join(__dirname, `../../../mock/graphql/${filename}`);
                 const file = fs.createReadStream(path);
 
                 const uploadAssetInput: UploadAssetInput = {
