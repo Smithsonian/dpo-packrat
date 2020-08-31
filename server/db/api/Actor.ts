@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { Actor as ActorBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Actor extends DBC.DBObject<ActorBase> implements ActorBase {
+export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemObjectBased {
     idActor!: number;
     idUnit!: number | null;
     IndividualName!: string | null;

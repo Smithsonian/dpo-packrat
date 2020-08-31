@@ -28,7 +28,23 @@ export enum eVocabularySetID {
 
 export enum eVocabularyID {
     eIdentifierIdentifierTypeARK,
+    eIdentifierIdentifierTypeDOI,
     eIdentifierIdentifierTypeUnitCMSID,
+    eAssetAssetTypeCaptureDataSetPhotogrammetry,
+    eAssetAssetTypeCaptureDataSetDiconde,
+    eAssetAssetTypeCaptureDataSetDicom,
+    eAssetAssetTypeCaptureDataSetLaserLine,
+    eAssetAssetTypeCaptureDataSetSphericalLaser,
+    eAssetAssetTypeCaptureDataSetStructuredLight,
+    eAssetAssetTypeCaptureDataSetOther,
+    eAssetAssetTypeCaptureDataFile,
+    eAssetAssetTypeModel,
+    eAssetAssetTypeModelGeometryFile,
+    eAssetAssetTypeModelUVMapFile,
+    eAssetAssetTypeScene,
+    eAssetAssetTypeProjectDocumentation,
+    eAssetAssetTypeIntermediaryFile,
+    eAssetAssetTypeOther,
     eNone = -1
 }
 
@@ -118,11 +134,32 @@ export class VocabularyCache {
 
             let eVocabEnum: eVocabularyID = eVocabularyID.eNone;
             switch (this.vocabSetIDEnumMap.get(vocabulary.idVocabularySet)) {
-                case eVocabularySetID.eIdentifierIdentifierType:
+                case eVocabularySetID.eIdentifierIdentifierType: {
                     switch (vocabulary.Term) {
                         case 'ARK':         eVocabEnum = eVocabularyID.eIdentifierIdentifierTypeARK; break;
+                        case 'DOI':         eVocabEnum = eVocabularyID.eIdentifierIdentifierTypeDOI; break;
                         case 'Unit CMS ID': eVocabEnum = eVocabularyID.eIdentifierIdentifierTypeUnitCMSID; break;
                     }
+                } break;
+                case eVocabularySetID.eAssetAssetType: {
+                    switch (vocabulary.Term) {
+                        case 'Capture Data Set: Photogrammetry':    eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry; break;
+                        case 'Capture Data Set: Diconde':           eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde; break;
+                        case 'Capture Data Set: Dicom':             eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetDicom; break;
+                        case 'Capture Data Set: Laser Line':        eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetLaserLine; break;
+                        case 'Capture Data Set: Spherical Laser':   eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetSphericalLaser; break;
+                        case 'Capture Data Set: Structured Light':  eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetStructuredLight; break;
+                        case 'Capture Data Set: Other':             eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetOther; break;
+                        case 'Capture Data File':                   eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataFile; break;
+                        case 'Model':                               eVocabEnum = eVocabularyID.eAssetAssetTypeModel; break;
+                        case 'Model Geometry File':                 eVocabEnum = eVocabularyID.eAssetAssetTypeModelGeometryFile; break;
+                        case 'Model UV Map File':                   eVocabEnum = eVocabularyID.eAssetAssetTypeModelUVMapFile; break;
+                        case 'Scene':                               eVocabEnum = eVocabularyID.eAssetAssetTypeScene; break;
+                        case 'Project Documentation':               eVocabEnum = eVocabularyID.eAssetAssetTypeProjectDocumentation; break;
+                        case 'Intermediary File':                   eVocabEnum = eVocabularyID.eAssetAssetTypeIntermediaryFile; break;
+                        case 'Other':                               eVocabEnum = eVocabularyID.eAssetAssetTypeOther; break;
+                    }
+                } break;
             }
 
             if (eVocabEnum != eVocabularyID.eNone) {

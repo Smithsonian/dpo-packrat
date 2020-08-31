@@ -1,6 +1,5 @@
 module.exports = {
     preset: 'ts-jest',
-    // collectCoverage: true,
     testEnvironment: 'node',
     testMatch: [
         '**/tests/db/**/?(*.)+(test).ts',
@@ -10,6 +9,7 @@ module.exports = {
         '**/tests/cache/cache.test.ts',
         '**/tests/utils/*.test.ts',
         '**/tests/collections/*.test.ts',
+        '**/tests/storage/**/*.test.ts',
         '**/tests/parser/*.test.ts'
     ],
     testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/build/'],

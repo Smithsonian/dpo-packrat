@@ -1,7 +1,7 @@
 import * as DBAPI from '../../db';
 import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
-import { randomStorageKey, nowCleansed } from './utils';
+import * as UTIL from './api';
 
 afterAll(async done => {
     await DBC.DBConnection.disconnect();
@@ -25,6 +25,7 @@ let assetGroup2: DBAPI.AssetGroup | null;
 let assetThumbnail: DBAPI.Asset | null;
 let assetWithoutAG: DBAPI.Asset | null;
 let assetVersion: DBAPI.AssetVersion | null;
+let assetVersion2: DBAPI.AssetVersion | null;
 let assetVersionNotIngested: DBAPI.AssetVersion | null;
 let captureData: DBAPI.CaptureData | null;
 let captureDataNulls: DBAPI.CaptureData | null;
@@ -92,8 +93,6 @@ let systemObjectXrefItemScene1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefItemScene2: DBAPI.SystemObjectXref | null;
 let systemObjectXrefProjectStakeholder1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefProjectStakeholder2: DBAPI.SystemObjectXref | null;
-let systemObjectXrefProjectProjectDoc1: DBAPI.SystemObjectXref | null;
-let systemObjectXrefProjectProjectDoc2: DBAPI.SystemObjectXref | null;
 let systemObjectXrefItemIntermediaryFile1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefItemIntermediaryFile2: DBAPI.SystemObjectXref | null;
 let unit: DBAPI.Unit | null;
@@ -176,20 +175,16 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Asset', async () => {
         if (assetGroup && vocabulary)
-            assetThumbnail = new DBAPI.Asset({
+            assetThumbnail = await UTIL.createAssetTest({
                 FileName: 'Test Asset Thumbnail',
                 FilePath: '/test/asset/path',
                 idAssetGroup: assetGroup.idAssetGroup,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: null,
-                StorageKey: randomStorageKey('/test/asset/path/'),
+                StorageKey: UTIL.randomStorageKey('/test/asset/path/'),
                 idAsset: 0
             });
         expect(assetThumbnail).toBeTruthy();
-        if (assetThumbnail) {
-            expect(await assetThumbnail.create()).toBeTruthy();
-            expect(assetThumbnail.idAsset).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: GeoLocation', async () => {
@@ -214,48 +209,34 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Unit', async () => {
-        unit = new DBAPI.Unit({
+        unit = await UTIL.createUnitTest({
             Name: 'DPO',
             Abbreviation: 'DPO',
             ARKPrefix: 'http://abbadabbadoo/',
             idUnit: 0
         });
-        expect(unit).toBeTruthy();
-        if (unit) {
-            expect(await unit.create()).toBeTruthy();
-            expect(unit.idUnit).toBeGreaterThan(0);
-        }
 
-        unit2 = new DBAPI.Unit({
+        unit2 = await UTIL.createUnitTest({
             Name: 'DPO2',
             Abbreviation: 'DPO2',
             ARKPrefix: 'http://abbadabbadoo2/',
             idUnit: 0
         });
-        expect(unit2).toBeTruthy();
-        if (unit2) {
-            expect(await unit2.create()).toBeTruthy();
-            expect(unit2.idUnit).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: User', async () => {
-        user = new DBAPI.User({
+        user = await UTIL.createUserTest({
             Name: 'Test User',
             EmailAddress: 'test@si.edu',
             SecurityID: 'SECURITY_ID',
             Active: true,
-            DateActivated: nowCleansed(),
+            DateActivated: UTIL.nowCleansed(),
             DateDisabled: null,
-            WorkflowNotificationTime: nowCleansed(),
+            WorkflowNotificationTime: UTIL.nowCleansed(),
             EmailSettings: 0,
             idUser: 0
         });
         expect(user).toBeTruthy();
-        if (user) {
-            expect(await user.create()).toBeTruthy();
-            expect(user.idUser).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Identifier Subject Hookup', async () => {
@@ -275,7 +256,7 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Subject', async () => {
         if (unit && assetThumbnail && geoLocation && identifierSubjectHookup)
-            subject = new DBAPI.Subject({
+            subject = await UTIL.createSubjectTest({
                 idUnit: unit.idUnit,
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idGeoLocation: geoLocation.idGeoLocation,
@@ -284,10 +265,6 @@ describe('DB Creation Test Suite', () => {
                 idSubject: 0
             });
         expect(subject).toBeTruthy();
-        if (subject) {
-            expect(await subject.create()).toBeTruthy();
-            expect(subject.idSubject).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Fetch System Object Subject', async() => {
@@ -310,7 +287,7 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Subject With Nulls', async () => {
         if (unit2)
-            subjectNulls = new DBAPI.Subject({
+            subjectNulls = await UTIL.createSubjectTest({
                 idUnit: unit2.idUnit,
                 idAssetThumbnail: null,
                 idGeoLocation: null,
@@ -319,27 +296,19 @@ describe('DB Creation Test Suite', () => {
                 idSubject: 0
             });
         expect(subjectNulls).toBeTruthy();
-        if (subjectNulls) {
-            expect(await subjectNulls.create()).toBeTruthy();
-            expect(subjectNulls.idSubject).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: WorkflowTemplate', async () => {
-        workflowTemplate = new DBAPI.WorkflowTemplate({
+        workflowTemplate = await UTIL.createWorkflowTemplateTest({
             Name: 'Test Workflow Template',
             idWorkflowTemplate: 0
         });
         expect(workflowTemplate).toBeTruthy();
-        if (workflowTemplate) {
-            expect(await workflowTemplate.create()).toBeTruthy();
-            expect(workflowTemplate.idWorkflowTemplate).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Scene', async () => {
         if (assetThumbnail)
-            scene = new DBAPI.Scene({
+            scene = await UTIL.createSceneTest({
                 Name: 'Test Scene',
                 idAssetThumbnail: assetThumbnail.idAsset,
                 IsOriented: true,
@@ -347,14 +316,10 @@ describe('DB Creation Test Suite', () => {
                 idScene: 0
             });
         expect(scene).toBeTruthy();
-        if (scene) {
-            expect(await scene.create()).toBeTruthy();
-            expect(scene.idScene).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Scene With Nulls', async () => {
-        sceneNulls = new DBAPI.Scene({
+        sceneNulls = await UTIL.createSceneTest({
             Name: 'Test Scene',
             idAssetThumbnail: null,
             IsOriented: true,
@@ -362,10 +327,6 @@ describe('DB Creation Test Suite', () => {
             idScene: 0
         });
         expect(sceneNulls).toBeTruthy();
-        if (sceneNulls) {
-            expect(await sceneNulls.create()).toBeTruthy();
-            expect(sceneNulls.idScene).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Fetch System Object Subject 2', async() => {
@@ -488,122 +449,95 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Actor With Unit', async () => {
         if (unit)
-            actorWithUnit = new DBAPI.Actor({
+            actorWithUnit = await UTIL.createActorTest({
                 IndividualName: 'Test Actor Name',
                 OrganizationName: 'Test Actor Org',
                 idUnit:  unit.idUnit,
                 idActor: 0
             });
         expect(actorWithUnit).toBeTruthy();
-        if (actorWithUnit) {
-            expect(await actorWithUnit.create()).toBeTruthy();
-            expect(actorWithUnit.idActor).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Actor Without Unit', async () => {
-        actorWithOutUnit = await new DBAPI.Actor({
+        actorWithOutUnit = await UTIL.createActorTest({
             IndividualName: 'Test Actor Name',
             OrganizationName: 'Test Actor Org',
             idUnit: null,
             idActor: 0
         });
         expect(actorWithOutUnit).toBeTruthy();
-        if (actorWithOutUnit) {
-            expect(await actorWithOutUnit.create()).toBeTruthy();
-            expect(actorWithOutUnit.idActor).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Asset Without Asset Group', async () => {
         if (vocabulary&& systemObjectSubject)
-            assetWithoutAG = new DBAPI.Asset({
+            assetWithoutAG = await UTIL.createAssetTest({
                 FileName: 'Test Asset 2',
                 FilePath: '/test/asset/path2',
                 idAssetGroup: null,
                 idVAssetType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectSubject.idSystemObject,
-                StorageKey: randomStorageKey('/test/asset/path/'),
+                StorageKey: UTIL.randomStorageKey('/test/asset/path/'),
                 idAsset: 0
             });
         expect(assetWithoutAG).toBeTruthy();
-        if (assetWithoutAG) {
-            expect(await assetWithoutAG.create()).toBeTruthy();
-            expect(assetWithoutAG.idAsset).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: AssetVersion', async () => {
         if (assetThumbnail && user)
-            assetVersion = new DBAPI.AssetVersion({
+            assetVersion = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FilePath,
                 idUserCreator: user.idUser,
-                DateCreated: nowCleansed(),
-                StorageChecksum: 'Asset Checksum',
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum',
                 StorageSize: 50,
-                idAssetVersion: 0,
+                StorageKeyStaging: '',
                 Ingested: true,
-                Version: 0
+                idAssetVersion: 0
             });
         expect(assetVersion).toBeTruthy();
-        if (assetVersion) {
-            expect(await assetVersion.create()).toBeTruthy();
-            expect(assetVersion.idAssetVersion).toBeGreaterThan(0);
-            expect(assetVersion.Version).toBeGreaterThan(0);
-        }
     });
 
-    jest.setTimeout(120000);
     test('DB Creation: AssetVersion Not Ingested', async () => {
         if (assetThumbnail && user)
-            assetVersionNotIngested = new DBAPI.AssetVersion({
+            assetVersionNotIngested = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FilePath,
                 idUserCreator: user.idUser,
-                DateCreated: nowCleansed(),
-                StorageChecksum: 'Asset Checksum',
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum',
                 StorageSize: 50,
-                idAssetVersion: 0,
+                StorageKeyStaging: '',
                 Ingested: false,
-                Version: 0
+                idAssetVersion: 0
             });
         expect(assetVersionNotIngested).toBeTruthy();
-        if (assetVersionNotIngested) {
-            expect(await assetVersionNotIngested.create()).toBeTruthy();
-            expect(assetVersionNotIngested.idAssetVersion).toBeGreaterThan(0);
-            expect(assetVersionNotIngested.Version).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: CaptureData', async () => {
         if (vocabulary && assetThumbnail)
-            captureData = new DBAPI.CaptureData({
+            captureData = await UTIL.createCaptureDataTest({
                 idVCaptureMethod: vocabulary.idVocabulary,
-                DateCaptured: nowCleansed(),
+                DateCaptured: UTIL.nowCleansed(),
                 Description: 'Test Capture Data',
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idCaptureData: 0
             });
         expect(captureData).toBeTruthy();
-        if (captureData) {
-            expect(await captureData.create()).toBeTruthy();
-            expect(captureData.idCaptureData).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: CaptureData With Nulls', async () => {
         if (vocabulary)
-            captureDataNulls = new DBAPI.CaptureData({
+            captureDataNulls = await UTIL.createCaptureDataTest({
                 idVCaptureMethod: vocabulary.idVocabulary,
-                DateCaptured: nowCleansed(),
+                DateCaptured: UTIL.nowCleansed(),
                 Description: 'Test Capture Data Nulls',
                 idAssetThumbnail: null,
                 idCaptureData: 0
             });
         expect(captureDataNulls).toBeTruthy();
-        if (captureDataNulls) {
-            expect(await captureDataNulls.create()).toBeTruthy();
-            expect(captureDataNulls.idCaptureData).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: CaptureDataFile', async () => {
@@ -739,21 +673,17 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: IntermediaryFile', async () => {
         if (assetThumbnail)
-            intermediaryFile = new DBAPI.IntermediaryFile({
+            intermediaryFile = await UTIL.createIntermediaryFileTest({
                 idAsset: assetThumbnail.idAsset,
-                DateCreated: nowCleansed(),
+                DateCreated: UTIL.nowCleansed(),
                 idIntermediaryFile: 0
             });
         expect(intermediaryFile).toBeTruthy();
-        if (intermediaryFile) {
-            expect(await intermediaryFile.create()).toBeTruthy();
-            expect(intermediaryFile.idIntermediaryFile).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Item', async () => {
         if (assetThumbnail && geoLocation)
-            item = new DBAPI.Item({
+            item = await UTIL.createItemTest({
                 idAssetThumbnail: assetThumbnail.idAsset,
                 idGeoLocation: geoLocation.idGeoLocation,
                 Name: 'Test Item',
@@ -761,14 +691,10 @@ describe('DB Creation Test Suite', () => {
                 idItem: 0
             });
         expect(item).toBeTruthy();
-        if (item) {
-            expect(await item.create()).toBeTruthy();
-            expect(item.idItem).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Item With Nulls', async () => {
-        itemNulls = new DBAPI.Item({
+        itemNulls = await UTIL.createItemTest({
             idAssetThumbnail: null,
             idGeoLocation: null,
             Name: 'Test Item Nulls',
@@ -776,10 +702,6 @@ describe('DB Creation Test Suite', () => {
             idItem: 0
         });
         expect(itemNulls).toBeTruthy();
-        if (itemNulls) {
-            expect(await itemNulls.create()).toBeTruthy();
-            expect(itemNulls.idItem).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Fetch System Object Item', async() => {
@@ -879,8 +801,8 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Model', async () => {
         if (vocabulary && assetThumbnail)
-            model = new DBAPI.Model({
-                DateCreated: nowCleansed(),
+            model = await UTIL.createModelTest({
+                DateCreated: UTIL.nowCleansed(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 Master: true,
                 Authoritative: true,
@@ -891,16 +813,12 @@ describe('DB Creation Test Suite', () => {
                 idModel: 0
             });
         expect(model).toBeTruthy();
-        if (model) {
-            expect(await model.create()).toBeTruthy();
-            expect(model.idModel).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Model With Nulls', async () => {
         if (vocabulary)
-            modelNulls = new DBAPI.Model({
-                DateCreated: nowCleansed(),
+            modelNulls = await UTIL.createModelTest({
+                DateCreated: UTIL.nowCleansed(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 Master: true,
                 Authoritative: true,
@@ -911,10 +829,6 @@ describe('DB Creation Test Suite', () => {
                 idModel: 0
             });
         expect(modelNulls).toBeTruthy();
-        if (modelNulls) {
-            expect(await modelNulls.create()).toBeTruthy();
-            expect(modelNulls.idModel).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: ModelGeometryFile', async () => {
@@ -956,7 +870,7 @@ describe('DB Creation Test Suite', () => {
             modelProcessingAction = new DBAPI.ModelProcessingAction({
                 idModel: model.idModel,
                 idActor: actorWithUnit.idActor,
-                DateProcessed: nowCleansed(),
+                DateProcessed: UTIL.nowCleansed(),
                 ToolsUsed: 'Test Model Processing Action',
                 Description: 'Test Model Processing Action Description',
                 idModelProcessingAction: 0
@@ -1014,27 +928,17 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Project', async () => {
-        project = new DBAPI.Project({
+        project = await UTIL.createProjectTest({
             Name: 'Test Project',
             Description: 'Test',
             idProject: 0,
         });
-        expect(project).toBeTruthy();
-        if (project) {
-            expect(await project.create()).toBeTruthy();
-            expect(project.idProject).toBeGreaterThan(0);
-        }
 
-        project2 = new DBAPI.Project({
+        project2 = await UTIL.createProjectTest({
             Name: 'Test Project 2',
             Description: 'Test',
             idProject: 0,
         });
-        expect(project2).toBeTruthy();
-        if (project2) {
-            expect(await project2.create()).toBeTruthy();
-            expect(project2.idProject).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: SystemObjectVersion', async () => {
@@ -1259,8 +1163,8 @@ describe('DB Creation Test Suite', () => {
             licenseAssignment = new DBAPI.LicenseAssignment({
                 idLicense: license.idLicense,
                 idUserCreator: user.idUser,
-                DateStart: nowCleansed(),
-                DateEnd: nowCleansed(),
+                DateStart: UTIL.nowCleansed(),
+                DateEnd: UTIL.nowCleansed(),
                 idSystemObject: systemObjectSubject.idSystemObject,
                 idLicenseAssignment: 0
             });
@@ -1290,21 +1194,17 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: ProjectDocumentation', async () => {
         if (project)
-            projectDocumentation = new DBAPI.ProjectDocumentation({
+            projectDocumentation = await UTIL.createProjectDocumentationTest({
                 idProject: project.idProject,
                 Name: 'Test Project Documentation',
                 Description: 'Test Description',
                 idProjectDocumentation: 0
             });
         expect(projectDocumentation).toBeTruthy();
-        if (projectDocumentation) {
-            expect(await projectDocumentation.create()).toBeTruthy();
-            expect(projectDocumentation.idProjectDocumentation).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Stakeholder', async () => {
-        stakeholder = new DBAPI.Stakeholder({
+        stakeholder = await UTIL.createStakeholderTest({
             IndividualName: 'Test Stakeholder Name',
             OrganizationName: 'Test Stakeholder Org',
             EmailAddress: 'Test Email',
@@ -1352,12 +1252,12 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Workflow', async () => {
         if (workflowTemplate && project && user)
-            workflow = new DBAPI.Workflow({
+            workflow = await UTIL.createWorkflowTest({
                 idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
                 idProject: project.idProject,
                 idUserInitiator: user.idUser,
-                DateInitiated: nowCleansed(),
-                DateUpdated: nowCleansed(),
+                DateInitiated: UTIL.nowCleansed(),
+                DateUpdated: UTIL.nowCleansed(),
                 idWorkflow: 0
             });
         expect(workflow).toBeTruthy();
@@ -1369,12 +1269,12 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Workflow With Nulls', async () => {
         if (workflowTemplate)
-            workflowNulls = new DBAPI.Workflow({
+            workflowNulls = await UTIL.createWorkflowTest({
                 idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
                 idProject: null,
                 idUserInitiator: null,
-                DateInitiated: nowCleansed(),
-                DateUpdated: nowCleansed(),
+                DateInitiated: UTIL.nowCleansed(),
+                DateUpdated: UTIL.nowCleansed(),
                 idWorkflow: 0
             });
         expect(workflowNulls).toBeTruthy();
@@ -1386,13 +1286,13 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: WorkflowStep', async () => {
         if (workflow && user && vocabulary)
-            workflowStep = new DBAPI.WorkflowStep({
+            workflowStep = await UTIL.createWorkflowStepTest({
                 idWorkflow: workflow.idWorkflow,
                 idUserOwner: user.idUser,
                 idVWorkflowStepType: vocabulary.idVocabulary,
                 State: 0,
-                DateCreated: nowCleansed(),
-                DateCompleted: nowCleansed(),
+                DateCreated: UTIL.nowCleansed(),
+                DateCompleted: UTIL.nowCleansed(),
                 idWorkflowStep: 0
             });
         expect(workflowStep).toBeTruthy();
@@ -1582,44 +1482,6 @@ describe('DB Creation Test Suite', () => {
         if (systemObjectXrefProjectStakeholder2) {
             expect(await systemObjectXrefProjectStakeholder2.create()).toBeTruthy();
             expect(systemObjectXrefProjectStakeholder2.idSystemObjectXref).toBeGreaterThan(0);
-        }
-    });
-
-    test('DB Creation: SystemObjectXref Project-ProjectDocumentation', async () => {
-        if (project && project2) {
-            const SOProject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(project.idProject);
-            const SOProject2: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(project2.idProject);
-            expect(SOProject).toBeTruthy();
-            expect(SOProject2).toBeTruthy();
-
-            if (SOProject && SOProject2 && projectDocumentation) {
-                const SOProjectDocumentation: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectDocumentationID(projectDocumentation.idProjectDocumentation);
-                expect(SOProjectDocumentation).toBeTruthy();
-
-                if (SOProjectDocumentation) {
-                    systemObjectXrefProjectProjectDoc1 = new DBAPI.SystemObjectXref({
-                        idSystemObjectMaster: SOProject.idSystemObject,
-                        idSystemObjectDerived: SOProjectDocumentation.idSystemObject,
-                        idSystemObjectXref: 0
-                    });
-                    systemObjectXrefProjectProjectDoc2 = new DBAPI.SystemObjectXref({
-                        idSystemObjectMaster: SOProject2.idSystemObject,
-                        idSystemObjectDerived: SOProjectDocumentation.idSystemObject,
-                        idSystemObjectXref: 0
-                    });
-                }
-            }
-        }
-        expect(systemObjectXrefProjectProjectDoc1).toBeTruthy();
-        if (systemObjectXrefProjectProjectDoc1) {
-            expect(await systemObjectXrefProjectProjectDoc1.create()).toBeTruthy();
-            expect(systemObjectXrefProjectProjectDoc1.idSystemObjectXref).toBeGreaterThan(0);
-        }
-
-        expect(systemObjectXrefProjectProjectDoc2).toBeTruthy();
-        if (systemObjectXrefProjectProjectDoc2) {
-            expect(await systemObjectXrefProjectProjectDoc2.create()).toBeTruthy();
-            expect(systemObjectXrefProjectProjectDoc2.idSystemObjectXref).toBeGreaterThan(0);
         }
     });
 });
@@ -1829,8 +1691,60 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersionNotIngested]));
             }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchLatestFromAsset Not Ingested', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromAsset(assetThumbnail.idAsset);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual(assetVersionNotIngested);
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Creation: AssetVersion 2', async () => {
+        if (assetThumbnail && user)
+            assetVersion2 = await UTIL.createAssetVersionTest({
+                idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FileName,
+                idUserCreator: user.idUser,
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum',
+                StorageSize: 50,
+                StorageKeyStaging: '',
+                Ingested: true,
+                idAssetVersion: 0
+            });
+        expect(assetVersion2).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchLatestFromAsset Ingested', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromAsset(assetThumbnail.idAsset);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual(assetVersion2);
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchByAssetAndVersion', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (assetThumbnail) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchByAssetAndVersion(assetThumbnail.idAsset, 1);
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
+            assetVersionFetch = await DBAPI.AssetVersion.fetchByAssetAndVersion(assetThumbnail.idAsset, 2);
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
         }
         expect(assetVersionFetch).toBeTruthy();
     });
@@ -2854,26 +2768,6 @@ describe('DB Fetch SystemObject.fetch* Test Suite', () => {
         }
         expect(SO).toBeTruthy();
     });
-
-    test('DB Fetch SystemObject: SystemObject.fetchFromWorkflowID', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (workflow) {
-            SO = await DBAPI.SystemObject.fetchFromWorkflowID(workflow.idWorkflow);
-            if (SO)
-                expect(SO.idWorkflow).toEqual(workflow.idWorkflow);
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: SystemObject.fetchFromWorkflowStepID', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (workflowStep) {
-            SO = await DBAPI.SystemObject.fetchFromWorkflowStepID(workflowStep.idWorkflowStep);
-            if (SO)
-                expect(SO.idWorkflowStep).toEqual(workflowStep.idWorkflowStep);
-        }
-        expect(SO).toBeTruthy();
-    });
 });
 
 // *******************************************************************
@@ -3088,38 +2982,6 @@ describe('DB Fetch SystemObject*.fetch Test Suite', () => {
         }
         expect(SO).toBeTruthy();
     });
-
-    test('DB Fetch SystemObjectWorkflow.fetch', async () => {
-        let SO: DBAPI.SystemObjectWorkflow | null = null;
-        if (workflow) {
-            SO = await DBAPI.SystemObjectWorkflow.fetch(workflow.idWorkflow);
-            if (SO) {
-                expect(SO.idWorkflow).toEqual(workflow.idWorkflow);
-                expect(SO.Workflow).toBeTruthy();
-                if (SO.Workflow) {
-                    expect(SO.Workflow).toMatchObject(workflow);
-                    expect(workflow).toMatchObject(SO.Workflow);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObjectWorkflowStep.fetch', async () => {
-        let SO: DBAPI.SystemObjectWorkflowStep | null = null;
-        if (workflowStep) {
-            SO = await DBAPI.SystemObjectWorkflowStep.fetch(workflowStep.idWorkflowStep);
-            if (SO) {
-                expect(SO.idWorkflowStep).toEqual(workflowStep.idWorkflowStep);
-                expect(SO.WorkflowStep).toBeTruthy();
-                if (SO.WorkflowStep) {
-                    expect(SO.WorkflowStep).toMatchObject(workflowStep);
-                    expect(workflowStep).toMatchObject(SO.WorkflowStep);
-                }
-            }
-        }
-        expect(SO).toBeTruthy();
-    });
 });
 
 // *******************************************************************
@@ -3265,26 +3127,6 @@ describe('DB Fetch *.fetchSystemObject Test Suite', () => {
         }
         expect(SO).toBeTruthy();
     });
-
-    test('DB Fetch Workflow.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (workflow) {
-            SO = await workflow.fetchSystemObject();
-            if (SO)
-                expect(SO.idWorkflow).toEqual(workflow.idWorkflow);
-        }
-        expect(SO).toBeTruthy();
-    });
-
-    test('DB Fetch WorkflowStep.fetchSystemObject', async () => {
-        let SO: DBAPI.SystemObject | null = null;
-        if (workflowStep) {
-            SO = await workflowStep.fetchSystemObject();
-            if (SO)
-                expect(SO.idWorkflowStep).toEqual(workflowStep.idWorkflowStep);
-        }
-        expect(SO).toBeTruthy();
-    });
 });
 
 // *******************************************************************
@@ -3304,8 +3146,6 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     let SOStakeholder: DBAPI.SystemObject | null = null;
     let SOSubject: DBAPI.SystemObject | null = null;
     let SOUnit: DBAPI.SystemObject | null = null;
-    let SOWorkflow: DBAPI.SystemObject | null = null;
-    let SOWorkflowStep: DBAPI.SystemObject | null = null;
 
     test('DB Fetch SystemObject: fetchSystemObjectFor * setup', async() => {
         SOActor = actorWithUnit ? await actorWithUnit.fetchSystemObject() : null;
@@ -3321,8 +3161,6 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         SOStakeholder = stakeholder ? await stakeholder.fetchSystemObject() : null;
         SOSubject = subject ? await subject.fetchSystemObject() : null;
         SOUnit = unit ? await unit.fetchSystemObject() : null;
-        SOWorkflow = workflow ? await workflow.fetchSystemObject() : null;
-        SOWorkflowStep = workflowStep ? await workflowStep.fetchSystemObject() : null;
 
         expect(SOActor).toBeTruthy();
         expect(SOAsset).toBeTruthy();
@@ -3337,8 +3175,6 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(SOStakeholder).toBeTruthy();
         expect(SOSubject).toBeTruthy();
         expect(SOUnit).toBeTruthy();
-        expect(SOWorkflow).toBeTruthy();
-        expect(SOWorkflowStep).toBeTruthy();
     });
 
     test('DB Fetch SystemObject: SystemObjectPairs.fetch with Invalid SystemObject ID', async () => {
@@ -3537,36 +3373,6 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
                 expect(SYOP.Unit).toMatchObject(unit);
                 if (SYOP.Unit)
                     expect(unit).toMatchObject(SYOP.Unit);
-            }
-        }
-        expect(SYOP).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: SystemObjectPairs.fetch for Workflow', async () => {
-        let SYOP: DBAPI.SystemObjectPairs | null = null;
-
-        if (SOWorkflow && workflow) {
-            SYOP = await DBAPI.SystemObjectPairs.fetch(SOWorkflow.idSystemObject);
-            if (SYOP) {
-                expect(SYOP.Workflow).toBeTruthy();
-                expect(SYOP.Workflow).toMatchObject(workflow);
-                if (SYOP.Workflow)
-                    expect(workflow).toMatchObject(SYOP.Workflow);
-            }
-        }
-        expect(SYOP).toBeTruthy();
-    });
-
-    test('DB Fetch SystemObject: SystemObjectPairs.fetch for WorkflowStep', async () => {
-        let SYOP: DBAPI.SystemObjectPairs | null = null;
-
-        if (SOWorkflowStep && workflowStep) {
-            SYOP = await DBAPI.SystemObjectPairs.fetch(SOWorkflowStep.idSystemObject);
-            if (SYOP) {
-                expect(SYOP.WorkflowStep).toBeTruthy();
-                expect(SYOP.WorkflowStep).toMatchObject(workflowStep);
-                if (SYOP.WorkflowStep)
-                    expect(workflowStep).toMatchObject(SYOP.WorkflowStep);
             }
         }
         expect(SYOP).toBeTruthy();
@@ -3773,6 +3579,13 @@ describe('DB Fetch Special Test Suite', () => {
         expect(SOAssetSource).toEqual(systemObjectSubject);
     });
 
+    test('DB Creation: Asset.assignOwner', async () => {
+        let assigned: boolean = false;
+        if (assetThumbnail && subject)
+            assigned = await assetThumbnail.assignOwner(subject);
+        expect(assigned).toBeTruthy();
+    });
+
     test('DB Fetch Special: CaptureData.fetchFromCaptureDataPhoto', async () => {
         let captureDataFetch: DBAPI.CaptureData | null = null;
         if (captureDataPhoto)
@@ -3929,7 +3742,7 @@ describe('DB Fetch Special Test Suite', () => {
         if (projectDocumentation) {
             projectFetch = await DBAPI.Project.fetchMasterFromProjectDocumentations([projectDocumentation.idProjectDocumentation]);
             if (projectFetch && project && project2)
-                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+                expect(projectFetch).toEqual(expect.arrayContaining([project]));
         }
         expect(projectFetch).toBeTruthy();
     });
@@ -5066,6 +4879,36 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: SystemObject.retireObject', async () => {
+        if (systemObjectItem) {
+            expect(systemObjectItem.Retired).toBeFalsy();
+            expect(await systemObjectItem.retireObject()).toBeTruthy();
+            expect(systemObjectItem.Retired).toBeTruthy();
+            expect(await systemObjectItem.retireObject()).toBeTruthy(); // one more time
+            expect(systemObjectItem.Retired).toBeTruthy();
+
+            const systemObjectFetch: DBAPI.SystemObject | null = item ? await item.fetchSystemObject() : null;
+            expect(systemObjectFetch).toBeTruthy();
+            if (systemObjectFetch)
+                expect(systemObjectFetch.Retired).toBeTruthy();
+        }
+    });
+
+    test('DB Update: SystemObject.reinstateObject', async () => {
+        if (systemObjectItem) {
+            expect(systemObjectItem.Retired).toBeTruthy();
+            expect(await systemObjectItem.reinstateObject()).toBeTruthy();
+            expect(systemObjectItem.Retired).toBeFalsy();
+            expect(await systemObjectItem.reinstateObject()).toBeTruthy(); // one more time
+            expect(systemObjectItem.Retired).toBeFalsy();
+
+            const systemObjectFetch: DBAPI.SystemObject | null = item ? await item.fetchSystemObject() : null;
+            expect(systemObjectFetch).toBeTruthy();
+            if (systemObjectFetch)
+                expect(systemObjectFetch.Retired).toBeFalsy();
+        }
+    });
+
     test('DB Update: SystemObjectVersion.update', async () => {
         let bUpdated: boolean = false;
         if (systemObjectVersion) {
@@ -5197,22 +5040,13 @@ describe('DB Update Test Suite', () => {
     test('DB Update: Workflow.update', async () => {
         let bUpdated: boolean = false;
         if (workflow && project2) {
-            const SOOld: DBAPI.SystemObject | null = await workflow.fetchSystemObject();
-            expect(SOOld).toBeTruthy();
-
             workflow.idProject = project2.idProject;
             bUpdated = await workflow.update();
 
             const workflowFetch: DBAPI.Workflow | null = await DBAPI.Workflow.fetch(workflow.idWorkflow);
             expect(workflowFetch).toBeTruthy();
-            if (workflowFetch) {
+            if (workflowFetch)
                 expect(workflowFetch.idProject).toBe(project2.idProject);
-
-                const SONew: DBAPI.SystemObject | null = await workflowFetch.fetchSystemObject();
-                expect(SONew).toBeTruthy();
-                if (SOOld && SONew)
-                    expect(SOOld).toMatchObject(SONew);
-            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -5266,22 +5100,13 @@ describe('DB Update Test Suite', () => {
     test('DB Update: WorkflowStep.update', async () => {
         let bUpdated: boolean = false;
         if (workflowStep && workflowNulls) {
-            const SOOld: DBAPI.SystemObject | null = await workflowStep.fetchSystemObject();
-            expect(SOOld).toBeTruthy();
-
             workflowStep.idWorkflow = workflowNulls.idWorkflow;
             bUpdated = await workflowStep.update();
 
             const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
             expect(workflowStepFetch).toBeTruthy();
-            if (workflowStepFetch) {
+            if (workflowStepFetch)
                 expect(workflowStepFetch.idWorkflow).toBe(workflowNulls.idWorkflow);
-
-                const SONew: DBAPI.SystemObject | null = await workflowStepFetch.fetchSystemObject();
-                expect(SONew).toBeTruthy();
-                if (SOOld && SONew)
-                    expect(SOOld).toMatchObject(SONew);
-            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -5377,8 +5202,11 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchLatestFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchByAssetAndVersion(0, 1)).toBeNull();
         expect(await DBAPI.CaptureData.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromCaptureDataPhoto(0)).toBeNull();
@@ -5469,8 +5297,6 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObject.fetchFromStakeholderID(0)).toBeNull();
         expect(await DBAPI.SystemObject.fetchFromSubjectID(0)).toBeNull();
         expect(await DBAPI.SystemObject.fetchFromUnitID(0)).toBeNull();
-        expect(await DBAPI.SystemObject.fetchFromWorkflowID(0)).toBeNull();
-        expect(await DBAPI.SystemObject.fetchFromWorkflowStepID(0)).toBeNull();
 
         expect(await DBAPI.SystemObjectActor.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectAsset.fetch(0)).toBeNull();
@@ -5485,8 +5311,6 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObjectStakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectSubject.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectUnit.fetch(0)).toBeNull();
-        expect(await DBAPI.SystemObjectWorkflow.fetch(0)).toBeNull();
-        expect(await DBAPI.SystemObjectWorkflowStep.fetch(0)).toBeNull();
 
         expect(await DBAPI.SystemObjectActor.fetch(-1)).toBeNull();
         expect(await DBAPI.SystemObjectAsset.fetch(-1)).toBeNull();
@@ -5501,8 +5325,6 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObjectStakeholder.fetch(-1)).toBeNull();
         expect(await DBAPI.SystemObjectSubject.fetch(-1)).toBeNull();
         expect(await DBAPI.SystemObjectUnit.fetch(-1)).toBeNull();
-        expect(await DBAPI.SystemObjectWorkflow.fetch(-1)).toBeNull();
-        expect(await DBAPI.SystemObjectWorkflowStep.fetch(-1)).toBeNull();
 
         expect(await DBAPI.SystemObjectPairs.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectPairs.fetchDerivedFromXref(0)).toBeNull();
@@ -5547,8 +5369,6 @@ describe('DB Null/Zero ID Test', () => {
             idSubject: 0,
             idSystemObject: 0,
             idUnit: 0,
-            idWorkflow: 0,
-            idWorkflowStep: 0,
             Retired: false,
         });
 
