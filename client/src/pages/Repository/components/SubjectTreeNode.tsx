@@ -1,18 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import StyledTreeItem from './StyledTreeItem';
-import ItemRepositoryTree from './ItemRepositoryTree';
+import ItemTreeNode from './ItemTreeNode';
 import TreeViewContents from './TreeViewContents';
 
-interface SubjectSubTreeProps {
+interface SubjectTreeNodeProps {
     idSubject: number;
 }
 
-function SubjectSubTree({ idSubject }: SubjectSubTreeProps): React.ReactElement {
-    const [loading, setLoading] = React.useState(true);
+function SubjectTreeNode({ idSubject }: SubjectTreeNodeProps): React.ReactElement {
+    const [loading, setLoading] = useState(true);
 
     const loadData = () => {
+        console.log('Loading items for idSubject', idSubject);
         setTimeout(() => {
-            console.log('loading subjects for idSubject', idSubject);
             setLoading(false);
         }, 2000);
     };
@@ -25,12 +25,12 @@ function SubjectSubTree({ idSubject }: SubjectSubTreeProps): React.ReactElement 
             label={`subject-${idSubject}`}
         >
             <TreeViewContents loading={loading}>
-                <ItemRepositoryTree idItem={1} />
-                <ItemRepositoryTree idItem={2} />
-                <ItemRepositoryTree idItem={3} />
+                <ItemTreeNode idItem={1} />
+                <ItemTreeNode idItem={2} />
+                <ItemTreeNode idItem={3} />
             </TreeViewContents>
         </StyledTreeItem>
     );
 }
 
-export default SubjectSubTree;
+export default SubjectTreeNode;

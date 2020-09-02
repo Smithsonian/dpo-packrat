@@ -1,18 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import StyledTreeItem from './StyledTreeItem';
-import SubjectRepositoryTree from './SubjectRepositoryTree';
+import SubjectTreeNode from './SubjectTreeNode';
 import TreeViewContents from './TreeViewContents';
 
-interface UnitSubTreeProps {
+interface UnitTreeNodeProps {
     idUnit: number;
 }
 
-function UnitSubTree({ idUnit }: UnitSubTreeProps): React.ReactElement {
-    const [loading, setLoading] = React.useState(true);
+function UnitTreeNode({ idUnit }: UnitTreeNodeProps): React.ReactElement {
+    const [loading, setLoading] = useState(true);
 
     const loadData = () => {
+        console.log('Loading subjects for idUnit', idUnit);
         setTimeout(() => {
-            console.log('loading units for idUnit', idUnit);
             setLoading(false);
         }, 2000);
     };
@@ -25,12 +25,12 @@ function UnitSubTree({ idUnit }: UnitSubTreeProps): React.ReactElement {
             label={`unit-${idUnit}`}
         >
             <TreeViewContents loading={loading}>
-                <SubjectRepositoryTree idSubject={1} />
-                <SubjectRepositoryTree idSubject={2} />
-                <SubjectRepositoryTree idSubject={3} />
+                <SubjectTreeNode idSubject={1} />
+                <SubjectTreeNode idSubject={2} />
+                <SubjectTreeNode idSubject={3} />
             </TreeViewContents>
         </StyledTreeItem>
     );
 }
 
-export default UnitSubTree;
+export default UnitTreeNode;

@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 const useStyles = makeStyles({
     container: {
         display: 'flex',
-        height: 50,
+        height: 60,
         alignItems: 'center',
     }
 });
@@ -23,7 +23,7 @@ function TreeViewContents(props: TreeViewContents): React.ReactElement {
         <>
             {loading ? (
                 <Box className={classes.container}>
-                    <CircularProgress size={15} />
+                    <CircularProgress size={20} />
                 </Box>
             ) : children}
         </>
