@@ -1,17 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import StyledTreeItem from './StyledTreeItem';
 import TreeViewContents from './TreeViewContents';
 
-interface ItemSubTreeProps {
+interface ItemTreeNodeProps {
     idItem: number;
 }
 
-function ItemSubTree({ idItem }: ItemSubTreeProps): React.ReactElement {
-    const [loading, setLoading] = React.useState(true);
+function ItemTreeNode({ idItem }: ItemTreeNodeProps): React.ReactElement {
+    const [loading, setLoading] = useState(true);
 
     const loadData = () => {
+        console.log('Loading data for idItem', idItem);
         setTimeout(() => {
-            console.log('loading items for idItem', idItem);
             setLoading(false);
         }, 2000);
     };
@@ -32,4 +32,4 @@ function ItemSubTree({ idItem }: ItemSubTreeProps): React.ReactElement {
     );
 }
 
-export default ItemSubTree;
+export default ItemTreeNode;
