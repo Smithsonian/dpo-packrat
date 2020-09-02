@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { TreeView } from '@material-ui/lab';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
-import { AiOutlineFileZip } from 'react-icons/ai';
 import UnitTreeNode from './UnitTreeNode';
 import StyledTreeItem from './StyledTreeItem';
 import TreeViewContents from './TreeViewContents';
+import mockRepositoryData from '../mock.repository';
+
+const { units } = mockRepositoryData;
 
 const useStyles = makeStyles({
-    root: {
-        height: 260,
+    container: {
+        height: '85vh',
         flexGrow: 1,
-        maxWidth: '90%'
+        maxWidth: '60%',
+        overflow: 'auto'
     }
 });
 
@@ -20,10 +23,9 @@ export default function RepositoryTreeView(): React.ReactElement {
 
     return (
         <TreeView
-            className={classes.root}
+            className={classes.container}
             defaultCollapseIcon={<BsChevronDown />}
             defaultExpandIcon={<BsChevronRight />}
-            defaultEndIcon={<AiOutlineFileZip />}
         >
             <ProjectTreeRoot />
             <UnitTreeRoot />
@@ -46,7 +48,7 @@ function ProjectTreeRoot(): React.ReactElement {
             onLabelClick={loadData}
             onIconClick={loadData}
             nodeId='project-root'
-            label='Project'
+            label='Projects'
         >
             <TreeViewContents loading={loading}>
             </TreeViewContents>
@@ -69,13 +71,10 @@ function UnitTreeRoot(): React.ReactElement {
             onLabelClick={loadData}
             onIconClick={loadData}
             nodeId='unit-root'
-            label='Unit'
+            label='Units'
         >
             <TreeViewContents loading={loading}>
-                <UnitTreeNode idUnit={1} />
-                <UnitTreeNode idUnit={2} />
-                <UnitTreeNode idUnit={3} />
-                <UnitTreeNode idUnit={4} />
+                {units.map(({ idUnit, Name }, index) => <UnitTreeNode key={index} idUnit={idUnit} Name={Name} />)}
             </TreeViewContents>
         </StyledTreeItem>
     );

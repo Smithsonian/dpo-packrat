@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import StyledTreeItem from './StyledTreeItem';
 import TreeViewContents from './TreeViewContents';
+import { AiOutlineFileZip } from 'react-icons/ai';
+import { FiBox } from 'react-icons/fi';
 
 interface ItemTreeNodeProps {
     idItem: number;
+    Name: string;
 }
 
-function ItemTreeNode({ idItem }: ItemTreeNodeProps): React.ReactElement {
+function ItemTreeNode(props: ItemTreeNodeProps): React.ReactElement {
+    const { idItem, Name } = props;
     const [loading, setLoading] = useState(true);
 
     const loadData = () => {
@@ -21,12 +25,13 @@ function ItemTreeNode({ idItem }: ItemTreeNodeProps): React.ReactElement {
             onLabelClick={loadData}
             onIconClick={loadData}
             nodeId={`item-${idItem}`}
-            label={`item-${idItem}`}
+            icon={<FiBox size={20} />}
+            label={Name}
         >
             <TreeViewContents loading={loading}>
-                <StyledTreeItem nodeId='9' label='Capture Data' />
-                <StyledTreeItem nodeId='10' label='Models' />
-                <StyledTreeItem nodeId='11' label='Scenes' />
+                <StyledTreeItem icon={<AiOutlineFileZip />} nodeId='9' label='Capture Data' />
+                <StyledTreeItem icon={<AiOutlineFileZip />} nodeId='10' label='Models' />
+                <StyledTreeItem icon={<AiOutlineFileZip />} nodeId='11' label='Scenes' />
             </TreeViewContents>
         </StyledTreeItem>
     );

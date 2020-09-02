@@ -26,6 +26,7 @@ function TransitionComponent(props: TransitionComponentProps): React.ReactElemen
 
 const StyledTreeItem = withStyles(({ palette, typography }: Theme) => ({
     iconContainer: {
+        width: 25,
         '& .close': {
             opacity: 0.3
         }
