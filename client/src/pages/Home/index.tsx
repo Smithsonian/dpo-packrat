@@ -4,6 +4,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import SidePanel from './components/SidePanel';
 import { Redirect, useRouteMatch } from 'react-router';
 import Ingestion from '../Ingestion';
+import Repository from '../Repository';
 import { Header, PrivateRoute } from '../../components';
 import { resolveRoute, HOME_ROUTES, HOME_ROUTE } from '../../constants';
 
@@ -35,6 +36,7 @@ function Home(): React.ReactElement {
                 <Header />
                 <Box className={classes.content}>
                     <SidePanel isExpanded={isExpanded} onToggle={onToggle} />
+                    <PrivateRoute path={resolveRoute(HOME_ROUTES.REPOSITORY)} component={Repository} />
                     <PrivateRoute path={resolveRoute(HOME_ROUTES.INGESTION)} component={Ingestion} />
                 </Box>
             </PrivateRoute>
