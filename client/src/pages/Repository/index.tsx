@@ -7,7 +7,7 @@ const useStyles = makeStyles(() => ({
     container: {
         display: 'flex',
         flex: 1,
-        padding: '40px 0px 0px 40px'
+        padding: 40
     }
 }));
 

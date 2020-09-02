@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import StyledTreeItem from './StyledTreeItem';
 import SubjectTreeNode from './SubjectTreeNode';
 import TreeViewContents from './TreeViewContents';
+import mockRepositoryData from '../mock.repository';
+
+const { subjects } = mockRepositoryData;
 
 interface UnitTreeNodeProps {
     idUnit: number;
+    Name: string;
 }
 
-function UnitTreeNode({ idUnit }: UnitTreeNodeProps): React.ReactElement {
+function UnitTreeNode(props: UnitTreeNodeProps): React.ReactElement {
+    const { idUnit, Name } = props;
     const [loading, setLoading] = useState(true);
 
     const loadData = () => {
@@ -22,12 +27,10 @@ function UnitTreeNode({ idUnit }: UnitTreeNodeProps): React.ReactElement {
             onLabelClick={loadData}
             onIconClick={loadData}
             nodeId={`unit-${idUnit}`}
-            label={`unit-${idUnit}`}
+            label={Name}
         >
             <TreeViewContents loading={loading}>
-                <SubjectTreeNode idSubject={1} />
-                <SubjectTreeNode idSubject={2} />
-                <SubjectTreeNode idSubject={3} />
+                {subjects.map(({ idSubject, Name }, index) => <SubjectTreeNode key={index} idSubject={idSubject} Name={Name} />)}
             </TreeViewContents>
         </StyledTreeItem>
     );
