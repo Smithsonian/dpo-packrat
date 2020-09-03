@@ -289,6 +289,13 @@ export type ModelUvMapFile = {
     ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
 };
 
+export type PaginationInput = {
+    first?: Maybe<Scalars['Int']>;
+    skip?: Maybe<Scalars['Int']>;
+    offset?: Maybe<Scalars['Int']>;
+    size?: Maybe<Scalars['Int']>;
+};
+
 export type Scene = {
     __typename?: 'Scene';
     idScene: Scalars['Int'];
@@ -601,6 +608,8 @@ export type Query = {
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
     getScene: GetSceneResult;
+    getSubjectsForUnit: GetSubjectsForUnitResult;
+    getItemsForSubject: GetItemsForSubjectResult;
     searchIngestionSubjects: SearchIngestionSubjectsResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
@@ -658,6 +667,16 @@ export type QueryGetModelArgs = {
 
 export type QueryGetSceneArgs = {
     input: GetSceneInput;
+};
+
+
+export type QueryGetSubjectsForUnitArgs = {
+    input: GetSubjectsForUnitInput;
+};
+
+
+export type QueryGetItemsForSubjectArgs = {
+    input: GetItemsForSubjectInput;
 };
 
 
@@ -806,6 +825,26 @@ export type GetSceneInput = {
 export type GetSceneResult = {
     __typename?: 'GetSceneResult';
     Scene?: Maybe<Scene>;
+};
+
+export type GetSubjectsForUnitInput = {
+    idUnit: Scalars['Int'];
+    pagination?: Maybe<PaginationInput>;
+};
+
+export type GetSubjectsForUnitResult = {
+    __typename?: 'GetSubjectsForUnitResult';
+    Subject: Array<Subject>;
+};
+
+export type GetItemsForSubjectInput = {
+    idSubject: Scalars['Int'];
+    pagination?: Maybe<PaginationInput>;
+};
+
+export type GetItemsForSubjectResult = {
+    __typename?: 'GetItemsForSubjectResult';
+    Item: Array<Item>;
 };
 
 export type SubjectUnitIdentifier = {
@@ -1740,6 +1779,26 @@ export type GetItemQuery = (
     }
 );
 
+export type GetItemsForSubjectQueryVariables = Exact<{
+    input: GetItemsForSubjectInput;
+}>;
+
+
+export type GetItemsForSubjectQuery = (
+    { __typename?: 'Query' }
+    & {
+        getItemsForSubject: (
+            { __typename?: 'GetItemsForSubjectResult' }
+            & {
+                Item: Array<(
+                    { __typename?: 'Item' }
+                    & Pick<Item, 'idItem' | 'Name'>
+                )>
+            }
+        )
+    }
+);
+
 export type GetProjectQueryVariables = Exact<{
     input: GetProjectInput;
 }>;
@@ -1774,6 +1833,26 @@ export type GetSubjectQuery = (
                 Subject?: Maybe<(
                     { __typename?: 'Subject' }
                     & Pick<Subject, 'idSubject'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetSubjectsForUnitQueryVariables = Exact<{
+    input: GetSubjectsForUnitInput;
+}>;
+
+
+export type GetSubjectsForUnitQuery = (
+    { __typename?: 'Query' }
+    & {
+        getSubjectsForUnit: (
+            { __typename?: 'GetSubjectsForUnitResult' }
+            & {
+                Subject: Array<(
+                    { __typename?: 'Subject' }
+                    & Pick<Subject, 'idSubject' | 'Name'>
                 )>
             }
         )
@@ -2829,6 +2908,42 @@ export function useGetItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ge
 export type GetItemQueryHookResult = ReturnType<typeof useGetItemQuery>;
 export type GetItemLazyQueryHookResult = ReturnType<typeof useGetItemLazyQuery>;
 export type GetItemQueryResult = Apollo.QueryResult<GetItemQuery, GetItemQueryVariables>;
+export const GetItemsForSubjectDocument = gql`
+    query getItemsForSubject($input: GetItemsForSubjectInput!) {
+  getItemsForSubject(input: $input) {
+    Item {
+      idItem
+      Name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetItemsForSubjectQuery__
+ *
+ * To run a query within a React component, call `useGetItemsForSubjectQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetItemsForSubjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetItemsForSubjectQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetItemsForSubjectQuery(baseOptions?: Apollo.QueryHookOptions<GetItemsForSubjectQuery, GetItemsForSubjectQueryVariables>) {
+    return Apollo.useQuery<GetItemsForSubjectQuery, GetItemsForSubjectQueryVariables>(GetItemsForSubjectDocument, baseOptions);
+}
+export function useGetItemsForSubjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetItemsForSubjectQuery, GetItemsForSubjectQueryVariables>) {
+    return Apollo.useLazyQuery<GetItemsForSubjectQuery, GetItemsForSubjectQueryVariables>(GetItemsForSubjectDocument, baseOptions);
+}
+export type GetItemsForSubjectQueryHookResult = ReturnType<typeof useGetItemsForSubjectQuery>;
+export type GetItemsForSubjectLazyQueryHookResult = ReturnType<typeof useGetItemsForSubjectLazyQuery>;
+export type GetItemsForSubjectQueryResult = Apollo.QueryResult<GetItemsForSubjectQuery, GetItemsForSubjectQueryVariables>;
 export const GetProjectDocument = gql`
     query getProject($input: GetProjectInput!) {
   getProject(input: $input) {
@@ -2899,6 +3014,42 @@ export function useGetSubjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions
 export type GetSubjectQueryHookResult = ReturnType<typeof useGetSubjectQuery>;
 export type GetSubjectLazyQueryHookResult = ReturnType<typeof useGetSubjectLazyQuery>;
 export type GetSubjectQueryResult = Apollo.QueryResult<GetSubjectQuery, GetSubjectQueryVariables>;
+export const GetSubjectsForUnitDocument = gql`
+    query getSubjectsForUnit($input: GetSubjectsForUnitInput!) {
+  getSubjectsForUnit(input: $input) {
+    Subject {
+      idSubject
+      Name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSubjectsForUnitQuery__
+ *
+ * To run a query within a React component, call `useGetSubjectsForUnitQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSubjectsForUnitQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSubjectsForUnitQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSubjectsForUnitQuery(baseOptions?: Apollo.QueryHookOptions<GetSubjectsForUnitQuery, GetSubjectsForUnitQueryVariables>) {
+    return Apollo.useQuery<GetSubjectsForUnitQuery, GetSubjectsForUnitQueryVariables>(GetSubjectsForUnitDocument, baseOptions);
+}
+export function useGetSubjectsForUnitLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSubjectsForUnitQuery, GetSubjectsForUnitQueryVariables>) {
+    return Apollo.useLazyQuery<GetSubjectsForUnitQuery, GetSubjectsForUnitQueryVariables>(GetSubjectsForUnitDocument, baseOptions);
+}
+export type GetSubjectsForUnitQueryHookResult = ReturnType<typeof useGetSubjectsForUnitQuery>;
+export type GetSubjectsForUnitLazyQueryHookResult = ReturnType<typeof useGetSubjectsForUnitLazyQuery>;
+export type GetSubjectsForUnitQueryResult = Apollo.QueryResult<GetSubjectsForUnitQuery, GetSubjectsForUnitQueryVariables>;
 export const GetUnitDocument = gql`
     query getUnit($input: GetUnitInput!) {
   getUnit(input: $input) {
