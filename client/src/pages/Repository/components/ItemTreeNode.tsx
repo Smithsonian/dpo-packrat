@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import StyledTreeItem from './StyledTreeItem';
-import TreeViewContents from './TreeViewContents';
+import TreeViewContents, { RepositoryContentType } from './TreeViewContents';
 import { AiOutlineFileZip } from 'react-icons/ai';
 import { FiBox } from 'react-icons/fi';
 
@@ -28,7 +28,7 @@ function ItemTreeNode(props: ItemTreeNodeProps): React.ReactElement {
             icon={<FiBox size={20} />}
             label={Name}
         >
-            <TreeViewContents loading={loading}>
+            <TreeViewContents loading={loading} isEmpty={false} contentType={RepositoryContentType.data}>
                 <StyledTreeItem icon={<AiOutlineFileZip />} nodeId='9' label='Capture Data' />
                 <StyledTreeItem icon={<AiOutlineFileZip />} nodeId='10' label='Models' />
                 <StyledTreeItem icon={<AiOutlineFileZip />} nodeId='11' label='Scenes' />

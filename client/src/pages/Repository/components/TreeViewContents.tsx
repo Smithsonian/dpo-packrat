@@ -1,22 +1,40 @@
 import React from 'react';
-import { Box, CircularProgress } from '@material-ui/core';
+import { Box, CircularProgress, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
-        height: 60,
+        height: 50,
         alignItems: 'center',
+    },
+    emptyList: {
+        display: 'flex',
+        height: 50,
+        width: '20%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: palette.grey[400],
     }
-});
+}));
 
-interface TreeViewContents {
+export enum RepositoryContentType {
+    projects = 'projects',
+    units = 'units',
+    subjects = 'subjects',
+    items = 'items',
+    data = 'data',
+}
+
+interface TreeViewContentsProps {
     loading: boolean;
+    isEmpty: boolean;
+    contentType: RepositoryContentType;
     children: React.ReactElement | React.ReactElement[]
 }
 
-function TreeViewContents(props: TreeViewContents): React.ReactElement {
-    const { loading, children } = props;
+function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
+    const { loading, isEmpty, contentType, children } = props;
     const classes = useStyles();
 
     return (
@@ -24,6 +42,10 @@ function TreeViewContents(props: TreeViewContents): React.ReactElement {
             {loading ? (
                 <Box className={classes.container}>
                     <CircularProgress size={20} />
+                </Box>
+            ) : isEmpty ? (
+                <Box className={classes.emptyList}>
+                    <Typography variant='body2' color='inherit'>No {contentType} found</Typography>
                 </Box>
             ) : children}
         </>

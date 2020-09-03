@@ -4,7 +4,7 @@ import { TreeView } from '@material-ui/lab';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
 import UnitTreeNode from './UnitTreeNode';
 import StyledTreeItem from './StyledTreeItem';
-import TreeViewContents from './TreeViewContents';
+import TreeViewContents, { RepositoryContentType } from './TreeViewContents';
 import mockRepositoryData from '../mock.repository';
 
 const { units } = mockRepositoryData;
@@ -50,7 +50,7 @@ function ProjectTreeRoot(): React.ReactElement {
             nodeId='project-root'
             label='Projects'
         >
-            <TreeViewContents loading={loading}>
+            <TreeViewContents loading={loading} isEmpty contentType={RepositoryContentType.projects}>
             </TreeViewContents>
         </StyledTreeItem>
     );
@@ -73,7 +73,7 @@ function UnitTreeRoot(): React.ReactElement {
             nodeId='unit-root'
             label='Units'
         >
-            <TreeViewContents loading={loading}>
+            <TreeViewContents loading={loading} isEmpty={!units.length} contentType={RepositoryContentType.units}>
                 {units.map(({ idUnit, Name }, index) => <UnitTreeNode key={index} idUnit={idUnit} Name={Name} />)}
             </TreeViewContents>
         </StyledTreeItem>

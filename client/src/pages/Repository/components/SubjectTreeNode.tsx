@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import StyledTreeItem from './StyledTreeItem';
 import ItemTreeNode from './ItemTreeNode';
-import TreeViewContents from './TreeViewContents';
+import TreeViewContents, { RepositoryContentType } from './TreeViewContents';
 import { BsArchive } from 'react-icons/bs';
-import mockRepositoryData from '../mock.repository';
-
-const { items } = mockRepositoryData;
+import { useLazyQuery } from '@apollo/client';
+import { GetItemsForSubjectDocument } from '../../../types/graphql';
 
 interface SubjectTreeNodeProps {
     idSubject: number;
@@ -14,25 +13,32 @@ interface SubjectTreeNodeProps {
 
 function SubjectTreeNode(props: SubjectTreeNodeProps): React.ReactElement {
     const { idSubject, Name } = props;
-    const [loading, setLoading] = useState(true);
+    const [getItemsForSubject, { data, loading, error }] = useLazyQuery(GetItemsForSubjectDocument, {
+        variables: {
+            input: {
+                idSubject
+            }
+        }
+    });
 
-    const loadData = () => {
-        console.log('Loading items for idSubject', idSubject);
-        setTimeout(() => {
-            setLoading(false);
-        }, 2000);
+    const loadItems = () => {
+        getItemsForSubject();
     };
+
+    const renderItem = ({ idItem, Name }, index: number) => <ItemTreeNode key={index} idItem={idItem} Name={Name} />;
+
+    const isEmpty = !data?.getItemsForSubject?.Item.length ?? false;
 
     return (
         <StyledTreeItem
-            onLabelClick={loadData}
-            onIconClick={loadData}
+            onLabelClick={loadItems}
+            onIconClick={loadItems}
             nodeId={`subject-${idSubject}`}
             icon={<BsArchive size={20} />}
             label={Name}
         >
-            <TreeViewContents loading={loading}>
-                {items.map(({ idItem, Name }, index) => <ItemTreeNode key={index} idItem={idItem} Name={Name} />)}
+            <TreeViewContents loading={loading && !error} isEmpty={isEmpty} contentType={RepositoryContentType.items}>
+                {data?.getItemsForSubject?.Item.map(renderItem)}
             </TreeViewContents>
         </StyledTreeItem>
     );
