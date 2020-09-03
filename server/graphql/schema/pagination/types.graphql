@@ -1,0 +1,6 @@
+input PaginationInput {
+    first: Int
+    skip: Int
+    offset: Int
+    size: Int
+}
