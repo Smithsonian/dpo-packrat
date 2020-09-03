@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import StyledTreeItem from './StyledTreeItem';
 import SubjectTreeNode from './SubjectTreeNode';
-import TreeViewContents from './TreeViewContents';
-import mockRepositoryData from '../mock.repository';
-
-const { subjects } = mockRepositoryData;
+import TreeViewContents, { RepositoryContentType } from './TreeViewContents';
+import { useLazyQuery } from '@apollo/client';
+import { GetSubjectsForUnitDocument } from '../../../types/graphql';
 
 interface UnitTreeNodeProps {
     idUnit: number;
@@ -13,24 +12,31 @@ interface UnitTreeNodeProps {
 
 function UnitTreeNode(props: UnitTreeNodeProps): React.ReactElement {
     const { idUnit, Name } = props;
-    const [loading, setLoading] = useState(true);
+    const [getSubjectsForUnit, { data, loading, error }] = useLazyQuery(GetSubjectsForUnitDocument, {
+        variables: {
+            input: {
+                idUnit
+            }
+        }
+    });
 
-    const loadData = () => {
-        console.log('Loading subjects for idUnit', idUnit);
-        setTimeout(() => {
-            setLoading(false);
-        }, 2000);
+    const loadSubjects = () => {
+        getSubjectsForUnit();
     };
+
+    const renderSubject = ({ idSubject, Name }, index: number) => <SubjectTreeNode key={index} idSubject={idSubject} Name={Name} />;
+
+    const isEmpty = !data?.getSubjectsForUnit?.Subject.length ?? false;
 
     return (
         <StyledTreeItem
-            onLabelClick={loadData}
-            onIconClick={loadData}
+            onLabelClick={loadSubjects}
+            onIconClick={loadSubjects}
             nodeId={`unit-${idUnit}`}
             label={Name}
         >
-            <TreeViewContents loading={loading}>
-                {subjects.map(({ idSubject, Name }, index) => <SubjectTreeNode key={index} idSubject={idSubject} Name={Name} />)}
+            <TreeViewContents loading={loading && !error} isEmpty={isEmpty} contentType={RepositoryContentType.subjects}>
+                {data?.getSubjectsForUnit?.Subject.map(renderSubject)}
             </TreeViewContents>
         </StyledTreeItem>
     );
