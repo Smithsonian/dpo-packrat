@@ -31,7 +31,7 @@ beforeAll(() => {
 
 afterAll(async done => {
     Config.storage.root = storageRootOrig;
-    H.Helpers.removeDirectory(storageRootNew, true);
+    await H.Helpers.removeDirectory(storageRootNew, true);
     // jest.setTimeout(3000);
     // await H.Helpers.sleep(2000);
     done();

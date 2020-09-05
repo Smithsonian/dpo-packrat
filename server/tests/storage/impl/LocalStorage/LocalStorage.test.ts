@@ -38,7 +38,7 @@ beforeAll(() => {
 
 afterAll(async done => {
     LOG.logger.info(`Removing test storage root from ${path.resolve(ocflStorageRoot)}`);
-    H.Helpers.removeDirectory(ocflStorageRoot, true);
+    await H.Helpers.removeDirectory(ocflStorageRoot, true);
     // jest.setTimeout(3000);
     // await H.Helpers.sleep(2000);
     done();
@@ -57,7 +57,7 @@ describe('LocalStorage Init', () => {
     });
 
     test('LocalStorage.initialize', async () => {
-        let ioResults: H.IOResults = H.Helpers.createDirectory(ocflStorageRoot);
+        let ioResults: H.IOResults = await H.Helpers.createDirectory(ocflStorageRoot);
         expect(ioResults.success).toBeTruthy();
 
         ioResults = await ls.initialize(ocflStorageRoot);
