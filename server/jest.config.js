@@ -7,7 +7,7 @@ module.exports = {
         '**/tests/graphql/graphql.test.ts',
         '**/tests/auth/**',
         '**/tests/cache/cache.test.ts',
-        '**/tests/utils/*.test.ts',
+        '**/tests/utils/**/*.test.ts',
         '**/tests/collections/*.test.ts',
         '**/tests/storage/**/*.test.ts',
         '**/tests/parser/*.test.ts'

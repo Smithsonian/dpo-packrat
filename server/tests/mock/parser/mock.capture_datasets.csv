@@ -1,0 +1,4 @@
+import_row_id,import_parent_id,model_import_row_id,capture_dataset_guid,capture_dataset_field_id,capture_method,capture_dataset_type,capture_dataset_name,collected_by,date_of_capture,item_position_type,item_position_field_id,item_arrangement_field_id,positionally_matched_capture_datasets,focus_type,light_source_type,background_removal_method,cluster_type,directory_path
+1,1,1,,1,photogrammetry,photogrammetry_image_set,1_high,Max Anderson,2018-06-25,relative_to_turntable,1,1,,fixed,strobe_standard,clip_black,array,nmnh_sea_turtle-1_high
+2,1,1,,2,photogrammetry,photogrammetry_image_set,1_low,Max Anderson,2018-06-25,relative_to_turntable,1,1,,fixed,strobe_standard,clip_black,array,nmnh_sea_turtle-1_low
+3,1,1,,3,photogrammetry,photogrammetry_image_set,2_low,Max Anderson,2018-06-25,relative_to_turntable,1,1,,fixed,strobe_standard,clip_black,array,nmnh_sea_turtle-2_low
