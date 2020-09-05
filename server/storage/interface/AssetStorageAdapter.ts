@@ -180,7 +180,7 @@ export class AssetStorageAdapter {
                 storageKey = storageKeyResults.storageKey;
         }
 
-        const metadata: DBAPI.ObjectAncestry = new DBAPI.ObjectAncestry(idSystemObject); /* istanbul ignore next */
+        const metadata: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors); /* istanbul ignore next */
         if (!await metadata.fetch()) {
             retValue.success = false;
             retValue.error = `AssetStorageAdapter.ingestAsset: Update to retrieve object ancestry for system object ${idSystemObject}`;

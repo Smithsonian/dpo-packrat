@@ -55,5 +55,5 @@ export * from './api/WorkflowStep';
 export * from './api/WorkflowStepSystemObjectXref';
 export * from './api/WorkflowTemplate';
 
-export * from './api/composite/ObjectAncestry';
+export * from './api/composite/ObjectGraph';
 export * from './api/composite/SubjectUnitIdentifier';

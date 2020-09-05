@@ -117,6 +117,18 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
         }
     }
 
+    static async fetchFromSystemObject(idSystemObject: number): Promise<Asset[] | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            return DBC.CopyArray<AssetBase, Asset>(
+                await DBC.DBConnection.prisma.asset.findMany({ where: { SystemObject_Asset_idSystemObjectToSystemObject: { idSystemObject } } }), Asset);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Asset.fetchFromSystemObject', error);
+            return null;
+        }
+    }
+
     /** This method returns the SystemObject to which this asset belongs. Use fetchSystemObject to fetch the SystemObject that represents this asset. */
     async fetchSourceSystemObject(): Promise<SystemObject | null> {
         const { idSystemObject } = this;

@@ -24,6 +24,7 @@ let assetGroup: DBAPI.AssetGroup | null;
 let assetGroup2: DBAPI.AssetGroup | null;
 let assetThumbnail: DBAPI.Asset | null;
 let assetWithoutAG: DBAPI.Asset | null;
+let asset3: DBAPI.Asset | null;
 let assetVersion: DBAPI.AssetVersion | null;
 let assetVersion2: DBAPI.AssetVersion | null;
 let assetVersionNotIngested: DBAPI.AssetVersion | null;
@@ -36,6 +37,7 @@ let captureDataGroupCaptureDataXref2: DBAPI.CaptureDataGroupCaptureDataXref | nu
 let captureDataPhoto: DBAPI.CaptureDataPhoto | null;
 let captureDataPhotoNulls: DBAPI.CaptureDataPhoto | null;
 let geoLocation: DBAPI.GeoLocation | null;
+const identifierValue: string = 'Test Identifier ' + UTIL.randomStorageKey('');
 let identifier: DBAPI.Identifier | null;
 let identifierNull: DBAPI.Identifier | null;
 let identifierSubjectHookup: DBAPI.Identifier | null;
@@ -185,6 +187,20 @@ describe('DB Creation Test Suite', () => {
                 idAsset: 0
             });
         expect(assetThumbnail).toBeTruthy();
+    });
+
+    test('DB Creation: Asset', async () => {
+        if (vocabulary)
+            asset3 = await UTIL.createAssetTest({
+                FileName: 'Test Asset Thumbnail',
+                FilePath: '/test/asset/path',
+                idAssetGroup: null,
+                idVAssetType: vocabulary.idVocabulary,
+                idSystemObject: null,
+                StorageKey: UTIL.randomStorageKey('/test/asset/path/'),
+                idAsset: 0
+            });
+        expect(asset3).toBeTruthy();
     });
 
     test('DB Creation: GeoLocation', async () => {
@@ -644,7 +660,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Identifier', async () => {
         if (systemObjectSubject && vocabulary)
             identifier = new DBAPI.Identifier({
-                IdentifierValue: 'Test Identifier',
+                IdentifierValue: identifierValue,
                 idVIdentifierType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectSubject.idSystemObject,
                 idIdentifier: 0
@@ -1669,6 +1685,27 @@ describe('DB Fetch By ID Test Suite', () => {
             assetFetch = await DBAPI.Asset.fetchFromAssetGroup(assetGroup.idAssetGroup);
             if (assetFetch) {
                 expect(assetFetch).toEqual(expect.arrayContaining([assetThumbnail]));
+            }
+        }
+        expect(assetFetch).toBeTruthy();
+    });
+
+    test('DB Creation: Asset.assignOwner', async () => {
+        let assigned: boolean = false;
+        if (assetThumbnail && subject)
+            assigned = await assetThumbnail.assignOwner(subject);
+        expect(assigned).toBeTruthy();
+    });
+
+    test('DB Fetch Asset: Asset.fetchFromSystemObject', async () => {
+        let assetFetch: DBAPI.Asset[] | null = null;
+        if (systemObjectSubject) {
+            assetFetch = await DBAPI.Asset.fetchFromSystemObject(systemObjectSubject.idSystemObject);
+            if (assetFetch && assetThumbnail && assetWithoutAG) {
+                const IDs: number[] = [];
+                for (const asset of assetFetch)
+                    IDs.push(asset.idAsset);
+                expect(IDs).toEqual(expect.arrayContaining([assetThumbnail.idAsset, assetWithoutAG.idAsset]));
             }
         }
         expect(assetFetch).toBeTruthy();
@@ -2797,10 +2834,8 @@ describe('DB Fetch SystemObject*.fetch Test Suite', () => {
             if (SO) {
                 expect(SO.idAsset).toEqual(assetThumbnail.idAsset);
                 expect(SO.Asset).toBeTruthy();
-                if (SO.Asset) {
-                    expect(SO.Asset).toMatchObject(assetThumbnail);
-                    expect(assetThumbnail).toMatchObject(SO.Asset);
-                }
+                if (SO.Asset)
+                    expect(SO.Asset.idAsset).toEqual(assetThumbnail.idAsset);
                 SO.Asset = assetThumbnail;
             }
         }
@@ -3204,9 +3239,8 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
             SYOP = await DBAPI.SystemObjectPairs.fetch(SOAsset.idSystemObject);
             if (SYOP) {
                 expect(SYOP.Asset).toBeTruthy();
-                expect(SYOP.Asset).toMatchObject(assetThumbnail);
                 if (SYOP.Asset)
-                    expect(assetThumbnail).toMatchObject(SYOP.Asset);
+                    expect(assetThumbnail.idAsset).toEqual(SYOP.Asset.idAsset);
                 SYOP.Asset = assetThumbnail;
             }
         }
@@ -3566,8 +3600,8 @@ describe('DB Fetch Xref Test Suite', () => {
 describe('DB Fetch Special Test Suite', () => {
     test('DB FetchSpecial: Asset.fetchSourceSystemObject 1', async() => {
         let SOAsset: DBAPI.SystemObject | null = null;
-        if (assetThumbnail)
-            SOAsset = await assetThumbnail.fetchSourceSystemObject();
+        if (asset3)
+            SOAsset = await asset3.fetchSourceSystemObject();
         expect(SOAsset).toBeFalsy();
     });
 
@@ -3577,13 +3611,6 @@ describe('DB Fetch Special Test Suite', () => {
             SOAssetSource = await assetWithoutAG.fetchSourceSystemObject();
         expect(SOAssetSource).toBeTruthy();
         expect(SOAssetSource).toEqual(systemObjectSubject);
-    });
-
-    test('DB Creation: Asset.assignOwner', async () => {
-        let assigned: boolean = false;
-        if (assetThumbnail && subject)
-            assigned = await assetThumbnail.assignOwner(subject);
-        expect(assigned).toBeTruthy();
     });
 
     test('DB Fetch Special: CaptureData.fetchFromCaptureDataPhoto', async () => {
@@ -3608,6 +3635,13 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(captureDataFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Identifier.fetchFromIdentifierValue', async () => {
+        const identifierFetch: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(identifierValue);
+        expect(identifierFetch).toBeTruthy();
+        if (identifierFetch && identifier)
+            expect(identifierFetch).toMatchObject([identifier]);
     });
 
     test('DB Fetch Special: Identifier.fetchFromSubjectPreferred', async () => {
@@ -5199,6 +5233,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Asset.fetch(0)).toBeNull();
         expect(await DBAPI.Asset.fetchByStorageKey('')).toBeNull();
         expect(await DBAPI.Asset.fetchFromAssetGroup(0)).toBeNull();
+        expect(await DBAPI.Asset.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
@@ -5221,6 +5256,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBC.CopyObject<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
         expect(await DBAPI.GeoLocation.fetch(0)).toBeNull();
         expect(await DBAPI.Identifier.fetch(0)).toBeNull();
+        expect(await DBAPI.Identifier.fetchFromIdentifierValue('')).toBeNull();
         expect(await DBAPI.Identifier.fetchFromSubjectPreferred(0)).toBeNull();
         expect(await DBAPI.Identifier.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.IntermediaryFile.fetch(0)).toBeNull();

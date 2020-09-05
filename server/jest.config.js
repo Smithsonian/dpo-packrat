@@ -1,9 +1,9 @@
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
+    // collectCoverage: true,
     testMatch: [
         '**/tests/db/**/?(*.)+(test).ts',
-        '**/tests/db/composite/?(*.)+(test).ts',
         '**/tests/graphql/graphql.test.ts',
         '**/tests/auth/**',
         '**/tests/cache/cache.test.ts',

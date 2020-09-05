@@ -10,9 +10,9 @@ import * as ST from '../../../../storage/impl/LocalStorage/SharedTypes';
 import * as DBAPI from '../../../../db';
 import * as H from '../../../../utils/helpers';
 import * as LOG from '../../../../utils/logger';
-import { ObjectHierarchyTestSetup } from '../../../db/composite/ObjectHierarchy.setup';
+import { ObjectGraphTestSetup } from '../../../db/composite/ObjectGraph.setup';
 
-const OHTS: ObjectHierarchyTestSetup = new ObjectHierarchyTestSetup();
+const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
 const ocflRoot: OR.OCFLRoot = new OR.OCFLRoot();
 let ocflObject: OO.OCFLObject | null = null;
 let ocflStorageRoot: string;
@@ -335,7 +335,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
         return '';
 
     // construct metadata for addOrUpdate
-    const metadataOA: DBAPI.ObjectAncestry | null = SOBased ? await ObjectHierarchyTestSetup.testObjectAncestryFetch(SOBased) : null;
+    const metadataOA: DBAPI.ObjectGraph | null = SOBased ? await ObjectGraphTestSetup.testObjectGraphFetch(SOBased, DBAPI.eObjectGraphMode.eAncestors) : null;
 
     // identify location to which we'll write our temporary data (as if we were streaming content here); write data
     const directoryName: string = createUploadLocation(ocflRoot);
