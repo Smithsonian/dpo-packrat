@@ -8,7 +8,7 @@ import * as CACHE from '../../../cache';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 import Config from '../../../config';
-import { ObjectHierarchyTestSetup } from '../../db/composite/ObjectHierarchy.setup';
+import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
 
 type AssetStorageAdapterTestCase = {
     asset: DBAPI.Asset,
@@ -16,7 +16,7 @@ type AssetStorageAdapterTestCase = {
     SOBased: DBAPI.SystemObjectBased | null
 };
 
-const OHTS: ObjectHierarchyTestSetup = new ObjectHierarchyTestSetup();
+const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
 let vAssetType: DBAPI.Vocabulary;
 let opInfo: STORE.OperationInfo;
 let TestCase1: AssetStorageAdapterTestCase;

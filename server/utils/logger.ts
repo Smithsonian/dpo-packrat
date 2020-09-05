@@ -12,6 +12,7 @@ function configureLogger(logPath: string | null): void {
     if (logger)
         return;
 
+    /* istanbul ignore else */
     if (!logPath)
         logPath = Config.log.root ? Config.log.root : /* istanbul ignore next */ './var/logs';
 
@@ -45,7 +46,7 @@ function configureLogger(logPath: string | null): void {
             // format: winston.format.simple(), // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
             format: winston.format.combine(
                 winston.format.errors({ stack: true }), // emit stack trace when Error objects are passed in
-                winston.format.timestamp(),
+                // winston.format.timestamp(),
                 winston.format.colorize(),
                 winston.format.simple()
             )
@@ -73,9 +74,10 @@ function configureLogger(logPath: string | null): void {
     }
 
     try {
+        /* istanbul ignore if */
         if (!fs.existsSync(logPath))
             fs.mkdirSync(logPath);
-    } catch (error) {
+    } catch (error) /* istanbul ignore next */ {
         logger.error(error);
     }
 

@@ -175,7 +175,7 @@ export class Helpers {
                 stream.end();
                 stream.on('finish', () => { resolve(hash.digest('hex')); });
                 stream.on('error', reject);
-            } catch (error) {
+            } catch (error) /* istanbul ignore next */ {
                 LOG.logger.error('Helpers.createRandomFile() error', error);
                 reject(error);
             }
@@ -291,7 +291,7 @@ export class Helpers {
     static async computeHashFromFile(filePath: string, hashMethod: string): Promise<HashResults> {
         try {
             return await Helpers.computeHashFromStream(fs.createReadStream(filePath), hashMethod);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             return {
                 success: false,
                 hash: '',
@@ -326,7 +326,7 @@ export class Helpers {
                     resolve(res);
                 });
             });
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             return {
                 success: false,
                 hash: '',
