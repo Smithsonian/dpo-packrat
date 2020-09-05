@@ -385,13 +385,13 @@ export class OCFLInventory implements OCFLInventoryType {
         // Confirm conformance to spec
         // Confirm inventory hash exists, is well-formed, and matches inventory
         const inventoryFilename: string = OCFLInventory.inventoryFilePath(ocflObject, isRootInventory ? 0 : this.headVersion);
-        results = H.Helpers.fileOrDirExists(inventoryFilename);
+        results = await H.Helpers.fileOrDirExists(inventoryFilename);
         /* istanbul ignore if */
         if (!results.success)
             return results;
 
         const digestFilename: string = OCFLInventory.inventoryDigestPath(ocflObject, isRootInventory ? 0 : this.headVersion);
-        results = H.Helpers.fileOrDirExists(digestFilename);
+        results = await H.Helpers.fileOrDirExists(digestFilename);
         if (!results.success)
             return results;
 
@@ -402,7 +402,7 @@ export class OCFLInventory implements OCFLInventoryType {
 
         try {
             const digestContentsExpected: string = OCFLInventory.digestContents(hashResults.hash);
-            const digestContents: string = fs.readFileSync(digestFilename);
+            const digestContents: string = await fs.readFile(digestFilename);
             if (digestContentsExpected != digestContents) {
                 results.success = false;
                 results.error = `Inventory digest ${digestFilename} did not have expected contents`;
@@ -459,7 +459,7 @@ export class OCFLInventory implements OCFLInventoryType {
             // write hash to inventory digest
             const digestContents: string = OCFLInventory.digestContents(hashResults.hash);
             const destDigest: string = OCFLInventory.inventoryDigestPath(ocflObject, version);
-            fs.writeFileSync(destDigest, digestContents);
+            await fs.writeFile(destDigest, digestContents);
 
             return {
                 success: true,
@@ -485,16 +485,16 @@ export class OCFLInventory implements OCFLInventoryType {
     }
 
     /** Read root inventory from disk */
-    static readFromDisk(ocflObject: OCFLObject): OCFLInventoryReadResults {
-        return OCFLInventory.readFromDiskWorker(ocflObject, 0);
+    static async readFromDisk(ocflObject: OCFLObject): Promise<OCFLInventoryReadResults> {
+        return await OCFLInventory.readFromDiskWorker(ocflObject, 0);
     }
 
     /** Read version inventory from disk */
-    static readFromDiskVersion(ocflObject: OCFLObject, version: number): OCFLInventoryReadResults {
-        return OCFLInventory.readFromDiskWorker(ocflObject, version);
+    static async readFromDiskVersion(ocflObject: OCFLObject, version: number): Promise<OCFLInventoryReadResults> {
+        return await OCFLInventory.readFromDiskWorker(ocflObject, version);
     }
 
-    private static readFromDiskWorker(ocflObject: OCFLObject, version: number): OCFLInventoryReadResults {
+    private static async readFromDiskWorker(ocflObject: OCFLObject, version: number): Promise<OCFLInventoryReadResults> {
         const retValue: OCFLInventoryReadResults = {
             ocflInventory: null,
             success: false,
@@ -503,7 +503,7 @@ export class OCFLInventory implements OCFLInventoryType {
 
         const dest: string = OCFLInventory.inventoryFilePath(ocflObject, version);
         // LOG.logger.info(`OCFLInventory.readFromDiskWorker ${dest}`);
-        const ioResults = H.Helpers.fileOrDirExists(dest);
+        const ioResults = await H.Helpers.fileOrDirExists(dest);
         if (!ioResults.success) {
             retValue.success = false;
             retValue.error = ioResults.error;
@@ -513,7 +513,7 @@ export class OCFLInventory implements OCFLInventoryType {
 
         try {
             retValue.ocflInventory = new OCFLInventory();
-            retValue.ocflInventory.revive(JSON.parse(fs.readFileSync(dest, { encoding: 'utf8' })));
+            retValue.ocflInventory.revive(JSON.parse(await fs.readFile(dest, { encoding: 'utf8' })));
             retValue.success = true;
         } catch (error) {
             LOG.logger.error('OCFLInventory.readFromDisk', error);
