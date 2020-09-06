@@ -6,7 +6,6 @@ import {
     PhotogrammetryFields,
     METADATA_ACTIONS,
     IngestionDispatchAction,
-    AssetType,
     StateFolder,
     StateVocabulary,
     StateIdentifier
@@ -46,7 +45,7 @@ function useMetadata(): UseMetadata {
         ingestionDispatch
     } = useContext(AppContext);
 
-    const { getInitialEntryWithVocabularies } = useVocabularyEntries();
+    const { getInitialEntryWithVocabularies, getAssetType } = useVocabularyEntries();
 
     // TODO: KARAN: replace index with fileId this afterwards
     const idAssetVersions: number[] = [...metadatas].map((_, index) => index);
@@ -64,7 +63,9 @@ function useMetadata(): UseMetadata {
         const { file } = metadata;
         const { type } = file;
 
-        if (type === AssetType.Photogrammetry) {
+        const assetType = getAssetType(type);
+
+        if (assetType.photogrammetry) {
             errors.photogrammetry.dateCaptured = metadata.photogrammetry.dateCaptured.toString() === 'Invalid Date';
             errors.photogrammetry.datasetType = metadata.photogrammetry.datasetType === null;
         }
@@ -180,7 +181,9 @@ function useMetadata(): UseMetadata {
             const metadata = updatedMetadatas[i];
             const { file, photogrammetry } = metadata;
 
-            if (file.type === AssetType.Photogrammetry) {
+            const assetType = getAssetType(file.type);
+
+            if (assetType.photogrammetry) {
                 // TODO: KARAN: replace index with fileId this afterwards
                 const variables = {
                     input: {

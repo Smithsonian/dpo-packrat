@@ -967,11 +967,6 @@ export type GetWorkflowResult = {
 };
 
 
-export enum AssetType {
-    Diconde = 'Diconde',
-    Photogrammetry = 'Photogrammetry'
-}
-
 export type Mutation = {
     __typename?: 'Mutation';
     uploadAsset: UploadAssetResult;
@@ -992,7 +987,7 @@ export type Mutation = {
 
 export type MutationUploadAssetArgs = {
     file: Scalars['Upload'];
-    type: AssetType;
+    type: Scalars['Int'];
 };
 
 
@@ -1053,12 +1048,6 @@ export type MutationCreateVocabularyArgs = {
 
 export type MutationCreateVocabularySetArgs = {
     input: CreateVocabularySetInput;
-};
-
-export type UploadAssetInput = {
-    __typename?: 'UploadAssetInput';
-    file: Scalars['Upload'];
-    type: AssetType;
 };
 
 export enum UploadStatus {
@@ -1271,7 +1260,7 @@ export type CreateVocabularySetResult = {
 
 export type UploadAssetMutationVariables = Exact<{
     file: Scalars['Upload'];
-    type: AssetType;
+    type: Scalars['Int'];
 }>;
 
 
@@ -1596,6 +1585,12 @@ export type GetUploadedAssetVersionQuery = (
                         Asset?: Maybe<(
                             { __typename?: 'Asset' }
                             & Pick<Asset, 'idAsset' | 'FileName'>
+                            & {
+                                VAssetType?: Maybe<(
+                                    { __typename?: 'Vocabulary' }
+                                    & Pick<Vocabulary, 'idVocabulary' | 'Term'>
+                                )>
+                            }
                         )>
                     }
                 )>>
@@ -2005,7 +2000,7 @@ export type GetWorkflowQuery = (
 
 
 export const UploadAssetDocument = gql`
-    mutation uploadAsset($file: Upload!, $type: AssetType!) {
+    mutation uploadAsset($file: Upload!, $type: Int!) {
   uploadAsset(file: $file, type: $type) {
     status
   }
@@ -2562,6 +2557,10 @@ export const GetUploadedAssetVersionDocument = gql`
       Asset {
         idAsset
         FileName
+        VAssetType {
+          idVocabulary
+          Term
+        }
       }
     }
   }

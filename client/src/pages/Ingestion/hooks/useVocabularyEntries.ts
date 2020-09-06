@@ -3,12 +3,18 @@ import { AppContext, IngestionDispatchAction, StateVocabulary, VocabularyOption,
 import { apolloClient } from '../../../graphql';
 import { GetVocabularyEntriesDocument } from '../../../types/graphql';
 import { eVocabularySetID } from '../../../types/server';
+import lodash from 'lodash';
+
+type AssetType = {
+    photogrammetry: boolean;
+};
 
 interface UseVocabularyEntries {
     updateVocabularyEntries: () => Promise<StateVocabulary>;
     getEntries: (eVocabularySetID: eVocabularySetID) => VocabularyOption[];
     getInitialEntry: (eVocabularySetID: eVocabularySetID) => number | null;
     getInitialEntryWithVocabularies: (vocabularies: StateVocabulary, eVocabularySetID: eVocabularySetID) => number | null;
+    getAssetType: (idVocabulary: number) => AssetType;
 }
 
 function useVocabularyEntries(): UseVocabularyEntries {
@@ -27,7 +33,8 @@ function useVocabularyEntries(): UseVocabularyEntries {
                 eVocabularySetID.eCaptureDataLightSourceType,
                 eVocabularySetID.eCaptureDataBackgroundRemovalMethod,
                 eVocabularySetID.eCaptureDataClusterType,
-                eVocabularySetID.eCaptureDataFileVariantType
+                eVocabularySetID.eCaptureDataFileVariantType,
+                eVocabularySetID.eAssetAssetType
             ]
         }
     };
@@ -46,12 +53,12 @@ function useVocabularyEntries(): UseVocabularyEntries {
             updatedVocabularyEntries.set(eVocabSetID, Vocabulary);
         });
 
-        const updateMetadataFieldsAction: IngestionDispatchAction = {
+        const updateVocabulariesAction: IngestionDispatchAction = {
             type: VOCABULARY_ACTIONS.ADD_VOCABULARIES,
             vocabularies: updatedVocabularyEntries
         };
 
-        ingestionDispatch(updateMetadataFieldsAction);
+        ingestionDispatch(updateVocabulariesAction);
 
         return updatedVocabularyEntries;
     };
@@ -88,11 +95,30 @@ function useVocabularyEntries(): UseVocabularyEntries {
         return null;
     };
 
+    const getAssetType = (idVocabulary: number): AssetType => {
+        const vocabularyEntry = vocabularies.get(eVocabularySetID.eAssetAssetType);
+
+        const assetType: AssetType = {
+            photogrammetry: false
+        };
+
+        if (vocabularyEntry) {
+            const foundVocabulary = lodash.find(vocabularyEntry, option => option.idVocabulary === idVocabulary);
+
+            if (foundVocabulary) {
+                assetType.photogrammetry = foundVocabulary.Term.toLowerCase().includes('photogrammetry');
+            }
+        }
+
+        return assetType;
+    };
+
     return {
         updateVocabularyEntries,
         getEntries,
         getInitialEntry,
-        getInitialEntryWithVocabularies
+        getInitialEntryWithVocabularies,
+        getAssetType
     };
 }
 

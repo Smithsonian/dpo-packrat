@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import KeepAlive from 'react-activation';
-import { SidebarBottomNavigator } from '../../../../components';
+import { SidebarBottomNavigator, Loader } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { Colors } from '../../../../theme';
 import UploadFilesPicker from './UploadFilesPicker';
@@ -12,6 +13,7 @@ import { useHistory } from 'react-router';
 import useFilesUpload from '../../hooks/useFilesUpload';
 import { toast } from 'react-toastify';
 import { AppContext } from '../../../../context';
+import useVocabularyEntries from '../../hooks/useVocabularyEntries';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -54,8 +56,20 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 function Uploads(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
+    const [loadingVocabulary, setLoadingVocabulary] = useState(true);
     const { ingestion: { uploads } } = useContext(AppContext);
     const { updateMetadataSteps, discardFiles } = useFilesUpload();
+    const { updateVocabularyEntries } = useVocabularyEntries();
+
+    const fetchVocabularyEntries = async () => {
+        setLoadingVocabulary(true);
+        await updateVocabularyEntries();
+        setLoadingVocabulary(false);
+    };
+
+    useEffect(() => {
+        fetchVocabularyEntries();
+    }, []);
 
     const onIngest = () => {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
@@ -81,9 +95,18 @@ function Uploads(): React.ReactElement {
         <KeepAlive>
             <Box className={classes.container}>
                 <Box className={classes.content}>
-                    <UploadFilesPicker />
-                    <UploadCompleteList />
-                    <UploadList />
+                    {
+                        loadingVocabulary ?
+                            <Loader minHeight='60vh' />
+                            : (
+                                <>
+                                    <UploadFilesPicker />
+                                    <UploadCompleteList />
+                                    <UploadList />
+                                </>
+                            )
+                    }
+
                 </Box>
                 <SidebarBottomNavigator
                     leftLabel='Discard'
