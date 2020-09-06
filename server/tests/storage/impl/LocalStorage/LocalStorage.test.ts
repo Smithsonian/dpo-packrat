@@ -7,7 +7,7 @@ import * as LS from '../../../../storage/impl/LocalStorage/LocalStorage';
 import * as DBAPI from '../../../../db';
 import * as H from '../../../../utils/helpers';
 import * as LOG from '../../../../utils/logger';
-import { ObjectHierarchyTestSetup } from '../../../db/composite/ObjectHierarchy.setup';
+import { ObjectGraphTestSetup } from '../../../db/composite/ObjectGraph.setup';
 
 type LocalStorageTestCase = {
     storageKeyStaging: string;
@@ -24,7 +24,7 @@ let LSTC: LocalStorageTestCase;
 let LSTC2: LocalStorageTestCase;
 let LSTC3: LocalStorageTestCase;
 
-const OHTS: ObjectHierarchyTestSetup = new ObjectHierarchyTestSetup();
+const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
 let ocflStorageRoot: string;
 let ls: LS.LocalStorage;
 let opInfo: STORE.OperationInfo;
@@ -38,7 +38,7 @@ beforeAll(() => {
 
 afterAll(async done => {
     LOG.logger.info(`Removing test storage root from ${path.resolve(ocflStorageRoot)}`);
-    H.Helpers.removeDirectory(ocflStorageRoot, true);
+    await H.Helpers.removeDirectory(ocflStorageRoot, true);
     // jest.setTimeout(3000);
     // await H.Helpers.sleep(2000);
     done();
@@ -57,7 +57,7 @@ describe('LocalStorage Init', () => {
     });
 
     test('LocalStorage.initialize', async () => {
-        let ioResults: H.IOResults = H.Helpers.createDirectory(ocflStorageRoot);
+        let ioResults: H.IOResults = await H.Helpers.createDirectory(ocflStorageRoot);
         expect(ioResults.success).toBeTruthy();
 
         ioResults = await ls.initialize(ocflStorageRoot);
@@ -218,8 +218,8 @@ async function readStreamAndComputeHash(stream: STR.Readable): Promise<string> {
     });
 }
 
-async function constructMetadata(SOBased: DBAPI.SystemObjectBased | null): Promise<DBAPI.ObjectAncestry | null> {
-    return SOBased ? await ObjectHierarchyTestSetup.testObjectAncestryFetch(SOBased) : null;
+async function constructMetadata(SOBased: DBAPI.SystemObjectBased | null): Promise<DBAPI.ObjectGraph | null> {
+    return SOBased ? await ObjectGraphTestSetup.testObjectGraphFetch(SOBased, DBAPI.eObjectGraphMode.eAncestors) : null;
 }
 
 async function testWriteStream(fileSize: number): Promise<LocalStorageTestCase> {

@@ -6,6 +6,7 @@ import * as L from 'lodash';
 import * as path from 'path';
 import { Stats } from 'fs';
 import * as fs from 'fs-extra';
+import { promises as fsp } from 'fs';
 import * as crypto from 'crypto';
 import * as STR from 'stream';
 
@@ -52,14 +53,14 @@ export class Helpers {
         return !bInvalid;
     }
 
-    static copyFile(nameSource: string, nameDestination: string, allowOverwrite: boolean = true): IOResults {
+    static async copyFile(nameSource: string, nameDestination: string, allowOverwrite: boolean = true): Promise<IOResults> {
         const res: IOResults = {
             success: true,
             error: ''
         };
 
         try {
-            fs.copyFileSync(nameSource, nameDestination, allowOverwrite ? 0 : fs.constants.COPYFILE_EXCL);
+            await fsp.copyFile(nameSource, nameDestination, allowOverwrite ? 0 : fs.constants.COPYFILE_EXCL);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.copyFile', error);
             res.success = false;
@@ -68,14 +69,14 @@ export class Helpers {
         return res;
     }
 
-    static moveFile(nameSource: string, nameDestination: string): IOResults {
+    static async moveFile(nameSource: string, nameDestination: string): Promise<IOResults> {
         const res: IOResults = {
             success: true,
             error: ''
         };
 
         try {
-            fs.renameSync(nameSource, nameDestination);
+            await fsp.rename(nameSource, nameDestination);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.moveFile', error);
             res.success = false;
@@ -84,33 +85,35 @@ export class Helpers {
         return res;
     }
 
-    static fileOrDirExists(name: string): IOResults {
+    static async fileOrDirExists(name: string): Promise<IOResults> {
         const res: IOResults = {
             success: true,
             error: ''
         };
 
         try {
-            if (!fs.existsSync(name)) {
+            const stats = await fsp.stat(name);
+            if (!stats.isFile && !stats.isDirectory) {
                 res.success = false;
                 res.error = `${name} does not exist`;
             }
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.fileExists', error);
+            LOG.logger.error('Helpers.fileOrDirExists', error);
             res.success = false;
             res.error = `Unable to test existence of ${name}: ${error}`;
         }
         return res;
     }
 
-    static ensureFileExists(filename: string): IOResults {
+    static async ensureFileExists(filename: string): Promise<IOResults> {
         const res: IOResults = {
             success: true,
             error: ''
         };
 
         try {
-            fs.closeSync(fs.openSync(filename, 'a'));
+            const fileHandle: fsp.FileHandle = await fsp.open(filename, 'a');
+            await fileHandle.close();
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.ensureFileExists', error);
             res.success = false;
@@ -119,33 +122,33 @@ export class Helpers {
         return res;
     }
 
-    static initializeFile(source: string | null, dest: string, description: string): IOResults {
+    static async initializeFile(source: string | null, dest: string, description: string): Promise<IOResults> {
         let ioResults: IOResults;
-        ioResults = Helpers.fileOrDirExists(dest);
+        ioResults = await Helpers.fileOrDirExists(dest);
         if (ioResults.success)
             return ioResults;
 
         LOG.logger.info(`${description} Creating ${dest}`);
-        ioResults = source ? Helpers.copyFile(source, dest) : Helpers.ensureFileExists(dest);
+        ioResults = source ? await Helpers.copyFile(source, dest) : await Helpers.ensureFileExists(dest);
         /* istanbul ignore if */
         if (!ioResults.success)
             LOG.logger.error(`${description} Unable to create ${dest}`);
         return ioResults;
     }
 
-    static filesMatch(file1: string, file2: string): IOResults {
+    static async filesMatch(file1: string, file2: string): Promise<IOResults> {
         let ioResults: IOResults;
-        ioResults = Helpers.fileOrDirExists(file1);
+        ioResults = await Helpers.fileOrDirExists(file1);
         if (!ioResults.success)
             return ioResults;
 
-        ioResults = Helpers.fileOrDirExists(file2);
+        ioResults = await Helpers.fileOrDirExists(file2);
         if (!ioResults.success)
             return ioResults;
 
         try {
-            const file1Buf = fs.readFileSync(file1);
-            const file2Buf = fs.readFileSync(file2);
+            const file1Buf = await fsp.readFile(file1);
+            const file2Buf = await fsp.readFile(file2);
             ioResults.success = file1Buf.equals(file2Buf);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.ensureFileExists', error);
@@ -175,22 +178,21 @@ export class Helpers {
                 stream.end();
                 stream.on('finish', () => { resolve(hash.digest('hex')); });
                 stream.on('error', reject);
-            } catch (error) {
+            } catch (error) /* istanbul ignore next */ {
                 LOG.logger.error('Helpers.createRandomFile() error', error);
                 reject(error);
             }
         });
     }
 
-    static removeFile(filename: string): IOResults {
+    static async removeFile(filename: string): Promise<IOResults> {
         const res: IOResults = {
             success: true,
             error: ''
         };
 
         try {
-            if (fs.existsSync(filename))
-                fs.unlinkSync(filename);
+            await fsp.unlink(filename);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.removeFile', error);
             res.success = false;
@@ -199,15 +201,16 @@ export class Helpers {
         return res;
     }
 
-    static createDirectory(directory: string): IOResults {
+    static async createDirectory(directory: string): Promise<IOResults> {
         const res: IOResults = {
             success: true,
             error: ''
         };
 
         try {
-            if (!fs.existsSync(directory))
-                fs.mkdirsSync(directory);
+            await fsp.mkdir(directory, { recursive: true });
+            // if (!fs.existsSync(directory))
+            //     fs.mkdirsSync(directory);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.createDirectory', error);
             res.success = false;
@@ -216,15 +219,14 @@ export class Helpers {
         return res;
     }
 
-    static removeDirectory(directory: string, recursive: boolean = false): IOResults {
+    static async removeDirectory(directory: string, recursive: boolean = false): Promise<IOResults> {
         const res: IOResults = {
             success: true,
             error: ''
         };
 
         try {
-            if (fs.existsSync(directory))
-                fs.rmdirSync(directory, { recursive });
+            await fsp.rmdir(directory, { recursive });
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.removeDirectory', error);
             res.success = false;
@@ -233,29 +235,30 @@ export class Helpers {
         return res;
     }
 
-    static initializeDirectory(directory: string, description: string): IOResults {
-        let ioResults: IOResults = Helpers.fileOrDirExists(directory);
+    static async initializeDirectory(directory: string, description: string): Promise<IOResults> {
+        let ioResults: IOResults = await Helpers.fileOrDirExists(directory);
         if (ioResults.success)
             return ioResults;
 
         LOG.logger.info(`${description} Creating ${directory}`);
-        ioResults = Helpers.createDirectory(directory);
+        ioResults = await Helpers.createDirectory(directory);
         /* istanbul ignore if */
         if (!ioResults.success)
             LOG.logger.error(`${description} Unable to create ${directory}`);
         return ioResults;
     }
 
-    static getDirectoryEntriesRecursive(directory: string, maxDepth: number = 32): string[] | null {
+    static async getDirectoryEntriesRecursive(directory: string, maxDepth: number = 32): Promise<string[] | null> {
         const dirEntries: string[] = [];
 
         try {
             const files: string[] = fs.readdirSync(directory);
             for (const fileName of files) {
                 const fullPath: string = path.join(directory, fileName);
-                if (fs.statSync(fullPath).isDirectory()) {
+                const stats = await fsp.stat(fullPath);
+                if (stats.isDirectory()) {
                     if (maxDepth > 0) {
-                        const subDirEntries: string[] | null = Helpers.getDirectoryEntriesRecursive(fullPath, maxDepth - 1);
+                        const subDirEntries: string[] | null = await Helpers.getDirectoryEntriesRecursive(fullPath, maxDepth - 1);
                         /* istanbul ignore next */
                         if (subDirEntries)
                             for (const subDirEntry of subDirEntries)
@@ -271,7 +274,7 @@ export class Helpers {
         return dirEntries;
     }
 
-    static stat(filePath: string): StatResults {
+    static async stat(filePath: string): Promise<StatResults> {
         const res: StatResults = {
             stat: null,
             success: true,
@@ -279,7 +282,7 @@ export class Helpers {
         };
 
         try {
-            res.stat = fs.statSync(filePath);
+            res.stat = await fsp.stat(filePath);
             res.success = true;
         } catch (error) /* istanbul ignore next */ {
             res.success = false;
@@ -291,7 +294,7 @@ export class Helpers {
     static async computeHashFromFile(filePath: string, hashMethod: string): Promise<HashResults> {
         try {
             return await Helpers.computeHashFromStream(fs.createReadStream(filePath), hashMethod);
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             return {
                 success: false,
                 hash: '',
@@ -326,7 +329,7 @@ export class Helpers {
                     resolve(res);
                 });
             });
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             return {
                 success: false,
                 hash: '',
@@ -342,7 +345,7 @@ export class Helpers {
 
     static async writeJsonAndComputeHash(dest: string, obj: any, hashMethod: string): Promise<HashResults> {
         try {
-            fs.writeJsonSync(dest, obj);
+            await fs.writeJson(dest, obj);
             return await Helpers.computeHashFromFile(dest, hashMethod);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.writeJsonAndComputeHash', error);
