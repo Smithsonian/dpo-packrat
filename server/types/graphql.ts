@@ -1009,6 +1009,12 @@ export type MutationCreateVocabularySetArgs = {
     input: CreateVocabularySetInput;
 };
 
+export type UploadAssetInput = {
+    __typename?: 'UploadAssetInput';
+    file: Scalars['Upload'];
+    type: Scalars['Int'];
+};
+
 export enum UploadStatus {
     Complete = 'COMPLETE',
     Failed = 'FAILED'
