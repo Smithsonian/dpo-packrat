@@ -30,6 +30,7 @@ export enum eVocabularyID {
     eIdentifierIdentifierTypeARK,
     eIdentifierIdentifierTypeDOI,
     eIdentifierIdentifierTypeUnitCMSID,
+    eAssetAssetTypeBulkIngestion,
     eAssetAssetTypeCaptureDataSetPhotogrammetry,
     eAssetAssetTypeCaptureDataSetDiconde,
     eAssetAssetTypeCaptureDataSetDicom,
@@ -143,6 +144,7 @@ export class VocabularyCache {
                 } break;
                 case eVocabularySetID.eAssetAssetType: {
                     switch (vocabulary.Term) {
+                        case 'Bulk Ingestion':                      eVocabEnum = eVocabularyID.eAssetAssetTypeBulkIngestion; break;
                         case 'Capture Data Set: Photogrammetry':    eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry; break;
                         case 'Capture Data Set: Diconde':           eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde; break;
                         case 'Capture Data Set: Dicom':             eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetDicom; break;

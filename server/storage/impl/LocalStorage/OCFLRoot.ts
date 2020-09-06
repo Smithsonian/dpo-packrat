@@ -44,7 +44,7 @@ export class OCFLRoot {
     }
 
     /** Computes a random directory and filename in the staging area */
-    computeWriteStreamLocation(): ComputeWriteStreamLocationResults {
+    async computeWriteStreamLocation(): Promise<ComputeWriteStreamLocationResults> {
         const results: ComputeWriteStreamLocationResults = {
             locationPublic: '<INVALID>',
             locationPrivate: '<INVALID>',
@@ -57,7 +57,7 @@ export class OCFLRoot {
         const directoryName: string = H.Helpers.randomSlug();
         const fileName: string      = H.Helpers.randomSlug();
         const directoryPath: string = path.join(this.computeLocationStagingRoot(), directoryName);
-        results.ioResults = H.Helpers.createDirectory(directoryPath);
+        results.ioResults = await H.Helpers.createDirectory(directoryPath);
         /* istanbul ignore else */
         if (results.ioResults.success) {
             results.locationPublic = path.join(directoryName, fileName);    // Partial path
@@ -75,15 +75,15 @@ export class OCFLRoot {
         LOG.logger.info(`OCFL Storage initialization: Staging Root = ${this.storageRootStaging}`);
 
         let ioResults: H.IOResults;
-        ioResults = H.Helpers.initializeDirectory(this.storageRoot, 'Storage Root');
+        ioResults = await H.Helpers.initializeDirectory(this.storageRoot, 'Storage Root');
         /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
-        ioResults = H.Helpers.initializeDirectory(this.storageRootRepo, 'Storage OCFLRoot');
+        ioResults = await H.Helpers.initializeDirectory(this.storageRootRepo, 'Storage OCFLRoot');
         /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
-        ioResults = H.Helpers.initializeDirectory(this.storageRootStaging, 'Storage Staging Root');
+        ioResults = await H.Helpers.initializeDirectory(this.storageRootStaging, 'Storage Staging Root');
         /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
@@ -101,21 +101,21 @@ export class OCFLRoot {
         // Ensure initialization of OCFL Storage Root "NAMASTE" file
         let source: string          = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootNamasteFilename);
         let dest: string            = path.join(this.storageRootRepo, ST.OCFLStorageRootNamasteFilename);
-        let ioResults: H.IOResults  = H.Helpers.initializeFile(source, dest, 'OCFL Root Namaste File');
+        let ioResults: H.IOResults  = await H.Helpers.initializeFile(source, dest, 'OCFL Root Namaste File');
         /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootLayoutFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootLayoutFilename);
-        ioResults   = H.Helpers.initializeFile(source, dest, 'OCFL Root Layout File');
+        ioResults   = await H.Helpers.initializeFile(source, dest, 'OCFL Root Layout File');
         /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootSpecFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootSpecFilename);
-        ioResults   = H.Helpers.initializeFile(source, dest, 'OCFL Root Spec File');
+        ioResults   = await H.Helpers.initializeFile(source, dest, 'OCFL Root Spec File');
         /* istanbul ignore if */
         if (!ioResults.success)
             return ioResults;
@@ -126,19 +126,19 @@ export class OCFLRoot {
     async validate(): Promise<H.IOResults> {
         let source: string          = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootNamasteFilename);
         let dest: string            = path.join(this.storageRootRepo, ST.OCFLStorageRootNamasteFilename);
-        let ioResults: H.IOResults  = H.Helpers.filesMatch(source, dest);
+        let ioResults: H.IOResults  = await H.Helpers.filesMatch(source, dest);
         if (!ioResults.success)
             return ioResults;
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootLayoutFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootLayoutFilename);
-        ioResults   = H.Helpers.filesMatch(source, dest);
+        ioResults   = await H.Helpers.filesMatch(source, dest);
         if (!ioResults.success)
             return ioResults;
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootSpecFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootSpecFilename);
-        ioResults   = H.Helpers.filesMatch(source, dest);
+        ioResults   = await H.Helpers.filesMatch(source, dest);
         if (!ioResults.success)
             return ioResults;
 
