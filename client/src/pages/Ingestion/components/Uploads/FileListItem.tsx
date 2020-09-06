@@ -7,7 +7,7 @@ import { FaRedo, FaRegCircle, FaCheckCircle } from 'react-icons/fa';
 import { MdFileUpload } from 'react-icons/md';
 import Colors, { colorWithOpacity } from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
-import { FileId, AssetType } from '../../../../context';
+import { FileId, VocabularyOption } from '../../../../context';
 import { motion } from 'framer-motion';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -105,23 +105,24 @@ interface FileListItemProps {
     size: number;
     name: string;
     selected: boolean;
+    typeOptions: VocabularyOption[];
     uploading: boolean;
     complete: boolean;
     progress: number;
     failed: boolean;
     cancelled: boolean;
-    type: AssetType;
+    type: number;
     status: string;
     onSelect: (id: FileId, selected: boolean) => void;
     onUpload: (id: FileId) => void;
     onCancel: (id: FileId) => void;
     onRetry: (id: FileId) => void;
     onRemove: (id: FileId) => void;
-    onChangeType: (id: FileId, type: AssetType) => void;
+    onChangeType: (id: FileId, type: number) => void;
 }
 
 function FileListItem(props: FileListItemProps): React.ReactElement {
-    const { id, name, size, type, status, complete, progress, selected, failed, uploading, onChangeType, onUpload, onCancel, onRemove, onRetry, onSelect } = props;
+    const { id, name, size, type, typeOptions, status, complete, progress, selected, failed, uploading, onChangeType, onUpload, onCancel, onRemove, onRetry, onSelect } = props;
     const classes = useStyles(props);
 
     const upload = () => onUpload(id);
@@ -189,11 +190,10 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                     <Select
                         value={type}
                         className={classes.typeSelect}
-                        renderValue={value => `Capture Data: ${value}`}
-                        onChange={({ target: { value } }) => onChangeType(id, value as AssetType)}
+                        onChange={({ target: { value } }) => onChangeType(id, value as number)}
                         disableUnderline
                     >
-                        {Object.keys(AssetType).map((type, index) => <MenuItem key={index} value={type}>{type}</MenuItem>)}
+                        {typeOptions.map((option: VocabularyOption, index) => <MenuItem key={index} value={option.idVocabulary}>{option.Term}</MenuItem>)}
                     </Select>
                 </Box>
                 <Box className={classes.options}>

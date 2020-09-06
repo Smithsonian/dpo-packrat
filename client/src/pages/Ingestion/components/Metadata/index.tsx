@@ -1,4 +1,3 @@
-/* eslint-disable no-var */
 import { Box, Breadcrumbs, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import * as qs from 'query-string';
@@ -8,11 +7,12 @@ import { Redirect, useHistory, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { AppContext, AssetType, FileId, StateItem, StateMetadata, StateProject } from '../../../../context';
+import { AppContext, FileId, StateItem, StateMetadata, StateProject } from '../../../../context';
 import useItem from '../../hooks/useItem';
 import useMetadata from '../../hooks/useMetadata';
 import useProject from '../../hooks/useProject';
 import useIngest from '../../hooks/useIngest';
+import useVocabularyEntries from '../../hooks/useVocabularyEntries';
 import Photogrammetry from './Photogrammetry';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -36,7 +36,7 @@ const useStyles = makeStyles(({ palette }) => ({
 
 type QueryParams = {
     fileId: FileId;
-    type: AssetType;
+    type: string;
 };
 
 function Metadata(): React.ReactElement {
@@ -52,6 +52,7 @@ function Metadata(): React.ReactElement {
     const { getSelectedItem } = useItem();
     const { getFieldErrors, getMetadataInfo } = useMetadata();
     const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
+    const { getAssetType } = useVocabularyEntries();
 
     const metadataLength = metadatas.length;
     const query = qs.parse(search) as QueryParams;
@@ -130,7 +131,9 @@ function Metadata(): React.ReactElement {
     };
 
     const getMetadataComponent = (metadataIndex: number): React.ReactElement | null => {
-        if (type === AssetType.Photogrammetry) {
+        const assetType = getAssetType(Number.parseInt(type, 10));
+
+        if (assetType.photogrammetry) {
             return <Photogrammetry metadataIndex={metadataIndex} />;
         }
 

@@ -2,7 +2,7 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useContext, useEffect } from 'react';
 import { FieldType } from '../../../../components';
-import { AppContext, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS, AssetType } from '../../../../context';
+import { AppContext, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS } from '../../../../context';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 import { useQuery } from '@apollo/client';
@@ -58,14 +58,14 @@ function UploadListComplete(): React.ReactElement {
             const { getUploadedAssetVersion } = data;
             const { AssetVersion } = getUploadedAssetVersion;
             const files = AssetVersion.map(assetVersion => {
-                const { idAssetVersion, StorageSize, Asset: { FileName } } = assetVersion;
+                const { idAssetVersion, StorageSize, Asset: { FileName, VAssetType: { idVocabulary } } } = assetVersion;
 
                 return {
                     id: String(idAssetVersion),
                     name: FileName,
                     size: StorageSize,
                     file: new File([], FileName),
-                    type: AssetType.Photogrammetry,
+                    type: idVocabulary,
                     status: FileUploadStatus.COMPLETE,
                     progress: 100,
                     selected: false,

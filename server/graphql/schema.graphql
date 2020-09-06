@@ -769,13 +769,8 @@ type GetWorkflowResult {
 
 scalar Upload
 
-enum AssetType {
-  Diconde
-  Photogrammetry
-}
-
 type Mutation {
-  uploadAsset(file: Upload!, type: AssetType!): UploadAssetResult!
+  uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
@@ -788,11 +783,6 @@ type Mutation {
   createUser(input: CreateUserInput!): CreateUserResult!
   createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
-}
-
-type UploadAssetInput {
-  file: Upload!
-  type: AssetType!
 }
 
 enum UploadStatus {

@@ -1,11 +1,13 @@
 import { useCallback, useContext } from 'react';
 import { toast } from 'react-toastify';
-import { AppContext, AssetType, METADATA_ACTIONS, StateMetadata } from '../../../context';
+import { AppContext, METADATA_ACTIONS, StateMetadata } from '../../../context';
 import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus } from '../../../context';
 import { apolloUploader } from '../../../graphql';
 import { UploadAssetDocument, UploadAssetMutation, UploadStatus } from '../../../types/graphql';
 import lodash from 'lodash';
 import { defaultPhotogrammetryFields } from '../../../context';
+import useVocabularyEntries from './useVocabularyEntries';
+import { eVocabularySetID } from '../../../types/server';
 
 interface UseFilesUpload {
     updateMetadataSteps: () => boolean;
@@ -14,13 +16,15 @@ interface UseFilesUpload {
     cancelUpload: (id: FileId) => void;
     retryUpload: (id: FileId) => void;
     removeUpload: (id: FileId) => void;
-    changeAssetType: (id: FileId, type: AssetType) => void;
+    changeAssetType: (id: FileId, type: number) => void;
     discardFiles: () => void;
 }
 
 const useFilesUpload = (): UseFilesUpload => {
     const { ingestion, ingestionDispatch } = useContext(AppContext);
     const { files } = ingestion.uploads;
+
+    const { getInitialEntry } = useVocabularyEntries();
 
     const getFile = useCallback((id: FileId): IngestionFile | undefined => lodash.find(files, { id }), [files]);
 
@@ -61,7 +65,9 @@ const useFilesUpload = (): UseFilesUpload => {
 
                     const { name, size } = file;
 
-                    if (!alreadyContains) {
+                    const type = getInitialEntry(eVocabularySetID.eAssetAssetType);
+
+                    if (!alreadyContains && type) {
                         const ingestionFile = {
                             id,
                             file,
@@ -69,7 +75,7 @@ const useFilesUpload = (): UseFilesUpload => {
                             size,
                             status: FileUploadStatus.READY,
                             progress: 0,
-                            type: AssetType.Photogrammetry,
+                            type,
                             selected: false,
                             cancel: null
                         };
@@ -88,11 +94,11 @@ const useFilesUpload = (): UseFilesUpload => {
                 ingestionDispatch(loadAction);
             }
         },
-        [files, ingestionDispatch]
+        [files, getInitialEntry, ingestionDispatch]
     );
 
     const changeAssetType = useCallback(
-        (id: FileId, assetType: AssetType): void => {
+        (id: FileId, assetType: number): void => {
             const changeAssetTypeAction: IngestionDispatchAction = {
                 type: UPLOAD_ACTIONS.SET_ASSET_TYPE,
                 id,
