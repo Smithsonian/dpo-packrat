@@ -785,6 +785,11 @@ type Mutation {
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
 }
 
+type UploadAssetInput {
+  file: Upload!
+  type: Int!
+}
+
 enum UploadStatus {
   COMPLETE
   FAILED

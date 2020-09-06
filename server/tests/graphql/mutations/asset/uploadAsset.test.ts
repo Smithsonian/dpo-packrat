@@ -1,10 +1,11 @@
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
-import { UploadAssetInput, AssetType, UploadStatus } from '../../../../types/graphql';
+import { UploadAssetInput, UploadStatus } from '../../../../types/graphql';
 import { Context } from '../../../../types/resolvers';
 import { CreateUserInput } from '../../../../types/graphql';
 import fs from 'fs';
 import { join } from 'path';
+import * as CACHE from '../../../../cache';
 
 const uploadAssetTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
@@ -30,18 +31,23 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
                 const path: string = join(__dirname, `../../../mock/graphql/${filename}`);
                 const file = fs.createReadStream(path);
 
-                const uploadAssetInput: UploadAssetInput = {
-                    file: {
-                        createReadStream: () => file,
-                        filename,
-                        encoding: 'us-ascii',
-                        mimetype: 'text/plain'
-                    },
-                    type: AssetType.Photogrammetry
-                };
+                const Vocabulary = await CACHE.VocabularyCache.vocabularySetEntriesByEnum(CACHE.eVocabularySetID.eAssetAssetType);
 
-                const { status } = await graphQLApi.uploadAsset(uploadAssetInput, context);
-                expect(status).toBe(UploadStatus.Complete);
+                if (Vocabulary) {
+                    const [{ idVocabulary }] = Vocabulary;
+
+                    const uploadAssetInput: UploadAssetInput = {
+                        file: {
+                            createReadStream: () => file,
+                            filename,
+                            encoding: 'us-ascii',
+                            mimetype: 'text/plain'
+                        },
+                        type: idVocabulary
+                    };
+                    const { status } = await graphQLApi.uploadAsset(uploadAssetInput, context);
+                    expect(status).toBe(UploadStatus.Complete);
+                }
             }
         });
 
@@ -55,12 +61,17 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
                     isAuthenticated: true
                 };
 
-                const uploadAssetInput: UploadAssetInput = {
-                    file: null,
-                    type: AssetType.Photogrammetry
-                };
+                const Vocabulary = await CACHE.VocabularyCache.vocabularySetEntriesByEnum(CACHE.eVocabularySetID.eAssetAssetType);
 
-                await expect(graphQLApi.uploadAsset(uploadAssetInput, context)).rejects.toThrow();
+                if (Vocabulary) {
+                    const [{ idVocabulary }] = Vocabulary;
+                    const uploadAssetInput: UploadAssetInput = {
+                        file: null,
+                        type: idVocabulary
+                    };
+
+                    await expect(graphQLApi.uploadAsset(uploadAssetInput, context)).rejects.toThrow();
+                }
             }
         });
     });
