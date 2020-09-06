@@ -1,7 +1,7 @@
 import { ReadStream } from 'fs';
 import csv from 'csv-parser';
 import { CSVHeaders, CSVTypes, CSVFields, SubjectsCSVFields, ItemsCSVFields } from './csvTypes';
-import * as DBAPI from '../db';
+import * as DBAPI from '../../db';
 import { Subject, Item, Identifier, SystemObject } from '@prisma/client';
 
 export class Parser {

@@ -73,30 +73,30 @@ describe('Utils: Helpers', () => {
         expect(H.Helpers.validFilename('.lpt5')).toBeTruthy();
     });
 
-    test('Utils: Helpers.createDirectory', () => {
-        let res: H.IOResults = H.Helpers.createDirectory(directoryPath);
+    test('Utils: Helpers.createDirectory', async () => {
+        let res: H.IOResults = await H.Helpers.createDirectory(directoryPath);
         expect(res.success).toBeTruthy();
-        res = H.Helpers.fileOrDirExists(directoryPath);
+        res = await H.Helpers.fileOrDirExists(directoryPath);
         expect(res.success).toBeTruthy();
-        res = H.Helpers.createDirectory(directoryPath);
-        expect(res.success).toBeTruthy();
-    });
-
-    test('Utils: Helpers.ensureFileExists', () => {
-        let res: H.IOResults = H.Helpers.ensureFileExists(filePath);
-        expect(res.success).toBeTruthy();
-        res = H.Helpers.fileOrDirExists(filePath);
+        res = await H.Helpers.createDirectory(directoryPath);
         expect(res.success).toBeTruthy();
     });
 
-    test('Utils: Helpers.stat', () => {
-        let res: H.StatResults = H.Helpers.stat(filePath);
+    test('Utils: Helpers.ensureFileExists', async () => {
+        let res: H.IOResults = await H.Helpers.ensureFileExists(filePath);
+        expect(res.success).toBeTruthy();
+        res = await H.Helpers.fileOrDirExists(filePath);
+        expect(res.success).toBeTruthy();
+    });
+
+    test('Utils: Helpers.stat', async () => {
+        let res: H.StatResults = await H.Helpers.stat(filePath);
         expect(res.success).toBeTruthy();
         expect(res.stat).toBeTruthy();
         if (res.stat)
             expect(res.stat.size).toBe(0);
 
-        res = H.Helpers.stat(H.Helpers.randomSlug());
+        res = await H.Helpers.stat(H.Helpers.randomSlug());
         expect(res.success).toBeFalsy();
     });
 
@@ -129,45 +129,45 @@ describe('Utils: Helpers', () => {
         expect(res1.hash).toEqual(res2.hash);
     });
 
-    test('Utils: Helpers.copyFile', () => {
-        let res: H.IOResults = H.Helpers.copyFile(filePath, filePath2);
+    test('Utils: Helpers.copyFile', async () => {
+        let res: H.IOResults = await H.Helpers.copyFile(filePath, filePath2);
         expect(res.success).toBeTruthy();
         LOG.logger.info('NOTICE: The logged error that should follow is expected!');
-        res = H.Helpers.copyFile(filePath, filePath2, false);
+        res = await H.Helpers.copyFile(filePath, filePath2, false);
         expect(res.success).toBeFalsy();
     });
 
-    test('Utils: Helpers.fileExists', () => {
-        let res: H.IOResults = H.Helpers.fileOrDirExists(filePath);
+    test('Utils: Helpers.fileExists', async () => {
+        let res: H.IOResults = await H.Helpers.fileOrDirExists(filePath);
         expect(res.success).toBeTruthy();
-        res = H.Helpers.fileOrDirExists(filePath2);
+        res = await H.Helpers.fileOrDirExists(filePath2);
         expect(res.success).toBeTruthy();
-        res = H.Helpers.fileOrDirExists(filePath3);
+        res = await H.Helpers.fileOrDirExists(filePath3);
         expect(res.success).toBeFalsy();
     });
 
-    test('Utils: Helpers.initializeFile', () => {
+    test('Utils: Helpers.initializeFile', async () => {
         let res: H.IOResults;
-        res = H.Helpers.initializeFile(filePath5, filePath, 'Destination exists');
+        res = await H.Helpers.initializeFile(filePath5, filePath, 'Destination exists');
         expect(res.success).toBeTruthy();
-        res = H.Helpers.initializeFile(filePath5, filePath4, 'Destination does not exist, source exists');
+        res = await H.Helpers.initializeFile(filePath5, filePath4, 'Destination does not exist, source exists');
         expect(res.success).toBeTruthy();
-        res = H.Helpers.removeFile(filePath4);
+        res = await H.Helpers.removeFile(filePath4);
         expect(res.success).toBeTruthy();
-        res = H.Helpers.initializeFile(null, filePath4, 'Destination does not exist, no source');
+        res = await H.Helpers.initializeFile(null, filePath4, 'Destination does not exist, no source');
         expect(res.success).toBeTruthy();
-        res = H.Helpers.removeFile(filePath4);
+        res = await H.Helpers.removeFile(filePath4);
         expect(res.success).toBeTruthy();
     });
 
-    test('Utils: Helpers.filesMatch', () => {
-        let res: H.IOResults = H.Helpers.filesMatch(filePath, filePath3);
+    test('Utils: Helpers.filesMatch', async () => {
+        let res: H.IOResults = await H.Helpers.filesMatch(filePath, filePath3);
         expect(res.success).toBeFalsy();
-        res = H.Helpers.filesMatch(filePath3, filePath);
+        res = await H.Helpers.filesMatch(filePath3, filePath);
         expect(res.success).toBeFalsy();
-        res = H.Helpers.filesMatch(filePath2, filePath5);
+        res = await H.Helpers.filesMatch(filePath2, filePath5);
         expect(res.success).toBeFalsy();
-        res = H.Helpers.filesMatch(filePath, filePath2);
+        res = await H.Helpers.filesMatch(filePath, filePath2);
         expect(res.success).toBeTruthy();
     });
 
@@ -183,34 +183,34 @@ describe('Utils: Helpers', () => {
         }
     });
 
-    test('Utils: Helpers.initializeDirectory', () => {
-        let res: H.IOResults = H.Helpers.initializeDirectory(dirNestEmpty, 'Nested Directory, Empty');
+    test('Utils: Helpers.initializeDirectory', async () => {
+        let res: H.IOResults = await H.Helpers.initializeDirectory(dirNestEmpty, 'Nested Directory, Empty');
         expect(res.success).toBeTruthy();
-        res = H.Helpers.initializeDirectory(dirNestNotEmpty, 'Nested Directory, Not Empty');
+        res = await H.Helpers.initializeDirectory(dirNestNotEmpty, 'Nested Directory, Not Empty');
         expect(res.success).toBeTruthy();
-        res = H.Helpers.initializeDirectory(dirNestNotEmpty, 'Nested Directory, Not Empty');
+        res = await H.Helpers.initializeDirectory(dirNestNotEmpty, 'Nested Directory, Not Empty');
         expect(res.success).toBeTruthy();
     });
 
-    test('Utils: Helpers.moveFile', () => {
+    test('Utils: Helpers.moveFile', async () => {
         const moveDest: string = path.join(dirNestNotEmpty, path.basename(filePath5));
         let res: H.IOResults;
-        res = H.Helpers.moveFile(filePath5, moveDest);
+        res = await H.Helpers.moveFile(filePath5, moveDest);
         expect(res.success).toBeTruthy();
-        res = H.Helpers.moveFile(moveDest, filePath5);
+        res = await H.Helpers.moveFile(moveDest, filePath5);
         expect(res.success).toBeTruthy();
     });
 
-    test('Utils: Helpers.getDirectoryEntriesRecursive', () => {
+    test('Utils: Helpers.getDirectoryEntriesRecursive', async () => {
         const copiedFile: string = H.Helpers.randomFilename(dirNestNotEmpty, '');
-        const res: H.IOResults = H.Helpers.copyFile(filePath5, copiedFile);
+        const res: H.IOResults = await H.Helpers.copyFile(filePath5, copiedFile);
         expect(res.success).toBeTruthy();
 
-        const dirNotRecursive: string[] | null = H.Helpers.getDirectoryEntriesRecursive(directoryPath, 0);
+        const dirNotRecursive: string[] | null = await H.Helpers.getDirectoryEntriesRecursive(directoryPath, 0);
         expect(dirNotRecursive).toBeTruthy();
         expect(dirNotRecursive).toEqual(expect.arrayContaining([filePath, filePath2, filePath5, filePathRandom]));
 
-        const dirRecursive: string[] | null = H.Helpers.getDirectoryEntriesRecursive(directoryPath);
+        const dirRecursive: string[] | null = await H.Helpers.getDirectoryEntriesRecursive(directoryPath);
         expect(dirRecursive).toBeTruthy();
         expect(dirRecursive).toEqual(expect.arrayContaining([filePath, filePath2, filePath5, filePathRandom, copiedFile]));
     });
@@ -235,25 +235,25 @@ describe('Utils: Helpers', () => {
         await H.Helpers.sleep(50);
     });
 
-    test('Utils: Helpers.removeFile', () => {
-        let res: H.IOResults = H.Helpers.removeFile(filePath);
+    test('Utils: Helpers.removeFile', async () => {
+        let res: H.IOResults = await H.Helpers.removeFile(filePath);
         expect(res.success).toBeTruthy();
-        res = H.Helpers.removeFile(filePath2);
+        res = await H.Helpers.removeFile(filePath2);
         expect(res.success).toBeTruthy();
-        res = H.Helpers.removeFile(filePath3);
-        expect(res.success).toBeTruthy();
-        res = H.Helpers.removeFile(filePath4);
-        expect(res.success).toBeTruthy();            // removing a non-existant file succeeds
-        res = H.Helpers.removeFile(filePathRandom);
+        res = await H.Helpers.removeFile(filePath3);
+        expect(res.success).toBeFalsy();
+        res = await H.Helpers.removeFile(filePath4);
+        expect(res.success).toBeFalsy();
+        res = await H.Helpers.removeFile(filePathRandom);
         expect(res.success).toBeTruthy();
     });
 
-    test('Utils: Helpers.removeDirectory', () => {
-        let res: H.IOResults = H.Helpers.removeDirectory(filePath);
-        expect(res.success).toBeTruthy();    // removing a non-existant directory suceeds
-        res = H.Helpers.removeDirectory(directoryPath, false); // removing a non-empty directory fails, when not in recurse mode
+    test('Utils: Helpers.removeDirectory', async () => {
+        let res: H.IOResults = await H.Helpers.removeDirectory(filePath);
         expect(res.success).toBeFalsy();
-        res = H.Helpers.removeDirectory(directoryPath, true);
+        res = await H.Helpers.removeDirectory(directoryPath, false); // removing a non-empty directory fails, when not in recurse mode
+        expect(res.success).toBeFalsy();
+        res = await H.Helpers.removeDirectory(directoryPath, true);
         expect(res.success).toBeTruthy();
     });
 });
