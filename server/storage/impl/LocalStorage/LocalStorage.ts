@@ -84,7 +84,7 @@ export class LocalStorage implements STORE.IStorage {
 
         // Compute random directory path and name in staging folder
         // Provide this as the storage key which clients must pass back to us
-        const res: ComputeWriteStreamLocationResults = this.ocflRoot.computeWriteStreamLocation();
+        const res: ComputeWriteStreamLocationResults = await this.ocflRoot.computeWriteStreamLocation();
         /* istanbul ignore if */
         if (!res.ioResults.success) {
             retValue.success = false;
@@ -131,7 +131,7 @@ export class LocalStorage implements STORE.IStorage {
         }
 
         // Compute filesize
-        const statResults: H.StatResults = H.Helpers.stat(filePath);
+        const statResults: H.StatResults = await H.Helpers.stat(filePath);
         /* istanbul ignore if */
         if (!statResults.success || !statResults.stat) {
             retValue.success = false;
@@ -162,7 +162,7 @@ export class LocalStorage implements STORE.IStorage {
         const PSAR: STORE.PromoteStagedAssetResult = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, fileName, metadata, opInfo); // moves staged file, if present
         if (!PSAR.success)
             return PSAR;
-        return (fileName) ? H.Helpers.removeDirectory(path.dirname(pathOnDisk), false) : PSAR; // cleanup staged directory if we have a staged file
+        return (fileName) ? await H.Helpers.removeDirectory(path.dirname(pathOnDisk), false) : PSAR; // cleanup staged directory if we have a staged file
     }
 
     async renameAsset(renameAssetInput: STORE.RenameAssetInput): Promise<STORE.RenameAssetResult> {
