@@ -20,11 +20,6 @@ const getAssetVersionsDetails = gql`
                 Name
                 EntireSubject
             }
-            Identifier {
-                idIdentifier
-                IdentifierValue
-                idVIdentifierType
-            }
         }
     }
 `;

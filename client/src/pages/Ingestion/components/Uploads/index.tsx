@@ -57,6 +57,7 @@ function Uploads(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
     const [loadingVocabulary, setLoadingVocabulary] = useState(true);
+    const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const { ingestion: { uploads } } = useContext(AppContext);
     const { updateMetadataSteps, discardFiles } = useFilesUpload();
     const { updateVocabularyEntries } = useVocabularyEntries();
@@ -71,14 +72,26 @@ function Uploads(): React.ReactElement {
         fetchVocabularyEntries();
     }, []);
 
-    const onIngest = () => {
+    const onIngest = async () => {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
-        const success = updateMetadataSteps();
+        try {
+            setGettingAssetDetails(true);
+            const { valid, selectedFiles } = await updateMetadataSteps();
+            setGettingAssetDetails(false);
 
-        if (success) {
+            if (!selectedFiles) {
+                toast.warn('Please select at least 1 file to ingest');
+                return;
+            }
+
+            if (!valid) {
+                toast.warn('Please select valid combination of files');
+                return;
+            }
+
             history.push(nextStep);
-        } else {
-            toast.warn('Please select at least 1 file to ingest');
+        } catch {
+            setGettingAssetDetails(false);
         }
     };
 
@@ -111,6 +124,7 @@ function Uploads(): React.ReactElement {
                 <SidebarBottomNavigator
                     leftLabel='Discard'
                     rightLabel='Ingest'
+                    rightLoading={gettingAssetDetails}
                     onClickLeft={onDiscard}
                     onClickRight={onIngest}
                 />
