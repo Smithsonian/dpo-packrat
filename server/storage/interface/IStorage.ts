@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Readable, Writable } from 'stream';
-
 export type OperationInfo = {
     message: string,
     idUser: number,
@@ -16,14 +14,14 @@ export type ReadStreamInput = {
 };
 
 export type ReadStreamResult = {
-    readStream: Readable | null,
+    readStream: NodeJS.ReadableStream | null,
     storageHash: string | null,
     success: boolean,
     error: string
 };
 
 export type WriteStreamResult = {
-    writeStream: Writable | null,
+    writeStream: NodeJS.WritableStream | null,
     storageKey: string | null,
     success: boolean,
     error: string

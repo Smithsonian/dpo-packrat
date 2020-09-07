@@ -1,6 +1,5 @@
 import * as path from 'path';
 import * as crypto from 'crypto';
-import * as STR from 'stream';
 
 import * as STORE from '../../../../storage/interface/IStorage';
 import * as LS from '../../../../storage/impl/LocalStorage/LocalStorage';
@@ -204,7 +203,7 @@ describe('LocalStorage Error Conditions', () => {
     });
 });
 
-async function readStreamAndComputeHash(stream: STR.Readable): Promise<string> {
+async function readStreamAndComputeHash(stream: NodeJS.ReadableStream): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         try {
             const hash = crypto.createHash('sha512');

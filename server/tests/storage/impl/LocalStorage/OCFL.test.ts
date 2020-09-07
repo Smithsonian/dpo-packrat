@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as crypto from 'crypto';
-import * as STR from 'stream';
 
 import { OperationInfo } from '../../../../storage/interface/IStorage';
 import * as OR from '../../../../storage/impl/LocalStorage/OCFLRoot';
@@ -308,7 +307,7 @@ async function createRandomFile(directoryName: string, fileName: string, fileSiz
     return new Promise<string>((resolve, reject) => {
         try {
             const fullPath: string = path.join(directoryName, fileName);
-            const stream: STR.Writable = fs.createWriteStream(fullPath);
+            const stream: NodeJS.WritableStream = fs.createWriteStream(fullPath);
             let bytesRemaining: number = fileSize;
 
             do {

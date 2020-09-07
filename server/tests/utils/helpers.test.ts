@@ -1,5 +1,4 @@
 import * as path from 'path';
-import * as STR from 'stream';
 // import { /* PassThrough */ } from 'stream';
 import * as fs from 'fs';
 import * as LOG from '../../utils/logger';
@@ -189,7 +188,7 @@ describe('Utils: Helpers', () => {
 
     test('Utils: Helpers.createRandomFile', async () => {
         try {
-            const WS: STR.Writable = fs.createWriteStream(filePathRandom);
+            const WS: NodeJS.WritableStream = fs.createWriteStream(filePathRandom);
             expect(WS).toBeTruthy();
             const hash: string = await H.Helpers.createRandomFile(WS, 10000);
             expect(hash).toBeTruthy();
