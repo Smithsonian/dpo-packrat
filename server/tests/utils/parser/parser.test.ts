@@ -2,7 +2,7 @@ import fs from 'fs';
 import { join } from 'path';
 import { Parser, CSVTypes, SubjectsCSVFields, ItemsCSVFields, ModelsCSVFields, CaptureDataCSVFields } from '../../../utils/parser';
 
-const mockPath = (type: CSVTypes) => join(__dirname, `../../mock/parser/mock.${type}.csv`);
+const mockPath = (type: CSVTypes) => join(__dirname, `../../mock/utils/parser/mock.${type}.csv`);
 
 describe('Parser: CSV parser', () => {
     test('Parser.parseCSV type subjects', async () => {

@@ -72,3 +72,4 @@ export class Parser {
 }
 
 export * from './csvTypes';
+export * from './bagitReader';
