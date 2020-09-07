@@ -11,7 +11,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
     idAssetGroup!: number | null;
     idVAssetType!: number;
     idSystemObject!: number | null;
-    StorageKey!: string;
+    StorageKey!: string | null;
 
     private idAssetGroupOrig!: number | null;
     private idSystemObjectOrig!: number | null;
