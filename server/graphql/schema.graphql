@@ -580,7 +580,6 @@ type GetAssetVersionsDetailsResult {
   SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
   Project: [Project!]!
   Item: [Item!]!
-  Identifier: [Identifier!]!
 }
 
 input GetAssetInput {

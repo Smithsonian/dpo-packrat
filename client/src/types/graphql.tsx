@@ -759,7 +759,6 @@ export type GetAssetVersionsDetailsResult = {
     SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
     Project: Array<Project>;
     Item: Array<Item>;
-    Identifier: Array<Identifier>;
 };
 
 export type GetAssetInput = {
@@ -1595,9 +1594,6 @@ export type GetAssetVersionsDetailsQuery = (
                 )>, Item: Array<(
                     { __typename?: 'Item' }
                     & Pick<Item, 'idItem' | 'Name' | 'EntireSubject'>
-                )>, Identifier: Array<(
-                    { __typename?: 'Identifier' }
-                    & Pick<Identifier, 'idIdentifier' | 'IdentifierValue' | 'idVIdentifierType'>
                 )>
             }
         )
@@ -2585,11 +2581,6 @@ export const GetAssetVersionsDetailsDocument = gql`
       idItem
       Name
       EntireSubject
-    }
-    Identifier {
-      idIdentifier
-      IdentifierValue
-      idVIdentifierType
     }
   }
 }

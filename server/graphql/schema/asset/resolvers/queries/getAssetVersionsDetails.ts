@@ -9,7 +9,6 @@ export default async function getAssetVersionsDetails(_: Parent, args: QueryGetA
         valid: true,
         SubjectUnitIdentifier: [],
         Project: [],
-        Item: [],
-        Identifier: []
+        Item: []
     };
 }

@@ -731,7 +731,6 @@ export type GetAssetVersionsDetailsResult = {
     SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
     Project: Array<Project>;
     Item: Array<Item>;
-    Identifier: Array<Identifier>;
 };
 
 export type GetAssetInput = {
