@@ -76,7 +76,7 @@ export class ObjectGraph {
     // This method will extract all ancestors, as well as look for invalid hierarchies and (invalid) cycles.
 
     // relatedType is child when eMode == eObjectGraphMode.eAncestors
-    // realtedType is parent when eMode == eObjectGraphMode.eDescendents
+    // relatedType is parent when eMode == eObjectGraphMode.eDescendents
     private async fetchWorker(idSystemObject: number, relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
         try {
             /* istanbul ignore if */
