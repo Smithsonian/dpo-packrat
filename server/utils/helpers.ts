@@ -8,7 +8,6 @@ import { Stats } from 'fs';
 import * as fs from 'fs-extra';
 import { promises as fsp } from 'fs';
 import * as crypto from 'crypto';
-import * as STR from 'stream';
 
 import * as LOG from './logger';
 
@@ -34,6 +33,16 @@ export class Helpers {
         if (!Array.isArray(input1) || ! Array.isArray(input2) || input1.length !== input2.length)
             return false;
         return L.isEqual(input1.sort(), input2.sort());
+    }
+
+    static iterablesEqual(input1: Iterable<any>, input2: Iterable<any>): boolean {
+        const array1: any[] = [];
+        const array2: any[] = [];
+        for (const item of input1)
+            array1.push(item);
+        for (const item of input2)
+            array2.push(item);
+        return Helpers.arraysEqual(array1, array2);
     }
 
     // Adapted from  https://github.com/npm/unique-slug/blob/master/index.js
@@ -93,6 +102,7 @@ export class Helpers {
 
         try {
             const stats = await fsp.stat(name);
+            /* istanbul ignore next */ // executing this code requires something like a symlink/junction point, which I don't want to create just for test coverage
             if (!stats.isFile && !stats.isDirectory) {
                 res.success = false;
                 res.error = `${name} does not exist`;
@@ -159,7 +169,7 @@ export class Helpers {
     }
 
     /** Streams fileSize random bytes to stream; returns the sha512 hash on success */
-    static async createRandomFile(stream: STR.Writable, fileSize: number): Promise<string> {
+    static async createRandomFile(stream: NodeJS.WritableStream, fileSize: number): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             try {
                 const hash = crypto.createHash('sha512');
@@ -252,7 +262,7 @@ export class Helpers {
         const dirEntries: string[] = [];
 
         try {
-            const files: string[] = fs.readdirSync(directory);
+            const files: string[] = await fsp.readdir(directory);
             for (const fileName of files) {
                 const fullPath: string = path.join(directory, fileName);
                 const stats = await fsp.stat(fullPath);
@@ -305,7 +315,7 @@ export class Helpers {
 
     // Adapted from https://stackoverflow.com/questions/33599688/how-to-use-es8-async-await-with-streams
     /** Computes a hash from a file. @param hashMethod Pass in 'sha512' or 'sha1', for example */
-    static async computeHashFromStream(stream: STR.Readable, hashMethod: string): Promise<HashResults> {
+    static async computeHashFromStream(stream: NodeJS.ReadableStream, hashMethod: string): Promise<HashResults> {
         try {
             const res: HashResults = {
                 hash: '',
@@ -330,6 +340,7 @@ export class Helpers {
                 });
             });
         } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('Helpers.computeHashFromFile', error);
             return {
                 success: false,
                 hash: '',
@@ -341,6 +352,20 @@ export class Helpers {
     static computeHashFromString(input: string, hashMethod: string): string {
         const hash: crypto.Hash = crypto.createHash(hashMethod);
         return hash.update(input).digest('hex');
+    }
+
+    static async readFileFromStream(stream: NodeJS.ReadableStream): Promise<Buffer | null> {
+        try {
+            const bufArray: Buffer[] = [];
+            return new Promise<Buffer | null>((resolve) => {
+                stream.on('data', (chunk: Buffer) => { bufArray.push(chunk); });
+                stream.on('end', () => { resolve(Buffer.concat(bufArray)); }); /* istanbul ignore next */
+                stream.on('error', () => { resolve(null); });
+            });
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('Helpers.readFileFromStream', error);
+            return null;
+        }
     }
 
     static async writeJsonAndComputeHash(dest: string, obj: any, hashMethod: string): Promise<HashResults> {

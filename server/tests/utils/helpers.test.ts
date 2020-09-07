@@ -5,6 +5,22 @@ import * as fs from 'fs';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
+const n1: number = 3;
+const n2: number = 5;
+const a1: number[] = [1, 2];
+const a2: number[] = [1, 2, 3];
+const a3: number[] = [1, 2, 4];
+const a4: number[] = [3, 1, 2];
+const a5: number[] = [1, 2, 3];
+const a6: string[] = ['one', 'two', 'three'];
+
+/*
+afterAll(async done => {
+    jest.setTimeout(5000);
+    await H.Helpers.sleep(2000);
+    done();
+});
+*/
 describe('Utils: Helpers', () => {
     test('Utils: Helpers.arraysEqual', () => {
         // Number 1
@@ -13,14 +29,6 @@ describe('Utils: Helpers', () => {
         // Arrays of same lengths, different values
         // Arryas of same lengths, same values, different sort
         // Arryas of same lengths, same values, same sort
-        const n1: number = 3;
-        const n2: number = 5;
-        const a1: number[] = [1, 2];
-        const a2: number[] = [1, 2, 3];
-        const a3: number[] = [1, 2, 4];
-        const a4: number[] = [3, 1, 2];
-        const a5: number[] = [1, 2, 3];
-        const a6: string[] = ['one', 'two', 'three'];
         expect(H.Helpers.arraysEqual(n1, n1)).toBeFalsy();
         expect(H.Helpers.arraysEqual(n1, n2)).toBeFalsy();
         expect(H.Helpers.arraysEqual(n1, a1)).toBeFalsy();
@@ -30,6 +38,14 @@ describe('Utils: Helpers', () => {
         expect(H.Helpers.arraysEqual(a2, a4)).toBeTruthy();
         expect(H.Helpers.arraysEqual(a2, a5)).toBeTruthy();
         expect(H.Helpers.arraysEqual(a5, a6)).toBeFalsy();
+    });
+
+    test('Utils: Helpers.iterablesEqual', () => {
+        expect(H.Helpers.iterablesEqual(a1.values(), a2.values())).toBeFalsy();
+        expect(H.Helpers.iterablesEqual(a2.values(), a3.values())).toBeFalsy();
+        expect(H.Helpers.iterablesEqual(a2.values(), a4.values())).toBeTruthy();
+        expect(H.Helpers.iterablesEqual(a2.values(), a5.values())).toBeTruthy();
+        expect(H.Helpers.iterablesEqual(a5.values(), a6.values())).toBeFalsy();
     });
 
     // jest.mock('fs');
@@ -137,7 +153,7 @@ describe('Utils: Helpers', () => {
         expect(res.success).toBeFalsy();
     });
 
-    test('Utils: Helpers.fileExists', async () => {
+    test('Utils: Helpers.fileOrDirExists', async () => {
         let res: H.IOResults = await H.Helpers.fileOrDirExists(filePath);
         expect(res.success).toBeTruthy();
         res = await H.Helpers.fileOrDirExists(filePath2);
@@ -181,6 +197,21 @@ describe('Utils: Helpers', () => {
             LOG.logger.error(`Helpers.createRandomeFile test failed: ${JSON.stringify(error)}`);
             expect(false).toBeTruthy();
         }
+    });
+
+    test('Utils: Helpers.readFileFromStream', async () => {
+        const stream1: NodeJS.ReadableStream = fs.createReadStream(filePath);
+        const buffer1: Buffer | null = await H.Helpers.readFileFromStream(stream1);
+        expect(buffer1).toBeTruthy();
+
+        const stream2: NodeJS.ReadableStream = fs.createReadStream(filePath2);
+        const buffer2: Buffer | null = await H.Helpers.readFileFromStream(stream2);
+        expect(buffer2).toBeTruthy();
+        expect(buffer1).toEqual(buffer2);
+
+        const stream3: NodeJS.ReadableStream = fs.createReadStream(filePathRandom);
+        const buffer3: Buffer | null = await H.Helpers.readFileFromStream(stream3);
+        expect(buffer3).toBeTruthy();
     });
 
     test('Utils: Helpers.initializeDirectory', async () => {

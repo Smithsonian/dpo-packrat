@@ -57,6 +57,7 @@
     "express-session": "^1.17.1",
     "graphql": "^15.0.0",
     "graphql-tools": "^6.0.7",
+    "jszip": "^3.2.0",
     "lodash": "^4.17.19",
     "memorystore": "^1.6.2",
     "node-fetch": "^2.6.0",
