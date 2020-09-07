@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `Asset` (
   `idAssetGroup` int(11) DEFAULT NULL,
   `idVAssetType` int(11) NOT NULL,
   `idSystemObject` int(11) DEFAULT NULL,
-  `StorageKey` varchar(512) NOT NULL UNIQUE,
+  `StorageKey` varchar(512) NULL UNIQUE,
   PRIMARY KEY (`idAsset`),
   KEY `Asset_idAssetGroup` (`idAssetGroup`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

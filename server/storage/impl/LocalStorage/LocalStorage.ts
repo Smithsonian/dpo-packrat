@@ -114,6 +114,11 @@ export class LocalStorage implements STORE.IStorage {
             error: ''
         };
 
+        if (CommitWriteStreamInput.storageKey.includes('..') || CommitWriteStreamInput.storageKey.includes(':')) {
+            retValue.error = 'Invalid storagekey';
+            return retValue;
+        }
+
         // Compute hash
         const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), CommitWriteStreamInput.storageKey);
         const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(filePath, ST.OCFLDigestAlgorithm);
@@ -143,6 +148,13 @@ export class LocalStorage implements STORE.IStorage {
         retValue.storageHash = hashResults.hash;
         retValue.storageSize = statResults.stat.size;
         return retValue;
+    }
+
+    async discardWriteStream(DiscardWriteStreamInput: STORE.DiscardWriteStreamInput): Promise<STORE.DiscardWriteStreamResult> {
+        if (DiscardWriteStreamInput.storageKey.includes('..') || DiscardWriteStreamInput.storageKey.includes(':'))
+            return { success: false, error: 'Invalid storagekey' };
+        const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), DiscardWriteStreamInput.storageKey);
+        return H.Helpers.removeFile(filePath);
     }
 
     async promoteStagedAsset(promoteStagedAssetInput: STORE.PromoteStagedAssetInput): Promise<STORE.PromoteStagedAssetResult> {
