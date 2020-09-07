@@ -3,10 +3,6 @@ import * as UTIL from '../api';
 import * as LOG from '../../../utils/logger';
 import { ObjectGraphTestSetup } from './ObjectGraph.setup';
 
-afterAll(async done => {
-    done();
-});
-
 const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
 
 // *******************************************************************
