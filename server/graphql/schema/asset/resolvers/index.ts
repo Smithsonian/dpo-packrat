@@ -5,12 +5,14 @@ import getAsset from './queries/getAsset';
 import uploadAsset from './mutations/uploadAsset';
 import getUploadedAssetVersion from './queries/getUploadedAssetVersion';
 import getContentsForAssetVersions from './queries/getContentsForAssetVersions';
+import getAssetVersionsDetails from './queries/getAssetVersionsDetails';
 
 const resolvers = {
     Query: {
         getAsset,
         getUploadedAssetVersion,
-        getContentsForAssetVersions
+        getContentsForAssetVersions,
+        getAssetVersionsDetails
     },
     Mutation: {
         uploadAsset
