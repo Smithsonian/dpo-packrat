@@ -1,10 +1,10 @@
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
 import * as DBAPI from '../../../../db';
-import { CreateUserInput, GetContentsForAssetVersionsInput, CreateVocabularySetInput, CreateVocabularyInput } from '../../../../types/graphql';
+import { CreateUserInput, GetAssetVersionsDetailsInput, CreateVocabularySetInput, CreateVocabularyInput } from '../../../../types/graphql';
 import { Asset, AssetVersion } from '@prisma/client';
 
-const getContentsForAssetVersionsTest = (utils: TestSuiteUtils): void => {
+const getAssetVersionDetailsTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
     let createUserInput: () => CreateUserInput;
     let createAssetInput: (idVAssetType: number) => Asset;
@@ -21,7 +21,7 @@ const getContentsForAssetVersionsTest = (utils: TestSuiteUtils): void => {
         createVocabularySetInput = utils.createVocabularySetInput;
     });
 
-    describe('Query: getContentsForAssetVersions', () => {
+    describe('Query: getAssetVersionDetails', () => {
         test('should work with valid input', async () => {
             const vocabularySetArgs: CreateVocabularySetInput = createVocabularySetInput();
             const { VocabularySet } = await graphQLApi.createVocabularySet(vocabularySetArgs);
@@ -46,12 +46,14 @@ const getContentsForAssetVersionsTest = (utils: TestSuiteUtils): void => {
                         const assetVersionInput = createAssetVersionInput(asset.idAsset, User.idUser);
                         const assetVersion = new DBAPI.AssetVersion(assetVersionInput);
                         if (await assetVersion.create()) {
-                            const getContentsInput: GetContentsForAssetVersionsInput = {
+                            const getContentsInput: GetAssetVersionsDetailsInput = {
                                 idAssetVersions: [assetVersion.idAsset]
                             };
 
-                            const { AssetVersionContent } = await graphQLApi.getContentsForAssetVersions(getContentsInput);
-                            expect(AssetVersionContent).toBeTruthy();
+                            const { SubjectUnitIdentifier, Project, Item } = await graphQLApi.getAssetVersionsDetails(getContentsInput);
+                            expect(SubjectUnitIdentifier).toBeTruthy();
+                            expect(Project).toBeTruthy();
+                            expect(Item).toBeTruthy();
                         }
                     }
                 }
@@ -60,4 +62,4 @@ const getContentsForAssetVersionsTest = (utils: TestSuiteUtils): void => {
     });
 };
 
-export default getContentsForAssetVersionsTest;
+export default getAssetVersionDetailsTest;

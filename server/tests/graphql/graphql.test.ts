@@ -22,6 +22,7 @@ import areCameraSettingsUniformTest from './queries/ingestion/areCameraSettingsU
 import getContentsForAssetVersionsTest from './queries/asset/getContentsForAssetVersions.test';
 import getSubjectsForUnitTest from './queries/unit/getSubjectsForUnit.test';
 import getItemsForSubjectTest from './queries/unit/getItemsForSubject.test';
+import getAssetVersionsDetailsTest from './queries/asset/getAssetVersionsDetails.test';
 
 import createCaptureDataTest from './mutations/capturedata/createCaptureData.test';
 import createModelTest from './mutations/model/createModel.test';
@@ -61,6 +62,7 @@ describe('GraphQL Test Suite', () => {
     getContentsForAssetVersionsTest(utils);
     getSubjectsForUnitTest(utils);
     getItemsForSubjectTest(utils);
+    getAssetVersionsDetailsTest(utils);
 
     // Mutations
     createCaptureDataTest(utils);
@@ -76,4 +78,3 @@ describe('GraphQL Test Suite', () => {
     uploadAssetTest(utils);
     ingestDataTest(utils);
 });
-
