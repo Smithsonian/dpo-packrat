@@ -540,6 +540,7 @@ type Query {
   getAsset(input: GetAssetInput!): GetAssetResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
+  getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
@@ -568,6 +569,18 @@ input GetAccessPolicyInput {
 
 type GetAccessPolicyResult {
   AccessPolicy: AccessPolicy
+}
+
+input GetAssetVersionsDetailsInput {
+  idAssetVersions: [Int!]!
+}
+
+type GetAssetVersionsDetailsResult {
+  valid: Boolean!
+  SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
+  Project: [Project!]!
+  Item: [Item!]!
+  Identifier: [Identifier!]!
 }
 
 input GetAssetInput {

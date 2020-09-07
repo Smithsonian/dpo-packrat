@@ -602,6 +602,7 @@ export type Query = {
     getAsset: GetAssetResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
+    getAssetVersionsDetails: GetAssetVersionsDetailsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     areCameraSettingsUniform: AreCameraSettingsUniformResult;
@@ -637,6 +638,11 @@ export type QueryGetAssetArgs = {
 
 export type QueryGetContentsForAssetVersionsArgs = {
     input: GetContentsForAssetVersionsInput;
+};
+
+
+export type QueryGetAssetVersionsDetailsArgs = {
+    input: GetAssetVersionsDetailsInput;
 };
 
 
@@ -741,6 +747,19 @@ export type GetAccessPolicyInput = {
 export type GetAccessPolicyResult = {
     __typename?: 'GetAccessPolicyResult';
     AccessPolicy?: Maybe<AccessPolicy>;
+};
+
+export type GetAssetVersionsDetailsInput = {
+    idAssetVersions: Array<Scalars['Int']>;
+};
+
+export type GetAssetVersionsDetailsResult = {
+    __typename?: 'GetAssetVersionsDetailsResult';
+    valid: Scalars['Boolean'];
+    SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
+    Project: Array<Project>;
+    Item: Array<Item>;
+    Identifier: Array<Identifier>;
 };
 
 export type GetAssetInput = {
@@ -1549,6 +1568,36 @@ export type GetAssetQuery = (
                 Asset?: Maybe<(
                     { __typename?: 'Asset' }
                     & Pick<Asset, 'idAsset'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetAssetVersionsDetailsQueryVariables = Exact<{
+    input: GetAssetVersionsDetailsInput;
+}>;
+
+
+export type GetAssetVersionsDetailsQuery = (
+    { __typename?: 'Query' }
+    & {
+        getAssetVersionsDetails: (
+            { __typename?: 'GetAssetVersionsDetailsResult' }
+            & Pick<GetAssetVersionsDetailsResult, 'valid'>
+            & {
+                SubjectUnitIdentifier: Array<(
+                    { __typename?: 'SubjectUnitIdentifier' }
+                    & Pick<SubjectUnitIdentifier, 'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
+                )>, Project: Array<(
+                    { __typename?: 'Project' }
+                    & Pick<Project, 'idProject' | 'Name'>
+                )>, Item: Array<(
+                    { __typename?: 'Item' }
+                    & Pick<Item, 'idItem' | 'Name' | 'EntireSubject'>
+                )>, Identifier: Array<(
+                    { __typename?: 'Identifier' }
+                    & Pick<Identifier, 'idIdentifier' | 'IdentifierValue' | 'idVIdentifierType'>
                 )>
             }
         )
@@ -2517,6 +2566,60 @@ export function useGetAssetLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetAssetQueryHookResult = ReturnType<typeof useGetAssetQuery>;
 export type GetAssetLazyQueryHookResult = ReturnType<typeof useGetAssetLazyQuery>;
 export type GetAssetQueryResult = Apollo.QueryResult<GetAssetQuery, GetAssetQueryVariables>;
+export const GetAssetVersionsDetailsDocument = gql`
+    query getAssetVersionsDetails($input: GetAssetVersionsDetailsInput!) {
+  getAssetVersionsDetails(input: $input) {
+    valid
+    SubjectUnitIdentifier {
+      idSubject
+      SubjectName
+      UnitAbbreviation
+      IdentifierPublic
+      IdentifierCollection
+    }
+    Project {
+      idProject
+      Name
+    }
+    Item {
+      idItem
+      Name
+      EntireSubject
+    }
+    Identifier {
+      idIdentifier
+      IdentifierValue
+      idVIdentifierType
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetAssetVersionsDetailsQuery__
+ *
+ * To run a query within a React component, call `useGetAssetVersionsDetailsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAssetVersionsDetailsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAssetVersionsDetailsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetAssetVersionsDetailsQuery(baseOptions?: Apollo.QueryHookOptions<GetAssetVersionsDetailsQuery, GetAssetVersionsDetailsQueryVariables>) {
+    return Apollo.useQuery<GetAssetVersionsDetailsQuery, GetAssetVersionsDetailsQueryVariables>(GetAssetVersionsDetailsDocument, baseOptions);
+}
+export function useGetAssetVersionsDetailsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAssetVersionsDetailsQuery, GetAssetVersionsDetailsQueryVariables>) {
+    return Apollo.useLazyQuery<GetAssetVersionsDetailsQuery, GetAssetVersionsDetailsQueryVariables>(GetAssetVersionsDetailsDocument, baseOptions);
+}
+export type GetAssetVersionsDetailsQueryHookResult = ReturnType<typeof useGetAssetVersionsDetailsQuery>;
+export type GetAssetVersionsDetailsLazyQueryHookResult = ReturnType<typeof useGetAssetVersionsDetailsLazyQuery>;
+export type GetAssetVersionsDetailsQueryResult = Apollo.QueryResult<GetAssetVersionsDetailsQuery, GetAssetVersionsDetailsQueryVariables>;
 export const GetContentsForAssetVersionsDocument = gql`
     query getContentsForAssetVersions($input: GetContentsForAssetVersionsInput!) {
   getContentsForAssetVersions(input: $input) {
