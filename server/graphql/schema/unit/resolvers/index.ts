@@ -15,6 +15,8 @@ import createItem from './mutations/createItem';
 import searchIngestionSubjects from './queries/searchIngestionSubjects';
 import getIngestionProjectsForSubjects from './queries/getIngestionProjectsForSubjects';
 import getIngestionItemsForSubjects from './queries/getIngestionItemsForSubjects';
+import getSubjectsForUnit from './queries/getSubjectsForUnit';
+import getItemsForSubject from './queries/getItemsForSubject';
 
 const resolvers = {
     Query: {
@@ -24,7 +26,9 @@ const resolvers = {
         getItem,
         searchIngestionSubjects,
         getIngestionProjectsForSubjects,
-        getIngestionItemsForSubjects
+        getIngestionItemsForSubjects,
+        getSubjectsForUnit,
+        getItemsForSubject
     },
     Mutation: {
         createUnit,

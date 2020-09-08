@@ -1,4 +1,6 @@
 type Query {
+    getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
+    getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
     searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
     getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
     getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
@@ -6,6 +8,24 @@ type Query {
     getProject(input: GetProjectInput!): GetProjectResult!
     getSubject(input: GetSubjectInput!): GetSubjectResult!
     getItem(input: GetItemInput!): GetItemResult!
+}
+
+input GetSubjectsForUnitInput {
+    idUnit: Int!
+    pagination: PaginationInput = {}
+}
+
+type GetSubjectsForUnitResult {
+    Subject: [Subject!]!
+}
+
+input GetItemsForSubjectInput {
+    idSubject: Int!
+    pagination: PaginationInput = {}
+}
+
+type GetItemsForSubjectResult {
+    Item: [Item!]!
 }
 
 type SubjectUnitIdentifier {

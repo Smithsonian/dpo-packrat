@@ -1,20 +1,42 @@
 import { useCallback, useContext } from 'react';
 import { toast } from 'react-toastify';
-import { AppContext, AssetType, METADATA_ACTIONS, StateMetadata } from '../../../context';
+import {
+    AppContext,
+    METADATA_ACTIONS,
+    StateMetadata,
+    StateProject,
+    parseProjectToState,
+    StateItem,
+    parseItemToState,
+    parseSubjectUnitIdentifierToState,
+    StateSubject
+} from '../../../context';
 import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus } from '../../../context';
-import { apolloUploader } from '../../../graphql';
-import { UploadAssetDocument, UploadAssetMutation, UploadStatus } from '../../../types/graphql';
+import { apolloUploader, apolloClient } from '../../../graphql';
+import { UploadAssetDocument, UploadAssetMutation, UploadStatus, GetAssetVersionsDetailsDocument, GetAssetVersionsDetailsQuery } from '../../../types/graphql';
 import lodash from 'lodash';
 import { defaultPhotogrammetryFields } from '../../../context';
+import useVocabularyEntries from './useVocabularyEntries';
+import { eVocabularySetID } from '../../../types/server';
+import { ApolloQueryResult } from '@apollo/client';
+import useProject from './useProject';
+import useItem from './useItem';
+import { Item, Project, SubjectUnitIdentifier } from '../../../types/graphql';
+import useSubject from './useSubject';
+
+type MetadataUpdate = {
+    valid: boolean;
+    selectedFiles: boolean;
+};
 
 interface UseFilesUpload {
-    updateMetadataSteps: () => boolean;
+    updateMetadataSteps: () => Promise<MetadataUpdate>;
     loadFiles: (acceptedFiles: File[]) => void;
     startUpload: (id: FileId) => void;
     cancelUpload: (id: FileId) => void;
     retryUpload: (id: FileId) => void;
     removeUpload: (id: FileId) => void;
-    changeAssetType: (id: FileId, type: AssetType) => void;
+    changeAssetType: (id: FileId, type: number) => void;
     discardFiles: () => void;
 }
 
@@ -22,34 +44,88 @@ const useFilesUpload = (): UseFilesUpload => {
     const { ingestion, ingestionDispatch } = useContext(AppContext);
     const { files } = ingestion.uploads;
 
+    const { getInitialEntry } = useVocabularyEntries();
+    const { addSubjects } = useSubject();
+    const { addProjects } = useProject();
+    const { addItems } = useItem();
+
     const getFile = useCallback((id: FileId): IngestionFile | undefined => lodash.find(files, { id }), [files]);
 
     const getSelectedFiles = useCallback((): IngestionFile[] => files.filter(({ selected }) => selected), [files]);
 
-    const updateMetadataSteps = useCallback((): boolean => {
+    const updateMetadataSteps = async (): Promise<MetadataUpdate> => {
         const selectedFiles = getSelectedFiles();
 
-        if (!selectedFiles.length) return false;
-
-        const metadatas: StateMetadata[] = [];
-
-        selectedFiles.forEach((file: IngestionFile) => {
-            const metadataStep: StateMetadata = {
-                file,
-                photogrammetry: defaultPhotogrammetryFields
+        if (!selectedFiles.length) {
+            return {
+                valid: false,
+                selectedFiles: false
             };
+        }
 
-            metadatas.push(metadataStep);
-        });
+        // TODO: KARAN: replace index with fileId this afterwards
+        const idAssetVersions = lodash.map(selectedFiles, (_, index) => index);
 
-        const addStepAction: IngestionDispatchAction = {
-            type: METADATA_ACTIONS.ADD_METADATA,
-            metadatas
+        try {
+            const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({
+                query: GetAssetVersionsDetailsDocument,
+                variables: {
+                    input: {
+                        idAssetVersions
+                    }
+                }
+            });
+
+            const { data } = assetVersionDetailsQuery;
+
+            if (data) {
+                const { getAssetVersionsDetails } = data;
+
+                const { SubjectUnitIdentifier: foundSubjectUnitIdentifier, Project: foundProject, Item: foundItem } = getAssetVersionsDetails;
+
+                const subjects: StateSubject[] = foundSubjectUnitIdentifier.map((subjectUnitIdentifier: SubjectUnitIdentifier) =>
+                    parseSubjectUnitIdentifierToState(subjectUnitIdentifier)
+                );
+                addSubjects(subjects);
+
+                const projects: StateProject[] = foundProject.map((project: Project, index: number) => parseProjectToState(project, !index));
+                addProjects(projects);
+
+                const items: StateItem[] = foundItem.map((item: Item) => parseItemToState(item, false));
+                addItems(items);
+
+                const metadatas: StateMetadata[] = [];
+
+                selectedFiles.forEach((file: IngestionFile) => {
+                    const metadataStep: StateMetadata = {
+                        file,
+                        photogrammetry: defaultPhotogrammetryFields
+                    };
+
+                    metadatas.push(metadataStep);
+                });
+
+                const addMetadataStepAction: IngestionDispatchAction = {
+                    type: METADATA_ACTIONS.ADD_METADATA,
+                    metadatas
+                };
+
+                ingestionDispatch(addMetadataStepAction);
+
+                return {
+                    valid: true,
+                    selectedFiles: true
+                };
+            }
+        } catch {
+            toast.error('Failed to ingest selected files, please try again later');
+        }
+
+        return {
+            valid: false,
+            selectedFiles: true
         };
-
-        ingestionDispatch(addStepAction);
-        return true;
-    }, [getSelectedFiles, ingestionDispatch]);
+    };
 
     const loadFiles = useCallback(
         (acceptedFiles: File[]) => {
@@ -61,7 +137,9 @@ const useFilesUpload = (): UseFilesUpload => {
 
                     const { name, size } = file;
 
-                    if (!alreadyContains) {
+                    const type = getInitialEntry(eVocabularySetID.eAssetAssetType);
+
+                    if (!alreadyContains && type) {
                         const ingestionFile = {
                             id,
                             file,
@@ -69,7 +147,7 @@ const useFilesUpload = (): UseFilesUpload => {
                             size,
                             status: FileUploadStatus.READY,
                             progress: 0,
-                            type: AssetType.Photogrammetry,
+                            type,
                             selected: false,
                             cancel: null
                         };
@@ -88,11 +166,11 @@ const useFilesUpload = (): UseFilesUpload => {
                 ingestionDispatch(loadAction);
             }
         },
-        [files, ingestionDispatch]
+        [files, getInitialEntry, ingestionDispatch]
     );
 
     const changeAssetType = useCallback(
-        (id: FileId, assetType: AssetType): void => {
+        (id: FileId, assetType: number): void => {
             const changeAssetTypeAction: IngestionDispatchAction = {
                 type: UPLOAD_ACTIONS.SET_ASSET_TYPE,
                 id,

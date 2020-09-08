@@ -1,8 +1,10 @@
 import { AnimatePresence } from 'framer-motion';
 import React, { useContext } from 'react';
-import { AppContext, AssetType, FileId, IngestionFile, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS } from '../../../../context';
+import { AppContext, FileId, IngestionFile, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS, VocabularyOption } from '../../../../context';
 import useFilesUpload from '../../hooks/useFilesUpload';
+import useVocabularyEntries from '../../hooks/useVocabularyEntries';
 import FileListItem from './FileListItem';
+import { eVocabularySetID } from '../../../../types/server';
 
 interface FileListProps {
     files: IngestionFile[];
@@ -10,11 +12,12 @@ interface FileListProps {
 
 function FileList(props: FileListProps): React.ReactElement {
     const { ingestionDispatch } = useContext(AppContext);
+    const { getEntries } = useVocabularyEntries();
     const { files } = props;
 
     const { changeAssetType, startUpload, retryUpload, cancelUpload, removeUpload } = useFilesUpload();
 
-    const onChangeType = (id: FileId, assetType: AssetType): void => changeAssetType(id, assetType);
+    const onChangeType = (id: FileId, assetType: number): void => changeAssetType(id, assetType);
 
     const onUpload = (id: FileId): void => startUpload(id);
 
@@ -40,6 +43,8 @@ function FileList(props: FileListProps): React.ReactElement {
         const failed = status === FileUploadStatus.FAILED;
         const cancelled = status === FileUploadStatus.CANCELLED;
 
+        const typeOptions: VocabularyOption[] = getEntries(eVocabularySetID.eAssetAssetType);
+
         return (
             <AnimatePresence key={index}>
                 <FileListItem
@@ -47,6 +52,7 @@ function FileList(props: FileListProps): React.ReactElement {
                     name={name}
                     size={size}
                     type={type}
+                    typeOptions={typeOptions}
                     selected={selected}
                     uploading={uploading}
                     complete={complete}

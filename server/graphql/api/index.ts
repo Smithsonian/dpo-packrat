@@ -74,7 +74,13 @@ import {
     AreCameraSettingsUniformInput,
     AreCameraSettingsUniformResult,
     IngestDataInput,
-    IngestDataResult
+    IngestDataResult,
+    GetSubjectsForUnitInput,
+    GetSubjectsForUnitResult,
+    GetItemsForSubjectInput,
+    GetItemsForSubjectResult,
+    GetAssetVersionsDetailsInput,
+    GetAssetVersionsDetailsResult
 } from '../../types/graphql';
 
 // Queries
@@ -100,6 +106,9 @@ import getIngestionProjectsForSubjects from './queries/unit/getIngestionProjects
 import getVocabularyEntries from './queries/vocabulary/getVocabularyEntries';
 import getContentsForAssetVersions from './queries/asset/getContentsForAssetVersions';
 import areCameraSettingsUniform from './queries/ingestion/areCameraSettingsUniform';
+import getSubjectsForUnit from './queries/unit/getSubjectsForUnit';
+import getItemsForSubject from './queries/unit/getItemsForSubject';
+import getAssetVersionsDetails from './queries/asset/getAssetVersionsDetails';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -153,7 +162,10 @@ const allQueries = {
     getVocabularyEntries,
     getContentsForAssetVersions,
     areCameraSettingsUniform,
-    ingestData
+    ingestData,
+    getSubjectsForUnit,
+    getItemsForSubject,
+    getAssetVersionsDetails
 };
 
 type GraphQLRequest = {
@@ -386,6 +398,36 @@ class GraphQLApi {
 
     async ingestData(input: IngestDataInput, context?: Context): Promise<IngestDataResult> {
         const operationName = 'ingestData';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getSubjectsForUnit(input: GetSubjectsForUnitInput, context?: Context): Promise<GetSubjectsForUnitResult> {
+        const operationName = 'getSubjectsForUnit';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getItemsForSubject(input: GetItemsForSubjectInput, context?: Context): Promise<GetItemsForSubjectResult> {
+        const operationName = 'getItemsForSubject';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getAssetVersionsDetails(input: GetAssetVersionsDetailsInput, context?: Context): Promise<GetAssetVersionsDetailsResult> {
+        const operationName = 'getAssetVersionsDetails';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

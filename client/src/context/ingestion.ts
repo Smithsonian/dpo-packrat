@@ -6,11 +6,6 @@ import { Vocabulary } from '../types/graphql';
 
 export type FileId = string;
 
-export enum AssetType {
-    Diconde = 'Diconde',
-    Photogrammetry = 'Photogrammetry'
-}
-
 export enum FileUploadStatus {
     READY = 'READY',
     UPLOADING = 'UPLOADING',
@@ -24,7 +19,7 @@ export type IngestionFile = {
     size: number;
     name: string;
     file: File;
-    type: AssetType;
+    type: number;
     status: FileUploadStatus;
     progress: number;
     selected: boolean;
@@ -256,7 +251,7 @@ type SET_CANCEL_HANDLER = {
 type SET_ASSET_TYPE = {
     type: UPLOAD_ACTIONS.SET_ASSET_TYPE;
     id: FileId;
-    assetType: AssetType;
+    assetType: number;
 };
 
 type DISCARD_FILES = {
