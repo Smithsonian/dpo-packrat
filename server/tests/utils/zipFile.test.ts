@@ -1,35 +1,33 @@
-import fs from 'fs';
 import { join } from 'path';
-import { ZipStream } from '../../utils/zipStream';
+import { ZipFile } from '../../utils/zipFile';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
 const mockPath: string = join(__dirname, '../mock/utils/zip/');
 
 afterAll(async done => {
-    // jest.setTimeout(5000);
-    // await H.Helpers.sleep(2000);
+    jest.setTimeout(5000);
+    await H.Helpers.sleep(2000);
     done();
 });
 
-let zip: ZipStream;
+let zip: ZipFile;
 
-describe('ZipStream', () => {
-    test('ZipStream load', async () => {
+describe('ZipFile', () => {
+    test('ZipFile load', async () => {
         const path = join(mockPath, 'PackratTest.zip');
-        const fileStream = fs.createReadStream(path);
-        zip = new ZipStream(fileStream);
+        zip = new ZipFile(path);
         const result: H.IOResults = await zip.load();
         expect(result.success).toBeTruthy();
     });
 
-    test('ZipStream extract', async () => {
+    test('ZipFile extract', async () => {
         const allEntries: string[] = zip.getAllEntries();
         const files: string[] = zip.getJustFiles();
         const dirs: string[] = zip.getJustDirectories();
-        // logStringArray(allEntries, 'ALL   ');
-        // logStringArray(files, 'FILES ');
-        // logStringArray(dirs, 'DIRS  ');
+        logStringArray(allEntries, 'ALL   ');
+        logStringArray(files, 'FILES ');
+        logStringArray(dirs, 'DIRS  ');
 
         expect(allEntries).toEqual(expect.arrayContaining(files.concat(dirs)));
         expect(files.concat(dirs)).toEqual(expect.arrayContaining(allEntries));
@@ -47,17 +45,21 @@ describe('ZipStream', () => {
         expect(result.success).toBeTruthy();
     });
 
-    test('ZipStream errors', async () => {
+    test('ZipFile errors', async () => {
         const path = join(mockPath, 'PackratTest.zip');
-        const fileStream = fs.createReadStream(path);
-        const zipUnloaded = new ZipStream(fileStream);
+        const zipUnloaded = new ZipFile(path);
         expect(zipUnloaded.getJustDirectories().length).toEqual(0);
 
         const readStream: NodeJS.ReadableStream | null = await zipUnloaded.streamContent('foobar');
         expect(readStream).toBeFalsy();
 
-        const result: H.IOResults = await zipUnloaded.close();
+        let result: H.IOResults = await zipUnloaded.close();
         expect(result.success).toBeTruthy();
+
+        const pathNotExist = join(mockPath, H.Helpers.randomSlug());
+        const zipNotExist = new ZipFile(pathNotExist);
+        result = await zipNotExist.load();
+        expect(result.success).toBeFalsy();
     });
 });
 

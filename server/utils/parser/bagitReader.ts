@@ -2,8 +2,9 @@ import * as fs from 'fs-extra';
 import { join } from 'path';
 import * as LOG from '../logger';
 import * as H from '../helpers';
-import * as ZIP from '../zipStream';
-// import { logStringArray } from '../../tests/utils/zipStream.test';
+import * as ZIPS from '../zipStream';
+import * as ZIPF from '../zipFile';
+import { IZip } from '../IZip';
 
 const BAGIT_BAG_DECLARATION: string = 'bagit.txt';
 const BAGIT_BAG_METADATA: string = 'bag-info.txt';
@@ -19,7 +20,7 @@ const BAGIT_MANIFEST_ENTRY_REGEX = /(.*)\s+(.*)/;
 
 /** c.f. https://tools.ietf.org/html/draft-kunze-bagit-17 */
 export class BagitReader {
-    private _zip: ZIP.ZipStream | null = null;
+    private _zip: IZip | null = null;
     private _files: string[] = [];
     private _fileValidationMap: Map<string, boolean> = new Map<string, boolean>(); // map of filename.ToLowerCase() -> present in manifest with valid hash; these names are potentially prefixed with a folder in which the bagit contents are found
 
@@ -30,14 +31,23 @@ export class BagitReader {
     private _valid: boolean = false;
     private _prefixDir: string | null = null;
 
-    async loadFromZipStream(inputStream: NodeJS.ReadableStream, validate: boolean): Promise<H.IOResults> {
-        this._zip = new ZIP.ZipStream(inputStream);
+    async loadFromZipFile(fileName: string, validate: boolean): Promise<H.IOResults> {
+        this._zip = new ZIPF.ZipFile(fileName);
         const results: H.IOResults = await this._zip.load();
         if (!results.success)
             return results;
-        this._files = this._zip.justFiles;
+        this._files = this._zip.getJustFiles();
 
-        // logStringArray(this._files, 'ZIP ');
+        return validate ? await this.validate() : results;
+    }
+
+    async loadFromZipStream(inputStream: NodeJS.ReadableStream, validate: boolean): Promise<H.IOResults> {
+        this._zip = new ZIPS.ZipStream(inputStream);
+        const results: H.IOResults = await this._zip.load();
+        if (!results.success)
+            return results;
+        this._files = this._zip.getJustFiles();
+
         return validate ? await this.validate() : results;
     }
 
@@ -47,8 +57,14 @@ export class BagitReader {
             return { success: false, error: `Unable to read ${directory}` };
         this._files = fileList;
 
-        // logStringArray(this._files, 'DIR ');
         return validate ? await this.validate() : { success: true, error: '' };
+    }
+
+    async close(): Promise<H.IOResults> {
+        if (this._zip)
+            return await this._zip.close();
+        else
+            return { success: true, error: '' };
     }
 
     private prefixedFilename(file: string): string {

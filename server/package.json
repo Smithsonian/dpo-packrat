@@ -61,6 +61,7 @@
     "lodash": "^4.17.19",
     "memorystore": "^1.6.2",
     "node-fetch": "^2.6.0",
+    "node-stream-zip": "^1.11.3",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "supertest": "^4.0.2",
