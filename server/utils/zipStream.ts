@@ -11,6 +11,12 @@ export class ZipStream {
         this._inputStream = inputStream;
     }
 
+    // TODO: convert ZipStream.load() into a method that avoids loading the full contents into memory
+    // The package node-stream-zip (https://github.com/antelle/node-stream-zip) avoids reading
+    //  everything into memory, but it requires a filename. Our storage system works with streams --
+    // we can't assume that the zip is present on disk, as we intend to support other storage implementations,
+    // such as cloud-based storage. One approach here would be to fork node-stream-zip and add a stream-based,
+    // promise wrapper. My first step here is to request an enhancment; let's see what comes of this (JT 2020-09-07)
     async load(): Promise<H.IOResults> {
         try {
             // this._inputStream
@@ -21,27 +27,20 @@ export class ZipStream {
                 this._inputStream.on('error', () => reject());
                 this._inputStream.on('end', () => resolve(Buffer.concat(chunks)));
             });
-            // const allData = await P;
 
             this._zip = await JSZ.loadAsync(await P);
             this._entries = [];
             for (const entry in this._zip.files) {
                 /* istanbul ignore if */
-                if (entry.toUpperCase().startsWith('__MACOSX'))
+                if (entry.toUpperCase().startsWith('__MACOSX')) // ignore wacky MAC OSX resource folder stuffed into zips created on that platform
                     continue;
                 this._entries.push(entry);
             }
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('ZipStream.load', error);
-            return {
-                success: false,
-                error: JSON.stringify(error)
-            };
+            return { success: false, error: JSON.stringify(error) };
         }
-        return {
-            success: true,
-            error: ''
-        };
+        return { success: true, error: '' };
     }
 
     get allEntries(): string[] {

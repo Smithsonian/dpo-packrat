@@ -132,6 +132,23 @@ describe('LocalStorage Modify Version', () => {
     });
 });
 
+describe('LocalStorage Discard', () => {
+    test('LocalStorage.discardWriteStream', async() => {
+        const LSTCDiscard1: LocalStorageTestCase = await testWriteStream(15000);
+        await testDiscardWriteStream(LSTCDiscard1, true);
+    });
+
+    test('LocalStorage.discardWriteStream invalid storage key', async() => {
+        const LSTCDiscard2: LocalStorageTestCase = await testWriteStream(15000);
+        LSTCDiscard2.storageKeyStaging = H.Helpers.randomSlug();
+        await testDiscardWriteStream(LSTCDiscard2, false);
+
+        const LSTCDiscard3: LocalStorageTestCase = await testWriteStream(15000);
+        LSTCDiscard3.storageKeyStaging = path.join('..', LSTCDiscard3.storageKeyStaging);
+        await testDiscardWriteStream(LSTCDiscard3, false);
+    });
+});
+
 describe('LocalStorage Error Conditions', () => {
     test('LocalStorage.readStream invalid storage key', async() => {
         const originalStorageKeyRepo: string = LSTC2.storageKeyRepo;
@@ -157,6 +174,10 @@ describe('LocalStorage Error Conditions', () => {
         LSTC3 = await testWriteStream(15000);
         const originalStorageKeyStaging: string = LSTC3.storageKeyStaging;
         LSTC3.storageKeyStaging = H.Helpers.randomSlug();
+        await testCommitWriteStream(LSTC3, false);
+        LSTC3.storageKeyStaging = originalStorageKeyStaging;
+
+        LSTC3.storageKeyStaging = path.join('..', originalStorageKeyStaging);
         await testCommitWriteStream(LSTC3, false);
         LSTC3.storageKeyStaging = originalStorageKeyStaging;
 
@@ -264,6 +285,17 @@ async function testCommitWriteStream(LSTC: LocalStorageTestCase, expectSuccess: 
         expect(CWSR.storageSize).toEqual(LSTC.fileSize);
     }
     return CWSR.success;
+}
+
+async function testDiscardWriteStream(LSTC: LocalStorageTestCase, expectSuccess: boolean): Promise<boolean> {
+    const DWSI: STORE.DiscardWriteStreamInput = {
+        storageKey: LSTC.storageKeyStaging,
+    };
+
+    LOG.logger.info(`LocalStorage.discardWriteStream: ${JSON.stringify(DWSI)} (Expect ${expectSuccess ? 'Success' : 'Failure'})`);
+    const DWSR: STORE.DiscardWriteStreamResult = await ls.discardWriteStream(DWSI);
+    expect(DWSR.success).toEqual(expectSuccess);
+    return DWSR.success;
 }
 
 async function testReadStream(LSTC: LocalStorageTestCase, expectSuccess: boolean): Promise<boolean> {
