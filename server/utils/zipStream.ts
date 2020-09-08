@@ -1,8 +1,14 @@
 import JSZip, * as JSZ from 'jszip';
 import * as LOG from './logger';
 import * as H from './helpers';
+import { IZip } from './IZip';
 
-export class ZipStream {
+/**
+ * This ZIP implementation uses JSZip and reads everything into memory before unzipping.
+ * Use zipStreamReader when you have a filename and you want fully streamed behavior -
+ * the file won't be read into memory all at once.
+ */
+export class ZipStream implements IZip {
     private _inputStream: NodeJS.ReadableStream;
     private _zip: JSZip | null = null;
     private _entries: string[] = [];
@@ -11,12 +17,6 @@ export class ZipStream {
         this._inputStream = inputStream;
     }
 
-    // TODO: convert ZipStream.load() into a method that avoids loading the full contents into memory
-    // The package node-stream-zip (https://github.com/antelle/node-stream-zip) avoids reading
-    //  everything into memory, but it requires a filename. Our storage system works with streams --
-    // we can't assume that the zip is present on disk, as we intend to support other storage implementations,
-    // such as cloud-based storage. One approach here would be to fork node-stream-zip and add a stream-based,
-    // promise wrapper. My first step here is to request an enhancment; let's see what comes of this (JT 2020-09-07)
     async load(): Promise<H.IOResults> {
         try {
             // this._inputStream
@@ -43,15 +43,19 @@ export class ZipStream {
         return { success: true, error: '' };
     }
 
-    get allEntries(): string[] {
+    async close(): Promise<H.IOResults> {
+        return { success: true, error: '' };
+    }
+
+    getAllEntries(): string[] {
         return this._entries;
     }
 
-    get justFiles(): string[] {
+    getJustFiles(): string[] {
         return this.computeContents(false);
     }
 
-    get justDirectories(): string[] {
+    getJustDirectories(): string[] {
         return this.computeContents(true);
     }
 
@@ -71,7 +75,7 @@ export class ZipStream {
         return retValue;
     }
 
-    streamContent(entry: string): NodeJS.ReadableStream | null {
+    async streamContent(entry: string): Promise<NodeJS.ReadableStream | null> {
         if (!this._zip)
             return null;
         const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
