@@ -39,6 +39,15 @@ export type CommitWriteStreamResult = {
     error: string
 };
 
+export type DiscardWriteStreamInput = {
+    storageKey: string,
+};
+
+export type DiscardWriteStreamResult = {
+    success: boolean,
+    error: string
+};
+
 export type PromoteStagedAssetInput = {
     storageKeyStaged: string,
     storageKeyFinal: string,
@@ -133,6 +142,13 @@ export interface IStorage {
      * maintained by closeWriteStream(), and updated by promoteStagedAsset().
      */
     commitWriteStream(commitWriteStreamInput: CommitWriteStreamInput): Promise<CommitWriteStreamResult>;
+
+    /**
+     * Informs the storage system that the client is discarding the streamed input, and the storage system should clean it up.
+     * @param discardWriteStreamInput Includes storage key, the opaque storage identifier created by writeStream(),
+     * maintained by closeWriteStream(), and updated by promoteStagedAsset().
+     */
+    discardWriteStream(discardWriteStreamInput: DiscardWriteStreamInput): Promise<DiscardWriteStreamResult>;
 
     /**
      * Promotes a staged file into the repository.  This should be called after commitWriteStream(),

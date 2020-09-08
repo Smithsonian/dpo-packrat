@@ -67,7 +67,7 @@ export type Asset = {
     FilePath: Scalars['String'];
     idAssetGroup?: Maybe<Scalars['Int']>;
     idSystemObject?: Maybe<Scalars['Int']>;
-    StorageKey: Scalars['String'];
+    StorageKey?: Maybe<Scalars['String']>;
     AssetGroup?: Maybe<AssetGroup>;
     SystemObjectSource?: Maybe<SystemObject>;
     AssetVersion?: Maybe<Array<Maybe<AssetVersion>>>;
