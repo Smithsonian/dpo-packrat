@@ -14,18 +14,20 @@ import { ObjectGraphTestSetup } from '../../../db/composite/ObjectGraph.setup';
 const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
 const ocflRoot: OR.OCFLRoot = new OR.OCFLRoot();
 let ocflObject: OO.OCFLObject | null = null;
-let ocflStorageRoot: string;
+let testStorageRoot: string;
+let ocflRootRepository: string;
+let ocflRootStaging: string;
 let opInfo: OperationInfo;
 const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
 
 beforeAll(() => {
-    ocflStorageRoot = path.join('var', 'test', H.Helpers.randomSlug());
-    LOG.logger.info(`Creating test storage root in ${path.resolve(ocflStorageRoot)}`);
+    testStorageRoot = path.join('var', 'test', H.Helpers.randomSlug());
+    LOG.logger.info(`Creating test storage root in ${path.resolve(testStorageRoot)}`);
 });
 
 afterAll(async done => {
-    LOG.logger.info(`Removing test storage root from ${path.resolve(ocflStorageRoot)}`);
-    await H.Helpers.removeDirectory(ocflStorageRoot, true);
+    LOG.logger.info(`Removing test storage root from ${path.resolve(testStorageRoot)}`);
+    await H.Helpers.removeDirectory(testStorageRoot, true);
     // jest.setTimeout(5000);
     // await H.Helpers.sleep(2000);
     done();
@@ -33,10 +35,12 @@ afterAll(async done => {
 
 describe('OCFL Setup', () => {
     test('OCFL OCFLRoot Setup', async () => {
-        let ioResults: H.IOResults = await H.Helpers.createDirectory(ocflStorageRoot);
+        let ioResults: H.IOResults = await H.Helpers.createDirectory(testStorageRoot);
         expect(ioResults.success).toBeTruthy();
 
-        ioResults = await ocflRoot.initialize(ocflStorageRoot);
+        ocflRootRepository = path.join(testStorageRoot, 'Repository');
+        ocflRootStaging = path.join(testStorageRoot, 'Staging');
+        ioResults = await ocflRoot.initialize(ocflRootRepository, ocflRootStaging);
         expect(ioResults.success).toBeTruthy();
 
         // Validate root
@@ -65,24 +69,24 @@ describe('OCFL OCFLRoot', () => {
 
     test('OCFL OCFLRoot.computeLocationRepoRoot', async () => {
         const location: string = ocflRoot.computeLocationRepoRoot();
-        expect(location).toEqual(path.join(ocflStorageRoot, ST.OCFLStorageRootFolderRepository));
+        expect(location).toEqual(ocflRootRepository);
+    });
+
+    test('OCFL OCFLRoot.computeLocationStagingRoot', async () => {
+        const location: string = ocflRoot.computeLocationStagingRoot();
+        expect(location).toEqual(ocflRootStaging);
     });
 
     test('OCFL OCFLRoot.computeLocationRoot', async () => {
-        const location: string = ocflRoot.computeLocationStagingRoot();
-        expect(location).toEqual(path.join(ocflStorageRoot, ST.OCFLStorageRootFolderStaging));
-    });
-
-    test('OCFL OCFLRoot.computeLocationRepoRoot', async () => {
         let location: string = ocflRoot.computeLocationRoot(false);
-        expect(location).toEqual(path.join(ocflStorageRoot, ST.OCFLStorageRootFolderRepository));
+        expect(location).toEqual(ocflRootRepository);
         location = ocflRoot.computeLocationRoot(true);
-        expect(location).toEqual(path.join(ocflStorageRoot, ST.OCFLStorageRootFolderStaging));
+        expect(location).toEqual(ocflRootStaging);
     });
 
     test('OCFL OCFLRoot.computeLocationObjectRoot', async () => {
         const location: string = ocflRoot.computeLocationObjectRoot(storageKey);
-        expect(location.toLowerCase()).toEqual(path.join(ocflStorageRoot, ST.OCFLStorageRootFolderRepository, '/35/6A/19/356A192B7913B04C54574D18C28D46E6395428AB').toLowerCase());
+        expect(location.toLowerCase()).toEqual(path.join(ocflRootRepository, '/35/6A/19/356A192B7913B04C54574D18C28D46E6395428AB').toLowerCase());
     });
 
     test('OCFL OCFLRoot.ocflObject New', async () => {

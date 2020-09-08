@@ -16,8 +16,8 @@ export class LocalStorage implements STORE.IStorage {
         this.ocflRoot = new OCFLRoot();
     }
 
-    async initialize(storageRoot: string): Promise<H.IOResults> {
-        return await this.ocflRoot.initialize(storageRoot);
+    async initialize(rootRepository: string, rootStaging: string): Promise<H.IOResults> {
+        return await this.ocflRoot.initialize(rootRepository, rootStaging);
     }
 
     async readStream(readStreamInput: STORE.ReadStreamInput): Promise<STORE.ReadStreamResult> {
@@ -74,6 +74,16 @@ export class LocalStorage implements STORE.IStorage {
         return retValue;
     }
 
+    /**
+     * Files are placed in staging storage for all content. This storage is local due to these facts:
+     * 1. Cracking zips without reading everything into memory requires random access to the bits in the zip
+     *    This amounts to having access to a file.  Isilon storage, across the network, is not a proper choice here.
+     * 2. Bulk ingestion zips won't be stored in the repository.  Instead, these are cracked apart, and the various
+     *    assets inside are handled separately. So, we can't "move" these into place from a staging area in Isilon
+     *    because the first step is to decompress and extract the contents, which should be done locally, per 1 above.
+     * 3. Our client streams uploads to the server. At some point, we need to stream these bits to Isilon. This
+     *    network transit from server to Isilon happens once, no matter if staging is located locally or on Isilon.
+     */
     async writeStream(): Promise<STORE.WriteStreamResult> {
         const retValue: STORE.WriteStreamResult = {
             writeStream: null,

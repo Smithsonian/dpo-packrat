@@ -12,7 +12,6 @@ export type ComputeWriteStreamLocationResults = {
 };
 
 export class OCFLRoot {
-    private storageRoot:        string = '';
     private storageRootRepo:    string = '';
     private storageRootStaging: string = '';
 
@@ -66,19 +65,13 @@ export class OCFLRoot {
         return results;
     }
 
-    async initialize(storageRoot: string): Promise<H.IOResults> {
-        this.storageRoot = storageRoot;                                                     // single spot under which our files are stored
-        this.storageRootRepo = path.join(storageRoot, ST.OCFLStorageRootFolderRepository);  // root of OCFL repository
-        this.storageRootStaging = path.join(storageRoot, ST.OCFLStorageRootFolderStaging);  // root of staging area -- should be on the same volume as the OCFL repository so that move operations are fast
-        LOG.logger.info(`OCFL Storage initialization: Storage Root = ${this.storageRoot}`);
+    async initialize(rootRepository: string, rootStaging: string): Promise<H.IOResults> {
+        this.storageRootRepo = rootRepository;  // root of OCFL repository
+        this.storageRootStaging = rootStaging;  // root of staging area
         LOG.logger.info(`OCFL Storage initialization: Repo Root    = ${this.storageRootRepo}`);
         LOG.logger.info(`OCFL Storage initialization: Staging Root = ${this.storageRootStaging}`);
 
         let ioResults: H.IOResults;
-        ioResults = await H.Helpers.initializeDirectory(this.storageRoot, 'Storage Root');
-        /* istanbul ignore if */
-        if (!ioResults.success)
-            return ioResults;
         ioResults = await H.Helpers.initializeDirectory(this.storageRootRepo, 'Storage OCFLRoot');
         /* istanbul ignore if */
         if (!ioResults.success)
