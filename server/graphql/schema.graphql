@@ -251,6 +251,13 @@ type ModelUVMapFile {
   ModelUVMapChannel: [ModelUVMapChannel]
 }
 
+input PaginationInput {
+  first: Int
+  skip: Int
+  offset: Int
+  size: Int
+}
+
 type Scene {
   idScene: Int!
   HasBeenQCd: Boolean!
@@ -533,12 +540,15 @@ type Query {
   getAsset(input: GetAssetInput!): GetAssetResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
+  getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
+  getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
   searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
   getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
@@ -559,6 +569,17 @@ input GetAccessPolicyInput {
 
 type GetAccessPolicyResult {
   AccessPolicy: AccessPolicy
+}
+
+input GetAssetVersionsDetailsInput {
+  idAssetVersions: [Int!]!
+}
+
+type GetAssetVersionsDetailsResult {
+  valid: Boolean!
+  SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
+  Project: [Project!]!
+  Item: [Item!]!
 }
 
 input GetAssetInput {
@@ -633,6 +654,24 @@ input GetSceneInput {
 
 type GetSceneResult {
   Scene: Scene
+}
+
+input GetSubjectsForUnitInput {
+  idUnit: Int!
+  pagination: PaginationInput = {}
+}
+
+type GetSubjectsForUnitResult {
+  Subject: [Subject!]!
+}
+
+input GetItemsForSubjectInput {
+  idSubject: Int!
+  pagination: PaginationInput = {}
+}
+
+type GetItemsForSubjectResult {
+  Item: [Item!]!
 }
 
 type SubjectUnitIdentifier {
@@ -742,13 +781,8 @@ type GetWorkflowResult {
 
 scalar Upload
 
-enum AssetType {
-  Diconde
-  Photogrammetry
-}
-
 type Mutation {
-  uploadAsset(file: Upload!, type: AssetType!): UploadAssetResult!
+  uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
@@ -765,7 +799,7 @@ type Mutation {
 
 type UploadAssetInput {
   file: Upload!
-  type: AssetType!
+  type: Int!
 }
 
 enum UploadStatus {

@@ -9,6 +9,10 @@ const getUploadedAssetVersion = gql`
                 Asset {
                     idAsset
                     FileName
+                    VAssetType {
+                        idVocabulary
+                        Term
+                    }
                 }
             }
         }

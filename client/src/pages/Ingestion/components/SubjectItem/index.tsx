@@ -108,7 +108,6 @@ function SubjectItem(): React.ReactElement {
         try {
             setMetadataStepLoading(true);
             const vocabularies: StateVocabulary = await updateVocabularyEntries();
-
             await updateMetadataFolders(vocabularies);
 
             setMetadataStepLoading(false);

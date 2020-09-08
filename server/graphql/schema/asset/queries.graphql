@@ -2,6 +2,18 @@ type Query {
     getAsset(input: GetAssetInput!): GetAssetResult!
     getUploadedAssetVersion: GetUploadedAssetVersionResult!
     getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
+    getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
+}
+
+input GetAssetVersionsDetailsInput {
+    idAssetVersions: [Int!]!
+}
+
+type GetAssetVersionsDetailsResult {
+    valid: Boolean!
+    SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
+    Project: [Project!]!
+    Item: [Item!]!
 }
 
 input GetAssetInput {

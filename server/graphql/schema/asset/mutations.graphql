@@ -1,17 +1,12 @@
 scalar Upload
 
-enum AssetType {
-    Diconde
-    Photogrammetry
-}
-
 type Mutation {
-    uploadAsset(file: Upload!, type: AssetType!): UploadAssetResult!
+    uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
 }
 
 type UploadAssetInput {
     file: Upload!
-    type: AssetType!
+    type: Int!
 }
 
 enum UploadStatus {

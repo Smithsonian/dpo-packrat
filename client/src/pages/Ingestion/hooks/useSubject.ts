@@ -17,6 +17,7 @@ import { ApolloQueryResult } from '@apollo/client';
 
 interface UseSubject {
     addSubject: (subject: StateSubject) => Promise<void>;
+    addSubjects: (subjects: StateSubject[]) => Promise<void>;
     removeSubject: (arkId: string) => void;
 }
 
@@ -28,6 +29,23 @@ function useSubject(): UseSubject {
 
     const { addItems } = useItem();
     const { addProjects } = useProject();
+
+    const addSubjects = async (subjects: StateSubject[]): Promise<void> => {
+        subjects.forEach((subject: StateSubject) => {
+            const alreadyExists = !!lodash.find(subjects, { arkId: subject.arkId });
+
+            if (!alreadyExists) {
+                const addSubjectAction: IngestionDispatchAction = {
+                    type: SUBJECT_ACTIONS.ADD_SUBJECT,
+                    subject
+                };
+
+                ingestionDispatch(addSubjectAction);
+            } else {
+                toast.info(`Subject ${subject.name} has already been added`);
+            }
+        });
+    };
 
     const addSubject = async (subject: StateSubject): Promise<void> => {
         const alreadyExists = !!lodash.find(subjects, { arkId: subject.arkId });
@@ -61,6 +79,7 @@ function useSubject(): UseSubject {
 
     return {
         addSubject,
+        addSubjects,
         removeSubject
     };
 }

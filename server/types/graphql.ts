@@ -284,6 +284,13 @@ export type ModelUvMapFile = {
     ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
 };
 
+export type PaginationInput = {
+    first?: Maybe<Scalars['Int']>;
+    skip?: Maybe<Scalars['Int']>;
+    offset?: Maybe<Scalars['Int']>;
+    size?: Maybe<Scalars['Int']>;
+};
+
 export type Scene = {
     __typename?: 'Scene';
     idScene: Scalars['Int'];
@@ -590,12 +597,15 @@ export type Query = {
     getAsset: GetAssetResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
+    getAssetVersionsDetails: GetAssetVersionsDetailsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     areCameraSettingsUniform: AreCameraSettingsUniformResult;
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
     getScene: GetSceneResult;
+    getSubjectsForUnit: GetSubjectsForUnitResult;
+    getItemsForSubject: GetItemsForSubjectResult;
     searchIngestionSubjects: SearchIngestionSubjectsResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
@@ -622,6 +632,10 @@ export type QueryGetContentsForAssetVersionsArgs = {
     input: GetContentsForAssetVersionsInput;
 };
 
+export type QueryGetAssetVersionsDetailsArgs = {
+    input: GetAssetVersionsDetailsInput;
+};
+
 export type QueryGetCaptureDataArgs = {
     input: GetCaptureDataInput;
 };
@@ -644,6 +658,14 @@ export type QueryGetModelArgs = {
 
 export type QueryGetSceneArgs = {
     input: GetSceneInput;
+};
+
+export type QueryGetSubjectsForUnitArgs = {
+    input: GetSubjectsForUnitInput;
+};
+
+export type QueryGetItemsForSubjectArgs = {
+    input: GetItemsForSubjectInput;
 };
 
 export type QuerySearchIngestionSubjectsArgs = {
@@ -697,6 +719,18 @@ export type GetAccessPolicyInput = {
 export type GetAccessPolicyResult = {
     __typename?: 'GetAccessPolicyResult';
     AccessPolicy?: Maybe<AccessPolicy>;
+};
+
+export type GetAssetVersionsDetailsInput = {
+    idAssetVersions: Array<Scalars['Int']>;
+};
+
+export type GetAssetVersionsDetailsResult = {
+    __typename?: 'GetAssetVersionsDetailsResult';
+    valid: Scalars['Boolean'];
+    SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
+    Project: Array<Project>;
+    Item: Array<Item>;
 };
 
 export type GetAssetInput = {
@@ -781,6 +815,26 @@ export type GetSceneInput = {
 export type GetSceneResult = {
     __typename?: 'GetSceneResult';
     Scene?: Maybe<Scene>;
+};
+
+export type GetSubjectsForUnitInput = {
+    idUnit: Scalars['Int'];
+    pagination?: Maybe<PaginationInput>;
+};
+
+export type GetSubjectsForUnitResult = {
+    __typename?: 'GetSubjectsForUnitResult';
+    Subject: Array<Subject>;
+};
+
+export type GetItemsForSubjectInput = {
+    idSubject: Scalars['Int'];
+    pagination?: Maybe<PaginationInput>;
+};
+
+export type GetItemsForSubjectResult = {
+    __typename?: 'GetItemsForSubjectResult';
+    Item: Array<Item>;
 };
 
 export type SubjectUnitIdentifier = {
@@ -902,11 +956,6 @@ export type GetWorkflowResult = {
     Workflow?: Maybe<Workflow>;
 };
 
-export enum AssetType {
-    Diconde = 'Diconde',
-    Photogrammetry = 'Photogrammetry'
-}
-
 export type Mutation = {
     __typename?: 'Mutation';
     uploadAsset: UploadAssetResult;
@@ -926,7 +975,7 @@ export type Mutation = {
 
 export type MutationUploadAssetArgs = {
     file: Scalars['Upload'];
-    type: AssetType;
+    type: Scalars['Int'];
 };
 
 export type MutationCreateCaptureDataArgs = {
@@ -980,7 +1029,7 @@ export type MutationCreateVocabularySetArgs = {
 export type UploadAssetInput = {
     __typename?: 'UploadAssetInput';
     file: Scalars['Upload'];
-    type: AssetType;
+    type: Scalars['Int'];
 };
 
 export enum UploadStatus {
