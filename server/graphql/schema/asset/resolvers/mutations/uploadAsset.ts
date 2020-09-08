@@ -1,6 +1,6 @@
 import { ReadStream } from 'fs';
 import { MutationUploadAssetArgs, UploadAssetResult, UploadStatus /*, AssetType */ } from '../../../../../types/graphql';
-import { Parent } from '../../../../../types/resolvers';
+import { Parent, Context } from '../../../../../types/resolvers';
 import * as STORE from '../../../../../storage/interface';
 import * as LOG from '../../../../../utils/logger';
 import * as CACHE from '../../../../../cache';
@@ -13,7 +13,15 @@ interface ApolloFile {
     createReadStream: () => ReadStream;
 }
 
-export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs): Promise<UploadAssetResult | void> {
+export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult | void> {
+    const { user } = context;
+    const { filename, createReadStream }: ApolloFile = await args.file;
+
+    if (!user) {
+        LOG.logger.error('uploadAsset unable to retrieve user context');
+        return { status: UploadStatus.Failed };
+    }
+
     const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
     if (!storage) {
         LOG.logger.error('uploadAsset unable to retrieve Storage Implementation from StorageFactory.getInstance()');
@@ -26,15 +34,13 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
         return { status: UploadStatus.Failed };
     }
     const { writeStream, storageKey } = WSResult;
-    // const type: AssetType = args.type; // TODO: this AssetType needs to be a Vocabulary.idVocabulary, or something that can be transformed into such an ID
-    const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeOther);
+    const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(args.type);
     if (!vocabulary) {
         LOG.logger.error('uploadAsset unable to retrieve asset type vocabulary');
         return { status: UploadStatus.Failed };
     }
 
     try {
-        const { filename, createReadStream }: ApolloFile = await args.file;
         const fileStream = createReadStream();
         const stream = fileStream.pipe(writeStream);
 
@@ -50,8 +56,8 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
                     FileName: filename,
                     FilePath: '',
                     idAssetGroup: 0,
-                    idVAssetType: vocabulary.idVocabulary, // TODO: replace with VocabularyID for this assettype, per above TODO item
-                    idUserCreator: 1, // TODO: replace with user ID
+                    idVAssetType: vocabulary.idVocabulary,
+                    idUserCreator: user.idUser,
                     DateCreated: new Date()
                 };
 

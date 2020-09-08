@@ -15,7 +15,7 @@ export class StorageFactory {
                 default:
                 case STORAGE_TYPE.LOCAL: {
                     const LS: LocalStorage = new LocalStorage();
-                    const IOR: IOResults = await LS.initialize(Config.storage.root);
+                    const IOR: IOResults = await LS.initialize(Config.storage.rootRepository, Config.storage.rootStaging);
                     /* istanbul ignore else */
                     if (IOR.success)
                         StorageFactory.instance = LS;

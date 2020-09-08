@@ -38,7 +38,8 @@ type ConfigType = {
     }
     storage: {
         type: STORAGE_TYPE;
-        root: string;
+        rootRepository: string;
+        rootStaging: string; // this should be local storage (not NAS or cloud)
     },
 };
 
@@ -66,7 +67,8 @@ const Config: ConfigType = {
     },
     storage: {
         type: STORAGE_TYPE.LOCAL,
-        root: process.env.OCFL_STORAGE_ROOT ? process.env.OCFL_STORAGE_ROOT : /* istanbul ignore next */ './var/PackratStorage'
+        rootRepository: process.env.OCFL_STORAGE_ROOT ? process.env.OCFL_STORAGE_ROOT : /* istanbul ignore next */ './var/Storage/Repository',
+        rootStaging: process.env.OCFL_STAGING_ROOT ? process.env.OCFL_STAGING_ROOT : /* istanbul ignore next */ './var/Storage/Staging'
     }
 };
 

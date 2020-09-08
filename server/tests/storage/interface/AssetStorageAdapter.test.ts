@@ -20,18 +20,27 @@ const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
 let vAssetType: DBAPI.Vocabulary;
 let opInfo: STORE.OperationInfo;
 let TestCase1: AssetStorageAdapterTestCase;
-let storageRootOrig: string;
-let storageRootNew: string;
+let rootRepositoryOrig: string;
+let rootRepositoryNew: string;
+let rootStagingOrig: string;
+let rootStagingNew: string;
 
 beforeAll(() => {
-    storageRootOrig = Config.storage.root;
-    storageRootNew = path.join('var', 'test', H.Helpers.randomSlug());
-    Config.storage.root = storageRootNew;
+    rootRepositoryOrig = Config.storage.rootRepository;
+    rootStagingOrig = Config.storage.rootStaging;
+
+    rootRepositoryNew = path.join('var', 'test', H.Helpers.randomSlug());
+    rootStagingNew = path.join('var', 'test', H.Helpers.randomSlug());
+
+    Config.storage.rootRepository = rootRepositoryNew;
+    Config.storage.rootStaging = rootStagingNew;
 });
 
 afterAll(async done => {
-    Config.storage.root = storageRootOrig;
-    await H.Helpers.removeDirectory(storageRootNew, true);
+    Config.storage.rootRepository = rootRepositoryOrig;
+    Config.storage.rootStaging = rootStagingOrig;
+    await H.Helpers.removeDirectory(rootRepositoryNew, true);
+    await H.Helpers.removeDirectory(rootStagingNew, true);
     // jest.setTimeout(3000);
     // await H.Helpers.sleep(2000);
     done();
