@@ -63,8 +63,7 @@ const useFilesUpload = (): UseFilesUpload => {
             };
         }
 
-        // TODO: KARAN: replace index with fileId this afterwards
-        const idAssetVersions = lodash.map(selectedFiles, (_, index) => index);
+        const idAssetVersions: number[] = lodash.map(selectedFiles, ({ id }) => Number.parseInt(id, 10));
 
         try {
             const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({

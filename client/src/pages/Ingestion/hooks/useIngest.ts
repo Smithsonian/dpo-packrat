@@ -64,7 +64,7 @@ function useIngest(): UseIngest {
         }
 
         lodash.forEach(metadatas, metadata => {
-            const { photogrammetry } = metadata;
+            const { file, photogrammetry } = metadata;
             const {
                 dateCaptured,
                 datasetType,
@@ -122,7 +122,7 @@ function useIngest(): UseIngest {
             }
 
             const photogrammetryData = {
-                idAssetVersion: 0, // TODO: KARAN: replace index with fileId this afterwards
+                idAssetVersion: Number.parseInt(file.id, 10),
                 dateCaptured: dateCaptured.toISOString(),
                 datasetType,
                 systemCreated,
