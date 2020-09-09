@@ -43,7 +43,7 @@ export class OCFLRoot {
     }
 
     /** Computes a random directory and filename in the staging area */
-    async computeWriteStreamLocation(): Promise<ComputeWriteStreamLocationResults> {
+    async computeWriteStreamLocation(fileName: string): Promise<ComputeWriteStreamLocationResults> {
         const results: ComputeWriteStreamLocationResults = {
             locationPublic: '<INVALID>',
             locationPrivate: '<INVALID>',
@@ -53,8 +53,9 @@ export class OCFLRoot {
             }
         };
 
+        if (!fileName || !H.Helpers.validFilename(fileName))
+            fileName = H.Helpers.randomSlug();
         const directoryName: string = H.Helpers.randomSlug();
-        const fileName: string      = H.Helpers.randomSlug();
         const directoryPath: string = path.join(this.computeLocationStagingRoot(), directoryName);
         results.ioResults = await H.Helpers.createDirectory(directoryPath);
         /* istanbul ignore else */

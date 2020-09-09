@@ -108,9 +108,9 @@ export class Helpers {
                 res.error = `${name} does not exist`;
             }
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.fileOrDirExists', error);
+            // LOG.logger.error('Helpers.fileOrDirExists', error);
             res.success = false;
-            res.error = `Unable to test existence of ${name}: ${error}`;
+            res.error = `${name} does not exist: ${error}`;
         }
         return res;
     }
@@ -365,6 +365,29 @@ export class Helpers {
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.readFileFromStream', error);
             return null;
+        }
+    }
+
+    static async writeFileToStream(fileName: string, writeStream: NodeJS.WritableStream): Promise<IOResults> {
+        try {
+            const readStream: NodeJS.ReadableStream = await fs.createReadStream(fileName);
+            return await Helpers.writeStreamToStream(readStream, writeStream);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('Helpers.writeFileToStream', error);
+            return { success: false, error: `Helpers.writeFileToStream: ${JSON.stringify(error)}` };
+        }
+    }
+
+    static async writeStreamToStream(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream): Promise<IOResults> {
+        try {
+            readStream.pipe(writeStream);
+            return new Promise<IOResults>((resolve) => {
+                writeStream.on('finish', () => { resolve({ success: true, error: '' }); }); /* istanbul ignore next */
+                writeStream.on('error', () => { resolve({ success: false, error: '' }); });
+            });
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('Helpers.writeStreamToStream', error);
+            return { success: false, error: `Helpers.writeFileToStream: ${JSON.stringify(error)}` };
         }
     }
 

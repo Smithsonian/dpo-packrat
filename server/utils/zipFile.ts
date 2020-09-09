@@ -76,9 +76,9 @@ export class ZipFile implements IZip {
         });
     }
 
-    getAllEntries(): string[] { return this._entries; }
-    getJustFiles(): string[] { return this._files; }
-    getJustDirectories(): string[] { return this._dirs; }
+    async getAllEntries(): Promise<string[]> { return this._entries; }
+    async getJustFiles(): Promise<string[]> { return this._files; }
+    async getJustDirectories(): Promise<string[]> { return this._dirs; }
 
     async streamContent(entry: string): Promise<NodeJS.ReadableStream | null> {
         return new Promise<NodeJS.ReadableStream | null>((resolve) => {
