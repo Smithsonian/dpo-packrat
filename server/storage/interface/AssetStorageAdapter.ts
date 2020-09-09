@@ -1,9 +1,13 @@
+import * as path from 'path';
 import * as STORE from '../interface';
 import * as DBAPI from '../../db';
+import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
-// import * as H from '../../utils/helpers';
+import { ZipFile, ZipStream, IOResults, IZip } from '../../utils';
+import { BagitReader } from '../../utils/parser';
 import { StorageFactory } from './StorageFactory';
 import { IStorage } from './IStorage';
+import { AssetVersionContent } from '../../types/graphql';
 
 export type AssetStorageResult = {
     asset: DBAPI.Asset | null,
@@ -47,16 +51,11 @@ export class AssetStorageAdapter {
             return { readStream: null, storageHash: null, success: false, error };
         }
 
-        let storageKey: string;
-        if (assetVersion.Ingested) { /* istanbul ignore next */
-            if (!asset.StorageKey) {
-                const error: string = `AssetStorageAdapter.readAsset: Asset ${JSON.stringify(asset)} has null storageKey`;
-                LOG.logger.error(error);
-                return { readStream: null, storageHash: null, success: false, error };
-            }
-            storageKey = asset.StorageKey;
-        } else
-            storageKey = assetVersion.StorageKeyStaging;
+        const { storageKey, ingested, error } = AssetStorageAdapter.computeStorageKeyAndIngested(asset, assetVersion); ingested; /* istanbul ignore next */
+        if (!storageKey) {
+            LOG.logger.error(error);
+            return { readStream: null, storageHash: null, success: false, error };
+        }
 
         const readStreamInput: STORE.ReadStreamInput = {
             storageKey,
@@ -437,6 +436,128 @@ export class AssetStorageAdapter {
         retValue.asset = asset;
         retValue.assetVersion = assetVersion;
         retValue.success = true;
+        return retValue;
+    }
+
+    private static computeStorageKeyAndIngested(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): { storageKey: string | null, ingested: boolean, error: string } {
+        let storageKey: string | null = null;
+        const ingested: boolean = assetVersion.Ingested;
+        let error: string = '';
+        if (ingested) { /* istanbul ignore next */
+            if (!asset.StorageKey) {
+                error = `AssetStorageAdapter.computeStorageKeyAndIngested: Asset ${JSON.stringify(asset)} has null storageKey`;
+                LOG.logger.error(error);
+                return { storageKey, ingested, error };
+            }
+            storageKey = asset.StorageKey;
+        } else
+            storageKey = assetVersion.StorageKeyStaging;
+        return { storageKey, ingested, error };
+    }
+
+    static async getAssetVersionContents(assetVersion: DBAPI.AssetVersion): Promise<AssetVersionContent> {
+        const retValue = {
+            idAssetVersion: assetVersion.idAssetVersion,
+            folders: new Array<string>(),
+            all: new Array<string>()
+        };
+
+        // if our filename is not a zip, just return it!
+        if (!assetVersion.FileName.toLowerCase().endsWith('.zip')) {
+            retValue.all.push(assetVersion.FileName);
+            return retValue;
+        }
+
+        // otherwise, we need to do the following:
+        // 1. retrieve the associated asset
+        // 2. determine if this is a plain old zip or a bagit bulk ingestion file (determined from asset.idVAssetType)
+        // 3. determine the storage key and whether it's staging or repository
+        // 4a. for repository, construct either a ZipStream (plain old zip) or a BagitReader (based on a zip stream)
+        // 4b. for staging, construct either a ZipFile (plain old zip) or a BagitReader (based on a zip file)
+        // 5. use the constructed object to compute contents
+        // 6. close the object
+
+        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset); /* istanbul ignore next */
+        if (!asset) {
+            LOG.logger.error(`AssetStorageAdapter.getAssetVersionContents unable to compute asset for AssetVersion ${JSON.stringify(assetVersion)} `);
+            return retValue;
+        }
+
+        const vocabBulkIngest: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeBulkIngestion);
+        const isBulkIngest: boolean = (vocabBulkIngest && asset.idVAssetType == vocabBulkIngest.idVocabulary) ? true : false;
+
+        const { storageKey, ingested, error } = AssetStorageAdapter.computeStorageKeyAndIngested(asset, assetVersion); /* istanbul ignore next */
+        if (!storageKey) {
+            LOG.logger.error(error);
+            return retValue;
+        }
+
+        const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
+        if (!storage) {
+            const error: string = 'AssetStorageAdapter.getAssetVersionContents: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            LOG.logger.error(error);
+            return retValue;
+        }
+
+        // LOG.logger.info(`getAssetVersionContents fileName ${assetVersion.FileName} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest}`);
+        let reader: IZip;
+        if (ingested) {
+            // ingested content lives on isilon storage; we'll need to stream it back to the server for processing
+            const readStreamInput: STORE.ReadStreamInput = {
+                storageKey,
+                fileName: asset.FileName,
+                version: assetVersion.Version,
+                staging: !assetVersion.Ingested
+            };
+
+            const RSR: STORE.ReadStreamResult = await storage.readStream(readStreamInput); /* istanbul ignore next */
+            if (!RSR.success|| !RSR.readStream) {
+                LOG.logger.error(RSR.error);
+                return retValue;
+            }
+
+            reader = (isBulkIngest)
+                ? new BagitReader({ zipFileName: null, zipStream: RSR.readStream, directory: null, validate: true, validateContent: false })
+                : new ZipStream(RSR.readStream);
+        } else {
+            // non-ingested content is staged locally
+            const stagingFileName: string = await storage.stagingFileName(storageKey);
+            reader = (isBulkIngest)
+                ? new BagitReader({ zipFileName: stagingFileName, zipStream: null, directory: null, validate: true, validateContent: false })
+                : new ZipFile(stagingFileName);
+        }
+
+        const ioResults: IOResults = await reader.load(); /* istanbul ignore next */
+        if (!ioResults.success) {
+            await reader.close();
+            LOG.logger.error(ioResults.error);
+            return retValue;
+        }
+
+        // for the time being, we handle bagit content differently than zip content
+        // bagits (isBulkIngest) use getJustFiles() to report the contents of the data folder, and getJustDirectories() to report the directories in the data folder
+        // zips give us everything
+        if (isBulkIngest) {
+            retValue.all = await reader.getJustFiles();
+            retValue.folders = await reader.getJustDirectories();
+        } else {
+            const directoryMap: Map<string, boolean> = new Map<string, boolean>();
+            const allEntries: string[] = await reader.getAllEntries();
+            for (const entry of allEntries) {
+                if (entry.endsWith('/'))
+                    continue;
+                const dirName: string = path.dirname(entry);
+                if (!directoryMap.has(dirName) && dirName != '.') {
+                    retValue.folders.push(dirName);
+                    directoryMap.set(dirName, true);
+                }
+                const baseName: string = path.basename(entry);
+                retValue.all.push(baseName);
+                // LOG.logger.info(`Entry ${entry}: Dir ${dirName}; Base ${baseName}`);
+            }
+        }
+
+        await reader.close();
         return retValue;
     }
 }

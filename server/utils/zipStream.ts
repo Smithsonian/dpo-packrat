@@ -1,22 +1,24 @@
 import JSZip, * as JSZ from 'jszip';
 import * as LOG from './logger';
 import * as H from './helpers';
+import { IZip } from './IZip';
 
-export class ZipStream {
+/**
+ * This ZIP implementation uses JSZip and reads everything into memory before unzipping.
+ * Use zipStreamReader when you have a filename and you want fully streamed behavior -
+ * the file won't be read into memory all at once.
+ */
+export class ZipStream implements IZip {
     private _inputStream: NodeJS.ReadableStream;
     private _zip: JSZip | null = null;
     private _entries: string[] = [];
+    private _files: string[] = [];
+    private _dirs: string[] = [];
 
     constructor(inputStream: NodeJS.ReadableStream) {
         this._inputStream = inputStream;
     }
 
-    // TODO: convert ZipStream.load() into a method that avoids loading the full contents into memory
-    // The package node-stream-zip (https://github.com/antelle/node-stream-zip) avoids reading
-    //  everything into memory, but it requires a filename. Our storage system works with streams --
-    // we can't assume that the zip is present on disk, as we intend to support other storage implementations,
-    // such as cloud-based storage. One approach here would be to fork node-stream-zip and add a stream-based,
-    // promise wrapper. My first step here is to request an enhancment; let's see what comes of this (JT 2020-09-07)
     async load(): Promise<H.IOResults> {
         try {
             // this._inputStream
@@ -29,12 +31,19 @@ export class ZipStream {
             });
 
             this._zip = await JSZ.loadAsync(await P);
-            this._entries = [];
+            this.clearState();
+
             for (const entry in this._zip.files) {
                 /* istanbul ignore if */
                 if (entry.toUpperCase().startsWith('__MACOSX')) // ignore wacky MAC OSX resource folder stuffed into zips created on that platform
                     continue;
                 this._entries.push(entry);
+
+                const isDirectoryEntry: boolean = (entry.endsWith('/'));
+                if (isDirectoryEntry)
+                    this._dirs.push(entry);
+                else
+                    this._files.push(entry);
             }
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('ZipStream.load', error);
@@ -43,38 +52,24 @@ export class ZipStream {
         return { success: true, error: '' };
     }
 
-    get allEntries(): string[] {
-        return this._entries;
+    async close(): Promise<H.IOResults> {
+        return { success: true, error: '' };
     }
 
-    get justFiles(): string[] {
-        return this.computeContents(false);
-    }
+    async getAllEntries(): Promise<string[]> { return this._entries; }
+    async getJustFiles(): Promise<string[]> { return this._files; }
+    async getJustDirectories(): Promise<string[]> { return this._dirs; }
 
-    get justDirectories(): string[] {
-        return this.computeContents(true);
-    }
-
-    private computeContents(directories: boolean): string[] {
-        const retValue: string[] = [];
-        if (!this._zip)
-            return retValue;
-
-        for (const entry of this._entries) {
-            const isDirectoryEntry: boolean = (entry.endsWith('/'));
-
-            if (isDirectoryEntry && directories)
-                retValue.push(entry);
-            else if (!isDirectoryEntry && !directories)
-                retValue.push(entry);
-        }
-        return retValue;
-    }
-
-    streamContent(entry: string): NodeJS.ReadableStream | null {
+    async streamContent(entry: string): Promise<NodeJS.ReadableStream | null> {
         if (!this._zip)
             return null;
         const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
         return (ZO) ? ZO.nodeStream() : null;
+    }
+
+    private clearState() {
+        this._entries = [];
+        this._files = [];
+        this._dirs = [];
     }
 }
