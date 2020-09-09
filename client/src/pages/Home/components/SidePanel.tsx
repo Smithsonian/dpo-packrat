@@ -64,7 +64,6 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
         },
         {
             title: 'Repository',
-            subtitle: '314k assets',
             type: HOME_ROUTES.REPOSITORY,
             color: Colors.sidebarOptions.repository,
             isExpanded,
@@ -72,7 +71,6 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
         },
         {
             title: 'Ingestion',
-            subtitle: '12 assets today',
             type: HOME_ROUTES.INGESTION,
             color: Colors.sidebarOptions.ingestion,
             isExpanded,
@@ -80,7 +78,6 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
         },
         {
             title: 'Workflow',
-            subtitle: '6 open tasks',
             type: HOME_ROUTES.WORKFLOW,
             color: Colors.sidebarOptions.workflow,
             isExpanded,
