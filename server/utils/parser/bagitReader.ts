@@ -1,9 +1,10 @@
 import * as fs from 'fs-extra';
-import { join } from 'path';
+import * as path from 'path';
 import * as LOG from '../logger';
 import * as H from '../helpers';
-import * as ZIP from '../zipStream';
-// import { logStringArray } from '../../tests/utils/zipStream.test';
+import * as ZIPS from '../zipStream';
+import * as ZIPF from '../zipFile';
+import { IZip } from '../IZip';
 
 const BAGIT_BAG_DECLARATION: string = 'bagit.txt';
 const BAGIT_BAG_METADATA: string = 'bag-info.txt';
@@ -17,9 +18,18 @@ const BAGIT_DATA_DIRECTORY: string = 'data/';
 const BAGIT_SPECIAL_FILES_REGEX = /((.*)[/\\])?(bagit.txt|bag-info.txt|(tag)?manifest-(.+).txt)$/;
 const BAGIT_MANIFEST_ENTRY_REGEX = /(.*)\s+(.*)/;
 
+/** exactly one of zipFileName, zipStream, or directory must be non-null */
+export type BagitReaderParams = {
+    zipFileName: string | null,                 // specifies path to on-disk zip file when non-null
+    zipStream: NodeJS.ReadableStream | null,    // specifies stream of zip bits when non-null
+    directory: string | null,                   // specifies directory within which is a bagit structure
+    validate: boolean,                          // validate bagit structure and manifest
+    validateContent: boolean                    // validate content (stream bits, compute hashes, and compare to values in the manifest)
+};
+
 /** c.f. https://tools.ietf.org/html/draft-kunze-bagit-17 */
-export class BagitReader {
-    private _zip: ZIP.ZipStream | null = null;
+export class BagitReader implements IZip {
+    private _zip: IZip | null = null;
     private _files: string[] = [];
     private _fileValidationMap: Map<string, boolean> = new Map<string, boolean>(); // map of filename.ToLowerCase() -> present in manifest with valid hash; these names are potentially prefixed with a folder in which the bagit contents are found
 
@@ -30,14 +40,61 @@ export class BagitReader {
     private _valid: boolean = false;
     private _prefixDir: string | null = null;
 
-    async loadFromZipStream(inputStream: NodeJS.ReadableStream, validate: boolean): Promise<H.IOResults> {
-        this._zip = new ZIP.ZipStream(inputStream);
+    private _dataDirectories: string[] = [];
+    private _dataFiles: string[] = [];
+
+    private _params: BagitReaderParams;
+
+    constructor(params: BagitReaderParams) {
+        this._params = params;
+    }
+
+    async load(): Promise<H.IOResults> {
+        if (this._params.zipFileName)
+            return await this.loadFromZipFile(this._params.zipFileName, this._params.validate);
+        else if (this._params.zipStream)
+            return await this.loadFromZipStream(this._params.zipStream, this._params.validate);
+        else if (this._params.directory)
+            return await this.loadFromDirectory(this._params.directory, this._params.validate);
+        else
+            return { success: false, error: 'Invalid BagitReader constructor params' };
+    }
+
+    async getAllEntries(): Promise<string[]> {
+        if (!this._validated)
+            await this.validate();
+        return this._files;
+    }
+
+    async getJustFiles(): Promise<string[]> {
+        if (!this._validated)
+            await this.validate();
+        return this._dataFiles;
+    }
+
+    async getJustDirectories(): Promise<string[]> {
+        if (!this._validated)
+            await this.validate();
+        return this._dataDirectories;
+    }
+
+    async loadFromZipFile(fileName: string, validate: boolean): Promise<H.IOResults> {
+        this._zip = new ZIPF.ZipFile(fileName);
         const results: H.IOResults = await this._zip.load();
         if (!results.success)
             return results;
-        this._files = this._zip.justFiles;
+        this._files = await this._zip.getJustFiles();
 
-        // logStringArray(this._files, 'ZIP ');
+        return validate ? await this.validate() : results;
+    }
+
+    async loadFromZipStream(inputStream: NodeJS.ReadableStream, validate: boolean): Promise<H.IOResults> {
+        this._zip = new ZIPS.ZipStream(inputStream);
+        const results: H.IOResults = await this._zip.load();
+        if (!results.success)
+            return results;
+        this._files = await this._zip.getJustFiles();
+
         return validate ? await this.validate() : results;
     }
 
@@ -47,15 +104,21 @@ export class BagitReader {
             return { success: false, error: `Unable to read ${directory}` };
         this._files = fileList;
 
-        // logStringArray(this._files, 'DIR ');
         return validate ? await this.validate() : { success: true, error: '' };
+    }
+
+    async close(): Promise<H.IOResults> {
+        if (this._zip)
+            return await this._zip.close();
+        else
+            return { success: true, error: '' };
     }
 
     private prefixedFilename(file: string): string {
         /* istanbul ignore else */
         if (this._prefixDir) {
             if (!file.startsWith(this._prefixDir)) {
-                file = join(this._prefixDir, file);
+                file = path.join(this._prefixDir, file);
                 if (this._zip)
                     file = file.replace(/\\/g, '/'); // if we are reading from a zip and on a Windows system, update path separators to be / after the join call above
             }
@@ -63,7 +126,7 @@ export class BagitReader {
         return file;
     }
 
-    async getFileStream(file: string): Promise<NodeJS.ReadableStream | null> {
+    async streamContent(file: string): Promise<NodeJS.ReadableStream | null> {
         const fileName: string = this.prefixedFilename(file);
         // LOG.logger.info(`getFileStream(${file}) looking in ${fileName}`);
 
@@ -214,7 +277,7 @@ export class BagitReader {
                 continue;
             }
 
-            let validateManifestResults = await this.validateManifest(manifestFile, algorithm);
+            let validateManifestResults = await this.validateManifest(manifestFile, algorithm, true);
             if (!validateManifestResults.success)
                 return validateManifestResults;
 
@@ -226,7 +289,7 @@ export class BagitReader {
                 continue;
             }
 
-            validateManifestResults = await this.validateManifest(manifestFile, algorithm);
+            validateManifestResults = await this.validateManifest(manifestFile, algorithm, false);
             if (!validateManifestResults.success)
                 return validateManifestResults;
         }
@@ -242,12 +305,12 @@ export class BagitReader {
         return { success: true, error: '' };
     }
 
-    private async validateManifest(manifestFile: string, algorithm: string): Promise<H.IOResults> {
+    private async validateManifest(manifestFile: string, algorithm: string, extractDataFiles: boolean): Promise<H.IOResults> {
         const manifestEntryRegex: RegExp = new RegExp(BAGIT_MANIFEST_ENTRY_REGEX);
         // LOG.logger.info(`Validate Manifest ${manifestFile}, algorithm ${algorithm}`);
 
         // load manifest file
-        const stream: NodeJS.ReadableStream | null = await this.getFileStream(manifestFile); /* istanbul ignore next */
+        const stream: NodeJS.ReadableStream | null = await this.streamContent(manifestFile); /* istanbul ignore next */
         if (!stream)
             return { success: false, error: `Invalid Bagit: unable to read manifest ${manifestFile}` };
         const buffer: Buffer | null = await H.Helpers.readFileFromStream(stream); /* istanbul ignore next */
@@ -263,6 +326,9 @@ export class BagitReader {
         }
 
         // parse into map of file -> hash
+        const directoryMap: Map<string, boolean> = new Map<string, boolean>();
+        const fileMap: Map<string, boolean> = new Map<string, boolean>();
+
         const manifestLines: string[] = manifestData.split(/[\r\n]+/);
         for (const line of manifestLines) {
             // LOG.logger.info(`Processing manifest line ${line}`);
@@ -273,26 +339,52 @@ export class BagitReader {
                 return { success: false, error: `Invalid Bagit: invalid manifest entry in ${manifestFile}` };
             const hash: string = regexResult[1];
             const fileName: string = regexResult[2];
-            const manifestEntryStream: NodeJS.ReadableStream | null = await this.getFileStream(fileName);
-            if (!manifestEntryStream)
-                return { success: false, error: `Invalid Bagit: invalid manifest entry ${fileName} in ${manifestFile} ` };
 
-            // verify file exists; compute & verify hashes; mark files as validated in this._fileMap
-            const hashResults = await H.Helpers.computeHashFromStream(manifestEntryStream, algorithm); /* istanbul ignore next */
-            if (!hashResults.success)
-                return hashResults;
+            if (this._params.validateContent) {
+                const manifestEntryStream: NodeJS.ReadableStream | null = await this.streamContent(fileName);
+                if (!manifestEntryStream)
+                    return { success: false, error: `Invalid Bagit: invalid manifest entry ${fileName} in ${manifestFile} ` };
 
-            if (hashResults.hash != hash)
-                return { success: false, error: `Invalid Bagit: invalid manifest ${algorithm} hash for ${fileName}` };
+                // verify file exists; compute & verify hashes; mark files as validated in this._fileMap
+                const hashResults = await H.Helpers.computeHashFromStream(manifestEntryStream, algorithm); /* istanbul ignore next */
+                if (!hashResults.success)
+                    return hashResults;
+
+                if (hashResults.hash != hash)
+                    return { success: false, error: `Invalid Bagit: invalid manifest ${algorithm} hash for ${fileName}` };
+            }
 
             const prefixedFileName: string = this.prefixedFilename(fileName); /* istanbul ignore next */
             if (!this._fileValidationMap.has(prefixedFileName.toLowerCase()))
                 return { success: false, error: `Invalid Bagit: manifest entry ${prefixedFileName} not found in bagit` };
 
+            if (extractDataFiles) {
+                // we expect fileName to start with "data/" -- there's an error if that's not the case!
+                /* istanbul ignore next */
+                if (!fileName.toLowerCase().startsWith(BAGIT_DATA_DIRECTORY))
+                    return { success: false, error: `Invalid Bagit: data manifest entry ${fileName} does not start with ${BAGIT_DATA_DIRECTORY}` };
+                // strip of "data/" ... then split results into folder names and file names
+                const strippedFileName: string = fileName.replace(BAGIT_DATA_DIRECTORY, '');
+                const dirname: string = path.dirname(strippedFileName);
+                if (dirname && dirname != '.')
+                    directoryMap.set(dirname, true);
+                fileMap.set(path.basename(strippedFileName), true);
+            }
+
             // File exists and has a valid hash; record it in our local validation this._fileMap, and record data in our persistent dataFileMap
             this._fileValidationMap.set(prefixedFileName.toLowerCase(), true);
             this._dataFileMap.set(fileName, hash); // last one wins
         }
+
+        if (this._dataDirectories.length == 0)
+            for (const [directory, flag] of directoryMap) {
+                this._dataDirectories.push(directory); flag;
+            }
+        if (this._dataFiles.length == 0)
+            for (const [file, flag] of fileMap) {
+                this._dataFiles.push(file); flag;
+            }
+
         return { success: true, error: '' };
     }
 }

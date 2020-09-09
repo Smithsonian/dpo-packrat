@@ -8,4 +8,6 @@ if (!process.env.EDAN_SERVER)
 if (!process.env.EDAN_APPID)
     process.env.EDAN_APPID = 'OCIO3D';
 if (!process.env.OCFL_STORAGE_ROOT)
-    process.env.OCFL_STORAGE_ROOT = './var/PackratStorage';
+    process.env.OCFL_STORAGE_ROOT = './var/Storage/Repository';
+if (!process.env.OCFL_STAGING_ROOT)
+    process.env.OCFL_STAGING_ROOT = './var/Storage/Staging';

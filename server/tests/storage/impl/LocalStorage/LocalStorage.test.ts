@@ -24,20 +24,22 @@ let LSTC2: LocalStorageTestCase;
 let LSTC3: LocalStorageTestCase;
 
 const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
-let ocflStorageRoot: string;
+let testStorageRoot: string;
+let ocflRootRepository: string;
+let ocflRootStaging: string;
 let ls: LS.LocalStorage;
 let opInfo: STORE.OperationInfo;
 let nextID: number = 1;
 
 beforeAll(() => {
     ls = new LS.LocalStorage();
-    ocflStorageRoot = path.join('var', 'test', H.Helpers.randomSlug());
-    LOG.logger.info(`Creating test storage root in ${path.resolve(ocflStorageRoot)}`);
+    testStorageRoot = path.join('var', 'test', H.Helpers.randomSlug());
+    LOG.logger.info(`Creating test storage root in ${path.resolve(testStorageRoot)}`);
 });
 
 afterAll(async done => {
-    LOG.logger.info(`Removing test storage root from ${path.resolve(ocflStorageRoot)}`);
-    await H.Helpers.removeDirectory(ocflStorageRoot, true);
+    LOG.logger.info(`Removing test storage root from ${path.resolve(testStorageRoot)}`);
+    await H.Helpers.removeDirectory(testStorageRoot, true);
     // jest.setTimeout(3000);
     // await H.Helpers.sleep(2000);
     done();
@@ -56,10 +58,12 @@ describe('LocalStorage Init', () => {
     });
 
     test('LocalStorage.initialize', async () => {
-        let ioResults: H.IOResults = await H.Helpers.createDirectory(ocflStorageRoot);
+        let ioResults: H.IOResults = await H.Helpers.createDirectory(testStorageRoot);
         expect(ioResults.success).toBeTruthy();
 
-        ioResults = await ls.initialize(ocflStorageRoot);
+        ocflRootRepository = path.join(testStorageRoot, 'Repository');
+        ocflRootStaging = path.join(testStorageRoot, 'Staging');
+        ioResults = await ls.initialize(ocflRootRepository, ocflRootStaging);
         expect(ioResults.success).toBeTruthy();
     });
 });
@@ -255,7 +259,7 @@ async function testWriteStream(fileSize: number): Promise<LocalStorageTestCase> 
     };
 
     LOG.logger.info('LocalStorage.writeStream');
-    const WSR: STORE.WriteStreamResult = await ls.writeStream();
+    const WSR: STORE.WriteStreamResult = await ls.writeStream(LSTC.fileName);
     expect(WSR.success).toBeTruthy();
     expect(WSR.writeStream).toBeTruthy();
     expect(WSR.storageKey).toBeTruthy();
@@ -267,6 +271,9 @@ async function testWriteStream(fileSize: number): Promise<LocalStorageTestCase> 
     LSTC.storageKeyStaging = WSR.storageKey;
     LSTC.storageHash = await H.Helpers.createRandomFile(WSR.writeStream, fileSize);
     expect(LSTC.storageHash).toBeTruthy();
+
+    const pathOnDisk: string = await ls.stagingFileName(WSR.storageKey);
+    expect(path.join(ocflRootStaging, WSR.storageKey)).toEqual(pathOnDisk);
     return LSTC;
 }
 

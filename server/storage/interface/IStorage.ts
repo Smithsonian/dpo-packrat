@@ -128,13 +128,18 @@ export interface IStorage {
      */
     readStream(readStreamInput: ReadStreamInput): Promise<ReadStreamResult>;
 
+    /** Provides access to staged files by filename */
+    stagingFileName(storageKey: string): Promise<string>;
+
     /**
      * Provides a Writable stream used to stream data into the storage system.
-     * Files are always streamed to a random location within the staging area.
-     * writeStreamClose() is used to promote files into the repository from the staging area.
-     * Returns a Writable stream and a StorageKey, which is the input to writeStreamClose().
+     * Files are always streamed to a random location within the "staging" area.
+     * commitWriteStream() is used to signal completion of the upload to staging.
+     * promoteStagedAsset() is used to promote files into the repository from the staging area.
+     * Returns a Writable stream and a StorageKey, which is the input to commitWriteStream()
+     * and promoteStagedAsset().
      */
-    writeStream(): Promise<WriteStreamResult>;
+    writeStream(fileName: string): Promise<WriteStreamResult>;
 
     /**
      * Informs the storage system that the client is done writing to the stream returned by writeStream().
