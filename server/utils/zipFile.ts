@@ -1,7 +1,7 @@
 import * as LOG from './logger';
 import * as H from './helpers';
 import { IZip } from './IZip';
-import StreamZip = require('node-stream-zip');
+import StreamZip from 'node-stream-zip';
 
 /**
  * Zip contents are stored at the end of the zip file.  In order to decompress a zip file,
