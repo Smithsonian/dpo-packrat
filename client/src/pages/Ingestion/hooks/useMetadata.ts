@@ -47,8 +47,7 @@ function useMetadata(): UseMetadata {
 
     const { getInitialEntryWithVocabularies, getAssetType } = useVocabularyEntries();
 
-    // TODO: KARAN: replace index with fileId this afterwards
-    const idAssetVersions: number[] = [...metadatas].map((_, index) => index);
+    const idAssetVersions: number[] = [...metadatas].map(({ file: { id } }) => Number.parseInt(id, 10));
 
     const getSelectedIdentifiers = (metadata: StateMetadata): StateIdentifier[] | undefined => lodash.filter(metadata.photogrammetry.identifiers, { selected: true });
 
@@ -141,7 +140,7 @@ function useMetadata(): UseMetadata {
 
         let updatedMetadatas = await updateCameraSettings(metadatas);
 
-        AssetVersionContent.forEach(({ idAssetVersion, folders }, index: number) => {
+        AssetVersionContent.forEach(({ idAssetVersion, folders }) => {
             const stateFolders: StateFolder[] = folders.map((folder, index: number) => ({
                 id: index,
                 name: folder,
@@ -149,9 +148,9 @@ function useMetadata(): UseMetadata {
             }));
 
             updatedMetadatas = updatedMetadatas.map(metadata => {
-                const { photogrammetry } = metadata;
-                // TODO: KARAN: replace index with fileId this afterwards
-                if (index === idAssetVersion) {
+                const { file, photogrammetry } = metadata;
+                const fileId = Number.parseInt(file.id, 10);
+                if (fileId === idAssetVersion) {
                     return {
                         ...metadata,
                         photogrammetry: {
@@ -180,14 +179,14 @@ function useMetadata(): UseMetadata {
         for (let i = 0; i < updatedMetadatas.length; i++) {
             const metadata = updatedMetadatas[i];
             const { file, photogrammetry } = metadata;
+            const idAssetVersion = Number.parseInt(file.id, 10);
 
             const assetType = getAssetType(file.type);
 
             if (assetType.photogrammetry) {
-                // TODO: KARAN: replace index with fileId this afterwards
                 const variables = {
                     input: {
-                        idAssetVersion: i
+                        idAssetVersion
                     }
                 };
 

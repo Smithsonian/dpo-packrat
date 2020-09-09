@@ -331,6 +331,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 ...state,
                 uploads: {
                     ...uploads,
+                    files: action.files,
                     loading: false
                 }
             };
