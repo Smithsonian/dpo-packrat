@@ -1037,6 +1037,7 @@ export type GetWorkflowResult = {
 export type Mutation = {
     __typename?: 'Mutation';
     uploadAsset: UploadAssetResult;
+    discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
     createCaptureData: CreateCaptureDataResult;
     createCaptureDataPhoto: CreateCaptureDataPhotoResult;
     ingestData: IngestDataResult;
@@ -1055,6 +1056,11 @@ export type Mutation = {
 export type MutationUploadAssetArgs = {
     file: Scalars['Upload'];
     type: Scalars['Int'];
+};
+
+
+export type MutationDiscardUploadedAssetVersionsArgs = {
+    input: DiscardUploadedAssetVersionsInput;
 };
 
 
@@ -1131,6 +1137,17 @@ export enum UploadStatus {
 export type UploadAssetResult = {
     __typename?: 'UploadAssetResult';
     status: UploadStatus;
+    idAssetVersion?: Maybe<Scalars['Int']>;
+    error?: Maybe<Scalars['String']>;
+};
+
+export type DiscardUploadedAssetVersionsInput = {
+    idAssetVersions: Array<Scalars['Int']>;
+};
+
+export type DiscardUploadedAssetVersionsResult = {
+    __typename?: 'DiscardUploadedAssetVersionsResult';
+    success: Scalars['Boolean'];
 };
 
 export type CreateCaptureDataInput = {
@@ -1342,7 +1359,7 @@ export type UploadAssetMutation = (
     & {
         uploadAsset: (
             { __typename?: 'UploadAssetResult' }
-            & Pick<UploadAssetResult, 'status'>
+            & Pick<UploadAssetResult, 'status' | 'idAssetVersion' | 'error'>
         )
     }
 );
@@ -1794,6 +1811,26 @@ export type GetModelQuery = (
     }
 );
 
+export type GetIntermediaryFileQueryVariables = Exact<{
+    input: GetIntermediaryFileInput;
+}>;
+
+
+export type GetIntermediaryFileQuery = (
+    { __typename?: 'Query' }
+    & {
+        getIntermediaryFile: (
+            { __typename?: 'GetIntermediaryFileResult' }
+            & {
+                IntermediaryFile?: Maybe<(
+                    { __typename?: 'IntermediaryFile' }
+                    & Pick<IntermediaryFile, 'idIntermediaryFile'>
+                )>
+            }
+        )
+    }
+);
+
 export type GetSceneQueryVariables = Exact<{
     input: GetSceneInput;
 }>;
@@ -1940,6 +1977,26 @@ export type GetProjectQuery = (
                 Project?: Maybe<(
                     { __typename?: 'Project' }
                     & Pick<Project, 'idProject'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetProjectDocumentationQueryVariables = Exact<{
+    input: GetProjectDocumentationInput;
+}>;
+
+
+export type GetProjectDocumentationQuery = (
+    { __typename?: 'Query' }
+    & {
+        getProjectDocumentation: (
+            { __typename?: 'GetProjectDocumentationResult' }
+            & {
+                ProjectDocumentation?: Maybe<(
+                    { __typename?: 'ProjectDocumentation' }
+                    & Pick<ProjectDocumentation, 'idProjectDocumentation'>
                 )>
             }
         )
@@ -2135,6 +2192,8 @@ export const UploadAssetDocument = gql`
     mutation uploadAsset($file: Upload!, $type: Int!) {
   uploadAsset(file: $file, type: $type) {
     status
+    idAssetVersion
+    error
   }
 }
     `;
@@ -2945,6 +3004,41 @@ export function useGetModelLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetModelQueryHookResult = ReturnType<typeof useGetModelQuery>;
 export type GetModelLazyQueryHookResult = ReturnType<typeof useGetModelLazyQuery>;
 export type GetModelQueryResult = Apollo.QueryResult<GetModelQuery, GetModelQueryVariables>;
+export const GetIntermediaryFileDocument = gql`
+    query getIntermediaryFile($input: GetIntermediaryFileInput!) {
+  getIntermediaryFile(input: $input) {
+    IntermediaryFile {
+      idIntermediaryFile
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetIntermediaryFileQuery__
+ *
+ * To run a query within a React component, call `useGetIntermediaryFileQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetIntermediaryFileQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetIntermediaryFileQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetIntermediaryFileQuery(baseOptions?: Apollo.QueryHookOptions<GetIntermediaryFileQuery, GetIntermediaryFileQueryVariables>) {
+    return Apollo.useQuery<GetIntermediaryFileQuery, GetIntermediaryFileQueryVariables>(GetIntermediaryFileDocument, baseOptions);
+}
+export function useGetIntermediaryFileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIntermediaryFileQuery, GetIntermediaryFileQueryVariables>) {
+    return Apollo.useLazyQuery<GetIntermediaryFileQuery, GetIntermediaryFileQueryVariables>(GetIntermediaryFileDocument, baseOptions);
+}
+export type GetIntermediaryFileQueryHookResult = ReturnType<typeof useGetIntermediaryFileQuery>;
+export type GetIntermediaryFileLazyQueryHookResult = ReturnType<typeof useGetIntermediaryFileLazyQuery>;
+export type GetIntermediaryFileQueryResult = Apollo.QueryResult<GetIntermediaryFileQuery, GetIntermediaryFileQueryVariables>;
 export const GetSceneDocument = gql`
     query getScene($input: GetSceneInput!) {
   getScene(input: $input) {
@@ -3216,6 +3310,41 @@ export function useGetProjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions
 export type GetProjectQueryHookResult = ReturnType<typeof useGetProjectQuery>;
 export type GetProjectLazyQueryHookResult = ReturnType<typeof useGetProjectLazyQuery>;
 export type GetProjectQueryResult = Apollo.QueryResult<GetProjectQuery, GetProjectQueryVariables>;
+export const GetProjectDocumentationDocument = gql`
+    query getProjectDocumentation($input: GetProjectDocumentationInput!) {
+  getProjectDocumentation(input: $input) {
+    ProjectDocumentation {
+      idProjectDocumentation
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetProjectDocumentationQuery__
+ *
+ * To run a query within a React component, call `useGetProjectDocumentationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetProjectDocumentationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetProjectDocumentationQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetProjectDocumentationQuery(baseOptions?: Apollo.QueryHookOptions<GetProjectDocumentationQuery, GetProjectDocumentationQueryVariables>) {
+    return Apollo.useQuery<GetProjectDocumentationQuery, GetProjectDocumentationQueryVariables>(GetProjectDocumentationDocument, baseOptions);
+}
+export function useGetProjectDocumentationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetProjectDocumentationQuery, GetProjectDocumentationQueryVariables>) {
+    return Apollo.useLazyQuery<GetProjectDocumentationQuery, GetProjectDocumentationQueryVariables>(GetProjectDocumentationDocument, baseOptions);
+}
+export type GetProjectDocumentationQueryHookResult = ReturnType<typeof useGetProjectDocumentationQuery>;
+export type GetProjectDocumentationLazyQueryHookResult = ReturnType<typeof useGetProjectDocumentationLazyQuery>;
+export type GetProjectDocumentationQueryResult = Apollo.QueryResult<GetProjectDocumentationQuery, GetProjectDocumentationQueryVariables>;
 export const GetSubjectDocument = gql`
     query getSubject($input: GetSubjectInput!) {
   getSubject(input: $input) {

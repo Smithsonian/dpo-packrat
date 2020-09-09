@@ -248,10 +248,11 @@ const useFilesUpload = (): UseFilesUpload => {
         async (ingestionFile: IngestionFile) => {
             const { id, file, type } = ingestionFile;
 
-            const successAction: IngestionDispatchAction = {
+            const successAction = (idAssetVersion: number): IngestionDispatchAction => ({
                 type: UPLOAD_ACTIONS.COMPLETE,
-                id
-            };
+                id,
+                idAssetVersion
+            });
 
             const errorAction: IngestionDispatchAction = {
                 type: UPLOAD_ACTIONS.FAILED,
@@ -296,12 +297,14 @@ const useFilesUpload = (): UseFilesUpload => {
                 const { uploadAsset }: UploadAssetMutation = data;
 
                 if (uploadAsset) {
-                    if (uploadAsset.status === UploadStatus.Complete) {
-                        ingestionDispatch(successAction);
+                    const { status, idAssetVersion, error } = uploadAsset;
+
+                    if (status === UploadStatus.Complete && idAssetVersion) {
+                        ingestionDispatch(successAction(idAssetVersion));
                         toast.success(`Upload finished for ${file.name}`);
-                    } else if (uploadAsset.status === UploadStatus.Failed) {
-                        const error = `Upload failed for ${file.name}`;
-                        toast.error(error);
+                    } else if (status === UploadStatus.Failed) {
+                        const errorMessage = error || `Upload failed for ${file.name}`;
+                        toast.error(errorMessage);
                         ingestionDispatch(errorAction);
                     }
                 }

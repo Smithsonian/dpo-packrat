@@ -1005,6 +1005,7 @@ export type GetWorkflowResult = {
 export type Mutation = {
     __typename?: 'Mutation';
     uploadAsset: UploadAssetResult;
+    discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
     createCaptureData: CreateCaptureDataResult;
     createCaptureDataPhoto: CreateCaptureDataPhotoResult;
     ingestData: IngestDataResult;
@@ -1022,6 +1023,10 @@ export type Mutation = {
 export type MutationUploadAssetArgs = {
     file: Scalars['Upload'];
     type: Scalars['Int'];
+};
+
+export type MutationDiscardUploadedAssetVersionsArgs = {
+    input: DiscardUploadedAssetVersionsInput;
 };
 
 export type MutationCreateCaptureDataArgs = {
@@ -1086,6 +1091,17 @@ export enum UploadStatus {
 export type UploadAssetResult = {
     __typename?: 'UploadAssetResult';
     status: UploadStatus;
+    idAssetVersion?: Maybe<Scalars['Int']>;
+    error?: Maybe<Scalars['String']>;
+};
+
+export type DiscardUploadedAssetVersionsInput = {
+    idAssetVersions: Array<Scalars['Int']>;
+};
+
+export type DiscardUploadedAssetVersionsResult = {
+    __typename?: 'DiscardUploadedAssetVersionsResult';
+    success: Scalars['Boolean'];
 };
 
 export type CreateCaptureDataInput = {
