@@ -80,7 +80,9 @@ import {
     GetItemsForSubjectInput,
     GetItemsForSubjectResult,
     GetAssetVersionsDetailsInput,
-    GetAssetVersionsDetailsResult
+    GetAssetVersionsDetailsResult,
+    GetObjectsForItemInput,
+    GetObjectsForItemResult
 } from '../../types/graphql';
 
 // Queries
@@ -109,6 +111,7 @@ import areCameraSettingsUniform from './queries/ingestion/areCameraSettingsUnifo
 import getSubjectsForUnit from './queries/unit/getSubjectsForUnit';
 import getItemsForSubject from './queries/unit/getItemsForSubject';
 import getAssetVersionsDetails from './queries/asset/getAssetVersionsDetails';
+import getObjectsForItem from './queries/unit/getObjectsForItem';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -165,7 +168,8 @@ const allQueries = {
     ingestData,
     getSubjectsForUnit,
     getItemsForSubject,
-    getAssetVersionsDetails
+    getAssetVersionsDetails,
+    getObjectsForItem
 };
 
 type GraphQLRequest = {
@@ -428,6 +432,16 @@ class GraphQLApi {
 
     async getAssetVersionsDetails(input: GetAssetVersionsDetailsInput, context?: Context): Promise<GetAssetVersionsDetailsResult> {
         const operationName = 'getAssetVersionsDetails';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getObjectsForItem(input: GetObjectsForItemInput, context?: Context): Promise<GetObjectsForItemResult> {
+        const operationName = 'getObjectsForItem';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

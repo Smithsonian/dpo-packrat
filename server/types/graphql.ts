@@ -428,7 +428,7 @@ export type ProjectDocumentation = {
     Description: Scalars['String'];
     idProject: Scalars['Int'];
     Name: Scalars['String'];
-    Project: Project;
+    Project?: Maybe<Project>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -606,6 +606,7 @@ export type Query = {
     getScene: GetSceneResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
     getItemsForSubject: GetItemsForSubjectResult;
+    getObjectsForItem: GetObjectsForItemResult;
     searchIngestionSubjects: SearchIngestionSubjectsResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
@@ -666,6 +667,10 @@ export type QueryGetSubjectsForUnitArgs = {
 
 export type QueryGetItemsForSubjectArgs = {
     input: GetItemsForSubjectInput;
+};
+
+export type QueryGetObjectsForItemArgs = {
+    input: GetObjectsForItemInput;
 };
 
 export type QuerySearchIngestionSubjectsArgs = {
@@ -844,6 +849,19 @@ export type SubjectUnitIdentifier = {
     UnitAbbreviation: Scalars['String'];
     IdentifierPublic?: Maybe<Scalars['String']>;
     IdentifierCollection?: Maybe<Scalars['String']>;
+};
+
+export type GetObjectsForItemInput = {
+    idItem: Scalars['Int'];
+};
+
+export type GetObjectsForItemResult = {
+    __typename?: 'GetObjectsForItemResult';
+    CaptureData: Array<CaptureData>;
+    Model: Array<Model>;
+    Scene: Array<Scene>;
+    IntermediaryFile: Array<IntermediaryFile>;
+    ProjectDocumentation: Array<ProjectDocumentation>;
 };
 
 export type SearchIngestionSubjectsInput = {
