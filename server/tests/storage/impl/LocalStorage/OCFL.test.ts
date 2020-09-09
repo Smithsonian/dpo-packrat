@@ -263,7 +263,7 @@ describe('OCFL Object', () => {
     });
 });
 
-describe('OCFL Teardown', async () => {
+describe('OCFL Teardown', () => {
     // Destructive test -- leave until end!
     test('OCFL OCFLRoot.validate', async () => {
         let results: H.IOResults;
