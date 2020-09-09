@@ -7,6 +7,7 @@ type Query {
     getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
     getUnit(input: GetUnitInput!): GetUnitResult!
     getProject(input: GetProjectInput!): GetProjectResult!
+    getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
     getSubject(input: GetSubjectInput!): GetSubjectResult!
     getItem(input: GetItemInput!): GetItemResult!
 }
@@ -87,6 +88,14 @@ input GetProjectInput {
 
 type GetProjectResult {
     Project: Project
+}
+
+input GetProjectDocumentationInput {
+    idProjectDocumentation: Int!
+}
+
+type GetProjectDocumentationResult {
+    ProjectDocumentation: ProjectDocumentation
 }
 
 input GetSubjectInput {

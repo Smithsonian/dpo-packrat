@@ -547,6 +547,7 @@ type Query {
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
   getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
   getObjectsForItem(input: GetObjectsForItemInput!): GetObjectsForItemResult!
@@ -555,6 +556,7 @@ type Query {
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getProject(input: GetProjectInput!): GetProjectResult!
+  getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
   getItem(input: GetItemInput!): GetItemResult!
   getCurrentUser: GetCurrentUserResult!
@@ -657,6 +659,14 @@ type GetSceneResult {
   Scene: Scene
 }
 
+input GetIntermediaryFileInput {
+  idIntermediaryFile: Int!
+}
+
+type GetIntermediaryFileResult {
+  IntermediaryFile: IntermediaryFile
+}
+
 input GetSubjectsForUnitInput {
   idUnit: Int!
   pagination: PaginationInput = {}
@@ -733,6 +743,14 @@ input GetProjectInput {
 
 type GetProjectResult {
   Project: Project
+}
+
+input GetProjectDocumentationInput {
+  idProjectDocumentation: Int!
+}
+
+type GetProjectDocumentationResult {
+  ProjectDocumentation: ProjectDocumentation
 }
 
 input GetSubjectInput {
