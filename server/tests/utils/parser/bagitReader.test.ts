@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { join } from 'path';
-import { BagitReader } from '../../../utils/parser/';
+import { BagitReader, BagitReaderParams } from '../../../utils/parser/';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 
@@ -21,6 +21,9 @@ describe('BagitReader', () => {
     test('BagitReader load from zip stream with initial validation', async () => {
         const path = join(mockPathZip, 'PackratTest.zip');
         bagitZipStream = await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path, initialValidate: true, subsequentValidate: true, subsequentIsValid: true, expectFailure: false });
+        expect(await bagitZipStream.getAllEntries()).toBeTruthy();
+        expect(await bagitZipStream.getJustFiles()).toBeTruthy();
+        expect(await bagitZipStream.getJustDirectories()).toBeTruthy();
     });
 
     test('BagitReader load from zip stream without initial validation', async () => {
@@ -61,6 +64,12 @@ describe('BagitReader', () => {
         expect((await bagit.getDataFileMap()).size).toBeGreaterThan(0);
         bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
         expect(await bagit.getHashAlgorithm()).toBeTruthy();
+        bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
+        expect(await bagit.getAllEntries()).toBeTruthy();
+        bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
+        expect(await bagit.getJustFiles()).toBeTruthy();
+        bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
+        expect(await bagit.getJustDirectories()).toBeTruthy();
     });
 
     test('BagitReader externally validate contents', async () => {
@@ -108,13 +117,16 @@ describe('BagitReader', () => {
         await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path, initialValidate: true, subsequentValidate: false, subsequentIsValid: true, expectFailure: true });
         path = join(mockPathDir, 'PackratTestInvalidManifestEntry.zip');
         await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path, initialValidate: true, subsequentValidate: false, subsequentIsValid: true, expectFailure: true });
+        path = join(mockPathDir, 'PackratTestInvalidManifestEntry.zip');
+        await testBagitLoad({ loadMethod: eLoadMethod.eError, path, initialValidate: true, subsequentValidate: false, subsequentIsValid: true, expectFailure: true });
     });
 });
 
 enum eLoadMethod {
     eZipStream,
     eZipFile,
-    eDirectory
+    eDirectory,
+    eError
 }
 
 type BagitLoadOptions = {
@@ -128,25 +140,24 @@ type BagitLoadOptions = {
 
 async function testBagitLoad(options: BagitLoadOptions): Promise<BagitReader> {
     const path: string = options.path;
-    const initialValidate: boolean = options.initialValidate != null ? options.initialValidate : true;
+    const validate: boolean = options.initialValidate != null ? options.initialValidate : true;
+    const validateContent: boolean = validate;
     const subsequentValidate: boolean = options.subsequentValidate != null ? options.subsequentValidate : false;
     const subsequentIsValid: boolean = options.subsequentIsValid != null ? options.subsequentIsValid : true;
     const expectFailure: boolean = options.expectFailure != null ? options.expectFailure : false;
 
-    const bagit: BagitReader = new BagitReader();
-    let result: H.IOResults;
+    let bagitParams: BagitReaderParams;
     switch (options.loadMethod) {
         case eLoadMethod.eZipStream: {
-            const stream = fs.createReadStream(path);
-            result = await bagit.loadFromZipStream(stream, initialValidate);
+            const zipStream = fs.createReadStream(path);
+            bagitParams = { zipFileName: null, zipStream, directory: null, validate, validateContent };
         }   break;
-        case eLoadMethod.eZipFile:
-            result = await bagit.loadFromZipFile(path, initialValidate);
-            break;
-        case eLoadMethod.eDirectory:
-            result = await bagit.loadFromDirectory(path, initialValidate);
-            break;
+        case eLoadMethod.eZipFile: bagitParams = { zipFileName: path, zipStream: null, directory: null, validate, validateContent }; break;
+        case eLoadMethod.eDirectory: bagitParams = { zipFileName: null, zipStream: null, directory: path, validate, validateContent }; break;
+        case eLoadMethod.eError: bagitParams = { zipFileName: null, zipStream: null, directory: null, validate, validateContent }; break;
     }
+    const bagit: BagitReader = new BagitReader(bagitParams);
+    let result: H.IOResults = await bagit.load();
 
     if (!result.success) {
         LOG.logger.error(result.error);
@@ -154,7 +165,7 @@ async function testBagitLoad(options: BagitLoadOptions): Promise<BagitReader> {
         return bagit;
     }
 
-    if (!initialValidate && subsequentValidate) {
+    if (!validate && subsequentValidate) {
         result = await bagit.validate();
         if (!result.success)
             LOG.logger.error(result.error);
@@ -184,7 +195,7 @@ async function testBagitContents(bagit: BagitReader): Promise<boolean> {
         if (!hash)
             return false;
 
-        const fileStream: NodeJS.ReadableStream | null = await bagit.getFileStream(file);
+        const fileStream: NodeJS.ReadableStream | null = await bagit.streamContent(file);
         expect(fileStream).toBeTruthy();
         if (!fileStream)
             return false;

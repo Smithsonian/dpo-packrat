@@ -28,7 +28,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
         return { status: UploadStatus.Failed };
     }
 
-    const WSResult: STORE.WriteStreamResult = await storage.writeStream();
+    const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
     if (WSResult.error || !WSResult.writeStream || !WSResult.storageKey) {
         LOG.logger.error(`uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`);
         return { status: UploadStatus.Failed };

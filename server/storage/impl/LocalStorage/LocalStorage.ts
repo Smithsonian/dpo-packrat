@@ -74,6 +74,10 @@ export class LocalStorage implements STORE.IStorage {
         return retValue;
     }
 
+    async stagingFileName(storageKey: string): Promise<string> {
+        return path.join(this.ocflRoot.computeLocationStagingRoot(), storageKey);
+    }
+
     /**
      * Files are placed in staging storage for all content. This storage is local due to these facts:
      * 1. Cracking zips without reading everything into memory requires random access to the bits in the zip
@@ -84,7 +88,7 @@ export class LocalStorage implements STORE.IStorage {
      * 3. Our client streams uploads to the server. At some point, we need to stream these bits to Isilon. This
      *    network transit from server to Isilon happens once, no matter if staging is located locally or on Isilon.
      */
-    async writeStream(): Promise<STORE.WriteStreamResult> {
+    async writeStream(fileName: string): Promise<STORE.WriteStreamResult> {
         const retValue: STORE.WriteStreamResult = {
             writeStream: null,
             storageKey: null,
@@ -94,7 +98,7 @@ export class LocalStorage implements STORE.IStorage {
 
         // Compute random directory path and name in staging folder
         // Provide this as the storage key which clients must pass back to us
-        const res: ComputeWriteStreamLocationResults = await this.ocflRoot.computeWriteStreamLocation();
+        const res: ComputeWriteStreamLocationResults = await this.ocflRoot.computeWriteStreamLocation(fileName);
         /* istanbul ignore if */
         if (!res.ioResults.success) {
             retValue.success = false;

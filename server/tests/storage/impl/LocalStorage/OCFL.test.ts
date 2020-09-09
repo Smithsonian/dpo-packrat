@@ -293,9 +293,9 @@ describe('OCFL Teardown', () => {
     });
 });
 
-async function createUploadLocation(ocflRoot: OR.OCFLRoot): Promise<string> {
+async function createUploadLocation(ocflRoot: OR.OCFLRoot, fileName: string = ''): Promise<string> {
     // identify location to which we'll write our temporary data (as if we were streaming content here)
-    const res: OR.ComputeWriteStreamLocationResults = await ocflRoot.computeWriteStreamLocation();
+    const res: OR.ComputeWriteStreamLocationResults = await ocflRoot.computeWriteStreamLocation(fileName);
     expect(res.ioResults.success).toBeTruthy();
 
     // LOG.logger.info(`Created write location at ${path.resolve(res.locationPrivate)}`);
@@ -341,8 +341,8 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     const metadataOA: DBAPI.ObjectGraph | null = SOBased ? await ObjectGraphTestSetup.testObjectGraphFetch(SOBased, DBAPI.eObjectGraphMode.eAncestors) : null;
 
     // identify location to which we'll write our temporary data (as if we were streaming content here); write data
-    const directoryName: string = await createUploadLocation(ocflRoot);
     const fileName: string = (SOBased != null || fileSize > 0) ? H.Helpers.randomSlug() : '';
+    const directoryName: string = await createUploadLocation(ocflRoot, fileName);
     const pathOnDisk: string = (fileSize > 0)
         ? await createRandomFile(directoryName, fileName, fileSize) // create a file
         : path.join(directoryName, fileName);                       // just yield a filenmae

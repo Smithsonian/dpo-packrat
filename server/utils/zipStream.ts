@@ -12,6 +12,8 @@ export class ZipStream implements IZip {
     private _inputStream: NodeJS.ReadableStream;
     private _zip: JSZip | null = null;
     private _entries: string[] = [];
+    private _files: string[] = [];
+    private _dirs: string[] = [];
 
     constructor(inputStream: NodeJS.ReadableStream) {
         this._inputStream = inputStream;
@@ -29,12 +31,19 @@ export class ZipStream implements IZip {
             });
 
             this._zip = await JSZ.loadAsync(await P);
-            this._entries = [];
+            this.clearState();
+
             for (const entry in this._zip.files) {
                 /* istanbul ignore if */
                 if (entry.toUpperCase().startsWith('__MACOSX')) // ignore wacky MAC OSX resource folder stuffed into zips created on that platform
                     continue;
                 this._entries.push(entry);
+
+                const isDirectoryEntry: boolean = (entry.endsWith('/'));
+                if (isDirectoryEntry)
+                    this._dirs.push(entry);
+                else
+                    this._files.push(entry);
             }
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('ZipStream.load', error);
@@ -47,38 +56,20 @@ export class ZipStream implements IZip {
         return { success: true, error: '' };
     }
 
-    getAllEntries(): string[] {
-        return this._entries;
-    }
-
-    getJustFiles(): string[] {
-        return this.computeContents(false);
-    }
-
-    getJustDirectories(): string[] {
-        return this.computeContents(true);
-    }
-
-    private computeContents(directories: boolean): string[] {
-        const retValue: string[] = [];
-        if (!this._zip)
-            return retValue;
-
-        for (const entry of this._entries) {
-            const isDirectoryEntry: boolean = (entry.endsWith('/'));
-
-            if (isDirectoryEntry && directories)
-                retValue.push(entry);
-            else if (!isDirectoryEntry && !directories)
-                retValue.push(entry);
-        }
-        return retValue;
-    }
+    async getAllEntries(): Promise<string[]> { return this._entries; }
+    async getJustFiles(): Promise<string[]> { return this._files; }
+    async getJustDirectories(): Promise<string[]> { return this._dirs; }
 
     async streamContent(entry: string): Promise<NodeJS.ReadableStream | null> {
         if (!this._zip)
             return null;
         const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
         return (ZO) ? ZO.nodeStream() : null;
+    }
+
+    private clearState() {
+        this._entries = [];
+        this._files = [];
+        this._dirs = [];
     }
 }

@@ -259,7 +259,7 @@ async function testWriteStream(fileSize: number): Promise<LocalStorageTestCase> 
     };
 
     LOG.logger.info('LocalStorage.writeStream');
-    const WSR: STORE.WriteStreamResult = await ls.writeStream();
+    const WSR: STORE.WriteStreamResult = await ls.writeStream(LSTC.fileName);
     expect(WSR.success).toBeTruthy();
     expect(WSR.writeStream).toBeTruthy();
     expect(WSR.storageKey).toBeTruthy();
@@ -271,6 +271,9 @@ async function testWriteStream(fileSize: number): Promise<LocalStorageTestCase> 
     LSTC.storageKeyStaging = WSR.storageKey;
     LSTC.storageHash = await H.Helpers.createRandomFile(WSR.writeStream, fileSize);
     expect(LSTC.storageHash).toBeTruthy();
+
+    const pathOnDisk: string = await ls.stagingFileName(WSR.storageKey);
+    expect(path.join(ocflRootStaging, WSR.storageKey)).toEqual(pathOnDisk);
     return LSTC;
 }
 
