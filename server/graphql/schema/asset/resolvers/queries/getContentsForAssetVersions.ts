@@ -1,12 +1,9 @@
 import { QueryGetContentsForAssetVersionsArgs, GetContentsForAssetVersionsResult, AssetVersionContent } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
+import { AssetStorageAdapter } from '../../../../../storage/interface';
+import { AssetVersion } from '../../../../../db';
+import * as LOG from '../../../../../utils/logger';
 
-const mockContent = {
-    folders: ['raw', 'camera', 'processed'],
-    all: ['raw/p1.jpg', 'raw/p2.jpg', 'camera/p1.jpg', 'camera/p2.jpg', 'processed/p1.jpg', 'processed/p2.jpg']
-};
-
-// TODO: update this to not use mockContent
 export default async function getContentsForAssetVersions(_: Parent, args: QueryGetContentsForAssetVersionsArgs, context: Context): Promise<GetContentsForAssetVersionsResult> {
     const { user } = context;
 
@@ -18,13 +15,12 @@ export default async function getContentsForAssetVersions(_: Parent, args: Query
 
     const result: AssetVersionContent[] = [];
 
-    idAssetVersions.forEach(idAssetVersion => {
-        const content = {
-            idAssetVersion,
-            ...mockContent
-        };
-
-        result.push(content);
+    idAssetVersions.forEach(async idAssetVersion => {
+        const assetVersion: AssetVersion | null = await AssetVersion.fetch(idAssetVersion);
+        if (assetVersion)
+            result.push(await AssetStorageAdapter.getAssetVersionContents(assetVersion));
+        else
+            LOG.logger.error(`getContentsForAssetVersions unable to load AssetVersion from ID ${idAssetVersion}`);
     });
 
     return { AssetVersionContent: result };

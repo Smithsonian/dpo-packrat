@@ -1,11 +1,39 @@
+import fs from 'fs';
+import { join } from 'path';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
 import { UploadAssetInput, UploadStatus } from '../../../../types/graphql';
 import { Context } from '../../../../types/resolvers';
 import { CreateUserInput } from '../../../../types/graphql';
-import fs from 'fs';
-import { join } from 'path';
 import * as CACHE from '../../../../cache';
+import * as H from '../../../../utils/helpers';
+import Config from '../../../../config';
+
+let rootRepositoryOrig: string;
+let rootRepositoryNew: string;
+let rootStagingOrig: string;
+let rootStagingNew: string;
+
+beforeAll(() => {
+    rootRepositoryOrig = Config.storage.rootRepository;
+    rootStagingOrig = Config.storage.rootStaging;
+
+    rootRepositoryNew = join('var', 'test', H.Helpers.randomSlug());
+    rootStagingNew = join('var', 'test', H.Helpers.randomSlug());
+
+    Config.storage.rootRepository = rootRepositoryNew;
+    Config.storage.rootStaging = rootStagingNew;
+});
+
+afterAll(async done => {
+    Config.storage.rootRepository = rootRepositoryOrig;
+    Config.storage.rootStaging = rootStagingOrig;
+    await H.Helpers.removeDirectory(rootRepositoryNew, true);
+    await H.Helpers.removeDirectory(rootStagingNew, true);
+    // jest.setTimeout(3000);
+    // await H.Helpers.sleep(2000);
+    done();
+});
 
 const uploadAssetTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;

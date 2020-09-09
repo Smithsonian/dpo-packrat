@@ -213,6 +213,17 @@ describe('Utils: Helpers', () => {
         expect(buffer3).toBeTruthy();
     });
 
+    test('Utils: Helpers.writeFileToStream', async () => {
+        const filePathTemp: string = H.Helpers.randomFilename(directoryPath, '');
+        const stream: NodeJS.WritableStream = fs.createWriteStream(filePathTemp);
+        let ioResults: H.IOResults = await H.Helpers.writeFileToStream(filePath, stream);
+        LOG.logger.info(ioResults.error);
+        expect(ioResults.success).toBeTruthy();
+
+        ioResults = await H.Helpers.removeFile(filePathTemp);
+        expect(ioResults.success).toBeTruthy();
+    });
+
     test('Utils: Helpers.initializeDirectory', async () => {
         let res: H.IOResults = await H.Helpers.initializeDirectory(dirNestEmpty, 'Nested Directory, Empty');
         expect(res.success).toBeTruthy();
