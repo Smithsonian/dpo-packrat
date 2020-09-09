@@ -82,7 +82,11 @@ import {
     GetAssetVersionsDetailsInput,
     GetAssetVersionsDetailsResult,
     GetObjectsForItemInput,
-    GetObjectsForItemResult
+    GetObjectsForItemResult,
+    GetProjectDocumentationInput,
+    GetProjectDocumentationResult,
+    GetIntermediaryFileInput,
+    GetIntermediaryFileResult
 } from '../../types/graphql';
 
 // Queries
@@ -112,6 +116,8 @@ import getSubjectsForUnit from './queries/unit/getSubjectsForUnit';
 import getItemsForSubject from './queries/unit/getItemsForSubject';
 import getAssetVersionsDetails from './queries/asset/getAssetVersionsDetails';
 import getObjectsForItem from './queries/unit/getObjectsForItem';
+import getProjectDocumentation from './queries/unit/getProjectDocumentation';
+import getIntermediaryFile from './queries/scene/getIntermediaryFile';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -169,7 +175,9 @@ const allQueries = {
     getSubjectsForUnit,
     getItemsForSubject,
     getAssetVersionsDetails,
-    getObjectsForItem
+    getObjectsForItem,
+    getProjectDocumentation,
+    getIntermediaryFile
 };
 
 type GraphQLRequest = {
@@ -442,6 +450,26 @@ class GraphQLApi {
 
     async getObjectsForItem(input: GetObjectsForItemInput, context?: Context): Promise<GetObjectsForItemResult> {
         const operationName = 'getObjectsForItem';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getProjectDocumentation(input: GetProjectDocumentationInput, context?: Context): Promise<GetProjectDocumentationResult> {
+        const operationName = 'getProjectDocumentation';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getIntermediaryFile(input: GetIntermediaryFileInput, context?: Context): Promise<GetIntermediaryFileResult> {
+        const operationName = 'getIntermediaryFile';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

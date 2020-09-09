@@ -72,7 +72,7 @@ export type Asset = {
     FilePath: Scalars['String'];
     idAssetGroup?: Maybe<Scalars['Int']>;
     idSystemObject?: Maybe<Scalars['Int']>;
-    StorageKey: Scalars['String'];
+    StorageKey?: Maybe<Scalars['String']>;
     AssetGroup?: Maybe<AssetGroup>;
     SystemObjectSource?: Maybe<SystemObject>;
     AssetVersion?: Maybe<Array<Maybe<AssetVersion>>>;
@@ -609,6 +609,7 @@ export type Query = {
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
     getScene: GetSceneResult;
+    getIntermediaryFile: GetIntermediaryFileResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
     getItemsForSubject: GetItemsForSubjectResult;
     getObjectsForItem: GetObjectsForItemResult;
@@ -617,6 +618,7 @@ export type Query = {
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getUnit: GetUnitResult;
     getProject: GetProjectResult;
+    getProjectDocumentation: GetProjectDocumentationResult;
     getSubject: GetSubjectResult;
     getItem: GetItemResult;
     getCurrentUser: GetCurrentUserResult;
@@ -677,6 +679,11 @@ export type QueryGetSceneArgs = {
 };
 
 
+export type QueryGetIntermediaryFileArgs = {
+    input: GetIntermediaryFileInput;
+};
+
+
 export type QueryGetSubjectsForUnitArgs = {
     input: GetSubjectsForUnitInput;
 };
@@ -714,6 +721,11 @@ export type QueryGetUnitArgs = {
 
 export type QueryGetProjectArgs = {
     input: GetProjectInput;
+};
+
+
+export type QueryGetProjectDocumentationArgs = {
+    input: GetProjectDocumentationInput;
 };
 
 
@@ -851,6 +863,15 @@ export type GetSceneResult = {
     Scene?: Maybe<Scene>;
 };
 
+export type GetIntermediaryFileInput = {
+    idIntermediaryFile: Scalars['Int'];
+};
+
+export type GetIntermediaryFileResult = {
+    __typename?: 'GetIntermediaryFileResult';
+    IntermediaryFile?: Maybe<IntermediaryFile>;
+};
+
 export type GetSubjectsForUnitInput = {
     idUnit: Scalars['Int'];
     pagination?: Maybe<PaginationInput>;
@@ -936,6 +957,15 @@ export type GetProjectInput = {
 export type GetProjectResult = {
     __typename?: 'GetProjectResult';
     Project?: Maybe<Project>;
+};
+
+export type GetProjectDocumentationInput = {
+    idProjectDocumentation: Scalars['Int'];
+};
+
+export type GetProjectDocumentationResult = {
+    __typename?: 'GetProjectDocumentationResult';
+    ProjectDocumentation?: Maybe<ProjectDocumentation>;
 };
 
 export type GetSubjectInput = {
