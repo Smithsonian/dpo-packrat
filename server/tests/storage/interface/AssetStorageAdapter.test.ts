@@ -161,19 +161,25 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
     expect(storageHash).toBeTruthy();
 
     // Use STORE.AssetStorageAdapter.commitNewAsset();
-    const CWSI: STORE.CommitWriteStreamInput = {
+    const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
         storageKey: TestCase.assetVersion.StorageKeyStaging,
-        storageHash
+        storageHash,
+        FileName: TestCase.asset.FileName,
+        FilePath: TestCase.asset.FilePath,
+        idAssetGroup: TestCase.asset.idAssetGroup,
+        idVAssetType: TestCase.asset.idVAssetType,
+        idUserCreator: TestCase.assetVersion.idUserCreator,
+        DateCreated: TestCase.assetVersion.DateCreated
     };
 
     let ASR: STORE.AssetStorageResult;
     if (newAsset) {
         LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset ${TestCase.asset.FileName}`);
-        ASR = await STORE.AssetStorageAdapter.commitNewAsset(CWSI, TestCase.asset.FileName, TestCase.asset.FilePath,
-            TestCase.asset.idAssetGroup, TestCase.asset.idVAssetType, TestCase.assetVersion.idUserCreator, TestCase.assetVersion.DateCreated);
+        ASR = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
     } else {
         LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`);
-        ASR = await STORE.AssetStorageAdapter.commitNewAssetVersion(CWSI, TestCase.asset, TestCase.assetVersion.idUserCreator, TestCase.assetVersion.DateCreated);
+        ASR = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: TestCase.assetVersion.StorageKeyStaging, storageHash },
+            TestCase.asset, TestCase.assetVersion.idUserCreator, TestCase.assetVersion.DateCreated);
     }
     expect(ASR.success).toBeTruthy();
     if (!ASR.success) {
@@ -332,14 +338,19 @@ async function testReinstateAsset(TestCase: AssetStorageAdapterTestCase, version
 }
 
 async function testCommitNewAssetFailure(TestCase: AssetStorageAdapterTestCase): Promise<boolean> {
-    const CWSI: STORE.CommitWriteStreamInput = {
+    const ASCNAI: STORE.AssetStorageCommitNewAssetInput = {
         storageKey: H.Helpers.randomSlug(),
-        storageHash: H.Helpers.randomSlug()
+        storageHash: H.Helpers.randomSlug(),
+        FileName: TestCase.asset.FileName,
+        FilePath: TestCase.asset.FilePath,
+        idAssetGroup: TestCase.asset.idAssetGroup,
+        idVAssetType: TestCase.asset.idVAssetType,
+        idUserCreator: TestCase.assetVersion.idUserCreator,
+        DateCreated: TestCase.assetVersion.DateCreated,
     };
 
     LOG.logger.info('AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset Failure Expected');
-    const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.commitNewAsset(CWSI, TestCase.asset.FileName, TestCase.asset.FilePath,
-        TestCase.asset.idAssetGroup, TestCase.asset.idVAssetType, TestCase.assetVersion.idUserCreator, TestCase.assetVersion.DateCreated);
+    const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
     expect(ASR.success).toBeFalsy();
     return !ASR.success;
 }

@@ -1,9 +1,3 @@
-/**
- The AssetStorageAdapter provides a DBAPI-based bridge to the storage interface
- It Allows the storage system to know nothing about the DB
- Interfaces like:  ReadAssetVersion(Asset, AssetVersion)
- */
-
 import * as STORE from '../interface';
 import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
@@ -18,22 +12,54 @@ export type AssetStorageResult = {
     error: string
 };
 
+export type AssetStorageCommitNewAssetInput = {
+    storageKey: string;
+    storageHash: string | null;
+    FileName: string;
+    FilePath: string;
+    idAssetGroup: number | null;
+    idVAssetType: number;
+    idUserCreator: number;
+    DateCreated: Date;
+};
+
+/**
+    The AssetStorageAdapter provides a DBAPI-based bridge to the storage interface,
+    enabling the storage system to know nothing about the DB.
+
+    Usage synopsis (don't forget error handling, logging, null checking, etc.!)
+    *******************************************************
+    (1) Uploading a file to staging storage for a new asset
+    *******************************************************
+    const storage: IStorage | null = await StorageFactory.getInstance();                                // get storage interface
+    const wsRes: WriteStreamResult = await storage.writeStream();                                       // get write stream from storage interface
+    const { writeStream, storageKey } = wsRes;
+    // write bits to writeStream; save storageKey
+    const comRes: AssetStorageResult = await AssetStorageAdapter.commitNewAsset({ storageKey,...}});    // commit uploads bits to staging storage
+    // comRes.asset; comRes.assetVersion; <-- These have been created
+ */
 export class AssetStorageAdapter {
     static async readAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<STORE.ReadStreamResult> {
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             const error: string = 'AssetStorageAdapter.readAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
             LOG.logger.error(error);
-            return {
-                readStream: null,
-                storageHash: null,
-                success: false,
-                error
-            };
+            return { readStream: null, storageHash: null, success: false, error };
         }
 
+        let storageKey: string;
+        if (assetVersion.Ingested) { /* istanbul ignore next */
+            if (!asset.StorageKey) {
+                const error: string = `AssetStorageAdapter.readAsset: Asset ${JSON.stringify(asset)} has null storageKey`;
+                LOG.logger.error(error);
+                return { readStream: null, storageHash: null, success: false, error };
+            }
+            storageKey = asset.StorageKey;
+        } else
+            storageKey = assetVersion.StorageKeyStaging;
+
         const readStreamInput: STORE.ReadStreamInput = {
-            storageKey: assetVersion.Ingested ? asset.StorageKey : assetVersion.StorageKeyStaging,
+            storageKey,
             fileName: asset.FileName,
             version: assetVersion.Version,
             staging: !assetVersion.Ingested
@@ -46,22 +72,19 @@ export class AssetStorageAdapter {
      * Commits Storage WriteStream
      * Creates and persists Asset and AssetVersion
      */
-    static async commitNewAsset(commitWriteStreamInput: STORE.CommitWriteStreamInput,
-        FileName: string, FilePath: string, idAssetGroup: number | null, idVAssetType: number,
-        idUserCreator: number, DateCreated: Date):
-        Promise<AssetStorageResult> {
-
+    static async commitNewAsset(commitNewAssetInput: AssetStorageCommitNewAssetInput): Promise<AssetStorageResult> {
+        const { storageKey, storageHash, FileName, FilePath, idAssetGroup, idVAssetType, idUserCreator, DateCreated } = commitNewAssetInput;
         const asset: DBAPI.Asset = new DBAPI.Asset({
             FileName,
             FilePath,
             idAssetGroup,
             idVAssetType,
             idSystemObject: null,
-            StorageKey: '',
+            StorageKey: null,
             idAsset: 0
         });
 
-        return await AssetStorageAdapter.commitNewAssetVersion(commitWriteStreamInput, asset, idUserCreator, DateCreated);
+        return await AssetStorageAdapter.commitNewAssetVersion({ storageKey, storageHash }, asset, idUserCreator, DateCreated);
     }
 
     /**
@@ -168,7 +191,7 @@ export class AssetStorageAdapter {
             return retValue;
         }
 
-        let storageKey: string = (asset.idAsset > 0 && asset.StorageKey != '') ? asset.StorageKey : '';
+        let storageKey: string = (asset.idAsset > 0 && asset.StorageKey) ? asset.StorageKey : '';
         if (!storageKey) {
             const storageKeyResults = await storage.computeStorageKey(asset.idAsset.toString()); /* istanbul ignore next */
             if (!storageKeyResults.success) {
@@ -239,7 +262,7 @@ export class AssetStorageAdapter {
 
     static async renameAsset(asset: DBAPI.Asset, fileNameNew: string, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
         const renameAssetInput: STORE.RenameAssetInput = {
-            storageKey: asset.StorageKey,
+            storageKey: asset.StorageKey ? asset.StorageKey : /* istanbul ignore next */ '',
             fileNameOld: asset.FileName,
             fileNameNew,
             opInfo
@@ -263,7 +286,7 @@ export class AssetStorageAdapter {
 
     static async hideAsset(asset: DBAPI.Asset, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
         const hideAssetInput: STORE.HideAssetInput = {
-            storageKey: asset.StorageKey,
+            storageKey: asset.StorageKey ? asset.StorageKey : /* istanbul ignore next */ '',
             fileName: asset.FileName,
             opInfo
         };
@@ -295,7 +318,7 @@ export class AssetStorageAdapter {
 
     static async reinstateAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion | null, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
         const reinstateAssetInput: STORE.ReinstateAssetInput = {
-            storageKey: asset.StorageKey,
+            storageKey: asset.StorageKey ? asset.StorageKey : /* istanbul ignore next */ '',
             fileName: assetVersion ? assetVersion.FileName : asset.FileName,
             version: assetVersion ? assetVersion.Version : -1, // -1 means the most recent version
             opInfo
@@ -330,6 +353,14 @@ export class AssetStorageAdapter {
         renameAssetInput: STORE.RenameAssetInput | null,
         hideAssetInput: STORE.HideAssetInput | null,
         reinstateAssetInput: STORE.ReinstateAssetInput | null): Promise<AssetStorageResult> {
+
+        /* istanbul ignore next */
+        if (!asset.StorageKey) {
+            const error: string = `AssetStorageAdapter.actOnAssetWorker: Asset ${JSON.stringify(asset)} has null storageKey`;
+            LOG.logger.error(error);
+            return { success: false, error, asset, assetVersion: null };
+        }
+
         const retValue: AssetStorageResult = {
             asset,
             assetVersion: null,

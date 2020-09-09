@@ -92,7 +92,7 @@ model Asset {
   idAssetGroup                                    Int?
   idVAssetType                                    Int
   idSystemObject                                  Int?
-  StorageKey                                      String              @unique
+  StorageKey                                      String?             @unique
   AssetGroup                                      AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
   SystemObject_Asset_idSystemObjectToSystemObject SystemObject?       @relation("Asset_idSystemObjectToSystemObject", fields: [idSystemObject], references: [idSystemObject])
   Vocabulary                                      Vocabulary          @relation(fields: [idVAssetType], references: [idVocabulary])

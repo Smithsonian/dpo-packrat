@@ -1671,7 +1671,7 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch Asset: Asset.fetchByStorageKey', async () => {
         let assetFetch: DBAPI.Asset | null = null;
-        if (assetThumbnail) {
+        if (assetThumbnail && assetThumbnail.StorageKey) {
             assetFetch = await DBAPI.Asset.fetchByStorageKey(assetThumbnail.StorageKey);
             if (assetFetch)
                 expect(assetFetch).toEqual(assetThumbnail);
