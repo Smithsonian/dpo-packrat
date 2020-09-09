@@ -1,8 +1,6 @@
 export const OCFLStorageRootNamasteFilename: string = '0=ocfl_1.0';
 export const OCFLStorageRootLayoutFilename: string = 'ocfl_layout.json';
 export const OCFLStorageRootSpecFilename: string = 'ocfl_1.0.html';
-export const OCFLStorageRootFolderRepository: string = 'REPO';
-export const OCFLStorageRootFolderStaging: string = 'STAGING';
 
 export const OCFLDigestAlgorithm: string = 'sha512';
 
