@@ -433,7 +433,7 @@ export type ProjectDocumentation = {
     Description: Scalars['String'];
     idProject: Scalars['Int'];
     Name: Scalars['String'];
-    Project: Project;
+    Project?: Maybe<Project>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -611,6 +611,7 @@ export type Query = {
     getScene: GetSceneResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
     getItemsForSubject: GetItemsForSubjectResult;
+    getObjectsForItem: GetObjectsForItemResult;
     searchIngestionSubjects: SearchIngestionSubjectsResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
@@ -683,6 +684,11 @@ export type QueryGetSubjectsForUnitArgs = {
 
 export type QueryGetItemsForSubjectArgs = {
     input: GetItemsForSubjectInput;
+};
+
+
+export type QueryGetObjectsForItemArgs = {
+    input: GetObjectsForItemInput;
 };
 
 
@@ -872,6 +878,19 @@ export type SubjectUnitIdentifier = {
     UnitAbbreviation: Scalars['String'];
     IdentifierPublic?: Maybe<Scalars['String']>;
     IdentifierCollection?: Maybe<Scalars['String']>;
+};
+
+export type GetObjectsForItemInput = {
+    idItem: Scalars['Int'];
+};
+
+export type GetObjectsForItemResult = {
+    __typename?: 'GetObjectsForItemResult';
+    CaptureData: Array<CaptureData>;
+    Model: Array<Model>;
+    Scene: Array<Scene>;
+    IntermediaryFile: Array<IntermediaryFile>;
+    ProjectDocumentation: Array<ProjectDocumentation>;
 };
 
 export type SearchIngestionSubjectsInput = {
@@ -1839,6 +1858,38 @@ export type GetItemsForSubjectQuery = (
                 Item: Array<(
                     { __typename?: 'Item' }
                     & Pick<Item, 'idItem' | 'Name'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetObjectsForItemQueryVariables = Exact<{
+    input: GetObjectsForItemInput;
+}>;
+
+
+export type GetObjectsForItemQuery = (
+    { __typename?: 'Query' }
+    & {
+        getObjectsForItem: (
+            { __typename?: 'GetObjectsForItemResult' }
+            & {
+                CaptureData: Array<(
+                    { __typename?: 'CaptureData' }
+                    & Pick<CaptureData, 'idCaptureData' | 'DateCaptured' | 'Description'>
+                )>, Model: Array<(
+                    { __typename?: 'Model' }
+                    & Pick<Model, 'idModel' | 'Authoritative' | 'DateCreated'>
+                )>, Scene: Array<(
+                    { __typename?: 'Scene' }
+                    & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name'>
+                )>, IntermediaryFile: Array<(
+                    { __typename?: 'IntermediaryFile' }
+                    & Pick<IntermediaryFile, 'idIntermediaryFile' | 'DateCreated'>
+                )>, ProjectDocumentation: Array<(
+                    { __typename?: 'ProjectDocumentation' }
+                    & Pick<ProjectDocumentation, 'idProjectDocumentation' | 'Description' | 'Name'>
                 )>
             }
         )
@@ -3043,6 +3094,63 @@ export function useGetItemsForSubjectLazyQuery(baseOptions?: Apollo.LazyQueryHoo
 export type GetItemsForSubjectQueryHookResult = ReturnType<typeof useGetItemsForSubjectQuery>;
 export type GetItemsForSubjectLazyQueryHookResult = ReturnType<typeof useGetItemsForSubjectLazyQuery>;
 export type GetItemsForSubjectQueryResult = Apollo.QueryResult<GetItemsForSubjectQuery, GetItemsForSubjectQueryVariables>;
+export const GetObjectsForItemDocument = gql`
+    query getObjectsForItem($input: GetObjectsForItemInput!) {
+  getObjectsForItem(input: $input) {
+    CaptureData {
+      idCaptureData
+      DateCaptured
+      Description
+    }
+    Model {
+      idModel
+      Authoritative
+      DateCreated
+    }
+    Scene {
+      idScene
+      HasBeenQCd
+      IsOriented
+      Name
+    }
+    IntermediaryFile {
+      idIntermediaryFile
+      DateCreated
+    }
+    ProjectDocumentation {
+      idProjectDocumentation
+      Description
+      Name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetObjectsForItemQuery__
+ *
+ * To run a query within a React component, call `useGetObjectsForItemQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetObjectsForItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetObjectsForItemQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetObjectsForItemQuery(baseOptions?: Apollo.QueryHookOptions<GetObjectsForItemQuery, GetObjectsForItemQueryVariables>) {
+    return Apollo.useQuery<GetObjectsForItemQuery, GetObjectsForItemQueryVariables>(GetObjectsForItemDocument, baseOptions);
+}
+export function useGetObjectsForItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetObjectsForItemQuery, GetObjectsForItemQueryVariables>) {
+    return Apollo.useLazyQuery<GetObjectsForItemQuery, GetObjectsForItemQueryVariables>(GetObjectsForItemDocument, baseOptions);
+}
+export type GetObjectsForItemQueryHookResult = ReturnType<typeof useGetObjectsForItemQuery>;
+export type GetObjectsForItemLazyQueryHookResult = ReturnType<typeof useGetObjectsForItemLazyQuery>;
+export type GetObjectsForItemQueryResult = Apollo.QueryResult<GetObjectsForItemQuery, GetObjectsForItemQueryVariables>;
 export const GetProjectDocument = gql`
     query getProject($input: GetProjectInput!) {
   getProject(input: $input) {
