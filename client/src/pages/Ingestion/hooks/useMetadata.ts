@@ -140,6 +140,17 @@ function useMetadata(): UseMetadata {
 
         let updatedMetadatas = await updateCameraSettings(metadatas);
 
+        updatedMetadatas = updatedMetadatas.map(metadata => {
+            const { photogrammetry } = metadata;
+            return {
+                ...metadata,
+                photogrammetry: {
+                    ...photogrammetry,
+                    ...defaultVocabularyFields
+                }
+            };
+        });
+
         AssetVersionContent.forEach(({ idAssetVersion, folders }) => {
             const stateFolders: StateFolder[] = folders.map((folder, index: number) => ({
                 id: index,
@@ -155,7 +166,6 @@ function useMetadata(): UseMetadata {
                         ...metadata,
                         photogrammetry: {
                             ...photogrammetry,
-                            ...defaultVocabularyFields,
                             folders: stateFolders
                         }
                     };
