@@ -8,24 +8,26 @@ afterAll(async done => {
     done();
 });
 
+const SCRAPE_EDAN: boolean = false;
+
 describe('Collections: EdanCollection', () => {
     jest.setTimeout(30000);
     const ICollection: COL.ICollection = COL.CollectionFactory.getInstance();
 
-    executeTestQuery(ICollection, 'Armstrong Space Suit', false);
-    executeTestQuery(ICollection, 'A19730040000', false);
-    executeTestQuery(ICollection, 'edanmdm:nasm_A19730040000', false);
-    executeTestQuery(ICollection, 'http://n2t.net/ark:/65665/nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
-    executeTestQuery(ICollection, '', false);
-    executeTestQuery(ICollection, 'jimmybobimmy', true);
-    executeTestQuery(ICollection, '<WHACKADOODLE>', true);
-    executeTestQuery(ICollection, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
-
-    /*
-    test('Collections: EdanCollection.scrape', async () => {
-        await executeScrapeQuery(ICollection, 'd:\\Work\\SI\\EdanScrape.txt', 8000000);
-    });
-    */
+    if (!SCRAPE_EDAN) {
+        executeTestQuery(ICollection, 'Armstrong Space Suit', false);
+        executeTestQuery(ICollection, 'A19730040000', false);
+        executeTestQuery(ICollection, 'edanmdm:nasm_A19730040000', false);
+        executeTestQuery(ICollection, 'http://n2t.net/ark:/65665/nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
+        executeTestQuery(ICollection, '', false);
+        executeTestQuery(ICollection, 'jimmybobimmy', true);
+        executeTestQuery(ICollection, '<WHACKADOODLE>', true);
+        executeTestQuery(ICollection, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
+    } else {
+        test('Collections: EdanCollection.scrape', async () => {
+            await executeScrapeQuery(ICollection, 'd:\\Work\\SI\\EdanScrape.txt', 12000000);
+        });
+    }
 });
 
 function executeTestQuery(ICollection: COL.ICollection, query: string, expectNoResults: boolean): void {
@@ -48,7 +50,7 @@ function executeTestQuery(ICollection: COL.ICollection, query: string, expectNoR
 
 const EDAN_SCRAPE_MAX_INIT: number = 14000000;
 const EDAN_QUERY_MAX_ROWS: number = 100;
-const EDAN_SIMUL: number = 50;
+const EDAN_SIMUL: number = 4; // set to a higher number only with permission from OCIO, as even a moderate load seems to cause alarm!
 
 export async function executeScrapeQuery(ICollection: COL.ICollection, fileName: string, rowStart: number): Promise<void> {
     jest.setTimeout(1000 * 60 * 60 * 24 * 7);   // 1 week
