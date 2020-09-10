@@ -86,7 +86,9 @@ import {
     GetProjectDocumentationInput,
     GetProjectDocumentationResult,
     GetIntermediaryFileInput,
-    GetIntermediaryFileResult
+    GetIntermediaryFileResult,
+    DiscardUploadedAssetVersionsInput,
+    DiscardUploadedAssetVersionsResult
 } from '../../types/graphql';
 
 // Queries
@@ -133,6 +135,7 @@ import createVocabulary from './mutations/vocabulary/createVocabulary';
 import createVocabularySet from './mutations/vocabulary/createVocabularySet';
 import uploadAsset from './mutations/asset/uploadAsset';
 import ingestData from './mutations/ingestion/ingestData';
+import discardUploadedAssetVersions from './mutations/asset/discardUploadedAssetVersions';
 
 import { Context } from '../../types/resolvers';
 
@@ -177,7 +180,8 @@ const allQueries = {
     getAssetVersionsDetails,
     getObjectsForItem,
     getProjectDocumentation,
-    getIntermediaryFile
+    getIntermediaryFile,
+    discardUploadedAssetVersions
 };
 
 type GraphQLRequest = {
@@ -480,6 +484,16 @@ class GraphQLApi {
 
     async getUnit(input: GetUnitInput, context?: Context): Promise<GetUnitResult> {
         const operationName = 'getUnit';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput, context?: Context): Promise<DiscardUploadedAssetVersionsResult> {
+        const operationName = 'discardUploadedAssetVersions';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
