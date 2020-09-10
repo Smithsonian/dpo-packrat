@@ -450,6 +450,14 @@ CREATE TABLE IF NOT EXISTS `Unit` (
   PRIMARY KEY (`idUnit`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `UnitEdan` (
+  `idUnitEdan` int(11) NOT NULL AUTO_INCREMENT,
+  `idUnit` int(11) DEFAULT NULL,
+  `Abbreviation` varchar(255) NOT NULL UNIQUE,
+  PRIMARY KEY (`idUnitEdan`),
+  KEY `UnitEdan_Abbreviation` (`Abbreviation`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `User` (
   `idUser` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
@@ -1010,6 +1018,13 @@ ADD CONSTRAINT `fk_systemobjectxref_systemobject1`
 ADD CONSTRAINT `fk_systemobjectxref_systemobject2`
   FOREIGN KEY (`idSystemObjectDerived`)
   REFERENCES `Packrat`.`SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `Packrat`.`UnitEdan` 
+ADD CONSTRAINT `fk_unitedan_idunit`
+  FOREIGN KEY (`idUnit`)
+  REFERENCES `Packrat`.`Unit` (`idUnit`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

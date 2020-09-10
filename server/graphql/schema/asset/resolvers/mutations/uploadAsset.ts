@@ -18,25 +18,25 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
     const { filename, createReadStream }: ApolloFile = await args.file;
 
     if (!user) {
-        LOG.logger.error('uploadAsset unable to retrieve user context');
+        LOG.logger.error('GraphQL uploadAsset unable to retrieve user context');
         return { status: UploadStatus.Failed };
     }
 
     const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
     if (!storage) {
-        LOG.logger.error('uploadAsset unable to retrieve Storage Implementation from StorageFactory.getInstance()');
+        LOG.logger.error('GraphQL uploadAsset unable to retrieve Storage Implementation from StorageFactory.getInstance()');
         return { status: UploadStatus.Failed };
     }
 
     const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
     if (WSResult.error || !WSResult.writeStream || !WSResult.storageKey) {
-        LOG.logger.error(`uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`);
+        LOG.logger.error(`GraphQL uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`);
         return { status: UploadStatus.Failed };
     }
     const { writeStream, storageKey } = WSResult;
     const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(args.type);
     if (!vocabulary) {
-        LOG.logger.error('uploadAsset unable to retrieve asset type vocabulary');
+        LOG.logger.error('GraphQL uploadAsset unable to retrieve asset type vocabulary');
         return { status: UploadStatus.Failed };
     }
 
@@ -63,7 +63,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
 
                 const commitResult: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
                 if (!commitResult.success) {
-                    LOG.logger.error(`uploadAsset AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`);
+                    LOG.logger.error(`GraphQL uploadAsset AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`);
                     resolve({ status: UploadStatus.Failed });
                 }
                 // commitResult.asset; commitResult.assetVersion; <-- These have been created
@@ -78,7 +78,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
             // stream.on('close', async () => { });
         });
     } catch (error) {
-        LOG.logger.error('uploadAsset', error);
+        LOG.logger.error('GraphQL uploadAsset', error);
         return { status: UploadStatus.Failed };
     }
 }

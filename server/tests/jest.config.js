@@ -25,6 +25,8 @@ module.exports = {
         // '**/tests/storage/interface/AssetStorageAdapter.test.ts',
         // '**/tests/storage/impl/LocalStorage/OCFL.test.ts',
         // '**/tests/storage/impl/LocalStorage/LocalStorage.test.ts',
+        // '**/tests/collections/EdanCollection.test.ts',
+        // '**/tests/db/dbcreation.test.ts',
     ],
     testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/build/'],
     setupFiles: ['<rootDir>/tests/setEnvVars.ts']
