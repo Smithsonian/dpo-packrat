@@ -1,8 +1,369 @@
-import { IngestDataResult, MutationIngestDataArgs } from '../../../../../types/graphql';
-import { Parent } from '../../../../../types/resolvers';
+import { IngestDataResult, MutationIngestDataArgs, IngestSubject, IngestItem, PhotogrammetryIngest, IngestIdentifier, User } from '../../../../../types/graphql';
+import { Parent, Context } from '../../../../../types/resolvers';
+import * as DBAPI from '../../../../../db';
+import * as CACHE from '../../../../../cache';
+import * as LOG from '../../../../../utils/logger';
+import { AssetStorageAdapter, AssetStorageResult, OperationInfo } from '../../../../../storage/interface';
+import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 
-export default async function ingestData(_: Parent, args: MutationIngestDataArgs): Promise<IngestDataResult> {
+export default async function ingestData(_: Parent, args: MutationIngestDataArgs, context: Context): Promise<IngestDataResult> {
     const { input } = args;
-    console.log(JSON.stringify(input, null, 2));
+    const { user } = context;
+
+    // data validation; FYI ... input.project is allowed to be unspecified
+    if (!input.subjects || input.subjects.length == 0) {
+        LOG.logger.error('GraphQL ingestData called with no subjects');
+        return { success: false };
+    }
+
+    if (!input.item) {
+        LOG.logger.error('GraphQL ingestData called with no item');
+        return { success: false };
+    }
+
+    if (!user) {
+        LOG.logger.error('GraphQL ingestData unable to retrieve user context');
+        return { success: false };
+    }
+
+    // retrieve/create subjects; if creating subjects, create related objects (Identifiers, possibly UnitEdan records, though unlikely)
+    const subjectsDB: DBAPI.Subject[] = [];
+    for (const subject of input.subjects) {
+        // fetch our understanding of EDAN's unit information:
+        const unitEdanDB: DBAPI.UnitEdan | null = await DBAPI.UnitEdan.fetchFromAbbreviation(subject.unit);
+        let subjectDB: DBAPI.Subject | null = null;
+
+        if (subject.id)     // if this subject exists, validate it
+            subjectDB = await validateExistingSubject(subject, unitEdanDB);
+        else                // otherwise create it and related objects, including possibly unitEdanDB
+            subjectDB = await createSubjectAndRelated(subject, unitEdanDB);
+
+        if (!subjectDB)
+            return { success: false };
+        subjectsDB.push(subjectDB);
+    }
+
+    // wire projects to subjects
+    if (input.project.id && !(await wireProjectToSubjects(input.project.id, subjectsDB)))
+        return { success: false };
+
+    const itemDB: DBAPI.Item | null = await fetchOrCreateItem(input.item);
+    if (!itemDB)
+        return { success: false };
+
+    // write subjects to item
+    if (!await wireSubjectsToItem(subjectsDB, itemDB))
+        return { success: false };
+
+    // map from idAsetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
+    const assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>();
+    // create photogrammetry objects, if needed
+    if (input.photogrammetry && input.photogrammetry.length > 0) {
+        for (const photogrammetry of input.photogrammetry)
+            if (!await createPhotogrammetryObjects(photogrammetry, assetVersionMap))
+                return { success: false };
+    }
+
+    // wire item to asset-owning objects
+    if (!await wireItemToAssetOwners(itemDB, assetVersionMap))
+        return { success: false };
+
+    // next, promote asset into repository storage
+    if (!await promoteAssetsIntoRepository(assetVersionMap, user))
+        return { success: false };
+
     return { success: true };
+}
+
+async function createIdentifier(arkId: string): Promise<DBAPI.Identifier | null> {
+    const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eIdentifierIdentifierTypeARK);
+    if (!vocabulary) {
+        LOG.logger.error('GraphQL ingestData unable to fetch vocabulary for ARK Identifiers');
+        return null;
+    }
+
+    const identifier: DBAPI.Identifier = new DBAPI.Identifier({
+        IdentifierValue: arkId,
+        idVIdentifierType: vocabulary.idVocabulary,
+        idSystemObject: null,
+        idIdentifier: 0
+    });
+
+    if (!await identifier.create()) {
+        LOG.logger.error(`GraphQL ingestData unable to create identifier record for subject's arkId ${arkId}`);
+        return null;
+    }
+    return identifier;
+}
+
+async function createIdentifierForObject(identifier: IngestIdentifier, SOBased: DBAPI.SystemObjectBased): Promise<boolean> {
+    const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
+    if (!SO) {
+        LOG.logger.error(`GraphQL ingestData unable to fetch system object from ${JSON.stringify(SOBased)}`);
+        return false;
+    }
+
+    // identifier.id; // null means create one? TODO: circle back on when we create identifiers ... not sure what the ID would mean if non-zero!
+    const identifierDB: DBAPI.Identifier = new DBAPI.Identifier({
+        IdentifierValue: identifier.identifier ? identifier.identifier : 'DPO ID', // TODO: replace with GUID created appropriately for us
+        idVIdentifierType: identifier.identifierType,
+        idSystemObject: SO.idSystemObject,
+        idIdentifier: 0
+    });
+
+    if (!await identifierDB.create()) {
+        LOG.logger.error(`GraphQL ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`);
+        return false;
+    }
+    return true;
+}
+
+async function validateOrCreateUnitEdan(unitEdanDB: DBAPI.UnitEdan | null, Abbreviation: string): Promise<DBAPI.UnitEdan | null> {
+    if (!unitEdanDB) {
+        unitEdanDB = new DBAPI.UnitEdan({
+            idUnit: 1, // hard-coded for the 'Unknown Unit'
+            Abbreviation,
+            idUnitEdan: 0
+        });
+        if (!await unitEdanDB.create()) {
+            LOG.logger.error(`GraphQL ingestData unable to create unitEdan record for subject's unit ${Abbreviation}`);
+            return null;
+        }
+    } else if (!unitEdanDB.idUnit) {
+        LOG.logger.error(`GraphQL ingestData called with invalid subject's unit ${Abbreviation}, mapped to ${JSON.stringify(unitEdanDB)} with null idUnit`);
+        return null;
+    }
+
+    return unitEdanDB;
+}
+
+async function createSubject(idUnit: number, Name: string, identifier: DBAPI.Identifier | null): Promise<DBAPI.Subject | null> {
+    // create the subject
+    const subjectDB: DBAPI.Subject = new DBAPI.Subject({
+        idUnit,
+        idAssetThumbnail: null,
+        idGeoLocation: null,
+        Name,
+        idIdentifierPreferred: (identifier) ? identifier.idIdentifier : null, // identifierSubjectHookup.idIdentifier,
+        idSubject: 0
+    });
+    if (!await subjectDB.create()) {
+        LOG.logger.error(`GraphQL ingestData unable to create subject record with name ${Name}`);
+        return null;
+    }
+    return subjectDB;
+}
+
+async function updateIdentifier(identifier: DBAPI.Identifier | null, subjectDB: DBAPI.Subject): Promise<boolean> {
+    // update identifier with systemobject ID of our subject
+    if (!identifier)
+        return true;
+    const SO: DBAPI.SystemObject | null = await subjectDB.fetchSystemObject();
+    if (!SO) {
+        LOG.logger.error(`GraphQL ingestData unable to fetch system object for subject record ${JSON.stringify(subjectDB)}`);
+        return false;
+    }
+    identifier.idSystemObject = SO.idSystemObject;
+    if (!await identifier.update()) {
+        LOG.logger.error(`GraphQL ingestData unable to update identifier's idSystemObject ${JSON.stringify(identifier)}`);
+        return false;
+    }
+
+    return true;
+}
+
+async function validateExistingSubject(subject: IngestSubject, unitEdanDB: DBAPI.UnitEdan | null): Promise<DBAPI.Subject | null> {
+    // if this subject exists, validate it
+    const subjectDB: DBAPI.Subject | null = await DBAPI.Subject.fetch(subject.id);
+    if (!subjectDB) {
+        LOG.logger.error(`GraphQL ingestData called with invalid subject ${subject.id}`);
+        return null;
+    }
+
+    // existing subjects must be connected to an existing unit
+    if (!unitEdanDB || !unitEdanDB.idUnit) {
+        LOG.logger.error(`GraphQL ingestData called with invalid subject's unit ${subject.unit}`);
+        return null;
+    }
+    return subjectDB;
+}
+
+async function createSubjectAndRelated(subject: IngestSubject, unitEdanDB: DBAPI.UnitEdan | null): Promise<DBAPI.Subject | null> {
+    // identify Unit; create UnitEdan if needed
+    unitEdanDB = await validateOrCreateUnitEdan(unitEdanDB, subject.unit);
+    if (!unitEdanDB)
+        return null;
+
+    // create identifier
+    let identifier: DBAPI.Identifier | null = null;
+    if (subject.arkId) {
+        identifier = await createIdentifier(subject.arkId);
+        if (!identifier)
+            return null;
+    }
+
+    // create the subject
+    const idUnit: number = (unitEdanDB.idUnit) ? unitEdanDB.idUnit : /* istanbul ignore next */ 1; // default hard-coded unit 1 in case of errors
+    const subjectDB: DBAPI.Subject | null = await createSubject(idUnit, subject.name, identifier);
+    if (!subjectDB)
+        return null;
+
+    // update identifier, if it exists with systemobject ID of our subject
+    if (!await updateIdentifier(identifier, subjectDB))
+        return null;
+
+    return subjectDB;
+}
+
+async function wireProjectToSubjects(idProject: number, subjectsDB: DBAPI.Subject[]): Promise<boolean> {
+    const projectDB: DBAPI.Project | null = await DBAPI.Project.fetch(idProject);
+    if (!projectDB) {
+        LOG.logger.error(`GraphQL ingestData unable to fetch project ${idProject}`);
+        return false;
+    }
+
+    for (const subjectDB of subjectsDB) {
+        const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(projectDB, subjectDB);
+        if (!xref) {
+            LOG.logger.error(`GraphQL ingestData unable to wire project ${JSON.stringify(projectDB)} to subject ${JSON.stringify(subjectDB)}`);
+            return false;
+        }
+    }
+    return true;
+}
+
+async function fetchOrCreateItem(item: IngestItem): Promise<DBAPI.Item | null> {
+    let itemDB: DBAPI.Item | null;
+    if (item.id) {
+        itemDB = await DBAPI.Item.fetch(item.id);
+        if (!itemDB)
+            LOG.logger.error(`GraphQL ingestData could not compute item from ${item.id}`);
+    } else {
+        itemDB = new DBAPI.Item({
+            idAssetThumbnail: null,
+            idGeoLocation: null,
+            Name: item.name,
+            EntireSubject: item.entireSubject,
+            idItem: 0
+        });
+
+        if (!await itemDB.create()) {
+            LOG.logger.error(`GraphQL ingestData unable to create item from ${JSON.stringify(item)}`);
+            return null;
+        }
+    }
+
+    return itemDB;
+}
+
+async function wireSubjectsToItem(subjectsDB: DBAPI.Subject[], itemDB: DBAPI.Item): Promise<boolean> {
+    for (const subjectDB of subjectsDB) {
+        const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(subjectDB, itemDB);
+        if (!xref) {
+            LOG.logger.error(`GraphQL ingestData unable to wire subject ${JSON.stringify(subjectDB)} to item ${JSON.stringify(itemDB)}`);
+            return false;
+        }
+    }
+    return true;
+}
+
+// map from idAsetVersion -> object that "owns" the asset
+async function createPhotogrammetryObjects(photogrammetry: PhotogrammetryIngest,
+    assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
+
+    const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry);
+    if (!vocabulary) {
+        LOG.logger.error('GraphQL ingestData unable to retrieve photogrammetry capture method vocabulary from cache');
+        return false;
+    }
+
+    // create photogrammetry objects, identifiers, etc.
+    const captureDataDB: DBAPI.CaptureData = new DBAPI.CaptureData({
+        idVCaptureMethod: vocabulary.idVocabulary,
+        DateCaptured: new Date(photogrammetry.dateCaptured), // TODO: can this throw an exception?  Add safeguards here.
+        Description: photogrammetry.description,
+        idAssetThumbnail: null,
+        idCaptureData: 0
+    });
+    if (!await captureDataDB.create()) {
+        LOG.logger.error(`GraphQL ingestData unable to create CaptureData for photogrammetry data ${JSON.stringify(photogrammetry)}`);
+        return false;
+    }
+
+    const captureDataPhotoDB: DBAPI.CaptureDataPhoto = new DBAPI.CaptureDataPhoto({
+        idVCaptureDatasetType: photogrammetry.datasetType,
+        CaptureDatasetFieldID: photogrammetry.datasetFieldId ? photogrammetry.datasetFieldId : null,
+        idVItemPositionType: photogrammetry.itemPositionType ? photogrammetry.itemPositionType : null,
+        ItemPositionFieldID: photogrammetry.itemPositionFieldId ? photogrammetry.itemPositionFieldId : null,
+        ItemArrangementFieldID: photogrammetry.itemArrangementFieldId ? photogrammetry.itemArrangementFieldId : null,
+        idVFocusType: photogrammetry.focusType ? photogrammetry.focusType : null,
+        idVLightSourceType: photogrammetry.lightsourceType ? photogrammetry.lightsourceType : null,
+        idVBackgroundRemovalMethod: photogrammetry.backgroundRemovalMethod ? photogrammetry.backgroundRemovalMethod : null,
+        idVClusterType: photogrammetry.clusterType ? photogrammetry.clusterType : null,
+        ClusterGeometryFieldID: photogrammetry.clusterGeometryFieldId ? photogrammetry.clusterGeometryFieldId : null,
+        CameraSettingsUniform: false,
+        idCaptureData: captureDataDB.idCaptureData,
+        idCaptureDataPhoto: 0
+    });
+    if (!await captureDataPhotoDB.create()) {
+        LOG.logger.error(`GraphQL ingestData unable to create CaptureDataPhoto for photogrammetry data ${JSON.stringify(photogrammetry)}`);
+        return false;
+    }
+
+    // TODO: create CaptureDataFile objects
+    // TODO: deal with zips and bulk ingest, in which we may want to split the uploaded asset into mutiple assets
+
+    if (photogrammetry.identifiers && photogrammetry.identifiers.length > 0) {
+        for (const identifier of photogrammetry.identifiers) {
+            if (!await createIdentifierForObject(identifier, captureDataDB)) {
+                LOG.logger.error(`GraphQL ingestData unable to create identifier for photogrammetry data ${JSON.stringify(photogrammetry)}`);
+                return false;
+            }
+        }
+    }
+
+    if (photogrammetry.idAssetVersion)
+        assetVersionMap.set(photogrammetry.idAssetVersion, captureDataDB);
+    return true;
+}
+
+async function wireItemToAssetOwners(itemDB: DBAPI.Item, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
+    for (const SOBased of assetVersionMap.values()) {
+        const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, SOBased);
+        if (!xref) {
+            LOG.logger.error(`GraphQL ingestData unable to wire item ${JSON.stringify(itemDB)} to asset owner ${JSON.stringify(SOBased)}`);
+            return false;
+        }
+    }
+    return true;
+}
+
+async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.SystemObjectBased>, user: User): Promise<boolean> {
+    // map from idAsetVersion -> object that "owns" the asset
+    for (const [idAssetVersion, SOBased] of assetVersionMap) {
+        const assetVersionDB: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
+        if (!assetVersionDB) {
+            LOG.logger.error(`GraphQL ingestData unable to load assetVersion for ${idAssetVersion}`);
+            return false;
+        }
+
+        const assetDB: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersionDB.idAsset);
+        if (!assetDB) {
+            LOG.logger.error(`GraphQL ingestData unable to load asset for ${assetVersionDB.idAsset}`);
+            return false;
+        }
+
+        const opInfo: OperationInfo = {
+            message: 'Ingesting asset',
+            idUser: user.idUser,
+            userEmailAddress: user.EmailAddress,
+            userName: user.Name
+        };
+        const ASR: AssetStorageResult = await AssetStorageAdapter.ingestAsset(assetDB, assetVersionDB, SOBased, opInfo);
+        if (!ASR.success) {
+            LOG.logger.error(`GraphQL ingestData unable to ingest assetVersion ${idAssetVersion}: ${ASR.error}`);
+            return false;
+        }
+    }
+    return true;
 }
