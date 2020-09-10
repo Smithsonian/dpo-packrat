@@ -15,6 +15,7 @@ import {
     CreateVocabularyInput,
     CreateVocabularySetInput
 } from '../../../../types/graphql';
+import { Context } from '../../../../types/resolvers';
 import { eVocabularySetID } from '../../../../cache';
 import { Asset, AssetVersion } from '@prisma/client';
 import * as DBAPI from '../../../../db';
@@ -63,6 +64,11 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                     const { User } = await graphQLApi.createUser(userInput);
 
                     if (User) {
+                        const context: Context = {
+                            user: User,
+                            isAuthenticated: true
+                        };
+
                         const assetVersionInput = createAssetVersionInput(asset.idAsset, User.idUser);
                         const assetVersion = new DBAPI.AssetVersion(assetVersionInput);
 
@@ -175,7 +181,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             photogrammetry: [photogrammetry]
                         };
 
-                        const result = await graphQLApi.ingestData(ingestDataInput);
+                        const result = await graphQLApi.ingestData(ingestDataInput, context);
                         expect(result.success).toBe(true);
                         done();
                     }
