@@ -1348,6 +1348,21 @@ export type CreateVocabularySetResult = {
     VocabularySet?: Maybe<VocabularySet>;
 };
 
+export type DiscardUploadedAssetVersionsMutationVariables = Exact<{
+    input: DiscardUploadedAssetVersionsInput;
+}>;
+
+
+export type DiscardUploadedAssetVersionsMutation = (
+    { __typename?: 'Mutation' }
+    & {
+        discardUploadedAssetVersions: (
+            { __typename?: 'DiscardUploadedAssetVersionsResult' }
+            & Pick<DiscardUploadedAssetVersionsResult, 'success'>
+        )
+    }
+);
+
 export type UploadAssetMutationVariables = Exact<{
     file: Scalars['Upload'];
     type: Scalars['Int'];
@@ -2188,6 +2203,38 @@ export type GetWorkflowQuery = (
 );
 
 
+export const DiscardUploadedAssetVersionsDocument = gql`
+    mutation discardUploadedAssetVersions($input: DiscardUploadedAssetVersionsInput!) {
+  discardUploadedAssetVersions(input: $input) {
+    success
+  }
+}
+    `;
+export type DiscardUploadedAssetVersionsMutationFn = Apollo.MutationFunction<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
+
+/**
+ * __useDiscardUploadedAssetVersionsMutation__
+ *
+ * To run a mutation, you first call `useDiscardUploadedAssetVersionsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDiscardUploadedAssetVersionsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [discardUploadedAssetVersionsMutation, { data, loading, error }] = useDiscardUploadedAssetVersionsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDiscardUploadedAssetVersionsMutation(baseOptions?: Apollo.MutationHookOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>) {
+    return Apollo.useMutation<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>(DiscardUploadedAssetVersionsDocument, baseOptions);
+}
+export type DiscardUploadedAssetVersionsMutationHookResult = ReturnType<typeof useDiscardUploadedAssetVersionsMutation>;
+export type DiscardUploadedAssetVersionsMutationResult = Apollo.MutationResult<DiscardUploadedAssetVersionsMutation>;
+export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
 export const UploadAssetDocument = gql`
     mutation uploadAsset($file: Upload!, $type: Int!) {
   uploadAsset(file: $file, type: $type) {

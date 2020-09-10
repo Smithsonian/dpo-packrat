@@ -38,6 +38,7 @@ import createVocabularyTest from './mutations/vocabulary/createVocabulary.test';
 import createVocabularySetTest from './mutations/vocabulary/createVocabularySet.test';
 import uploadAssetTest from './mutations/asset/uploadAsset.test';
 import ingestDataTest from './mutations/ingestion/ingestData.test';
+import discardUploadedAssetVersionsTest from './mutations/asset/discardUploadedAssetVersions.test';
 
 const utils = new TestSuiteUtils();
 utils.setupJest();
@@ -81,4 +82,5 @@ describe('GraphQL Test Suite', () => {
     createVocabularySetTest(utils);
     uploadAssetTest(utils);
     ingestDataTest(utils);
+    discardUploadedAssetVersionsTest(utils);
 });

@@ -137,7 +137,11 @@ function Metadata(): React.ReactElement {
             return <Photogrammetry metadataIndex={metadataIndex} />;
         }
 
-        return null;
+        return (
+            <Box display='flex' flex={1} alignItems='center' justifyContent='center'>
+                <Typography variant='subtitle1' color='primary'>Metadata type not yet implemented</Typography>
+            </Box>
+        );
     };
 
     return (
