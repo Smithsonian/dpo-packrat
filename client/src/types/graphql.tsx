@@ -1183,7 +1183,7 @@ export type CreateCaptureDataPhotoResult = {
 };
 
 export type IngestSubject = {
-    id: Scalars['Int'];
+    id?: Maybe<Scalars['Int']>;
     name: Scalars['String'];
     arkId: Scalars['String'];
     unit: Scalars['String'];
@@ -1201,7 +1201,6 @@ export type IngestItem = {
 };
 
 export type IngestIdentifier = {
-    id?: Maybe<Scalars['Int']>;
     identifier: Scalars['String'];
     identifierType: Scalars['Int'];
 };
@@ -1211,7 +1210,7 @@ export type IngestFolder = {
     variantType: Scalars['Int'];
 };
 
-export type PhotogrammetryIngest = {
+export type IngestPhotogrammetry = {
     idAssetVersion: Scalars['Int'];
     dateCaptured: Scalars['String'];
     datasetType: Scalars['Int'];
@@ -1235,7 +1234,7 @@ export type IngestDataInput = {
     subjects: Array<IngestSubject>;
     project: IngestProject;
     item: IngestItem;
-    photogrammetry: Array<PhotogrammetryIngest>;
+    photogrammetry: Array<IngestPhotogrammetry>;
 };
 
 export type IngestDataResult = {

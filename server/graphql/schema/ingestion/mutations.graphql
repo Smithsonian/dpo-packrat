@@ -3,7 +3,7 @@ type Mutation {
 }
 
 input IngestSubject {
-    id: Int!
+    id: Int
     name: String!
     arkId: String!
     unit: String!
@@ -21,7 +21,6 @@ input IngestItem {
 }
 
 input IngestIdentifier {
-    id: Int
     identifier: String!
     identifierType: Int!
 }
@@ -31,7 +30,7 @@ input IngestFolder {
     variantType: Int!
 }
 
-input PhotogrammetryIngest {
+input IngestPhotogrammetry {
     idAssetVersion: Int!
     dateCaptured: String!
     datasetType: Int!
@@ -55,7 +54,7 @@ input IngestDataInput {
     subjects: [IngestSubject!]!
     project: IngestProject!
     item: IngestItem!
-    photogrammetry: [PhotogrammetryIngest!]!
+    photogrammetry: [IngestPhotogrammetry!]!
 }
 
 type IngestDataResult {
