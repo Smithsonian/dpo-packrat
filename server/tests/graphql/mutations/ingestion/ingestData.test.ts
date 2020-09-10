@@ -4,7 +4,7 @@ import {
     IngestItem,
     IngestProject,
     IngestSubject,
-    PhotogrammetryIngest,
+    IngestPhotogrammetry,
     IngestIdentifier,
     IngestFolder,
     Vocabulary,
@@ -148,7 +148,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         const { isUniform } = await graphQLApi.areCameraSettingsUniform(cameraSettingUniformInput);
 
-                        const photogrammetry: PhotogrammetryIngest = {
+                        const photogrammetry: IngestPhotogrammetry = {
                             idAssetVersion: assetVersion.idAssetVersion,
                             dateCaptured: new Date().toISOString(),
                             datasetType,
