@@ -116,7 +116,6 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                         const datasetType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eCaptureDataDatasetType) || 0;
 
                         const identifier: IngestIdentifier = {
-                            id: assetVersion.idAssetVersion,
                             identifier: 'custom-identifier',
                             identifierType
                         };
