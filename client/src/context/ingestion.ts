@@ -488,9 +488,10 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
 
         case INGESTION_ACTION.UPLOAD.DISCARD_FILES:
             return {
-                ...ingestionState,
+                ...state,
                 uploads: {
-                    ...ingestionState.uploads,
+                    ...uploads,
+                    files: lodash.filter(files, ({ selected }) => !selected),
                     loading: false
                 }
             };
