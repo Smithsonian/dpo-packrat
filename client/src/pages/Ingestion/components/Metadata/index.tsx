@@ -65,50 +65,53 @@ function Metadata(): React.ReactElement {
     const { metadata, metadataIndex, isLast } = getMetadataInfo(fileId);
     const project = getSelectedProject();
     const item = getSelectedItem();
+    const assetType = getAssetType(Number.parseInt(type, 10));
 
     const onPrevious = () => {
         history.goBack();
     };
 
     const onNext = async () => {
-        const { photogrammetry } = getFieldErrors(metadata);
-        const { photogrammetry: { datasetType, description, systemCreated, identifiers } } = metadata;
-        let hasError: boolean = false;
+        if (assetType.photogrammetry) {
+            const { photogrammetry } = getFieldErrors(metadata);
+            const { photogrammetry: { datasetType, description, systemCreated, identifiers } } = metadata;
+            let hasError: boolean = false;
 
-        if (!datasetType) {
-            toast.warn('Please select a valid dataset type', { autoClose: false });
-        }
+            if (!datasetType) {
+                toast.warn('Please select a valid dataset type', { autoClose: false });
+            }
 
-        if (!systemCreated) {
-            hasError = true;
-        }
+            if (!systemCreated) {
+                hasError = true;
+            }
 
-        identifiers.forEach(({ identifier, selected }) => {
-            if (selected) {
-                hasError = false;
-                if (identifier.trim() === '') {
-                    toast.warn('Please provide a valid identifier', { autoClose: false });
+            identifiers.forEach(({ identifier, selected }) => {
+                if (selected) {
+                    hasError = false;
+                    if (identifier.trim() === '') {
+                        toast.warn('Please provide a valid identifier', { autoClose: false });
+                        hasError = true;
+                    }
+                }
+            });
+
+            if (hasError && !systemCreated) {
+                toast.warn('Should select/provide at least 1 identifier', { autoClose: false });
+            }
+
+            if (description.trim() === '') {
+                toast.warn('Description cannot be empty', { autoClose: false });
+                hasError = true;
+            }
+
+            for (const fieldValue of Object.values(photogrammetry)) {
+                if (fieldValue) {
                     hasError = true;
                 }
             }
-        });
 
-        if (hasError && !systemCreated) {
-            toast.warn('Should select/provide at least 1 identifier', { autoClose: false });
+            if (hasError) return;
         }
-
-        if (description.trim() === '') {
-            toast.warn('Description cannot be empty', { autoClose: false });
-            hasError = true;
-        }
-
-        for (const fieldValue of Object.values(photogrammetry)) {
-            if (fieldValue) {
-                hasError = true;
-            }
-        }
-
-        if (hasError) return;
 
         if (isLast) {
             setIngestionLoading(true);
@@ -131,13 +134,15 @@ function Metadata(): React.ReactElement {
     };
 
     const getMetadataComponent = (metadataIndex: number): React.ReactElement | null => {
-        const assetType = getAssetType(Number.parseInt(type, 10));
-
         if (assetType.photogrammetry) {
             return <Photogrammetry metadataIndex={metadataIndex} />;
         }
 
-        return null;
+        return (
+            <Box display='flex' flex={1} alignItems='center' justifyContent='center'>
+                <Typography variant='subtitle1' color='primary'>Metadata type not yet implemented</Typography>
+            </Box>
+        );
     };
 
     return (

@@ -428,7 +428,7 @@ export type ProjectDocumentation = {
     Description: Scalars['String'];
     idProject: Scalars['Int'];
     Name: Scalars['String'];
-    Project: Project;
+    Project?: Maybe<Project>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -604,13 +604,16 @@ export type Query = {
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
     getScene: GetSceneResult;
+    getIntermediaryFile: GetIntermediaryFileResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
     getItemsForSubject: GetItemsForSubjectResult;
+    getObjectsForItem: GetObjectsForItemResult;
     searchIngestionSubjects: SearchIngestionSubjectsResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getUnit: GetUnitResult;
     getProject: GetProjectResult;
+    getProjectDocumentation: GetProjectDocumentationResult;
     getSubject: GetSubjectResult;
     getItem: GetItemResult;
     getCurrentUser: GetCurrentUserResult;
@@ -660,12 +663,20 @@ export type QueryGetSceneArgs = {
     input: GetSceneInput;
 };
 
+export type QueryGetIntermediaryFileArgs = {
+    input: GetIntermediaryFileInput;
+};
+
 export type QueryGetSubjectsForUnitArgs = {
     input: GetSubjectsForUnitInput;
 };
 
 export type QueryGetItemsForSubjectArgs = {
     input: GetItemsForSubjectInput;
+};
+
+export type QueryGetObjectsForItemArgs = {
+    input: GetObjectsForItemInput;
 };
 
 export type QuerySearchIngestionSubjectsArgs = {
@@ -686,6 +697,10 @@ export type QueryGetUnitArgs = {
 
 export type QueryGetProjectArgs = {
     input: GetProjectInput;
+};
+
+export type QueryGetProjectDocumentationArgs = {
+    input: GetProjectDocumentationInput;
 };
 
 export type QueryGetSubjectArgs = {
@@ -817,6 +832,15 @@ export type GetSceneResult = {
     Scene?: Maybe<Scene>;
 };
 
+export type GetIntermediaryFileInput = {
+    idIntermediaryFile: Scalars['Int'];
+};
+
+export type GetIntermediaryFileResult = {
+    __typename?: 'GetIntermediaryFileResult';
+    IntermediaryFile?: Maybe<IntermediaryFile>;
+};
+
 export type GetSubjectsForUnitInput = {
     idUnit: Scalars['Int'];
     pagination?: Maybe<PaginationInput>;
@@ -844,6 +868,19 @@ export type SubjectUnitIdentifier = {
     UnitAbbreviation: Scalars['String'];
     IdentifierPublic?: Maybe<Scalars['String']>;
     IdentifierCollection?: Maybe<Scalars['String']>;
+};
+
+export type GetObjectsForItemInput = {
+    idItem: Scalars['Int'];
+};
+
+export type GetObjectsForItemResult = {
+    __typename?: 'GetObjectsForItemResult';
+    CaptureData: Array<CaptureData>;
+    Model: Array<Model>;
+    Scene: Array<Scene>;
+    IntermediaryFile: Array<IntermediaryFile>;
+    ProjectDocumentation: Array<ProjectDocumentation>;
 };
 
 export type SearchIngestionSubjectsInput = {
@@ -889,6 +926,15 @@ export type GetProjectInput = {
 export type GetProjectResult = {
     __typename?: 'GetProjectResult';
     Project?: Maybe<Project>;
+};
+
+export type GetProjectDocumentationInput = {
+    idProjectDocumentation: Scalars['Int'];
+};
+
+export type GetProjectDocumentationResult = {
+    __typename?: 'GetProjectDocumentationResult';
+    ProjectDocumentation?: Maybe<ProjectDocumentation>;
 };
 
 export type GetSubjectInput = {
@@ -959,6 +1005,7 @@ export type GetWorkflowResult = {
 export type Mutation = {
     __typename?: 'Mutation';
     uploadAsset: UploadAssetResult;
+    discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
     createCaptureData: CreateCaptureDataResult;
     createCaptureDataPhoto: CreateCaptureDataPhotoResult;
     ingestData: IngestDataResult;
@@ -976,6 +1023,10 @@ export type Mutation = {
 export type MutationUploadAssetArgs = {
     file: Scalars['Upload'];
     type: Scalars['Int'];
+};
+
+export type MutationDiscardUploadedAssetVersionsArgs = {
+    input: DiscardUploadedAssetVersionsInput;
 };
 
 export type MutationCreateCaptureDataArgs = {
@@ -1040,6 +1091,17 @@ export enum UploadStatus {
 export type UploadAssetResult = {
     __typename?: 'UploadAssetResult';
     status: UploadStatus;
+    idAssetVersion?: Maybe<Scalars['Int']>;
+    error?: Maybe<Scalars['String']>;
+};
+
+export type DiscardUploadedAssetVersionsInput = {
+    idAssetVersions: Array<Scalars['Int']>;
+};
+
+export type DiscardUploadedAssetVersionsResult = {
+    __typename?: 'DiscardUploadedAssetVersionsResult';
+    success: Scalars['Boolean'];
 };
 
 export type CreateCaptureDataInput = {
@@ -1075,7 +1137,7 @@ export type CreateCaptureDataPhotoResult = {
 };
 
 export type IngestSubject = {
-    id: Scalars['Int'];
+    id?: Maybe<Scalars['Int']>;
     name: Scalars['String'];
     arkId: Scalars['String'];
     unit: Scalars['String'];
@@ -1093,7 +1155,6 @@ export type IngestItem = {
 };
 
 export type IngestIdentifier = {
-    id?: Maybe<Scalars['Int']>;
     identifier: Scalars['String'];
     identifierType: Scalars['Int'];
 };
@@ -1103,7 +1164,7 @@ export type IngestFolder = {
     variantType: Scalars['Int'];
 };
 
-export type PhotogrammetryIngest = {
+export type IngestPhotogrammetry = {
     idAssetVersion: Scalars['Int'];
     dateCaptured: Scalars['String'];
     datasetType: Scalars['Int'];
@@ -1127,7 +1188,7 @@ export type IngestDataInput = {
     subjects: Array<IngestSubject>;
     project: IngestProject;
     item: IngestItem;
-    photogrammetry: Array<PhotogrammetryIngest>;
+    photogrammetry: Array<IngestPhotogrammetry>;
 };
 
 export type IngestDataResult = {

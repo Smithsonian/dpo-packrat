@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useContext, useEffect } from 'react';
@@ -57,8 +58,15 @@ function UploadListComplete(): React.ReactElement {
         if (!loading && !error) {
             const { getUploadedAssetVersion } = data;
             const { AssetVersion } = getUploadedAssetVersion;
+            const fileIds: string[] = uploads.files.map(({ id }) => id);
+
             const files = AssetVersion.map(assetVersion => {
                 const { idAssetVersion, StorageSize, Asset: { FileName, VAssetType: { idVocabulary } } } = assetVersion;
+
+                const id = String(idAssetVersion);
+                if (fileIds.includes(id)) {
+                    return uploads.files.find(file => file.id === id);
+                }
 
                 return {
                     id: String(idAssetVersion),

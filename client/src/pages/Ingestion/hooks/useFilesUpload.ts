@@ -13,12 +13,20 @@ import {
 } from '../../../context';
 import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus } from '../../../context';
 import { apolloUploader, apolloClient } from '../../../graphql';
-import { UploadAssetDocument, UploadAssetMutation, UploadStatus, GetAssetVersionsDetailsDocument, GetAssetVersionsDetailsQuery } from '../../../types/graphql';
+import {
+    UploadAssetDocument,
+    UploadAssetMutation,
+    UploadStatus,
+    GetAssetVersionsDetailsDocument,
+    GetAssetVersionsDetailsQuery,
+    DiscardUploadedAssetVersionsDocument,
+    DiscardUploadedAssetVersionsMutation
+} from '../../../types/graphql';
 import lodash from 'lodash';
 import { defaultPhotogrammetryFields } from '../../../context';
 import useVocabularyEntries from './useVocabularyEntries';
 import { eVocabularySetID } from '../../../types/server';
-import { ApolloQueryResult } from '@apollo/client';
+import { ApolloQueryResult, FetchResult } from '@apollo/client';
 import useProject from './useProject';
 import useItem from './useItem';
 import { Item, Project, SubjectUnitIdentifier } from '../../../types/graphql';
@@ -37,7 +45,7 @@ interface UseFilesUpload {
     retryUpload: (id: FileId) => void;
     removeUpload: (id: FileId) => void;
     changeAssetType: (id: FileId, type: number) => void;
-    discardFiles: () => void;
+    discardFiles: () => Promise<void>;
 }
 
 const useFilesUpload = (): UseFilesUpload => {
@@ -63,8 +71,7 @@ const useFilesUpload = (): UseFilesUpload => {
             };
         }
 
-        // TODO: KARAN: replace index with fileId this afterwards
-        const idAssetVersions = lodash.map(selectedFiles, (_, index) => index);
+        const idAssetVersions: number[] = lodash.map(selectedFiles, ({ id }) => Number.parseInt(id, 10));
 
         try {
             const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({
@@ -249,10 +256,11 @@ const useFilesUpload = (): UseFilesUpload => {
         async (ingestionFile: IngestionFile) => {
             const { id, file, type } = ingestionFile;
 
-            const successAction: IngestionDispatchAction = {
+            const successAction = (idAssetVersion: number): IngestionDispatchAction => ({
                 type: UPLOAD_ACTIONS.COMPLETE,
-                id
-            };
+                id,
+                idAssetVersion
+            });
 
             const errorAction: IngestionDispatchAction = {
                 type: UPLOAD_ACTIONS.FAILED,
@@ -297,12 +305,14 @@ const useFilesUpload = (): UseFilesUpload => {
                 const { uploadAsset }: UploadAssetMutation = data;
 
                 if (uploadAsset) {
-                    if (uploadAsset.status === UploadStatus.Complete) {
-                        ingestionDispatch(successAction);
+                    const { status, idAssetVersion, error } = uploadAsset;
+
+                    if (status === UploadStatus.Complete && idAssetVersion) {
+                        ingestionDispatch(successAction(idAssetVersion));
                         toast.success(`Upload finished for ${file.name}`);
-                    } else if (uploadAsset.status === UploadStatus.Failed) {
-                        const error = `Upload failed for ${file.name}`;
-                        toast.error(error);
+                    } else if (status === UploadStatus.Failed) {
+                        const errorMessage = error || `Upload failed for ${file.name}`;
+                        toast.error(errorMessage);
                         ingestionDispatch(errorAction);
                     }
                 }
@@ -319,13 +329,53 @@ const useFilesUpload = (): UseFilesUpload => {
         [getFile, ingestionDispatch]
     );
 
-    const discardFiles = () => {
-        // TODO: send dispatch to server about discarded items
-        const discardFilesAction: IngestionDispatchAction = {
-            type: UPLOAD_ACTIONS.DISCARD_FILES
+    const discardFiles = async (): Promise<void> => {
+        const selectedFiles = getSelectedFiles();
+
+        if (!selectedFiles.length) {
+            toast.warn('Please select at least 1 file to discard');
+            return;
+        }
+
+        const isConfirmed = global.confirm('Do you want to discard current items?');
+
+        if (!isConfirmed) return;
+
+        const idAssetVersions: number[] = selectedFiles.map(({ id }) => Number.parseInt(id, 10));
+
+        const discardMutationVariables = {
+            input: {
+                idAssetVersions
+            }
         };
 
-        ingestionDispatch(discardFilesAction);
+        try {
+            const { data }: FetchResult<DiscardUploadedAssetVersionsMutation> = await apolloClient.mutate({
+                mutation: DiscardUploadedAssetVersionsDocument,
+                variables: discardMutationVariables
+            });
+
+            if (data) {
+                const { discardUploadedAssetVersions } = data;
+                const { success } = discardUploadedAssetVersions;
+
+                if (!success) {
+                    toast.error('Failed to discard selected files');
+                    return;
+                }
+
+                const discardFilesAction: IngestionDispatchAction = {
+                    type: UPLOAD_ACTIONS.DISCARD_FILES
+                };
+
+                ingestionDispatch(discardFilesAction);
+
+                toast.info('Selected files have been discarded');
+                return;
+            }
+        } catch {
+            toast.error('Failed to discard selected files');
+        }
     };
 
     return {

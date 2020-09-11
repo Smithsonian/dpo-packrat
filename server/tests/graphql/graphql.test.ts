@@ -23,6 +23,8 @@ import getContentsForAssetVersionsTest from './queries/asset/getContentsForAsset
 import getSubjectsForUnitTest from './queries/unit/getSubjectsForUnit.test';
 import getItemsForSubjectTest from './queries/unit/getItemsForSubject.test';
 import getAssetVersionsDetailsTest from './queries/asset/getAssetVersionsDetails.test';
+import getProjectDocumentationTest from './queries/unit/getProjectDocumentation.test';
+import getIntermediaryFileTest from './queries/scene/getIntermediaryFile.test';
 
 import createCaptureDataTest from './mutations/capturedata/createCaptureData.test';
 import createModelTest from './mutations/model/createModel.test';
@@ -36,6 +38,7 @@ import createVocabularyTest from './mutations/vocabulary/createVocabulary.test';
 import createVocabularySetTest from './mutations/vocabulary/createVocabularySet.test';
 import uploadAssetTest from './mutations/asset/uploadAsset.test';
 import ingestDataTest from './mutations/ingestion/ingestData.test';
+import discardUploadedAssetVersionsTest from './mutations/asset/discardUploadedAssetVersions.test';
 
 const utils = new TestSuiteUtils();
 utils.setupJest();
@@ -63,6 +66,8 @@ describe('GraphQL Test Suite', () => {
     getSubjectsForUnitTest(utils);
     getItemsForSubjectTest(utils);
     getAssetVersionsDetailsTest(utils);
+    getProjectDocumentationTest(utils);
+    getIntermediaryFileTest(utils);
 
     // Mutations
     createCaptureDataTest(utils);
@@ -77,4 +82,5 @@ describe('GraphQL Test Suite', () => {
     createVocabularySetTest(utils);
     uploadAssetTest(utils);
     ingestDataTest(utils);
+    discardUploadedAssetVersionsTest(utils);
 });
