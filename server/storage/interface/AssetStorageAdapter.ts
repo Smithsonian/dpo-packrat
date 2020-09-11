@@ -159,13 +159,13 @@ export class AssetStorageAdapter {
         /* istanbul ignore if */
         if (!SO) {
             const error: string = `Unable to fetch SystemObject for ${SO}`;
+            LOG.logger.error(error);
             return {
                 asset,
                 assetVersion,
                 success: false,
                 error
             };
-            LOG.logger.error(error);
         }
         return await AssetStorageAdapter.ingestAssetForSystemObjectID(asset, assetVersion, SO.idSystemObject, opInfo);
     }

@@ -224,6 +224,7 @@ type CANCELLED = {
 type COMPLETE = {
     type: UPLOAD_ACTIONS.COMPLETE;
     id: FileId;
+    idAssetVersion: number;
 };
 
 type RETRY = {
@@ -331,6 +332,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 ...state,
                 uploads: {
                     ...uploads,
+                    files: action.files,
                     loading: false
                 }
             };
@@ -415,6 +417,7 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                         if (file.id === action.id) {
                             lodash.set(file, 'status', FileUploadStatus.COMPLETE);
                             lodash.set(file, 'cancel', null);
+                            lodash.set(file, 'id', String(action.idAssetVersion));
                         }
                     })
                 }
@@ -485,9 +488,10 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
 
         case INGESTION_ACTION.UPLOAD.DISCARD_FILES:
             return {
-                ...ingestionState,
+                ...state,
                 uploads: {
-                    ...ingestionState.uploads,
+                    ...uploads,
+                    files: lodash.filter(files, ({ selected }) => !selected),
                     loading: false
                 }
             };

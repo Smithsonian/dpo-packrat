@@ -385,7 +385,7 @@ type ProjectDocumentation {
   Description: String!
   idProject: Int!
   Name: String!
-  Project: Project!
+  Project: Project
   SystemObject: SystemObject
 }
 
@@ -547,13 +547,16 @@ type Query {
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
   getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
+  getObjectsForItem(input: GetObjectsForItemInput!): GetObjectsForItemResult!
   searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
   getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getProject(input: GetProjectInput!): GetProjectResult!
+  getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
   getItem(input: GetItemInput!): GetItemResult!
   getCurrentUser: GetCurrentUserResult!
@@ -656,6 +659,14 @@ type GetSceneResult {
   Scene: Scene
 }
 
+input GetIntermediaryFileInput {
+  idIntermediaryFile: Int!
+}
+
+type GetIntermediaryFileResult {
+  IntermediaryFile: IntermediaryFile
+}
+
 input GetSubjectsForUnitInput {
   idUnit: Int!
   pagination: PaginationInput = {}
@@ -680,6 +691,18 @@ type SubjectUnitIdentifier {
   UnitAbbreviation: String!
   IdentifierPublic: String
   IdentifierCollection: String
+}
+
+input GetObjectsForItemInput {
+  idItem: Int!
+}
+
+type GetObjectsForItemResult {
+  CaptureData: [CaptureData!]!
+  Model: [Model!]!
+  Scene: [Scene!]!
+  IntermediaryFile: [IntermediaryFile!]!
+  ProjectDocumentation: [ProjectDocumentation!]!
 }
 
 input SearchIngestionSubjectsInput {
@@ -720,6 +743,14 @@ input GetProjectInput {
 
 type GetProjectResult {
   Project: Project
+}
+
+input GetProjectDocumentationInput {
+  idProjectDocumentation: Int!
+}
+
+type GetProjectDocumentationResult {
+  ProjectDocumentation: ProjectDocumentation
 }
 
 input GetSubjectInput {
@@ -783,6 +814,7 @@ scalar Upload
 
 type Mutation {
   uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
+  discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
@@ -809,6 +841,16 @@ enum UploadStatus {
 
 type UploadAssetResult {
   status: UploadStatus!
+  idAssetVersion: Int
+  error: String
+}
+
+input DiscardUploadedAssetVersionsInput {
+  idAssetVersions: [Int!]!
+}
+
+type DiscardUploadedAssetVersionsResult {
+  success: Boolean!
 }
 
 input CreateCaptureDataInput {
@@ -842,7 +884,7 @@ type CreateCaptureDataPhotoResult {
 }
 
 input IngestSubject {
-  id: Int!
+  id: Int
   name: String!
   arkId: String!
   unit: String!
@@ -860,7 +902,6 @@ input IngestItem {
 }
 
 input IngestIdentifier {
-  id: Int
   identifier: String!
   identifierType: Int!
 }
@@ -870,7 +911,7 @@ input IngestFolder {
   variantType: Int!
 }
 
-input PhotogrammetryIngest {
+input IngestPhotogrammetry {
   idAssetVersion: Int!
   dateCaptured: String!
   datasetType: Int!
@@ -894,7 +935,7 @@ input IngestDataInput {
   subjects: [IngestSubject!]!
   project: IngestProject!
   item: IngestItem!
-  photogrammetry: [PhotogrammetryIngest!]!
+  photogrammetry: [IngestPhotogrammetry!]!
 }
 
 type IngestDataResult {

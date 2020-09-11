@@ -4,7 +4,7 @@ import {
     IngestItem,
     IngestProject,
     IngestSubject,
-    PhotogrammetryIngest,
+    IngestPhotogrammetry,
     IngestIdentifier,
     IngestFolder,
     Vocabulary,
@@ -122,7 +122,6 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                         const datasetType = getInitialEntryWithVocabularies(vocabularyMap, eVocabularySetID.eCaptureDataDatasetType) || 0;
 
                         const identifier: IngestIdentifier = {
-                            id: assetVersion.idAssetVersion,
                             identifier: 'ark:/65665/p2b-a6ae6ff4-89a5-44b3-9edc-09728f884076',
                             identifierType
                         };
@@ -154,7 +153,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         const { isUniform } = await graphQLApi.areCameraSettingsUniform(cameraSettingUniformInput);
 
-                        const photogrammetry: PhotogrammetryIngest = {
+                        const photogrammetry: IngestPhotogrammetry = {
                             idAssetVersion: assetVersion.idAssetVersion,
                             dateCaptured: new Date().toISOString(),
                             datasetType,
