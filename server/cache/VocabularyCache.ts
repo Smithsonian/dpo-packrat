@@ -46,6 +46,11 @@ export enum eVocabularyID {
     eAssetAssetTypeProjectDocumentation,
     eAssetAssetTypeIntermediaryFile,
     eAssetAssetTypeOther,
+    eCaptureDataCaptureMethodPhotogrammetry,
+    eCaptureDataCaptureMethodCT,
+    eCaptureDataCaptureMethodStructuredLight,
+    eCaptureDataCaptureMethodLaserLine,
+    eCaptureDataCaptureMethodSphericalLaser,
     eNone = -1
 }
 
@@ -142,6 +147,7 @@ export class VocabularyCache {
                         case 'Unit CMS ID': eVocabEnum = eVocabularyID.eIdentifierIdentifierTypeUnitCMSID; break;
                     }
                 } break;
+
                 case eVocabularySetID.eAssetAssetType: {
                     switch (vocabulary.Term) {
                         case 'Bulk Ingestion':                      eVocabEnum = eVocabularyID.eAssetAssetTypeBulkIngestion; break;
@@ -160,6 +166,16 @@ export class VocabularyCache {
                         case 'Project Documentation':               eVocabEnum = eVocabularyID.eAssetAssetTypeProjectDocumentation; break;
                         case 'Intermediary File':                   eVocabEnum = eVocabularyID.eAssetAssetTypeIntermediaryFile; break;
                         case 'Other':                               eVocabEnum = eVocabularyID.eAssetAssetTypeOther; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eCaptureDataCaptureMethod: {
+                    switch (vocabulary.Term) {
+                        case 'Photogrammetry':      eVocabEnum = eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry; break;
+                        case 'CT':                  eVocabEnum = eVocabularyID.eCaptureDataCaptureMethodCT; break;
+                        case 'Structured Light':    eVocabEnum = eVocabularyID.eCaptureDataCaptureMethodStructuredLight; break;
+                        case 'Laser Line':          eVocabEnum = eVocabularyID.eCaptureDataCaptureMethodLaserLine; break;
+                        case 'Spherical Laser':     eVocabEnum = eVocabularyID.eCaptureDataCaptureMethodSphericalLaser; break;
                     }
                 } break;
             }

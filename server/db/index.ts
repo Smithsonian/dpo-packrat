@@ -45,6 +45,7 @@ export * from './api/SystemObjectPairs';
 export * from './api/SystemObjectVersion';
 export * from './api/SystemObjectXref';
 export * from './api/Unit';
+export * from './api/UnitEdan';
 export * from './api/User';
 export * from './api/UserPersonalizationSystemObject';
 export * from './api/UserPersonalizationUrl';
