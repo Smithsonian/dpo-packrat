@@ -22,7 +22,7 @@ type ProjectDocumentation {
     Description: String!
     idProject: Int!
     Name: String!
-    Project: Project!
+    Project: Project
     SystemObject: SystemObject
 }
 

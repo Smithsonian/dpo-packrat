@@ -2,6 +2,7 @@ scalar Upload
 
 type Mutation {
     uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
+    discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
 }
 
 type UploadAssetInput {
@@ -16,4 +17,14 @@ enum UploadStatus {
 
 type UploadAssetResult {
     status: UploadStatus!
+    idAssetVersion: Int
+    error: String
+}
+
+input DiscardUploadedAssetVersionsInput {
+    idAssetVersions: [Int!]!
+}
+
+type DiscardUploadedAssetVersionsResult {
+    success: Boolean!
 }

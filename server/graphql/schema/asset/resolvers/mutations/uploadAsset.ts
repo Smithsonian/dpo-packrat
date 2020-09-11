@@ -19,25 +19,25 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
 
     if (!user) {
         LOG.logger.error('uploadAsset unable to retrieve user context');
-        return { status: UploadStatus.Failed };
+        return { status: UploadStatus.Failed, error: 'User not authenticated' };
     }
 
     const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
     if (!storage) {
         LOG.logger.error('uploadAsset unable to retrieve Storage Implementation from StorageFactory.getInstance()');
-        return { status: UploadStatus.Failed };
+        return { status: UploadStatus.Failed, error: 'Storage unavailable' };
     }
 
     const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
     if (WSResult.error || !WSResult.writeStream || !WSResult.storageKey) {
         LOG.logger.error(`uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`);
-        return { status: UploadStatus.Failed };
+        return { status: UploadStatus.Failed, error: 'Storage unavailable' };
     }
     const { writeStream, storageKey } = WSResult;
     const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(args.type);
     if (!vocabulary) {
         LOG.logger.error('uploadAsset unable to retrieve asset type vocabulary');
-        return { status: UploadStatus.Failed };
+        return { status: UploadStatus.Failed, error: 'Unable to retrieve asset type vocabulary' };
     }
 
     try {
@@ -64,21 +64,25 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
                 const commitResult: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
                 if (!commitResult.success) {
                     LOG.logger.error(`uploadAsset AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`);
-                    resolve({ status: UploadStatus.Failed });
+                    resolve({ status: UploadStatus.Failed, error: 'Storage failed to commit new asset' });
                 }
                 // commitResult.asset; commitResult.assetVersion; <-- These have been created
-                resolve({ status: UploadStatus.Complete });
+                const { assetVersion } = commitResult;
+                if (assetVersion) {
+                    const { idAssetVersion } = assetVersion;
+                    resolve({ status: UploadStatus.Complete, idAssetVersion });
+                }
             });
 
             stream.on('error', async () => {
                 await storage.discardWriteStream({ storageKey });
-                resolve({ status: UploadStatus.Failed });
+                resolve({ status: UploadStatus.Failed, error: 'Upload failed' });
             });
 
             // stream.on('close', async () => { });
         });
     } catch (error) {
         LOG.logger.error('uploadAsset', error);
-        return { status: UploadStatus.Failed };
+        return { status: UploadStatus.Failed, error: 'Upload failed' };
     }
 }

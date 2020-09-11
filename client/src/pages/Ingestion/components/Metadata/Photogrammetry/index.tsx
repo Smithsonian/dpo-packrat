@@ -191,7 +191,6 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-
             <Box marginBottom='10px'>
                 <FieldType required label='Asset Identifier(s)'>
                     <Box className={classes.assetIdentifier}>

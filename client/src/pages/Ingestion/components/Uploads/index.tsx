@@ -58,6 +58,7 @@ function Uploads(): React.ReactElement {
     const history = useHistory();
     const [loadingVocabulary, setLoadingVocabulary] = useState(true);
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
+    const [discardingFiles, setDiscardingFiles] = useState(false);
     const { ingestion: { uploads } } = useContext(AppContext);
     const { updateMetadataSteps, discardFiles } = useFilesUpload();
     const { updateVocabularyEntries } = useVocabularyEntries();
@@ -95,11 +96,14 @@ function Uploads(): React.ReactElement {
         }
     };
 
-    const onDiscard = () => {
+    const onDiscard = async () => {
         if (uploads.files.length) {
-            const isConfirmed = global.confirm('Do you want to discard current items?');
-            if (isConfirmed) {
-                discardFiles();
+            try {
+                setDiscardingFiles(true);
+                await discardFiles();
+                setDiscardingFiles(false);
+            } catch {
+                setDiscardingFiles(false);
             }
         }
     };
@@ -124,6 +128,7 @@ function Uploads(): React.ReactElement {
                 <SidebarBottomNavigator
                     leftLabel='Discard'
                     rightLabel='Ingest'
+                    leftLoading={discardingFiles}
                     rightLoading={gettingAssetDetails}
                     onClickLeft={onDiscard}
                     onClickRight={onIngest}
