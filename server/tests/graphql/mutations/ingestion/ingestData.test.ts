@@ -123,7 +123,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         const identifier: IngestIdentifier = {
                             id: assetVersion.idAssetVersion,
-                            identifier: 'custom-identifier',
+                            identifier: 'ark:/65665/p2b-a6ae6ff4-89a5-44b3-9edc-09728f884076',
                             identifierType
                         };
 

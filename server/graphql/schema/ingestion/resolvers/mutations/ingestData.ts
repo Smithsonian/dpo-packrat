@@ -2,6 +2,7 @@ import { IngestDataResult, MutationIngestDataArgs, IngestSubject, IngestItem, Ph
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
+import * as COL from '../../../../../collections/interface';
 import * as LOG from '../../../../../utils/logger';
 import { AssetStorageAdapter, AssetStorageResult, OperationInfo } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
@@ -75,45 +76,85 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     return { success: true };
 }
 
-async function createIdentifier(arkId: string): Promise<DBAPI.Identifier | null> {
-    const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eIdentifierIdentifierTypeARK);
-    if (!vocabulary) {
-        LOG.logger.error('GraphQL ingestData unable to fetch vocabulary for ARK Identifiers');
-        return null;
+let vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
+async function getVocabularyARK(): Promise<DBAPI.Vocabulary | undefined> {
+    if (!vocabularyARK) {
+        vocabularyARK = await VocabularyCache.vocabularyByEnum(eVocabularyID.eIdentifierIdentifierTypeARK);
+        if (!vocabularyARK) {
+            LOG.logger.error('GraphQL ingestData unable to fetch vocabulary for ARK Identifiers');
+            return undefined;
+        }
+    }
+    return vocabularyARK;
+}
+
+/**  */
+async function createIdentifier(identifierValue: string, SO: DBAPI.SystemObject | null, idVIdentifierType: number | null): Promise<DBAPI.Identifier | null> {
+    if (!idVIdentifierType) {
+        const vocabularyARK: DBAPI.Vocabulary | undefined = await getVocabularyARK();
+        if (!vocabularyARK)
+            return null;
+        idVIdentifierType = vocabularyARK.idVocabulary;
     }
 
     const identifier: DBAPI.Identifier = new DBAPI.Identifier({
-        IdentifierValue: arkId,
-        idVIdentifierType: vocabulary.idVocabulary,
-        idSystemObject: null,
+        IdentifierValue: identifierValue,
+        idVIdentifierType,
+        idSystemObject: SO ? SO.idSystemObject : null,
         idIdentifier: 0
     });
 
     if (!await identifier.create()) {
-        LOG.logger.error(`GraphQL ingestData unable to create identifier record for subject's arkId ${arkId}`);
+        LOG.logger.error(`GraphQL ingestData unable to create identifier record for subject's arkId ${identifierValue}`);
         return null;
     }
     return identifier;
 }
 
-async function createIdentifierForObject(identifier: IngestIdentifier, SOBased: DBAPI.SystemObjectBased): Promise<boolean> {
+async function createIdentifierForObject(identifier: IngestIdentifier | null, SOBased: DBAPI.SystemObjectBased): Promise<boolean> {
     const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
     if (!SO) {
         LOG.logger.error(`GraphQL ingestData unable to fetch system object from ${JSON.stringify(SOBased)}`);
         return false;
     }
 
-    // identifier.id; // null means create one? TODO: circle back on when we create identifiers ... not sure what the ID would mean if non-zero!
-    const identifierDB: DBAPI.Identifier = new DBAPI.Identifier({
-        IdentifierValue: identifier.identifier ? identifier.identifier : 'DPO ID', // TODO: replace with GUID created appropriately for us
-        idVIdentifierType: identifier.identifierType,
-        idSystemObject: SO.idSystemObject,
-        idIdentifier: 0
-    });
+    const ICOL: COL.ICollection = COL.CollectionFactory.getInstance();
 
-    if (!await identifierDB.create()) {
-        LOG.logger.error(`GraphQL ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`);
-        return false;
+    if (!identifier) {
+        // create system identifier when needed
+        const arkId: string = ICOL.generateArk(null, false);
+        const identifierSystemDB: DBAPI.Identifier | null = await createIdentifier(arkId, SO, null);
+        if (!identifierSystemDB) {
+            LOG.logger.error(`GraphQL ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`);
+            return false;
+        } else
+            return true;
+    } else {
+        // use identifier provided by use
+
+        // compute identifier; for ARKs, extract the ID from a URL that may be housing the ARK ID
+        const vocabularyARK: DBAPI.Vocabulary | undefined = await getVocabularyARK();
+        if (!vocabularyARK)
+            return false;
+        let IdentifierValue: string;
+        if (identifier.identifierType == vocabularyARK.idVocabulary) {
+            const arkId: string | null = ICOL.extractArkFromUrl(identifier.identifier);
+            if (!arkId) {
+                LOG.logger.error(`GraphQL ingestData asked to create an ark indentifier with invalid ark ${identifier.identifier} no value for ${JSON.stringify(SOBased)}`);
+                return false;
+            } else
+                IdentifierValue = arkId;
+        } else
+            IdentifierValue = identifier.identifier;
+
+        if (!IdentifierValue) {
+            LOG.logger.error(`GraphQL ingestData asked to create an indentifier with no value for ${JSON.stringify(SOBased)}`);
+            return false;
+        }
+
+        const identifierDB: DBAPI.Identifier | null = await createIdentifier(IdentifierValue, SO, identifier.identifierType);
+        if (!identifierDB)
+            return false;
     }
     return true;
 }
@@ -197,7 +238,7 @@ async function createSubjectAndRelated(subject: IngestSubject, unitEdanDB: DBAPI
     // create identifier
     let identifier: DBAPI.Identifier | null = null;
     if (subject.arkId) {
-        identifier = await createIdentifier(subject.arkId);
+        identifier = await createIdentifier(subject.arkId, null, null);
         if (!identifier)
             return null;
     }
@@ -310,8 +351,12 @@ async function createPhotogrammetryObjects(photogrammetry: PhotogrammetryIngest,
         return false;
     }
 
-    // TODO: create CaptureDataFile objects
-    // TODO: deal with zips and bulk ingest, in which we may want to split the uploaded asset into mutiple assets
+    if (photogrammetry.systemCreated) {
+        if (!await createIdentifierForObject(null, captureDataDB)) {
+            LOG.logger.error(`GraphQL ingestData unable to create identifier for photogrammetry data ${JSON.stringify(photogrammetry)}`);
+            return false;
+        }
+    }
 
     if (photogrammetry.identifiers && photogrammetry.identifiers.length > 0) {
         for (const identifier of photogrammetry.identifiers) {
@@ -322,6 +367,8 @@ async function createPhotogrammetryObjects(photogrammetry: PhotogrammetryIngest,
         }
     }
 
+    // TODO: deal with zips and bulk ingest, in which we may want to split the uploaded asset into mutiple assets
+    // TODO: create CaptureDataFile objects
     if (photogrammetry.idAssetVersion)
         assetVersionMap.set(photogrammetry.idAssetVersion, captureDataDB);
     return true;
