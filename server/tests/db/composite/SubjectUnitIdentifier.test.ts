@@ -46,7 +46,7 @@ function executeQuery(query: string, expectNull: boolean, expectResults: boolean
 function executeQueryCollection(ICollection: COL.ICollection, query: string, expectNull: boolean, expectResults: boolean): void {
     test(`DB Composite SubjectUnitIdentifier.fetch and ICollection.queryCollection '${query}'`, async () => {
         let resultsDB: DBAPI.SubjectUnitIdentifier[] | null = await DBAPI.SubjectUnitIdentifier.fetch(query, 10);
-        const resultsCOL: COL.CollectionQueryResults | null = await ICollection.queryCollection(query, 10, 0);
+        const resultsCOL: COL.CollectionQueryResults | null = await ICollection.queryCollection(query, 10, 0, null);
 
         // Combine Results
         if (!resultsDB)
