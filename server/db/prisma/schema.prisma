@@ -625,6 +625,17 @@ model Unit {
   Actor        Actor[]
   Subject      Subject[]
   SystemObject SystemObject?
+  UnitEdan     UnitEdan[]
+}
+
+model UnitEdan {
+  idUnitEdan   Int    @default(autoincrement()) @id
+  idUnit       Int?
+  Abbreviation String @unique
+  Unit         Unit?  @relation(fields: [idUnit], references: [idUnit])
+
+  @@index([Abbreviation], name: "UnitEdan_Abbreviation")
+  @@index([idUnit], name: "fk_unitedan_idunit")
 }
 
 model User {

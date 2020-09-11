@@ -12,6 +12,7 @@ export * from './Stakeholder.util';
 export * from './Subject.util';
 export * from './SystemObjectXref.util';
 export * from './Unit.util';
+export * from './UnitEdan.util';
 export * from './User.util';
 export * from './Workflow.util';
 export * from './WorkflowStep.util';
