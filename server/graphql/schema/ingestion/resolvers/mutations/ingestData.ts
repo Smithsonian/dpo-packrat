@@ -1,4 +1,4 @@
-import { IngestDataResult, MutationIngestDataArgs, IngestSubject, IngestItem, PhotogrammetryIngest, IngestIdentifier, User } from '../../../../../types/graphql';
+import { IngestDataResult, MutationIngestDataArgs, IngestSubject, IngestItem, IngestPhotogrammetry, IngestIdentifier, User } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
@@ -215,7 +215,7 @@ async function updateIdentifier(identifier: DBAPI.Identifier | null, subjectDB: 
 
 async function validateExistingSubject(subject: IngestSubject, unitEdanDB: DBAPI.UnitEdan | null): Promise<DBAPI.Subject | null> {
     // if this subject exists, validate it
-    const subjectDB: DBAPI.Subject | null = await DBAPI.Subject.fetch(subject.id);
+    const subjectDB: DBAPI.Subject | null = subject.id ? await DBAPI.Subject.fetch(subject.id) : null;
     if (!subjectDB) {
         LOG.logger.error(`GraphQL ingestData called with invalid subject ${subject.id}`);
         return null;
@@ -309,7 +309,7 @@ async function wireSubjectsToItem(subjectsDB: DBAPI.Subject[], itemDB: DBAPI.Ite
 }
 
 // map from idAsetVersion -> object that "owns" the asset
-async function createPhotogrammetryObjects(photogrammetry: PhotogrammetryIngest,
+async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
     assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
 
     const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry);
