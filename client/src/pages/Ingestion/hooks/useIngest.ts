@@ -3,7 +3,7 @@ import { AppContext, StateItem, StateProject, StateIdentifier, defaultItem, Inge
 import useItem from './useItem';
 import useProject from './useProject';
 import useMetadata from './useMetadata';
-import { IngestDataMutation, IngestIdentifier, IngestFolder, PhotogrammetryIngest, IngestDataDocument } from '../../../types/graphql';
+import { IngestDataMutation, IngestIdentifier, IngestFolder, IngestPhotogrammetry, IngestDataDocument, IngestSubject } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql';
 import lodash from 'lodash';
 import { FetchResult } from '@apollo/client';
@@ -31,7 +31,13 @@ function useIngest(): UseIngest {
     const ingestPhotogrammetryData = async (): Promise<boolean> => {
         let ingestProject = {};
         let ingestItem = {};
-        const photogrammetryIngest: PhotogrammetryIngest[] = [];
+
+        const ingestPhotogrammetry: IngestPhotogrammetry[] = [];
+
+        const ingestSubjects: IngestSubject[] = subjects.map(subject => ({
+            ...subject,
+            id: subject.id || null
+        }));
 
         const project: StateProject | undefined = getSelectedProject();
 
@@ -64,7 +70,7 @@ function useIngest(): UseIngest {
         }
 
         lodash.forEach(metadatas, metadata => {
-            const { photogrammetry } = metadata;
+            const { file, photogrammetry } = metadata;
             const {
                 dateCaptured,
                 datasetType,
@@ -92,8 +98,7 @@ function useIngest(): UseIngest {
                         throw Error('Identifer type is null');
                     }
 
-                    const identifierData = {
-                        id: null,
+                    const identifierData: IngestIdentifier = {
                         identifier,
                         identifierType
                     };
@@ -122,7 +127,7 @@ function useIngest(): UseIngest {
             }
 
             const photogrammetryData = {
-                idAssetVersion: 0, // TODO: KARAN: replace index with fileId this afterwards
+                idAssetVersion: Number.parseInt(file.id, 10),
                 dateCaptured: dateCaptured.toISOString(),
                 datasetType,
                 systemCreated,
@@ -141,15 +146,15 @@ function useIngest(): UseIngest {
                 clusterGeometryFieldId
             };
 
-            photogrammetryIngest.push(photogrammetryData);
+            ingestPhotogrammetry.push(photogrammetryData);
         });
 
         const variables = {
             input: {
-                subjects,
+                subjects: ingestSubjects,
                 project: ingestProject,
                 item: ingestItem,
-                photogrammetry: photogrammetryIngest
+                photogrammetry: ingestPhotogrammetry
             }
         };
 

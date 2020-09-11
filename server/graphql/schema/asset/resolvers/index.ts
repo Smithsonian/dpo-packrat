@@ -6,6 +6,7 @@ import uploadAsset from './mutations/uploadAsset';
 import getUploadedAssetVersion from './queries/getUploadedAssetVersion';
 import getContentsForAssetVersions from './queries/getContentsForAssetVersions';
 import getAssetVersionsDetails from './queries/getAssetVersionsDetails';
+import discardUploadedAssetVersions from './mutations/discardUploadedAssetVersions';
 
 const resolvers = {
     Query: {
@@ -15,7 +16,8 @@ const resolvers = {
         getAssetVersionsDetails
     },
     Mutation: {
-        uploadAsset
+        uploadAsset,
+        discardUploadedAssetVersions
     },
     Asset,
     AssetGroup,

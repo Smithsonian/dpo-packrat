@@ -80,7 +80,15 @@ import {
     GetItemsForSubjectInput,
     GetItemsForSubjectResult,
     GetAssetVersionsDetailsInput,
-    GetAssetVersionsDetailsResult
+    GetAssetVersionsDetailsResult,
+    GetObjectsForItemInput,
+    GetObjectsForItemResult,
+    GetProjectDocumentationInput,
+    GetProjectDocumentationResult,
+    GetIntermediaryFileInput,
+    GetIntermediaryFileResult,
+    DiscardUploadedAssetVersionsInput,
+    DiscardUploadedAssetVersionsResult
 } from '../../types/graphql';
 
 // Queries
@@ -109,6 +117,9 @@ import areCameraSettingsUniform from './queries/ingestion/areCameraSettingsUnifo
 import getSubjectsForUnit from './queries/unit/getSubjectsForUnit';
 import getItemsForSubject from './queries/unit/getItemsForSubject';
 import getAssetVersionsDetails from './queries/asset/getAssetVersionsDetails';
+import getObjectsForItem from './queries/unit/getObjectsForItem';
+import getProjectDocumentation from './queries/unit/getProjectDocumentation';
+import getIntermediaryFile from './queries/scene/getIntermediaryFile';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -124,6 +135,7 @@ import createVocabulary from './mutations/vocabulary/createVocabulary';
 import createVocabularySet from './mutations/vocabulary/createVocabularySet';
 import uploadAsset from './mutations/asset/uploadAsset';
 import ingestData from './mutations/ingestion/ingestData';
+import discardUploadedAssetVersions from './mutations/asset/discardUploadedAssetVersions';
 
 import { Context } from '../../types/resolvers';
 
@@ -165,7 +177,11 @@ const allQueries = {
     ingestData,
     getSubjectsForUnit,
     getItemsForSubject,
-    getAssetVersionsDetails
+    getAssetVersionsDetails,
+    getObjectsForItem,
+    getProjectDocumentation,
+    getIntermediaryFile,
+    discardUploadedAssetVersions
 };
 
 type GraphQLRequest = {
@@ -436,8 +452,48 @@ class GraphQLApi {
         });
     }
 
+    async getObjectsForItem(input: GetObjectsForItemInput, context?: Context): Promise<GetObjectsForItemResult> {
+        const operationName = 'getObjectsForItem';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getProjectDocumentation(input: GetProjectDocumentationInput, context?: Context): Promise<GetProjectDocumentationResult> {
+        const operationName = 'getProjectDocumentation';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getIntermediaryFile(input: GetIntermediaryFileInput, context?: Context): Promise<GetIntermediaryFileResult> {
+        const operationName = 'getIntermediaryFile';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
     async getUnit(input: GetUnitInput, context?: Context): Promise<GetUnitResult> {
         const operationName = 'getUnit';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput, context?: Context): Promise<DiscardUploadedAssetVersionsResult> {
+        const operationName = 'discardUploadedAssetVersions';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
