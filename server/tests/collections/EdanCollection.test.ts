@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as fs from 'fs-extra';
 import * as COL from '../../collections/interface/';
 import * as LOG from '../../utils/logger';
@@ -12,27 +13,49 @@ const SCRAPE_EDAN: boolean = false;
 
 describe('Collections: EdanCollection', () => {
     jest.setTimeout(30000);
-    const ICollection: COL.ICollection = COL.CollectionFactory.getInstance();
+    const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
 
     if (!SCRAPE_EDAN) {
-        executeTestQuery(ICollection, 'Armstrong Space Suit', false);
-        executeTestQuery(ICollection, 'A19730040000', false);
-        executeTestQuery(ICollection, 'edanmdm:nasm_A19730040000', false);
-        executeTestQuery(ICollection, 'http://n2t.net/ark:/65665/nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
-        executeTestQuery(ICollection, '', false);
-        executeTestQuery(ICollection, 'jimmybobimmy', true);
-        executeTestQuery(ICollection, '<WHACKADOODLE>', true);
-        executeTestQuery(ICollection, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
+        executeTestQuery(ICol, 'Armstrong Space Suit', false);
+        executeTestQuery(ICol, 'A19730040000', false);
+        executeTestQuery(ICol, 'edanmdm:nasm_A19730040000', false);
+        executeTestQuery(ICol, 'http://n2t.net/ark:/65665/nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
+        executeTestQuery(ICol, '', false);
+        executeTestQuery(ICol, 'jimmybobimmy', true);
+        executeTestQuery(ICol, '<WHACKADOODLE>', true);
+        executeTestQuery(ICol, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false);
+
+        // custom search options:
+        executeTestQuery(ICol, 'Armstrong Space Suit', false, false, '3d_package');
+        executeTestQuery(ICol, 'A19730040000', false, true, '3d_package');
+        executeTestQuery(ICol, 'edanmdm:nasm_A19730040000', false, false, '');
+        executeTestQuery(ICol, 'http://n2t.net/ark:/65665/nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false, true, '');
+        executeTestQuery(ICol, '', false, false, '3d_package');
+        executeTestQuery(ICol, 'jimmybobimmy', true, false, '3d_package');
+        executeTestQuery(ICol, '<WHACKADOODLE>', true, false, '3d_package');
+        executeTestQuery(ICol, 'nv93248f8ce-b6c4-474d-aac7-88252a2daf73', false, false, '3d_package');
+
+        test('Collections: EdanCollection Ark Tests', () => {
+            executeArkTests(ICol);
+        });
     } else {
         test('Collections: EdanCollection.scrape', async () => {
-            await executeScrapeQuery(ICollection, 'd:\\Work\\SI\\EdanScrape.txt', 12000000);
+            await executeScrapeQuery(ICol, 'd:\\Work\\SI\\EdanScrape.txt', 0);
         });
     }
 });
 
-function executeTestQuery(ICollection: COL.ICollection, query: string, expectNoResults: boolean): void {
+function executeTestQuery(ICol: COL.ICollection, query: string, expectNoResults: boolean,
+    searchCollections: boolean = true, edanRecordType: string = ''): void {
     test('Collections: EdanCollection.queryCollection ' + query, async () => {
-        const results: COL.CollectionQueryResults | null = await ICollection.queryCollection(query, 10, 0);
+        let options: any = null;
+        if (!searchCollections || edanRecordType)
+            options = {
+                searchMetadata: !searchCollections,
+                recordType: edanRecordType
+            };
+
+        const results: COL.CollectionQueryResults | null = await ICol.queryCollection(query, 10, 0, options);
 
         expect(results).toBeTruthy();
         if (results) {
@@ -52,7 +75,7 @@ const EDAN_SCRAPE_MAX_INIT: number = 14000000;
 const EDAN_QUERY_MAX_ROWS: number = 100;
 const EDAN_SIMUL: number = 4; // set to a higher number only with permission from OCIO, as even a moderate load seems to cause alarm!
 
-export async function executeScrapeQuery(ICollection: COL.ICollection, fileName: string, rowStart: number): Promise<void> {
+export async function executeScrapeQuery(ICol: COL.ICollection, fileName: string, rowStart: number): Promise<void> {
     jest.setTimeout(1000 * 60 * 60 * 24 * 7);   // 1 week
 
     let scrapeEndRecord: number = EDAN_SCRAPE_MAX_INIT;
@@ -67,7 +90,7 @@ export async function executeScrapeQuery(ICollection: COL.ICollection, fileName:
         // run EDAN_SIMUL requests at once:
         const promiseArray: Promise<COL.CollectionQueryResults | null>[] = [];
         for (let simulReq: number = 0; simulReq < EDAN_SIMUL && rowStart < scrapeEndRecord; simulReq++) {
-            promiseArray.push(ICollection.queryCollection('*.*', EDAN_QUERY_MAX_ROWS, rowStart));
+            promiseArray.push(ICol.queryCollection('*.*', EDAN_QUERY_MAX_ROWS, rowStart, null));
             rowStart += EDAN_QUERY_MAX_ROWS;
         }
 
@@ -113,4 +136,56 @@ function logUnitMap(unitMap: Map<string, number>, queryNumber: number, resultCou
     logArray.push('\n');
 
     LOG.logger.info(logArray.join('\n'));
+}
+
+function executeArkTests(ICol: COL.ICollection) {
+    const customShoulder: string = 'custom';
+    const ArkNameMappingAuthority: string = ICol.getArkNameMappingAuthority();
+    const ArkNameAssigningAuthority: string = ICol.getArkNameAssigningAuthority();
+
+    const ArkDefaultShoulderNoPrepend: string = ICol.generateArk(null, false);
+    const ArkDefaultShoulderPrepend: string = ICol.generateArk(null, true);
+    const ArkCustomShoulderNoPrepend: string = ICol.generateArk(customShoulder, false);
+    const ArkCustomShoulderPrepend: string = ICol.generateArk(customShoulder, true);
+    const ArkInvalid: string = H.Helpers.randomSlug();
+
+    expect(ArkDefaultShoulderNoPrepend.startsWith(ArkNameMappingAuthority)).toBeFalsy();
+    expect(ArkDefaultShoulderPrepend.startsWith(ArkNameMappingAuthority)).toBeTruthy();
+    expect(ArkCustomShoulderNoPrepend.startsWith(ArkNameMappingAuthority)).toBeFalsy();
+    expect(ArkCustomShoulderPrepend.startsWith(ArkNameMappingAuthority)).toBeTruthy();
+
+    expect(ArkDefaultShoulderNoPrepend.includes(customShoulder)).toBeFalsy();
+    expect(ArkDefaultShoulderPrepend.includes(customShoulder)).toBeFalsy();
+    expect(ArkCustomShoulderNoPrepend.includes(customShoulder)).toBeTruthy();
+    expect(ArkCustomShoulderPrepend.includes(customShoulder)).toBeTruthy();
+
+    expect(ArkDefaultShoulderNoPrepend.includes(ArkNameAssigningAuthority)).toBeTruthy();
+    expect(ArkDefaultShoulderPrepend.includes(ArkNameAssigningAuthority)).toBeTruthy();
+    expect(ArkCustomShoulderNoPrepend.includes(ArkNameAssigningAuthority)).toBeTruthy();
+    expect(ArkCustomShoulderPrepend.includes(ArkNameAssigningAuthority)).toBeTruthy();
+
+    const ArkDefaultShoulderNoPrependExtract: string | null = ICol.extractArkFromUrl(ArkDefaultShoulderNoPrepend);
+    const ArkDefaultShoulderPrependExtract: string | null = ICol.extractArkFromUrl(ArkDefaultShoulderPrepend);
+    const ArkCustomShoulderNoPrependExtract: string | null = ICol.extractArkFromUrl(ArkCustomShoulderNoPrepend);
+    const ArkCustomShoulderPrependExtract: string | null = ICol.extractArkFromUrl(ArkCustomShoulderPrepend);
+    const ArkInvalidExtract: string | null = ICol.extractArkFromUrl(ArkInvalid);
+
+    expect(ArkDefaultShoulderNoPrependExtract && ArkDefaultShoulderNoPrependExtract.startsWith('ark:')).toBeTruthy();
+    expect(ArkDefaultShoulderPrependExtract && ArkDefaultShoulderPrependExtract.startsWith('ark:')).toBeTruthy();
+    expect(ArkCustomShoulderNoPrependExtract && ArkCustomShoulderNoPrependExtract.startsWith('ark:')).toBeTruthy();
+    expect(ArkCustomShoulderPrependExtract && ArkCustomShoulderPrependExtract.startsWith('ark:')).toBeTruthy();
+    expect(ArkInvalidExtract).toBeFalsy();
+
+    const ArkDefaultShoulderNoPrependUrl: string = ICol.transformArkIntoUrl(ArkDefaultShoulderNoPrependExtract ? ArkDefaultShoulderNoPrependExtract : '');
+    const ArkDefaultShoulderPrependUrl: string = ICol.transformArkIntoUrl(ArkDefaultShoulderPrependExtract ? ArkDefaultShoulderPrependExtract : '');
+    const ArkCustomShoulderNoPrependUrl: string = ICol.transformArkIntoUrl(ArkCustomShoulderNoPrependExtract ? ArkCustomShoulderNoPrependExtract : '');
+    const ArkCustomShoulderPrependUrl: string = ICol.transformArkIntoUrl(ArkCustomShoulderPrependExtract ? ArkCustomShoulderPrependExtract : '');
+
+    expect(ArkDefaultShoulderNoPrependUrl.startsWith(ArkNameMappingAuthority)).toBeTruthy();
+    expect(ArkDefaultShoulderPrependUrl.startsWith(ArkNameMappingAuthority)).toBeTruthy();
+    expect(ArkCustomShoulderNoPrependUrl.startsWith(ArkNameMappingAuthority)).toBeTruthy();
+    expect(ArkCustomShoulderPrependUrl.startsWith(ArkNameMappingAuthority)).toBeTruthy();
+
+    expect(ArkDefaultShoulderPrependUrl).toEqual(ArkDefaultShoulderPrepend);
+    expect(ArkCustomShoulderPrependUrl).toEqual(ArkCustomShoulderPrepend);
 }
