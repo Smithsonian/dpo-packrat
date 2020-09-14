@@ -123,6 +123,25 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         }
     }
 
+    async delete(): Promise<boolean> {
+        const { idAssetVersion } = this;
+        if (!idAssetVersion)
+            return false;
+        try {
+            const delSysObj: SystemObjectBase | null = await DBC.DBConnection.prisma.systemObject.delete({ where: { idAssetVersion, }, }); /* istanbul ignore next */
+            if (!delSysObj) {
+                LOG.logger.error(`DBAPI.AssetVersion.delete unable to delete system object related to ${JSON.stringify(this)}`);
+                return false;
+            }
+
+            const delAV: AssetVersionBase | null = await DBC.DBConnection.prisma.assetVersion.delete({ where: { idAssetVersion, }, });
+            return (delAV != null);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.AssetVersion.delete', error);
+            return false;
+        }
+    }
+
     static async fetch(idAssetVersion: number): Promise<AssetVersion | null> {
         if (!idAssetVersion)
             return null;
