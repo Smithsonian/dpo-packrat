@@ -9,7 +9,7 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
 
     const ICollection: COL.ICollection = COL.CollectionFactory.getInstance();
     let resultsDB: DBAPI.SubjectUnitIdentifier[] | null = await DBAPI.SubjectUnitIdentifier.fetch(query, 10);
-    const resultsCOL: COL.CollectionQueryResults | null = await ICollection.queryCollection(query, 10, 0);
+    const resultsCOL: COL.CollectionQueryResults | null = await ICollection.queryCollection(query, 10, 0, null);
 
     if (!resultsDB) resultsDB = [];
 
