@@ -139,6 +139,14 @@ describe('AssetStorageAdapter Methods', () => {
         await testReinstateAsset(TestCase1, 4, true);
         await testReadAsset(TestCase1, true);
     });
+
+    test('AssetStorageAdapter.discardAssetVersion', async() => {
+        const TestCase2 = await testCommitNewAsset(null, 15000, OHTS.captureData1);
+        await testDiscardAssetVersion(TestCase2, true);  // first time should succeed
+        await testDiscardAssetVersion(TestCase2, false); // second time should fail
+
+        await testDiscardAssetVersion(TestCase1, false); // discard of ingested asset should fail
+    });
 });
 
 describe('AssetStorageAdapter Failures', () => {
@@ -291,7 +299,7 @@ async function testReadAsset(TestCase: AssetStorageAdapterTestCase, expectSucces
     return true;
 }
 
-async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: true): Promise<boolean> {
+async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
     expect(TestCase.SOBased).toBeTruthy();
     if (!TestCase.SOBased)
         return false;
@@ -310,7 +318,7 @@ async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
     return true;
 }
 
-async function testRenameAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: true): Promise<boolean> {
+async function testRenameAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
     expect(TestCase.SOBased).toBeTruthy();
     if (!TestCase.SOBased)
         return false;
@@ -335,7 +343,7 @@ async function testRenameAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
     return true;
 }
 
-async function testHideAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: true): Promise<boolean> {
+async function testHideAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
     expect(TestCase.SOBased).toBeTruthy();
     if (!TestCase.SOBased)
         return false;
@@ -363,7 +371,7 @@ async function testHideAsset(TestCase: AssetStorageAdapterTestCase, expectSucces
     return true;
 }
 
-async function testReinstateAsset(TestCase: AssetStorageAdapterTestCase, version: number, expectSuccess: true): Promise<boolean> {
+async function testReinstateAsset(TestCase: AssetStorageAdapterTestCase, version: number, expectSuccess: boolean): Promise<boolean> {
     expect(TestCase.SOBased).toBeTruthy();
     if (!TestCase.SOBased)
         return false;
@@ -447,3 +455,19 @@ async function testGetAssetVersionContents(TestCase: AssetStorageAdapterTestCase
     expect(AVC.folders).toEqual(expect.arrayContaining(expectedDirs));
     expect(expectedDirs).toEqual(expect.arrayContaining(AVC.folders));
 }
+
+async function testDiscardAssetVersion(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+    const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(TestCase.assetVersion);
+
+    if (!ASR.success && expectSuccess)
+        LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion: ${ASR.error}`);
+    expect(ASR.success).toEqual(expectSuccess);
+    if (!ASR.success)
+        return !expectSuccess;
+
+    expect(ASR.assetVersion).toBeFalsy();
+    expect(await DBAPI.AssetVersion.fetch(TestCase.assetVersion.idAssetVersion)).toBeFalsy();
+    return true;
+}
+

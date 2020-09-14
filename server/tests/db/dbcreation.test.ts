@@ -4013,6 +4013,44 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Creation: AssetVersion.delete', async () => {
+        let assetVersion3: DBAPI.AssetVersion | null = null;
+        if (assetThumbnail && user) {
+            assetVersion3 = await UTIL.createAssetVersionTest({
+                idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FileName,
+                idUserCreator: user.idUser,
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum',
+                StorageSize: 50,
+                StorageKeyStaging: '',
+                Ingested: true,
+                idAssetVersion: 0
+            });
+
+            const idAssetVersion: number = assetVersion3.idAssetVersion;
+            expect(idAssetVersion).toBeTruthy();
+
+            // First delete should work
+            expect(await assetVersion3.delete()).toBeTruthy();
+
+            // Fetch of deleted object should find nothing
+            const assetVersionFetch: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
+            expect(assetVersionFetch).toBeFalsy();
+
+            // Second delete should fail
+            LOG.logger.info('IGNORE the next error from prisma! It is expected');
+            expect(await assetVersion3.delete()).toBeFalsy();
+
+            // Final delete with empty ID should fail
+            assetVersion3.idAssetVersion = 0;
+            expect(await assetVersion3.delete()).toBeFalsy();
+        }
+        expect(assetVersion3).toBeTruthy();
+    });
+
+
     test('DB Update: CaptureData.update', async () => {
         let bUpdated: boolean = false;
         if (captureData && assetWithoutAG) {
