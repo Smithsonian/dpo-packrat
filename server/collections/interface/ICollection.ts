@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type CollectionQueryResultRecord = {
     name: string;
     unit: string;
@@ -12,5 +13,13 @@ export type CollectionQueryResults = {
 };
 
 export interface ICollection {
-    queryCollection(query: string, rows: number, start: number): Promise<CollectionQueryResults | null>;
+    queryCollection(query: string, rows: number, start: number, options: any): Promise<CollectionQueryResults | null>;
+
+    /** Identifier services */
+    /** Pass in a null shoulder to use the system shoulder */
+    generateArk(shoulder: string | null, prependNameAuthority: boolean): string;
+    extractArkFromUrl(url: string): string | null;
+    transformArkIntoUrl(arkId: string): string
+    getArkNameMappingAuthority(): string;
+    getArkNameAssigningAuthority(): string;
 }

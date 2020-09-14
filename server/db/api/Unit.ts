@@ -58,7 +58,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findOne({ where: { idUnit, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.unit.fetchSystemObject', error);
+            LOG.logger.error('DBAPI.Unit.fetchSystemObject', error);
             return null;
         }
     }
@@ -94,7 +94,19 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectDerived = SOP.idSystemObject)
                 WHERE SOP.idProject IN (${join(idProjects)})`, Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchMasterFromProjects', error);
+            LOG.logger.error('DBAPI.Unit.fetchMasterFromProjects', error);
+            return null;
+        }
+    }
+
+    static async fetchFromUnitEdanAbbreviation(Abbreviation: string): Promise<Unit[] | null> {
+        if (!Abbreviation)
+            return null;
+        try {
+            return DBC.CopyArray<UnitBase, Unit>(
+                await DBC.DBConnection.prisma.unit.findMany({ where: { UnitEdan: { some: { Abbreviation }, }, }, }), Unit);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Unit.fetchFromUnitEdanAbbreviation', error);
             return null;
         }
     }
