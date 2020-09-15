@@ -88,7 +88,9 @@ import {
     GetIntermediaryFileInput,
     GetIntermediaryFileResult,
     DiscardUploadedAssetVersionsInput,
-    DiscardUploadedAssetVersionsResult
+    DiscardUploadedAssetVersionsResult,
+    GetBagitAssetsDetailsInput,
+    GetBagitAssetsDetailsResult
 } from '../../types/graphql';
 
 // Queries
@@ -120,6 +122,7 @@ import getAssetVersionsDetails from './queries/asset/getAssetVersionsDetails';
 import getObjectsForItem from './queries/unit/getObjectsForItem';
 import getProjectDocumentation from './queries/unit/getProjectDocumentation';
 import getIntermediaryFile from './queries/scene/getIntermediaryFile';
+import getBagitAssetsDetails from './queries/asset/getAssetVersionsDetails';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -181,7 +184,8 @@ const allQueries = {
     getObjectsForItem,
     getProjectDocumentation,
     getIntermediaryFile,
-    discardUploadedAssetVersions
+    discardUploadedAssetVersions,
+    getBagitAssetsDetails
 };
 
 type GraphQLRequest = {
@@ -494,6 +498,16 @@ class GraphQLApi {
 
     async discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput, context?: Context): Promise<DiscardUploadedAssetVersionsResult> {
         const operationName = 'discardUploadedAssetVersions';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getBagitAssetsDetails(input: GetBagitAssetsDetailsInput, context?: Context): Promise<GetBagitAssetsDetailsResult> {
+        const operationName = 'getBagitAssetsDetails';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

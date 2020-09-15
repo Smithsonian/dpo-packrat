@@ -7,13 +7,15 @@ import getUploadedAssetVersion from './queries/getUploadedAssetVersion';
 import getContentsForAssetVersions from './queries/getContentsForAssetVersions';
 import getAssetVersionsDetails from './queries/getAssetVersionsDetails';
 import discardUploadedAssetVersions from './mutations/discardUploadedAssetVersions';
+import getBagitAssetsDetails from './queries/getBagitAssetsDetails';
 
 const resolvers = {
     Query: {
         getAsset,
         getUploadedAssetVersion,
         getContentsForAssetVersions,
-        getAssetVersionsDetails
+        getAssetVersionsDetails,
+        getBagitAssetsDetails
     },
     Mutation: {
         uploadAsset,

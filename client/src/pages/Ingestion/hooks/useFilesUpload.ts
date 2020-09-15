@@ -9,7 +9,10 @@ import {
     StateItem,
     parseItemToState,
     parseSubjectUnitIdentifierToState,
-    StateSubject
+    StateSubject,
+    generateBagitId,
+    parseFileId,
+    StateIdentifier
 } from '../../../context';
 import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus } from '../../../context';
 import { apolloUploader, apolloClient } from '../../../graphql';
@@ -20,7 +23,9 @@ import {
     GetAssetVersionsDetailsDocument,
     GetAssetVersionsDetailsQuery,
     DiscardUploadedAssetVersionsDocument,
-    DiscardUploadedAssetVersionsMutation
+    DiscardUploadedAssetVersionsMutation,
+    GetBagitAssetsDetailsDocument,
+    GetBagitAssetsDetailsQuery
 } from '../../../types/graphql';
 import lodash from 'lodash';
 import { defaultPhotogrammetryFields } from '../../../context';
@@ -31,6 +36,7 @@ import useProject from './useProject';
 import useItem from './useItem';
 import { Item, Project, SubjectUnitIdentifier } from '../../../types/graphql';
 import useSubject from './useSubject';
+import useMetadata from './useMetadata';
 
 type MetadataUpdate = {
     valid: boolean;
@@ -52,10 +58,11 @@ const useFilesUpload = (): UseFilesUpload => {
     const { ingestion, ingestionDispatch } = useContext(AppContext);
     const { files } = ingestion.uploads;
 
-    const { getInitialEntry } = useVocabularyEntries();
+    const { getInitialEntry, getAssetType } = useVocabularyEntries();
     const { addSubjects } = useSubject();
     const { addProjects } = useProject();
     const { addItems } = useItem();
+    const { getStateFolders } = useMetadata();
 
     const getFile = useCallback((id: FileId): IngestionFile | undefined => lodash.find(files, { id }), [files]);
 
@@ -71,7 +78,7 @@ const useFilesUpload = (): UseFilesUpload => {
             };
         }
 
-        const idAssetVersions: number[] = lodash.map(selectedFiles, ({ id }) => Number.parseInt(id, 10));
+        const idAssetVersions: number[] = lodash.map(selectedFiles, ({ id }) => parseFileId(id));
 
         try {
             const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({
@@ -103,14 +110,72 @@ const useFilesUpload = (): UseFilesUpload => {
 
                 const metadatas: StateMetadata[] = [];
 
-                selectedFiles.forEach((file: IngestionFile) => {
-                    const metadataStep: StateMetadata = {
-                        file,
-                        photogrammetry: defaultPhotogrammetryFields
-                    };
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file: IngestionFile = selectedFiles[i];
+                    const idAssetVersion = parseFileId(file.id);
 
-                    metadatas.push(metadataStep);
-                });
+                    const { photogrammetry, bagit } = getAssetType(file.type);
+                    let metadataStep: StateMetadata;
+
+                    if (photogrammetry) {
+                        metadataStep = {
+                            file,
+                            photogrammetry: defaultPhotogrammetryFields
+                        };
+
+                        metadatas.push(metadataStep);
+                    }
+
+                    if (bagit) {
+                        const getBagitAssetDetailsQuery: ApolloQueryResult<GetBagitAssetsDetailsQuery> = await apolloClient.query({
+                            query: GetBagitAssetsDetailsDocument,
+                            variables: {
+                                input: {
+                                    idAssetVersion
+                                }
+                            }
+                        });
+
+                        const { data } = getBagitAssetDetailsQuery;
+
+                        if (data) {
+                            const { getBagitAssetsDetails } = data;
+                            const { BagitMetadata } = getBagitAssetsDetails;
+
+                            BagitMetadata.forEach(metadata => {
+                                const { name, folders, type, photogrammetryData, identifiers } = metadata;
+                                const bagitFile = { ...file };
+
+                                bagitFile.id = generateBagitId(bagitFile.id, name);
+                                bagitFile.name = name;
+                                bagitFile.type = type;
+
+                                const stateIdentifiers: StateIdentifier[] = identifiers.map(
+                                    ({ identifier, identifierType }, index): StateIdentifier => ({
+                                        id: index,
+                                        identifier,
+                                        identifierType,
+                                        selected: true
+                                    })
+                                );
+
+                                metadataStep = {
+                                    file: bagitFile,
+                                    photogrammetry: {
+                                        ...defaultPhotogrammetryFields,
+                                        ...(photogrammetryData && {
+                                            ...photogrammetryData,
+                                            dateCaptured: new Date(photogrammetryData.dateCaptured),
+                                            folders: getStateFolders(folders),
+                                            identifiers: stateIdentifiers
+                                        })
+                                    }
+                                };
+                                metadatas.push(metadataStep);
+                            });
+                        }
+                    }
+                }
 
                 const addMetadataStepAction: IngestionDispatchAction = {
                     type: METADATA_ACTIONS.ADD_METADATA,
@@ -341,7 +406,7 @@ const useFilesUpload = (): UseFilesUpload => {
 
         if (!isConfirmed) return;
 
-        const idAssetVersions: number[] = selectedFiles.map(({ id }) => Number.parseInt(id, 10));
+        const idAssetVersions: number[] = selectedFiles.map(({ id }) => parseFileId(id));
 
         const discardMutationVariables = {
             input: {

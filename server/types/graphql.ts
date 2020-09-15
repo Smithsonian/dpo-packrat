@@ -598,6 +598,7 @@ export type Query = {
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getAssetVersionsDetails: GetAssetVersionsDetailsResult;
+    getBagitAssetsDetails: GetBagitAssetsDetailsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     areCameraSettingsUniform: AreCameraSettingsUniformResult;
@@ -637,6 +638,10 @@ export type QueryGetContentsForAssetVersionsArgs = {
 
 export type QueryGetAssetVersionsDetailsArgs = {
     input: GetAssetVersionsDetailsInput;
+};
+
+export type QueryGetBagitAssetsDetailsArgs = {
+    input: GetBagitAssetsDetailsInput;
 };
 
 export type QueryGetCaptureDataArgs = {
@@ -736,6 +741,46 @@ export type GetAccessPolicyResult = {
     AccessPolicy?: Maybe<AccessPolicy>;
 };
 
+export type GetBagitAssetsDetailsInput = {
+    idAssetVersion: Scalars['Int'];
+};
+
+export type PhotogrammetryData = {
+    __typename?: 'PhotogrammetryData';
+    dateCaptured: Scalars['String'];
+    datasetType: Scalars['Int'];
+    description: Scalars['String'];
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+};
+
+export type BagitIdentifier = {
+    __typename?: 'BagitIdentifier';
+    identifier: Scalars['String'];
+    identifierType: Scalars['Int'];
+};
+
+export type BagitMetadata = {
+    __typename?: 'BagitMetadata';
+    name: Scalars['String'];
+    type: Scalars['Int'];
+    photogrammetryData?: Maybe<PhotogrammetryData>;
+    folders: Array<Scalars['String']>;
+    identifiers: Array<BagitIdentifier>;
+};
+
+export type GetBagitAssetsDetailsResult = {
+    __typename?: 'GetBagitAssetsDetailsResult';
+    BagitMetadata: Array<BagitMetadata>;
+};
+
 export type GetAssetVersionsDetailsInput = {
     idAssetVersions: Array<Scalars['Int']>;
 };
@@ -759,7 +804,7 @@ export type GetAssetResult = {
 
 export type GetUploadedAssetVersionResult = {
     __typename?: 'GetUploadedAssetVersionResult';
-    AssetVersion: Array<Maybe<AssetVersion>>;
+    AssetVersion: Array<AssetVersion>;
 };
 
 export type GetContentsForAssetVersionsInput = {

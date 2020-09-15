@@ -1,5 +1,14 @@
-import { Item, Project, SubjectUnitIdentifier } from '../types/graphql';
-import { StateSubject, StateItem, StateProject } from './ingestion';
+import { Item, Project, SubjectUnitIdentifier, AssetVersion, Asset, Vocabulary } from '../types/graphql';
+import { StateSubject, StateItem, StateProject, IngestionFile, FileUploadStatus, FileId } from './ingestion';
+
+export function generateBagitId(id: FileId, unique: number | string): FileId {
+    return `${id}-bagit-${unique}`;
+}
+
+export function parseFileId(id: FileId): number {
+    const [fileId] = id.split('-bagit-');
+    return Number.parseInt(fileId, 10);
+}
 
 export function parseSubjectUnitIdentifierToState(subjectUnitIdentifier: SubjectUnitIdentifier): StateSubject {
     const { idSubject, SubjectName, UnitAbbreviation, IdentifierPublic } = subjectUnitIdentifier;
@@ -30,5 +39,25 @@ export function parseProjectToState(project: Project, selected: boolean): StateP
         id: idProject,
         name: Name,
         selected
+    };
+}
+
+export function parseAssetVersionToState(assetVersion: AssetVersion, asset: Asset, vocabulary: Vocabulary): IngestionFile {
+    const { idAssetVersion, StorageSize } = assetVersion;
+    const { FileName } = asset;
+    const { idVocabulary } = vocabulary;
+
+    const id = String(idAssetVersion);
+
+    return {
+        id,
+        name: FileName,
+        size: StorageSize,
+        file: new File([], FileName),
+        type: idVocabulary,
+        status: FileUploadStatus.COMPLETE,
+        progress: 100,
+        selected: false,
+        cancel: null
     };
 }

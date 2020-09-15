@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AppContext, StateItem, StateProject, StateIdentifier, defaultItem, IngestionDispatchAction, METADATA_ACTIONS } from '../../../context';
+import { AppContext, StateItem, StateProject, StateIdentifier, defaultItem, IngestionDispatchAction, METADATA_ACTIONS, parseFileId } from '../../../context';
 import useItem from './useItem';
 import useProject from './useProject';
 import useMetadata from './useMetadata';
@@ -10,6 +10,7 @@ import { FetchResult } from '@apollo/client';
 import { toast } from 'react-toastify';
 import { useHistory } from 'react-router';
 import { HOME_ROUTES, resolveSubRoute, INGESTION_ROUTES_TYPE } from '../../../constants/routes';
+import useVocabularyEntries from './useVocabularyEntries';
 
 interface UseIngest {
     ingestPhotogrammetryData: () => Promise<boolean>;
@@ -27,6 +28,7 @@ function useIngest(): UseIngest {
     const { getSelectedProject } = useProject();
     const { getSelectedItem } = useItem();
     const { getSelectedIdentifiers } = useMetadata();
+    const { getAssetType } = useVocabularyEntries();
 
     const ingestPhotogrammetryData = async (): Promise<boolean> => {
         let ingestProject = {};
@@ -71,82 +73,85 @@ function useIngest(): UseIngest {
 
         lodash.forEach(metadatas, metadata => {
             const { file, photogrammetry } = metadata;
-            const {
-                dateCaptured,
-                datasetType,
-                systemCreated,
-                description,
-                cameraSettingUniform,
-                datasetFieldId,
-                itemPositionType,
-                itemPositionFieldId,
-                itemArrangementFieldId,
-                focusType,
-                lightsourceType,
-                backgroundRemovalMethod,
-                clusterType,
-                clusterGeometryFieldId
-            } = photogrammetry;
+            const { photogrammetry: isPhotogrammetry } = getAssetType(file.type);
 
-            const ingestIdentifiers: IngestIdentifier[] = [];
-            const identifiers: StateIdentifier[] | undefined = getSelectedIdentifiers(metadata);
+            if (isPhotogrammetry) {
+                const {
+                    dateCaptured,
+                    datasetType,
+                    systemCreated,
+                    description,
+                    cameraSettingUniform,
+                    datasetFieldId,
+                    itemPositionType,
+                    itemPositionFieldId,
+                    itemArrangementFieldId,
+                    focusType,
+                    lightsourceType,
+                    backgroundRemovalMethod,
+                    clusterType,
+                    clusterGeometryFieldId
+                } = photogrammetry;
 
-            if (identifiers) {
-                lodash.forEach(identifiers, data => {
-                    const { identifier, identifierType } = data;
-                    if (!identifierType) {
-                        throw Error('Identifer type is null');
-                    }
+                const ingestIdentifiers: IngestIdentifier[] = [];
+                const identifiers: StateIdentifier[] | undefined = getSelectedIdentifiers(metadata);
 
-                    const identifierData: IngestIdentifier = {
-                        identifier,
-                        identifierType
-                    };
-                    ingestIdentifiers.push(identifierData);
-                });
-            }
+                if (identifiers) {
+                    lodash.forEach(identifiers, data => {
+                        const { identifier, identifierType } = data;
+                        if (!identifierType) {
+                            throw Error('Identifer type is null');
+                        }
 
-            const ingestFolders: IngestFolder[] = [];
-            lodash.forEach(photogrammetry.folders, folder => {
-                const { name, variantType } = folder;
-
-                if (!variantType) {
-                    throw Error('Folder variantType type is null');
+                        const identifierData: IngestIdentifier = {
+                            identifier,
+                            identifierType
+                        };
+                        ingestIdentifiers.push(identifierData);
+                    });
                 }
 
-                const folderData = {
-                    name,
-                    variantType
+                const ingestFolders: IngestFolder[] = [];
+                lodash.forEach(photogrammetry.folders, folder => {
+                    const { name, variantType } = folder;
+
+                    if (!variantType) {
+                        throw Error('Folder variantType type is null');
+                    }
+
+                    const folderData = {
+                        name,
+                        variantType
+                    };
+
+                    ingestFolders.push(folderData);
+                });
+
+                if (!datasetType) {
+                    throw Error('Dataset Type type is null');
+                }
+
+                const photogrammetryData = {
+                    idAssetVersion: parseFileId(file.id),
+                    dateCaptured: dateCaptured.toISOString(),
+                    datasetType,
+                    systemCreated,
+                    description,
+                    cameraSettingUniform,
+                    identifiers: ingestIdentifiers,
+                    folders: ingestFolders,
+                    datasetFieldId,
+                    itemPositionType,
+                    itemPositionFieldId,
+                    itemArrangementFieldId,
+                    focusType,
+                    lightsourceType,
+                    backgroundRemovalMethod,
+                    clusterType,
+                    clusterGeometryFieldId
                 };
-
-                ingestFolders.push(folderData);
-            });
-
-            if (!datasetType) {
-                throw Error('Dataset Type type is null');
+                ingestPhotogrammetry.push(photogrammetryData);
             }
-
-            const photogrammetryData = {
-                idAssetVersion: Number.parseInt(file.id, 10),
-                dateCaptured: dateCaptured.toISOString(),
-                datasetType,
-                systemCreated,
-                description,
-                cameraSettingUniform,
-                identifiers: ingestIdentifiers,
-                folders: ingestFolders,
-                datasetFieldId,
-                itemPositionType,
-                itemPositionFieldId,
-                itemArrangementFieldId,
-                focusType,
-                lightsourceType,
-                backgroundRemovalMethod,
-                clusterType,
-                clusterGeometryFieldId
-            };
-
-            ingestPhotogrammetry.push(photogrammetryData);
         });
 
         const variables = {
