@@ -318,10 +318,18 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
         return false;
     }
 
+    let DateCaptured: Date;
+    try {
+        DateCaptured = new Date(photogrammetry.dateCaptured);
+    } catch (error) {
+        LOG.logger.error(`GraphQL ingestData provided invalid photogrammetry.dateCaptured ${photogrammetry.dateCaptured}`);
+        DateCaptured = new Date();
+    }
+
     // create photogrammetry objects, identifiers, etc.
     const captureDataDB: DBAPI.CaptureData = new DBAPI.CaptureData({
         idVCaptureMethod: vocabulary.idVocabulary,
-        DateCaptured: new Date(photogrammetry.dateCaptured), // TODO: can this throw an exception?  Add safeguards here.
+        DateCaptured,
         Description: photogrammetry.description,
         idAssetThumbnail: null,
         idCaptureData: 0
