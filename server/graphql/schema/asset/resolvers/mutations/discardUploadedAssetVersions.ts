@@ -15,7 +15,7 @@ export default async function discardUploadedAssetVersions(
     }
 
     // TODO: remove the asset versions
-    console.log('Discard asset versions:', idAssetVersions);
+    console.log('discardUploadedAssetVersions', idAssetVersions);
 
     return { success: true };
 }

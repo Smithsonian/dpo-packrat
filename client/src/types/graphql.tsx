@@ -603,6 +603,7 @@ export type Query = {
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getAssetVersionsDetails: GetAssetVersionsDetailsResult;
+    getBagitAssetsDetails: GetBagitAssetsDetailsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     areCameraSettingsUniform: AreCameraSettingsUniformResult;
@@ -646,6 +647,11 @@ export type QueryGetContentsForAssetVersionsArgs = {
 
 export type QueryGetAssetVersionsDetailsArgs = {
     input: GetAssetVersionsDetailsInput;
+};
+
+
+export type QueryGetBagitAssetsDetailsArgs = {
+    input: GetBagitAssetsDetailsInput;
 };
 
 
@@ -767,6 +773,46 @@ export type GetAccessPolicyResult = {
     AccessPolicy?: Maybe<AccessPolicy>;
 };
 
+export type GetBagitAssetsDetailsInput = {
+    idAssetVersion: Scalars['Int'];
+};
+
+export type PhotogrammetryData = {
+    __typename?: 'PhotogrammetryData';
+    dateCaptured: Scalars['String'];
+    datasetType: Scalars['Int'];
+    description: Scalars['String'];
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+};
+
+export type BagitIdentifier = {
+    __typename?: 'BagitIdentifier';
+    identifier: Scalars['String'];
+    identifierType: Scalars['Int'];
+};
+
+export type BagitMetadata = {
+    __typename?: 'BagitMetadata';
+    name: Scalars['String'];
+    type: Scalars['Int'];
+    photogrammetryData?: Maybe<PhotogrammetryData>;
+    folders: Array<Scalars['String']>;
+    identifiers: Array<BagitIdentifier>;
+};
+
+export type GetBagitAssetsDetailsResult = {
+    __typename?: 'GetBagitAssetsDetailsResult';
+    BagitMetadata: Array<BagitMetadata>;
+};
+
 export type GetAssetVersionsDetailsInput = {
     idAssetVersions: Array<Scalars['Int']>;
 };
@@ -790,7 +836,7 @@ export type GetAssetResult = {
 
 export type GetUploadedAssetVersionResult = {
     __typename?: 'GetUploadedAssetVersionResult';
-    AssetVersion: Array<Maybe<AssetVersion>>;
+    AssetVersion: Array<AssetVersion>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -1680,6 +1726,35 @@ export type GetAssetVersionsDetailsQuery = (
     }
 );
 
+export type GetBagitAssetsDetailsQueryVariables = Exact<{
+    input: GetBagitAssetsDetailsInput;
+}>;
+
+
+export type GetBagitAssetsDetailsQuery = (
+    { __typename?: 'Query' }
+    & {
+        getBagitAssetsDetails: (
+            { __typename?: 'GetBagitAssetsDetailsResult' }
+            & {
+                BagitMetadata: Array<(
+                    { __typename?: 'BagitMetadata' }
+                    & Pick<BagitMetadata, 'name' | 'type' | 'folders'>
+                    & {
+                        photogrammetryData?: Maybe<(
+                            { __typename?: 'PhotogrammetryData' }
+                            & Pick<PhotogrammetryData, 'dateCaptured' | 'datasetType' | 'description' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId'>
+                        )>, identifiers: Array<(
+                            { __typename?: 'BagitIdentifier' }
+                            & Pick<BagitIdentifier, 'identifier' | 'identifierType'>
+                        )>
+                    }
+                )>
+            }
+        )
+    }
+);
+
 export type GetContentsForAssetVersionsQueryVariables = Exact<{
     input: GetContentsForAssetVersionsInput;
 }>;
@@ -1709,7 +1784,7 @@ export type GetUploadedAssetVersionQuery = (
         getUploadedAssetVersion: (
             { __typename?: 'GetUploadedAssetVersionResult' }
             & {
-                AssetVersion: Array<Maybe<(
+                AssetVersion: Array<(
                     { __typename?: 'AssetVersion' }
                     & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize'>
                     & {
@@ -1724,7 +1799,7 @@ export type GetUploadedAssetVersionQuery = (
                             }
                         )>
                     }
-                )>>
+                )>
             }
         )
     }
@@ -2797,6 +2872,61 @@ export function useGetAssetVersionsDetailsLazyQuery(baseOptions?: Apollo.LazyQue
 export type GetAssetVersionsDetailsQueryHookResult = ReturnType<typeof useGetAssetVersionsDetailsQuery>;
 export type GetAssetVersionsDetailsLazyQueryHookResult = ReturnType<typeof useGetAssetVersionsDetailsLazyQuery>;
 export type GetAssetVersionsDetailsQueryResult = Apollo.QueryResult<GetAssetVersionsDetailsQuery, GetAssetVersionsDetailsQueryVariables>;
+export const GetBagitAssetsDetailsDocument = gql`
+    query getBagitAssetsDetails($input: GetBagitAssetsDetailsInput!) {
+  getBagitAssetsDetails(input: $input) {
+    BagitMetadata {
+      name
+      type
+      folders
+      photogrammetryData {
+        dateCaptured
+        datasetType
+        description
+        datasetFieldId
+        itemPositionType
+        itemPositionFieldId
+        itemArrangementFieldId
+        focusType
+        lightsourceType
+        backgroundRemovalMethod
+        clusterType
+        clusterGeometryFieldId
+      }
+      identifiers {
+        identifier
+        identifierType
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetBagitAssetsDetailsQuery__
+ *
+ * To run a query within a React component, call `useGetBagitAssetsDetailsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetBagitAssetsDetailsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetBagitAssetsDetailsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetBagitAssetsDetailsQuery(baseOptions?: Apollo.QueryHookOptions<GetBagitAssetsDetailsQuery, GetBagitAssetsDetailsQueryVariables>) {
+    return Apollo.useQuery<GetBagitAssetsDetailsQuery, GetBagitAssetsDetailsQueryVariables>(GetBagitAssetsDetailsDocument, baseOptions);
+}
+export function useGetBagitAssetsDetailsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetBagitAssetsDetailsQuery, GetBagitAssetsDetailsQueryVariables>) {
+    return Apollo.useLazyQuery<GetBagitAssetsDetailsQuery, GetBagitAssetsDetailsQueryVariables>(GetBagitAssetsDetailsDocument, baseOptions);
+}
+export type GetBagitAssetsDetailsQueryHookResult = ReturnType<typeof useGetBagitAssetsDetailsQuery>;
+export type GetBagitAssetsDetailsLazyQueryHookResult = ReturnType<typeof useGetBagitAssetsDetailsLazyQuery>;
+export type GetBagitAssetsDetailsQueryResult = Apollo.QueryResult<GetBagitAssetsDetailsQuery, GetBagitAssetsDetailsQueryVariables>;
 export const GetContentsForAssetVersionsDocument = gql`
     query getContentsForAssetVersions($input: GetContentsForAssetVersionsInput!) {
   getContentsForAssetVersions(input: $input) {

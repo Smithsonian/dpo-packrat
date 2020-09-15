@@ -541,6 +541,7 @@ type Query {
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
   getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
+  getBagitAssetsDetails(input: GetBagitAssetsDetailsInput!): GetBagitAssetsDetailsResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
@@ -574,6 +575,42 @@ type GetAccessPolicyResult {
   AccessPolicy: AccessPolicy
 }
 
+input GetBagitAssetsDetailsInput {
+  idAssetVersion: Int!
+}
+
+type PhotogrammetryData {
+  dateCaptured: String!
+  datasetType: Int!
+  description: String!
+  datasetFieldId: Int
+  itemPositionType: Int
+  itemPositionFieldId: Int
+  itemArrangementFieldId: Int
+  focusType: Int
+  lightsourceType: Int
+  backgroundRemovalMethod: Int
+  clusterType: Int
+  clusterGeometryFieldId: Int
+}
+
+type BagitIdentifier {
+  identifier: String!
+  identifierType: Int!
+}
+
+type BagitMetadata {
+  name: String!
+  type: Int!
+  photogrammetryData: PhotogrammetryData
+  folders: [String!]!
+  identifiers: [BagitIdentifier!]!
+}
+
+type GetBagitAssetsDetailsResult {
+  BagitMetadata: [BagitMetadata!]!
+}
+
 input GetAssetVersionsDetailsInput {
   idAssetVersions: [Int!]!
 }
@@ -594,7 +631,7 @@ type GetAssetResult {
 }
 
 type GetUploadedAssetVersionResult {
-  AssetVersion: [AssetVersion]!
+  AssetVersion: [AssetVersion!]!
 }
 
 input GetContentsForAssetVersionsInput {
