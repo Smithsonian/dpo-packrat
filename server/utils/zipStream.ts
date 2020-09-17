@@ -61,10 +61,15 @@ export class ZipStream implements IZip {
     async getJustDirectories(): Promise<string[]> { return this._dirs; }
 
     async streamContent(entry: string): Promise<NodeJS.ReadableStream | null> {
-        if (!this._zip)
+        try {
+            if (!this._zip)
+                return null;
+            const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
+            return (ZO) ? ZO.nodeStream() : null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error(`zipStream.streamContent ${entry}`, error);
             return null;
-        const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
-        return (ZO) ? ZO.nodeStream() : null;
+        }
     }
 
     private clearState() {

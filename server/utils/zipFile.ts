@@ -85,14 +85,19 @@ export class ZipFile implements IZip {
             if (!this._zip)
                 resolve(null);
             else {
-                this._zip.stream(entry, (error, stream) => {
-                    if (!error && stream)
-                        resolve(stream);
-                    else {
-                        LOG.logger.error('ZipFile.streamContent', error);
-                        resolve(null);
-                    }
-                });
+                try {
+                    this._zip.stream(entry, (error, stream) => {
+                        if (!error && stream)
+                            resolve(stream);
+                        else {
+                            LOG.logger.error(`ZipFie.streamContent ${entry}`, error);
+                            resolve(null);
+                        }
+                    });
+                } catch (error) /* istanbul ignore next */ {
+                    LOG.logger.error(`ZipFie.streamContent ${entry}`, error);
+                    resolve(null);
+                }
             }
         });
     }

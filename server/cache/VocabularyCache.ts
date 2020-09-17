@@ -20,6 +20,7 @@ export enum eVocabularySetID {
     eModelProcessingActionStepActionMethod,
     eModelUVMapChannelUVMapType,
     eIdentifierIdentifierType,
+    eIdentifierIdentifierTypeActor,
     eMetadataMetadataSource,
     eWorkflowStepWorkflowStepType,
     eAssetAssetType,
@@ -51,21 +52,26 @@ export enum eVocabularyID {
     eCaptureDataCaptureMethodStructuredLight,
     eCaptureDataCaptureMethodLaserLine,
     eCaptureDataCaptureMethodSphericalLaser,
+    eCaptureDataFileVariantTypeRaw,
+    eCaptureDataFileVariantTypeProcessed,
+    eCaptureDataFileVariantTypeProcessedZeroed,
+    eCaptureDataFileVariantTypeFromCamera,
     eNone = -1
 }
 
 export class VocabularyCache {
     private static singleton: VocabularyCache | null = null;
 
-    private vocabMap:           Map<number, Vocabulary>         = new Map<number, Vocabulary>();        // map of Vocab ID     -> Vocabulary object
-    private vocabSetMap:        Map<number, VocabularySet>      = new Map<number, VocabularySet>();     // map of Vocab Set ID -> VocabularySet object
-    private vocabSetEntries:    Map<number, Vocabulary[]>       = new Map<number, Vocabulary[]>();      // map of Vocab Set ID -> Sorted Array of Vocabulary objects
+    private vocabMap:               Map<number, Vocabulary>         = new Map<number, Vocabulary>();        // map of Vocab ID     -> Vocabulary object
+    private vocabSetMap:            Map<number, VocabularySet>      = new Map<number, VocabularySet>();     // map of Vocab Set ID -> VocabularySet object
+    private vocabSetEntries:        Map<number, Vocabulary[]>       = new Map<number, Vocabulary[]>();      // map of Vocab Set ID -> Sorted Array of Vocabulary objects
+    private vocabSetEnumEntryMap:   Map<eVocabularySetID, Map<string, Vocabulary>> = new Map<eVocabularySetID, Map<string, Vocabulary>>();  // map of Vocab Set ID Enum -> map of vocabulary term, normalized -> Vocabulary record
 
-    private vocabEnumIDMap:     Map<eVocabularyID, number>      = new Map<eVocabularyID, number>();     // map of Vocab ID Enum -> Vocab ID
-    private vocabIDEnumMap:     Map<number, eVocabularyID>      = new Map<number, eVocabularyID>();     // map of Vocab ID -> Vocab ID Enum
+    private vocabEnumIDMap:         Map<eVocabularyID, number>      = new Map<eVocabularyID, number>();     // map of Vocab ID Enum -> Vocab ID
+    private vocabIDEnumMap:         Map<number, eVocabularyID>      = new Map<number, eVocabularyID>();     // map of Vocab ID -> Vocab ID Enum
 
-    private vocabSetEnumIDMap:  Map<eVocabularySetID, number>   = new Map<eVocabularySetID, number>();  // map of Vocab Set ID Enum -> Vocab Set ID
-    private vocabSetIDEnumMap:  Map<number, eVocabularySetID>   = new Map<number, eVocabularySetID>();  // map of Vocab Set ID -> Vocab Set ID Enum
+    private vocabSetEnumIDMap:      Map<eVocabularySetID, number>   = new Map<eVocabularySetID, number>();  // map of Vocab Set ID Enum -> Vocab Set ID
+    private vocabSetIDEnumMap:      Map<number, eVocabularySetID>   = new Map<number, eVocabularySetID>();  // map of Vocab Set ID -> Vocab Set ID Enum
 
     // **************************
     // Boilerplate Implementation
@@ -124,6 +130,7 @@ export class VocabularyCache {
                 case 'ModelProcessingActionStep.ActionMethod':  eVocabSetEnum = eVocabularySetID.eModelProcessingActionStepActionMethod; break;
                 case 'ModelUVMapChannel.UVMapType':             eVocabSetEnum = eVocabularySetID.eModelUVMapChannelUVMapType; break;
                 case 'Identifier.IdentifierType':               eVocabSetEnum = eVocabularySetID.eIdentifierIdentifierType; break;
+                case 'Identifier.IdentifierTypeActor':          eVocabSetEnum = eVocabularySetID.eIdentifierIdentifierTypeActor; break;
                 case 'Metadata.MetadataSource':                 eVocabSetEnum = eVocabularySetID.eMetadataMetadataSource; break;
                 case 'WorkflowStep.WorkflowStepType':           eVocabSetEnum = eVocabularySetID.eWorkflowStepWorkflowStepType; break;
                 case 'Asset.AssetType':                         eVocabSetEnum = eVocabularySetID.eAssetAssetType; break;
@@ -132,6 +139,7 @@ export class VocabularyCache {
             if (eVocabSetEnum != eVocabularySetID.eNone) {
                 this.vocabSetEnumIDMap.set(eVocabSetEnum, vocabularySet.idVocabularySet);
                 this.vocabSetIDEnumMap.set(vocabularySet.idVocabularySet, eVocabSetEnum);
+                this.vocabSetEnumEntryMap.set(eVocabSetEnum, new Map<string, Vocabulary>()); // map of Vocab Set ID Enum -> map of vocabulary term, normalized -> Vocabulary record
             }
         }
 
@@ -139,7 +147,14 @@ export class VocabularyCache {
             this.vocabMap.set(vocabulary.idVocabulary, vocabulary);
 
             let eVocabEnum: eVocabularyID = eVocabularyID.eNone;
-            switch (this.vocabSetIDEnumMap.get(vocabulary.idVocabularySet)) {
+            const eVocabSetEnum: eVocabularySetID | undefined = this.vocabSetIDEnumMap.get(vocabulary.idVocabularySet);
+            if (eVocabSetEnum !== undefined) {
+                const vocabMap = this.vocabSetEnumEntryMap.get(eVocabSetEnum); /* istanbul ignore else */
+                if (vocabMap)
+                    vocabMap.set(this.normalizeTerm(vocabulary.Term), vocabulary);
+            }
+
+            switch (eVocabSetEnum) {
                 case eVocabularySetID.eIdentifierIdentifierType: {
                     switch (vocabulary.Term) {
                         case 'ARK':         eVocabEnum = eVocabularyID.eIdentifierIdentifierTypeARK; break;
@@ -176,6 +191,15 @@ export class VocabularyCache {
                         case 'Structured Light':    eVocabEnum = eVocabularyID.eCaptureDataCaptureMethodStructuredLight; break;
                         case 'Laser Line':          eVocabEnum = eVocabularyID.eCaptureDataCaptureMethodLaserLine; break;
                         case 'Spherical Laser':     eVocabEnum = eVocabularyID.eCaptureDataCaptureMethodSphericalLaser; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eCaptureDataFileVariantType: {
+                    switch (vocabulary.Term) {
+                        case 'Raw':                 eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+                        case 'Processed':           eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
+                        case 'Processed, Zeroed':   eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeProcessedZeroed; break;
+                        case 'From Camera':         eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
                     }
                 } break;
             }
@@ -234,6 +258,24 @@ export class VocabularyCache {
         return idVocabularySet ? this.vocabSetEntries.get(idVocabularySet) : undefined;
     }
 
+    private vocabularyBySetAndTermInternal(eVocabSetID: eVocabularySetID, term: string): Vocabulary | undefined {
+        const vocabMap: Map<string, Vocabulary> | undefined = this.vocabSetEnumEntryMap.get(eVocabSetID);
+        return (vocabMap) ? vocabMap.get(this.normalizeTerm(term)) : undefined;
+    }
+
+    private normalizeTerm(term: string) {
+        return term.toLowerCase().replace(/_/g, ' ');
+    }
+
+    private vocabularyEnumToIdInternal(eVocabID: eVocabularyID): number | undefined {
+        return this.vocabEnumIDMap.get(eVocabID);
+    }
+
+    /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. Note that not all vocabulary are represented by eVocabularyID entries. */
+    private vocabularyIdToEnumInternal(idVocabulary: number): eVocabularyID | undefined {
+        return this.vocabIDEnumMap.get(idVocabulary);
+    }
+
     // **************************
     // Public Interface
     // **************************
@@ -283,6 +325,40 @@ export class VocabularyCache {
      */
     static async vocabularySetEntriesByEnum(eVocabSetID: eVocabularySetID): Promise<Vocabulary[] | undefined> {
         return (await this.getInstance()).vocabularySetEntriesByEnumInternal(eVocabSetID);
+    }
+
+    /** Fetch the vocabulary in the specified vocabulary set with the specified term.  The term is
+     * normalized: case is ignored, and _ are turned into spaces
+     */
+    static async vocabularyBySetAndTerm(eVocabSetID: eVocabularySetID, term: string): Promise<Vocabulary | undefined> {
+        return (await this.getInstance()).vocabularyBySetAndTermInternal(eVocabSetID, term);
+    }
+
+    /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. */
+    static async vocabularyEnumToId(eVocabID: eVocabularyID): Promise<number | undefined> {
+        return (await this.getInstance()).vocabularyEnumToIdInternal(eVocabID);
+    }
+
+    /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. Note that not all vocabulary are represented by eVocabularyID entries. */
+    static async vocabularyIdToEnum(idVocabulary: number): Promise<eVocabularyID | undefined> {
+        return (await this.getInstance()).vocabularyIdToEnumInternal(idVocabulary);
+    }
+
+    static async mapPhotogrammetryVariantType(variantType: string): Promise<Vocabulary | undefined> {
+        let eVocabID: eVocabularyID;
+        switch (variantType.toLowerCase().replace(/_/g, '')) {
+            case 'raw': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'processed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
+            case 'processed, zeroed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessedZeroed; break;
+            case 'from camera': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'dng': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'jpg': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'jpeg': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'tif': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'tiff': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            default: return undefined;
+        }
+        return await VocabularyCache.vocabularyByEnum(eVocabID);
     }
 
     static async flush(): Promise<void> {

@@ -246,29 +246,33 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         DateCreated: TestCase.assetVersion.DateCreated
     };
 
-    let ASR: STORE.AssetStorageResult;
+    let ASRC: STORE.AssetStorageResultCommit;
     if (newAsset) {
         LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset ${TestCase.asset.FileName}`);
-        ASR = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
+        ASRC = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
     } else {
         LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`);
-        ASR = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: TestCase.assetVersion.StorageKeyStaging, storageHash },
+        ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: TestCase.assetVersion.StorageKeyStaging, storageHash },
             TestCase.asset, TestCase.assetVersion.idUserCreator, TestCase.assetVersion.DateCreated);
     }
-    expect(ASR.success).toBeTruthy();
-    if (!ASR.success) {
-        LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset: ${ASR.error}`);
+    expect(ASRC.success).toBeTruthy();
+    if (!ASRC.success) {
+        LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset: ${ASRC.error}`);
         return TestCase;
     }
 
-    expect(ASR.asset).toBeTruthy();
-    expect(ASR.assetVersion).toBeTruthy();
-    if (ASR.asset) {
-        TestCase.asset = ASR.asset;
+    expect(ASRC.assets).toBeTruthy();
+    expect(ASRC.assetVersions).toBeTruthy();
+    if (ASRC.assets) {
+        if (ASRC.assets.length > 0)
+            TestCase.asset = ASRC.assets[0];
+        expect(ASRC.assets.length).toEqual(1);
         expect(TestCase.asset.idAsset).toBeGreaterThan(0);
     }
-    if (ASR.assetVersion) {
-        TestCase.assetVersion = ASR.assetVersion;
+    if (ASRC.assetVersions) {
+        if (ASRC.assetVersions.length > 0)
+            TestCase.assetVersion = ASRC.assetVersions[0];
+        expect(ASRC.assetVersions.length).toEqual(1);
         expect(TestCase.assetVersion.idAssetVersion).toBeGreaterThan(0);
         expect(TestCase.assetVersion.idAsset).toEqual(TestCase.asset.idAsset);
         expect(TestCase.assetVersion.Ingested).toBeFalsy();
@@ -424,9 +428,9 @@ async function testCommitNewAssetFailure(TestCase: AssetStorageAdapterTestCase):
     };
 
     LOG.logger.info('AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset Failure Expected');
-    const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
-    expect(ASR.success).toBeFalsy();
-    return !ASR.success;
+    const ASRC: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
+    expect(ASRC.success).toBeFalsy();
+    return !ASRC.success;
 }
 
 async function testIngestAssetFailure(TestCase: AssetStorageAdapterTestCase): Promise<boolean> {

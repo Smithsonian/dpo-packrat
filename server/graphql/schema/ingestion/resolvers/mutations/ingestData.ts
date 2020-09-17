@@ -4,6 +4,7 @@ import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as COL from '../../../../../collections/interface';
 import * as LOG from '../../../../../utils/logger';
+import * as H from '../../../../../utils/helpers';
 import { AssetStorageAdapter, AssetStorageResult, OperationInfo } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 
@@ -318,18 +319,11 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
         return false;
     }
 
-    let DateCaptured: Date;
-    try {
-        DateCaptured = new Date(photogrammetry.dateCaptured);
-    } catch (error) {
-        LOG.logger.error(`GraphQL ingestData provided invalid photogrammetry.dateCaptured ${photogrammetry.dateCaptured}`);
-        DateCaptured = new Date();
-    }
 
     // create photogrammetry objects, identifiers, etc.
     const captureDataDB: DBAPI.CaptureData = new DBAPI.CaptureData({
         idVCaptureMethod: vocabulary.idVocabulary,
-        DateCaptured,
+        DateCaptured: H.Helpers.convertStringToDate(photogrammetry.dateCaptured) || new Date(),
         Description: photogrammetry.description,
         idAssetThumbnail: null,
         idCaptureData: 0

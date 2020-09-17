@@ -777,6 +777,8 @@ export type GetAssetVersionsDetailsResult = {
     SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
     Project: Array<Project>;
     Item: Array<Item>;
+    CaptureDataPhoto: Array<IngestPhotogrammetry>;
+    Model: Array<Model>;
 };
 
 export type GetAssetInput = {
@@ -1674,6 +1676,15 @@ export type GetAssetVersionsDetailsQuery = (
                 )>, Item: Array<(
                     { __typename?: 'Item' }
                     & Pick<Item, 'idItem' | 'Name' | 'EntireSubject'>
+                )>, CaptureDataPhoto: Array<(
+                    { __typename?: 'CaptureDataPhoto' }
+                    & Pick<CaptureDataPhoto, 'CaptureDatasetFieldID' | 'ClusterGeometryFieldID' | 'idVBackgroundRemovalMethod'
+                    | 'idVClusterType' | 'idVFocusType' | 'idVItemPositionType' | 'idVLightSourceType' | 'ItemArrangementFieldID'
+                    | 'ItemPositionFieldID' | 'CaptureData'>
+                )>, Model: Array<(
+                    { __typename?: 'Model' }
+                    & Pick<Model, 'Authoritative' | 'DateCreated' | 'idVCreationMethod' | 'idVModality'
+                    | 'idVPurpose' | 'idVUnits' | 'Master'>
                 )>
             }
         )

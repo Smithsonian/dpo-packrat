@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { Asset as AssetBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
+import { VocabularyCache, eVocabularyID } from '../../cache';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -160,5 +161,18 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return false;
         this.idSystemObject = SO.idSystemObject;
         return this.updateWorker();
+    }
+
+    async assetType(): Promise<eVocabularyID | undefined> {
+        return await VocabularyCache.vocabularyIdToEnum(this.idVAssetType);
+    }
+
+    /** Don't forget to call update! */
+    async setAssetType(eVocabID: eVocabularyID): Promise<boolean> {
+        const idVocabulary: number | undefined = await VocabularyCache.vocabularyEnumToId(eVocabID);
+        if (!idVocabulary)
+            return false;
+        this.idVAssetType = idVocabulary;
+        return true;
     }
 }
