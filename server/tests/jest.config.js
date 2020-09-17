@@ -21,6 +21,7 @@ module.exports = {
         // '**/tests/utils/zipFile.test.ts',
         // '**/tests/utils/zipStream.test.ts',
         // '**/tests/utils/parser/bagitReader.test.ts',
+        // '**/tests/utils/parser/csvParser.test.ts',
         // '**/tests/utils/helpers.test.ts',
         // '**/tests/storage/interface/AssetStorageAdapter.test.ts',
         // '**/tests/storage/impl/LocalStorage/OCFL.test.ts',

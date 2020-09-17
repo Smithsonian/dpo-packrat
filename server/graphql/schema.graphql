@@ -583,6 +583,8 @@ type GetAssetVersionsDetailsResult {
   SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
   Project: [Project!]!
   Item: [Item!]!
+  CaptureDataPhoto: [IngestPhotogrammetry!]!
+  Model: [Model!]!
 }
 
 input GetAssetInput {

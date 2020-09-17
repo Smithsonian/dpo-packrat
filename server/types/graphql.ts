@@ -746,6 +746,8 @@ export type GetAssetVersionsDetailsResult = {
     SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
     Project: Array<Project>;
     Item: Array<Item>;
+    CaptureDataPhoto: Array<IngestPhotogrammetry>;
+    Model: Array<Model>;
 };
 
 export type GetAssetInput = {
@@ -1091,7 +1093,7 @@ export enum UploadStatus {
 export type UploadAssetResult = {
     __typename?: 'UploadAssetResult';
     status: UploadStatus;
-    idAssetVersion?: Maybe<Scalars['Int']>;
+    idAssetVersions?: Maybe<Array<Scalars['Int']>>;
     error?: Maybe<Scalars['String']>;
 };
 

@@ -6,10 +6,8 @@ import * as LOG from '../../../../../utils/logger';
 
 export default async function getContentsForAssetVersions(_: Parent, args: QueryGetContentsForAssetVersionsArgs, context: Context): Promise<GetContentsForAssetVersionsResult> {
     const { user } = context;
-
     if (!user)
         return { AssetVersionContent: [] };
-
     const { idAssetVersions } = args.input;
 
     const result: AssetVersionContent[] = [];
