@@ -36,10 +36,8 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
         border: 'none',
         outline: 'none',
         padding: '0px 2px',
-        paddingBottom: 8,
         fontSize: typography.body1.fontSize,
         fontFamily: typography.fontFamily,
-        borderBottom: `1px solid ${palette.grey[300]}`,
         '&:focus': {
             outline: 'none',
         },
@@ -145,18 +143,19 @@ function ItemListItem(props: ItemListItemProps) {
     const classes = useStyles();
     const { isDefaultItem, selected, onUpdateSelected, onUpdateEntireSubject, entireSubject, children } = props;
 
-    const rowStyle = {
-        width: 100
+    const cellStyle = {
+        width: 100,
+        padding: '8px 16px'
     };
 
     return (
         <TableRow>
-            <TableCell style={rowStyle} align='center'>
+            <TableCell style={cellStyle} align='center'>
                 {!selected && <FaRegCircle className={classes.selected} onClick={() => onUpdateSelected(true)} size={24} color={grey[500]} />}
                 {selected && <FaDotCircle className={classes.selected} onClick={() => onUpdateSelected(false)} size={24} color={blue[500]} />}
             </TableCell>
             {children}
-            <TableCell style={rowStyle} align='center'>
+            <TableCell style={cellStyle} align='center'>
                 {isDefaultItem ? (
                     <Checkbox
                         checked={entireSubject}
