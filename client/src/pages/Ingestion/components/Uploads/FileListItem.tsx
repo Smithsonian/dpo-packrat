@@ -14,7 +14,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
         position: 'relative',
         display: 'flex',
-        minHeight: 70,
+        minHeight: 60,
         alignItems: 'center',
         backgroundColor: palette.background.paper,
         marginTop: 10,
