@@ -9,13 +9,18 @@ input GetAssetVersionsDetailsInput {
     idAssetVersions: [Int!]!
 }
 
+type GetAssetVersionDetailResult {
+    idAssetVersion: Int!
+    SubjectUnitIdentifier: SubjectUnitIdentifier
+    Project: [Project!]
+    Item: Item
+    CaptureDataPhoto: IngestPhotogrammetry
+    Model: IngestModel
+}
+
 type GetAssetVersionsDetailsResult {
     valid: Boolean!
-    SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
-    Project: [Project!]!
-    Item: [Item!]!
-    CaptureDataPhoto: [CaptureDataPhoto!]!
-    Model: [Model!]!
+    Details: [GetAssetVersionDetailResult!]!
 }
 
 input GetAssetInput {

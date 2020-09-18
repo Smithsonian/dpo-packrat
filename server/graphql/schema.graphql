@@ -578,13 +578,18 @@ input GetAssetVersionsDetailsInput {
   idAssetVersions: [Int!]!
 }
 
+type GetAssetVersionDetailResult {
+  idAssetVersion: Int!
+  SubjectUnitIdentifier: SubjectUnitIdentifier
+  Project: [Project!]
+  Item: Item
+  CaptureDataPhoto: IngestPhotogrammetry
+  Model: IngestModel
+}
+
 type GetAssetVersionsDetailsResult {
   valid: Boolean!
-  SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
-  Project: [Project!]!
-  Item: [Item!]!
-  CaptureDataPhoto: [IngestPhotogrammetry!]!
-  Model: [Model!]!
+  Details: [GetAssetVersionDetailResult!]!
 }
 
 input GetAssetInput {
@@ -843,7 +848,7 @@ enum UploadStatus {
 
 type UploadAssetResult {
   status: UploadStatus!
-  idAssetVersion: Int
+  idAssetVersions: [Int!]
   error: String
 }
 
@@ -929,9 +934,21 @@ input IngestPhotogrammetry {
   backgroundRemovalMethod: Int
   clusterType: Int
   clusterGeometryFieldId: Int
-  directory: String
+  directory: String!
   folders: [IngestFolder!]!
   identifiers: [IngestIdentifier!]!
+}
+
+input IngestModel {
+  idAssetVersion: Int!
+  authoritative: Boolean!
+  dateCreated: String!
+  creationMethod: Int!
+  modality: Int!
+  purpose: Int!
+  units: Int!
+  master: Boolean!
+  directory: String!
 }
 
 input IngestDataInput {

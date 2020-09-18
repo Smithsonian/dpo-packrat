@@ -740,14 +740,20 @@ export type GetAssetVersionsDetailsInput = {
     idAssetVersions: Array<Scalars['Int']>;
 };
 
+export type GetAssetVersionDetailResult = {
+    __typename?: 'GetAssetVersionDetailResult';
+    idAssetVersion: Scalars['Int'];
+    SubjectUnitIdentifier?: Maybe<SubjectUnitIdentifier>;
+    Project?: Maybe<Array<Project>>;
+    Item?: Maybe<Item>;
+    CaptureDataPhoto?: Maybe<IngestPhotogrammetry>;
+    Model?: Maybe<IngestModel>;
+};
+
 export type GetAssetVersionsDetailsResult = {
     __typename?: 'GetAssetVersionsDetailsResult';
     valid: Scalars['Boolean'];
-    SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
-    Project: Array<Project>;
-    Item: Array<Item>;
-    CaptureDataPhoto: Array<IngestPhotogrammetry>;
-    Model: Array<IngestModel>;
+    Details: Array<GetAssetVersionDetailResult>;
 };
 
 export type GetAssetInput = {
@@ -1182,21 +1188,21 @@ export type IngestPhotogrammetry = {
     backgroundRemovalMethod?: Maybe<Scalars['Int']>;
     clusterType?: Maybe<Scalars['Int']>;
     clusterGeometryFieldId?: Maybe<Scalars['Int']>;
-    directory?: Maybe<Scalars['String']>;
+    directory: Scalars['String'];
     folders: Array<IngestFolder>;
     identifiers: Array<IngestIdentifier>;
 };
 
 export type IngestModel = {
     idAssetVersion: Scalars['Int'];
+    authoritative: Scalars['Boolean'];
     dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
-    master: Scalars['Boolean'];
-    authoritative: Scalars['Boolean'];
     modality: Scalars['Int'];
-    units: Scalars['Int'];
     purpose: Scalars['Int'];
-    directory: Maybe<Scalars['String']>;
+    units: Scalars['Int'];
+    master: Scalars['Boolean'];
+    directory: Scalars['String'];
 };
 
 export type IngestDataInput = {

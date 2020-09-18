@@ -51,6 +51,18 @@ input IngestPhotogrammetry {
     identifiers: [IngestIdentifier!]!
 }
 
+input IngestModel {
+    idAssetVersion: Int!
+    authoritative: Boolean!
+    dateCreated: String!
+    creationMethod: Int!
+    modality: Int!
+    purpose: Int!
+    units: Int!
+    master: Boolean!
+    directory: String!
+}
+
 input IngestDataInput {
     subjects: [IngestSubject!]!
     project: IngestProject!

@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as path from 'path';
 import * as STORE from '../interface';
 import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 import { ZipFile, ZipStream, IOResults, IZip } from '../../utils';
-import { BagitReader, BulkIngestReader } from '../../utils/parser';
+import { BagitReader, BulkIngestReader, IngestMetadata } from '../../utils/parser';
 import { StorageFactory } from './StorageFactory';
 import { IStorage } from './IStorage';
 import { AssetVersionContent } from '../../types/graphql';
@@ -163,15 +162,6 @@ export class AssetStorageAdapter {
             return { assets: null, assetVersions: null, success: false, error: loadResults.error };
         }
 
-        /*
-        // create an asset group for these bulk ingested assets
-        const assetGroup: DBAPI.AssetGroup = new DBAPI.AssetGroup({ idAssetGroup: 0 });
-        if (!await assetGroup.create()) {
-            LOG.logger.error(loadResults.error);
-            return { assets: null, assetVersions: null, success: false, error: 'AssetStorageAdapter.commitNewAssetVersionBulk unable to create AssetGroup' };
-        }
-        asset.idAssetGroup = assetGroup.idAssetGroup;
-        */
         const assets: DBAPI.Asset[] = [];
         const assetVersions: DBAPI.AssetVersion[] = [];
 
@@ -203,7 +193,7 @@ export class AssetStorageAdapter {
 
     private static async createAssetConstellation(asset: DBAPI.Asset, idUserCreator: number,
         DateCreated: Date, resStorage: STORE.CommitWriteStreamResult, storageKey: string,
-        IsBagit: boolean, metaObject: any): Promise<DBAPI.AssetVersion | null> {
+        IsBagit: boolean, ingestedObject: IngestMetadata | null): Promise<DBAPI.AssetVersion | null> {
         if (asset.idAsset == 0) {
             /* istanbul ignore if */
             if (!await asset.create()) {
@@ -234,34 +224,59 @@ export class AssetStorageAdapter {
             return null;
         }
 
+        if (!await AssetStorageAdapter.storeBulkIngestMetadata(assetVersion, idUserCreator, ingestedObject))
+            return null;
+        return assetVersion;
+    }
+
+    static async storeBulkIngestMetadata(assetVersion: DBAPI.AssetVersion, idUserCreator: number, ingestedObject: IngestMetadata | null): Promise<boolean> {
+        if (!ingestedObject)
+            return true;
+
         const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
         if (!SO) {
             const error: string = `AssetStorageAdapter.commitNewAssetVersion: Unable to fetch system object for AssetVersion ${JSON.stringify(assetVersion)}`;
             LOG.logger.error(error);
+            return false;
+        }
+
+        const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eMetadataMetadataSourceBulkIngestion);
+        const metadata: DBAPI.Metadata = new DBAPI.Metadata({
+            Name: 'Bulk Ingestion',
+            ValueShort: null,
+            ValueExtended: JSON.stringify(ingestedObject),
+            idAssetValue: null,
+            idUser: idUserCreator,
+            idVMetadataSource: vocabulary ? vocabulary.idVocabulary : null,
+            idSystemObject: SO.idSystemObject,
+            idMetadata: 0
+        });
+
+        if (!await metadata.create()) {
+            const error: string = `AssetStorageAdapter.commitNewAssetVersion: Unable to create metadata for AssetVersion ${JSON.stringify(assetVersion)}`;
+            LOG.logger.error(error);
+            return false;
+        }
+        return true;
+    }
+
+    static async extractBulkIngestMetadata(assetVersion: DBAPI.AssetVersion): Promise<IngestMetadata | null> {
+        const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+        const metadataList: DBAPI.Metadata[] | null = SO ? await DBAPI.Metadata.fetchFromSystemObject(SO.idSystemObject) : null;
+        if (!metadataList)
             return null;
+
+        const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eMetadataMetadataSourceBulkIngestion);
+        if (!vocabulary)
+            return null;
+
+        for (const metadata of metadataList) {
+            if (metadata.idVMetadataSource != vocabulary.idVocabulary || !metadata.ValueExtended)
+                continue;
+            // Found it!
+            return JSON.parse(metadata.ValueExtended);
         }
-
-        if (metaObject) {
-            const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eMetadataMetadataSourceBulkIngestion);
-            const metadata: DBAPI.Metadata = new DBAPI.Metadata({
-                Name: 'Bulk Ingestion',
-                ValueShort: null,
-                ValueExtended: JSON.stringify(metaObject),
-                idAssetValue: null,
-                idUser: idUserCreator,
-                idVMetadataSource: vocabulary ? vocabulary.idVocabulary : null,
-                idSystemObject: SO.idSystemObject,
-                idMetadata: 0
-            });
-
-            if (!await metadata.create()) {
-                const error: string = `AssetStorageAdapter.commitNewAssetVersion: Unable to create metadata for AssetVersion ${JSON.stringify(assetVersion)}`;
-                LOG.logger.error(error);
-                return null;
-            }
-        }
-
-        return assetVersion;
+        return null;
     }
 
     static async ingestAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,

@@ -1,35 +1,28 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/brace-style */
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as STORE from '../../storage/interface';
 import * as H from '../helpers';
 import * as LOG from '../logger';
-import { IngestPhotogrammetry, IngestModel, IngestFolder } from '../../types/graphql';
+import { IngestPhotogrammetry, IngestModel, IngestFolder, Item } from '../../types/graphql';
 import { IZip } from '../IZip';
 import { CSVTypes, SubjectsCSVFields, ItemsCSVFields, CaptureDataPhotoCSVFields, ModelsCSVFields } from './csvTypes';
 import { CSVParser } from './csvParser';
 
-/** Wraps a bagit file represented by an AssetVersion. Besides being a valid bagit file (and thus having manifests and declaration files),
- * our bulk ingest files can have any of the following metadata CSV files:
- * subjects.csv: specifies one or more subjects to which the ingested content is attached. An idSubject can be specified to connect to an
- *      existing subject in the Packrat database; otherwise, upon ingest, subject(s) will be created, connected to the EDAN record specified
- *      via guids in the import file.
- * items.csv: specifies exactly one item to which the ingested content is attached. An idItem can be specified to connect to an existing
- *      item in the Packrat database; otherwise, upon ingest, an item will be created.
- * capture_data_photo.csv: specifies photogrammetry capture set metadata, as well as the directory name in which the actual assets
+export type IngestMetadata = DBAPI.SubjectUnitIdentifier & Item & (IngestPhotogrammetry | IngestModel);
+
+/** Provides access to bulk ingestion metadata, either from a bulk ingest bagit zip file, or from extracted metadata:
+ * Our bulk ingest files can have any of the following metadata CSV files:
+ * capture_data_photo.csv: specifies subject, unit, item, and photogrammetry capture set metadata, as well as the directory name in which the actual assets
  *      are found within the data folder of the bagit collection
- * models.csv: specifies model metadata, as well as the directory name in which the actual assets are found
+ * models.csv: specifies subject, unit, item, and model metadata, as well as the directory name in which the actual assets are found
  *      within the data folder of the bagit collection
  */
 export class BulkIngestReader {
     private _zip: IZip | null = null;
-
-    private _subjects: DBAPI.SubjectUnitIdentifier[] = [];
-    private _items: DBAPI.Item[] = [];
-    private _captureDataPhotos: IngestPhotogrammetry[] = [];
-    private _models: IngestModel[] = [];
-    private _projects: DBAPI.Project[] = [];
+    private _ingestedMetadata: IngestMetadata[] = [];
 
     async loadFromAssetVersion(idAssetVersion: number, autoClose: boolean): Promise<H.IOResults> {
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
@@ -90,8 +83,7 @@ export class BulkIngestReader {
                 return results;
         }
 
-        await this.computeProjects();
-        if ((this._captureDataPhotos.length + this._models.length) > 0)
+        if (this._ingestedMetadata.length > 0)
             return { success: true, error: '' };
         else
             return { success: false, error: 'BulkIngestReader.extractMetadataWorker() found no metadata' };
@@ -106,42 +98,23 @@ export class BulkIngestReader {
         return res;
     }
 
-    get subjects(): DBAPI.SubjectUnitIdentifier[] {
-        return this._subjects;
-    }
-    get items(): DBAPI.Item[] {
-        return this._items;
-    }
-    get projects(): DBAPI.Project[] {
-        return this._projects;
-    }
-    get captureDataPhoto(): IngestPhotogrammetry[] {
-        return this._captureDataPhotos;
-    }
-    get models(): IngestModel[] {
-        return this._models;
-    }
-    get ingestedObjects(): (IngestPhotogrammetry | IngestModel)[] {
-        const retValue: (IngestPhotogrammetry | IngestModel)[] = this._captureDataPhotos;
-        return retValue.concat(this._models);
+    get ingestedObjects(): IngestMetadata[] {
+        return this._ingestedMetadata;
     }
 
-    static ingestedObjectIsPhotogrammetry(obj: IngestPhotogrammetry | IngestModel): obj is IngestPhotogrammetry {
+    static ingestedObjectIsPhotogrammetry(obj: (IngestPhotogrammetry | IngestModel)): obj is IngestPhotogrammetry {
         return (obj as IngestPhotogrammetry).lightsourceType !== undefined;
     }
-    static ingestedObjectIsModel(obj: IngestPhotogrammetry | IngestModel): obj is IngestModel {
+    static ingestedObjectIsModel(obj: (IngestPhotogrammetry | IngestModel)): obj is IngestModel {
         return (obj as IngestModel).modality !== undefined;
     }
 
-    private async computeProjects(): Promise<void> {
-        const idSubjects: number[] = [];
-        for (const SUI of this._subjects) {
-            if (SUI.idSubject)
-                idSubjects.push(SUI.idSubject);
-        }
-        const projectList1: DBAPI.Project[] | null = await DBAPI.Project.fetchDerivedFromSubjectsUnits(idSubjects) || [];
-        const projectList2: DBAPI.Project[] | null = await DBAPI.Project.fetchMasterFromSubjects(idSubjects) || [];
-        this._projects =  projectList1.concat(projectList2);
+    static async computeProjects(ingestMetadata: IngestMetadata): Promise<DBAPI.Project[] | null> {
+        if (!ingestMetadata.idSubject)
+            return null;
+        const projectList1: DBAPI.Project[] | null = await DBAPI.Project.fetchDerivedFromSubjectsUnits([ingestMetadata.idSubject]) || [];
+        const projectList2: DBAPI.Project[] | null = await DBAPI.Project.fetchMasterFromSubjects([ingestMetadata.idSubject]) || [];
+        return projectList1.concat(projectList2);
     }
 
     private async computeCaptureDataPhotos(fileStream: NodeJS.ReadableStream): Promise<H.IOResults> {
@@ -153,22 +126,23 @@ export class BulkIngestReader {
             return { success: true, error: '' };
         }
 
-        let results: H.IOResults;
         for (const bagitCDP of bagitCDPs) {
             if (BulkIngestReader.isEmptyRow(bagitCDP))
                 continue;
 
-            results = await this.extractSubjectFromCSV(bagitCDP);
-            if (!results.success)
-                return results;
+            const subject: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectFromCSV(bagitCDP);
+            if (!subject)
+                return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute subject' };
 
-            results = await this.extractItemFromCSV(bagitCDP);
-            if (!results.success)
-                return results;
+            const item: DBAPI.Item | null = await this.extractItemFromCSV(bagitCDP);
+            if (!item)
+                return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute item' };
 
-            results = await this.extractCaptureDataPhotoFromCSV(bagitCDP);
-            if (!results.success)
-                return results;
+            const photo: IngestPhotogrammetry | null = await this.extractCaptureDataPhotoFromCSV(bagitCDP);
+            if (!photo)
+                return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute photogrammetry metadata' };
+
+            this._ingestedMetadata.push({ ... subject, ... item, ... photo });
         }
         return { success: true, error: '' };
     }
@@ -182,23 +156,23 @@ export class BulkIngestReader {
             return { success: true, error: '' };
         }
 
-        let results: H.IOResults;
         for (const bagitModel of bagitModels) {
             // LOG.logger.info(`Processing model ${JSON.stringify(bagitModel)}`);
             if (BulkIngestReader.isEmptyRow(bagitModel))
                 continue;
 
-            results = await this.extractSubjectFromCSV(bagitModel);
-            if (!results.success)
-                return results;
+            const subject: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectFromCSV(bagitModel);
+            if (!subject)
+                return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute subject' };
 
-            results = await this.extractItemFromCSV(bagitModel);
-            if (!results.success)
-                return results;
+            const item: DBAPI.Item | null = await this.extractItemFromCSV(bagitModel);
+            if (!item)
+                return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute item' };
 
-            results = await this.extractModelFromCSV(bagitModel);
-            if (!results.success)
-                return results;
+            const model: IngestModel | null = await this.extractModelFromCSV(bagitModel);
+            if (!model)
+                return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute model metadata' };
+            this._ingestedMetadata.push({ ... subject, ... item, ... model });
         }
         return { success: true, error: '' };
     }
@@ -210,7 +184,7 @@ export class BulkIngestReader {
         return true;
     }
 
-    private async extractSubjectFromCSV(bagitSubject: SubjectsCSVFields): Promise<H.IOResults> {
+    private async extractSubjectFromCSV(bagitSubject: SubjectsCSVFields): Promise<DBAPI.SubjectUnitIdentifier | null> {
         // try to load from guid as a subject identifier
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(bagitSubject.subject_guid);
         if (identifiers) {
@@ -220,22 +194,21 @@ export class BulkIngestReader {
                 const SOPair: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(identifier.idSystemObject);
                 if (SOPair && SOPair.Subject) {
                     const SUID: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectUnitIDFromSubject(SOPair.Subject, bagitSubject);
-                    if (SUID) {
-                        this._subjects.push(SUID);
-                        return { success: true, error: '' };
-                    }
+                    if (SUID)
+                        return SUID;
                 }
             }
         }
 
         // otherwise, we can't spot this subject in our DB; validate unit name and then gather remaining information
         const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(bagitSubject.unit_name);
-        if (!units || units.length == 0)
-            return { success: false, error: `BulkIngestReader.extractSubjectFromCSV unable to load unit from ${JSON.stringify(bagitSubject)}` };
+        if (!units || units.length == 0) {
+            LOG.logger.error(`BulkIngestReader.extractSubjectFromCSV unable to load unit from ${JSON.stringify(bagitSubject)}`);
+            return null;
+        }
 
-        this.subjects.push({ idSubject: 0, SubjectName: bagitSubject.subject_name, UnitAbbreviation: units[0].Abbreviation || '',
-            IdentifierCollection: bagitSubject.subject_guid, IdentifierPublic: '' });
-        return { success: true, error: '' };
+        return { idSubject: 0, SubjectName: bagitSubject.subject_name, UnitAbbreviation: units[0].Abbreviation || '',
+            IdentifierCollection: bagitSubject.subject_guid, IdentifierPublic: '' };
     }
 
     private async extractSubjectUnitIDFromSubject(subject: DBAPI.Subject | null,
@@ -257,69 +230,71 @@ export class BulkIngestReader {
             IdentifierCollection: identifier ? identifier.IdentifierValue : bagitSubject.subject_guid, IdentifierPublic: '' };
     }
 
-    private async extractItemFromCSV(bagitItem: ItemsCSVFields): Promise<H.IOResults> {
-        // try to load from guid as a item identifier
-        if (!bagitItem.item_guid) {
-            this._items.push(new DBAPI.Item({
+    private async extractItemFromCSV(bagitItem: ItemsCSVFields): Promise<DBAPI.Item | null> {
+        if (!bagitItem.item_guid)
+            return new DBAPI.Item({
                 idItem: 0,
                 EntireSubject: bagitItem.entire_subject != 0,
                 idAssetThumbnail!: null,
                 idGeoLocation!: null,
                 Name: bagitItem.item_name
-            }));
-            return { success: true, error: '' };
-        }
+            });
 
+        // try to load from guid as a item identifier
         const error: string = `Unable to find identifiers for items from ${bagitItem.item_guid}`;
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(bagitItem.item_guid);
-        if (!identifiers)
-            return { success: false, error };
+        if (!identifiers) {
+            LOG.logger.error(error);
+            return null;
+        }
 
         for (const identifier of identifiers) {
             if (!identifier.idSystemObject)
                 continue;
             const SOPair: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(identifier.idSystemObject);
             if (SOPair && SOPair.Item) {
-                this._items.push(SOPair.Item);
-                return { success: true, error: '' };
-            } else
-                return { success: false, error };
+                return SOPair.Item;
+            } else {
+                LOG.logger.error(error);
+                return null;
+            }
         }
 
-        return { success: false, error };
+        LOG.logger.error(error);
+        return null;
     }
 
-    private async extractCaptureDataPhotoFromCSV(bagitCDP: CaptureDataPhotoCSVFields): Promise<H.IOResults> {
+    private async extractCaptureDataPhotoFromCSV(bagitCDP: CaptureDataPhotoCSVFields): Promise<IngestPhotogrammetry | null> {
         let vocabResult: { idVocabulary: number, error?: string | null };
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataDatasetType, bagitCDP.capture_dataset_type);
         if (vocabResult.error)
-            return { success: false, error: vocabResult.error };
+        { LOG.logger.error(vocabResult.error); return null; }
         const datasetType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataItemPositionType, bagitCDP.item_position_type);
         if (vocabResult.error)
-            return { success: false, error: vocabResult.error };
+        { LOG.logger.error(vocabResult.error); return null; }
         const itemPositionType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataFocusType, bagitCDP.focus_type);
         if (vocabResult.error)
-            return { success: false, error: vocabResult.error };
+        { LOG.logger.error(vocabResult.error); return null; }
         const focusType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataLightSourceType, bagitCDP.light_source_type);
         if (vocabResult.error)
-            return { success: false, error: vocabResult.error };
+        { LOG.logger.error(vocabResult.error); return null; }
         const lightsourceType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, bagitCDP.background_removal_method);
         if (vocabResult.error)
-            return { success: false, error: vocabResult.error };
+        { LOG.logger.error(vocabResult.error); return null; }
         const backgroundRemovalMethod: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataClusterType, bagitCDP.cluster_type);
         if (vocabResult.error)
-            return { success: false, error: vocabResult.error };
+        { LOG.logger.error(vocabResult.error); return null; }
         const clusterType: number = vocabResult.idVocabulary;
 
         const folders: IngestFolder[] = [];
@@ -334,7 +309,7 @@ export class BulkIngestReader {
         }
 
         // directory_path: string;
-        const captureDataPhoto: IngestPhotogrammetry = {
+        return {
             idAssetVersion: 0,
             systemCreated: true, // TODO: not sure what is needed here
             dateCaptured: bagitCDP.date_captured,
@@ -351,37 +326,36 @@ export class BulkIngestReader {
             lightsourceType,
             backgroundRemovalMethod,
             clusterType,
-            clusterGeometryFieldId: bagitCDP.cluster_geometry_field_id
+            clusterGeometryFieldId: bagitCDP.cluster_geometry_field_id,
+            directory: bagitCDP.directory_path
         };
-        this._captureDataPhotos.push(captureDataPhoto);
-        return { success: true, error: '' };
     }
 
-    private async extractModelFromCSV(bagitModel: ModelsCSVFields): Promise<H.IOResults> {
+    private async extractModelFromCSV(bagitModel: ModelsCSVFields): Promise<IngestModel | null> {
         let vocabResult: { idVocabulary: number, error?: string | null };
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelCreationMethod, bagitModel.creation_method);
         if (vocabResult.error)
-            return { success: false, error: vocabResult.error };
+        { LOG.logger.error(vocabResult.error); return null; }
         const creationMethod: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelModality, bagitModel.modality);
         if (vocabResult.error)
-            return { success: false, error: vocabResult.error };
+        { LOG.logger.error(vocabResult.error); return null; }
         const modality: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelPurpose, bagitModel.purpose);
         if (vocabResult.error)
-            return { success: false, error: vocabResult.error };
+        { LOG.logger.error(vocabResult.error); return null; }
         const purpose: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelUnits, bagitModel.units);
         if (vocabResult.error)
-            return { success: false, error: vocabResult.error };
+        { LOG.logger.error(vocabResult.error); return null; }
         const units: number = vocabResult.idVocabulary;
 
         // directory_path: string;
-        const model: IngestModel = {
+        return {
             idAssetVersion: 0, // TODO: not sure what is needed here
             dateCreated: bagitModel.date_created,
             creationMethod,
@@ -392,9 +366,6 @@ export class BulkIngestReader {
             purpose,
             directory: bagitModel.directory_path
         };
-
-        this._models.push(model);
-        return { success: true, error: '' };
     }
 
     private async computeVocabulary(eVocabSetID: CACHE.eVocabularySetID, term: string): Promise<{ idVocabulary: number, error?: string | null }> {
