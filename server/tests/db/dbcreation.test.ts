@@ -531,6 +531,7 @@ describe('DB Creation Test Suite', () => {
                 StorageSize: 50,
                 StorageKeyStaging: '',
                 Ingested: true,
+                IsBagit: false,
                 idAssetVersion: 0
             });
         expect(assetVersion).toBeTruthy();
@@ -548,6 +549,7 @@ describe('DB Creation Test Suite', () => {
                 StorageSize: 50,
                 StorageKeyStaging: '',
                 Ingested: false,
+                IsBagit: false,
                 idAssetVersion: 0
             });
         expect(assetVersionNotIngested).toBeTruthy();
@@ -1622,6 +1624,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 StorageSize: 50,
                 StorageKeyStaging: '',
                 Ingested: true,
+                IsBagit: false,
                 idAssetVersion: 0
             });
         expect(assetVersion2).toBeTruthy();
@@ -4073,6 +4076,7 @@ describe('DB Update Test Suite', () => {
                 StorageSize: 50,
                 StorageKeyStaging: '',
                 Ingested: true,
+                IsBagit: false,
                 idAssetVersion: 0
             });
 

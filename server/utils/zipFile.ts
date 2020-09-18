@@ -90,12 +90,12 @@ export class ZipFile implements IZip {
                         if (!error && stream)
                             resolve(stream);
                         else {
-                            LOG.logger.error(`ZipFie.streamContent ${entry}`, error);
+                            LOG.logger.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`);
                             resolve(null);
                         }
                     });
                 } catch (error) /* istanbul ignore next */ {
-                    LOG.logger.error(`ZipFie.streamContent ${entry}`, error);
+                    LOG.logger.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`);
                     resolve(null);
                 }
             }

@@ -162,6 +162,7 @@ class TestSuiteUtils {
             StorageSize: 50,
             idAssetVersion: 0,
             Ingested: false,
+            IsBagit: false,
             Version: 0
         };
     };

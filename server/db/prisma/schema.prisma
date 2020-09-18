@@ -130,6 +130,7 @@ model AssetVersion {
   StorageSize       Int           @default(0)
   StorageKeyStaging String
   Ingested          Boolean
+  IsBagit           Boolean
   Asset             Asset         @relation(fields: [idAsset], references: [idAsset])
   User              User          @relation(fields: [idUserCreator], references: [idUser])
   SystemObject      SystemObject?

@@ -118,6 +118,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eCaptureDataFileVariantTypeProcessed: testVocabulary(vocabulary, 'Processed'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeProcessedZeroed: testVocabulary(vocabulary, 'Processed, Zeroed'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeFromCamera: testVocabulary(vocabulary, 'From Camera'); break;
+                    case eVocabularyID.eMetadataMetadataSourceBulkIngestion: testVocabulary(vocabulary, 'Bulk Ingestion'); break;
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
@@ -355,6 +356,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Project Documentation');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Intermediary File');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Other');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eMetadataMetadataSource, 'Bulk Ingestion');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
             await testVocabularyBySetAndTerm(eVocabularySetID.eNone, 'Other', false);
         });

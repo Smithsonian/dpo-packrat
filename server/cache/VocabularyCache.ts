@@ -56,6 +56,7 @@ export enum eVocabularyID {
     eCaptureDataFileVariantTypeProcessed,
     eCaptureDataFileVariantTypeProcessedZeroed,
     eCaptureDataFileVariantTypeFromCamera,
+    eMetadataMetadataSourceBulkIngestion,
     eNone = -1
 }
 
@@ -200,6 +201,12 @@ export class VocabularyCache {
                         case 'Processed':           eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
                         case 'Processed, Zeroed':   eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeProcessedZeroed; break;
                         case 'From Camera':         eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eMetadataMetadataSource: {
+                    switch (vocabulary.Term) {
+                        case 'Bulk Ingestion':      eVocabEnum = eVocabularyID.eMetadataMetadataSourceBulkIngestion; break;
                     }
                 } break;
             }

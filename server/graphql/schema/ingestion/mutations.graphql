@@ -37,8 +37,6 @@ input IngestPhotogrammetry {
     systemCreated: Boolean!
     description: String!
     cameraSettingUniform: Boolean!
-    identifiers: [IngestIdentifier!]!
-    folders: [IngestFolder!]!
     datasetFieldId: Int
     itemPositionType: Int
     itemPositionFieldId: Int
@@ -48,6 +46,9 @@ input IngestPhotogrammetry {
     backgroundRemovalMethod: Int
     clusterType: Int
     clusterGeometryFieldId: Int
+    directory: String!
+    folders: [IngestFolder!]!
+    identifiers: [IngestIdentifier!]!
 }
 
 input IngestDataInput {
