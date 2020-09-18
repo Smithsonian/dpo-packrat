@@ -3,7 +3,7 @@ import { AppContext, StateItem, StateProject, StateIdentifier, defaultItem, Inge
 import useItem from './useItem';
 import useProject from './useProject';
 import useMetadata from './useMetadata';
-import { IngestDataMutation, IngestIdentifier, IngestFolder, IngestPhotogrammetry, IngestDataDocument, IngestSubject } from '../../../types/graphql';
+import { IngestDataMutation, IngestIdentifier, IngestFolder, IngestPhotogrammetry, IngestDataDocument, IngestSubjectInput } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql';
 import lodash from 'lodash';
 import { FetchResult } from '@apollo/client';
@@ -34,7 +34,7 @@ function useIngest(): UseIngest {
 
         const ingestPhotogrammetry: IngestPhotogrammetry[] = [];
 
-        const ingestSubjects: IngestSubject[] = subjects.map(subject => ({
+        const ingestSubjects: IngestSubjectInput[] = subjects.map(subject => ({
             ...subject,
             id: subject.id || null
         }));
@@ -85,7 +85,8 @@ function useIngest(): UseIngest {
                 lightsourceType,
                 backgroundRemovalMethod,
                 clusterType,
-                clusterGeometryFieldId
+                clusterGeometryFieldId,
+                directory
             } = photogrammetry;
 
             const ingestIdentifiers: IngestIdentifier[] = [];
@@ -143,7 +144,8 @@ function useIngest(): UseIngest {
                 lightsourceType,
                 backgroundRemovalMethod,
                 clusterType,
-                clusterGeometryFieldId
+                clusterGeometryFieldId,
+                directory: directory || ''
             };
 
             ingestPhotogrammetry.push(photogrammetryData);
