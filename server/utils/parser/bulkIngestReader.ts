@@ -1,10 +1,11 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as STORE from '../../storage/interface';
 import * as H from '../helpers';
 import * as LOG from '../logger';
-import { IngestPhotogrammetry, IngestFolder } from '../../types/graphql';
+import { IngestPhotogrammetry, IngestModel, IngestFolder } from '../../types/graphql';
 import { IZip } from '../IZip';
 import { CSVTypes, SubjectsCSVFields, ItemsCSVFields, CaptureDataPhotoCSVFields, ModelsCSVFields } from './csvTypes';
 import { CSVParser } from './csvParser';
@@ -27,7 +28,7 @@ export class BulkIngestReader {
     private _subjects: DBAPI.SubjectUnitIdentifier[] = [];
     private _items: DBAPI.Item[] = [];
     private _captureDataPhotos: IngestPhotogrammetry[] = [];
-    private _models: DBAPI.Model[] = [];
+    private _models: IngestModel[] = [];
     private _projects: DBAPI.Project[] = [];
 
     async loadFromAssetVersion(idAssetVersion: number, autoClose: boolean): Promise<H.IOResults> {
@@ -55,7 +56,7 @@ export class BulkIngestReader {
 
     private async extractMetadata(autoClose: boolean): Promise<H.IOResults> {
         if (!this._zip)
-            return { success: false, error: 'bulkIngestReader.extractMetadata called with invalid zip' };
+            return { success: false, error: 'BulkIngestReader.extractMetadata called with invalid zip' };
 
         const results = await this.extractMetadataWorker();
 
@@ -69,7 +70,7 @@ export class BulkIngestReader {
 
     private async extractMetadataWorker(): Promise<H.IOResults> {
         if (!this._zip)
-            return { success: false, error: 'bulkIngestReader.extractMetadata called with invalid zip' };
+            return { success: false, error: 'BulkIngestReader.extractMetadata called with invalid zip' };
 
         // extract metadata for capture data
 
@@ -90,7 +91,10 @@ export class BulkIngestReader {
         }
 
         await this.computeProjects();
-        return { success: true, error: '' };
+        if ((this._captureDataPhotos.length + this._models.length) > 0)
+            return { success: true, error: '' };
+        else
+            return { success: false, error: 'BulkIngestReader.extractMetadataWorker() found no metadata' };
     }
 
     async close(): Promise<H.IOResults> {
@@ -114,8 +118,19 @@ export class BulkIngestReader {
     get captureDataPhoto(): IngestPhotogrammetry[] {
         return this._captureDataPhotos;
     }
-    get models(): DBAPI.Model[] {
+    get models(): IngestModel[] {
         return this._models;
+    }
+    get ingestedObjects(): (IngestPhotogrammetry | IngestModel)[] {
+        const retValue: (IngestPhotogrammetry | IngestModel)[] = this._captureDataPhotos;
+        return retValue.concat(this._models);
+    }
+
+    static ingestedObjectIsPhotogrammetry(obj: IngestPhotogrammetry | IngestModel): obj is IngestPhotogrammetry {
+        return (obj as IngestPhotogrammetry).lightsourceType !== undefined;
+    }
+    static ingestedObjectIsModel(obj: IngestPhotogrammetry | IngestModel): obj is IngestModel {
+        return (obj as IngestModel).modality !== undefined;
     }
 
     private async computeProjects(): Promise<void> {
@@ -134,12 +149,15 @@ export class BulkIngestReader {
         try {
             bagitCDPs = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & CaptureDataPhotoCSVFields>(fileStream, CSVTypes.captureDataPhoto);
         } catch (error) {
-            // LOG.logger.info('bulkIngestReader.computeCaptureDataPhotos capture_data_photos.csv not found');
+            LOG.logger.info('BulkIngestReader.computeCaptureDataPhotos capture_data_photos.csv not found');
             return { success: true, error: '' };
         }
 
         let results: H.IOResults;
         for (const bagitCDP of bagitCDPs) {
+            if (BulkIngestReader.isEmptyRow(bagitCDP))
+                continue;
+
             results = await this.extractSubjectFromCSV(bagitCDP);
             if (!results.success)
                 return results;
@@ -160,12 +178,16 @@ export class BulkIngestReader {
         try {
             bagitModels = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & ModelsCSVFields>(fileStream, CSVTypes.models);
         } catch (error) {
-            // LOG.logger.info('bulkIngestReader.computeCaptureDataPhotos models.csv not found');
+            LOG.logger.info('BulkIngestReader.computeModels models.csv not found');
             return { success: true, error: '' };
         }
 
         let results: H.IOResults;
         for (const bagitModel of bagitModels) {
+            // LOG.logger.info(`Processing model ${JSON.stringify(bagitModel)}`);
+            if (BulkIngestReader.isEmptyRow(bagitModel))
+                continue;
+
             results = await this.extractSubjectFromCSV(bagitModel);
             if (!results.success)
                 return results;
@@ -179,6 +201,13 @@ export class BulkIngestReader {
                 return results;
         }
         return { success: true, error: '' };
+    }
+
+    private static isEmptyRow(row: any): boolean {
+        for (const value of Object.values(row))
+            if (value)
+                return false;
+        return true;
     }
 
     private async extractSubjectFromCSV(bagitSubject: SubjectsCSVFields): Promise<H.IOResults> {
@@ -201,11 +230,8 @@ export class BulkIngestReader {
 
         // otherwise, we can't spot this subject in our DB; validate unit name and then gather remaining information
         const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(bagitSubject.unit_name);
-        if (!units || units.length == 0) {
-            const error: string = `BulkIngestReader.computeCaptureDataPhotos unable to load unit from ${JSON.stringify(bagitSubject)}`;
-            LOG.logger.error(error);
-            return { success: false, error };
-        }
+        if (!units || units.length == 0)
+            return { success: false, error: `BulkIngestReader.extractSubjectFromCSV unable to load unit from ${JSON.stringify(bagitSubject)}` };
 
         this.subjects.push({ idSubject: 0, SubjectName: bagitSubject.subject_name, UnitAbbreviation: units[0].Abbreviation || '',
             IdentifierCollection: bagitSubject.subject_guid, IdentifierPublic: '' });
@@ -246,10 +272,8 @@ export class BulkIngestReader {
 
         const error: string = `Unable to find identifiers for items from ${bagitItem.item_guid}`;
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(bagitItem.item_guid);
-        if (!identifiers) {
-            LOG.logger.error(error);
+        if (!identifiers)
             return { success: false, error };
-        }
 
         for (const identifier of identifiers) {
             if (!identifier.idSystemObject)
@@ -258,13 +282,10 @@ export class BulkIngestReader {
             if (SOPair && SOPair.Item) {
                 this._items.push(SOPair.Item);
                 return { success: true, error: '' };
-            } else {
-                LOG.logger.error(error);
+            } else
                 return { success: false, error };
-            }
         }
 
-        LOG.logger.error(error);
         return { success: false, error };
     }
 
@@ -314,7 +335,7 @@ export class BulkIngestReader {
 
         // directory_path: string;
         const captureDataPhoto: IngestPhotogrammetry = {
-            idAssetVersion: 0, // TODO: not sure what is needed here
+            idAssetVersion: 0,
             systemCreated: true, // TODO: not sure what is needed here
             dateCaptured: bagitCDP.date_captured,
             datasetType,
@@ -342,35 +363,36 @@ export class BulkIngestReader {
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelCreationMethod, bagitModel.creation_method);
         if (vocabResult.error)
             return { success: false, error: vocabResult.error };
-        const idVCreationMethod: number = vocabResult.idVocabulary;
+        const creationMethod: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelModality, bagitModel.modality);
         if (vocabResult.error)
             return { success: false, error: vocabResult.error };
-        const idVModality: number = vocabResult.idVocabulary;
+        const modality: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelPurpose, bagitModel.purpose);
         if (vocabResult.error)
             return { success: false, error: vocabResult.error };
-        const idVPurpose: number = vocabResult.idVocabulary;
+        const purpose: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelUnits, bagitModel.units);
         if (vocabResult.error)
             return { success: false, error: vocabResult.error };
-        const idVUnits: number = vocabResult.idVocabulary;
+        const units: number = vocabResult.idVocabulary;
 
         // directory_path: string;
-        const model: DBAPI.Model = new DBAPI.Model({
-            idModel: 0, // TODO: not sure what is needed here
-            Authoritative: bagitModel.authoritative != 0,
-            DateCreated: H.Helpers.convertStringToDate(bagitModel.date_created) || new Date(),
-            idAssetThumbnail: null,
-            idVCreationMethod,
-            idVModality,
-            idVPurpose,
-            idVUnits,
-            Master: bagitModel.master != 0
-        });
+        const model: IngestModel = {
+            idAssetVersion: 0, // TODO: not sure what is needed here
+            dateCreated: bagitModel.date_created,
+            creationMethod,
+            master: bagitModel.master != 0,
+            authoritative: bagitModel.authoritative != 0,
+            modality,
+            units,
+            purpose,
+            directory: bagitModel.directory_path
+        };
+
         this._models.push(model);
         return { success: true, error: '' };
     }

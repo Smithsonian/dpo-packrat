@@ -137,9 +137,14 @@ export class BagitReader implements IZip {
     }
 
     async streamContent(file: string): Promise<NodeJS.ReadableStream | null> {
+        if (!this._validated) {
+            if (!(await this.validate()).success)
+                return null;
+        }
+
         try {
             const fileName: string = this.prefixedFilename(file);
-            // LOG.logger.info(`getFileStream(${file}) looking in ${fileName}`);
+            // LOG.logger.info(`getFileStream(${file}) looking in ${fileName} with prefixDir of ${this._prefixDir}`);
 
             return (this._zip)
                 ? await this._zip.streamContent(fileName)
@@ -195,6 +200,7 @@ export class BagitReader implements IZip {
             const regexResults = bagSpecialRegex.exec(file);
             if (regexResults && regexResults.length == 6) {
                 const prefixDirInstance: string = regexResults[2];
+
                 if (this._prefixDir == null)
                     this._prefixDir = prefixDirInstance;
                 else if (this._prefixDir != prefixDirInstance)

@@ -160,8 +160,6 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             systemCreated: true,
                             description: 'some description',
                             cameraSettingUniform: isUniform,
-                            identifiers: [identifier],
-                            folders: [folder],
                             datasetFieldId: null,
                             itemPositionType: null,
                             itemPositionFieldId: null,
@@ -170,7 +168,10 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             lightsourceType: null,
                             backgroundRemovalMethod: null,
                             clusterType: null,
-                            clusterGeometryFieldId: null
+                            clusterGeometryFieldId: null,
+                            directory: '',
+                            identifiers: [identifier],
+                            folders: [folder],
                         };
 
                         const ingestDataInput = {

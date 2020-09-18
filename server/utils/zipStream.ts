@@ -67,7 +67,7 @@ export class ZipStream implements IZip {
             const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
             return (ZO) ? ZO.nodeStream() : null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error(`zipStream.streamContent ${entry}`, error);
+            LOG.logger.error(`ZipStream.streamContent ${entry}`, error);
             return null;
         }
     }

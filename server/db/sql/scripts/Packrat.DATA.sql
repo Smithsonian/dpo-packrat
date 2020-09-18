@@ -120,6 +120,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 13, 'Scene
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 14, 'Project Documentation');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 15, 'Intermediary File');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 16, 'Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 1, 'Bulk Ingestion');
 
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary 
 WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');

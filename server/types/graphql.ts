@@ -747,7 +747,7 @@ export type GetAssetVersionsDetailsResult = {
     Project: Array<Project>;
     Item: Array<Item>;
     CaptureDataPhoto: Array<IngestPhotogrammetry>;
-    Model: Array<Model>;
+    Model: Array<IngestModel>;
 };
 
 export type GetAssetInput = {
@@ -1173,8 +1173,6 @@ export type IngestPhotogrammetry = {
     systemCreated: Scalars['Boolean'];
     description: Scalars['String'];
     cameraSettingUniform: Scalars['Boolean'];
-    identifiers: Array<IngestIdentifier>;
-    folders: Array<IngestFolder>;
     datasetFieldId?: Maybe<Scalars['Int']>;
     itemPositionType?: Maybe<Scalars['Int']>;
     itemPositionFieldId?: Maybe<Scalars['Int']>;
@@ -1184,6 +1182,21 @@ export type IngestPhotogrammetry = {
     backgroundRemovalMethod?: Maybe<Scalars['Int']>;
     clusterType?: Maybe<Scalars['Int']>;
     clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    directory?: Maybe<Scalars['String']>;
+    folders: Array<IngestFolder>;
+    identifiers: Array<IngestIdentifier>;
+};
+
+export type IngestModel = {
+    idAssetVersion: Scalars['Int'];
+    dateCreated: Scalars['String'];
+    creationMethod: Scalars['Int'];
+    master: Scalars['Boolean'];
+    authoritative: Scalars['Boolean'];
+    modality: Scalars['Int'];
+    units: Scalars['Int'];
+    purpose: Scalars['Int'];
+    directory: Maybe<Scalars['String']>;
 };
 
 export type IngestDataInput = {

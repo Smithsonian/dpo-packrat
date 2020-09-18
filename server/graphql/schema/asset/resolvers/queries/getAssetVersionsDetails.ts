@@ -1,5 +1,5 @@
 import { QueryGetAssetVersionsDetailsArgs, GetAssetVersionsDetailsResult,
-    Item as ItemQL, Model as ModelQL, IngestPhotogrammetry } from '../../../../../types/graphql';
+    Item as ItemQL, IngestPhotogrammetry, IngestModel } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import { BulkIngestReader } from '../../../../../utils/parser';
 // import * as LOG from '../../../../../utils/logger';
@@ -24,7 +24,7 @@ export default async function getAssetVersionsDetails(_: Parent, args: QueryGetA
 
             const itemList: ItemQL[] = [];
             const capturePhotoList: IngestPhotogrammetry[] = [];
-            const modelList: ModelQL[] = [];
+            const modelList: IngestModel[] = [];
             for (const item of bulkReader.items)
                 itemList.push({ idItem: item.idItem, EntireSubject: item.EntireSubject, Name: item.Name });
             for (const CDP of bulkReader.captureDataPhoto)
