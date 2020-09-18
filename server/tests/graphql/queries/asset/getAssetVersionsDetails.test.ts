@@ -50,10 +50,15 @@ const getAssetVersionDetailsTest = (utils: TestSuiteUtils): void => {
                                 idAssetVersions: [assetVersion.idAsset]
                             };
 
-                            const { SubjectUnitIdentifier, Project, Item } = await graphQLApi.getAssetVersionsDetails(getContentsInput);
-                            expect(SubjectUnitIdentifier).toBeTruthy();
-                            expect(Project).toBeTruthy();
-                            expect(Item).toBeTruthy();
+                            const { valid, Details } = await graphQLApi.getAssetVersionsDetails(getContentsInput);
+                            expect(valid).toBeTruthy();
+                            expect(Details.length).toBeGreaterThan(0);
+                            if (Details.length > 0) {
+                                const { SubjectUnitIdentifier, Project, Item } = Details[0];
+                                expect(SubjectUnitIdentifier).toBeTruthy();
+                                expect(Project).toBeTruthy();
+                                expect(Item).toBeTruthy();
+                            }
                         }
                     }
                 }
