@@ -2,35 +2,35 @@ type Mutation {
     ingestData(input: IngestDataInput!): IngestDataResult!
 }
 
-input IngestSubject {
+input IngestSubjectInput {
     id: Int
     name: String!
     arkId: String!
     unit: String!
 }
 
-input IngestProject {
+input IngestProjectInput {
     id: Int!
     name: String!
 }
 
-input IngestItem {
+input IngestItemInput {
     id: Int
     name: String!
     entireSubject: Boolean!
 }
 
-input IngestIdentifier {
+input IngestIdentifierInput {
     identifier: String!
     identifierType: Int!
 }
 
-input IngestFolder {
+input IngestFolderInput {
     name: String!
     variantType: Int!
 }
 
-input IngestPhotogrammetry {
+input IngestPhotogrammetryInput {
     idAssetVersion: Int!
     dateCaptured: String!
     datasetType: Int!
@@ -47,11 +47,11 @@ input IngestPhotogrammetry {
     clusterType: Int
     clusterGeometryFieldId: Int
     directory: String!
-    folders: [IngestFolder!]!
-    identifiers: [IngestIdentifier!]!
+    folders: [IngestFolderInput!]!
+    identifiers: [IngestIdentifierInput!]!
 }
 
-input IngestModel {
+input IngestModelInput {
     idAssetVersion: Int!
     authoritative: Boolean!
     dateCreated: String!
@@ -64,10 +64,10 @@ input IngestModel {
 }
 
 input IngestDataInput {
-    subjects: [IngestSubject!]!
-    project: IngestProject!
-    item: IngestItem!
-    photogrammetry: [IngestPhotogrammetry!]!
+    subjects: [IngestSubjectInput!]!
+    project: IngestProjectInput!
+    item: IngestItemInput!
+    photogrammetry: [IngestPhotogrammetryInput!]!
 }
 
 type IngestDataResult {

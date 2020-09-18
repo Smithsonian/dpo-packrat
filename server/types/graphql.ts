@@ -740,6 +740,53 @@ export type GetAssetVersionsDetailsInput = {
     idAssetVersions: Array<Scalars['Int']>;
 };
 
+export type IngestIdentifier = {
+    __typename?: 'IngestIdentifier';
+    identifier: Scalars['String'];
+    identifierType: Scalars['Int'];
+};
+
+export type IngestFolder = {
+    __typename?: 'IngestFolder';
+    name: Scalars['String'];
+    variantType: Scalars['Int'];
+};
+
+export type IngestPhotogrammetry = {
+    __typename?: 'IngestPhotogrammetry';
+    idAssetVersion: Scalars['Int'];
+    dateCaptured: Scalars['String'];
+    datasetType: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    description: Scalars['String'];
+    cameraSettingUniform: Scalars['Boolean'];
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    directory: Scalars['String'];
+    folders: Array<IngestFolder>;
+    identifiers: Array<IngestIdentifier>;
+};
+
+export type IngestModel = {
+    __typename?: 'IngestModel';
+    idAssetVersion: Scalars['Int'];
+    authoritative: Scalars['Boolean'];
+    dateCreated: Scalars['String'];
+    creationMethod: Scalars['Int'];
+    modality: Scalars['Int'];
+    purpose: Scalars['Int'];
+    units: Scalars['Int'];
+    master: Scalars['Boolean'];
+    directory: Scalars['String'];
+};
+
 export type GetAssetVersionDetailResult = {
     __typename?: 'GetAssetVersionDetailResult';
     idAssetVersion: Scalars['Int'];
@@ -1144,35 +1191,35 @@ export type CreateCaptureDataPhotoResult = {
     CaptureDataPhoto?: Maybe<CaptureDataPhoto>;
 };
 
-export type IngestSubject = {
+export type IngestSubjectInput = {
     id?: Maybe<Scalars['Int']>;
     name: Scalars['String'];
     arkId: Scalars['String'];
     unit: Scalars['String'];
 };
 
-export type IngestProject = {
+export type IngestProjectInput = {
     id: Scalars['Int'];
     name: Scalars['String'];
 };
 
-export type IngestItem = {
+export type IngestItemInput = {
     id?: Maybe<Scalars['Int']>;
     name: Scalars['String'];
     entireSubject: Scalars['Boolean'];
 };
 
-export type IngestIdentifier = {
+export type IngestIdentifierInput = {
     identifier: Scalars['String'];
     identifierType: Scalars['Int'];
 };
 
-export type IngestFolder = {
+export type IngestFolderInput = {
     name: Scalars['String'];
     variantType: Scalars['Int'];
 };
 
-export type IngestPhotogrammetry = {
+export type IngestPhotogrammetryInput = {
     idAssetVersion: Scalars['Int'];
     dateCaptured: Scalars['String'];
     datasetType: Scalars['Int'];
@@ -1189,11 +1236,11 @@ export type IngestPhotogrammetry = {
     clusterType?: Maybe<Scalars['Int']>;
     clusterGeometryFieldId?: Maybe<Scalars['Int']>;
     directory: Scalars['String'];
-    folders: Array<IngestFolder>;
-    identifiers: Array<IngestIdentifier>;
+    folders: Array<IngestFolderInput>;
+    identifiers: Array<IngestIdentifierInput>;
 };
 
-export type IngestModel = {
+export type IngestModelInput = {
     idAssetVersion: Scalars['Int'];
     authoritative: Scalars['Boolean'];
     dateCreated: Scalars['String'];
@@ -1206,10 +1253,10 @@ export type IngestModel = {
 };
 
 export type IngestDataInput = {
-    subjects: Array<IngestSubject>;
-    project: IngestProject;
-    item: IngestItem;
-    photogrammetry: Array<IngestPhotogrammetry>;
+    subjects: Array<IngestSubjectInput>;
+    project: IngestProjectInput;
+    item: IngestItemInput;
+    photogrammetry: Array<IngestPhotogrammetryInput>;
 };
 
 export type IngestDataResult = {

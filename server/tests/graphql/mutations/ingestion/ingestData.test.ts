@@ -1,9 +1,9 @@
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
 import {
-    IngestItem,
-    IngestProject,
-    IngestSubject,
+    IngestItemInput,
+    IngestProjectInput,
+    IngestSubjectInput,
     IngestPhotogrammetry,
     IngestIdentifier,
     IngestFolder,
@@ -83,7 +83,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         const { idSubject, SubjectName, IdentifierPublic, UnitAbbreviation } = SubjectUnitIdentifier[0];
 
-                        const subject: IngestSubject = {
+                        const subject: IngestSubjectInput = {
                             id: idSubject,
                             name: SubjectName,
                             arkId: IdentifierPublic || '',
@@ -98,12 +98,12 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         const { idProject, Name } = Project[0];
 
-                        const project: IngestProject = {
+                        const project: IngestProjectInput = {
                             id: idProject,
                             name: Name
                         };
 
-                        const item: IngestItem = {
+                        const item: IngestItemInput = {
                             id: null,
                             name: 'custom item',
                             entireSubject: true
