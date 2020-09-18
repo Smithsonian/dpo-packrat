@@ -1,4 +1,4 @@
-import { IngestDataResult, MutationIngestDataArgs, IngestSubject, IngestItem, IngestPhotogrammetry, IngestIdentifier, User } from '../../../../../types/graphql';
+import { IngestDataResult, MutationIngestDataArgs, IngestSubjectInput, IngestItemInput, IngestPhotogrammetry, IngestIdentifier, User } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
@@ -214,7 +214,7 @@ async function updateIdentifier(identifier: DBAPI.Identifier | null, subjectDB: 
     return true;
 }
 
-async function validateExistingSubject(subject: IngestSubject, unitEdanDB: DBAPI.UnitEdan | null): Promise<DBAPI.Subject | null> {
+async function validateExistingSubject(subject: IngestSubjectInput, unitEdanDB: DBAPI.UnitEdan | null): Promise<DBAPI.Subject | null> {
     // if this subject exists, validate it
     const subjectDB: DBAPI.Subject | null = subject.id ? await DBAPI.Subject.fetch(subject.id) : null;
     if (!subjectDB) {
@@ -230,7 +230,7 @@ async function validateExistingSubject(subject: IngestSubject, unitEdanDB: DBAPI
     return subjectDB;
 }
 
-async function createSubjectAndRelated(subject: IngestSubject, unitEdanDB: DBAPI.UnitEdan | null): Promise<DBAPI.Subject | null> {
+async function createSubjectAndRelated(subject: IngestSubjectInput, unitEdanDB: DBAPI.UnitEdan | null): Promise<DBAPI.Subject | null> {
     // identify Unit; create UnitEdan if needed
     unitEdanDB = await validateOrCreateUnitEdan(unitEdanDB, subject.unit);
     if (!unitEdanDB)
@@ -274,7 +274,7 @@ async function wireProjectToSubjects(idProject: number, subjectsDB: DBAPI.Subjec
     return true;
 }
 
-async function fetchOrCreateItem(item: IngestItem): Promise<DBAPI.Item | null> {
+async function fetchOrCreateItem(item: IngestItemInput): Promise<DBAPI.Item | null> {
     let itemDB: DBAPI.Item | null;
     if (item.id) {
         itemDB = await DBAPI.Item.fetch(item.id);

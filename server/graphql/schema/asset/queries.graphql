@@ -9,6 +9,49 @@ input GetAssetVersionsDetailsInput {
     idAssetVersions: [Int!]!
 }
 
+type IngestIdentifier {
+    identifier: String!
+    identifierType: Int!
+}
+
+type IngestFolder {
+    name: String!
+    variantType: Int!
+}
+
+type IngestPhotogrammetry {
+    idAssetVersion: Int!
+    dateCaptured: String!
+    datasetType: Int!
+    systemCreated: Boolean!
+    description: String!
+    cameraSettingUniform: Boolean!
+    datasetFieldId: Int
+    itemPositionType: Int
+    itemPositionFieldId: Int
+    itemArrangementFieldId: Int
+    focusType: Int
+    lightsourceType: Int
+    backgroundRemovalMethod: Int
+    clusterType: Int
+    clusterGeometryFieldId: Int
+    directory: String!
+    folders: [IngestFolder!]!
+    identifiers: [IngestIdentifier!]!
+}
+
+type IngestModel {
+    idAssetVersion: Int!
+    authoritative: Boolean!
+    dateCreated: String!
+    creationMethod: Int!
+    modality: Int!
+    purpose: Int!
+    units: Int!
+    master: Boolean!
+    directory: String!
+}
+
 type GetAssetVersionDetailResult {
     idAssetVersion: Int!
     SubjectUnitIdentifier: SubjectUnitIdentifier
