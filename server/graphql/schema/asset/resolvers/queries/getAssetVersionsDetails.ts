@@ -9,17 +9,20 @@ import * as LOG from '../../../../../utils/logger';
 
 export default async function getAssetVersionsDetails(_: Parent, args: QueryGetAssetVersionsDetailsArgs, context: Context): Promise<GetAssetVersionsDetailsResult> {
     const { user } = context;
-    if (!user)
+    if (!user) {
+        LOG.logger.error('GraphQL getAssetVersionsDetails called with invalid user');
         return { valid: false, Details: [] };
+    }
 
     let firstSubject: SubjectUnitIdentifier | null = null;
     let firstItem: Item | null = null;
     const { idAssetVersions } = args.input;
+
     const results: GetAssetVersionsDetailsResult = { valid: true, Details: [] };
     for (const idAssetVersion of idAssetVersions) {
         const assetVersion: AssetVersion | null = await AssetVersion.fetch(idAssetVersion);
         if (!assetVersion) {
-            LOG.logger.error(`GraphQL getAssetVersionsDetails called with invalid idAssetVersion ${idAssetVersions}`);
+            LOG.logger.error(`GraphQL getAssetVersionsDetails called with invalid idAssetVersion ${idAssetVersion}`);
             return { valid: false, Details: [] };
         }
 

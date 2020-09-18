@@ -6,10 +6,8 @@ import {
     StateMetadata,
     StateProject,
     parseProjectToState,
-    StateItem,
     parseItemToState,
-    parseSubjectUnitIdentifierToState,
-    StateSubject
+    parseSubjectUnitIdentifierToState
 } from '../../../context';
 import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus } from '../../../context';
 import { apolloUploader, apolloClient } from '../../../graphql';
@@ -29,7 +27,7 @@ import { eVocabularySetID } from '../../../types/server';
 import { ApolloQueryResult, FetchResult } from '@apollo/client';
 import useProject from './useProject';
 import useItem from './useItem';
-import { Item, Project, SubjectUnitIdentifier } from '../../../types/graphql';
+import { Project } from '../../../types/graphql';
 import useSubject from './useSubject';
 
 type MetadataUpdate = {
@@ -87,30 +85,33 @@ const useFilesUpload = (): UseFilesUpload => {
 
             if (data) {
                 const { getAssetVersionsDetails } = data;
-
-                const { SubjectUnitIdentifier: foundSubjectUnitIdentifier, Project: foundProject, Item: foundItem } = getAssetVersionsDetails;
-
-                const subjects: StateSubject[] = foundSubjectUnitIdentifier.map((subjectUnitIdentifier: SubjectUnitIdentifier) =>
-                    parseSubjectUnitIdentifierToState(subjectUnitIdentifier)
-                );
-                addSubjects(subjects);
-
-                const projects: StateProject[] = foundProject.map((project: Project, index: number) => parseProjectToState(project, !index));
-                addProjects(projects);
-
-                const items: StateItem[] = foundItem.map((item: Item) => parseItemToState(item, false));
-                addItems(items);
+                if (!getAssetVersionsDetails.valid)
+                    return { valid: false, selectedFiles: false };
 
                 const metadatas: StateMetadata[] = [];
+                for (const detail of getAssetVersionsDetails.Details) {
+                    const { SubjectUnitIdentifier: foundSubjectUnitIdentifier, Project: foundProject, Item: foundItem } = detail;
 
-                selectedFiles.forEach((file: IngestionFile) => {
-                    const metadataStep: StateMetadata = {
-                        file,
-                        photogrammetry: defaultPhotogrammetryFields
-                    };
+                    if (foundSubjectUnitIdentifier)
+                        addSubjects([parseSubjectUnitIdentifierToState(foundSubjectUnitIdentifier)]);
 
-                    metadatas.push(metadataStep);
-                });
+                    if (foundProject) {
+                        const projects: StateProject[] = foundProject.map((project: Project, index: number) => parseProjectToState(project, !index));
+                        addProjects(projects);
+                    }
+
+                    if (foundItem)
+                        addItems([parseItemToState(foundItem, false)]);
+
+                    selectedFiles.forEach((file: IngestionFile) => {
+                        const metadataStep: StateMetadata = {
+                            file,
+                            photogrammetry: defaultPhotogrammetryFields
+                        };
+
+                        metadatas.push(metadataStep);
+                    });
+                }
 
                 const addMetadataStepAction: IngestionDispatchAction = {
                     type: METADATA_ACTIONS.ADD_METADATA,
@@ -305,15 +306,19 @@ const useFilesUpload = (): UseFilesUpload => {
                 const { uploadAsset }: UploadAssetMutation = data;
 
                 if (uploadAsset) {
-                    const { status, idAssetVersion, error } = uploadAsset;
-
-                    if (status === UploadStatus.Complete && idAssetVersion) {
-                        ingestionDispatch(successAction(idAssetVersion));
-                        toast.success(`Upload finished for ${file.name}`);
-                    } else if (status === UploadStatus.Failed) {
-                        const errorMessage = error || `Upload failed for ${file.name}`;
-                        toast.error(errorMessage);
-                        ingestionDispatch(errorAction);
+                    const { status, idAssetVersions, error } = uploadAsset;
+                    // TODO: Handle the fact that idAssetVersions may have multiple entries as a result of bulk ingestion
+                    if (idAssetVersions && idAssetVersions.length > 0) {
+                        for (const idAssetVersion of idAssetVersions) {
+                            if (status === UploadStatus.Complete && idAssetVersion) {
+                                ingestionDispatch(successAction(idAssetVersion));
+                                toast.success(`Upload finished for ${file.name}`);
+                            } else if (status === UploadStatus.Failed) {
+                                const errorMessage = error || `Upload failed for ${file.name}`;
+                                toast.error(errorMessage);
+                                ingestionDispatch(errorAction);
+                            }
+                        }
                     }
                 }
             } catch ({ message }) {

@@ -141,8 +141,8 @@ export class BulkIngestReader {
             const photo: IngestPhotogrammetry | null = await this.extractCaptureDataPhotoFromCSV(bagitCDP);
             if (!photo)
                 return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute photogrammetry metadata' };
-            // @ts-ignore
-            this._ingestedMetadata.push({ ...subject, ...item, ...photo });
+            const __typename: undefined = undefined;
+            this._ingestedMetadata.push({ ...subject, ...item, ...photo, __typename });
         }
         return { success: true, error: '' };
     }
@@ -172,8 +172,8 @@ export class BulkIngestReader {
             const model: IngestModel | null = await this.extractModelFromCSV(bagitModel);
             if (!model)
                 return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute model metadata' };
-            // @ts-ignore
-            this._ingestedMetadata.push({ ...subject, ...item, ...model });
+            const __typename: undefined = undefined;
+            this._ingestedMetadata.push({ ...subject, ...item, ...model, __typename });
         }
         return { success: true, error: '' };
     }
