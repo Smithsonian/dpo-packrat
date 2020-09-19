@@ -59,10 +59,9 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
                 const path: string = join(__dirname, `../../../mock/graphql/${filename}`);
                 const file = fs.createReadStream(path);
 
-                const Vocabulary = await CACHE.VocabularyCache.vocabularySetEntriesByEnum(CACHE.eVocabularySetID.eAssetAssetType);
-
+                const Vocabulary = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeOther);
                 if (Vocabulary) {
-                    const [{ idVocabulary }] = Vocabulary;
+                    const { idVocabulary } = Vocabulary;
 
                     const uploadAssetInput: UploadAssetInput = {
                         file: {

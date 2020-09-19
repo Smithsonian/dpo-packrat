@@ -2,6 +2,7 @@ import * as DBAPI from '../../db';
 import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
 import * as UTIL from './api';
+import { VocabularyCache, eVocabularyID } from '../../cache';
 
 afterAll(async done => {
     await DBC.DBConnection.disconnect();
@@ -24,7 +25,7 @@ let assetGroup: DBAPI.AssetGroup | null;
 let assetGroup2: DBAPI.AssetGroup | null;
 let assetThumbnail: DBAPI.Asset | null;
 let assetWithoutAG: DBAPI.Asset | null;
-let asset3: DBAPI.Asset | null;
+let assetBulkIngest: DBAPI.Asset | null;
 let assetVersion: DBAPI.AssetVersion | null;
 let assetVersion2: DBAPI.AssetVersion | null;
 let assetVersionNotIngested: DBAPI.AssetVersion | null;
@@ -192,17 +193,19 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Asset', async () => {
-        if (vocabulary)
-            asset3 = await UTIL.createAssetTest({
+        const vocabBulkIngest: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabularyID.eAssetAssetTypeBulkIngestion);
+        expect(vocabBulkIngest).toBeTruthy();
+        if (vocabBulkIngest)
+            assetBulkIngest = await UTIL.createAssetTest({
                 FileName: 'Test Asset Thumbnail',
                 FilePath: '/test/asset/path',
                 idAssetGroup: null,
-                idVAssetType: vocabulary.idVocabulary,
+                idVAssetType: vocabBulkIngest.idVocabulary,
                 idSystemObject: null,
                 StorageKey: UTIL.randomStorageKey('/test/asset/path/'),
                 idAsset: 0
             });
-        expect(asset3).toBeTruthy();
+        expect(assetBulkIngest).toBeTruthy();
     });
 
     test('DB Creation: GeoLocation', async () => {
@@ -528,6 +531,7 @@ describe('DB Creation Test Suite', () => {
                 StorageSize: 50,
                 StorageKeyStaging: '',
                 Ingested: true,
+                IsBagit: false,
                 idAssetVersion: 0
             });
         expect(assetVersion).toBeTruthy();
@@ -545,6 +549,7 @@ describe('DB Creation Test Suite', () => {
                 StorageSize: 50,
                 StorageKeyStaging: '',
                 Ingested: false,
+                IsBagit: false,
                 idAssetVersion: 0
             });
         expect(assetVersionNotIngested).toBeTruthy();
@@ -1619,6 +1624,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 StorageSize: 50,
                 StorageKeyStaging: '',
                 Ingested: true,
+                IsBagit: false,
                 idAssetVersion: 0
             });
         expect(assetVersion2).toBeTruthy();
@@ -3472,10 +3478,44 @@ describe('DB Fetch Xref Test Suite', () => {
 // DB Fetch Special Test Suite
 // *******************************************************************
 describe('DB Fetch Special Test Suite', () => {
+    test('DB FetchSpecial: Asset.assetType undefined', async() => {
+        let eVocabID: eVocabularyID | undefined = undefined;
+        if (assetThumbnail)
+            eVocabID = await assetThumbnail.assetType();
+        expect(eVocabID).toBeUndefined();
+        expect(eVocabID).toBeFalsy();
+    });
+
+    test('DB FetchSpecial: Asset.assetType defined', async() => {
+        let eVocabID: eVocabularyID | undefined = undefined;
+        if (assetBulkIngest)
+            eVocabID = await assetBulkIngest.assetType();
+        expect(eVocabID).toBeDefined();
+        expect(eVocabID).toBeTruthy();
+        expect(eVocabID).toEqual(eVocabularyID.eAssetAssetTypeBulkIngestion);
+    });
+
+    test('DB FetchSpecial: Asset.setAssetType', async() => {
+        expect(assetThumbnail).toBeTruthy();
+        if (assetThumbnail) {
+            expect(await assetThumbnail.setAssetType(eVocabularyID.eNone)).toBeFalsy();
+
+            const eVocabID: eVocabularyID = eVocabularyID.eAssetAssetTypeOther;
+            expect(await assetThumbnail.setAssetType(eVocabID)).toBeTruthy();
+            expect(await assetThumbnail.update()).toBeTruthy();
+
+            const assetFetch: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetThumbnail.idAsset);
+            expect(assetFetch).toBeTruthy();
+            if (assetFetch)
+                expect(await assetFetch.assetType()).toEqual(eVocabID);
+        }
+    });
+
+
     test('DB FetchSpecial: Asset.fetchSourceSystemObject 1', async() => {
         let SOAsset: DBAPI.SystemObject | null = null;
-        if (asset3)
-            SOAsset = await asset3.fetchSourceSystemObject();
+        if (assetBulkIngest)
+            SOAsset = await assetBulkIngest.fetchSourceSystemObject();
         expect(SOAsset).toBeFalsy();
     });
 
@@ -3733,6 +3773,16 @@ describe('DB Fetch Special Test Suite', () => {
         let unitFetch: DBAPI.Unit[] | null = null;
         if (unitEdan) {
             unitFetch = await DBAPI.Unit.fetchFromUnitEdanAbbreviation(unitEdan.Abbreviation);
+            if (unitFetch && unit)
+                expect(unitFetch).toEqual(expect.arrayContaining([unit]));
+        }
+        expect(unitFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Unit.fetchFromNameSearch', async () => {
+        let unitFetch: DBAPI.Unit[] | null = null;
+        if (unitEdan) {
+            unitFetch = await DBAPI.Unit.fetchFromNameSearch(unitEdan.Abbreviation);
             if (unitFetch && unit)
                 expect(unitFetch).toEqual(expect.arrayContaining([unit]));
         }
@@ -4012,6 +4062,45 @@ describe('DB Update Test Suite', () => {
         }
         expect(bUpdated).toBeTruthy();
     });
+
+    test('DB Creation: AssetVersion.delete', async () => {
+        let assetVersion3: DBAPI.AssetVersion | null = null;
+        if (assetThumbnail && user) {
+            assetVersion3 = await UTIL.createAssetVersionTest({
+                idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FileName,
+                idUserCreator: user.idUser,
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum',
+                StorageSize: 50,
+                StorageKeyStaging: '',
+                Ingested: true,
+                IsBagit: false,
+                idAssetVersion: 0
+            });
+
+            const idAssetVersion: number = assetVersion3.idAssetVersion;
+            expect(idAssetVersion).toBeTruthy();
+
+            // First delete should work
+            expect(await assetVersion3.delete()).toBeTruthy();
+
+            // Fetch of deleted object should find nothing
+            const assetVersionFetch: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
+            expect(assetVersionFetch).toBeFalsy();
+
+            // Second delete should fail
+            LOG.logger.info('IGNORE the next error from prisma! It is expected');
+            expect(await assetVersion3.delete()).toBeFalsy();
+
+            // Final delete with empty ID should fail
+            assetVersion3.idAssetVersion = 0;
+            expect(await assetVersion3.delete()).toBeFalsy();
+        }
+        expect(assetVersion3).toBeTruthy();
+    });
+
 
     test('DB Update: CaptureData.update', async () => {
         let bUpdated: boolean = false;
@@ -5344,6 +5433,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Unit.fetch(0)).toBeNull();
         expect(await DBAPI.Unit.fetchMasterFromProjects([])).toBeNull();
         expect(await DBAPI.Unit.fetchFromUnitEdanAbbreviation('')).toBeNull();
+        expect(await DBAPI.Unit.fetchFromNameSearch('')).toBeNull();
         expect(await DBAPI.UnitEdan.fetch(0)).toBeNull();
         expect(await DBAPI.UnitEdan.fetchFromUnit(0)).toBeNull();
         expect(await DBAPI.UnitEdan.fetchFromAbbreviation('')).toBeNull();

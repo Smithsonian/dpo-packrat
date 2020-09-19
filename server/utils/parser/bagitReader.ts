@@ -79,23 +79,33 @@ export class BagitReader implements IZip {
     }
 
     async loadFromZipFile(fileName: string, validate: boolean): Promise<H.IOResults> {
-        this._zip = new ZIPF.ZipFile(fileName);
-        const results: H.IOResults = await this._zip.load();
-        if (!results.success)
-            return results;
-        this._files = await this._zip.getJustFiles();
+        try {
+            this._zip = new ZIPF.ZipFile(fileName);
+            const results: H.IOResults = await this._zip.load();
+            if (!results.success)
+                return results;
+            this._files = await this._zip.getJustFiles();
 
-        return validate ? await this.validate() : results;
+            return validate ? await this.validate() : results;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('bagitReader.loadFromZipFile', error);
+            return { success: false, error: `bagitReader.loadFromZipFile ${JSON.stringify(error)}` };
+        }
     }
 
     async loadFromZipStream(inputStream: NodeJS.ReadableStream, validate: boolean): Promise<H.IOResults> {
-        this._zip = new ZIPS.ZipStream(inputStream);
-        const results: H.IOResults = await this._zip.load();
-        if (!results.success)
-            return results;
-        this._files = await this._zip.getJustFiles();
+        try {
+            this._zip = new ZIPS.ZipStream(inputStream);
+            const results: H.IOResults = await this._zip.load();
+            if (!results.success)
+                return results;
+            this._files = await this._zip.getJustFiles();
 
-        return validate ? await this.validate() : results;
+            return validate ? await this.validate() : results;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('bagitReader.loadFromZipStream', error);
+            return { success: false, error: `bagitReader.loadFromZipStream ${JSON.stringify(error)}` };
+        }
     }
 
     async loadFromDirectory(directory: string, validate: boolean): Promise<H.IOResults> {
@@ -127,12 +137,22 @@ export class BagitReader implements IZip {
     }
 
     async streamContent(file: string): Promise<NodeJS.ReadableStream | null> {
-        const fileName: string = this.prefixedFilename(file);
-        // LOG.logger.info(`getFileStream(${file}) looking in ${fileName}`);
+        if (!this._validated) {
+            if (!(await this.validate()).success)
+                return null;
+        }
 
-        return (this._zip)
-            ? await this._zip.streamContent(fileName)
-            : await fs.createReadStream(fileName);
+        try {
+            const fileName: string = this.prefixedFilename(file);
+            // LOG.logger.info(`getFileStream(${file}) looking in ${fileName} with prefixDir of ${this._prefixDir}`);
+
+            return (this._zip)
+                ? await this._zip.streamContent(fileName)
+                : await fs.createReadStream(fileName);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.info(`bagitReader.streamContent unable to read ${file}: ${JSON.stringify(error)}`);
+            return null;
+        }
     }
 
     async getValid(): Promise<boolean> {
@@ -180,6 +200,7 @@ export class BagitReader implements IZip {
             const regexResults = bagSpecialRegex.exec(file);
             if (regexResults && regexResults.length == 6) {
                 const prefixDirInstance: string = regexResults[2];
+
                 if (this._prefixDir == null)
                     this._prefixDir = prefixDirInstance;
                 else if (this._prefixDir != prefixDirInstance)

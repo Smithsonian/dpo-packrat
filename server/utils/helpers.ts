@@ -410,4 +410,14 @@ export class Helpers {
             setTimeout(resolve, ms);
         });
     }
+
+    static convertStringToDate(dateString: string): Date | null {
+        try {
+            const date: Date = new Date(dateString);
+            return isNaN(date.getTime()) ? null : date;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('Helpers.convertStringToDate', error);
+            return null;
+        }
+    }
 }
