@@ -14,6 +14,7 @@ type LocalStorageTestCase = {
     storageHash: string;
     fileSize: number;
     fileName: string;
+    inputStream: NodeJS.ReadableStream | null;
     version: number;
     staging: boolean;
     uniqueID: number;
@@ -253,6 +254,7 @@ async function testWriteStream(fileSize: number): Promise<LocalStorageTestCase> 
         storageHash: '',
         fileSize,
         fileName: H.Helpers.randomSlug(),
+        inputStream: null,
         version: -1,
         staging: true,
         uniqueID: nextID++
@@ -339,6 +341,7 @@ async function testPromoteStagedAsset(LSTC: LocalStorageTestCase, SOBased: DBAPI
         storageKeyStaged: LSTC.storageKeyStaging,
         storageKeyFinal: LSTC.storageKeyRepo,
         fileName: LSTC.fileName,
+        inputStream: LSTC.inputStream,
         metadata: await constructMetadata(SOBased),
         opInfo
     };

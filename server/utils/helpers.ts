@@ -301,6 +301,7 @@ export class Helpers {
         return res;
     }
 
+    /** Computes a hash from a file. @param hashMethod Pass in 'sha512' or 'sha1', for example */
     static async computeHashFromFile(filePath: string, hashMethod: string): Promise<HashResults> {
         try {
             return await Helpers.computeHashFromStream(fs.createReadStream(filePath), hashMethod);
@@ -314,7 +315,7 @@ export class Helpers {
     }
 
     // Adapted from https://stackoverflow.com/questions/33599688/how-to-use-es8-async-await-with-streams
-    /** Computes a hash from a file. @param hashMethod Pass in 'sha512' or 'sha1', for example */
+    /** Computes a hash from a stream. @param hashMethod Pass in 'sha512' or 'sha1', for example */
     static async computeHashFromStream(stream: NodeJS.ReadableStream, hashMethod: string): Promise<HashResults> {
         try {
             const res: HashResults = {

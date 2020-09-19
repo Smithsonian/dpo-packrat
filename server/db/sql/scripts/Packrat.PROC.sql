@@ -12,7 +12,7 @@ CREATE OR REPLACE PROCEDURE AssetVersionCreate (
     IN P_IsBagit TINYINT
 )
 BEGIN
-    INSERT INTO AssetVersion (idAsset, FileName, idUserCreator, DateCreated, StorageHash, StorageSize, StorageKeyStaging, Ingested, IsBagit, Version)
+    INSERT INTO AssetVersion (idAsset, FileName, idUserCreator, DateCreated, StorageHash, StorageSize, StorageKeyStaging, Ingested, BulkIngest, Version)
     VALUES (P_idAsset, P_FileName, P_idUserCreator, P_DateCreated, P_StorageHash, P_StorageSize, P_StorageKeyStaging, P_Ingested, P_IsBagit,
 	     (SELECT IFNULL(MAX(AV.Version), 0) + 1 
          FROM AssetVersion AS AV
