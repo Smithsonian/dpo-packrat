@@ -64,7 +64,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
                 const commitResult: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
                 if (!commitResult.success) {
                     LOG.logger.error(`GraphQL uploadAsset AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`);
-                    resolve({ status: UploadStatus.Failed, error: 'Storage failed to commit new asset' });
+                    resolve({ status: UploadStatus.Failed, error: commitResult.error });
                 }
                 // commitResult.assets; commitResult.assetVersions; <-- These have been created
                 const { assetVersions } = commitResult;

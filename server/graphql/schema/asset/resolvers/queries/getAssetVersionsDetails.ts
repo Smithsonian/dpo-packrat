@@ -33,7 +33,6 @@ export default async function getAssetVersionsDetails(_: Parent, args: QueryGetA
 
         const { idSubject, SubjectName, UnitAbbreviation, IdentifierPublic, IdentifierCollection } = ingestMetadata;
         const SubjectUnitIdentifier: SubjectUnitIdentifier = {
-            __typename: 'SubjectUnitIdentifier',
             idSubject,
             SubjectName,
             UnitAbbreviation,

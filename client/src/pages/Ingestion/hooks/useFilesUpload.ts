@@ -1,42 +1,43 @@
+import { ApolloQueryResult, FetchResult } from '@apollo/client';
+import lodash from 'lodash';
 import { useCallback, useContext } from 'react';
 import { toast } from 'react-toastify';
 import {
     AppContext,
+    defaultPhotogrammetryFields,
+    FileId,
+    FileUploadStatus,
+    IngestionDispatchAction,
+    IngestionFile,
     METADATA_ACTIONS,
+    parseFileId,
+    parseItemToState,
+    parseProjectToState,
+    parseSubjectUnitIdentifierToState,
+    StateIdentifier,
+    StateItem,
     StateMetadata,
     StateProject,
-    parseProjectToState,
-    StateItem,
-    parseItemToState,
-    parseSubjectUnitIdentifierToState,
     StateSubject,
-    generateBagitId,
-    parseFileId,
-    StateIdentifier
+    UPLOAD_ACTIONS
 } from '../../../context';
-import { UPLOAD_ACTIONS, IngestionFile, FileId, IngestionDispatchAction, FileUploadStatus } from '../../../context';
-import { apolloUploader, apolloClient } from '../../../graphql';
+import { apolloClient, apolloUploader } from '../../../graphql';
 import {
-    UploadAssetDocument,
-    UploadAssetMutation,
-    UploadStatus,
-    GetAssetVersionsDetailsDocument,
-    GetAssetVersionsDetailsQuery,
     DiscardUploadedAssetVersionsDocument,
     DiscardUploadedAssetVersionsMutation,
-    GetBagitAssetsDetailsDocument,
-    GetBagitAssetsDetailsQuery
+    GetAssetVersionsDetailsDocument,
+    GetAssetVersionsDetailsQuery,
+    Project,
+    UploadAssetDocument,
+    UploadAssetMutation,
+    UploadStatus
 } from '../../../types/graphql';
-import lodash from 'lodash';
-import { defaultPhotogrammetryFields } from '../../../context';
-import useVocabularyEntries from './useVocabularyEntries';
 import { eVocabularySetID } from '../../../types/server';
-import { ApolloQueryResult, FetchResult } from '@apollo/client';
-import useProject from './useProject';
 import useItem from './useItem';
-import { Item, Project, SubjectUnitIdentifier } from '../../../types/graphql';
-import useSubject from './useSubject';
 import useMetadata from './useMetadata';
+import useProject from './useProject';
+import useSubject from './useSubject';
+import useVocabularyEntries from './useVocabularyEntries';
 
 type MetadataUpdate = {
     valid: boolean;
@@ -58,7 +59,7 @@ const useFilesUpload = (): UseFilesUpload => {
     const { ingestion, ingestionDispatch } = useContext(AppContext);
     const { files } = ingestion.uploads;
 
-    const { getInitialEntry, getAssetType } = useVocabularyEntries();
+    const { getInitialEntry } = useVocabularyEntries();
     const { addSubjects } = useSubject();
     const { addProjects } = useProject();
     const { addItems } = useItem();
@@ -93,89 +94,76 @@ const useFilesUpload = (): UseFilesUpload => {
             const { data } = assetVersionDetailsQuery;
 
             if (data) {
-                const { getAssetVersionsDetails } = data;
-
-                const { SubjectUnitIdentifier: foundSubjectUnitIdentifier, Project: foundProject, Item: foundItem } = getAssetVersionsDetails;
-
-                const subjects: StateSubject[] = foundSubjectUnitIdentifier.map((subjectUnitIdentifier: SubjectUnitIdentifier) =>
-                    parseSubjectUnitIdentifierToState(subjectUnitIdentifier)
-                );
-                addSubjects(subjects);
-
-                const projects: StateProject[] = foundProject.map((project: Project, index: number) => parseProjectToState(project, !index));
-                addProjects(projects);
-
-                const items: StateItem[] = foundItem.map((item: Item) => parseItemToState(item, false));
-                addItems(items);
-
+                const {
+                    getAssetVersionsDetails: { Details }
+                } = data;
+                console.log(Details);
+                const subjects: StateSubject[] = [];
+                const projects: StateProject[] = [];
+                const items: StateItem[] = [];
                 const metadatas: StateMetadata[] = [];
 
-                for (let i = 0; i < selectedFiles.length; i++) {
-                    const file: IngestionFile = selectedFiles[i];
-                    const idAssetVersion = parseFileId(file.id);
+                for (let i = 0; i < Details.length; i++) {
+                    const { idAssetVersion, SubjectUnitIdentifier: foundSubjectUnitIdentifier, Project: foundProject, Item: foundItem, CaptureDataPhoto } = Details[i];
+                    if (foundSubjectUnitIdentifier) {
+                        const subject: StateSubject = parseSubjectUnitIdentifierToState(foundSubjectUnitIdentifier);
+                        subjects.push(subject);
+                    }
+                    if (foundProject) {
+                        const stateProjects: StateProject[] = foundProject.map((project: Project, index: number) => parseProjectToState(project, !index));
+                        projects.push(...stateProjects);
+                    }
+                    if (foundItem) {
+                        const item: StateItem = parseItemToState(foundItem, false);
+                        items.push(item);
+                    }
 
-                    const { photogrammetry, bagit } = getAssetType(file.type);
                     let metadataStep: StateMetadata;
+                    const file = files.find((file: IngestionFile) => parseFileId(file.id) === idAssetVersion);
 
-                    if (photogrammetry) {
+                    if (!file) {
+                        toast.error('Ingestion file not found');
+                        throw new Error();
+                    }
+
+                    if (CaptureDataPhoto) {
+                        const { identifiers, folders } = CaptureDataPhoto;
+                        const stateIdentifiers: StateIdentifier[] = identifiers.map(
+                            ({ identifier, identifierType }, index): StateIdentifier => ({
+                                id: index,
+                                identifier,
+                                identifierType,
+                                selected: true
+                            })
+                        );
+
                         metadataStep = {
                             file,
-                            photogrammetry: defaultPhotogrammetryFields
+                            photogrammetry: {
+                                ...defaultPhotogrammetryFields,
+                                ...(CaptureDataPhoto && {
+                                    ...CaptureDataPhoto,
+                                    dateCaptured: new Date(CaptureDataPhoto.dateCaptured),
+                                    folders: getStateFolders(folders),
+                                    identifiers: stateIdentifiers
+                                })
+                            }
                         };
-
+                        metadatas.push(metadataStep);
+                    } else {
+                        metadataStep = {
+                            file,
+                            photogrammetry: {
+                                ...defaultPhotogrammetryFields
+                            }
+                        };
                         metadatas.push(metadataStep);
                     }
-
-                    if (bagit) {
-                        const getBagitAssetDetailsQuery: ApolloQueryResult<GetBagitAssetsDetailsQuery> = await apolloClient.query({
-                            query: GetBagitAssetsDetailsDocument,
-                            variables: {
-                                input: {
-                                    idAssetVersion
-                                }
-                            }
-                        });
-
-                        const { data } = getBagitAssetDetailsQuery;
-
-                        if (data) {
-                            const { getBagitAssetsDetails } = data;
-                            const { BagitMetadata } = getBagitAssetsDetails;
-
-                            BagitMetadata.forEach(metadata => {
-                                const { name, folders, type, photogrammetryData, identifiers } = metadata;
-                                const bagitFile = { ...file };
-
-                                bagitFile.id = generateBagitId(bagitFile.id, name);
-                                bagitFile.name = name;
-                                bagitFile.type = type;
-
-                                const stateIdentifiers: StateIdentifier[] = identifiers.map(
-                                    ({ identifier, identifierType }, index): StateIdentifier => ({
-                                        id: index,
-                                        identifier,
-                                        identifierType,
-                                        selected: true
-                                    })
-                                );
-
-                                metadataStep = {
-                                    file: bagitFile,
-                                    photogrammetry: {
-                                        ...defaultPhotogrammetryFields,
-                                        ...(photogrammetryData && {
-                                            ...photogrammetryData,
-                                            dateCaptured: new Date(photogrammetryData.dateCaptured),
-                                            folders: getStateFolders(folders),
-                                            identifiers: stateIdentifiers
-                                        })
-                                    }
-                                };
-                                metadatas.push(metadataStep);
-                            });
-                        }
-                    }
                 }
+
+                addSubjects(subjects);
+                addProjects(projects);
+                addItems(items);
 
                 const addMetadataStepAction: IngestionDispatchAction = {
                     type: METADATA_ACTIONS.ADD_METADATA,
@@ -211,7 +199,12 @@ const useFilesUpload = (): UseFilesUpload => {
 
                     const type = getInitialEntry(eVocabularySetID.eAssetAssetType);
 
-                    if (!alreadyContains && type) {
+                    if (!type) {
+                        toast.error(`Vocabulary for file ${name} not found`);
+                        return;
+                    }
+
+                    if (!alreadyContains) {
                         const ingestionFile = {
                             id,
                             file,
@@ -321,12 +314,6 @@ const useFilesUpload = (): UseFilesUpload => {
         async (ingestionFile: IngestionFile) => {
             const { id, file, type } = ingestionFile;
 
-            const successAction = (idAssetVersion: number): IngestionDispatchAction => ({
-                type: UPLOAD_ACTIONS.COMPLETE,
-                id,
-                idAssetVersion
-            });
-
             const errorAction: IngestionDispatchAction = {
                 type: UPLOAD_ACTIONS.FAILED,
                 id
@@ -362,6 +349,7 @@ const useFilesUpload = (): UseFilesUpload => {
                 const { data } = await apolloUploader({
                     mutation: UploadAssetDocument,
                     variables: { file, type },
+                    refetchQueries: ['getUploadedAssetVersion'],
                     useUpload: true,
                     onProgress,
                     onCancel
@@ -370,10 +358,10 @@ const useFilesUpload = (): UseFilesUpload => {
                 const { uploadAsset }: UploadAssetMutation = data;
 
                 if (uploadAsset) {
-                    const { status, idAssetVersion, error } = uploadAsset;
+                    const { status, error } = uploadAsset;
 
-                    if (status === UploadStatus.Complete && idAssetVersion) {
-                        ingestionDispatch(successAction(idAssetVersion));
+                    if (status === UploadStatus.Complete) {
+                        // ingestionDispatch(successAction(idAssetVersion));
                         toast.success(`Upload finished for ${file.name}`);
                     } else if (status === UploadStatus.Failed) {
                         const errorMessage = error || `Upload failed for ${file.name}`;
