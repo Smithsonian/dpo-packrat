@@ -172,7 +172,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async promoteStagedAsset(promoteStagedAssetInput: STORE.PromoteStagedAssetInput): Promise<STORE.PromoteStagedAssetResult> {
-        const { storageKeyStaged, storageKeyFinal, fileName, metadata, opInfo } = promoteStagedAssetInput;
+        const { storageKeyStaged, storageKeyFinal, fileName, inputStream, metadata, opInfo } = promoteStagedAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, true);
         /* istanbul ignore next */
         if (!ocflObjectInitResults.success)
@@ -184,8 +184,9 @@ export class LocalStorage implements STORE.IStorage {
             };
         }
 
-        const pathOnDisk: string = path.join(this.ocflRoot.computeLocationStagingRoot(), storageKeyStaged);
-        const PSAR: STORE.PromoteStagedAssetResult = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, fileName, metadata, opInfo); // moves staged file, if present
+        const pathOnDisk: string = (inputStream) ? '' : path.join(this.ocflRoot.computeLocationStagingRoot(), storageKeyStaged);
+        const PSAR: STORE.PromoteStagedAssetResult = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, inputStream, fileName, metadata, opInfo); // moves staged file, or streams file, if present
+
         if (!PSAR.success)
             return PSAR;
         return (fileName) ? await H.Helpers.removeDirectory(path.dirname(pathOnDisk), false) : PSAR; // cleanup staged directory if we have a staged file
@@ -245,6 +246,7 @@ export class LocalStorage implements STORE.IStorage {
             storageKeyStaged: '',
             storageKeyFinal: storageKey,
             fileName: '',
+            inputStream: null,
             metadata,
             opInfo
         };

@@ -349,7 +349,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
 
     // Add content
     LOG.logger.info(`addOrUpdate ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`);
-    let ioResults: H.IOResults = await ocflObject.addOrUpdate(pathOnDisk, fileName, metadataOA, opInfo);
+    let ioResults: H.IOResults = await ocflObject.addOrUpdate(pathOnDisk, null, fileName, metadataOA, opInfo);
     expect(expectSuccess === ioResults.success).toBeTruthy();
     if (!ioResults.success) {
         if (expectSuccess)

@@ -193,7 +193,7 @@ export class AssetStorageAdapter {
 
     private static async createAssetConstellation(asset: DBAPI.Asset, idUserCreator: number,
         DateCreated: Date, resStorage: STORE.CommitWriteStreamResult, storageKey: string,
-        IsBagit: boolean, ingestedObject: IngestMetadata | null): Promise<DBAPI.AssetVersion | null> {
+        BulkIngest: boolean, ingestedObject: IngestMetadata | null): Promise<DBAPI.AssetVersion | null> {
         if (asset.idAsset == 0) {
             /* istanbul ignore if */
             if (!await asset.create()) {
@@ -213,7 +213,7 @@ export class AssetStorageAdapter {
             StorageSize: resStorage.storageSize ? resStorage.storageSize : /* istanbul ignore next */ 0,
             StorageKeyStaging: storageKey,
             Ingested: false,
-            IsBagit,
+            BulkIngest,
             idAssetVersion: 0
         });
 
@@ -308,6 +308,48 @@ export class AssetStorageAdapter {
             return { asset, assetVersion, success: false, error };
         }
 
+        const metadata: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors); /* istanbul ignore next */
+        if (!await metadata.fetch()) {
+            const error: string = `AssetStorageAdapter.ingestAsset: Update to retrieve object ancestry for system object ${idSystemObject}`;
+            LOG.logger.error(error);
+            return { asset, assetVersion, success: false, error };
+        }
+
+        if (assetVersion.BulkIngest)
+            return await AssetStorageAdapter.ingestAssetBulkWorker(storage, asset, assetVersion, metadata, opInfo);
+        else
+            return await AssetStorageAdapter.promoteAssetWorker(storage, asset, assetVersion, metadata, opInfo, null);
+    }
+
+    private static async ingestAssetBulkWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
+        metadata: DBAPI.ObjectGraph, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
+
+        return await AssetStorageAdapter.promoteAssetWorker(storage, asset, assetVersion, metadata, opInfo, null);
+
+        /*
+        const CAR: CrackAssetResult = await AssetStorageAdapter.crackAssetWorker(storage, asset, assetVersion);
+        if (!CAR.success || !CAR.zip)
+            return { asset, assetVersion, success: false, error: CAR.error };
+
+        const allFiles: string[] = await CAR.zip.getJustFiles();
+        */
+        // for bulk ingest, pass in the folder from the zip from which to extract assets asset.FilePath
+        // Use bulkIngestReader to extract contents for assets in and below asset.FilePath
+        // For each:
+        //      Create an asset
+        //      Create an asset version
+        //      Create a storage key
+        //      Get a readstream to that part of the zip
+        //      Promote the asset
+        //      Update the asset
+        // Remove the asset and asset version that represented this piece of the bulk ingest
+        // If no other assets exist for this bulk ingest, remove the stated file
+
+    }
+
+    private static async promoteAssetWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
+        metadata: DBAPI.ObjectGraph, opInfo: STORE.OperationInfo, inputStream: NodeJS.ReadableStream | null): Promise<AssetStorageResult> {
+
         let storageKey: string = (asset.idAsset > 0 && asset.StorageKey) ? asset.StorageKey : '';
         if (!storageKey) {
             const storageKeyResults = await storage.computeStorageKey(asset.idAsset.toString()); /* istanbul ignore next */
@@ -318,17 +360,11 @@ export class AssetStorageAdapter {
                 storageKey = storageKeyResults.storageKey;
         }
 
-        const metadata: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors); /* istanbul ignore next */
-        if (!await metadata.fetch()) {
-            const error: string = `AssetStorageAdapter.ingestAsset: Update to retrieve object ancestry for system object ${idSystemObject}`;
-            LOG.logger.error(error);
-            return { asset, assetVersion, success: false, error };
-        }
-
         const promoteStagedAssetInput: STORE.PromoteStagedAssetInput = {
             storageKeyStaged: assetVersion.StorageKeyStaging,
             storageKeyFinal: storageKey,
             fileName: asset.FileName,
+            inputStream,
             metadata,
             opInfo
         };
@@ -342,8 +378,8 @@ export class AssetStorageAdapter {
         // Update Asset if new information is being provided here
         // StorageKey should be updated only the first time we ingest
         let updateAsset: boolean = false;
-        if (asset.idSystemObject != idSystemObject) {
-            asset.idSystemObject = idSystemObject;
+        if (asset.idSystemObject != metadata.idSystemObject) {
+            asset.idSystemObject = metadata.idSystemObject;
             updateAsset = true;
         }
         if (asset.StorageKey != storageKey) {
@@ -480,12 +516,6 @@ export class AssetStorageAdapter {
             return { success: false, error, zip: null, isBagit: false };
         }
 
-        const { storageKey, ingested, error } = AssetStorageAdapter.computeStorageKeyAndIngested(asset, assetVersion); /* istanbul ignore next */
-        if (!storageKey) {
-            LOG.logger.error(error);
-            return { success: false, error, zip: null, isBagit: false };
-        }
-
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             const error: string = 'AssetStorageAdapter.crackAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
@@ -493,7 +523,17 @@ export class AssetStorageAdapter {
             return { success: false, error, zip: null, isBagit: false };
         }
 
-        const isBulkIngest: boolean = assetVersion.IsBagit || (await asset.assetType() == eVocabularyID.eAssetAssetTypeBulkIngestion);
+        return await AssetStorageAdapter.crackAssetWorker(storage, asset, assetVersion);
+    }
+
+    private static async crackAssetWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<CrackAssetResult> {
+        const { storageKey, ingested, error } = AssetStorageAdapter.computeStorageKeyAndIngested(asset, assetVersion); /* istanbul ignore next */
+        if (!storageKey) {
+            LOG.logger.error(error);
+            return { success: false, error, zip: null, isBagit: false };
+        }
+
+        const isBulkIngest: boolean = assetVersion.BulkIngest || (await asset.assetType() == eVocabularyID.eAssetAssetTypeBulkIngestion);
         // LOG.logger.info(`getAssetVersionContents fileName ${assetVersion.FileName} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest}`);
         let reader: IZip;
         if (ingested) {
@@ -680,7 +720,7 @@ export class AssetStorageAdapter {
             StorageSize: assetVersionOld.StorageSize,
             StorageKeyStaging: assetVersionOld.StorageKeyStaging,
             Ingested: assetVersionOld.Ingested,
-            IsBagit: assetVersionOld.IsBagit,
+            BulkIngest: assetVersionOld.BulkIngest,
             idAssetVersion: 0
         });
 
