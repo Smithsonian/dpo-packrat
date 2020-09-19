@@ -297,6 +297,19 @@ describe('Utils: Helpers', () => {
         res = await H.Helpers.removeDirectory(directoryPath, true);
         expect(res.success).toBeTruthy();
     });
+
+    test('Utils: Helpers.convertStringToDate', async () => {
+        let date: Date | null = H.Helpers.convertStringToDate('2020-01-01');
+        expect(date).toBeTruthy();
+        if (date) {
+            expect(date.getUTCFullYear()).toEqual(2020);
+            expect(date.getUTCMonth()).toEqual(0);
+            expect(date.getUTCDate()).toEqual(1);
+        }
+
+        date = H.Helpers.convertStringToDate('foobar');
+        expect(date).toBeFalsy();
+    });
 });
 
 /*

@@ -57,10 +57,9 @@ const discardUploadedAssetVersions = (utils: TestSuiteUtils): void => {
                 const path: string = join(__dirname, `../../../mock/graphql/${filename}`);
                 const file = fs.createReadStream(path);
 
-                const Vocabulary = await CACHE.VocabularyCache.vocabularySetEntriesByEnum(CACHE.eVocabularySetID.eAssetAssetType);
-
+                const Vocabulary = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eAssetAssetTypeOther);
                 if (Vocabulary) {
-                    const [{ idVocabulary }] = Vocabulary;
+                    const { idVocabulary } = Vocabulary;
 
                     const uploadAssetInput: UploadAssetInput = {
                         file: {
@@ -71,12 +70,12 @@ const discardUploadedAssetVersions = (utils: TestSuiteUtils): void => {
                         },
                         type: idVocabulary
                     };
-                    const { status, idAssetVersion } = await graphQLApi.uploadAsset(uploadAssetInput, context);
+                    const { status, idAssetVersions } = await graphQLApi.uploadAsset(uploadAssetInput, context);
                     expect(status).toBe(UploadStatus.Complete);
 
-                    if (idAssetVersion) {
+                    if (idAssetVersions) {
                         const discardInput: DiscardUploadedAssetVersionsInput = {
-                            idAssetVersions: [idAssetVersion]
+                            idAssetVersions
                         };
 
                         const { success } = await graphQLApi.discardUploadedAssetVersions(discardInput, context);

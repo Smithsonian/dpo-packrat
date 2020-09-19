@@ -4,7 +4,7 @@ const uploadAsset = gql`
     mutation uploadAsset($file: Upload!, $type: Int!) {
         uploadAsset(file: $file, type: $type) {
             status
-            idAssetVersion
+            idAssetVersions
             error
         }
     }

@@ -82,7 +82,7 @@ export class OCFLObject {
         return results;
     }
 
-    private async addOrUpdateWorker (pathOnDisk: string | null, fileName: string | null, metadata: any | null): Promise<H.IOResults> {
+    private async addOrUpdateWorker(pathOnDisk: string | null, fileName: string | null, metadata: any | null): Promise<H.IOResults> {
         let results: H.IOResults = {
             success: false,
             error: ''

@@ -1,2 +1,2 @@
-import_row_id,import_parent_id,date_of_creation,derived_from,creation_method,units,model_purpose,file_path
-1,1,2019-04-28,1,scan_to_mesh,millimeter,master,model/nmnh_sea_turtle-master.obj
+subject_guid,subject_name,unit_guid,unit_name,item_guid,item_name,entire_subject,date_created,creation_method,master,authoritative,modality,units,purpose,directory_path
+edanmdm:nmnheducation_10841877,Atlantic Hawksbill Sea Turtle,ISN:0000000123642127,NMNH,,Top and Bottom,1,4/28/2019,scan_to_mesh,1,1,mesh,millimeter,master,model
