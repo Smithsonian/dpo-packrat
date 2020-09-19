@@ -5,7 +5,7 @@ import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
 import UnitTreeNode from './UnitTreeNode';
 import StyledTreeItem from './StyledTreeItem';
 import TreeViewContents, { RepositoryContentType } from './TreeViewContents';
-import mockRepositoryData from '../mock.repository';
+import mockRepositoryData from '../../mock.repository';
 
 const { units } = mockRepositoryData;
 
