@@ -12,7 +12,7 @@ import {
     parseFileId
 } from '../../../context';
 import lodash from 'lodash';
-import { GetContentsForAssetVersionsDocument, AreCameraSettingsUniformDocument } from '../../../types/graphql';
+import { GetContentsForAssetVersionsDocument, AreCameraSettingsUniformDocument, IngestFolder, AssetVersionContent } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql';
 import { eVocabularySetID } from '../../../types/server';
 import useVocabularyEntries from './useVocabularyEntries';
@@ -32,7 +32,7 @@ type FieldErrors = {
 };
 
 interface UseMetadata {
-    getStateFolders: (folders: string[]) => StateFolder[];
+    getStateFolders: (folders: IngestFolder[]) => StateFolder[];
     getSelectedIdentifiers: (metadata: StateMetadata) => StateIdentifier[] | undefined;
     getFieldErrors: (metadata: StateMetadata) => FieldErrors;
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
@@ -111,7 +111,17 @@ function useMetadata(): UseMetadata {
         ingestionDispatch(updateMetadataFieldsAction);
     };
 
-    const getStateFolders = (folders: string[]): StateFolder[] => {
+    const getStateFolders = (folders: IngestFolder[]): StateFolder[] => {
+        const stateFolders: StateFolder[] = folders.map(({ name, variantType }, index: number) => ({
+            id: index,
+            name,
+            variantType
+        }));
+
+        return stateFolders;
+    };
+
+    const getInitialStateFolders = (folders: string[]): StateFolder[] => {
         const stateFolders: StateFolder[] = folders.map((folder, index: number) => ({
             id: index,
             name: folder,
@@ -147,7 +157,8 @@ function useMetadata(): UseMetadata {
         });
 
         const { getContentsForAssetVersions } = data;
-        const { AssetVersionContent } = getContentsForAssetVersions;
+
+        const { AssetVersionContent: foundAssetVersionContent } = getContentsForAssetVersions;
 
         let updatedMetadatas = await updateCameraSettings(metadatas);
 
@@ -165,8 +176,8 @@ function useMetadata(): UseMetadata {
             };
         });
 
-        AssetVersionContent.forEach(({ idAssetVersion, folders }) => {
-            const stateFolders: StateFolder[] = getStateFolders(folders);
+        foundAssetVersionContent.forEach(({ idAssetVersion, folders }: AssetVersionContent) => {
+            const stateFolders: StateFolder[] = getInitialStateFolders(folders);
 
             updatedMetadatas = updatedMetadatas.map(metadata => {
                 const { file, photogrammetry } = metadata;

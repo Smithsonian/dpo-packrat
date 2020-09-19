@@ -1781,6 +1781,7 @@ export type GetAssetVersionsDetailsQuery = (
             & {
                 Details: Array<(
                     { __typename?: 'GetAssetVersionDetailResult' }
+                    & Pick<GetAssetVersionDetailResult, 'idAssetVersion'>
                     & {
                         SubjectUnitIdentifier?: Maybe<(
                             { __typename?: 'SubjectUnitIdentifier' }
@@ -2916,6 +2917,7 @@ export const GetAssetVersionsDetailsDocument = gql`
   getAssetVersionsDetails(input: $input) {
     valid
     Details {
+      idAssetVersion
       SubjectUnitIdentifier {
         idSubject
         SubjectName

@@ -78,6 +78,7 @@ function Uploads(): React.ReactElement {
         try {
             setGettingAssetDetails(true);
             const { valid, selectedFiles } = await updateMetadataSteps();
+
             setGettingAssetDetails(false);
 
             if (!selectedFiles) {
