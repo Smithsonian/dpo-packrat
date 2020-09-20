@@ -5,9 +5,11 @@ import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
+import { IngestMetadata } from '../../../utils/parser';
 import Config from '../../../config';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
 import { AssetVersionContent } from '../../../types/graphql';
+
 
 const mockPathZip: string = path.join(__dirname, '../../mock/utils/zip/PackratTest.zip');
 const mockPathBagit1: string = path.join(__dirname, '../../mock/utils/bagit/PackratTestValidMultiHash.zip');
@@ -166,6 +168,7 @@ describe('AssetStorageAdapter getAssetVersionContents', () => {
     test('AssetStorageAdapter.getAssetVersionContents zip', async() => {
         const tcZip: AssetStorageAdapterTestCase = await testCommitNewAsset(null, 0, OHTS.captureData1, mockPathZip, vAssetTypeOther);
         await testGetAssetVersionContents(tcZip, ['bag-info.txt', 'bagit.txt', 'capture_data_photo.csv', 'manifest-sha1.txt', 'tagmanifest-sha1.txt', 'nmnh_sea_turtle-1_low-01.jpg', 'nmnh_sea_turtle-1_low-02.jpg', 'nmnh_sea_turtle-1_low-01.dng', 'nmnh_sea_turtle-1_low-02.dng'], ['PackratTest', 'PackratTest/data/nmnh_sea_turtle-1_low/camera', 'PackratTest/data/nmnh_sea_turtle-1_low/raw']);
+        await testCrackAsset(tcZip, true);
         await testIngestAsset(tcZip, true);
         await testGetAssetVersionContents(tcZip, ['bag-info.txt', 'bagit.txt', 'capture_data_photo.csv', 'manifest-sha1.txt', 'tagmanifest-sha1.txt', 'nmnh_sea_turtle-1_low-01.jpg', 'nmnh_sea_turtle-1_low-02.jpg', 'nmnh_sea_turtle-1_low-01.dng', 'nmnh_sea_turtle-1_low-02.dng'], ['PackratTest', 'PackratTest/data/nmnh_sea_turtle-1_low/camera', 'PackratTest/data/nmnh_sea_turtle-1_low/raw']);
     });
@@ -173,15 +176,23 @@ describe('AssetStorageAdapter getAssetVersionContents', () => {
     test('AssetStorageAdapter.getAssetVersionContents bagit 1', async() => {
         const tcBagit1Other: AssetStorageAdapterTestCase = await testCommitNewAsset(null, 0, OHTS.captureData1, mockPathBagit1, vAssetTypeBulk);
         await testGetAssetVersionContents(tcBagit1Other, ['hello.txt'], ['model']);
+        await testExtractBulkIngestMetadata(tcBagit1Other, true);
+        await testCrackAsset(tcBagit1Other, true);
         await testIngestAsset(tcBagit1Other, true);
         await testGetAssetVersionContents(tcBagit1Other, ['hello.txt'], []); // ingested sub-element is no longer in the "model" folder
+        await testExtractBulkIngestMetadata(tcBagit1Other, false);
+        await testCrackAsset(tcBagit1Other, false);
     });
 
     test('AssetStorageAdapter.getAssetVersionContents bagit 2', async() => {
         const tcBagit2: AssetStorageAdapterTestCase = await testCommitNewAsset(null, 0, OHTS.captureData1, mockPathBagit2, vAssetTypeBulk);
         await testGetAssetVersionContents(tcBagit2, ['nmnh_sea_turtle-1_low-01.jpg', 'nmnh_sea_turtle-1_low-02.jpg', 'nmnh_sea_turtle-1_low-01.dng', 'nmnh_sea_turtle-1_low-02.dng'], ['nmnh_sea_turtle-1_low/camera', 'nmnh_sea_turtle-1_low/raw']);
+        await testExtractBulkIngestMetadata(tcBagit2, true);
+        await testCrackAsset(tcBagit2, true);
         await testIngestAsset(tcBagit2, true);
         await testGetAssetVersionContents(tcBagit2, ['nmnh_sea_turtle-1_low-01.jpg', 'nmnh_sea_turtle-1_low-02.jpg', 'nmnh_sea_turtle-1_low-01.dng', 'nmnh_sea_turtle-1_low-02.dng'], []);
+        await testExtractBulkIngestMetadata(tcBagit2, false);
+        await testCrackAsset(tcBagit2, false);
     });
 });
 
@@ -538,3 +549,31 @@ async function testDiscardAssetVersion(TestCase: AssetStorageAdapterTestCase, ex
     return true;
 }
 
+async function testExtractBulkIngestMetadata(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    for (let index = 0; index < TestCase.assets.length; index++) {
+        const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
+
+        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        const ingestMetadata: IngestMetadata | null = await STORE.AssetStorageAdapter.extractBulkIngestMetadata(assetVersion);
+        if (!ingestMetadata && expectSuccess)
+            LOG.logger.error('AssetStorageAdaterTest AssetStorageAdapter.extracBulkIngestMetadata failed');
+        if (expectSuccess)
+            expect(ingestMetadata).toBeTruthy();
+    }
+    return true;
+}
+
+async function testCrackAsset(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    for (let index = 0; index < TestCase.assets.length; index++) {
+        const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
+
+        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        const CAR: STORE.CrackAssetResult = await STORE.AssetStorageAdapter.crackAsset(assetVersion);
+        if (!CAR.success && expectSuccess)
+            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.crackAsset failed: ${CAR.error}`);
+        if (CAR.zip)
+            await CAR.zip.close();
+        expect(CAR.success).toEqual(expectSuccess);
+    }
+    return true;
+}

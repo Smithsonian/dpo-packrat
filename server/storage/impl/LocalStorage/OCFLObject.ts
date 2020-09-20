@@ -93,32 +93,22 @@ export class OCFLObject {
 
     private async addOrUpdateWorker(pathOnDisk: string | null, inputStream: NodeJS.ReadableStream | null,
         fileName: string | null, metadata: any | null): Promise<H.IOResults> {
-        let results: H.IOResults = {
-            success: false,
-            error: ''
-        };
-
-        if (!((pathOnDisk || inputStream) && fileName) && !metadata) {
-            results.success = false;
-            results.error = 'No information specified';
-            return results;
-        }
+        if (!((pathOnDisk || inputStream) && fileName) && !metadata)
+            return { success: false, error: 'No information specified' };
 
         // Read current inventory, if any
         /* istanbul ignore next */
-        if (!this._ocflInventory) {
-            results.success = false;
-            results.error = 'Unable to compute OCFL Inventory';
-            return results;
-        }
+        if (!this._ocflInventory)
+            return { success: false, error: 'Unable to compute OCFL Inventory' };
 
         const version: number = this._ocflInventory.headVersion;
         const destFolder: string = this.versionContentFullPath(version);
         const contentPath: string = OCFLObject.versionContentPartialPath(version);
+        let results: H.IOResults = { success: false, error: 'Unititalized' };
 
         if (fileName) {
             const destName = path.join(destFolder, fileName);
-            let hashResults: H.HashResults = { hash: '', dataLength: 0, success: false, error: '' };
+            let hashResults: H.HashResults = { hash: '', dataLength: 0, success: false, error: '' }; /* istanbul ignore else */
             if (pathOnDisk) {
                 // Compute hash
                 hashResults = await H.Helpers.computeHashFromFile(pathOnDisk, ST.OCFLDigestAlgorithm);
@@ -127,15 +117,16 @@ export class OCFLObject {
 
                 // Move file to new version folder
                 results = await H.Helpers.moveFile(pathOnDisk, destName);
-            } else /* istanbul ignore else */ if (inputStream) {
+            } else if (inputStream) {
                 // We need to both compute the hash and stream bytes to the right location
                 const hashResultsPromise = H.Helpers.computeHashFromStream(inputStream, ST.OCFLDigestAlgorithm);
                 const writeFilesPromise = H.Helpers.writeStreamToStream(inputStream, fs.createWriteStream(destName));
                 const resultsArray = await Promise.all([hashResultsPromise, writeFilesPromise]);
-                [ hashResults, results ] = resultsArray;
+                [ hashResults, results ] = resultsArray; /* istanbul ignore next */
                 if (!hashResults.success)
                     return hashResults;
-            }
+            } /* istanbul ignore next */
+
             if (!results.success)
                 return results;
             // Update Inventory
