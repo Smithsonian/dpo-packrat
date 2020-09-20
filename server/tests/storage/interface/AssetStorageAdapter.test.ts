@@ -36,6 +36,7 @@ beforeAll(() => {
 
     rootRepositoryNew = path.join('var', 'test', H.Helpers.randomSlug());
     rootStagingNew = path.join('var', 'test', H.Helpers.randomSlug());
+    // LOG.logger.info(`Test Repo ${rootRepositoryNew}; staging ${rootStagingNew}`);
 
     Config.storage.rootRepository = rootRepositoryNew;
     Config.storage.rootStaging = rootStagingNew;
@@ -46,8 +47,8 @@ afterAll(async done => {
     Config.storage.rootStaging = rootStagingOrig;
     await H.Helpers.removeDirectory(rootRepositoryNew, true);
     await H.Helpers.removeDirectory(rootStagingNew, true);
-    jest.setTimeout(3000);
-    await H.Helpers.sleep(2000);
+    // jest.setTimeout(5000);
+    // await H.Helpers.sleep(2000);
     done();
 });
 
@@ -173,15 +174,14 @@ describe('AssetStorageAdapter getAssetVersionContents', () => {
         const tcBagit1Other: AssetStorageAdapterTestCase = await testCommitNewAsset(null, 0, OHTS.captureData1, mockPathBagit1, vAssetTypeBulk);
         await testGetAssetVersionContents(tcBagit1Other, ['hello.txt'], ['model']);
         await testIngestAsset(tcBagit1Other, true);
-        await testGetAssetVersionContents(tcBagit1Other, ['hello.txt'], ['model']);
+        await testGetAssetVersionContents(tcBagit1Other, ['hello.txt'], []); // ingested sub-element is no longer in the "model" folder
     });
 
     test('AssetStorageAdapter.getAssetVersionContents bagit 2', async() => {
         const tcBagit2: AssetStorageAdapterTestCase = await testCommitNewAsset(null, 0, OHTS.captureData1, mockPathBagit2, vAssetTypeBulk);
         await testGetAssetVersionContents(tcBagit2, ['nmnh_sea_turtle-1_low-01.jpg', 'nmnh_sea_turtle-1_low-02.jpg', 'nmnh_sea_turtle-1_low-01.dng', 'nmnh_sea_turtle-1_low-02.dng'], ['nmnh_sea_turtle-1_low/camera', 'nmnh_sea_turtle-1_low/raw']);
-        // TODO: re-enable these once partial promotion of bagit zips is implemented
-        // await testIngestAsset(tcBagit2, true);
-        // await testGetAssetVersionContents(tcBagit2, ['nmnh_sea_turtle-1_low-01.jpg', 'nmnh_sea_turtle-1_low-02.jpg', 'nmnh_sea_turtle-1_low-01.dng', 'nmnh_sea_turtle-1_low-02.dng'], ['nmnh_sea_turtle-1_low/camera', 'nmnh_sea_turtle-1_low/raw']);
+        await testIngestAsset(tcBagit2, true);
+        await testGetAssetVersionContents(tcBagit2, ['nmnh_sea_turtle-1_low-01.jpg', 'nmnh_sea_turtle-1_low-02.jpg', 'nmnh_sea_turtle-1_low-01.dng', 'nmnh_sea_turtle-1_low-02.dng'], []);
     });
 });
 
@@ -314,22 +314,39 @@ async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
     if (!TestCase.SOBased)
         return false;
 
-    for (let index = 0; index < 1 /* TestCase.assets.length */; index++) { // TODO: iterate across all assets once partial promotion of bagit assets is implemented
+    let assets: DBAPI.Asset[] = [];
+    let assetVersions: DBAPI.AssetVersion[] = [];
+    for (let index = 0; index < TestCase.assets.length; index++) {
         const asset: DBAPI.Asset = TestCase.assets[index];
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
         // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
-        const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.ingestAsset(asset, assetVersion, TestCase.SOBased, opInfo);
+        const ISR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(asset, assetVersion, TestCase.SOBased, opInfo);
 
-        if (!ASR.success && expectSuccess)
-            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset: ${ASR.error}`);
-        expect(ASR.success).toEqual(expectSuccess);
-        if (!ASR.success)
+        if (!ISR.success && expectSuccess)
+            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset: ${ISR.error}`);
+        expect(ISR.success).toEqual(expectSuccess);
+        if (!ISR.success)
             return !expectSuccess;
 
+        expect(ISR.assets).toBeTruthy();
+        if (ISR.assets)
+            assets = assets.concat(ISR.assets);
+
+        // LOG.logger.info(`Ingest reports ${JSON.stringify(ISR.assetVersions)}`);
+        expect(ISR.assetVersions).toBeTruthy();
+        if (ISR.assetVersions)
+            assetVersions = assetVersions.concat(ISR.assetVersions);
+    }
+
+    // LOG.logger.info(`Accumulated ${JSON.stringify(assetVersions)}`);
+    for (const assetVersion of assetVersions) {
         expect(assetVersion.StorageKeyStaging).toEqual('');
         expect(assetVersion.Ingested).toBeTruthy();
     }
+
+    TestCase.assets = assets;
+    TestCase.assetVersions = assetVersions;
     return true;
 }
 
@@ -467,31 +484,36 @@ async function testIngestAssetFailure(TestCase: AssetStorageAdapterTestCase): Pr
     const storageKeyStagingOld: string = TestCase.assetVersions[0].StorageKeyStaging;
     TestCase.assetVersions[0].StorageKeyStaging = H.Helpers.randomSlug();
     LOG.logger.info('AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting Failure)');
-    const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.ingestAsset(TestCase.assets[0], TestCase.assetVersions[0], TestCase.SOBased, opInfo);
+    const ISR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(TestCase.assets[0], TestCase.assetVersions[0], TestCase.SOBased, opInfo);
     TestCase.assetVersions[0].StorageKeyStaging = storageKeyStagingOld;
 
-    expect(ASR.success).toBeFalsy();
-    return !ASR.success;
+    expect(ISR.success).toBeFalsy();
+    return !ISR.success;
 }
 
 async function testGetAssetVersionContents(TestCase: AssetStorageAdapterTestCase, expectedFiles: string[], expectedDirs: string[]): Promise<void> {
-    for (let index = 0; index < TestCase.assets.length; index++) {
+    let observedFiles: string[] = [];
+    let observedDirs: string[] = [];
+    for (let index = 0; index < TestCase.assetVersions.length; index++) {
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
         const AVC: AssetVersionContent = await STORE.AssetStorageAdapter.getAssetVersionContents(assetVersion);
         expect(AVC.idAssetVersion).toEqual(assetVersion.idAssetVersion);
-        if (AVC.all.length != expectedFiles.length)
-            LOG.logger.info(`AVC.all = ${JSON.stringify(AVC.all)} vs expectedFiles = ${JSON.stringify(expectedFiles)}`);
-        if (AVC.folders.length != expectedDirs.length)
-            LOG.logger.info(`AVC.Folders = ${JSON.stringify(AVC.folders)} vs expectedDirs = ${JSON.stringify(expectedDirs)}`);
-        expect(AVC.all.length).toEqual(expectedFiles.length);
-        expect(AVC.folders.length).toEqual(expectedDirs.length);
-
-        expect(AVC.all).toEqual(expect.arrayContaining(expectedFiles));
-        expect(expectedFiles).toEqual(expect.arrayContaining(AVC.all));
-        expect(AVC.folders).toEqual(expect.arrayContaining(expectedDirs));
-        expect(expectedDirs).toEqual(expect.arrayContaining(AVC.folders));
+        observedFiles = observedFiles.concat(AVC.all);
+        observedDirs = observedDirs.concat(AVC.folders);
     }
+
+    if (observedFiles.length != expectedFiles.length)
+        LOG.logger.info(`observedFiles = ${JSON.stringify(observedFiles)} vs expectedFiles = ${JSON.stringify(expectedFiles)}`);
+    if (observedDirs.length != expectedDirs.length)
+        LOG.logger.info(`observedDirs = ${JSON.stringify(observedDirs)} vs expectedDirs = ${JSON.stringify(expectedDirs)}`);
+    expect(observedFiles.length).toEqual(expectedFiles.length);
+    expect(observedDirs.length).toEqual(expectedDirs.length);
+
+    expect(observedFiles).toEqual(expect.arrayContaining(expectedFiles));
+    expect(expectedFiles).toEqual(expect.arrayContaining(observedFiles));
+    expect(observedDirs).toEqual(expect.arrayContaining(expectedDirs));
+    expect(expectedDirs).toEqual(expect.arrayContaining(observedDirs));
 }
 
 async function testDiscardAssetVersion(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
@@ -508,7 +530,10 @@ async function testDiscardAssetVersion(TestCase: AssetStorageAdapterTestCase, ex
             return !expectSuccess;
 
         expect(ASR.assetVersion).toBeFalsy();
-        expect(await DBAPI.AssetVersion.fetch(assetVersion.idAssetVersion)).toBeFalsy();
+        const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
+        expect(SO).toBeTruthy();
+        if (SO)
+            expect(SO.Retired).toBeTruthy();
     }
     return true;
 }

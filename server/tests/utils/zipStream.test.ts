@@ -24,9 +24,9 @@ describe('ZipStream', () => {
     });
 
     test('ZipStream extract', async () => {
-        const allEntries: string[] = await zip.getAllEntries();
-        const files: string[] = await zip.getJustFiles();
-        const dirs: string[] = await zip.getJustDirectories();
+        const allEntries: string[] = await zip.getAllEntries(null);
+        const files: string[] = await zip.getJustFiles(null);
+        const dirs: string[] = await zip.getJustDirectories(null);
         // logStringArray(allEntries, 'ALL   ');
         // logStringArray(files, 'FILES ');
         // logStringArray(dirs, 'DIRS  ');
@@ -51,7 +51,7 @@ describe('ZipStream', () => {
         const path = join(mockPath, 'PackratTest.zip');
         const fileStream = fs.createReadStream(path);
         const zipUnloaded = new ZipStream(fileStream);
-        expect((await zipUnloaded.getJustDirectories()).length).toEqual(0);
+        expect((await zipUnloaded.getJustDirectories(null)).length).toEqual(0);
 
         const readStream: NodeJS.ReadableStream | null = await zipUnloaded.streamContent('foobar');
         expect(readStream).toBeFalsy();
