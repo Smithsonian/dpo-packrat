@@ -78,7 +78,7 @@ export class BagitReader implements IZip {
 
         const results: string[] = [];
         for (const fileName of allFiltered) {
-            const { dirname, basename } = this.extractDirectoryAndBasename(fileName, true);
+            const { dirname, basename } = this.extractDirectoryAndBasename(fileName, true); /* istanbul ignore else */
             if (dirname && dirname.startsWith(filter)) {
                 results.push(basename);
                 // LOG.logger.info(`*JF* *** ${fileName} -> ${dirname} ... ${basename}`);
@@ -96,8 +96,7 @@ export class BagitReader implements IZip {
         const dirMap: Map<string, boolean> = new Map<string, boolean>();
         const results: string[] = [];
         for (const fileName of allFiltered) {
-            const { dirname } = this.extractDirectoryAndBasename(fileName, true);
-            // if (dirname)
+            const { dirname } = this.extractDirectoryAndBasename(fileName, true); /* istanbul ignore else */
             if (dirname && dirname.startsWith(filter))
                 dirMap.set(dirname, true);
         }
@@ -165,7 +164,7 @@ export class BagitReader implements IZip {
     }
 
     async streamContent(file: string): Promise<NodeJS.ReadableStream | null> {
-        if (!this._validated) {
+        if (!this._validated) { /* istanbul ignore if */
             if (!(await this.validate()).success)
                 return null;
         }
@@ -184,7 +183,7 @@ export class BagitReader implements IZip {
     }
 
     async uncompressedSize(file: string): Promise<number | null> {
-        if (!this._validated) {
+        if (!this._validated) { /* istanbul ignore if */
             if (!(await this.validate()).success)
                 return null;
         }
@@ -196,7 +195,7 @@ export class BagitReader implements IZip {
             if (this._zip)
                 return await this._zip.uncompressedSize(fileName);
             const statResults: H.StatResults = await H.Helpers.stat(fileName);
-            return (statResults.success && statResults.stat) ? statResults.stat.size : null;
+            return (statResults.success && statResults.stat) ? statResults.stat.size : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.info(`bagitReader.uncompressedSize unable to read ${file}: ${JSON.stringify(error)}`);
             return null;

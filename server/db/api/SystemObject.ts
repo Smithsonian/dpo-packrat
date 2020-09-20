@@ -42,13 +42,13 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
     }
 
     static async retireSystemObject(SOBased: SystemObjectBased): Promise<boolean> {
-        const SO: SystemObject | null = await SOBased.fetchSystemObject(); /* istanbul ignore next */
-        return (SO != null) ? await SO.retireObject() : false;
+        const SO: SystemObject | null = await SOBased.fetchSystemObject();
+        return (SO != null) ? await SO.retireObject() : /* istanbul ignore next */ false;
     }
 
     static async reinstateSystemObject(SOBased: SystemObjectBased): Promise<boolean> {
-        const SO: SystemObject | null = await SOBased.fetchSystemObject(); /* istanbul ignore next */
-        return (SO != null) ? await SO.reinstateObject() : false;
+        const SO: SystemObject | null = await SOBased.fetchSystemObject();
+        return (SO != null) ? await SO.reinstateObject() : /* istanbul ignore next */ false;
     }
 
     async retireObject(): Promise<boolean> {
