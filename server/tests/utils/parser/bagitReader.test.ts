@@ -21,9 +21,9 @@ describe('BagitReader', () => {
     test('BagitReader load from zip stream with initial validation', async () => {
         const path = join(mockPathZip, 'PackratTest.zip');
         bagitZipStream = await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path, initialValidate: true, subsequentValidate: true, subsequentIsValid: true, expectFailure: false });
-        expect(await bagitZipStream.getAllEntries()).toBeTruthy();
-        expect(await bagitZipStream.getJustFiles()).toBeTruthy();
-        expect(await bagitZipStream.getJustDirectories()).toBeTruthy();
+        expect(await bagitZipStream.getAllEntries(null)).toBeTruthy();
+        expect(await bagitZipStream.getJustFiles(null)).toBeTruthy();
+        expect(await bagitZipStream.getJustDirectories(null)).toBeTruthy();
     });
 
     test('BagitReader load from zip stream without initial validation', async () => {
@@ -65,11 +65,11 @@ describe('BagitReader', () => {
         bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
         expect(await bagit.getHashAlgorithm()).toBeTruthy();
         bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
-        expect(await bagit.getAllEntries()).toBeTruthy();
+        expect(await bagit.getAllEntries(null)).toBeTruthy();
         bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
-        expect(await bagit.getJustFiles()).toBeTruthy();
+        expect(await bagit.getJustFiles(null)).toBeTruthy();
         bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
-        expect(await bagit.getJustDirectories()).toBeTruthy();
+        expect(await bagit.getJustDirectories(null)).toBeTruthy();
     });
 
     test('BagitReader externally validate contents', async () => {

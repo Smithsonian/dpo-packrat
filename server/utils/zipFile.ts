@@ -1,6 +1,6 @@
 import * as LOG from './logger';
 import * as H from './helpers';
-import { IZip } from './IZip';
+import { IZip, zipFilterResults } from './IZip';
 import StreamZip from 'node-stream-zip';
 
 /**
@@ -76,9 +76,9 @@ export class ZipFile implements IZip {
         });
     }
 
-    async getAllEntries(): Promise<string[]> { return this._entries; }
-    async getJustFiles(): Promise<string[]> { return this._files; }
-    async getJustDirectories(): Promise<string[]> { return this._dirs; }
+    async getAllEntries(filter: string | null): Promise<string[]> { return zipFilterResults(this._entries, filter); }
+    async getJustFiles(filter: string | null): Promise<string[]> { return zipFilterResults(this._files, filter); }
+    async getJustDirectories(filter: string | null): Promise<string[]> { return zipFilterResults(this._dirs, filter); }
 
     async streamContent(entry: string): Promise<NodeJS.ReadableStream | null> {
         return new Promise<NodeJS.ReadableStream | null>((resolve) => {
@@ -96,6 +96,22 @@ export class ZipFile implements IZip {
                     });
                 } catch (error) /* istanbul ignore next */ {
                     LOG.logger.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`);
+                    resolve(null);
+                }
+            }
+        });
+    }
+
+    async uncompressedSize(entry: string): Promise<number | null> {
+        return new Promise<number | null>((resolve) => {
+            if (!this._zip)
+                resolve(null);
+            else {
+                try {
+                    const zipEntry = this._zip.entry(entry);
+                    resolve((zipEntry) ? zipEntry.size : null);
+                } catch (error) /* istanbul ignore next */ {
+                    LOG.logger.info(`ZipFile.uncompressedSize ${entry}: ${JSON.stringify(error)}`);
                     resolve(null);
                 }
             }

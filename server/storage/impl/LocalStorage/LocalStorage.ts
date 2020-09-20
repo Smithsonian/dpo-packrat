@@ -189,7 +189,7 @@ export class LocalStorage implements STORE.IStorage {
 
         if (!PSAR.success)
             return PSAR;
-        return (fileName) ? await H.Helpers.removeDirectory(path.dirname(pathOnDisk), false) : PSAR; // cleanup staged directory if we have a staged file
+        return (!inputStream && fileName) ? await H.Helpers.removeDirectory(path.dirname(pathOnDisk), false) : PSAR; // cleanup staged directory if we have a staged file
     }
 
     async renameAsset(renameAssetInput: STORE.RenameAssetInput): Promise<STORE.RenameAssetResult> {

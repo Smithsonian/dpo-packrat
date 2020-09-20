@@ -4,11 +4,11 @@ import * as LOG from '../logger';
 import * as H from '../helpers';
 import * as ZIPS from '../zipStream';
 import * as ZIPF from '../zipFile';
-import { IZip } from '../IZip';
+import { IZip, zipFilterResults } from '../IZip';
 
 const BAGIT_BAG_DECLARATION: string = 'bagit.txt';
 const BAGIT_BAG_METADATA: string = 'bag-info.txt';
-const BAGIT_DATA_DIRECTORY: string = 'data/';
+export const BAGIT_DATA_DIRECTORY: string = 'data/';
 
 // Detect special bagit files
 // match[2] = prefix directory name
@@ -60,22 +60,50 @@ export class BagitReader implements IZip {
             return { success: false, error: 'Invalid BagitReader constructor params' };
     }
 
-    async getAllEntries(): Promise<string[]> {
+    async getAllEntries(filter: string | null): Promise<string[]> {
         if (!this._validated)
             await this.validate();
-        return this._files;
+        return zipFilterResults(this._files, filter);
     }
 
-    async getJustFiles(): Promise<string[]> {
+    async getJustFiles(filter: string | null): Promise<string[]> {
         if (!this._validated)
             await this.validate();
-        return this._dataFiles;
+        if (!filter)
+            return this._dataFiles;
+
+        const allFiltered: string[] = zipFilterResults(this._files, filter);
+        // LOG.logger.info(`*JF* All ${JSON.stringify(this._dataFiles)}`);
+        // LOG.logger.info(`*JF* Filtered ${JSON.stringify(allFiltered)}`);
+
+        const results: string[] = [];
+        for (const fileName of allFiltered) {
+            const { dirname, basename } = this.extractDirectoryAndBasename(fileName, true);
+            if (dirname && dirname.startsWith(filter)) {
+                results.push(basename);
+                // LOG.logger.info(`*JF* *** ${fileName} -> ${dirname} ... ${basename}`);
+            }
+        }
+        return results;
     }
 
-    async getJustDirectories(): Promise<string[]> {
+    async getJustDirectories(filter: string | null): Promise<string[]> {
         if (!this._validated)
             await this.validate();
-        return this._dataDirectories;
+        if (!filter)
+            return this._dataDirectories;
+        const allFiltered: string[] = zipFilterResults(this._files, filter);
+        const dirMap: Map<string, boolean> = new Map<string, boolean>();
+        const results: string[] = [];
+        for (const fileName of allFiltered) {
+            const { dirname } = this.extractDirectoryAndBasename(fileName, true);
+            // if (dirname)
+            if (dirname && dirname.startsWith(filter))
+                dirMap.set(dirname, true);
+        }
+        for (const dirname of dirMap.keys())
+            results.push(dirname);
+        return results;
     }
 
     async loadFromZipFile(fileName: string, validate: boolean): Promise<H.IOResults> {
@@ -84,7 +112,7 @@ export class BagitReader implements IZip {
             const results: H.IOResults = await this._zip.load();
             if (!results.success)
                 return results;
-            this._files = await this._zip.getJustFiles();
+            this._files = await this._zip.getJustFiles(null);
 
             return validate ? await this.validate() : results;
         } catch (error) /* istanbul ignore next */ {
@@ -99,7 +127,7 @@ export class BagitReader implements IZip {
             const results: H.IOResults = await this._zip.load();
             if (!results.success)
                 return results;
-            this._files = await this._zip.getJustFiles();
+            this._files = await this._zip.getJustFiles(null);
 
             return validate ? await this.validate() : results;
         } catch (error) /* istanbul ignore next */ {
@@ -151,6 +179,26 @@ export class BagitReader implements IZip {
                 : await fs.createReadStream(fileName);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.info(`bagitReader.streamContent unable to read ${file}: ${JSON.stringify(error)}`);
+            return null;
+        }
+    }
+
+    async uncompressedSize(file: string): Promise<number | null> {
+        if (!this._validated) {
+            if (!(await this.validate()).success)
+                return null;
+        }
+
+        try {
+            const fileName: string = this.prefixedFilename(file);
+            // LOG.logger.info(`getFileStream(${file}) looking in ${fileName} with prefixDir of ${this._prefixDir}`);
+
+            if (this._zip)
+                return await this._zip.uncompressedSize(fileName);
+            const statResults: H.StatResults = await H.Helpers.stat(fileName);
+            return (statResults.success && statResults.stat) ? statResults.stat.size : null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.info(`bagitReader.uncompressedSize unable to read ${file}: ${JSON.stringify(error)}`);
             return null;
         }
     }
@@ -385,11 +433,10 @@ export class BagitReader implements IZip {
                 if (!fileName.toLowerCase().startsWith(BAGIT_DATA_DIRECTORY))
                     return { success: false, error: `Invalid Bagit: data manifest entry ${fileName} does not start with ${BAGIT_DATA_DIRECTORY}` };
                 // strip of "data/" ... then split results into folder names and file names
-                const strippedFileName: string = fileName.replace(BAGIT_DATA_DIRECTORY, '');
-                const dirname: string = path.dirname(strippedFileName);
-                if (dirname && dirname != '.')
+                const { dirname, basename } = this.extractDirectoryAndBasename(fileName, false);
+                if (dirname)
                     directoryMap.set(dirname, true);
-                fileMap.set(path.basename(strippedFileName), true);
+                fileMap.set(basename, true);
             }
 
             // File exists and has a valid hash; record it in our local validation this._fileMap, and record data in our persistent dataFileMap
@@ -407,5 +454,17 @@ export class BagitReader implements IZip {
             }
 
         return { success: true, error: '' };
+    }
+
+    private extractDirectoryAndBasename(fileName: string, removePrefix: boolean): { dirname: string | null, basename: string } {
+        let strippedFileName: string = (removePrefix && this._prefixDir) ? fileName.replace(this._prefixDir + '/', '') : fileName;
+        strippedFileName = strippedFileName.replace(BAGIT_DATA_DIRECTORY, '');
+
+        let dirname: string | null = path.dirname(strippedFileName);
+        if (!dirname || dirname == '.')
+            dirname = null;
+        const basename: string = path.basename(strippedFileName);
+        // if (removePrefix) LOG.logger.info(`extractDirectoryAndBasename (prefix ${this._prefixDir}, fileName: ${fileName}) -> { ${dirname}, ${basename}}`);
+        return { dirname, basename };
     }
 }

@@ -118,7 +118,7 @@ export class OCFLObject {
 
         if (fileName) {
             const destName = path.join(destFolder, fileName);
-            let hashResults: H.HashResults = { hash: '', success: false, error: '' };
+            let hashResults: H.HashResults = { hash: '', dataLength: 0, success: false, error: '' };
             if (pathOnDisk) {
                 // Compute hash
                 hashResults = await H.Helpers.computeHashFromFile(pathOnDisk, ST.OCFLDigestAlgorithm);
