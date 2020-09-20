@@ -5,7 +5,7 @@ import * as CACHE from '../../../../../cache';
 import * as COL from '../../../../../collections/interface';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
-import { AssetStorageAdapter, AssetStorageResult, OperationInfo } from '../../../../../storage/interface';
+import { AssetStorageAdapter, IngestAssetResult, OperationInfo } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
 
 export default async function ingestData(_: Parent, args: MutationIngestDataArgs, context: Context): Promise<IngestDataResult> {
@@ -408,9 +408,9 @@ async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.Sy
             userEmailAddress: user.EmailAddress,
             userName: user.Name
         };
-        const ASR: AssetStorageResult = await AssetStorageAdapter.ingestAsset(assetDB, assetVersionDB, SOBased, opInfo);
-        if (!ASR.success) {
-            LOG.logger.error(`GraphQL ingestData unable to ingest assetVersion ${idAssetVersion}: ${ASR.error}`);
+        const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(assetDB, assetVersionDB, SOBased, opInfo);
+        if (!ISR.success) {
+            LOG.logger.error(`GraphQL ingestData unable to ingest assetVersion ${idAssetVersion}: ${ISR.error}`);
             return false;
         }
     }
