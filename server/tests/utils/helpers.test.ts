@@ -12,6 +12,7 @@ const a3: number[] = [1, 2, 4];
 const a4: number[] = [3, 1, 2];
 const a5: number[] = [1, 2, 3];
 const a6: string[] = ['one', 'two', 'three'];
+const RANDOM_FILE_SIZE: number = 10000;
 
 /*
 afterAll(async done => {
@@ -190,7 +191,7 @@ describe('Utils: Helpers', () => {
         try {
             const WS: NodeJS.WritableStream = fs.createWriteStream(filePathRandom);
             expect(WS).toBeTruthy();
-            const hash: string = await H.Helpers.createRandomFile(WS, 10000);
+            const hash: string = await H.Helpers.createRandomFile(WS, RANDOM_FILE_SIZE);
             expect(hash).toBeTruthy();
         } catch (error) {
             LOG.logger.error(`Helpers.createRandomeFile test failed: ${JSON.stringify(error)}`);
@@ -223,6 +224,14 @@ describe('Utils: Helpers', () => {
         ioResults = await H.Helpers.removeFile(filePathTemp);
         expect(ioResults.success).toBeTruthy();
     });
+
+    test('Utils: Helpers.computeSizeOfStream', async () => {
+        const stream: NodeJS.ReadableStream = fs.createReadStream(filePathRandom);
+        const fileSize: number | null = await H.Helpers.computeSizeOfStream(stream);
+        expect(fileSize).toBeTruthy();
+        expect(fileSize).toEqual(RANDOM_FILE_SIZE);
+    });
+
 
     test('Utils: Helpers.initializeDirectory', async () => {
         let res: H.IOResults = await H.Helpers.initializeDirectory(dirNestEmpty, 'Nested Directory, Empty');
