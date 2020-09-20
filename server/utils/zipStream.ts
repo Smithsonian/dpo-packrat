@@ -53,6 +53,7 @@ export class ZipStream implements IZip {
     }
 
     async close(): Promise<H.IOResults> {
+        this._zip = null;
         return { success: true, error: '' };
     }
 
@@ -74,8 +75,11 @@ export class ZipStream implements IZip {
 
     async uncompressedSize(entry: string): Promise<number | null> {
         const stream: NodeJS.ReadableStream | null = await this.streamContent(entry);
-        if (!stream)
-            return null;
+        if (!stream) {
+            return (this._dirs.includes(entry))
+                ? 0                 // 0 means a directory or zero-length file
+                : null;             // null means invalid entry
+        }
         return H.Helpers.computeSizeOfStream(stream);
     }
 

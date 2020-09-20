@@ -16,6 +16,9 @@ module.exports = {
         // '**/tests/collections/*.test.ts',
         // '**/tests/storage/**/*.test.ts',
 
+        // Needs test cases written:
+        // '**/tests/utils/parser/bulkIngestReader.test.ts',
+
         // Individual tests, left here to aid in quick, focused testing:
         // '**/tests/collections/EdanCollection.test.ts',
         // '**/tests/db/dbcreation.test.ts',

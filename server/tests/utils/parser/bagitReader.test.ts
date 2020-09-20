@@ -26,6 +26,19 @@ describe('BagitReader', () => {
         expect(await bagitZipStream.getJustDirectories(null)).toBeTruthy();
     });
 
+    test('BagitReader load from zip stream with initial validation', async () => {
+        const expectedDirs: string[] = ['nmnh_sea_turtle-1_low/camera', 'nmnh_sea_turtle-1_low/raw'];
+        const expectedFiles: string[] = ['nmnh_sea_turtle-1_low-01.jpg', 'nmnh_sea_turtle-1_low-02.jpg', 'nmnh_sea_turtle-1_low-01.dng', 'nmnh_sea_turtle-1_low-02.dng'];
+        const expectedAll: string[] = ['PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-01.jpg', 'PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-02.jpg', 'PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-01.dng', 'PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-02.dng'];
+
+        const observedDirs: string[] = await bagitZipStream.getJustDirectories('nmnh_sea_turtle-1_low/');
+        const observedFiles: string[] = await bagitZipStream.getJustFiles('nmnh_sea_turtle-1_low/');
+        const observedAll: string[] = await bagitZipStream.getAllEntries('nmnh_sea_turtle-1_low/');
+        expect(observedDirs).toEqual(expect.arrayContaining(expectedDirs));
+        expect(observedFiles).toEqual(expect.arrayContaining(expectedFiles));
+        expect(observedAll).toEqual(expect.arrayContaining(expectedAll));
+    });
+
     test('BagitReader load from zip stream without initial validation', async () => {
         const path = join(mockPathZip, 'PackratTest.zip');
         await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path, initialValidate: false, subsequentValidate: true, subsequentIsValid: true, expectFailure: false });
