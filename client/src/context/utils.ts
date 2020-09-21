@@ -1,13 +1,8 @@
 import { Item, Project, SubjectUnitIdentifier, AssetVersion, Asset, Vocabulary } from '../types/graphql';
 import { StateSubject, StateItem, StateProject, IngestionFile, FileUploadStatus, FileId } from './ingestion';
 
-export function generateBagitId(id: FileId, unique: number | string): FileId {
-    return `${id}-bagit-${unique}`;
-}
-
 export function parseFileId(id: FileId): number {
-    const [fileId] = id.split('-bagit-');
-    return Number.parseInt(fileId, 10);
+    return Number.parseInt(id, 10);
 }
 
 export function parseSubjectUnitIdentifierToState(subjectUnitIdentifier: SubjectUnitIdentifier): StateSubject {
@@ -21,11 +16,16 @@ export function parseSubjectUnitIdentifierToState(subjectUnitIdentifier: Subject
     };
 }
 
-export function parseItemToState(item: Item, selected: boolean): StateItem {
+export function isNewItem(id: string): boolean {
+    return id.includes('-new-item');
+}
+
+export function parseItemToState(item: Item, selected: boolean, position: number): StateItem {
     const { idItem, Name, EntireSubject } = item;
+    const id = idItem || `${position}-new-item`;
 
     return {
-        id: String(idItem),
+        id: String(id),
         entireSubject: EntireSubject,
         name: Name,
         selected

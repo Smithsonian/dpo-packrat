@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AppContext, StateItem, StateProject, StateIdentifier, defaultItem, IngestionDispatchAction, METADATA_ACTIONS, parseFileId } from '../../../context';
+import { AppContext, StateItem, StateProject, StateIdentifier, defaultItem, IngestionDispatchAction, METADATA_ACTIONS, parseFileId, isNewItem } from '../../../context';
 import useItem from './useItem';
 import useProject from './useProject';
 import useMetadata from './useMetadata';
@@ -61,7 +61,7 @@ function useIngest(): UseIngest {
 
                 let ingestItemId: number | null = null;
 
-                if (!isDefaultItem) {
+                if (!isDefaultItem || !isNewItem(id)) {
                     ingestItemId = Number.parseInt(id, 10);
                 }
 

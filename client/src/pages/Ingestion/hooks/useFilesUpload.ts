@@ -103,8 +103,8 @@ const useFilesUpload = (): UseFilesUpload => {
                 const items: StateItem[] = [];
                 const metadatas: StateMetadata[] = [];
 
-                for (let i = 0; i < Details.length; i++) {
-                    const { idAssetVersion, SubjectUnitIdentifier: foundSubjectUnitIdentifier, Project: foundProject, Item: foundItem, CaptureDataPhoto } = Details[i];
+                for (let index = 0; index < Details.length; index++) {
+                    const { idAssetVersion, SubjectUnitIdentifier: foundSubjectUnitIdentifier, Project: foundProject, Item: foundItem, CaptureDataPhoto } = Details[index];
                     if (foundSubjectUnitIdentifier) {
                         const subject: StateSubject = parseSubjectUnitIdentifierToState(foundSubjectUnitIdentifier);
                         subjects.push(subject);
@@ -114,7 +114,7 @@ const useFilesUpload = (): UseFilesUpload => {
                         projects.push(...stateProjects);
                     }
                     if (foundItem) {
-                        const item: StateItem = parseItemToState(foundItem, false);
+                        const item: StateItem = parseItemToState(foundItem, false, index);
                         items.push(item);
                     }
 
