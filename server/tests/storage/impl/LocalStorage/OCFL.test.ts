@@ -183,6 +183,7 @@ describe('OCFL Object', () => {
         expect(initRes.ocflObject).toBeTruthy();
         if (!initRes.ocflObject)
             return;
+        ocflObject = initRes.ocflObject;
     });
 
     test('OCFL Object.fileLocationAndHash', async () => {
@@ -216,6 +217,16 @@ describe('OCFL Object', () => {
             expect(pathAndHash.path).toEqual(path.join(ocflObject.versionContentFullPath(10), fileName1));
     });
 
+    test('OCFL Object InputStream', async () => {
+        expect(ocflObject).toBeTruthy();
+        if (!ocflObject)
+            return;
+        // test with an input stream
+        await testAddOrUpdate(ocflObject, OHTS.captureData1, 505, true, true);
+        await testAddOrUpdate(ocflObject, OHTS.captureData1, 1110, false, true, true); // manually "add" using both filename and inputstream -- should fail
+        await testAddOrUpdate(ocflObject, OHTS.model1, 0, true, false, false, true); // force just metadata
+    });
+
     test('OCFL Object Other Methods', async () => {
         expect(ocflObject).toBeTruthy();
         if (!ocflObject)
@@ -240,7 +251,7 @@ describe('OCFL Object', () => {
         expect(fileLocationExplicit).toEqual(path.join(objectRoot, versionContentPartialPath, fileName1));
 
         const headVersion: number = ocflObject.headVersion();
-        expect(headVersion).toEqual(13);
+        expect(headVersion).toEqual(19);
     });
 
     test('OCFL Object.validate', async () => {
@@ -332,7 +343,9 @@ async function createRandomFile(directoryName: string, fileName: string, fileSiz
     });
 }
 
-async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.SystemObjectBased | null, fileSize: number, expectSuccess: boolean): Promise<string> {
+async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.SystemObjectBased | null, fileSize: number,
+    expectSuccess: boolean, useInputStream: boolean = false,
+    specifyBothPathAndStream: boolean = false, forceJustMetadata: boolean = false): Promise<string> {
     expect(ocflObject).toBeTruthy();
     if (!ocflObject)
         return '';
@@ -345,11 +358,27 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     const directoryName: string = await createUploadLocation(ocflRoot, fileName);
     const pathOnDisk: string = (fileSize > 0)
         ? await createRandomFile(directoryName, fileName, fileSize) // create a file
-        : path.join(directoryName, fileName);                       // just yield a filenmae
+        : path.join(directoryName, fileName);                       // just yield a filename
+
+    let inputStream: NodeJS.ReadStream | null = null;
+    if (useInputStream)
+        inputStream = fs.createReadStream(pathOnDisk);
 
     // Add content
-    LOG.logger.info(`addOrUpdate ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`);
-    let ioResults: H.IOResults = await ocflObject.addOrUpdate(pathOnDisk, fileName, metadataOA, opInfo);
+    LOG.logger.info(`addOrUpdate ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}${useInputStream ? ' (use inputstream)' : ''}${forceJustMetadata ? ' (just metadata)': ''}`);
+    let ioResults: H.IOResults;
+    if (!forceJustMetadata)
+        ioResults = await ocflObject.addOrUpdate(inputStream && !specifyBothPathAndStream ? null : pathOnDisk, inputStream, fileName, metadataOA, opInfo);
+    else
+        ioResults = await ocflObject.addOrUpdate(null, null, null, metadataOA, opInfo);
+
+    if (useInputStream) {
+        if (!expectSuccess && inputStream)
+            inputStream.destroy();
+        inputStream = null;
+        await H.Helpers.removeFile(pathOnDisk);
+    }
+
     expect(expectSuccess === ioResults.success).toBeTruthy();
     if (!ioResults.success) {
         if (expectSuccess)
@@ -389,9 +418,10 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     expect(ioResults.success).toBeTruthy();
     ioResults = await H.Helpers.fileOrDirExists(path.join(contentRoot, ST.OCFLMetadataFilename));
     expect(ioResults.success).toBeTruthy();
-    ioResults = await H.Helpers.fileOrDirExists(path.join(contentRoot, fileName));
-    expect(ioResults.success).toBeTruthy();
-
+    if (!forceJustMetadata) {
+        ioResults = await H.Helpers.fileOrDirExists(path.join(contentRoot, fileName));
+        expect(ioResults.success).toBeTruthy();
+    }
     // cleanup temporary upload location
     ioResults = await H.Helpers.removeDirectory(directoryName, true);
     expect(ioResults.success).toBeTruthy();

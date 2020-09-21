@@ -61,16 +61,18 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
                     DateCreated: new Date()
                 };
 
-                const commitResult: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
+                const commitResult: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
                 if (!commitResult.success) {
                     LOG.logger.error(`GraphQL uploadAsset AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`);
                     resolve({ status: UploadStatus.Failed, error: 'Storage failed to commit new asset' });
                 }
-                // commitResult.asset; commitResult.assetVersion; <-- These have been created
-                const { assetVersion } = commitResult;
-                if (assetVersion) {
-                    const { idAssetVersion } = assetVersion;
-                    resolve({ status: UploadStatus.Complete, idAssetVersion });
+                // commitResult.assets; commitResult.assetVersions; <-- These have been created
+                const { assetVersions } = commitResult;
+                if (assetVersions) {
+                    const idAssetVersions: number[] = [];
+                    for (const assetVersion of assetVersions)
+                        idAssetVersions.push(assetVersion.idAssetVersion);
+                    resolve({ status: UploadStatus.Complete, idAssetVersions });
                 }
             });
 

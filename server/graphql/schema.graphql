@@ -578,11 +578,61 @@ input GetAssetVersionsDetailsInput {
   idAssetVersions: [Int!]!
 }
 
+type IngestIdentifier {
+  identifier: String!
+  identifierType: Int!
+}
+
+type IngestFolder {
+  name: String!
+  variantType: Int!
+}
+
+type IngestPhotogrammetry {
+  idAssetVersion: Int!
+  dateCaptured: String!
+  datasetType: Int!
+  systemCreated: Boolean!
+  description: String!
+  cameraSettingUniform: Boolean!
+  datasetFieldId: Int
+  itemPositionType: Int
+  itemPositionFieldId: Int
+  itemArrangementFieldId: Int
+  focusType: Int
+  lightsourceType: Int
+  backgroundRemovalMethod: Int
+  clusterType: Int
+  clusterGeometryFieldId: Int
+  directory: String!
+  folders: [IngestFolder!]!
+  identifiers: [IngestIdentifier!]!
+}
+
+type IngestModel {
+  idAssetVersion: Int!
+  authoritative: Boolean!
+  dateCreated: String!
+  creationMethod: Int!
+  modality: Int!
+  purpose: Int!
+  units: Int!
+  master: Boolean!
+  directory: String!
+}
+
+type GetAssetVersionDetailResult {
+  idAssetVersion: Int!
+  SubjectUnitIdentifier: SubjectUnitIdentifier
+  Project: [Project!]
+  Item: Item
+  CaptureDataPhoto: IngestPhotogrammetry
+  Model: IngestModel
+}
+
 type GetAssetVersionsDetailsResult {
   valid: Boolean!
-  SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
-  Project: [Project!]!
-  Item: [Item!]!
+  Details: [GetAssetVersionDetailResult!]!
 }
 
 input GetAssetInput {
@@ -841,7 +891,7 @@ enum UploadStatus {
 
 type UploadAssetResult {
   status: UploadStatus!
-  idAssetVersion: Int
+  idAssetVersions: [Int!]
   error: String
 }
 
@@ -883,43 +933,41 @@ type CreateCaptureDataPhotoResult {
   CaptureDataPhoto: CaptureDataPhoto
 }
 
-input IngestSubject {
+input IngestSubjectInput {
   id: Int
   name: String!
   arkId: String!
   unit: String!
 }
 
-input IngestProject {
+input IngestProjectInput {
   id: Int!
   name: String!
 }
 
-input IngestItem {
+input IngestItemInput {
   id: Int
   name: String!
   entireSubject: Boolean!
 }
 
-input IngestIdentifier {
+input IngestIdentifierInput {
   identifier: String!
   identifierType: Int!
 }
 
-input IngestFolder {
+input IngestFolderInput {
   name: String!
   variantType: Int!
 }
 
-input IngestPhotogrammetry {
+input IngestPhotogrammetryInput {
   idAssetVersion: Int!
   dateCaptured: String!
   datasetType: Int!
   systemCreated: Boolean!
   description: String!
   cameraSettingUniform: Boolean!
-  identifiers: [IngestIdentifier!]!
-  folders: [IngestFolder!]!
   datasetFieldId: Int
   itemPositionType: Int
   itemPositionFieldId: Int
@@ -929,13 +977,28 @@ input IngestPhotogrammetry {
   backgroundRemovalMethod: Int
   clusterType: Int
   clusterGeometryFieldId: Int
+  directory: String!
+  folders: [IngestFolderInput!]!
+  identifiers: [IngestIdentifierInput!]!
+}
+
+input IngestModelInput {
+  idAssetVersion: Int!
+  authoritative: Boolean!
+  dateCreated: String!
+  creationMethod: Int!
+  modality: Int!
+  purpose: Int!
+  units: Int!
+  master: Boolean!
+  directory: String!
 }
 
 input IngestDataInput {
-  subjects: [IngestSubject!]!
-  project: IngestProject!
-  item: IngestItem!
-  photogrammetry: [IngestPhotogrammetry!]!
+  subjects: [IngestSubjectInput!]!
+  project: IngestProjectInput!
+  item: IngestItemInput!
+  photogrammetry: [IngestPhotogrammetryInput!]!
 }
 
 type IngestDataResult {

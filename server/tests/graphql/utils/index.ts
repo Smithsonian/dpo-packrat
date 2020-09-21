@@ -5,6 +5,7 @@
  */
 import GraphQLApi from '../../../graphql';
 import * as DBC from '../../../db/connection';
+// import * as H from '../../../utils/helpers';
 import {
     CreateUserInput,
     CreateVocabularySetInput,
@@ -37,6 +38,7 @@ class TestSuiteUtils {
     };
 
     private afterAll = async (done: () => void): Promise<void> => {
+        // await H.Helpers.sleep(5000);
         await DBC.DBConnection.disconnect();
         done();
     };
@@ -160,6 +162,7 @@ class TestSuiteUtils {
             StorageSize: 50,
             idAssetVersion: 0,
             Ingested: false,
+            BulkIngest: false,
             Version: 0
         };
     };

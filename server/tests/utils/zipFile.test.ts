@@ -21,10 +21,10 @@ describe('ZipFile', () => {
         expect(result.success).toBeTruthy();
     });
 
-    test('ZipFile extract', async () => {
-        const allEntries: string[] = await zip.getAllEntries();
-        const files: string[] = await zip.getJustFiles();
-        const dirs: string[] = await zip.getJustDirectories();
+    test('ZipFile.extract', async () => {
+        const allEntries: string[] = await zip.getAllEntries(null);
+        const files: string[] = await zip.getJustFiles(null);
+        const dirs: string[] = await zip.getJustDirectories(null);
         // logStringArray(allEntries, 'ALL   ');
         // logStringArray(files, 'FILES ');
         // logStringArray(dirs, 'DIRS  ');
@@ -37,18 +37,65 @@ describe('ZipFile', () => {
         expect(readStream).toBeTruthy();
         readStream = await zip.streamContent(H.Helpers.randomSlug());
         expect(readStream).toBeFalsy();
+    });
 
+    test('ZipFile extract with filter', async () => {
+        const all: string[] = await zip.getAllEntries('data');
+        const files: string[] = await zip.getJustFiles('data');
+        const dirs: string[] = await zip.getJustDirectories('data');
+
+        const expectedFiles: string[] = ['PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-01.jpg', 'PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-02.jpg', 'PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-01.dng', 'PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-02.dng'];
+        const expectedDirs: string[] = ['PackratTest/data/', 'PackratTest/data/nmnh_sea_turtle-1_low/', 'PackratTest/data/nmnh_sea_turtle-1_low/camera/', 'PackratTest/data/nmnh_sea_turtle-1_low/raw/'];
+        const expectedAll: string[] = expectedFiles.concat(expectedDirs);
+        expect(all).toEqual(expect.arrayContaining(expectedAll));
+        expect(files).toEqual(expect.arrayContaining(expectedFiles));
+        expect(dirs).toEqual(expect.arrayContaining(expectedDirs));
+    });
+
+    test('ZipFile.uncompressedSize', async () => {
+        const fileSizeMap: Map<string, number> = new Map<string, number>();
+        fileSizeMap.set('PackratTest/bag-info.txt', 0);
+        fileSizeMap.set('PackratTest/bagit.txt', 55);
+        fileSizeMap.set('PackratTest/capture_data_photo.csv', 1047);
+        fileSizeMap.set('PackratTest/data/', 0);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/', 0);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/', 0);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-01.jpg', 245862);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-02.jpg', 245161);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/', 0);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-01.dng', 283616);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-02.dng', 282558);
+        fileSizeMap.set('PackratTest/manifest-sha1.txt', 410);
+        fileSizeMap.set('PackratTest/tagmanifest-sha1.txt', 229);
+
+        for (const entry of await zip.getAllEntries(null)) {
+            const observedSize: number | null = await zip.uncompressedSize(entry);
+            const expectedSize: number | undefined = fileSizeMap.get(entry);
+            // LOG.logger.info(`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`);
+            expect(observedSize).not.toBeNull();
+            expect(expectedSize).not.toBeUndefined();
+            expect(observedSize).toEqual(expectedSize);
+        }
+
+        const uncompressedSizeRandomName: number | null = await zip.uncompressedSize(H.Helpers.randomSlug());
+        expect(uncompressedSizeRandomName).toBeNull();
+    });
+
+    test('ZipFile.close', async () => {
         let result: H.IOResults = await zip.close();
         expect(result.success).toBeTruthy();
 
         result = await zip.close();
         expect(result.success).toBeTruthy();
+
+        const uncompressedSizeAterClose: number | null = await zip.uncompressedSize('PackratTest/bagit.txt');
+        expect(uncompressedSizeAterClose).toBeNull();
     });
 
     test('ZipFile errors', async () => {
         const path = join(mockPath, 'PackratTest.zip');
         const zipUnloaded = new ZipFile(path);
-        expect((await zipUnloaded.getJustDirectories()).length).toEqual(0);
+        expect((await zipUnloaded.getJustDirectories(null)).length).toEqual(0);
 
         const readStream: NodeJS.ReadableStream | null = await zipUnloaded.streamContent('foobar');
         expect(readStream).toBeFalsy();

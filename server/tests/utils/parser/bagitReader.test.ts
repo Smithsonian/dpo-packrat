@@ -6,13 +6,13 @@ import * as H from '../../../utils/helpers';
 
 const mockPathZip: string = join(__dirname, '../../mock/utils/zip/');
 const mockPathDir: string = join(__dirname, '../../mock/utils/bagit/');
-
+/*
 afterAll(async done => {
-    // jest.setTimeout(5000);
-    // await H.Helpers.sleep(2000);
+    jest.setTimeout(5000);
+    await H.Helpers.sleep(2000);
     done();
 });
-
+*/
 let bagitZipStream: BagitReader;
 let bagitZipFile: BagitReader;
 let bagitDir: BagitReader;
@@ -21,9 +21,80 @@ describe('BagitReader', () => {
     test('BagitReader load from zip stream with initial validation', async () => {
         const path = join(mockPathZip, 'PackratTest.zip');
         bagitZipStream = await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path, initialValidate: true, subsequentValidate: true, subsequentIsValid: true, expectFailure: false });
-        expect(await bagitZipStream.getAllEntries()).toBeTruthy();
-        expect(await bagitZipStream.getJustFiles()).toBeTruthy();
-        expect(await bagitZipStream.getJustDirectories()).toBeTruthy();
+        expect(await bagitZipStream.getAllEntries(null)).toBeTruthy();
+        expect(await bagitZipStream.getJustFiles(null)).toBeTruthy();
+        expect(await bagitZipStream.getJustDirectories(null)).toBeTruthy();
+    });
+
+    test('BagitReader extract filter', async () => {
+        const expectedDirs: string[] = ['nmnh_sea_turtle-1_low/camera', 'nmnh_sea_turtle-1_low/raw'];
+        const expectedFiles: string[] = ['nmnh_sea_turtle-1_low-01.jpg', 'nmnh_sea_turtle-1_low-02.jpg', 'nmnh_sea_turtle-1_low-01.dng', 'nmnh_sea_turtle-1_low-02.dng'];
+        const expectedAll: string[] = ['PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-01.jpg', 'PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-02.jpg', 'PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-01.dng', 'PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-02.dng'];
+
+        const observedDirs: string[] = await bagitZipStream.getJustDirectories('nmnh_sea_turtle-1_low/');
+        const observedFiles: string[] = await bagitZipStream.getJustFiles('nmnh_sea_turtle-1_low/');
+        const observedAll: string[] = await bagitZipStream.getAllEntries('nmnh_sea_turtle-1_low/');
+        expect(observedDirs).toEqual(expect.arrayContaining(expectedDirs));
+        expect(observedFiles).toEqual(expect.arrayContaining(expectedFiles));
+        expect(observedAll).toEqual(expect.arrayContaining(expectedAll));
+    });
+
+    test('BagitReader extract filter no match', async () => {
+        const randomName: string = H.Helpers.randomSlug();
+        const observedDirs2: string[] = await bagitZipStream.getJustDirectories(randomName);
+        const observedFiles2: string[] = await bagitZipStream.getJustFiles(randomName);
+        const observedAll2: string[] = await bagitZipStream.getAllEntries(randomName);
+        expect(observedDirs2).toEqual([]);
+        expect(observedFiles2).toEqual([]);
+        expect(observedAll2).toEqual([]);
+    });
+
+    test('BagitReader.uncompressedSize', async () => {
+        const fileSizeMap: Map<string, number> = new Map<string, number>();
+        fileSizeMap.set('PackratTest/bag-info.txt', 0);
+        fileSizeMap.set('PackratTest/bagit.txt', 55);
+        fileSizeMap.set('PackratTest/capture_data_photo.csv', 1047);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-01.jpg', 245862);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-02.jpg', 245161);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-01.dng', 283616);
+        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-02.dng', 282558);
+        fileSizeMap.set('PackratTest/manifest-sha1.txt', 410);
+        fileSizeMap.set('PackratTest/tagmanifest-sha1.txt', 229);
+
+        for (const entry of await bagitZipStream.getAllEntries(null)) {
+            const observedSize: number | null = await bagitZipStream.uncompressedSize(entry);
+            const expectedSize: number | undefined = fileSizeMap.get(entry);
+            LOG.logger.info(`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`);
+            expect(observedSize).not.toBeNull();
+            expect(expectedSize).not.toBeUndefined();
+            expect(observedSize).toEqual(expectedSize);
+        }
+
+        const uncompressedSizeRandomName: number | null = await bagitZipStream.uncompressedSize(H.Helpers.randomSlug());
+        expect(uncompressedSizeRandomName).toBeNull();
+    });
+
+    test('BagitReader APIs without initial validation', async () => {
+        const path = join(mockPathZip, 'PackratTest.zip');
+        const bagitReader1: BagitReader = await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
+        let sizeResult: number | null = await bagitReader1.uncompressedSize('PackratTest/tagmanifest-sha1.txt');
+        expect(sizeResult).toBeTruthy();
+        expect(sizeResult).toEqual(229);
+
+        const bagitZipFile1 = await testBagitLoad({ loadMethod: eLoadMethod.eZipFile, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
+        sizeResult = await bagitZipFile1.uncompressedSize('PackratTest/tagmanifest-sha1.txt');
+        expect(sizeResult).toBeTruthy();
+        expect(sizeResult).toEqual(229);
+
+        const pathDir = join(mockPathDir, 'PackratTest');
+        const bagitDir1 = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path: pathDir, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
+        sizeResult = await bagitDir1.uncompressedSize('tagmanifest-sha1.txt');
+        expect(sizeResult).toBeTruthy();
+        expect(sizeResult).toEqual(229);
+
+        const bagitReader2: BagitReader = await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
+        const stream: NodeJS.ReadableStream | null = await bagitReader2.streamContent('PackratTest/tagmanifest-sha1.txt');
+        expect(stream).toBeTruthy();
     });
 
     test('BagitReader load from zip stream without initial validation', async () => {
@@ -65,11 +136,11 @@ describe('BagitReader', () => {
         bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
         expect(await bagit.getHashAlgorithm()).toBeTruthy();
         bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
-        expect(await bagit.getAllEntries()).toBeTruthy();
+        expect(await bagit.getAllEntries(null)).toBeTruthy();
         bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
-        expect(await bagit.getJustFiles()).toBeTruthy();
+        expect(await bagit.getJustFiles(null)).toBeTruthy();
         bagit = await testBagitLoad({ loadMethod: eLoadMethod.eDirectory, path, initialValidate: false, subsequentValidate: false, subsequentIsValid: false, expectFailure: false });
-        expect(await bagit.getJustDirectories()).toBeTruthy();
+        expect(await bagit.getJustDirectories(null)).toBeTruthy();
     });
 
     test('BagitReader externally validate contents', async () => {

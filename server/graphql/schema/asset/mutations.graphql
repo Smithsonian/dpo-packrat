@@ -17,7 +17,7 @@ enum UploadStatus {
 
 type UploadAssetResult {
     status: UploadStatus!
-    idAssetVersion: Int
+    idAssetVersions: [Int!]
     error: String
 }
 
