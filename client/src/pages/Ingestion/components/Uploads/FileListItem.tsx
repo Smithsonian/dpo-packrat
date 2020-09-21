@@ -156,7 +156,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
 
     const variants = {
         visible: { opacity: 1, y: 0 },
-        hidden: { opacity: 0.5, y: 20 },
+        hidden: { opacity: 0.5, y: 10 },
     };
 
     return (
