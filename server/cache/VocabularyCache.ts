@@ -54,7 +54,6 @@ export enum eVocabularyID {
     eCaptureDataCaptureMethodSphericalLaser,
     eCaptureDataFileVariantTypeRaw,
     eCaptureDataFileVariantTypeProcessed,
-    eCaptureDataFileVariantTypeProcessedZeroed,
     eCaptureDataFileVariantTypeFromCamera,
     eMetadataMetadataSourceBulkIngestion,
     eNone = -1
@@ -137,6 +136,7 @@ export class VocabularyCache {
                 case 'Asset.AssetType':                         eVocabSetEnum = eVocabularySetID.eAssetAssetType; break;
             }
 
+            /* istanbul ignore else */
             if (eVocabSetEnum != eVocabularySetID.eNone) {
                 this.vocabSetEnumIDMap.set(eVocabSetEnum, vocabularySet.idVocabularySet);
                 this.vocabSetIDEnumMap.set(vocabularySet.idVocabularySet, eVocabSetEnum);
@@ -148,7 +148,7 @@ export class VocabularyCache {
             this.vocabMap.set(vocabulary.idVocabulary, vocabulary);
 
             let eVocabEnum: eVocabularyID = eVocabularyID.eNone;
-            const eVocabSetEnum: eVocabularySetID | undefined = this.vocabSetIDEnumMap.get(vocabulary.idVocabularySet);
+            const eVocabSetEnum: eVocabularySetID | undefined = this.vocabSetIDEnumMap.get(vocabulary.idVocabularySet); /* istanbul ignore else */
             if (eVocabSetEnum !== undefined) {
                 const vocabMap = this.vocabSetEnumEntryMap.get(eVocabSetEnum); /* istanbul ignore else */
                 if (vocabMap)
@@ -199,7 +199,6 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Raw':                 eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
                         case 'Processed':           eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
-                        case 'Processed, Zeroed':   eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeProcessedZeroed; break;
                         case 'From Camera':         eVocabEnum = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
                     }
                 } break;
@@ -355,15 +354,22 @@ export class VocabularyCache {
         let eVocabID: eVocabularyID;
         switch (variantType.toLowerCase().replace(/_/g, '')) {
             case 'raw': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'processed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
-            case 'processed, zeroed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessedZeroed; break;
-            case 'camera': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
-            case 'from camera': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
-            case 'dng': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
-            case 'jpg': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
-            case 'jpeg': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'cr2': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'cr3': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'dng': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'arw': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'camdng': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
             case 'tif': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
             case 'tiff': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'processed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
+            case 'colcor': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
+            case 'zeroed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
+            case 'from camera': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'fromcamera': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'jpg': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'jpeg': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'camerajpg': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'camera': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
             default: return undefined;
         }
         return await VocabularyCache.vocabularyByEnum(eVocabID);
