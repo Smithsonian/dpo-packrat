@@ -4,7 +4,7 @@ import ItemTreeNode from './ItemTreeNode';
 import TreeViewContents, { RepositoryContentType } from './TreeViewContents';
 import { BsArchive } from 'react-icons/bs';
 import { useLazyQuery } from '@apollo/client';
-import { GetItemsForSubjectDocument } from '../../../types/graphql';
+import { GetItemsForSubjectDocument } from '../../../../types/graphql';
 
 interface SubjectTreeNodeProps {
     idSubject: number;
