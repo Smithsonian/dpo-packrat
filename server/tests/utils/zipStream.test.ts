@@ -3,6 +3,7 @@ import { join } from 'path';
 import { ZipStream } from '../../utils/zipStream';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import { getPackratTestFileSizeMap } from './parser/bagitReader.test';
 
 const mockPath: string = join(__dirname, '../mock/utils/zip/');
 /*
@@ -55,20 +56,7 @@ describe('ZipStream', () => {
     });
 
     test('ZipStream.uncompressedSize', async () => {
-        const fileSizeMap: Map<string, number> = new Map<string, number>();
-        fileSizeMap.set('PackratTest/bag-info.txt', 0);
-        fileSizeMap.set('PackratTest/bagit.txt', 55);
-        fileSizeMap.set('PackratTest/capture_data_photo.csv', 1047);
-        fileSizeMap.set('PackratTest/data/', 0);
-        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/', 0);
-        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/', 0);
-        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-01.jpg', 245862);
-        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-02.jpg', 245161);
-        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/', 0);
-        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-01.dng', 283616);
-        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-02.dng', 282558);
-        fileSizeMap.set('PackratTest/manifest-sha1.txt', 410);
-        fileSizeMap.set('PackratTest/tagmanifest-sha1.txt', 229);
+        const fileSizeMap: Map<string, number> = getPackratTestFileSizeMap(true);
 
         for (const entry of await zip.getAllEntries(null)) {
             const observedSize: number | null = await zip.uncompressedSize(entry);

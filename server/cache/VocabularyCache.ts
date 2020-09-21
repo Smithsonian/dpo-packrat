@@ -357,6 +357,7 @@ export class VocabularyCache {
             case 'raw': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
             case 'processed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
             case 'processed, zeroed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessedZeroed; break;
+            case 'camera': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
             case 'from camera': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
             case 'dng': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
             case 'jpg': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
