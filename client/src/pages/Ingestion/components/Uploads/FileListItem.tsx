@@ -14,7 +14,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
         position: 'relative',
         display: 'flex',
-        minHeight: 70,
+        minHeight: 60,
         alignItems: 'center',
         backgroundColor: palette.background.paper,
         marginTop: 10,
@@ -156,7 +156,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
 
     const variants = {
         visible: { opacity: 1, y: 0 },
-        hidden: { opacity: 0.5, y: 20 },
+        hidden: { opacity: 0.5, y: 10 },
     };
 
     return (

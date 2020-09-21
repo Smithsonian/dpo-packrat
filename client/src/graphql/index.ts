@@ -33,16 +33,18 @@ interface IApolloUploader {
     mutation: DocumentNode;
     variables: unknown;
     useUpload: boolean;
+    refetchQueries?: string[];
     onProgress: (event: ProgressEvent) => void;
     onCancel: (cancelHandler: () => void) => void;
 }
 
 const apolloUploader = (options: IApolloUploader): Promise<any> => {
-    const { mutation, variables, useUpload, onProgress, onCancel } = options;
+    const { mutation, variables, useUpload, refetchQueries, onProgress, onCancel } = options;
 
     return apolloClient.mutate({
         mutation,
         variables,
+        refetchQueries,
         context: {
             fetchOptions: {
                 useUpload,

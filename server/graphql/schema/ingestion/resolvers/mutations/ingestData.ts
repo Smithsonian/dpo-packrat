@@ -57,7 +57,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     if (!await wireSubjectsToItem(subjectsDB, itemDB))
         return { success: false };
 
-    // map from idAsetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
+    // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
     const assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>();
     // create photogrammetry objects, if needed
     if (input.photogrammetry && input.photogrammetry.length > 0) {
@@ -309,7 +309,7 @@ async function wireSubjectsToItem(subjectsDB: DBAPI.Subject[], itemDB: DBAPI.Ite
     return true;
 }
 
-// map from idAsetVersion -> object that "owns" the asset
+// map from idAssetVersion -> object that "owns" the asset
 async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
     assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
 
@@ -388,7 +388,7 @@ async function wireItemToAssetOwners(itemDB: DBAPI.Item, assetVersionMap: Map<nu
 }
 
 async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.SystemObjectBased>, user: User): Promise<boolean> {
-    // map from idAsetVersion -> object that "owns" the asset
+    // map from idAssetVersion -> object that "owns" the asset
     for (const [idAssetVersion, SOBased] of assetVersionMap) {
         const assetVersionDB: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
         if (!assetVersionDB) {

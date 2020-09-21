@@ -12,7 +12,7 @@ import { IZip } from '../IZip';
 import { CSVTypes, SubjectsCSVFields, ItemsCSVFields, CaptureDataPhotoCSVFields, ModelsCSVFields } from './csvTypes';
 import { CSVParser } from './csvParser';
 
-export type IngestMetadata = DBAPI.SubjectUnitIdentifier & Item & (IngestPhotogrammetry | IngestModel);
+export type IngestMetadata = DBAPI.SubjectUnitIdentifier & Omit<Item, '__typename'> & (Omit<IngestPhotogrammetry, '__typename'> | Omit<IngestModel, '__typename'>);
 
 /** Provides access to bulk ingestion metadata, either from a bulk ingest bagit zip file, or from extracted metadata:
  * Our bulk ingest files can have any of the following metadata CSV files:
@@ -146,8 +146,8 @@ export class BulkIngestReader {
             const photo: IngestPhotogrammetry | null = await this.extractCaptureDataPhotoFromCSV(bagitCDP); /* istanbul ignore next */
             if (!photo)
                 return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute photogrammetry metadata' };
-            const __typename: undefined = undefined;
-            this._ingestedMetadata.push({ ...subject, ...item, ...photo, __typename });
+
+            this._ingestedMetadata.push({ ...subject, ...item, ...photo });
         }
         return { success: true, error: '' };
     }
@@ -177,8 +177,8 @@ export class BulkIngestReader {
             const model: IngestModel | null = await this.extractModelFromCSV(bagitModel); /* istanbul ignore next */
             if (!model)
                 return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute model metadata' };
-            const __typename: undefined = undefined;
-            this._ingestedMetadata.push({ ...subject, ...item, ...model, __typename });
+
+            this._ingestedMetadata.push({ ...subject, ...item, ...model });
         }
         return { success: true, error: '' };
     }
