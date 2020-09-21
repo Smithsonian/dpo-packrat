@@ -3749,6 +3749,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(stakeholderFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: SystemObject.fetchAll', async () => {
+        const SOFetch: DBAPI.SystemObject[] | null = await DBAPI.SystemObject.fetchAll();
+        expect(SOFetch).toBeTruthy();
+        if (SOFetch) {
+            expect(SOFetch.length).toBeGreaterThan(0);
+            if (systemObjectAsset && systemObjectItem && systemObjectItemNulls && systemObjectScene && systemObjectSubject && systemObjectSubjectNulls)
+                expect(SOFetch).toEqual(expect.arrayContaining([ systemObjectAsset, systemObjectItem, systemObjectItemNulls, systemObjectScene, systemObjectSubject, systemObjectSubjectNulls ]));
+        }
+    });
+
     test('DB Fetch Special: SystemObjectXref.fetchXref', async () => {
         let xrefFetch: DBAPI.SystemObjectXref[] | null = null;
         if (systemObjectSubject && systemObjectScene) {
@@ -3787,6 +3797,16 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(unitFetch).toEqual(expect.arrayContaining([unit]));
         }
         expect(unitFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Unit.fetchAll', async () => {
+        const unitFetch: DBAPI.Unit[] | null = await DBAPI.Unit.fetchAll();
+        expect(unitFetch).toBeTruthy();
+        if (unitFetch) {
+            expect(unitFetch.length).toBeGreaterThan(0);
+            if (unit && unit2)
+                expect(unitFetch).toEqual(expect.arrayContaining([unit, unit2]));
+        }
     });
 
     test('DB Fetch Special: UnitEdan.fetchFromUnit', async () => {
