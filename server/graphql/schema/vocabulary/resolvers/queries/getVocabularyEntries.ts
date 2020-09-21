@@ -8,9 +8,7 @@ export default async function getVocabularyEntries(_: Parent, args: QueryGetVoca
 
     const VocabularyEntries: VocabularyEntry[] = [];
 
-    for (let i = 0; i < eVocabSetIDs.length; i++) {
-        const eVocabSetID = eVocabSetIDs[i];
-
+    for (const eVocabSetID of eVocabSetIDs) {
         const VocabularyEntry: VocabularyEntry = {
             eVocabSetID,
             Vocabulary: []

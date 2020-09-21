@@ -75,7 +75,7 @@ type GetAssetResult {
 }
 
 type GetUploadedAssetVersionResult {
-    AssetVersion: [AssetVersion]!
+    AssetVersion: [AssetVersion!]!
 }
 
 input GetContentsForAssetVersionsInput {

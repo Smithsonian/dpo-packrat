@@ -7,7 +7,7 @@ import useSubject from '../../hooks/useSubject';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
-        maxHeight: '16vh',
+        maxHeight: '20vh',
         backgroundColor: palette.background.paper
     },
     headerText: {
