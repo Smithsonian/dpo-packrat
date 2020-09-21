@@ -110,4 +110,20 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return null;
         }
     }
+
+    static async fetchFromNameSearch(search: string): Promise<Unit[] | null> {
+        if (!search)
+            return null;
+        try {
+            return DBC.CopyArray<UnitBase, Unit>(
+                await DBC.DBConnection.prisma.unit.findMany({ where: { OR: [
+                    { UnitEdan: { some: { Abbreviation: { contains: search }, }, }, },
+                    { Abbreviation: { contains: search }, },
+                    { Name: { contains: search }, },
+                ] }, }), Unit);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Unit.fetchFromNameSearch', error);
+            return null;
+        }
+    }
 }

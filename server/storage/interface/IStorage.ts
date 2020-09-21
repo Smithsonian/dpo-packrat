@@ -52,7 +52,8 @@ export type PromoteStagedAssetInput = {
     storageKeyStaged: string,
     storageKeyFinal: string,
     fileName: string,
-    metadata: any,
+    inputStream: NodeJS.ReadableStream | null,  // suggested use: when processing bulk ingestion files (zips) from which content should be extracted
+    metadata: any,                              // when inputStream is not null, the storage system pipes this stream out to the output location
     opInfo: OperationInfo
 };
 

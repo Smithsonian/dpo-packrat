@@ -49,11 +49,18 @@ const getAssetVersionDetailsTest = (utils: TestSuiteUtils): void => {
                             const getContentsInput: GetAssetVersionsDetailsInput = {
                                 idAssetVersions: [assetVersion.idAsset]
                             };
-
-                            const { SubjectUnitIdentifier, Project, Item } = await graphQLApi.getAssetVersionsDetails(getContentsInput);
-                            expect(SubjectUnitIdentifier).toBeTruthy();
-                            expect(Project).toBeTruthy();
-                            expect(Item).toBeTruthy();
+                            const { valid, Details } = await graphQLApi.getAssetVersionsDetails(getContentsInput, { user: User, isAuthenticated: true });
+                            expect(valid).toBeTruthy();
+                            expect(Details.length).toBeGreaterThan(0);
+                            /*
+                            // TODO: construct a test case for bulk ingest that creates ingestion metadata, and then validate that ingestion metadata here:
+                            if (Details.length > 0) {
+                                const { SubjectUnitIdentifier, Project, Item } = Details[0];
+                                expect(SubjectUnitIdentifier).toBeTruthy();
+                                expect(Project).toBeTruthy();
+                                expect(Item).toBeTruthy();
+                            }
+                            */
                         }
                     }
                 }
