@@ -1441,7 +1441,7 @@ export type UploadAssetMutation = (
     & {
         uploadAsset: (
             { __typename?: 'UploadAssetResult' }
-            & Pick<UploadAssetResult, 'idAssetVersions' | 'status' | 'error'>
+            & Pick<UploadAssetResult, 'status' | 'idAssetVersions' | 'error'>
         )
     }
 );
@@ -2326,8 +2326,8 @@ export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOpt
 export const UploadAssetDocument = gql`
     mutation uploadAsset($file: Upload!, $type: Int!) {
   uploadAsset(file: $file, type: $type) {
-    idAssetVersions
     status
+    idAssetVersions
     error
   }
 }

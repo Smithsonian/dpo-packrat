@@ -97,7 +97,7 @@ const useFilesUpload = (): UseFilesUpload => {
                 const {
                     getAssetVersionsDetails: { Details }
                 } = data;
-                console.log(Details);
+
                 const subjects: StateSubject[] = [];
                 const projects: StateProject[] = [];
                 const items: StateItem[] = [];
@@ -361,7 +361,6 @@ const useFilesUpload = (): UseFilesUpload => {
                     const { status, error } = uploadAsset;
 
                     if (status === UploadStatus.Complete) {
-                        // ingestionDispatch(successAction(idAssetVersion));
                         toast.success(`Upload finished for ${file.name}`);
                     } else if (status === UploadStatus.Failed) {
                         const errorMessage = error || `Upload failed for ${file.name}`;

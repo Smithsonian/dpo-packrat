@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as L from 'lodash';
 import { OperationInfo } from '../../interface/IStorage';
@@ -64,71 +65,79 @@ export class OCFLObject {
      * and the content cannot have existed in any earlier versions of the object.
      * Updating: Changes the content pointed to by a content path. The path must exist in the previous version of the OCFL Object,
      * and the content cannot have existed in any earlier versions of the object.
-     * @param pathOnDisk Full path to added content's bits on disk; may be null if only metadata is being updated
+     * @param pathOnDisk Full path to added content's bits on disk; may be null if only metadata is being updated; must be null if inputStream is specified
+     * @param inputStream Readable stream of added content's bits; may be null if only metadata is being updated; must be null if pathOnDisk is specified
      * @param fileName Name (and path) of added content's bits; may be null if only metadata is being updated
      * @param metadata Optional metadata record that accompanies this content addition
      * @param opInfo Operation Info, specifying a message and user context for the operation
      */
-    async addOrUpdate(pathOnDisk: string | null, fileName: string | null, metadata: any | null, opInfo: OperationInfo): Promise<H.IOResults> {
+    async addOrUpdate(pathOnDisk: string | null, inputStream: NodeJS.ReadableStream | null,
+        fileName: string | null, metadata: any | null, opInfo: OperationInfo): Promise<H.IOResults> {
+        if (pathOnDisk && inputStream) {
+            const error: string = 'OCFLObject.addOrUpdate called with both a file and a stream';
+            LOG.logger.error(error);
+            return { success: false, error };
+        }
+
         // Prepare new version in inventory
         let results: H.IOResults = await this.addVersion(opInfo);
         /* istanbul ignore next */
         if (!results.success)
             return results;
 
-        results = await this.addOrUpdateWorker(pathOnDisk, fileName, metadata);
+        results = await this.addOrUpdateWorker(pathOnDisk, inputStream, fileName, metadata);
         if (!results.success)
             await this.rollbackVersion();
         return results;
     }
 
-    private async addOrUpdateWorker(pathOnDisk: string | null, fileName: string | null, metadata: any | null): Promise<H.IOResults> {
-        let results: H.IOResults = {
-            success: false,
-            error: ''
-        };
-
-        if (!(pathOnDisk && fileName) && !metadata) {
-            results.success = false;
-            results.error = 'No information specified';
-            return results;
-        }
+    private async addOrUpdateWorker(pathOnDisk: string | null, inputStream: NodeJS.ReadableStream | null,
+        fileName: string | null, metadata: any | null): Promise<H.IOResults> {
+        if (!((pathOnDisk || inputStream) && fileName) && !metadata)
+            return { success: false, error: 'No information specified' };
 
         // Read current inventory, if any
         /* istanbul ignore next */
-        if (!this._ocflInventory) {
-            results.success = false;
-            results.error = 'Unable to compute OCFL Inventory';
-            return results;
-        }
+        if (!this._ocflInventory)
+            return { success: false, error: 'Unable to compute OCFL Inventory' };
 
         const version: number = this._ocflInventory.headVersion;
         const destFolder: string = this.versionContentFullPath(version);
         const contentPath: string = OCFLObject.versionContentPartialPath(version);
-        let hashResults: H.HashResults;
+        let results: H.IOResults = { success: false, error: 'Unititalized' };
 
-        /* istanbul ignore else */
-        if (pathOnDisk && fileName) {
-            // Compute hash
-            hashResults = await H.Helpers.computeHashFromFile(pathOnDisk, ST.OCFLDigestAlgorithm);
-            if (!hashResults.success)
-                return hashResults;
+        if (fileName) {
+            const destName = path.join(destFolder, fileName);
+            let hashResults: H.HashResults = { hash: '', dataLength: 0, success: false, error: '' }; /* istanbul ignore else */
+            if (pathOnDisk) {
+                // Compute hash
+                hashResults = await H.Helpers.computeHashFromFile(pathOnDisk, ST.OCFLDigestAlgorithm);
+                if (!hashResults.success)
+                    return hashResults;     // if we fail to compute the hash, don't move the file below!
 
-            // Update Inventory
-            this._ocflInventory.addContent(path.join(contentPath, fileName), fileName, hashResults.hash);
+                // Move file to new version folder
+                results = await H.Helpers.moveFile(pathOnDisk, destName);
+            } else if (inputStream) {
+                // We need to both compute the hash and stream bytes to the right location
+                const hashResultsPromise = H.Helpers.computeHashFromStream(inputStream, ST.OCFLDigestAlgorithm);
+                const writeFilesPromise = H.Helpers.writeStreamToStream(inputStream, fs.createWriteStream(destName));
+                const resultsArray = await Promise.all([hashResultsPromise, writeFilesPromise]);
+                [ hashResults, results ] = resultsArray; /* istanbul ignore next */
+                if (!hashResults.success)
+                    return hashResults;
+            } /* istanbul ignore next */
 
-            // Move file to new version folder
-            results = await H.Helpers.moveFile(pathOnDisk, path.join(destFolder, fileName));
-            /* istanbul ignore next */
             if (!results.success)
                 return results;
+            // Update Inventory
+            this._ocflInventory.addContent(path.join(contentPath, fileName), fileName, hashResults.hash);
         }
 
         /* istanbul ignore else */
         if (metadata) {
             // serialize metadata to new version folder & compute hash
             const metadataFilename: string = ST.OCFLMetadataFilename;
-            hashResults = await H.Helpers.writeJsonAndComputeHash(path.join(destFolder, metadataFilename), metadata, ST.OCFLDigestAlgorithm);
+            const hashResults: H.HashResults = await H.Helpers.writeJsonAndComputeHash(path.join(destFolder, metadataFilename), metadata, ST.OCFLDigestAlgorithm);
             /* istanbul ignore next */
             if (!hashResults.success)
                 return hashResults;

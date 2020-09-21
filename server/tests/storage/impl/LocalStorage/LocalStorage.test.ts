@@ -1,3 +1,4 @@
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
@@ -14,6 +15,7 @@ type LocalStorageTestCase = {
     storageHash: string;
     fileSize: number;
     fileName: string;
+    inputStream: NodeJS.ReadableStream | null;
     version: number;
     staging: boolean;
     uniqueID: number;
@@ -113,6 +115,31 @@ describe('LocalStorage Add Version', () => {
     });
     test('LocalStorage.validateAsset', async() => {
         await testValidateAsset(LSTC2, true);
+    });
+});
+
+describe('LocalStorage Add Version Stream', () => {
+    let LSTCStream: LocalStorageTestCase;
+    test('LocalStorage.writeStream', async() => {
+        LSTCStream = await testWriteStream(15000);
+    });
+    test('LocalStorage.commitWriteStream', async() => {
+        await testCommitWriteStream(LSTCStream, true);
+    });
+    test('LocalStorage.readStream Staging', async() => {
+        await testReadStream(LSTCStream, true);
+    });
+    test('LocalStorage.promoteStagedAsset inputStream', async() => {
+        const pathOnDisk: string = await ls.stagingFileName(LSTCStream.storageKeyStaging);
+        LSTCStream.inputStream = fs.createReadStream(pathOnDisk);
+        LSTCStream.storageKeyRepo = await testComputeStorageKey(LSTCStream.uniqueID.toString());
+        await testPromoteStagedAsset(LSTCStream, OHTS.model1, true);
+    });
+    test('LocalStorage.readStream Production', async() => {
+        await testReadStream(LSTCStream, true);
+    });
+    test('LocalStorage.validateAsset', async() => {
+        await testValidateAsset(LSTCStream, true);
     });
 });
 
@@ -253,6 +280,7 @@ async function testWriteStream(fileSize: number): Promise<LocalStorageTestCase> 
         storageHash: '',
         fileSize,
         fileName: H.Helpers.randomSlug(),
+        inputStream: null,
         version: -1,
         staging: true,
         uniqueID: nextID++
@@ -339,11 +367,12 @@ async function testPromoteStagedAsset(LSTC: LocalStorageTestCase, SOBased: DBAPI
         storageKeyStaged: LSTC.storageKeyStaging,
         storageKeyFinal: LSTC.storageKeyRepo,
         fileName: LSTC.fileName,
+        inputStream: LSTC.inputStream,
         metadata: await constructMetadata(SOBased),
         opInfo
     };
 
-    LOG.logger.info(`LocalStorage.promoteStagedAsset: ${PSAI.storageKeyStaged} -> ${PSAI.storageKeyFinal} (Expect ${expectSuccess ? 'Success' : 'Failure'})`);
+    LOG.logger.info(`LocalStorage.promoteStagedAsset: ${PSAI.storageKeyStaged} -> ${PSAI.storageKeyFinal} (Expect ${expectSuccess ? 'Success' : 'Failure'}) ${LSTC.inputStream ? ' (using InputStream)' : ''}`);
     const PSAR: STORE.PromoteStagedAssetResult = await ls.promoteStagedAsset(PSAI);
     expect(PSAR.success).toEqual(expectSuccess);
     if (PSAR.success) {
