@@ -1,7 +1,7 @@
 import JSZip, * as JSZ from 'jszip';
 import * as LOG from './logger';
 import * as H from './helpers';
-import { IZip } from './IZip';
+import { IZip, zipFilterResults } from './IZip';
 
 /**
  * This ZIP implementation uses JSZip and reads everything into memory before unzipping.
@@ -53,12 +53,13 @@ export class ZipStream implements IZip {
     }
 
     async close(): Promise<H.IOResults> {
+        this._zip = null;
         return { success: true, error: '' };
     }
 
-    async getAllEntries(): Promise<string[]> { return this._entries; }
-    async getJustFiles(): Promise<string[]> { return this._files; }
-    async getJustDirectories(): Promise<string[]> { return this._dirs; }
+    async getAllEntries(filter: string | null): Promise<string[]> { return zipFilterResults(this._entries, filter); }
+    async getJustFiles(filter: string | null): Promise<string[]> { return zipFilterResults(this._files, filter); }
+    async getJustDirectories(filter: string | null): Promise<string[]> { return zipFilterResults(this._dirs, filter); }
 
     async streamContent(entry: string): Promise<NodeJS.ReadableStream | null> {
         try {
@@ -70,6 +71,16 @@ export class ZipStream implements IZip {
             LOG.logger.error(`ZipStream.streamContent ${entry}`, error);
             return null;
         }
+    }
+
+    async uncompressedSize(entry: string): Promise<number | null> {
+        const stream: NodeJS.ReadableStream | null = await this.streamContent(entry);
+        if (!stream) {
+            return (this._dirs.includes(entry))
+                ? 0                 // 0 means a directory or zero-length file
+                : null;             // null means invalid entry
+        }
+        return H.Helpers.computeSizeOfStream(stream);
     }
 
     private clearState() {

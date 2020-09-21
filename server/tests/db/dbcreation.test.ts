@@ -529,9 +529,9 @@ describe('DB Creation Test Suite', () => {
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
                 StorageSize: 50,
-                StorageKeyStaging: '',
+                StorageKeyStaging: UTIL.randomStorageKey('/test/asset/path/'),
                 Ingested: true,
-                IsBagit: false,
+                BulkIngest: false,
                 idAssetVersion: 0
             });
         expect(assetVersion).toBeTruthy();
@@ -549,7 +549,7 @@ describe('DB Creation Test Suite', () => {
                 StorageSize: 50,
                 StorageKeyStaging: '',
                 Ingested: false,
-                IsBagit: false,
+                BulkIngest: true,
                 idAssetVersion: 0
             });
         expect(assetVersionNotIngested).toBeTruthy();
@@ -1601,7 +1601,7 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetVersionFetch).toBeTruthy();
     });
 
-    test('DB Fetch AssetVersion: AssetVersion.fetchLatestFromAsset Not Ingested', async () => {
+    test('DB Fetch AssetVersion: AssetVersion.fetchLatestFromAsset Not Ingested, Bulk Ingested', async () => {
         let assetVersionFetch: DBAPI.AssetVersion | null = null;
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromAsset(assetThumbnail.idAsset);
@@ -1624,7 +1624,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 StorageSize: 50,
                 StorageKeyStaging: '',
                 Ingested: true,
-                IsBagit: false,
+                BulkIngest: false,
                 idAssetVersion: 0
             });
         expect(assetVersion2).toBeTruthy();
@@ -1704,6 +1704,18 @@ describe('DB Fetch By ID Test Suite', () => {
             assetVersionFetch = await DBAPI.AssetVersion.fetchByIngested(false);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchByStorageKeyStaging Not Ingested', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (assetVersion) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchByStorageKeyStaging(assetVersion.StorageKeyStaging);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch.length).toEqual(1);
+                expect(assetVersionFetch).toEqual(expect.arrayContaining(assetVersionFetch));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -4076,27 +4088,12 @@ describe('DB Update Test Suite', () => {
                 StorageSize: 50,
                 StorageKeyStaging: '',
                 Ingested: true,
-                IsBagit: false,
+                BulkIngest: false,
                 idAssetVersion: 0
             });
 
             const idAssetVersion: number = assetVersion3.idAssetVersion;
             expect(idAssetVersion).toBeTruthy();
-
-            // First delete should work
-            expect(await assetVersion3.delete()).toBeTruthy();
-
-            // Fetch of deleted object should find nothing
-            const assetVersionFetch: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
-            expect(assetVersionFetch).toBeFalsy();
-
-            // Second delete should fail
-            LOG.logger.info('IGNORE the next error from prisma! It is expected');
-            expect(await assetVersion3.delete()).toBeFalsy();
-
-            // Final delete with empty ID should fail
-            assetVersion3.idAssetVersion = 0;
-            expect(await assetVersion3.delete()).toBeFalsy();
         }
         expect(assetVersion3).toBeTruthy();
     });
@@ -4943,6 +4940,32 @@ describe('DB Update Test Suite', () => {
             expect(systemObjectFetch).toBeTruthy();
             if (systemObjectFetch)
                 expect(systemObjectFetch.Retired).toBeFalsy();
+        }
+    });
+
+    test('DB Update: SystemObject.retireSystemObject', async () => {
+        if (systemObjectItem && item) {
+            expect(systemObjectItem.Retired).toBeFalsy();
+            expect(await DBAPI.SystemObject.retireSystemObject(item)).toBeTruthy();
+            const systemObjectFetch: DBAPI.SystemObject | null = await item.fetchSystemObject();
+            expect(systemObjectFetch).toBeTruthy();
+            if (systemObjectFetch) {
+                systemObjectItem = systemObjectFetch;
+                expect(systemObjectItem.Retired).toBeTruthy();
+            }
+        }
+    });
+
+    test('DB Update: SystemObject.reinstateSystemObject', async () => {
+        if (systemObjectItem && item) {
+            expect(systemObjectItem.Retired).toBeTruthy();
+            expect(await DBAPI.SystemObject.reinstateSystemObject(item)).toBeTruthy();
+            const systemObjectFetch: DBAPI.SystemObject | null = await item.fetchSystemObject();
+            expect(systemObjectFetch).toBeTruthy();
+            if (systemObjectFetch) {
+                systemObjectItem = systemObjectFetch;
+                expect(systemObjectItem.Retired).toBeFalsy();
+            }
         }
     });
 

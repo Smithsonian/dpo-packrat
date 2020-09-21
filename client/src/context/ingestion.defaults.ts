@@ -23,5 +23,6 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     backgroundRemovalMethod: null,
     clusterType: null,
     clusterGeometryFieldId: null,
-    cameraSettingUniform: false
+    cameraSettingUniform: false,
+    directory: ''
 };

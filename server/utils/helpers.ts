@@ -18,6 +18,7 @@ export type IOResults = {
 
 export type HashResults = {
     hash: string,
+    dataLength: number,
     success: boolean,
     error: string
 };
@@ -301,51 +302,36 @@ export class Helpers {
         return res;
     }
 
+    /** Computes a hash from a file. @param hashMethod Pass in 'sha512' or 'sha1', for example */
     static async computeHashFromFile(filePath: string, hashMethod: string): Promise<HashResults> {
         try {
             return await Helpers.computeHashFromStream(fs.createReadStream(filePath), hashMethod);
         } catch (error) /* istanbul ignore next */ {
             return {
-                success: false,
                 hash: '',
+                dataLength: 0,
+                success: false,
                 error: `Helpers.computeHashFromFile: ${JSON.stringify(error)}`
             };
         }
     }
 
     // Adapted from https://stackoverflow.com/questions/33599688/how-to-use-es8-async-await-with-streams
-    /** Computes a hash from a file. @param hashMethod Pass in 'sha512' or 'sha1', for example */
+    /** Computes a hash from a stream. @param hashMethod Pass in 'sha512' or 'sha1', for example */
     static async computeHashFromStream(stream: NodeJS.ReadableStream, hashMethod: string): Promise<HashResults> {
         try {
-            const res: HashResults = {
-                hash: '',
-                success: false,
-                error: ''
-            };
-            const hash      = crypto.createHash(hashMethod);
+            let dataLength: number = 0;
+            const hash = crypto.createHash(hashMethod);
             stream.pipe(hash);
 
             return new Promise<HashResults>((resolve) => {
-                stream.on('end', () => {
-                    res.success = true;
-                    res.hash = hash.digest('hex');
-                    resolve(res);
-                });
-
-                stream.on('error', () => {
-                    // do we need to perform cleanup?
-                    res.success = false;
-                    res.error = 'Helpers.computeHashFromFile() Stream Error';
-                    resolve(res);
-                });
+                stream.on('data', (chunk: Buffer) => { dataLength += chunk.length; });
+                stream.on('end', () => { resolve({ hash: hash.digest('hex'), dataLength, success: true, error: '' }); });
+                stream.on('error', () => { resolve({ hash: '', dataLength: 0, success: false, error: 'Helpers.computeHashFromFile() Stream Error' }); });
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.computeHashFromFile', error);
-            return {
-                success: false,
-                hash: '',
-                error: `Helpers.computeHashFromFile: ${JSON.stringify(error)}`
-            };
+            return { hash: '', dataLength: 0, success: false, error: `Helpers.computeHashFromFile: ${JSON.stringify(error)}` };
         }
     }
 
@@ -364,6 +350,20 @@ export class Helpers {
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.readFileFromStream', error);
+            return null;
+        }
+    }
+
+    static async computeSizeOfStream(stream: NodeJS.ReadableStream): Promise<number | null> {
+        try {
+            let size: number = 0;
+            return new Promise<number | null>((resolve) => {
+                stream.on('data', (chunk: Buffer) => { size += chunk.length; });
+                stream.on('end', () => { resolve(size); }); /* istanbul ignore next */
+                stream.on('error', () => { resolve(null); });
+            });
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('Helpers.computeSizeOfStream', error);
             return null;
         }
     }
@@ -397,11 +397,7 @@ export class Helpers {
             return await Helpers.computeHashFromFile(dest, hashMethod);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.writeJsonAndComputeHash', error);
-            return {
-                hash: '',
-                success: false,
-                error: JSON.stringify(error)
-            };
+            return { hash: '', dataLength: 0, success: false, error: JSON.stringify(error) };
         }
     }
 

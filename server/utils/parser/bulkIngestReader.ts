@@ -300,7 +300,7 @@ export class BulkIngestReader {
 
         const folders: IngestFolder[] = [];
         if (this._zip) {
-            const directories: string[] = await this._zip.getJustDirectories();
+            const directories: string[] = await this._zip.getJustDirectories(null);
             for (const directory of directories) {
                 if (directory.toLowerCase().includes(bagitCDP.directory_path.toLowerCase())) {
                     const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapPhotogrammetryVariantType(directory);

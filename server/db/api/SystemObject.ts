@@ -41,6 +41,16 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
         throw new ReferenceError('DBAPI.SystemObject.update() should never be called; used the explict update methods of objects linked to SystemObject');
     }
 
+    static async retireSystemObject(SOBased: SystemObjectBased): Promise<boolean> {
+        const SO: SystemObject | null = await SOBased.fetchSystemObject();
+        return (SO != null) ? await SO.retireObject() : /* istanbul ignore next */ false;
+    }
+
+    static async reinstateSystemObject(SOBased: SystemObjectBased): Promise<boolean> {
+        const SO: SystemObject | null = await SOBased.fetchSystemObject();
+        return (SO != null) ? await SO.reinstateObject() : /* istanbul ignore next */ false;
+    }
+
     async retireObject(): Promise<boolean> {
         if (this.Retired)
             return true;
