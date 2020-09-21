@@ -22,6 +22,7 @@ module.exports = {
         // Individual tests, left here to aid in quick, focused testing:
         // '**/tests/collections/EdanCollection.test.ts',
         // '**/tests/db/dbcreation.test.ts',
+        // '**/tests/db/composite/ObjectGraph.test.ts',
         // '**/tests/storage/interface/AssetStorageAdapter.test.ts',
         // '**/tests/storage/impl/LocalStorage/OCFL.test.ts',
         // '**/tests/storage/impl/LocalStorage/LocalStorage.test.ts',
