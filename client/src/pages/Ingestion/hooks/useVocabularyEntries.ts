@@ -7,6 +7,7 @@ import lodash from 'lodash';
 
 type AssetType = {
     photogrammetry: boolean;
+    bagit: boolean;
 };
 
 interface UseVocabularyEntries {
@@ -99,7 +100,8 @@ function useVocabularyEntries(): UseVocabularyEntries {
         const vocabularyEntry = vocabularies.get(eVocabularySetID.eAssetAssetType);
 
         const assetType: AssetType = {
-            photogrammetry: false
+            photogrammetry: false,
+            bagit: false
         };
 
         if (vocabularyEntry) {
@@ -107,6 +109,7 @@ function useVocabularyEntries(): UseVocabularyEntries {
 
             if (foundVocabulary) {
                 assetType.photogrammetry = foundVocabulary.Term.toLowerCase().includes('photogrammetry');
+                assetType.bagit = foundVocabulary.Term.toLowerCase().includes('bulk');
             }
         }
 

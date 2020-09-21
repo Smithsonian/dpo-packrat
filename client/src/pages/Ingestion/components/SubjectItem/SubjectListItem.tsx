@@ -43,11 +43,15 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
 
     const remove = () => onRemove(arkId);
 
+    const cellStyle = {
+        padding: '8px 16px'
+    };
+
     return (
         <TableRow>
-            <TableCell>{arkId}</TableCell>
-            <TableCell align='left'>{unit}</TableCell>
-            <TableCell align='left'>
+            <TableCell style={cellStyle}>{arkId}</TableCell>
+            <TableCell style={cellStyle} align='left'>{unit}</TableCell>
+            <TableCell style={cellStyle} align='left'>
                 <Box display='flex' flexDirection='row'>
                     <Typography className={classes.name} variant='caption'>{name}</Typography>
                     <Box className={classes.options}>

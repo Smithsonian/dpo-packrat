@@ -5,6 +5,7 @@ const getAssetVersionsDetails = gql`
         getAssetVersionsDetails(input: $input) {
             valid
             Details {
+                idAssetVersion
                 SubjectUnitIdentifier {
                     idSubject
                     SubjectName

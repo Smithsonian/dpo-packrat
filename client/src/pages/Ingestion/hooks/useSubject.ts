@@ -32,18 +32,12 @@ function useSubject(): UseSubject {
 
     const addSubjects = async (subjects: StateSubject[]): Promise<void> => {
         subjects.forEach((subject: StateSubject) => {
-            const alreadyExists = !!lodash.find(subjects, { arkId: subject.arkId });
+            const addSubjectAction: IngestionDispatchAction = {
+                type: SUBJECT_ACTIONS.ADD_SUBJECT,
+                subject
+            };
 
-            if (!alreadyExists) {
-                const addSubjectAction: IngestionDispatchAction = {
-                    type: SUBJECT_ACTIONS.ADD_SUBJECT,
-                    subject
-                };
-
-                ingestionDispatch(addSubjectAction);
-            } else {
-                toast.info(`Subject ${subject.name} has already been added`);
-            }
+            ingestionDispatch(addSubjectAction);
         });
     };
 
@@ -128,7 +122,7 @@ async function updateProjectsAndItemsForSubjects(selectedSubjects: StateSubject[
         if (data) {
             const { Item: foundItems } = data.getIngestionItemsForSubjects;
 
-            const items: StateItem[] = foundItems.map((item: Item) => parseItemToState(item, false));
+            const items: StateItem[] = foundItems.map((item: Item, index: number) => parseItemToState(item, false, index));
 
             addItems(items);
         }

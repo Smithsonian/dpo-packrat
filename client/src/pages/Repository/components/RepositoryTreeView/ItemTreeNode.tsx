@@ -4,7 +4,7 @@ import TreeViewContents, { RepositoryContentType } from './TreeViewContents';
 import { AiOutlineFileZip } from 'react-icons/ai';
 import { FiBox } from 'react-icons/fi';
 import { useLazyQuery } from '@apollo/client';
-import { GetObjectsForItemDocument } from '../../../types/graphql';
+import { GetObjectsForItemDocument } from '../../../../types/graphql';
 
 interface ItemTreeNodeProps {
     idItem: number;
