@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, CircularProgress, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         height: 50,
@@ -14,7 +14,15 @@ const useStyles = makeStyles(({ palette }) => ({
         width: '30%',
         alignItems: 'center',
         justifyContent: 'center',
-        color: palette.grey[400]
+        color: palette.grey[400],
+        [breakpoints.down('md')]: {
+            height: 40,
+        },
+    },
+    emptyListText: {
+        [breakpoints.down('md')]: {
+            fontSize: 12,
+        },
     }
 }));
 
@@ -45,7 +53,7 @@ function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
                 </Box>
             ) : isEmpty ? (
                 <Box className={classes.emptyList}>
-                    <Typography variant='caption' color='inherit'>No {contentType} found</Typography>
+                    <Typography className={classes.emptyListText} variant='caption' color='inherit'>No {contentType} found</Typography>
                 </Box>
             ) : children}
         </>
