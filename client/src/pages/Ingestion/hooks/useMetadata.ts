@@ -207,8 +207,8 @@ function useMetadata(): UseMetadata {
     const updateCameraSettings = async (metadatas: StateMetadata[]): Promise<StateMetadata[]> => {
         const updatedMetadatas = metadatas.slice();
 
-        for (let i = 0; i < updatedMetadatas.length; i++) {
-            const metadata = updatedMetadatas[i];
+        for (let index = 0; index < updatedMetadatas.length; index++) {
+            const metadata = updatedMetadatas[index];
             const { file, photogrammetry } = metadata;
             const idAssetVersion = parseFileId(file.id);
 
