@@ -3,7 +3,7 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useContext, useEffect } from 'react';
 import { FieldType } from '../../../../components';
-import { AppContext, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS } from '../../../../context';
+import { AppContext, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS, parseAssetVersionToState } from '../../../../context';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 import { useQuery } from '@apollo/client';
@@ -61,24 +61,14 @@ function UploadListComplete(): React.ReactElement {
             const fileIds: string[] = uploads.files.map(({ id }) => id);
 
             const files = AssetVersion.map(assetVersion => {
-                const { idAssetVersion, StorageSize, Asset: { FileName, VAssetType: { idVocabulary } } } = assetVersion;
+                const { idAssetVersion } = assetVersion;
 
                 const id = String(idAssetVersion);
+
                 if (fileIds.includes(id)) {
                     return uploads.files.find(file => file.id === id);
                 }
-
-                return {
-                    id: String(idAssetVersion),
-                    name: FileName,
-                    size: StorageSize,
-                    file: new File([], FileName),
-                    type: idVocabulary,
-                    status: FileUploadStatus.COMPLETE,
-                    progress: 100,
-                    selected: false,
-                    cancel: null
-                };
+                return parseAssetVersionToState(assetVersion, assetVersion.Asset, assetVersion.Asset.VAssetType);
             });
 
             const fetchSuccessAction: IngestionDispatchAction = {

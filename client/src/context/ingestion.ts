@@ -117,7 +117,6 @@ export enum UPLOAD_ACTIONS {
     PROGRESS = 'PROGRESS',
     CANCELLED = 'CANCELLED',
     RETRY = 'RETRY',
-    COMPLETE = 'COMPLETE',
     REMOVE = 'REMOVE',
     SELECT = 'SELECT',
     SET_CANCEL_HANDLER = 'SET_CANCEL_HANDLER',
@@ -179,7 +178,6 @@ type UploadDispatchAction =
     | FAILED
     | PROGRESS
     | CANCELLED
-    | COMPLETE
     | REMOVE
     | SELECT
     | SET_CANCEL_HANDLER
@@ -220,12 +218,6 @@ type PROGRESS = {
 type CANCELLED = {
     type: UPLOAD_ACTIONS.CANCELLED;
     id: FileId;
-};
-
-type COMPLETE = {
-    type: UPLOAD_ACTIONS.COMPLETE;
-    id: FileId;
-    idAssetVersion: number;
 };
 
 type RETRY = {
@@ -404,21 +396,6 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                     files: lodash.forEach(files, file => {
                         if (file.id === action.id) {
                             lodash.set(file, 'status', FileUploadStatus.CANCELLED);
-                        }
-                    })
-                }
-            };
-
-        case INGESTION_ACTION.UPLOAD.COMPLETE:
-            return {
-                ...state,
-                uploads: {
-                    ...uploads,
-                    files: lodash.forEach(files, file => {
-                        if (file.id === action.id) {
-                            lodash.set(file, 'status', FileUploadStatus.COMPLETE);
-                            lodash.set(file, 'cancel', null);
-                            lodash.set(file, 'id', String(action.idAssetVersion));
                         }
                     })
                 }

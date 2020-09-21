@@ -24,11 +24,14 @@ function TransitionComponent(props: TransitionComponentProps): React.ReactElemen
     );
 }
 
-const StyledTreeItem = withStyles(({ palette, typography }: Theme) => ({
+const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) => ({
     iconContainer: {
         width: 25,
         '& .close': {
             opacity: 0.3
+        },
+        [breakpoints.down('md')]: {
+            width: 15
         }
     },
     root: {
@@ -40,10 +43,14 @@ const StyledTreeItem = withStyles(({ palette, typography }: Theme) => ({
         borderLeft: `1px dashed ${fade(palette.text.primary, 0.4)}`
     },
     label: {
-        fontSize: '20px',
+        fontSize: 16,
         fontWeight: typography.fontWeightLight,
-        borderRadius: 10,
-        padding: '5px 12px'
+        borderRadius: 5,
+        padding: '5px 10px',
+        [breakpoints.down('md')]: {
+            fontSize: 12,
+            padding: '3px 6px',
+        }
     }
 }))((props: TreeItemProps) => <TreeItem {...props} TransitionComponent={TransitionComponent} />);
 
