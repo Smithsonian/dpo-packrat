@@ -11,10 +11,10 @@ const useStyles = makeStyles(({ palette }) => ({
     emptyList: {
         display: 'flex',
         height: 50,
-        width: '20%',
+        width: '30%',
         alignItems: 'center',
         justifyContent: 'center',
-        color: palette.grey[400],
+        color: palette.grey[400]
     }
 }));
 
@@ -45,7 +45,7 @@ function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
                 </Box>
             ) : isEmpty ? (
                 <Box className={classes.emptyList}>
-                    <Typography variant='body2' color='inherit'>No {contentType} found</Typography>
+                    <Typography variant='caption' color='inherit'>No {contentType} found</Typography>
                 </Box>
             ) : children}
         </>

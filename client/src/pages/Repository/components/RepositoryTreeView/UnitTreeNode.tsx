@@ -3,7 +3,7 @@ import StyledTreeItem from './StyledTreeItem';
 import SubjectTreeNode from './SubjectTreeNode';
 import TreeViewContents, { RepositoryContentType } from './TreeViewContents';
 import { useLazyQuery } from '@apollo/client';
-import { GetSubjectsForUnitDocument } from '../../../types/graphql';
+import { GetSubjectsForUnitDocument } from '../../../../types/graphql';
 
 interface UnitTreeNodeProps {
     idUnit: number;
