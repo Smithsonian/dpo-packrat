@@ -45,15 +45,15 @@ export class SystemObjectCache {
     // **************************
     private async flushInternalWorker(): Promise<boolean> {
         LOG.logger.info('CACHE: SystemObjectCache.flushInternalWorker() start');
-
-        const SOFetch: SystemObject[] | null = await SystemObject.fetchAll(); // TODO: replace with paged output
+        // TODO: replace with paged output
+        const SOFetch: SystemObject[] | null = await SystemObject.fetchAll(); /* istanbul ignore next */
         if (!SOFetch) {
             LOG.logger.error('SystemObjectCache.flushInternalWorker unable to fetch System Objects');
             return false;
         }
 
         for (const SO of SOFetch) {
-            const oID: ObjectIDAndType | undefined = SystemObjectCache.convertSystemObjectToObjectID(SO);
+            const oID: ObjectIDAndType | undefined = SystemObjectCache.convertSystemObjectToObjectID(SO); /* istanbul ignore else */
             if (oID) {
                 this.objectIDToSystemMap.set(oID, { idSystemObject: SO.idSystemObject, Retired: SO.Retired });
                 this.systemIDToObjectMap.set(SO.idSystemObject, oID);
@@ -67,7 +67,7 @@ export class SystemObjectCache {
     // Private Interface
     // **************************
     private async getSystemFromObjectIDInternal(oID: ObjectIDAndType): Promise<SystemObjectInfo | undefined> {
-        let sID: SystemObjectInfo | undefined = this.objectIDToSystemMap.get(oID);
+        let sID: SystemObjectInfo | undefined = this.objectIDToSystemMap.get(oID); /* istanbul ignore else */
         if (!sID) {  // if we have a cache miss, look it up
             let SO: SystemObject | null = null;
             const { idObject, eObjectType } = oID;
@@ -85,9 +85,9 @@ export class SystemObjectCache {
                 case eSystemObjectType.eAssetVersion: SO = await SystemObject.fetchFromAssetVersionID(idObject); break;
                 case eSystemObjectType.eActor: SO = await SystemObject.fetchFromActorID(idObject); break;
                 case eSystemObjectType.eStakeholder: SO = await SystemObject.fetchFromStakeholderID(idObject); break;
-                case eSystemObjectType.eUnknown: break;
             }
 
+            /* istanbul ignore else */
             if (SO) {
                 sID = { idSystemObject: SO.idSystemObject, Retired: SO.Retired };
                 this.objectIDToSystemMap.set(oID, sID);
@@ -117,7 +117,27 @@ export class SystemObjectCache {
         return oID;
     }
 
-    private static convertSystemObjectToObjectID(SO: SystemObject | null): ObjectIDAndType | undefined {
+    // **************************
+    // Public Interface
+    // **************************
+    /**
+     * Fetch { SystemObject.idSystemObject, Retired } for the specified database object
+     * @param {number} idObject - database ID, such as Subject.idSubject or Unit.idUnit
+     * @param eObjectType - object type, such as eSubject or eUnit
+     */
+    static async getSystemFromObjectID(oID: ObjectIDAndType): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal(oID);
+    }
+
+    /**
+     * Fetches object ID and object type for the specified SystemObject.idSystemObject
+     * @param idSystemObject SystemObject.idSystemObject to query
+     */
+    static async getObjectFromSystem(idSystemObject: number): Promise<ObjectIDAndType | undefined> {
+        return await (await this.getInstance()).getObjectFromSystemInternal(idSystemObject);
+    }
+
+    public static convertSystemObjectToObjectID(SO: SystemObject | null): ObjectIDAndType | undefined {
         if (!SO)
             return undefined;
         if (SO.idUnit) return { idObject: SO.idUnit, eObjectType: eSystemObjectType.eUnit };
@@ -136,22 +156,6 @@ export class SystemObjectCache {
 
         LOG.logger.error(`SystemObjectCache.convertSystemObjectToObjectID unable to interpret ${JSON.stringify(SO)}`);
         return undefined;
-    }
-
-    // **************************
-    // Public Interface
-    // **************************
-    /**
-     * Fetch the SystemObject.idSystemObject for the specified database object
-     * @param {number} idObject - database ID, such as Subject.idSubject or Unit.idUnit
-     * @param eObjectType - object type, such as eSubject or eUnit
-     */
-    static async getSystemFromObjectID(oID: ObjectIDAndType): Promise<SystemObjectInfo | undefined> {
-        return await (await this.getInstance()).getSystemFromObjectIDInternal(oID);
-    }
-
-    static async getObjectFromSystem(idSystemObject: number): Promise<ObjectIDAndType | undefined> {
-        return await (await this.getInstance()).getObjectFromSystemInternal(idSystemObject);
     }
 
     static async flush(): Promise<void> {
