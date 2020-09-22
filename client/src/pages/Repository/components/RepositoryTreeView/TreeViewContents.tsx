@@ -1,19 +1,21 @@
 import React from 'react';
 import { Box, CircularProgress, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import { eSystemObjectType } from '../../../../types/server';
+import { getTermForSystemObjectType } from '../../../../utils/repository';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         height: 50,
+        width: '10%',
         alignItems: 'center',
+        justifyContent: 'center',
     },
     emptyList: {
         display: 'flex',
-        height: 50,
-        width: '30%',
+        padding: '10px 5px',
         alignItems: 'center',
-        justifyContent: 'center',
         color: palette.grey[400],
         [breakpoints.down('md')]: {
             height: 40,
@@ -26,24 +28,19 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     }
 }));
 
-export enum RepositoryContentType {
-    projects = 'projects',
-    units = 'units',
-    subjects = 'subjects',
-    items = 'items',
-    data = 'data',
-}
-
 interface TreeViewContentsProps {
+    name: string;
     loading: boolean;
     isEmpty: boolean;
-    contentType: RepositoryContentType;
-    children: React.ReactElement | React.ReactElement[]
+    objectType: eSystemObjectType;
+    children: React.ReactElement | React.ReactElement[] | Element[] | undefined
 }
 
 function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
-    const { loading, isEmpty, contentType, children } = props;
+    const { name, loading, isEmpty, objectType, children } = props;
     const classes = useStyles();
+
+    const contentTerm = getTermForSystemObjectType(objectType);
 
     return (
         <>
@@ -53,7 +50,7 @@ function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
                 </Box>
             ) : isEmpty ? (
                 <Box className={classes.emptyList}>
-                    <Typography className={classes.emptyListText} variant='caption' color='inherit'>No {contentType} found</Typography>
+                    <Typography className={classes.emptyListText} variant='caption' color='inherit'>No objects found for {contentTerm} {name}</Typography>
                 </Box>
             ) : children}
         </>
