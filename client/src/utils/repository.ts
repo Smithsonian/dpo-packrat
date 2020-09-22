@@ -1,5 +1,7 @@
 import { RepositoryFilter } from '../pages/Repository';
 import { eSystemObjectType } from '../types/server';
+import { NavigationResultEntry } from '../types/graphql';
+import lodash from 'lodash';
 
 export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystemObjectType[] {
     const objectTypes: eSystemObjectType[] = [];
@@ -50,4 +52,8 @@ export function getTermForSystemObjectType(objectType: eSystemObjectType): strin
 
 export function getRepositoryTreeNodeId(idSystemObject: number, idObject: number, objectType: eSystemObjectType): string {
     return `${idSystemObject}-${eSystemObjectType[objectType]}-${idObject}`;
+}
+
+export function getSortedTreeEntries(entries: NavigationResultEntry[]): NavigationResultEntry[] {
+    return lodash.orderBy(entries, [(entry: NavigationResultEntry) => entry.name.toLowerCase()], 'asc');
 }
