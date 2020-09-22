@@ -143,7 +143,7 @@ export class AssetStorageAdapter {
         Promise<AssetStorageResultCommit> {
 
         const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(asset, idUserCreator,
-            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, null);
+            DateCreated, resStorage, commitWriteStreamInput.storageKey, false, null, null);
         /* istanbul ignore else */
         if (assetVersion)
             return { assets: [ asset ], assetVersions: [ assetVersion ], success: true, error: '' };
@@ -176,6 +176,7 @@ export class AssetStorageAdapter {
         const assetVersions: DBAPI.AssetVersion[] = [];
 
         // process objects; for each, create an asset, asset version, and metadata attached to the assetversion; set asset FilePath to the path within the zip of interest
+        let objectNumber: number = 1;
         for (const ingestedObject of bulkIngestReader.ingestedObjects) {
             const assetClone: DBAPI.Asset = new DBAPI.Asset({ ...asset });
             assetClone.FilePath = ingestedObject.directory || /* istanbul ignore next */ '';
@@ -189,8 +190,10 @@ export class AssetStorageAdapter {
             if (!await assetClone.setAssetType(eVocabID))
                 return { assets: null, assetVersions: null, success: false, error: 'AssetStorageAdapter.commitNewAssetVersionBulk unable to create assets & asset versions' };
 
+            const assetNameOverride: string = asset.FileName + ' Object ' + objectNumber;
+            objectNumber++;
             const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(assetClone, idUserCreator,
-                DateCreated, resStorage, commitWriteStreamInput.storageKey, true, ingestedObject); /* istanbul ignore else */
+                DateCreated, resStorage, commitWriteStreamInput.storageKey, true, ingestedObject, assetNameOverride); /* istanbul ignore else */
             if (assetVersion) {
                 assets.push(assetClone);
                 assetVersions.push(assetVersion);
@@ -204,8 +207,12 @@ export class AssetStorageAdapter {
     /** creates asset (if asset.idAsset == 0) and creates an assetVersion */
     private static async createAssetConstellation(asset: DBAPI.Asset, idUserCreator: number,
         DateCreated: Date, resStorage: STORE.CommitWriteStreamResult, storageKey: string,
-        BulkIngest: boolean, ingestedObject: IngestMetadata | null): Promise<DBAPI.AssetVersion | null> {
+        BulkIngest: boolean, ingestedObject: IngestMetadata | null, assetNameOverride: string | null): Promise<DBAPI.AssetVersion | null> {
         if (asset.idAsset == 0) {
+            assetNameOverride;
+            // TODO: use assetNameOverride, but ensure tests still work!
+            // if (assetNameOverride)
+            //     asset.FileName = assetNameOverride;
             /* istanbul ignore if */
             if (!await asset.create()) {
                 const error: string = `AssetStorageAdapter.createAssetAndVersion: Unable to create Asset ${JSON.stringify(asset)}`;
@@ -217,7 +224,7 @@ export class AssetStorageAdapter {
         const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
             idAsset: asset.idAsset,
             Version: 1, /* ignored */
-            FileName: asset.FileName,
+            FileName: asset.FileName, // assetNameOverride ? assetNameOverride : asset.FileName,
             idUserCreator,
             DateCreated,
             StorageHash: resStorage.storageHash ? resStorage.storageHash : /* istanbul ignore next */ '',
@@ -264,7 +271,7 @@ export class AssetStorageAdapter {
         }); /* istanbul ignore next */
 
         if (!await metadata.create()) {
-            const error: string = `AssetStorageAdapter.commitNewAssetVersion: Unable to create metadata for AssetVersion ${JSON.stringify(assetVersion)}`;
+            const error: string = `AssetStorageAdapter.commitNewAssetVersion: Unable to create metadata ${JSON.stringify(metadata)} for AssetVersion ${JSON.stringify(assetVersion)}`;
             LOG.logger.error(error);
             return false;
         }
@@ -393,7 +400,7 @@ export class AssetStorageAdapter {
             const assetComponent: DBAPI.Asset = new DBAPI.Asset({ FileName, FilePath, idAssetGroup: 0, idVAssetType, idSystemObject: asset.idSystemObject, StorageKey: null, idAsset: 0 });
             const CWSR: STORE.CommitWriteStreamResult = { storageHash: hashResults.hash, storageSize: hashResults.dataLength, success: true, error: '' };
             const assetVersionComponent: DBAPI.AssetVersion | null =
-                await AssetStorageAdapter.createAssetConstellation(assetComponent, assetVersion.idUserCreator, assetVersion.DateCreated, CWSR, '', false, null); /* istanbul ignore next */
+                await AssetStorageAdapter.createAssetConstellation(assetComponent, assetVersion.idUserCreator, assetVersion.DateCreated, CWSR, '', false, null, null); /* istanbul ignore next */
             if (!assetVersionComponent) {
                 const error: string = `AssetStorageAdapter.ingestAssetBulkWorker unable to create AssetVersion from Asset ${JSON.stringify(asset)}`;
                 LOG.logger.error(error);
@@ -427,8 +434,9 @@ export class AssetStorageAdapter {
             return { assets, assetVersions, success: false, error };
         }
 
-        // clear StorageKeyStaging from this retired asset version
+        // clear StorageKeyStaging and updated Ingested flag from this retired asset version
         assetVersion.StorageKeyStaging = ''; /* istanbul ignore next */
+        assetVersion.Ingested = true;
         if (!await assetVersion.update()) {
             const error: string = `Unable to clear staging storage key from AssetVersion ${JSON.stringify(assetVersion)}`;
             LOG.logger.error(error);
