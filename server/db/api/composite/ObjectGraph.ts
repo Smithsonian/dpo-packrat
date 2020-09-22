@@ -39,13 +39,15 @@ export class ObjectGraph {
 
     pushCount: number = 0;
     maxPushCount: number = 500;
+    depth: number = 32;
     systemObjectList: number[] = []; // array of idSystemObjects to be processed
     systemObjectProcessed: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map from idSystemObject -> { idSystemObject, id of database object, type of database object}
     systemObjectAdded: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map from idSystemObject -> { idSystemObject, id of database object, type of database object}
 
-    constructor(idSystemObject: number, eMode: eObjectGraphMode) {
+    constructor(idSystemObject: number, eMode: eObjectGraphMode, depth: number = 32) {
         this.idSystemObject = idSystemObject;
         this.eMode = eMode;
+        this.depth = depth;
     }
 
     async fetch(): Promise<boolean> {
@@ -55,13 +57,13 @@ export class ObjectGraph {
         switch (this.eMode) {
             case eObjectGraphMode.eAncestors:
             case eObjectGraphMode.eDescendents:
-                return await this.fetchWorker(this.idSystemObject, null, this.eMode);
+                return await this.fetchWorker(this.idSystemObject, null, this.eMode, this.depth);
             case eObjectGraphMode.eAll: {
                 /* istanbul ignore if */
-                if (!await this.fetchWorker(this.idSystemObject, null, eObjectGraphMode.eAncestors))
+                if (!await this.fetchWorker(this.idSystemObject, null, eObjectGraphMode.eAncestors, this.depth))
                     return false;
                 this.systemObjectProcessed.clear();
-                return await this.fetchWorker(this.idSystemObject, null, eObjectGraphMode.eDescendents);
+                return await this.fetchWorker(this.idSystemObject, null, eObjectGraphMode.eDescendents, this.depth);
             }
         }
     }
@@ -77,7 +79,7 @@ export class ObjectGraph {
 
     // relatedType is child when eMode == eObjectGraphMode.eAncestors
     // relatedType is parent when eMode == eObjectGraphMode.eDescendents
-    private async fetchWorker(idSystemObject: number, relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
+    private async fetchWorker(idSystemObject: number, relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode, recurseDepth: number): Promise<boolean> {
         try {
             /* istanbul ignore if */
             if (eMode != eObjectGraphMode.eAncestors && eMode != eObjectGraphMode.eDescendents) {
@@ -109,7 +111,15 @@ export class ObjectGraph {
                 return true;
             } else {
                 // Determine what kind of object this is; perform type-specific validity checks; push to the appropriate list; gather explicitly related objects
-                if (SOP.CaptureData && !await this.pushCaptureData(SOP.CaptureData, sourceType, relatedType, eMode))
+                if (SOP.Unit && !await this.pushUnit(SOP.Unit, sourceType, relatedType, eMode))
+                    return true;
+                else if (SOP.Project && !await this.pushProject(SOP.Project, sourceType, relatedType, eMode))
+                    return true;
+                else if (SOP.Subject && !await this.pushSubject(SOP.Subject, sourceType, relatedType, eMode))
+                    return true;
+                else if (SOP.Item && !await this.pushItem(SOP.Item, sourceType, relatedType, eMode))
+                    return true;
+                else if (SOP.CaptureData && !await this.pushCaptureData(SOP.CaptureData, sourceType, relatedType, eMode))
                     return true;
                 else if (SOP.Model && !await this.pushModel(SOP.Model, sourceType, relatedType, eMode))
                     return true;
@@ -118,16 +128,6 @@ export class ObjectGraph {
                 else if (SOP.IntermediaryFile && !await this.pushIntermediaryFile(SOP.IntermediaryFile, sourceType, relatedType, eMode))
                     return true;
                 else if (SOP.ProjectDocumentation && !await this.pushProjectDocumentation(SOP.ProjectDocumentation, sourceType, relatedType, eMode))
-                    return true;
-                else if (SOP.Scene && !await this.pushScene(SOP.Scene, sourceType, relatedType, eMode))
-                    return true;
-                else if (SOP.Item && !await this.pushItem(SOP.Item, sourceType, relatedType, eMode))
-                    return true;
-                else if (SOP.Subject && !await this.pushSubject(SOP.Subject, sourceType, relatedType, eMode))
-                    return true;
-                else if (SOP.Project && !await this.pushProject(SOP.Project, sourceType, relatedType, eMode))
-                    return true;
-                else if (SOP.Unit && !await this.pushUnit(SOP.Unit, sourceType, relatedType, eMode))
                     return true;
                 else if (SOP.Asset && !await this.pushAsset(SOP.Asset, sourceType, relatedType, eMode))
                     return true;
@@ -142,7 +142,6 @@ export class ObjectGraph {
             /* istanbul ignore if */
             if (sourceType.eType == eSystemObjectType.eUnknown)
                 LOG.logger.error(`DBAPI.ObjectGraph.fetchWorker Unidentified SystemObject type ${JSON.stringify(SOP)}`);
-
             /*
             const valid: string = (this.validHierarchy ? '' : ' INVALID HIERARCHY') + (this.noCycles ? '' : ' CYCLE');
             const sourceDesc: string = `${eSystemObjectType[sourceType.eType]} ${sourceType.idObject}/${sourceType.idSystemObject}`;
@@ -183,13 +182,16 @@ export class ObjectGraph {
                 }
             }
 
-            // handle all gathered objects
-            const RelatedList: number[] = L.clone(this.systemObjectList);
-            this.systemObjectList = [];
-            for (const idSystemObject of RelatedList) {
-                /* istanbul ignore if */
-                if (!await this.fetchWorker(idSystemObject, sourceType, eMode)) // recurse
-                    return false;
+            // can we continue down?
+            if (recurseDepth > 0) {
+                // handle all gathered objects
+                const RelatedList: number[] = L.clone(this.systemObjectList);
+                this.systemObjectList = [];
+                for (const idSystemObject of RelatedList) {
+                    /* istanbul ignore if */
+                    if (!await this.fetchWorker(idSystemObject, sourceType, eMode, recurseDepth - 1)) // recurse
+                        return false;
+                }
             }
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ObjectGraph.fetchWorker', error);
@@ -717,6 +719,19 @@ export class ObjectGraph {
                         this.systemObjectList.push(SO.idSystemObject);
                     else
                         LOG.logger.error(`Missing SystemObject for subject ${JSON.stringify(subject)}`);
+                }
+            }
+
+            const actorList: Actor[] | null = await Actor.fetchFromUnit(unit.idUnit);
+            /* istanbul ignore else */
+            if (actorList) {
+                for (const actor of actorList) {
+                    const SO: SystemObject | null = await SystemObject.fetchFromActorID(actor.idActor);
+                    /* istanbul ignore else */
+                    if (SO)
+                        this.systemObjectList.push(SO.idSystemObject);
+                    else
+                        LOG.logger.error(`Missing SystemObject for subject ${JSON.stringify(actor)}`);
                 }
             }
         }

@@ -16,6 +16,10 @@ enum COLLECTION_TYPE {
     EDAN = 'edan'
 }
 
+enum NAVIGATION_TYPE {
+    DB = 'db'
+}
+
 type ConfigType = {
     auth: {
         type: AUTH_TYPE;
@@ -40,6 +44,9 @@ type ConfigType = {
         type: STORAGE_TYPE;
         rootRepository: string;
         rootStaging: string; // this should be local storage (not NAS or cloud)
+    },
+    navigation: {
+        type: NAVIGATION_TYPE;
     },
 };
 
@@ -69,7 +76,10 @@ const Config: ConfigType = {
         type: STORAGE_TYPE.LOCAL,
         rootRepository: process.env.OCFL_STORAGE_ROOT ? process.env.OCFL_STORAGE_ROOT : /* istanbul ignore next */ './var/Storage/Repository',
         rootStaging: process.env.OCFL_STAGING_ROOT ? process.env.OCFL_STAGING_ROOT : /* istanbul ignore next */ './var/Storage/Staging'
-    }
+    },
+    navigation: {
+        type: NAVIGATION_TYPE.DB,
+    },
 };
 
-export { Config as default, AUTH_TYPE, COLLECTION_TYPE, STORAGE_TYPE };
+export { Config as default, AUTH_TYPE, COLLECTION_TYPE, STORAGE_TYPE, NAVIGATION_TYPE };

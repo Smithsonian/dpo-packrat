@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/brace-style */
+import * as path from 'path';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as STORE from '../../storage/interface';
@@ -48,6 +49,7 @@ export class BulkIngestReader {
     }
 
     private async extractMetadata(autoClose: boolean): Promise<H.IOResults> {
+        /* istanbul ignore next */
         if (!this._zip)
             return { success: false, error: 'BulkIngestReader.extractMetadata called with invalid zip' };
 
@@ -62,6 +64,7 @@ export class BulkIngestReader {
     }
 
     private async extractMetadataWorker(): Promise<H.IOResults> {
+        /* istanbul ignore next */
         if (!this._zip)
             return { success: false, error: 'BulkIngestReader.extractMetadata called with invalid zip' };
 
@@ -70,7 +73,7 @@ export class BulkIngestReader {
         let results: H.IOResults;
         let readStream: NodeJS.ReadableStream | null = await this._zip.streamContent('capture_data_photo.csv');
         if (readStream) {
-            results = await this.computeCaptureDataPhotos(readStream);
+            results = await this.computeCaptureDataPhotos(readStream); /* istanbul ignore if */
             if (!results.success)
                 return results;
         }
@@ -78,7 +81,7 @@ export class BulkIngestReader {
         // extract metadata for models
         readStream = await this._zip.streamContent('models.csv');
         if (readStream) {
-            results = await this.computeModels(readStream);
+            results = await this.computeModels(readStream); /* istanbul ignore next */
             if (!results.success)
                 return results;
         }
@@ -90,6 +93,7 @@ export class BulkIngestReader {
     }
 
     async close(): Promise<H.IOResults> {
+        /* istanbul ignore next */
         if (!this._zip)
             return { success: true, error: '' };
 
@@ -112,8 +116,8 @@ export class BulkIngestReader {
     static async computeProjects(ingestMetadata: IngestMetadata): Promise<DBAPI.Project[] | null> {
         if (!ingestMetadata.idSubject)
             return null;
-        const projectList1: DBAPI.Project[] | null = await DBAPI.Project.fetchDerivedFromSubjectsUnits([ingestMetadata.idSubject]) || [];
-        const projectList2: DBAPI.Project[] | null = await DBAPI.Project.fetchMasterFromSubjects([ingestMetadata.idSubject]) || [];
+        const projectList1: DBAPI.Project[] | null = await DBAPI.Project.fetchDerivedFromSubjectsUnits([ingestMetadata.idSubject]) || /* istanbul ignore next */ [];
+        const projectList2: DBAPI.Project[] | null = await DBAPI.Project.fetchMasterFromSubjects([ingestMetadata.idSubject]) || /* istanbul ignore next */ [];
         return projectList1.concat(projectList2);
     }
 
@@ -127,18 +131,19 @@ export class BulkIngestReader {
         }
 
         for (const bagitCDP of bagitCDPs) {
+            /* istanbul ignore next */
             if (BulkIngestReader.isEmptyRow(bagitCDP))
                 continue;
 
-            const subject: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectFromCSV(bagitCDP);
+            const subject: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectFromCSV(bagitCDP); /* istanbul ignore next */
             if (!subject)
                 return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute subject' };
 
-            const item: DBAPI.Item | null = await this.extractItemFromCSV(bagitCDP);
+            const item: DBAPI.Item | null = await this.extractItemFromCSV(bagitCDP); /* istanbul ignore next */
             if (!item)
                 return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute item' };
 
-            const photo: IngestPhotogrammetry | null = await this.extractCaptureDataPhotoFromCSV(bagitCDP);
+            const photo: IngestPhotogrammetry | null = await this.extractCaptureDataPhotoFromCSV(bagitCDP); /* istanbul ignore next */
             if (!photo)
                 return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute photogrammetry metadata' };
 
@@ -161,15 +166,15 @@ export class BulkIngestReader {
             if (BulkIngestReader.isEmptyRow(bagitModel))
                 continue;
 
-            const subject: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectFromCSV(bagitModel);
+            const subject: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectFromCSV(bagitModel); /* istanbul ignore next */
             if (!subject)
                 return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute subject' };
 
-            const item: DBAPI.Item | null = await this.extractItemFromCSV(bagitModel);
+            const item: DBAPI.Item | null = await this.extractItemFromCSV(bagitModel); /* istanbul ignore next */
             if (!item)
                 return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute item' };
 
-            const model: IngestModel | null = await this.extractModelFromCSV(bagitModel);
+            const model: IngestModel | null = await this.extractModelFromCSV(bagitModel); /* istanbul ignore next */
             if (!model)
                 return { success: false, error: 'BulkIngestReader.computeCaptureDataPhotos could not compute model metadata' };
 
@@ -187,14 +192,14 @@ export class BulkIngestReader {
 
     private async extractSubjectFromCSV(bagitSubject: SubjectsCSVFields): Promise<DBAPI.SubjectUnitIdentifier | null> {
         // try to load from guid as a subject identifier
-        const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(bagitSubject.subject_guid);
+        const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(bagitSubject.subject_guid); /* istanbul ignore else */
         if (identifiers) {
-            for (const identifier of identifiers) {
+            for (const identifier of identifiers) { /* istanbul ignore next */
                 if (!identifier.idSystemObject)
                     continue;
-                const SOPair: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(identifier.idSystemObject);
+                const SOPair: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(identifier.idSystemObject); /* istanbul ignore else */
                 if (SOPair && SOPair.Subject) {
-                    const SUID: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectUnitIDFromSubject(SOPair.Subject, bagitSubject);
+                    const SUID: DBAPI.SubjectUnitIdentifier | null = await this.extractSubjectUnitIDFromSubject(SOPair.Subject, bagitSubject); /* istanbul ignore else */
                     if (SUID)
                         return SUID;
                 }
@@ -202,23 +207,24 @@ export class BulkIngestReader {
         }
 
         // otherwise, we can't spot this subject in our DB; validate unit name and then gather remaining information
-        const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(bagitSubject.unit_name);
+        const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(bagitSubject.unit_name); /* istanbul ignore next */
         if (!units || units.length == 0) {
             LOG.logger.error(`BulkIngestReader.extractSubjectFromCSV unable to load unit from ${JSON.stringify(bagitSubject)}`);
             return null;
         }
 
-        return { idSubject: 0, SubjectName: bagitSubject.subject_name, UnitAbbreviation: units[0].Abbreviation || '',
+        return { idSubject: 0, SubjectName: bagitSubject.subject_name, UnitAbbreviation: units[0].Abbreviation || /* istanbul ignore next */ '',
             IdentifierCollection: bagitSubject.subject_guid, IdentifierPublic: '' };
     }
 
     private async extractSubjectUnitIDFromSubject(subject: DBAPI.Subject | null,
         bagitSubject: SubjectsCSVFields): Promise<DBAPI.SubjectUnitIdentifier | null> {
+        /* istanbul ignore next */
         if (!subject) {
             LOG.logger.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load subject from local_subject_id in ${JSON.stringify(bagitSubject)}`);
             return null;
         }
-        const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subject.idUnit);
+        const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subject.idUnit); /* istanbul ignore next */
         if (!unit) {
             LOG.logger.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load unit from local_subject_id in ${JSON.stringify(bagitSubject)}`);
             return null;
@@ -226,12 +232,13 @@ export class BulkIngestReader {
 
         const identifier: DBAPI.Identifier | null = (subject.idIdentifierPreferred)
             ? await DBAPI.Identifier.fetch(subject.idIdentifierPreferred)
-            : null;
-        return { idSubject: subject.idSubject, SubjectName: subject.Name, UnitAbbreviation: unit.Abbreviation  || '',
-            IdentifierCollection: identifier ? identifier.IdentifierValue : bagitSubject.subject_guid, IdentifierPublic: '' };
+            : /* istanbul ignore next */ null;
+        return { idSubject: subject.idSubject, SubjectName: subject.Name, UnitAbbreviation: unit.Abbreviation  || /* istanbul ignore next */ '',
+            IdentifierCollection: identifier ? identifier.IdentifierValue : /* istanbul ignore next */ bagitSubject.subject_guid, IdentifierPublic: '' };
     }
 
     private async extractItemFromCSV(bagitItem: ItemsCSVFields): Promise<DBAPI.Item | null> {
+        /* istanbul ignore next */
         if (!bagitItem.item_guid)
             return new DBAPI.Item({
                 idItem: 0,
@@ -303,8 +310,10 @@ export class BulkIngestReader {
             const directories: string[] = await this._zip.getJustDirectories(null);
             for (const directory of directories) {
                 if (directory.toLowerCase().includes(bagitCDP.directory_path.toLowerCase())) {
-                    const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapPhotogrammetryVariantType(directory);
-                    folders.push({ name: directory, variantType: vocabulary ? vocabulary.idVocabulary : 0 });
+                    const finalPathElement: string = path.basename(directory);
+                    LOG.logger.info(`BIR directory: ${directory}: ${finalPathElement}`);
+                    const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapPhotogrammetryVariantType(finalPathElement);
+                    folders.push({ name: finalPathElement, variantType: vocabulary ? vocabulary.idVocabulary : /* istanbul ignore next */ 0 });
                 }
             }
         }
@@ -370,7 +379,7 @@ export class BulkIngestReader {
     }
 
     private async computeVocabulary(eVocabSetID: CACHE.eVocabularySetID, term: string): Promise<{ idVocabulary: number, error?: string | null }> {
-        const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyBySetAndTerm(eVocabSetID, term);
+        const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyBySetAndTerm(eVocabSetID, term); /* istanbul ignore next */
         if (!vocabulary) {
             const error: string = `Unable to locate ${CACHE.eVocabularySetID[eVocabSetID]} ${term}`;
             LOG.logger.error(error);

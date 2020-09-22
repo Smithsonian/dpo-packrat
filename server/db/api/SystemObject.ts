@@ -93,6 +93,16 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
         }
     }
 
+    static async fetchAll(): Promise<SystemObject[] | null> {
+        try {
+            return DBC.CopyArray<P.SystemObject, SystemObject>(
+                await DBC.DBConnection.prisma.systemObject.findMany(), SystemObject);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.SystemObject.fetchAll', error);
+            return null;
+        }
+    }
+
     static async fetchDerivedFromXref(idSystemObjectMaster: number): Promise<SystemObject[] | null> {
         if (!idSystemObjectMaster)
             return null;

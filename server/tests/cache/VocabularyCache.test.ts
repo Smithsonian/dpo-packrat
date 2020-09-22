@@ -116,7 +116,6 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eCaptureDataCaptureMethodSphericalLaser: testVocabulary(vocabulary, 'Spherical Laser'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeRaw: testVocabulary(vocabulary, 'Raw'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeProcessed: testVocabulary(vocabulary, 'Processed'); break;
-                    case eVocabularyID.eCaptureDataFileVariantTypeProcessedZeroed: testVocabulary(vocabulary, 'Processed, Zeroed'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeFromCamera: testVocabulary(vocabulary, 'From Camera'); break;
                     case eVocabularyID.eMetadataMetadataSourceBulkIngestion: testVocabulary(vocabulary, 'Bulk Ingestion'); break;
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
@@ -289,7 +288,6 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataClusterType, 'Focal Stack Focus Based');
             await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataFileVariantType, 'Raw');
             await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataFileVariantType, 'Processed');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataFileVariantType, 'Processed, Zeroed');
             await testVocabularyBySetAndTerm(eVocabularySetID.eCaptureDataFileVariantType, 'From Camera');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelCreationMethod, 'Scan To Mesh');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelCreationMethod, 'CAD');
@@ -362,16 +360,24 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
         });
 
         test('Cache: VocabularyCache.mapPhotogrammetryVariantType ' + description, async () => {
-            await testMapPhotogrammetryVariantType('Raw', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('Processed', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
-            await testMapPhotogrammetryVariantType('Processed, Zeroed', eVocabularyID.eCaptureDataFileVariantTypeProcessedZeroed);
-            await testMapPhotogrammetryVariantType('From Camera', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
-            await testMapPhotogrammetryVariantType('dng', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
-            await testMapPhotogrammetryVariantType('jpg', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
-            await testMapPhotogrammetryVariantType('jpeg', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('raw', eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('cr2', eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('cr3', eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('dng', eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('arw', eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('cam_dng', eVocabularyID.eCaptureDataFileVariantTypeRaw);
             await testMapPhotogrammetryVariantType('tif', eVocabularyID.eCaptureDataFileVariantTypeRaw);
             await testMapPhotogrammetryVariantType('tiff', eVocabularyID.eCaptureDataFileVariantTypeRaw);
-            await testMapPhotogrammetryVariantType('OBVIOUSLY INVALID VALUE', eVocabularyID.eNone);
+            await testMapPhotogrammetryVariantType('processed', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
+            await testMapPhotogrammetryVariantType('col_cor', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
+            await testMapPhotogrammetryVariantType('zeroed', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
+            await testMapPhotogrammetryVariantType('from camera', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('fromcamera', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('jpg', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('jpeg', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('camerajpg', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('camera', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('FOOBARFAULTY', eVocabularyID.eNone);
         });
 
         test('Cache: VocabularyCache.vocabularyEnumToId and vocabularyIdToEnum ' + description, async () => {
@@ -423,6 +429,7 @@ async function testVocabularyBySetAndTerm(eVocabSetId: eVocabularySetID, term: s
 }
 
 async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: eVocabularyID): Promise<void> {
+    // LOG.logger.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`);
     const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapPhotogrammetryVariantType(variantType);
     const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
     if (eVocabID != eVocabularyID.eNone) {

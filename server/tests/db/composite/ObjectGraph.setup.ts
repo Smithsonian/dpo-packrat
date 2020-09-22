@@ -5,6 +5,7 @@ import * as UTIL from '../api';
 
 /** Implements the object graph described here: https://confluence.si.edu/download/attachments/100272687/ObjectGraph.png?api=v2 */
 export class ObjectGraphTestSetup {
+    /* #region Variable Declarations */
     user1: DBAPI.User | null = null;
     unit1: DBAPI.Unit | null = null;
     unit2: DBAPI.Unit | null = null;
@@ -66,6 +67,7 @@ export class ObjectGraphTestSetup {
     assetVersion9: DBAPI.AssetVersion | null = null;
     assetVersion10: DBAPI.AssetVersion | null = null;
     v1: DBAPI.Vocabulary | undefined;
+    /* #endregion */
 
     async initialize(): Promise<void> {
         let assigned: boolean = true;
@@ -73,7 +75,7 @@ export class ObjectGraphTestSetup {
         expect(this.v1).toBeTruthy();
         if (!this.v1)
             return;
-
+        /* #region Object Creation */
         this.user1 = await UTIL.createUserTest({ Name: 'OA Test', EmailAddress: 'oatest@si.edu', SecurityID: 'OA Test', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0 });
 
         this.unit1 = await UTIL.createUnitTest({ Name: 'DPO', Abbreviation: 'DPO', ARKPrefix: 'http://dpo/', idUnit: 0 });
@@ -83,11 +85,11 @@ export class ObjectGraphTestSetup {
 
         this.assetT1 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersionT1 = await UTIL.createAssetVersionTest({ idAsset: this.assetT1.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
-        this.subject1 = await UTIL.createSubjectTest({ idUnit: this.unit1.idUnit, idAssetThumbnail: this.assetT1.idAsset, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
+        this.subject1 = await UTIL.createSubjectWithIdentifierTest({ idUnit: this.unit1.idUnit, idAssetThumbnail: this.assetT1.idAsset, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
         assigned = await this.assetT1.assignOwner(this.subject1); expect(assigned).toBeTruthy();
-        this.subject2 = await UTIL.createSubjectTest({ idUnit: this.unit1.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
-        this.subject3 = await UTIL.createSubjectTest({ idUnit: this.unit2.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
-        this.subject4 = await UTIL.createSubjectTest({ idUnit: this.unit2.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
+        this.subject2 = await UTIL.createSubjectTest({ idUnit: this.unit1.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 }); // No identifier, on purpose
+        this.subject3 = await UTIL.createSubjectWithIdentifierTest({ idUnit: this.unit2.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
+        this.subject4 = await UTIL.createSubjectWithIdentifierTest({ idUnit: this.unit2.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
 
         this.assetT2 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersionT2 = await UTIL.createAssetVersionTest({ idAsset: this.assetT2.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
@@ -162,6 +164,7 @@ export class ObjectGraphTestSetup {
         this.actor2 = await UTIL.createActorTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', idUnit: 0, idActor: 0 });
         this.stakeholder1 = await UTIL.createStakeholderTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', EmailAddress: 'OA Test', PhoneNumberMobile: 'OA Test', PhoneNumberOffice: 'OA Test', MailingAddress: 'OA Test', idStakeholder: 0 });
         this.stakeholder2 = await UTIL.createStakeholderTest({ IndividualName: 'OA Test', OrganizationName: 'OA Test', EmailAddress: 'OA Test', PhoneNumberMobile: 'OA Test', PhoneNumberOffice: 'OA Test', MailingAddress: 'OA Test', idStakeholder: 0 });
+        /* #endregion */
     }
 
     async wire(): Promise<void> {
@@ -181,6 +184,9 @@ export class ObjectGraphTestSetup {
         await UTIL.createXref(this.item1, this.captureData1);
         await UTIL.createXref(this.item1, this.captureData2);
         await UTIL.createXref(this.item1, this.model1);
+        await UTIL.createXref(this.item1, this.model2);
+        await UTIL.createXref(this.item1, this.model3);
+        await UTIL.createXref(this.item1, this.model4);
         await UTIL.createXref(this.item1, this.scene1);
         await UTIL.createXref(this.captureData1, this.model1);
         await UTIL.createXref(this.captureData2, this.model1);
@@ -215,13 +221,13 @@ export class ObjectGraphTestSetup {
     }
 
     static async testObjectGraphFetch(SOBased: DBAPI.SystemObjectBased | null, eMode: DBAPI.eObjectGraphMode,
-        expectValidHierarchy: boolean = true, expectNoCycles: boolean = true): Promise<DBAPI.ObjectGraph | null> {
+        expectValidHierarchy: boolean = true, expectNoCycles: boolean = true, maxDepth: number = 32): Promise<DBAPI.ObjectGraph | null> {
         const SO: DBAPI.SystemObject | null = SOBased ? await SOBased.fetchSystemObject() : null;
         expect(SO).toBeTruthy();
         if (!SO)
             return null;
 
-        const OA: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(SO.idSystemObject, eMode);
+        const OA: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(SO.idSystemObject, eMode, maxDepth);
         const OAFetched: boolean = await OA.fetch();
         expect(OAFetched).toBeTruthy();
         if (!OAFetched)
