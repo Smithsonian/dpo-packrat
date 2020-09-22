@@ -6,8 +6,7 @@ import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
 import RepositoryTreeNode from './RepositoryTreeNode';
 import { RepositoryFilter } from '../../index';
 import { useGetRootObjects } from '../../hooks/useRepository';
-import { getSystemObjectTypesForFilter } from '../../../../utils/repository';
-
+import { getSystemObjectTypesForFilter, getSortedTreeEntries } from '../../../../utils/repository';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -39,6 +38,8 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
     const noFilter = !filter.units && !filter.projects;
 
+    const entries = getSortedTreeEntries(getRootObjectsData?.getObjectChildren?.entries ?? []);
+
     return (
         <TreeView
             className={classes.container}
@@ -52,7 +53,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             )}
             {!getRootObjectsLoading && !getRootObjectsError ? (
                 <>
-                    {getRootObjectsData?.getObjectChildren?.entries.map((entry, index: number) => {
+                    {entries.map((entry, index: number) => {
                         const { idSystemObject, name, objectType, idObject } = entry;
                         return (
                             <RepositoryTreeNode

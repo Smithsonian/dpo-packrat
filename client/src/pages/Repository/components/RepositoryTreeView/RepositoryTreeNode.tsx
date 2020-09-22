@@ -2,7 +2,7 @@ import React from 'react';
 import StyledTreeItem from './StyledTreeItem';
 import TreeViewContents from './TreeViewContents';
 import { eSystemObjectType } from '../../../../types/server';
-import { getRepositoryTreeNodeId } from '../../../../utils/repository';
+import { getRepositoryTreeNodeId, getSortedTreeEntries } from '../../../../utils/repository';
 import { useGetObjectChildren } from '../../hooks/useRepository';
 
 interface RepositoryTreeNodeProps {
@@ -20,6 +20,8 @@ function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement 
 
     const isEmpty = !getObjectChildrenData?.getObjectChildren?.entries.length ?? false;
 
+    const entries = getSortedTreeEntries(getObjectChildrenData?.getObjectChildren?.entries ?? []);
+
     return (
         <StyledTreeItem
             onLabelClick={getObjectChildren}
@@ -28,7 +30,7 @@ function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement 
             label={name}
         >
             <TreeViewContents name={name} loading={getObjectChildrenLoading && !getObjectChildrenError} isEmpty={isEmpty} objectType={objectType}>
-                {getObjectChildrenData?.getObjectChildren?.entries.map((entry, index: number) => {
+                {entries.map((entry, index: number) => {
                     const { idSystemObject, name, objectType, idObject } = entry;
                     return (
                         <RepositoryTreeNode
