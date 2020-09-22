@@ -49,8 +49,30 @@ export enum eVocabularyID {
     eCaptureDataCaptureMethodSphericalLaser,
     eCaptureDataFileVariantTypeRaw,
     eCaptureDataFileVariantTypeProcessed,
-    eCaptureDataFileVariantTypeProcessedZeroed,
     eCaptureDataFileVariantTypeFromCamera,
     eMetadataMetadataSourceBulkIngestion,
     eNone = -1
+}
+
+export enum eMetadata {
+    eUnitAbbreviation,
+    eSubjectIdentifier,
+    eItemName
+}
+
+export enum eSystemObjectType {
+    eUnit,
+    eProject,
+    eSubject,
+    eItem,
+    eCaptureData,
+    eModel,
+    eScene,
+    eIntermediaryFile,
+    eProjectDocumentation,
+    eAsset,
+    eAssetVersion,
+    eActor,
+    eStakeholder,
+    eUnknown
 }
