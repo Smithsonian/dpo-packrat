@@ -5,16 +5,17 @@ module.exports = {
     // collectCoverage: true,
     testMatch: [
         // The complete test suite, on one line, to aid in quick commenting out
-        '**/tests/db/**/*.test.ts', '**/tests/graphql/graphql.test.ts', '**/tests/auth/**', '**/tests/cache/cache.test.ts', '**/tests/utils/**/*.test.ts', '**/tests/collections/*.test.ts', '**/tests/storage/**/*.test.ts',
+        '**/tests/auth/**', '**/tests/cache/cache.test.ts', '**/tests/collections/*.test.ts', '**/tests/db/**/*.test.ts', '**/tests/graphql/graphql.test.ts', '**/tests/navigation/**/*.test.ts', '**/tests/storage/**/*.test.ts', '**/tests/utils/**/*.test.ts',
 
         // Larger test collections, left here to aid in quick, focused testing; these are the elements on the line above:
-        // '**/tests/db/**/*.test.ts',
-        // '**/tests/graphql/graphql.test.ts',
         // '**/tests/auth/**',
         // '**/tests/cache/cache.test.ts',
-        // '**/tests/utils/**/*.test.ts',
         // '**/tests/collections/*.test.ts',
+        // '**/tests/db/**/*.test.ts',
+        // '**/tests/graphql/graphql.test.ts',
+        // '**/tests/navigation/**/*.test.ts',
         // '**/tests/storage/**/*.test.ts',
+        // '**/tests/utils/**/*.test.ts',
 
         // Needs test cases written:
         // '**/tests/utils/parser/bulkIngestReader.test.ts',
@@ -23,6 +24,7 @@ module.exports = {
         // '**/tests/collections/EdanCollection.test.ts',
         // '**/tests/db/dbcreation.test.ts',
         // '**/tests/db/composite/ObjectGraph.test.ts',
+        // '**/tests/navigation/impl/NavigationDB.test.ts',
         // '**/tests/storage/interface/AssetStorageAdapter.test.ts',
         // '**/tests/storage/impl/LocalStorage/OCFL.test.ts',
         // '**/tests/storage/impl/LocalStorage/LocalStorage.test.ts',
