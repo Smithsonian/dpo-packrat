@@ -118,7 +118,7 @@ export class BulkIngestReader {
             return null;
         const projectList1: DBAPI.Project[] | null = await DBAPI.Project.fetchDerivedFromSubjectsUnits([ingestMetadata.idSubject]) || /* istanbul ignore next */ [];
         const projectList2: DBAPI.Project[] | null = await DBAPI.Project.fetchMasterFromSubjects([ingestMetadata.idSubject]) || /* istanbul ignore next */ [];
-        return projectList1.concat(projectList2);
+        return [...new Set([...projectList1, ...projectList2])]; // removes duplicates
     }
 
     private async computeCaptureDataPhotos(fileStream: NodeJS.ReadableStream): Promise<H.IOResults> {
