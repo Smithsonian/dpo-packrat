@@ -32,13 +32,13 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     const subjectsDB: DBAPI.Subject[] = [];
     for (const subject of input.subjects) {
         // fetch our understanding of EDAN's unit information:
-        const unitEdanDB: DBAPI.UnitEdan | null = await DBAPI.UnitEdan.fetchFromAbbreviation(subject.unit);
+        const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(subject.unit);
         let subjectDB: DBAPI.Subject | null = null;
 
         if (subject.id)     // if this subject exists, validate it
-            subjectDB = await validateExistingSubject(subject, unitEdanDB);
-        else                // otherwise create it and related objects, including possibly unitEdanDB
-            subjectDB = await createSubjectAndRelated(subject, unitEdanDB);
+            subjectDB = await validateExistingSubject(subject, units);
+        else                // otherwise create it and related objects, including possibly units
+            subjectDB = await createSubjectAndRelated(subject, units);
 
         if (!subjectDB)
             return { success: false };
@@ -160,9 +160,9 @@ async function createIdentifierForObject(identifier: IngestIdentifier | null, SO
     return true;
 }
 
-async function validateOrCreateUnitEdan(unitEdanDB: DBAPI.UnitEdan | null, Abbreviation: string): Promise<DBAPI.UnitEdan | null> {
-    if (!unitEdanDB) {
-        unitEdanDB = new DBAPI.UnitEdan({
+async function validateOrCreateUnitEdan(units: DBAPI.Unit[] | null, Abbreviation: string): Promise<DBAPI.Unit | null> {
+    if (!units || units.length == 0) {
+        const unitEdanDB = new DBAPI.UnitEdan({
             idUnit: 1, // hard-coded for the 'Unknown Unit'
             Abbreviation,
             idUnitEdan: 0
@@ -171,12 +171,10 @@ async function validateOrCreateUnitEdan(unitEdanDB: DBAPI.UnitEdan | null, Abbre
             LOG.logger.error(`GraphQL ingestData unable to create unitEdan record for subject's unit ${Abbreviation}`);
             return null;
         }
-    } else if (!unitEdanDB.idUnit) {
-        LOG.logger.error(`GraphQL ingestData called with invalid subject's unit ${Abbreviation}, mapped to ${JSON.stringify(unitEdanDB)} with null idUnit`);
-        return null;
+        return await DBAPI.Unit.fetch(1);
     }
 
-    return unitEdanDB;
+    return units[0];
 }
 
 async function createSubject(idUnit: number, Name: string, identifier: DBAPI.Identifier | null): Promise<DBAPI.Subject | null> {
@@ -214,7 +212,7 @@ async function updateIdentifier(identifier: DBAPI.Identifier | null, subjectDB: 
     return true;
 }
 
-async function validateExistingSubject(subject: IngestSubjectInput, unitEdanDB: DBAPI.UnitEdan | null): Promise<DBAPI.Subject | null> {
+async function validateExistingSubject(subject: IngestSubjectInput, units: DBAPI.Unit[] | null): Promise<DBAPI.Subject | null> {
     // if this subject exists, validate it
     const subjectDB: DBAPI.Subject | null = subject.id ? await DBAPI.Subject.fetch(subject.id) : null;
     if (!subjectDB) {
@@ -223,17 +221,17 @@ async function validateExistingSubject(subject: IngestSubjectInput, unitEdanDB: 
     }
 
     // existing subjects must be connected to an existing unit
-    if (!unitEdanDB || !unitEdanDB.idUnit) {
+    if (!units || units.length == 0) {
         LOG.logger.error(`GraphQL ingestData called with invalid subject's unit ${subject.unit}`);
         return null;
     }
     return subjectDB;
 }
 
-async function createSubjectAndRelated(subject: IngestSubjectInput, unitEdanDB: DBAPI.UnitEdan | null): Promise<DBAPI.Subject | null> {
+async function createSubjectAndRelated(subject: IngestSubjectInput, units: DBAPI.Unit[] | null): Promise<DBAPI.Subject | null> {
     // identify Unit; create UnitEdan if needed
-    unitEdanDB = await validateOrCreateUnitEdan(unitEdanDB, subject.unit);
-    if (!unitEdanDB)
+    const unit: DBAPI.Unit | null = await validateOrCreateUnitEdan(units, subject.unit);
+    if (!unit)
         return null;
 
     // create identifier
@@ -245,8 +243,7 @@ async function createSubjectAndRelated(subject: IngestSubjectInput, unitEdanDB: 
     }
 
     // create the subject
-    const idUnit: number = (unitEdanDB.idUnit) ? unitEdanDB.idUnit : /* istanbul ignore next */ 1; // default hard-coded unit 1 in case of errors
-    const subjectDB: DBAPI.Subject | null = await createSubject(idUnit, subject.name, identifier);
+    const subjectDB: DBAPI.Subject | null = await createSubject(unit.idUnit, subject.name, identifier);
     if (!subjectDB)
         return null;
 
