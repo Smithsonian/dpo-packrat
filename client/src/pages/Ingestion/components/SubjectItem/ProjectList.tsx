@@ -3,6 +3,7 @@ import { Select, MenuItem } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { AppContext } from '../../../../context';
 import useProject from '../../hooks/useProject';
+import lodash from 'lodash';
 
 const useStyles = makeStyles(({ palette }) => ({
     projectSelect: {
@@ -20,6 +21,8 @@ function ProjectList(): React.ReactElement {
     const hasProjects = !projects.length;
     const selectedProject = getSelectedProject();
 
+    const uniqueSortedProjects = lodash.uniqBy(lodash.orderBy(projects, 'name', 'asc'), 'name');
+
     return (
         <Select
             value={selectedProject?.id || 'none'}
@@ -30,7 +33,7 @@ function ProjectList(): React.ReactElement {
             disableUnderline
         >
             <MenuItem value='none'>none</MenuItem>
-            {projects.map(({ id, name }, index) => <MenuItem key={index} value={id}>{name}</MenuItem>)}
+            {uniqueSortedProjects.map(({ id, name }, index: number) => <MenuItem key={index} value={id}>{name}</MenuItem>)}
         </Select>
     );
 }
