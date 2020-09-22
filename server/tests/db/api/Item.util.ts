@@ -1,7 +1,7 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 // import * as LOG from '../../../utils/logger';
-import { createIdentifierForItem } from './Identifier.util';
+import { createIdentifierForSystemObject } from './Identifier.util';
 import { Item as ItemBase } from '@prisma/client';
 
 export async function createItemTest(base: ItemBase): Promise<DBAPI.Item> {
@@ -20,9 +20,9 @@ export async function createItemAndIDsForBagitTesting(base: ItemBase): Promise<D
     let itemID2: DBAPI.Identifier | null = null;
     let itemID3: DBAPI.Identifier | null = null;
     if (item) {
-        itemID1 = await createIdentifierForItem(item, 'ITEM_GUID_1', vIDTypeArk);
-        itemID2 = await createIdentifierForItem(item, 'ITEM_GUID_2', vIDTypeArk);
-        itemID3 = await createIdentifierForItem(item, 'ITEM_GUID_3', vIDTypeArk);
+        itemID1 = await createIdentifierForSystemObject(item, 'ITEM_GUID_1', vIDTypeArk);
+        itemID2 = await createIdentifierForSystemObject(item, 'ITEM_GUID_2', vIDTypeArk);
+        itemID3 = await createIdentifierForSystemObject(item, 'ITEM_GUID_3', vIDTypeArk);
     }
     expect(itemID1).toBeTruthy();
     expect(itemID2).toBeTruthy();

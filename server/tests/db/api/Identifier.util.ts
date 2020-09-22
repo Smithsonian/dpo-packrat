@@ -10,15 +10,15 @@ export async function createIdentifierTest(base: IdentifierBase): Promise<DBAPI.
     return identifier;
 }
 
-export async function createIdentifierForItem(item: DBAPI.Item | null,
+export async function createIdentifierForSystemObject(SOBased: DBAPI.SystemObjectBased | null,
     IdentifierValue: string | null, vIdentifierType: DBAPI.Vocabulary | null): Promise<DBAPI.Identifier | null> {
-    if (!item)
+    if (!SOBased)
         return null;
 
     if (!IdentifierValue)
         IdentifierValue = H.Helpers.randomSlug();
 
-    const SO: DBAPI.SystemObject | null = await item.fetchSystemObject();
+    const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
     expect(SO).toBeTruthy();
     if (!SO)
         return null;

@@ -85,11 +85,11 @@ export class ObjectGraphTestSetup {
 
         this.assetT1 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersionT1 = await UTIL.createAssetVersionTest({ idAsset: this.assetT1.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
-        this.subject1 = await UTIL.createSubjectTest({ idUnit: this.unit1.idUnit, idAssetThumbnail: this.assetT1.idAsset, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
+        this.subject1 = await UTIL.createSubjectWithIdentifierTest({ idUnit: this.unit1.idUnit, idAssetThumbnail: this.assetT1.idAsset, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
         assigned = await this.assetT1.assignOwner(this.subject1); expect(assigned).toBeTruthy();
-        this.subject2 = await UTIL.createSubjectTest({ idUnit: this.unit1.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
-        this.subject3 = await UTIL.createSubjectTest({ idUnit: this.unit2.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
-        this.subject4 = await UTIL.createSubjectTest({ idUnit: this.unit2.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
+        this.subject2 = await UTIL.createSubjectTest({ idUnit: this.unit1.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 }); // No identifier, on purpose
+        this.subject3 = await UTIL.createSubjectWithIdentifierTest({ idUnit: this.unit2.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
+        this.subject4 = await UTIL.createSubjectWithIdentifierTest({ idUnit: this.unit2.idUnit, idAssetThumbnail: null, idGeoLocation: null, Name: 'OA Test', idIdentifierPreferred: null, idSubject: 0 });
 
         this.assetT2 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersionT2 = await UTIL.createAssetVersionTest({ idAsset: this.assetT2.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });

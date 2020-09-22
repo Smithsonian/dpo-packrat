@@ -111,7 +111,15 @@ export class ObjectGraph {
                 return true;
             } else {
                 // Determine what kind of object this is; perform type-specific validity checks; push to the appropriate list; gather explicitly related objects
-                if (SOP.CaptureData && !await this.pushCaptureData(SOP.CaptureData, sourceType, relatedType, eMode))
+                if (SOP.Unit && !await this.pushUnit(SOP.Unit, sourceType, relatedType, eMode))
+                    return true;
+                else if (SOP.Project && !await this.pushProject(SOP.Project, sourceType, relatedType, eMode))
+                    return true;
+                else if (SOP.Subject && !await this.pushSubject(SOP.Subject, sourceType, relatedType, eMode))
+                    return true;
+                else if (SOP.Item && !await this.pushItem(SOP.Item, sourceType, relatedType, eMode))
+                    return true;
+                else if (SOP.CaptureData && !await this.pushCaptureData(SOP.CaptureData, sourceType, relatedType, eMode))
                     return true;
                 else if (SOP.Model && !await this.pushModel(SOP.Model, sourceType, relatedType, eMode))
                     return true;
@@ -120,16 +128,6 @@ export class ObjectGraph {
                 else if (SOP.IntermediaryFile && !await this.pushIntermediaryFile(SOP.IntermediaryFile, sourceType, relatedType, eMode))
                     return true;
                 else if (SOP.ProjectDocumentation && !await this.pushProjectDocumentation(SOP.ProjectDocumentation, sourceType, relatedType, eMode))
-                    return true;
-                else if (SOP.Scene && !await this.pushScene(SOP.Scene, sourceType, relatedType, eMode))
-                    return true;
-                else if (SOP.Item && !await this.pushItem(SOP.Item, sourceType, relatedType, eMode))
-                    return true;
-                else if (SOP.Subject && !await this.pushSubject(SOP.Subject, sourceType, relatedType, eMode))
-                    return true;
-                else if (SOP.Project && !await this.pushProject(SOP.Project, sourceType, relatedType, eMode))
-                    return true;
-                else if (SOP.Unit && !await this.pushUnit(SOP.Unit, sourceType, relatedType, eMode))
                     return true;
                 else if (SOP.Asset && !await this.pushAsset(SOP.Asset, sourceType, relatedType, eMode))
                     return true;
@@ -144,7 +142,6 @@ export class ObjectGraph {
             /* istanbul ignore if */
             if (sourceType.eType == eSystemObjectType.eUnknown)
                 LOG.logger.error(`DBAPI.ObjectGraph.fetchWorker Unidentified SystemObject type ${JSON.stringify(SOP)}`);
-
             /*
             const valid: string = (this.validHierarchy ? '' : ' INVALID HIERARCHY') + (this.noCycles ? '' : ' CYCLE');
             const sourceDesc: string = `${eSystemObjectType[sourceType.eType]} ${sourceType.idObject}/${sourceType.idSystemObject}`;
