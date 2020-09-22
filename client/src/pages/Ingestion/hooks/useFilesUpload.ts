@@ -114,7 +114,7 @@ const useFilesUpload = (): UseFilesUpload => {
                         projects.push(...stateProjects);
                     }
                     if (foundItem) {
-                        const item: StateItem = parseItemToState(foundItem, false, index);
+                        const item: StateItem = parseItemToState(foundItem, !index, index);
                         items.push(item);
                     }
 
@@ -161,9 +161,9 @@ const useFilesUpload = (): UseFilesUpload => {
                     }
                 }
 
-                addSubjects(subjects);
+                addSubjects(lodash.uniqBy(subjects, 'arkId'));
                 addProjects(projects);
-                addItems(items);
+                addItems(lodash.uniqBy(items, 'name'));
 
                 const addMetadataStepAction: IngestionDispatchAction = {
                     type: METADATA_ACTIONS.ADD_METADATA,
