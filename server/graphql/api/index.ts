@@ -88,7 +88,9 @@ import {
     GetIntermediaryFileInput,
     GetIntermediaryFileResult,
     DiscardUploadedAssetVersionsInput,
-    DiscardUploadedAssetVersionsResult
+    DiscardUploadedAssetVersionsResult,
+    GetObjectChildrenInput,
+    GetObjectChildrenResult
 } from '../../types/graphql';
 
 // Queries
@@ -120,6 +122,7 @@ import getAssetVersionsDetails from './queries/asset/getAssetVersionsDetails';
 import getObjectsForItem from './queries/unit/getObjectsForItem';
 import getProjectDocumentation from './queries/unit/getProjectDocumentation';
 import getIntermediaryFile from './queries/scene/getIntermediaryFile';
+import getObjectChildren from './queries/repository/getObjectChildren';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -181,7 +184,8 @@ const allQueries = {
     getObjectsForItem,
     getProjectDocumentation,
     getIntermediaryFile,
-    discardUploadedAssetVersions
+    discardUploadedAssetVersions,
+    getObjectChildren
 };
 
 type GraphQLRequest = {
@@ -494,6 +498,16 @@ class GraphQLApi {
 
     async discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput, context?: Context): Promise<DiscardUploadedAssetVersionsResult> {
         const operationName = 'discardUploadedAssetVersions';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getObjectChildren(input: GetObjectChildrenInput, context?: Context): Promise<GetObjectChildrenResult> {
+        const operationName = 'getObjectChildren';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
