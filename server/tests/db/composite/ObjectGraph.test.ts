@@ -564,6 +564,189 @@ describe('DB Composite ObjectGraph Descendent', () => {
     });
 });
 
+describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
+    test('DB Composite ObjectGraph Descendent Unit Depth 1', async () => {
+        const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.unit1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeTruthy();
+        expect(OA.unit).toEqual(expect.arrayContaining([OHTS.unit1]));
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
+        expect(OA.subject).toBeTruthy();
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1, OHTS.subject2]));
+        expect(OA.item).toBeFalsy();
+        expect(OA.captureData).toBeFalsy();
+        expect(OA.model).toBeFalsy();
+        expect(OA.scene).toBeFalsy();
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeFalsy();
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeTruthy();
+        expect(OA.actor).toEqual(expect.arrayContaining([OHTS.actor1]));
+        expect(OA.stakeholder).toBeTruthy();
+        expect(OA.stakeholder).toEqual(expect.arrayContaining([OHTS.stakeholder1]));
+    });
+
+    test('DB Composite ObjectGraph Descendent Project Depth 1', async () => {
+        const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.project1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeFalsy();
+        expect(OA.project).toBeTruthy();
+        expect(OA.project).toEqual(expect.arrayContaining([OHTS.project1]));
+        expect(OA.subject).toBeTruthy();
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject2, OHTS.subject3, OHTS.subject4]));
+        expect(OA.item).toBeFalsy();
+        expect(OA.captureData).toBeFalsy();
+        expect(OA.model).toBeFalsy();
+        expect(OA.scene).toBeFalsy();
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeTruthy();
+        expect(OA.projectDocumentation).toEqual(expect.arrayContaining([OHTS.projectDocumentation1]));
+        expect(OA.asset).toBeFalsy();
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeFalsy();
+        expect(OA.stakeholder).toBeTruthy();
+        expect(OA.stakeholder).toEqual(expect.arrayContaining([OHTS.stakeholder1, OHTS.stakeholder2]));
+    });
+
+    test('DB Composite ObjectGraph Descendent Subject Depth 1', async () => {
+        const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.subject1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeFalsy();
+        expect(OA.project).toBeFalsy();
+        expect(OA.subject).toBeTruthy();
+        expect(OA.subject).toEqual(expect.arrayContaining([OHTS.subject1]));
+        expect(OA.item).toBeTruthy();
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1, OHTS.item2]));
+        expect(OA.captureData).toBeFalsy();
+        expect(OA.model).toBeFalsy();
+        expect(OA.scene).toBeFalsy();
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeTruthy();
+        testAssetIDs(OA.asset, [OHTS.assetT1]);
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeFalsy();
+        expect(OA.stakeholder).toBeFalsy();
+    });
+
+    test('DB Composite ObjectGraph Descendent Item', async () => {
+        const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.item1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeFalsy();
+        expect(OA.project).toBeFalsy();
+        expect(OA.subject).toBeFalsy();
+        expect(OA.item).toBeTruthy();
+        expect(OA.item).toEqual(expect.arrayContaining([OHTS.item1]));
+        expect(OA.captureData).toBeTruthy();
+        expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1, OHTS.captureData2]));
+        expect(OA.model).toBeTruthy();
+        expect(OA.model).toEqual(expect.arrayContaining([OHTS.model1, OHTS.model2, OHTS.model3, OHTS.model4]));
+        expect(OA.scene).toBeTruthy();
+        expect(OA.scene).toEqual(expect.arrayContaining([OHTS.scene1]));
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeTruthy();
+        testAssetIDs(OA.asset, [OHTS.assetT2]);
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeFalsy();
+        expect(OA.stakeholder).toBeFalsy();
+    });
+
+    test('DB Composite ObjectGraph Descendent Capture Data', async () => {
+        const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.captureData1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeFalsy();
+        expect(OA.project).toBeFalsy();
+        expect(OA.subject).toBeFalsy();
+        expect(OA.item).toBeFalsy();
+        expect(OA.captureData).toBeTruthy();
+        expect(OA.captureData).toEqual(expect.arrayContaining([OHTS.captureData1]));
+        expect(OA.model).toBeTruthy();
+        expect(OA.model).toEqual(expect.arrayContaining([OHTS.model1]));
+        expect(OA.scene).toBeFalsy();
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeTruthy();
+        testAssetIDs(OA.asset, [OHTS.asset1]);
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeTruthy();
+        expect(OA.actor).toEqual(expect.arrayContaining([OHTS.actor1, OHTS.actor2]));
+        expect(OA.stakeholder).toBeFalsy();
+    });
+
+    test('DB Composite ObjectGraph Descendent Model Master', async () => {
+        const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.model1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeFalsy();
+        expect(OA.project).toBeFalsy();
+        expect(OA.subject).toBeFalsy();
+        expect(OA.item).toBeFalsy();
+        expect(OA.captureData).toBeFalsy();
+        expect(OA.model).toBeTruthy();
+        expect(OA.model).toEqual(expect.arrayContaining([OHTS.model1, OHTS.model2, OHTS.model3, OHTS.model4]));
+        expect(OA.scene).toBeTruthy();
+        expect(OA.scene).toEqual(expect.arrayContaining([OHTS.scene1]));
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeTruthy();
+        testAssetIDs(OA.asset, [OHTS.asset2, OHTS.asset3, OHTS.asset4, OHTS.assetT4]);
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeFalsy();
+        expect(OA.stakeholder).toBeFalsy();
+    });
+
+    test('DB Composite ObjectGraph Descendent Model Derived', async () => {
+        const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.model2, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeFalsy();
+        expect(OA.project).toBeFalsy();
+        expect(OA.subject).toBeFalsy();
+        expect(OA.item).toBeFalsy();
+        expect(OA.captureData).toBeFalsy();
+        expect(OA.model).toBeTruthy();
+        expect(OA.model).toEqual(expect.arrayContaining([OHTS.model2]));
+        expect(OA.scene).toBeFalsy();
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeTruthy();
+        testAssetIDs(OA.asset, [OHTS.asset5]);
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeFalsy();
+        expect(OA.stakeholder).toBeFalsy();
+    });
+
+    test('DB Composite ObjectGraph Descendent Scene', async () => {
+        const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.scene1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        if (!OA)
+            return;
+        expect(OA.unit).toBeFalsy();
+        expect(OA.project).toBeFalsy();
+        expect(OA.subject).toBeFalsy();
+        expect(OA.item).toBeFalsy();
+        expect(OA.captureData).toBeFalsy();
+        expect(OA.model).toBeTruthy();
+        expect(OA.model).toEqual(expect.arrayContaining([OHTS.model2, OHTS.model3, OHTS.model4]));
+        expect(OA.scene).toBeTruthy();
+        expect(OA.scene).toEqual(expect.arrayContaining([OHTS.scene1]));
+        expect(OA.intermediaryFile).toBeFalsy();
+        expect(OA.projectDocumentation).toBeFalsy();
+        expect(OA.asset).toBeTruthy();
+        testAssetIDs(OA.asset, [OHTS.asset8, OHTS.assetT5]);
+        expect(OA.assetVersion).toBeFalsy();
+        expect(OA.actor).toBeFalsy();
+        expect(OA.stakeholder).toBeFalsy();
+    });
+});
+
 describe('DB Composite ObjectGraph All', () => {
     test('DB Composite ObjectGraph All Unit', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.unit1, DBAPI.eObjectGraphMode.eAll);

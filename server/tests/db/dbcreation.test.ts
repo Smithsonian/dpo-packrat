@@ -278,17 +278,13 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Identifier Subject Hookup', async () => {
         if (vocabulary)
-            identifierSubjectHookup = new DBAPI.Identifier({
+            identifierSubjectHookup = await UTIL.createIdentifierTest({
                 IdentifierValue: 'Test Identifier Null 2',
                 idVIdentifierType: vocabulary.idVocabulary,
                 idSystemObject: null,
                 idIdentifier: 0
             });
         expect(identifierSubjectHookup).toBeTruthy();
-        if (identifierSubjectHookup) {
-            expect(await identifierSubjectHookup.create()).toBeTruthy();
-            expect(identifierSubjectHookup.idIdentifier).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Subject', async () => {
@@ -682,32 +678,24 @@ describe('DB Creation Test Suite', () => {
 
     test('DB Creation: Identifier', async () => {
         if (systemObjectSubject && vocabulary)
-            identifier = new DBAPI.Identifier({
+            identifier = await UTIL.createIdentifierTest({
                 IdentifierValue: identifierValue,
                 idVIdentifierType: vocabulary.idVocabulary,
                 idSystemObject: systemObjectSubject.idSystemObject,
                 idIdentifier: 0
             });
         expect(identifier).toBeTruthy();
-        if (identifier) {
-            expect(await identifier.create()).toBeTruthy();
-            expect(identifier.idIdentifier).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: Identifier With Nulls', async () => {
         if (vocabulary)
-            identifierNull = new DBAPI.Identifier({
+            identifierNull = await UTIL.createIdentifierTest({
                 IdentifierValue: 'Test Identifier Null',
                 idVIdentifierType: vocabulary.idVocabulary,
                 idSystemObject: null,
                 idIdentifier: 0
             });
         expect(identifierNull).toBeTruthy();
-        if (identifierNull) {
-            expect(await identifierNull.create()).toBeTruthy();
-            expect(identifierNull.idIdentifier).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: IntermediaryFile', async () => {
@@ -3761,6 +3749,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(stakeholderFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: SystemObject.fetchAll', async () => {
+        const SOFetch: DBAPI.SystemObject[] | null = await DBAPI.SystemObject.fetchAll();
+        expect(SOFetch).toBeTruthy();
+        if (SOFetch) {
+            expect(SOFetch.length).toBeGreaterThan(0);
+            if (systemObjectAsset && systemObjectItem && systemObjectItemNulls && systemObjectScene && systemObjectSubject && systemObjectSubjectNulls)
+                expect(SOFetch).toEqual(expect.arrayContaining([ systemObjectAsset, systemObjectItem, systemObjectItemNulls, systemObjectScene, systemObjectSubject, systemObjectSubjectNulls ]));
+        }
+    });
+
     test('DB Fetch Special: SystemObjectXref.fetchXref', async () => {
         let xrefFetch: DBAPI.SystemObjectXref[] | null = null;
         if (systemObjectSubject && systemObjectScene) {
@@ -3799,6 +3797,16 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(unitFetch).toEqual(expect.arrayContaining([unit]));
         }
         expect(unitFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Unit.fetchAll', async () => {
+        const unitFetch: DBAPI.Unit[] | null = await DBAPI.Unit.fetchAll();
+        expect(unitFetch).toBeTruthy();
+        if (unitFetch) {
+            expect(unitFetch.length).toBeGreaterThan(0);
+            if (unit && unit2)
+                expect(unitFetch).toEqual(expect.arrayContaining([unit, unit2]));
+        }
     });
 
     test('DB Fetch Special: UnitEdan.fetchFromUnit', async () => {

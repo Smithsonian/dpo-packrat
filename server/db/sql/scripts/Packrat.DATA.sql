@@ -53,8 +53,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (7, 4, 'Focal S
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (7, 5, 'Focal Stack Focus Based');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 1, 'Raw');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 2, 'Processed');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 3, 'Processed, Zeroed');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 4, 'From Camera');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 3, 'From Camera');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (9, 1, 'Scan To Mesh');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (9, 2, 'CAD');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (10, 1, 'Point Cloud');
@@ -1246,3 +1245,8 @@ INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (1, 'SJ_BL');
 INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (1, 'SLC_YT');
 INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (1, 'SS_BL');
 INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (32, 'STRI_YT');
+
+-- Entries for Test code
+INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELECT 'ITEM_GUID_1', @idVocabARK, idSystemObject FROM SystemObject WHERE idItem = (SELECT idItem FROM Item WHERE NAME = '401524 turtle scute');
+INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELECT 'ITEM_GUID_2', @idVocabARK, idSystemObject FROM SystemObject WHERE idItem = (SELECT idItem FROM Item WHERE NAME = '401524 turtle scute');
+INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELECT 'ITEM_GUID_3', @idVocabARK, idSystemObject FROM SystemObject WHERE idItem = (SELECT idItem FROM Item WHERE NAME = '401524 turtle scute');

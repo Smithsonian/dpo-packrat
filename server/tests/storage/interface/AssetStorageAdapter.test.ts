@@ -8,6 +8,7 @@ import * as LOG from '../../../utils/logger';
 import { IngestMetadata } from '../../../utils/parser';
 import Config from '../../../config';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
+import { createItemAndIDsForBagitTesting } from '../../db/api/Item.util';
 import { AssetVersionContent } from '../../../types/graphql';
 
 
@@ -82,6 +83,14 @@ describe('AssetStorageAdapter Init', () => {
         if (!vAssetTypeLookup)
             return;
         vAssetTypeOther = vAssetTypeLookup;
+
+        await createItemAndIDsForBagitTesting({
+            idAssetThumbnail: null,
+            idGeoLocation: null,
+            Name: 'BagitTestingItem',
+            EntireSubject: true,
+            idItem: 0
+        });
     });
 });
 
