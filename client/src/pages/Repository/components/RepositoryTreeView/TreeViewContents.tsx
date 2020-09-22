@@ -17,12 +17,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         padding: '10px 5px',
         alignItems: 'center',
         color: palette.grey[400],
-        [breakpoints.down('md')]: {
+        [breakpoints.down('lg')]: {
             height: 40,
         },
     },
     emptyListText: {
-        [breakpoints.down('md')]: {
+        [breakpoints.down('lg')]: {
             fontSize: 12,
         },
     }

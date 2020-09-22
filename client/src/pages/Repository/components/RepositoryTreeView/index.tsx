@@ -67,9 +67,13 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                 </>
             )
                 : (
-                    <Box className={classes.fullView}>
-                        <CircularProgress size={30} />
-                    </Box>
+                    <>
+                        {!noFilter && (
+                            <Box className={classes.fullView}>
+                                <CircularProgress size={30} />
+                            </Box>
+                        )}
+                    </>
                 )}
 
         </TreeView>
