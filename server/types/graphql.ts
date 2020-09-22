@@ -29,6 +29,7 @@ export type Query = {
     getItemsForSubject: GetItemsForSubjectResult;
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
+    getObjectChildren: GetObjectChildrenResult;
     getObjectsForItem: GetObjectsForItemResult;
     getProject: GetProjectResult;
     getProjectDocumentation: GetProjectDocumentationResult;
@@ -98,6 +99,10 @@ export type QueryGetLicenseArgs = {
 
 export type QueryGetModelArgs = {
     input: GetModelInput;
+};
+
+export type QueryGetObjectChildrenArgs = {
+    input: GetObjectChildrenInput;
 };
 
 export type QueryGetObjectsForItemArgs = {
@@ -798,6 +803,29 @@ export type PaginationInput = {
     skip?: Maybe<Scalars['Int']>;
     offset?: Maybe<Scalars['Int']>;
     size?: Maybe<Scalars['Int']>;
+};
+
+export type GetObjectChildrenInput = {
+    idRoot: Scalars['Int'];
+    objectTypes: Array<Scalars['Int']>;
+    metadataColumns: Array<Scalars['Int']>;
+};
+
+export type NavigationResultEntry = {
+    __typename?: 'NavigationResultEntry';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    objectType: Scalars['Int'];
+    idObject: Scalars['Int'];
+    metadata: Array<Scalars['String']>;
+};
+
+export type GetObjectChildrenResult = {
+    __typename?: 'GetObjectChildrenResult';
+    success: Scalars['Boolean'];
+    error: Scalars['String'];
+    entries: Array<NavigationResultEntry>;
+    metadataColumns: Array<Scalars['Int']>;
 };
 
 export type CreateSceneInput = {

@@ -14,6 +14,7 @@ type Query {
   getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
+  getObjectChildren(input: GetObjectChildrenInput!): GetObjectChildrenResult!
   getObjectsForItem(input: GetObjectsForItemInput!): GetObjectsForItemResult!
   getProject(input: GetProjectInput!): GetProjectResult!
   getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
@@ -581,6 +582,27 @@ input PaginationInput {
   skip: Int
   offset: Int
   size: Int
+}
+
+input GetObjectChildrenInput {
+  idRoot: Int!
+  objectTypes: [Int!]!
+  metadataColumns: [Int!]!
+}
+
+type NavigationResultEntry {
+  idSystemObject: Int!
+  name: String!
+  objectType: Int!
+  idObject: Int!
+  metadata: [String!]!
+}
+
+type GetObjectChildrenResult {
+  success: Boolean!
+  error: String!
+  entries: [NavigationResultEntry!]!
+  metadataColumns: [Int!]!
 }
 
 input CreateSceneInput {
