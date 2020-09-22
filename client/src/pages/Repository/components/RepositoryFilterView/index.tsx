@@ -13,7 +13,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         background: palette.primary.light,
         borderRadius: 10,
         padding: 20,
-        [breakpoints.down('md')]: {
+        [breakpoints.down('lg')]: {
             padding: 10,
             borderRadius: 5,
         }
@@ -28,7 +28,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         background: 'transparent',
         borderBottom: `1px solid ${palette.primary.main}`,
         fontFamily: typography.fontFamily,
-        [breakpoints.down('md')]: {
+        [breakpoints.down('lg')]: {
             height: 20,
             fontSize: 14,
             padding: '5px 0px',
@@ -50,7 +50,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         cursor: 'pointer',
         color: palette.primary.contrastText,
         background: palette.background.paper,
-        [breakpoints.down('md')]: {
+        [breakpoints.down('lg')]: {
             minWidth: 100,
             width: 100,
             padding: '5px 10px',
@@ -65,7 +65,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     filterText: {
         marginLeft: 10,
-        [breakpoints.down('md')]: {
+        [breakpoints.down('lg')]: {
             marginLeft: 5,
             fontSize: 10
         },

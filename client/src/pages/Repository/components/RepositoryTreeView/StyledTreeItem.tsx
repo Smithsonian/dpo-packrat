@@ -30,7 +30,7 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         '& .close': {
             opacity: 0.3
         },
-        [breakpoints.down('md')]: {
+        [breakpoints.down('lg')]: {
             width: 15
         }
     },
@@ -47,7 +47,7 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         fontWeight: typography.fontWeightLight,
         borderRadius: 5,
         padding: '5px 10px',
-        [breakpoints.down('md')]: {
+        [breakpoints.down('lg')]: {
             fontSize: 12,
             padding: '3px 6px',
         }
