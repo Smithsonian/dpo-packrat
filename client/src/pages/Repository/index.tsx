@@ -12,7 +12,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         maxWidth: '70vw',
         flexDirection: 'column',
         padding: 40,
-        [breakpoints.down('md')]: {
+        [breakpoints.down('lg')]: {
             padding: 20,
             maxWidth: '100vw'
         }

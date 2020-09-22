@@ -33,6 +33,7 @@ export type Query = {
     getItemsForSubject: GetItemsForSubjectResult;
     getLicense: GetLicenseResult;
     getModel: GetModelResult;
+    getObjectChildren: GetObjectChildrenResult;
     getObjectsForItem: GetObjectsForItemResult;
     getProject: GetProjectResult;
     getProjectDocumentation: GetProjectDocumentationResult;
@@ -116,6 +117,11 @@ export type QueryGetLicenseArgs = {
 
 export type QueryGetModelArgs = {
     input: GetModelInput;
+};
+
+
+export type QueryGetObjectChildrenArgs = {
+    input: GetObjectChildrenInput;
 };
 
 
@@ -844,6 +850,29 @@ export type PaginationInput = {
     skip?: Maybe<Scalars['Int']>;
     offset?: Maybe<Scalars['Int']>;
     size?: Maybe<Scalars['Int']>;
+};
+
+export type GetObjectChildrenInput = {
+    idRoot: Scalars['Int'];
+    objectTypes: Array<Scalars['Int']>;
+    metadataColumns: Array<Scalars['Int']>;
+};
+
+export type NavigationResultEntry = {
+    __typename?: 'NavigationResultEntry';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    objectType: Scalars['Int'];
+    idObject: Scalars['Int'];
+    metadata: Array<Scalars['String']>;
+};
+
+export type GetObjectChildrenResult = {
+    __typename?: 'GetObjectChildrenResult';
+    success: Scalars['Boolean'];
+    error: Scalars['String'];
+    entries: Array<NavigationResultEntry>;
+    metadataColumns: Array<Scalars['Int']>;
 };
 
 export type CreateSceneInput = {
@@ -1908,6 +1937,27 @@ export type GetModelQuery = (
                 Model?: Maybe<(
                     { __typename?: 'Model' }
                     & Pick<Model, 'idModel'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetObjectChildrenQueryVariables = Exact<{
+    input: GetObjectChildrenInput;
+}>;
+
+
+export type GetObjectChildrenQuery = (
+    { __typename?: 'Query' }
+    & {
+        getObjectChildren: (
+            { __typename?: 'GetObjectChildrenResult' }
+            & Pick<GetObjectChildrenResult, 'success' | 'error' | 'metadataColumns'>
+            & {
+                entries: Array<(
+                    { __typename?: 'NavigationResultEntry' }
+                    & Pick<NavigationResultEntry, 'idSystemObject' | 'name' | 'objectType' | 'idObject' | 'metadata'>
                 )>
             }
         )
@@ -3179,6 +3229,48 @@ export function useGetModelLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetModelQueryHookResult = ReturnType<typeof useGetModelQuery>;
 export type GetModelLazyQueryHookResult = ReturnType<typeof useGetModelLazyQuery>;
 export type GetModelQueryResult = Apollo.QueryResult<GetModelQuery, GetModelQueryVariables>;
+export const GetObjectChildrenDocument = gql`
+    query getObjectChildren($input: GetObjectChildrenInput!) {
+  getObjectChildren(input: $input) {
+    success
+    error
+    entries {
+      idSystemObject
+      name
+      objectType
+      idObject
+      metadata
+    }
+    metadataColumns
+  }
+}
+    `;
+
+/**
+ * __useGetObjectChildrenQuery__
+ *
+ * To run a query within a React component, call `useGetObjectChildrenQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetObjectChildrenQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetObjectChildrenQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetObjectChildrenQuery(baseOptions?: Apollo.QueryHookOptions<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>) {
+    return Apollo.useQuery<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>(GetObjectChildrenDocument, baseOptions);
+}
+export function useGetObjectChildrenLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>) {
+    return Apollo.useLazyQuery<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>(GetObjectChildrenDocument, baseOptions);
+}
+export type GetObjectChildrenQueryHookResult = ReturnType<typeof useGetObjectChildrenQuery>;
+export type GetObjectChildrenLazyQueryHookResult = ReturnType<typeof useGetObjectChildrenLazyQuery>;
+export type GetObjectChildrenQueryResult = Apollo.QueryResult<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>;
 export const GetIntermediaryFileDocument = gql`
     query getIntermediaryFile($input: GetIntermediaryFileInput!) {
   getIntermediaryFile(input: $input) {

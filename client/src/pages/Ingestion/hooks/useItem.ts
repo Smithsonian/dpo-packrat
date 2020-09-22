@@ -31,6 +31,12 @@ function useItem(): UseItem {
                 return;
             }
 
+            const newItemSelected = lodash.find(fetchedItems, { selected: true });
+
+            if (newItemSelected) {
+                currentDefaultItem.selected = false;
+            }
+
             const newItems: StateItem[] = [currentDefaultItem].concat(fetchedItems);
 
             ingestionDispatch(addItemsAction(newItems));
