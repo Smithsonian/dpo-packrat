@@ -4,6 +4,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import RepositoryFilterView from './components/RepositoryFilterView';
 import RepositoryTreeView from './components/RepositoryTreeView';
 import RepositoryTreeHeader from './components/RepositoryTreeView/RepositoryTreeHeader';
+import useDebounce from './hooks/useDebounce';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
@@ -30,7 +31,9 @@ function Repository(): React.ReactElement {
         units: true,
         projects: false,
     };
+
     const [filter, setFilter] = useState<RepositoryFilter>(initialFilterState);
+    const debouncedFilter = useDebounce<RepositoryFilter>(filter, 200);
 
     const onChange = (name: string, value: string | boolean) => {
         setFilter(filter => ({ ...filter, [name]: value }));
@@ -40,7 +43,7 @@ function Repository(): React.ReactElement {
         <Box className={classes.container}>
             <RepositoryFilterView filter={filter} onChange={onChange} />
             <RepositoryTreeHeader />
-            <RepositoryTreeView filter={filter} />
+            <RepositoryTreeView filter={debouncedFilter} />
         </Box>
     );
 }
