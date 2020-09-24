@@ -3,6 +3,7 @@ import { fade, withStyles, Theme } from '@material-ui/core/styles';
 import { TreeItem, TreeItemProps } from '@material-ui/lab';
 import React from 'react';
 import { animated, useSpring } from 'react-spring';
+import { colorWithOpacity } from '../../../../theme/colors';
 
 interface TransitionComponentProps {
     in?: boolean;
@@ -22,6 +23,10 @@ function TransitionComponent(props: TransitionComponentProps): React.ReactElemen
             <Collapse {...props} />
         </animated.div>
     );
+}
+
+interface StyledTreeItemProps {
+    color: string;
 }
 
 const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) => ({
@@ -50,8 +55,24 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         [breakpoints.down('lg')]: {
             fontSize: 12,
             padding: '3px 6px',
+        },
+        backgroundColor: 'transparent !important',
+        '&:hover': {
+            backgroundColor: 'transparent',
         }
+    },
+    content: {
+        backgroundColor: ({ color }: StyledTreeItemProps) => color,
+        borderRadius: 5,
+        transition: 'all 200ms ease',
+        '&:hover': {
+            transform: 'scale(1.01)',
+            backgroundColor: ({ color }: StyledTreeItemProps) => colorWithOpacity(color, 90),
+        }
+    },
+    selected: {
+        backgroundColor: 'transparent'
     }
-}))((props: TreeItemProps) => <TreeItem {...props} TransitionComponent={TransitionComponent} />);
+}))((props: TreeItemProps & StyledTreeItemProps) => <TreeItem {...props} TransitionComponent={TransitionComponent} />);
 
 export default StyledTreeItem;
