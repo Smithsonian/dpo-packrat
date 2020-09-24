@@ -3,10 +3,11 @@ import { Box, Typography, CircularProgress } from '@material-ui/core';
 import { TreeView } from '@material-ui/lab';
 import React from 'react';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
-import RepositoryTreeNode from './RepositoryTreeNode';
+import RepositoryTreeNode, { getObjectInterfaceDetails } from './RepositoryTreeNode';
 import { RepositoryFilter } from '../../index';
 import { useGetRootObjects } from '../../hooks/useRepository';
 import { getSystemObjectTypesForFilter, getSortedTreeEntries } from '../../../../utils/repository';
+import { RepositoryColorVariant } from '../../../../theme/colors';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -55,11 +56,16 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                 <>
                     {entries.map((entry, index: number) => {
                         const { idSystemObject, name, objectType, idObject } = entry;
+                        const variant = index % 2 ? RepositoryColorVariant.Light : RepositoryColorVariant.Dark;
+                        const { icon, color } = getObjectInterfaceDetails(objectType, variant);
+
                         return (
                             <RepositoryTreeNode
                                 key={index}
                                 idSystemObject={idSystemObject}
                                 name={name}
+                                icon={icon}
+                                color={color}
                                 objectType={objectType}
                                 idObject={idObject}
                             />
