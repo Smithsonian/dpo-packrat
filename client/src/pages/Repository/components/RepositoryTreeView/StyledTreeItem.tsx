@@ -1,5 +1,5 @@
-import { Collapse } from '@material-ui/core';
-import { fade, withStyles, Theme } from '@material-ui/core/styles';
+import { Box, Collapse } from '@material-ui/core';
+import { fade, withStyles, Theme, makeStyles } from '@material-ui/core/styles';
 import { TreeItem, TreeItemProps } from '@material-ui/lab';
 import React from 'react';
 import { animated, useSpring } from 'react-spring';
@@ -27,6 +27,7 @@ function TransitionComponent(props: TransitionComponentProps): React.ReactElemen
 
 interface StyledTreeItemProps {
     color: string;
+    metadata: string[];
 }
 
 const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) => ({
@@ -35,12 +36,14 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         '& .close': {
             opacity: 0.3
         },
+        marginLeft: 5,
         [breakpoints.down('lg')]: {
-            width: 15
+            width: 15,
+            marginLeft: 8,
         }
     },
     root: {
-        marginTop: 5
+        marginTop: 5,
     },
     group: {
         marginLeft: 8,
@@ -73,6 +76,61 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
     selected: {
         backgroundColor: 'transparent'
     }
-}))((props: TreeItemProps & StyledTreeItemProps) => <TreeItem {...props} TransitionComponent={TransitionComponent} />);
+}))((props: TreeItemProps & StyledTreeItemProps) => <TreeItem {...props} label={<TreeLabel label={props.label} metadata={props.metadata} />} TransitionComponent={TransitionComponent} />);
+
+const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
+    metadata: {
+        display: 'flex',
+        width: '35vw',
+        [breakpoints.down('lg')]: {
+            width: '42vw',
+        }
+    },
+    text: {
+        display: 'flex',
+        alignItems: 'center',
+        fontSize: ({ header }: MetadataViewProps) => header ? typography.pxToRem(18) : undefined,
+        color: ({ header }: MetadataViewProps) => header ? palette.primary.dark : palette.grey[900],
+        fontWeight: ({ header }: MetadataViewProps) => header ? typography.fontWeightRegular : typography.fontWeightLight,
+        [breakpoints.down('lg')]: {
+            fontSize: ({ header }: MetadataViewProps) => header ? typography.pxToRem(14) : undefined,
+        }
+    }
+}));
+
+interface TreeLabelProps {
+    label?: React.ReactNode;
+    metadata: string[];
+}
+
+function TreeLabel(props: TreeLabelProps): React.ReactElement {
+    const { label, metadata } = props;
+
+    return (
+        <Box display='flex'>
+            <Box display='flex' flex={1} alignItems='center'>{label}</Box>
+            <MetadataView header={false} metadata={metadata} />
+        </Box>
+    );
+}
+
+interface MetadataViewProps {
+    header: boolean;
+    metadata: string[];
+}
+
+export function MetadataView(props: MetadataViewProps): React.ReactElement {
+    const { metadata } = props;
+    const classes = useStyles(props);
+    const [unit, subjectId, itemName] = metadata;
+
+    return (
+        <Box className={classes.metadata}>
+            <Box className={classes.text} width='15%'>{unit}</Box>
+            <Box className={classes.text} flex={1} >{subjectId}</Box>
+            <Box className={classes.text} width='30%'>{itemName}</Box>
+        </Box>
+    );
+}
 
 export default StyledTreeItem;

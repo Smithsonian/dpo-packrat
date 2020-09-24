@@ -9,13 +9,17 @@ import { useGetRootObjects } from '../../hooks/useRepository';
 import { getSystemObjectTypesForFilter, getSortedTreeEntries } from '../../../../utils/repository';
 import { RepositoryColorVariant } from '../../../../theme/colors';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
-        flex: 1,
-        maxHeight: '70vh',
+        flex: 5,
+        maxHeight: '68vh',
         flexDirection: 'column',
-        overflow: 'auto'
+        overflow: 'auto',
+        overflowX: 'hidden',
+        [breakpoints.down('lg')]: {
+            maxHeight: '65vh',
+        }
     },
     fullView: {
         display: 'flex',
@@ -55,7 +59,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             {!getRootObjectsLoading && !getRootObjectsError ? (
                 <>
                     {entries.map((entry, index: number) => {
-                        const { idSystemObject, name, objectType, idObject } = entry;
+                        const { idSystemObject, name, objectType, idObject, metadata } = entry;
                         const variant = index % 2 ? RepositoryColorVariant.Light : RepositoryColorVariant.Dark;
                         const { icon, color } = getObjectInterfaceDetails(objectType, variant);
 
@@ -68,6 +72,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                                 color={color}
                                 objectType={objectType}
                                 idObject={idObject}
+                                metadata={metadata}
                             />
                         );
                     })}
