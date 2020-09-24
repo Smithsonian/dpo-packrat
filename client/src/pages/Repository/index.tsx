@@ -3,7 +3,7 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import RepositoryFilterView from './components/RepositoryFilterView';
 import RepositoryTreeView from './components/RepositoryTreeView';
-import RepositoryMetadataView from './components/RepositoryMetadataView';
+import RepositoryTreeHeader from './components/RepositoryTreeView/RepositoryTreeHeader';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
@@ -39,10 +39,8 @@ function Repository(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <RepositoryFilterView filter={filter} onChange={onChange} />
-            <Box display='flex' flex={5} mt={2}>
-                <RepositoryTreeView filter={filter} />
-                <RepositoryMetadataView />
-            </Box>
+            <RepositoryTreeHeader />
+            <RepositoryTreeView filter={filter} />
         </Box>
     );
 }

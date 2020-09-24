@@ -17,10 +17,11 @@ interface RepositoryTreeNodeProps {
     color: string;
     objectType: eSystemObjectType;
     icon: React.ReactElement;
+    metadata: string[];
 }
 
 function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement {
-    const { idSystemObject, idObject, name, objectType, icon, color } = props;
+    const { idSystemObject, idObject, name, objectType, icon, color, metadata } = props;
     const nodeId = getRepositoryTreeNodeId(idSystemObject, idObject, objectType);
 
     const { getObjectChildren, getObjectChildrenData, getObjectChildrenLoading, getObjectChildrenError } = useGetObjectChildren(idSystemObject);
@@ -37,10 +38,11 @@ function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement 
             onIconClick={getObjectChildren}
             nodeId={nodeId}
             label={name}
+            metadata={metadata}
         >
             <TreeViewContents name={name} loading={getObjectChildrenLoading && !getObjectChildrenError} isEmpty={isEmpty} objectType={objectType}>
                 {entries.map((entry, index: number) => {
-                    const { idSystemObject, name, objectType, idObject } = entry;
+                    const { idSystemObject, name, objectType, idObject, metadata } = entry;
                     const variant = index % 2 ? RepositoryColorVariant.Light : RepositoryColorVariant.Dark;
                     const { icon, color } = getObjectInterfaceDetails(objectType, variant);
 
@@ -53,6 +55,7 @@ function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement 
                             color={color}
                             objectType={objectType}
                             idObject={idObject}
+                            metadata={metadata}
                         />
                     );
                 })}
