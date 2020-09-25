@@ -13,6 +13,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         background: palette.primary.light,
         borderRadius: 10,
         padding: 20,
+        marginBottom: 10,
         [breakpoints.down('lg')]: {
             padding: 10,
             borderRadius: 5,

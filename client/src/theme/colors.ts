@@ -29,8 +29,4 @@ export enum RepositoryColorVariant {
     Light
 }
 
-export function colorWithOpacity(color: string, percentage: number): string {
-    return `${color}${percentage}`;
-}
-
 export default Colors;

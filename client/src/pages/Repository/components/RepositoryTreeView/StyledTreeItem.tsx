@@ -3,7 +3,7 @@ import { fade, withStyles, Theme, makeStyles } from '@material-ui/core/styles';
 import { TreeItem, TreeItemProps } from '@material-ui/lab';
 import React from 'react';
 import { animated, useSpring } from 'react-spring';
-import { colorWithOpacity } from '../../../../theme/colors';
+import { trimmedMetadataField } from '../../../../utils/repository';
 
 interface TransitionComponentProps {
     in?: boolean;
@@ -46,9 +46,12 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         marginTop: 5,
     },
     group: {
-        marginLeft: 8,
+        marginLeft: 10,
         paddingLeft: 20,
-        borderLeft: `1px dashed ${fade(palette.text.primary, 0.4)}`
+        borderLeft: `1px dashed ${fade(palette.text.primary, 0.2)}`,
+        [breakpoints.down('lg')]: {
+            paddingLeft: 15,
+        }
     },
     label: {
         fontSize: 16,
@@ -70,7 +73,7 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         transition: 'all 200ms ease',
         '&:hover': {
             transform: 'scale(1.01)',
-            backgroundColor: ({ color }: StyledTreeItemProps) => colorWithOpacity(color, 90),
+            backgroundColor: ({ color }: StyledTreeItemProps) => fade(color, 0.4),
         }
     },
     selected: {
@@ -92,6 +95,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontSize: ({ header }: MetadataViewProps) => header ? typography.pxToRem(18) : undefined,
         color: ({ header }: MetadataViewProps) => header ? palette.primary.dark : palette.grey[900],
         fontWeight: ({ header }: MetadataViewProps) => header ? typography.fontWeightRegular : typography.fontWeightLight,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
         [breakpoints.down('lg')]: {
             fontSize: ({ header }: MetadataViewProps) => header ? typography.pxToRem(14) : undefined,
         }
@@ -126,8 +131,8 @@ export function MetadataView(props: MetadataViewProps): React.ReactElement {
 
     return (
         <Box className={classes.metadata}>
-            <Box className={classes.text} width='15%'>{unit}</Box>
-            <Box className={classes.text} flex={1} >{subjectId}</Box>
+            <Box className={classes.text} component='div' whiteSpace='normal' width='15%'>{unit}</Box>
+            <Box className={classes.text} flex={1}>{trimmedMetadataField(subjectId)}</Box>
             <Box className={classes.text} width='30%'>{itemName}</Box>
         </Box>
     );

@@ -9,7 +9,10 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         height: 50,
         background: palette.primary.light,
         borderRadius: 5,
-        margin: '10px 0px 5px 0px',
+        margin: '0px 0px 5px 0px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
         [breakpoints.down('lg')]: {
             height: 40,
         }
