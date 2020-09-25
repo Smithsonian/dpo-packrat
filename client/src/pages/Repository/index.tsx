@@ -3,18 +3,17 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import RepositoryFilterView from './components/RepositoryFilterView';
 import RepositoryTreeView from './components/RepositoryTreeView';
-import RepositoryMetadataView from './components/RepositoryMetadataView';
+import useDebounce from './hooks/useDebounce';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        maxWidth: '70vw',
+        maxWidth: '100vw',
         flexDirection: 'column',
         padding: 40,
         [breakpoints.down('lg')]: {
             padding: 20,
-            maxWidth: '100vw'
         }
     }
 }));
@@ -30,19 +29,25 @@ function Repository(): React.ReactElement {
         units: true,
         projects: false,
     };
+
     const [filter, setFilter] = useState<RepositoryFilter>(initialFilterState);
+    const debouncedFilter = useDebounce<RepositoryFilter>(filter, 200);
 
     const onChange = (name: string, value: string | boolean) => {
-        setFilter(filter => ({ ...filter, [name]: value }));
+        setFilter(filter => {
+            return {
+                ...filter,
+                [name]: value,
+                ...(name === 'units' && { projects: false }),
+                ...(name === 'projects' && { units: false }),
+            };
+        });
     };
 
     return (
         <Box className={classes.container}>
             <RepositoryFilterView filter={filter} onChange={onChange} />
-            <Box display='flex' flex={5} mt={2}>
-                <RepositoryTreeView filter={filter} />
-                <RepositoryMetadataView />
-            </Box>
+            <RepositoryTreeView filter={debouncedFilter} />
         </Box>
     );
 }

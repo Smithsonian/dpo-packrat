@@ -10,6 +10,7 @@ import Metadata from './components/Metadata';
 import SubjectItem from './components/SubjectItem';
 import { AppContext } from '../../context';
 import { Prompt } from 'react-router-dom';
+import useIngest from './hooks/useIngest';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -22,6 +23,7 @@ function Ingestion(): React.ReactElement {
     const classes = useStyles();
     const { path } = useRouteMatch();
     const { ingestion: { metadatas } } = useContext(AppContext);
+    const { ingestionReset } = useIngest();
 
     const [options, setOptions] = useState<IngestionSidebarOption[]>([]);
 
@@ -61,7 +63,14 @@ function Ingestion(): React.ReactElement {
         }
 
         if (allowChange) return true;
-        return 'Are you sure you want to go to navigate away? changes might be lost';
+
+        const isConfirmed = global.confirm('Are you sure you want to go to navigate away? changes might be lost');
+
+        if (isConfirmed) {
+            ingestionReset();
+        }
+
+        return isConfirmed;
     };
 
     return (

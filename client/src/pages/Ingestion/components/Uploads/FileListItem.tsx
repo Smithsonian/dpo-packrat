@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box, Typography, Select, MenuItem, CircularProgress } from '@material-ui/core';
 import { green, red, yellow, grey, blue } from '@material-ui/core/colors';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, fade } from '@material-ui/core/styles';
 import { IoIosCloseCircle } from 'react-icons/io';
 import { FaRedo, FaRegCircle, FaCheckCircle } from 'react-icons/fa';
 import { MdFileUpload } from 'react-icons/md';
-import Colors, { colorWithOpacity } from '../../../../theme/colors';
+import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
 import { FileId, VocabularyOption } from '../../../../context';
 import { motion } from 'framer-motion';
@@ -73,7 +73,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         padding: '0px 10px',
         borderRadius: 5,
         fontSize: '0.8rem',
-        border: `1px solid ${colorWithOpacity(palette.primary.main, 66)}`
+        border: `1px solid ${fade(palette.primary.main, 0.3)}`
     },
     options: {
         display: 'flex',
@@ -90,7 +90,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         position: 'absolute',
         height: '100%',
         width: ({ progress }: FileListItemProps) => `${progress}%`,
-        backgroundColor: ({ complete, failed }: FileListItemProps) => failed ? colorWithOpacity(palette.error.light, 66) : complete ? colorWithOpacity(Colors.upload.success, 80) : palette.secondary.light,
+        backgroundColor: ({ complete, failed }: FileListItemProps) => failed ? fade(palette.error.light, 0.3) : complete ? fade(Colors.upload.success, 0.4) : palette.secondary.light,
         zIndex: 5,
         top: 0,
         left: 0,
