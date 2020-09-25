@@ -14,11 +14,11 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        maxHeight: '68vh',
+        maxHeight: '72vh',
         flexDirection: 'column',
         overflow: 'auto',
         [breakpoints.down('lg')]: {
-            maxHeight: '65vh',
+            maxHeight: '70vh',
         }
     },
     fullView: {
