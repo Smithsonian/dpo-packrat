@@ -38,6 +38,7 @@ import useMetadata from './useMetadata';
 import useProject from './useProject';
 import useSubject from './useSubject';
 import useVocabularyEntries from './useVocabularyEntries';
+import { generateFileId } from '../../../utils/upload';
 
 type MetadataUpdate = {
     valid: boolean;
@@ -81,6 +82,19 @@ const useFilesUpload = (): UseFilesUpload => {
 
         const idAssetVersions: number[] = lodash.map(selectedFiles, ({ id }) => parseFileId(id));
 
+        const defaultIdentifier: StateIdentifier = {
+            id: 0,
+            identifier: '',
+            identifierType: getInitialEntry(eVocabularySetID.eIdentifierIdentifierType),
+            selected: false
+        };
+
+        const defaultVocabularyFields = {
+            ...defaultPhotogrammetryFields,
+            datasetType: getInitialEntry(eVocabularySetID.eCaptureDataDatasetType),
+            identifiers: [defaultIdentifier]
+        };
+
         try {
             const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({
                 query: GetAssetVersionsDetailsDocument,
@@ -105,14 +119,17 @@ const useFilesUpload = (): UseFilesUpload => {
 
                 for (let index = 0; index < Details.length; index++) {
                     const { idAssetVersion, SubjectUnitIdentifier: foundSubjectUnitIdentifier, Project: foundProject, Item: foundItem, CaptureDataPhoto } = Details[index];
+
                     if (foundSubjectUnitIdentifier) {
                         const subject: StateSubject = parseSubjectUnitIdentifierToState(foundSubjectUnitIdentifier);
                         subjects.push(subject);
                     }
+
                     if (foundProject) {
                         const stateProjects: StateProject[] = foundProject.map((project: Project, index: number) => parseProjectToState(project, !index));
                         projects.push(...stateProjects);
                     }
+
                     if (foundItem) {
                         const item: StateItem = parseItemToState(foundItem, !index, index);
                         items.push(item);
@@ -128,7 +145,7 @@ const useFilesUpload = (): UseFilesUpload => {
 
                     if (CaptureDataPhoto) {
                         const { identifiers, folders } = CaptureDataPhoto;
-                        const stateIdentifiers: StateIdentifier[] = identifiers.map(
+                        const parsedIdentifiers: StateIdentifier[] = identifiers.map(
                             ({ identifier, identifierType }, index): StateIdentifier => ({
                                 id: index,
                                 identifier,
@@ -137,10 +154,12 @@ const useFilesUpload = (): UseFilesUpload => {
                             })
                         );
 
+                        const stateIdentifiers = parsedIdentifiers.length ? parsedIdentifiers : defaultVocabularyFields.identifiers;
+
                         metadataStep = {
                             file,
                             photogrammetry: {
-                                ...defaultPhotogrammetryFields,
+                                ...defaultVocabularyFields,
                                 ...(CaptureDataPhoto && {
                                     ...CaptureDataPhoto,
                                     dateCaptured: new Date(CaptureDataPhoto.dateCaptured),
@@ -149,12 +168,13 @@ const useFilesUpload = (): UseFilesUpload => {
                                 })
                             }
                         };
+
                         metadatas.push(metadataStep);
                     } else {
                         metadataStep = {
                             file,
                             photogrammetry: {
-                                ...defaultPhotogrammetryFields
+                                ...defaultVocabularyFields
                             }
                         };
                         metadatas.push(metadataStep);
@@ -192,7 +212,7 @@ const useFilesUpload = (): UseFilesUpload => {
             if (acceptedFiles.length) {
                 const ingestionFiles: IngestionFile[] = [];
                 acceptedFiles.forEach((file: File): void => {
-                    const id = `${file.name.replace(/[^\w\s]/gi, '')}${files.length}`;
+                    const id = generateFileId();
                     const alreadyContains = !!lodash.find(files, { id });
 
                     const { name, size } = file;
@@ -314,6 +334,11 @@ const useFilesUpload = (): UseFilesUpload => {
         async (ingestionFile: IngestionFile) => {
             const { id, file, type } = ingestionFile;
 
+            const completeAction: IngestionDispatchAction = {
+                type: UPLOAD_ACTIONS.COMPLETE,
+                id
+            };
+
             const errorAction: IngestionDispatchAction = {
                 type: UPLOAD_ACTIONS.FAILED,
                 id
@@ -361,6 +386,7 @@ const useFilesUpload = (): UseFilesUpload => {
                     const { status, error } = uploadAsset;
 
                     if (status === UploadStatus.Complete) {
+                        ingestionDispatch(completeAction);
                         toast.success(`Upload finished for ${file.name}`);
                     } else if (status === UploadStatus.Failed) {
                         const errorMessage = error || `Upload failed for ${file.name}`;
@@ -389,7 +415,7 @@ const useFilesUpload = (): UseFilesUpload => {
             return;
         }
 
-        const isConfirmed = global.confirm('Do you want to discard current items?');
+        const isConfirmed = global.confirm('Do you want to discard selected items?');
 
         if (!isConfirmed) return;
 

@@ -87,7 +87,7 @@ export type PhotogrammetryFields = {
     clusterType: number | null;
     clusterGeometryFieldId: number | null;
     cameraSettingUniform: boolean;
-    directory: string | null;
+    directory: string;
 };
 
 export type StateMetadata = {
@@ -117,6 +117,7 @@ export enum UPLOAD_ACTIONS {
     PROGRESS = 'PROGRESS',
     CANCELLED = 'CANCELLED',
     RETRY = 'RETRY',
+    COMPLETE = 'COMPLETE',
     REMOVE = 'REMOVE',
     SELECT = 'SELECT',
     SET_CANCEL_HANDLER = 'SET_CANCEL_HANDLER',
@@ -142,6 +143,7 @@ export enum ITEM_ACTIONS {
 export enum METADATA_ACTIONS {
     ADD_METADATA = 'ADD_METADATA',
     UPDATE_METADATA_FIELDS = 'UPDATE_METADATA_FIELDS',
+    INGESTION_RESET = 'INGESTION_RESET',
     INGESTION_COMPLETE = 'INGESTION_COMPLETE'
 }
 
@@ -178,6 +180,7 @@ type UploadDispatchAction =
     | FAILED
     | PROGRESS
     | CANCELLED
+    | COMPLETE
     | REMOVE
     | SELECT
     | SET_CANCEL_HANDLER
@@ -222,6 +225,11 @@ type CANCELLED = {
 
 type RETRY = {
     type: UPLOAD_ACTIONS.RETRY;
+    id: FileId;
+};
+
+type COMPLETE = {
+    type: UPLOAD_ACTIONS.COMPLETE;
     id: FileId;
 };
 
@@ -288,7 +296,7 @@ type UPDATE_ITEM = {
     item: StateItem;
 };
 
-type MetadataDispatchAction = ADD_METADATA | UPDATE_METADATA_FIELDS | INGESTION_COMPLETE;
+type MetadataDispatchAction = ADD_METADATA | UPDATE_METADATA_FIELDS | INGESTION_COMPLETE | INGESTION_RESET;
 
 export type MetadataFieldValue = string | number | boolean | Date;
 
@@ -304,6 +312,10 @@ type UPDATE_METADATA_FIELDS = {
 
 type INGESTION_COMPLETE = {
     type: METADATA_ACTIONS.INGESTION_COMPLETE;
+};
+
+type INGESTION_RESET = {
+    type: METADATA_ACTIONS.INGESTION_RESET;
 };
 
 type VocabularyDispatchAction = ADD_VOCABULARIES;
@@ -411,6 +423,15 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                             lodash.set(file, 'status', FileUploadStatus.UPLOADING);
                         }
                     })
+                }
+            };
+
+        case INGESTION_ACTION.UPLOAD.COMPLETE:
+            return {
+                ...state,
+                uploads: {
+                    ...uploads,
+                    files: lodash.filter(files, ({ id }) => id !== action.id)
                 }
             };
 
@@ -551,6 +572,12 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 vocabularies: state.vocabularies
             };
         }
+
+        case INGESTION_ACTION.METADATA.INGESTION_RESET:
+            return {
+                ...ingestionState,
+                vocabularies: state.vocabularies
+            };
 
         default:
             return state;
