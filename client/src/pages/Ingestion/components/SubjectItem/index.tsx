@@ -5,7 +5,7 @@ import { Redirect, useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { AppContext, StateVocabulary } from '../../../../context';
+import { AppContext } from '../../../../context';
 import useItem from '../../hooks/useItem';
 import useProject from '../../hooks/useProject';
 import ItemList from './ItemList';
@@ -107,9 +107,8 @@ function SubjectItem(): React.ReactElement {
 
         try {
             setMetadataStepLoading(true);
-            const vocabularies: StateVocabulary = await updateVocabularyEntries();
-            await updateMetadataFolders(vocabularies);
-
+            await updateVocabularyEntries();
+            await updateMetadataFolders();
             setMetadataStepLoading(false);
         } catch (error) {
             toast.error(error);

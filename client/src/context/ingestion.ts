@@ -87,7 +87,7 @@ export type PhotogrammetryFields = {
     clusterType: number | null;
     clusterGeometryFieldId: number | null;
     cameraSettingUniform: boolean;
-    directory: string | null;
+    directory: string;
 };
 
 export type StateMetadata = {

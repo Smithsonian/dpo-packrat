@@ -81,6 +81,19 @@ const useFilesUpload = (): UseFilesUpload => {
 
         const idAssetVersions: number[] = lodash.map(selectedFiles, ({ id }) => parseFileId(id));
 
+        const defaultIdentifier: StateIdentifier = {
+            id: 0,
+            identifier: '',
+            identifierType: getInitialEntry(eVocabularySetID.eIdentifierIdentifierType),
+            selected: false
+        };
+
+        const defaultVocabularyFields = {
+            ...defaultPhotogrammetryFields,
+            datasetType: getInitialEntry(eVocabularySetID.eCaptureDataDatasetType),
+            identifiers: [defaultIdentifier]
+        };
+
         try {
             const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({
                 query: GetAssetVersionsDetailsDocument,
@@ -128,7 +141,7 @@ const useFilesUpload = (): UseFilesUpload => {
 
                     if (CaptureDataPhoto) {
                         const { identifiers, folders } = CaptureDataPhoto;
-                        const stateIdentifiers: StateIdentifier[] = identifiers.map(
+                        const parsedIdentifiers: StateIdentifier[] = identifiers.map(
                             ({ identifier, identifierType }, index): StateIdentifier => ({
                                 id: index,
                                 identifier,
@@ -137,10 +150,12 @@ const useFilesUpload = (): UseFilesUpload => {
                             })
                         );
 
+                        const stateIdentifiers = parsedIdentifiers.length ? parsedIdentifiers : defaultVocabularyFields.identifiers;
+
                         metadataStep = {
                             file,
                             photogrammetry: {
-                                ...defaultPhotogrammetryFields,
+                                ...defaultVocabularyFields,
                                 ...(CaptureDataPhoto && {
                                     ...CaptureDataPhoto,
                                     dateCaptured: new Date(CaptureDataPhoto.dateCaptured),
@@ -149,12 +164,13 @@ const useFilesUpload = (): UseFilesUpload => {
                                 })
                             }
                         };
+
                         metadatas.push(metadataStep);
                     } else {
                         metadataStep = {
                             file,
                             photogrammetry: {
-                                ...defaultPhotogrammetryFields
+                                ...defaultVocabularyFields
                             }
                         };
                         metadatas.push(metadataStep);

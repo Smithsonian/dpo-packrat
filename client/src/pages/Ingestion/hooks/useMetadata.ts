@@ -1,16 +1,5 @@
 import { useContext } from 'react';
-import {
-    AppContext,
-    FileId,
-    StateMetadata,
-    PhotogrammetryFields,
-    METADATA_ACTIONS,
-    IngestionDispatchAction,
-    StateFolder,
-    StateVocabulary,
-    StateIdentifier,
-    parseFileId
-} from '../../../context';
+import { AppContext, FileId, StateMetadata, PhotogrammetryFields, METADATA_ACTIONS, IngestionDispatchAction, StateFolder, StateIdentifier, parseFileId } from '../../../context';
 import lodash from 'lodash';
 import { GetContentsForAssetVersionsDocument, AreCameraSettingsUniformDocument, IngestFolder, AssetVersionContent } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql';
@@ -38,7 +27,7 @@ interface UseMetadata {
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
     getMetadataInfo: (id: FileId) => MetadataInfo;
     updatePhotogrammetryFields: (metadataIndex: number, values: PhotogrammetryFields) => void;
-    updateMetadataFolders: (vocabularies: StateVocabulary) => Promise<void>;
+    updateMetadataFolders: () => Promise<void>;
 }
 
 function useMetadata(): UseMetadata {
@@ -47,7 +36,7 @@ function useMetadata(): UseMetadata {
         ingestionDispatch
     } = useContext(AppContext);
 
-    const { getInitialEntryWithVocabularies, getAssetType, getInitialEntry } = useVocabularyEntries();
+    const { getAssetType, getInitialEntry } = useVocabularyEntries();
 
     const idAssetVersions: number[] = [...metadatas].map(({ file: { id } }) => parseFileId(id));
 
@@ -131,20 +120,7 @@ function useMetadata(): UseMetadata {
         return stateFolders;
     };
 
-    const getInitialVocabularyEntry = (vocabularies: StateVocabulary, eVocabularySetID: eVocabularySetID) => getInitialEntryWithVocabularies(vocabularies, eVocabularySetID);
-
-    const updateMetadataFolders = async (vocabularies: StateVocabulary): Promise<void> => {
-        const defaultIdentifier: StateIdentifier = {
-            id: 0,
-            identifier: '',
-            identifierType: getInitialVocabularyEntry(vocabularies, eVocabularySetID.eIdentifierIdentifierType),
-            selected: false
-        };
-
-        const defaultVocabularyFields = {
-            datasetType: getInitialVocabularyEntry(vocabularies, eVocabularySetID.eCaptureDataDatasetType)
-        };
-
+    const updateMetadataFolders = async (): Promise<void> => {
         const variables = {
             input: {
                 idAssetVersions
@@ -162,27 +138,18 @@ function useMetadata(): UseMetadata {
 
         let updatedMetadatas = await updateCameraSettings(metadatas);
 
-        updatedMetadatas = updatedMetadatas.map(metadata => {
-            const { photogrammetry } = metadata;
-            const identifiers = photogrammetry.identifiers.length ? photogrammetry.identifiers : [defaultIdentifier];
-
-            return {
-                ...metadata,
-                photogrammetry: {
-                    ...photogrammetry,
-                    ...defaultVocabularyFields,
-                    identifiers
-                }
-            };
-        });
-
         foundAssetVersionContent.forEach(({ idAssetVersion, folders }: AssetVersionContent) => {
-            const stateFolders: StateFolder[] = getInitialStateFolders(folders);
-
             updatedMetadatas = updatedMetadatas.map(metadata => {
                 const { file, photogrammetry } = metadata;
                 const fileId = parseFileId(file.id);
+
                 if (fileId === idAssetVersion) {
+                    if (photogrammetry.folders.length) {
+                        return metadata;
+                    }
+
+                    const stateFolders: StateFolder[] = getInitialStateFolders(folders);
+
                     return {
                         ...metadata,
                         photogrammetry: {
