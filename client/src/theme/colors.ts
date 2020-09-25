@@ -17,7 +17,7 @@ const Colors = {
     repository: {
         default: ['#e9f4fe', '#f4fafe'],
         unit: ['#e9f4fe', '#f4fafe'],
-        project: ['#f0ebf8', '#f7f5fb'],
+        project: ['#f6f3fb', '#faf9fd'],
         subject: ['#fff9e6', '#fffcf3'],
         item: ['#ffe6de', '#ffeee9'],
         captureData: ['#edf7ed', '#f6fbf6']
