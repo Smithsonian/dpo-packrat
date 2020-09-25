@@ -38,6 +38,7 @@ import useMetadata from './useMetadata';
 import useProject from './useProject';
 import useSubject from './useSubject';
 import useVocabularyEntries from './useVocabularyEntries';
+import { generateFileId } from '../../../utils/upload';
 
 type MetadataUpdate = {
     valid: boolean;
@@ -118,14 +119,17 @@ const useFilesUpload = (): UseFilesUpload => {
 
                 for (let index = 0; index < Details.length; index++) {
                     const { idAssetVersion, SubjectUnitIdentifier: foundSubjectUnitIdentifier, Project: foundProject, Item: foundItem, CaptureDataPhoto } = Details[index];
+
                     if (foundSubjectUnitIdentifier) {
                         const subject: StateSubject = parseSubjectUnitIdentifierToState(foundSubjectUnitIdentifier);
                         subjects.push(subject);
                     }
+
                     if (foundProject) {
                         const stateProjects: StateProject[] = foundProject.map((project: Project, index: number) => parseProjectToState(project, !index));
                         projects.push(...stateProjects);
                     }
+
                     if (foundItem) {
                         const item: StateItem = parseItemToState(foundItem, !index, index);
                         items.push(item);
@@ -208,7 +212,7 @@ const useFilesUpload = (): UseFilesUpload => {
             if (acceptedFiles.length) {
                 const ingestionFiles: IngestionFile[] = [];
                 acceptedFiles.forEach((file: File): void => {
-                    const id = `${file.name.replace(/[^\w\s]/gi, '')}${files.length}`;
+                    const id = generateFileId();
                     const alreadyContains = !!lodash.find(files, { id });
 
                     const { name, size } = file;
@@ -330,6 +334,11 @@ const useFilesUpload = (): UseFilesUpload => {
         async (ingestionFile: IngestionFile) => {
             const { id, file, type } = ingestionFile;
 
+            const completeAction: IngestionDispatchAction = {
+                type: UPLOAD_ACTIONS.COMPLETE,
+                id
+            };
+
             const errorAction: IngestionDispatchAction = {
                 type: UPLOAD_ACTIONS.FAILED,
                 id
@@ -377,6 +386,7 @@ const useFilesUpload = (): UseFilesUpload => {
                     const { status, error } = uploadAsset;
 
                     if (status === UploadStatus.Complete) {
+                        ingestionDispatch(completeAction);
                         toast.success(`Upload finished for ${file.name}`);
                     } else if (status === UploadStatus.Failed) {
                         const errorMessage = error || `Upload failed for ${file.name}`;
