@@ -3,7 +3,7 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useContext, useEffect } from 'react';
 import { FieldType } from '../../../../components';
-import { AppContext, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS, parseAssetVersionToState } from '../../../../context';
+import { AppContext, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS, parseAssetVersionToState, IngestionFile } from '../../../../context';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 import { useQuery } from '@apollo/client';
@@ -71,9 +71,11 @@ function UploadListComplete(): React.ReactElement {
                 return parseAssetVersionToState(assetVersion, assetVersion.Asset, assetVersion.Asset.VAssetType);
             });
 
+            const pendingFiles: IngestionFile[] = uploads.files.filter(({ status }) => status !== FileUploadStatus.COMPLETE);
+
             const fetchSuccessAction: IngestionDispatchAction = {
                 type: UPLOAD_ACTIONS.FETCH_COMPLETE,
-                files
+                files: files.concat(pendingFiles)
             };
 
             ingestionDispatch(fetchSuccessAction);
