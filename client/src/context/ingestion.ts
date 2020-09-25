@@ -143,6 +143,7 @@ export enum ITEM_ACTIONS {
 export enum METADATA_ACTIONS {
     ADD_METADATA = 'ADD_METADATA',
     UPDATE_METADATA_FIELDS = 'UPDATE_METADATA_FIELDS',
+    INGESTION_RESET = 'INGESTION_RESET',
     INGESTION_COMPLETE = 'INGESTION_COMPLETE'
 }
 
@@ -295,7 +296,7 @@ type UPDATE_ITEM = {
     item: StateItem;
 };
 
-type MetadataDispatchAction = ADD_METADATA | UPDATE_METADATA_FIELDS | INGESTION_COMPLETE;
+type MetadataDispatchAction = ADD_METADATA | UPDATE_METADATA_FIELDS | INGESTION_COMPLETE | INGESTION_RESET;
 
 export type MetadataFieldValue = string | number | boolean | Date;
 
@@ -311,6 +312,10 @@ type UPDATE_METADATA_FIELDS = {
 
 type INGESTION_COMPLETE = {
     type: METADATA_ACTIONS.INGESTION_COMPLETE;
+};
+
+type INGESTION_RESET = {
+    type: METADATA_ACTIONS.INGESTION_RESET;
 };
 
 type VocabularyDispatchAction = ADD_VOCABULARIES;
@@ -567,6 +572,12 @@ const ingestionReducer = (state: Ingestion, action: IngestionDispatchAction): In
                 vocabularies: state.vocabularies
             };
         }
+
+        case INGESTION_ACTION.METADATA.INGESTION_RESET:
+            return {
+                ...ingestionState,
+                vocabularies: state.vocabularies
+            };
 
         default:
             return state;

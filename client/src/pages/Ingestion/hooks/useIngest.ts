@@ -15,6 +15,7 @@ import useVocabularyEntries from './useVocabularyEntries';
 interface UseIngest {
     ingestPhotogrammetryData: () => Promise<boolean>;
     ingestionComplete: () => void;
+    ingestionReset: () => void;
 }
 
 function useIngest(): UseIngest {
@@ -198,9 +199,18 @@ function useIngest(): UseIngest {
         history.push(nextRoute);
     };
 
+    const ingestionReset = (): void => {
+        const ingestionResetAction: IngestionDispatchAction = {
+            type: METADATA_ACTIONS.INGESTION_RESET
+        };
+
+        ingestionDispatch(ingestionResetAction);
+    };
+
     return {
         ingestPhotogrammetryData,
-        ingestionComplete
+        ingestionComplete,
+        ingestionReset
     };
 }
 
