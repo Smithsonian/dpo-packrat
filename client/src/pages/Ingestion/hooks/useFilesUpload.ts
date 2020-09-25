@@ -415,7 +415,7 @@ const useFilesUpload = (): UseFilesUpload => {
             return;
         }
 
-        const isConfirmed = global.confirm('Do you want to discard current items?');
+        const isConfirmed = global.confirm('Do you want to discard selected items?');
 
         if (!isConfirmed) return;
 
