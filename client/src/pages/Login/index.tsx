@@ -1,5 +1,5 @@
 import { Box, Container, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, fade } from '@material-ui/core/styles';
 import { Field, Formik, FormikHelpers } from 'formik';
 import { TextField } from 'formik-material-ui';
 import React, { useContext } from 'react';
@@ -12,7 +12,6 @@ import { AppContext } from '../../context';
 import { getAuthenticatedUser } from '../../utils/auth';
 import { actionOnKeyPress } from '../../utils/shared';
 import useLoginForm, { ILoginForm } from './hooks/useLoginForm';
-import { colorWithOpacity } from '../../theme/colors';
 import Config from '../../config';
 import LoginBackground from '../../assets/images/login-background.png';
 
@@ -39,7 +38,7 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
         borderRadius: 5,
         padding: 40,
         marginBottom: 20,
-        boxShadow: `0px 1px 4px ${colorWithOpacity(palette.primary.dark, 33)}`,
+        boxShadow: `0px 1px 4px ${fade(palette.primary.dark, 0.2)}`,
         [breakpoints.down('md')]: {
             width: '30vw',
         },

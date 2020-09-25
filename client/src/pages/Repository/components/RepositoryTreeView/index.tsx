@@ -8,6 +8,7 @@ import { RepositoryFilter } from '../../index';
 import { useGetRootObjects } from '../../hooks/useRepository';
 import { getSystemObjectTypesForFilter, getSortedTreeEntries } from '../../../../utils/repository';
 import { RepositoryColorVariant } from '../../../../theme/colors';
+import RepositoryTreeHeader from './RepositoryTreeHeader';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -16,7 +17,6 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         maxHeight: '68vh',
         flexDirection: 'column',
         overflow: 'auto',
-        overflowX: 'hidden',
         [breakpoints.down('lg')]: {
             maxHeight: '65vh',
         }
@@ -51,6 +51,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             defaultCollapseIcon={<BsChevronDown />}
             defaultExpandIcon={<BsChevronRight />}
         >
+            <RepositoryTreeHeader />
             {noFilter && (
                 <Box className={classes.fullView}>
                     <Typography variant='caption'>Please select a valid filter</Typography>

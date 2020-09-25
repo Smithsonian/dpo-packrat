@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Typography, PropTypes, BoxProps } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import { colorWithOpacity } from '../../theme/colors';
+import { makeStyles, fade } from '@material-ui/core/styles';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
@@ -10,7 +9,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         borderRadius: 5,
         width: ({ width }: FieldTypeProps) => width || '100%',
         marginTop: ({ marginTop }: FieldTypeProps) => spacing(marginTop || 0),
-        backgroundColor: ({ required, error }: FieldTypeProps) => error ? colorWithOpacity(palette.error.light, 66) : required ? palette.primary.light : palette.secondary.light
+        backgroundColor: ({ required, error }: FieldTypeProps) => error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light
     },
     label: {
         margin: '5px 0px 10px 0px',

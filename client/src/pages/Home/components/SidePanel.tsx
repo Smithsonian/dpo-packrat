@@ -1,11 +1,10 @@
 import { Box, Grid } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles, fade } from '@material-ui/core/styles';
 import React, { memo, useState, useEffect } from 'react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useParams } from 'react-router';
 import { HOME_ROUTES } from '../../../constants';
 import { Colors } from '../../../theme';
-import { colorWithOpacity } from '../../../theme/colors';
 import SidePanelOption, { SidePanelOptionProps } from './SidePanelOption';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
@@ -32,7 +31,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         transition: 'all 250ms linear',
         '&:hover': {
             cursor: 'pointer',
-            backgroundColor: colorWithOpacity(palette.primary.light, 33)
+            backgroundColor: fade(palette.primary.light, 0.2)
         }
     }
 }));
