@@ -91,7 +91,8 @@ function useIngest(): UseIngest {
                         lightsourceType,
                         backgroundRemovalMethod,
                         clusterType,
-                        clusterGeometryFieldId
+                        clusterGeometryFieldId,
+                        directory
                     } = photogrammetry;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = [];
@@ -148,7 +149,7 @@ function useIngest(): UseIngest {
                         focusType,
                         lightsourceType,
                         backgroundRemovalMethod,
-                        directory: '', // TODO: Ques: what is directory and how do we get it?
+                        directory,
                         clusterType,
                         clusterGeometryFieldId
                     };
