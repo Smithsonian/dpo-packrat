@@ -68,7 +68,7 @@ function UploadListComplete(): React.ReactElement {
                 if (fileIds.includes(id)) {
                     return uploads.files.find(file => file.id === id);
                 }
-                return parseAssetVersionToState(assetVersion, assetVersion.Asset, assetVersion.Asset.VAssetType);
+                return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType);
             });
 
             const pendingFiles: IngestionFile[] = uploads.files.filter(({ status }) => status !== FileUploadStatus.COMPLETE);
