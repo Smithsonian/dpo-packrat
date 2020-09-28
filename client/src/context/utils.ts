@@ -1,4 +1,4 @@
-import { Item, Project, SubjectUnitIdentifier, AssetVersion, Asset, Vocabulary } from '../types/graphql';
+import { Item, Project, SubjectUnitIdentifier, AssetVersion, Vocabulary } from '../types/graphql';
 import { StateSubject, StateItem, StateProject, IngestionFile, FileUploadStatus, FileId } from './ingestion';
 
 export function parseFileId(id: FileId): number {
@@ -42,9 +42,8 @@ export function parseProjectToState(project: Project, selected: boolean): StateP
     };
 }
 
-export function parseAssetVersionToState(assetVersion: AssetVersion, asset: Asset, vocabulary: Vocabulary): IngestionFile {
-    const { idAssetVersion, StorageSize } = assetVersion;
-    const { FileName } = asset;
+export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary: Vocabulary): IngestionFile {
+    const { idAssetVersion, StorageSize, FileName } = assetVersion;
     const { idVocabulary } = vocabulary;
 
     const id = String(idAssetVersion);
