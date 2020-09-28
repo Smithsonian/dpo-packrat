@@ -9,6 +9,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         height: 50,
         background: palette.primary.light,
         borderRadius: 5,
+        width: '100vw',
         margin: '0px 0px 5px 0px',
         position: 'sticky',
         top: 0,
@@ -20,6 +21,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     treeView: {
         display: 'flex',
         flex: 1,
+        position: 'sticky',
+        left: 20,
         alignItems: 'center',
         marginLeft: 20,
         color: palette.primary.dark,

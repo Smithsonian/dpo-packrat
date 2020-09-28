@@ -1,4 +1,4 @@
-import { Box, Collapse } from '@material-ui/core';
+import { Box, Collapse, Tooltip } from '@material-ui/core';
 import { fade, withStyles, Theme, makeStyles } from '@material-ui/core/styles';
 import { TreeItem, TreeItemProps } from '@material-ui/lab';
 import React from 'react';
@@ -33,20 +33,21 @@ interface StyledTreeItemProps {
 const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) => ({
     iconContainer: {
         width: 25,
-        '& .close': {
-            opacity: 0.3
-        },
         marginLeft: 5,
+        position: 'sticky',
+        left: 10,
         [breakpoints.down('lg')]: {
             width: 15,
             marginLeft: 8,
-        }
+        },
+        '& .close': {
+            opacity: 0.3
+        },
     },
     root: {
         marginTop: 5,
     },
     group: {
-        marginLeft: 10,
         paddingLeft: 20,
         borderLeft: `1px dashed ${fade(palette.text.primary, 0.2)}`,
         [breakpoints.down('lg')]: {
@@ -81,15 +82,45 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
     }
 }))((props: TreeItemProps & StyledTreeItemProps) => <TreeItem {...props} label={<TreeLabel label={props.label} metadata={props.metadata} />} TransitionComponent={TransitionComponent} />);
 
-const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
+interface TreeLabelProps {
+    label?: React.ReactNode;
+    metadata: string[];
+}
+
+const useTreeLabelStyles = makeStyles(({ breakpoints }) => ({
+    label: {
+        display: 'flex',
+        flex: 1,
+        alignItems: 'center',
+        position: 'sticky',
+        left: 45,
+        [breakpoints.down('lg')]: {
+            left: 35,
+        },
+    }
+}));
+
+function TreeLabel(props: TreeLabelProps): React.ReactElement {
+    const classes = useTreeLabelStyles();
+    const { label, metadata } = props;
+
+    return (
+        <Box display='flex'>
+            <Box className={classes.label}>{label}</Box>
+            <MetadataView header={false} metadata={metadata} />
+        </Box>
+    );
+}
+
+const useMetadataStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     metadata: {
         display: 'flex',
-        width: '35vw',
+        width: '50vw',
         [breakpoints.down('lg')]: {
             width: '42vw',
         }
     },
-    text: {
+    column: {
         display: 'flex',
         alignItems: 'center',
         fontSize: ({ header }: MetadataViewProps) => header ? typography.pxToRem(18) : undefined,
@@ -103,22 +134,6 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     }
 }));
 
-interface TreeLabelProps {
-    label?: React.ReactNode;
-    metadata: string[];
-}
-
-function TreeLabel(props: TreeLabelProps): React.ReactElement {
-    const { label, metadata } = props;
-
-    return (
-        <Box display='flex'>
-            <Box display='flex' flex={1} alignItems='center'>{label}</Box>
-            <MetadataView header={false} metadata={metadata} />
-        </Box>
-    );
-}
-
 interface MetadataViewProps {
     header: boolean;
     metadata: string[];
@@ -126,14 +141,20 @@ interface MetadataViewProps {
 
 export function MetadataView(props: MetadataViewProps): React.ReactElement {
     const { metadata } = props;
-    const classes = useStyles(props);
+    const classes = useMetadataStyles(props);
     const [unit, subjectId, itemName] = metadata;
 
     return (
         <Box className={classes.metadata}>
-            <Box className={classes.text} component='div' whiteSpace='normal' width='15%'>{unit}</Box>
-            <Box className={classes.text} flex={1}>{trimmedMetadataField(subjectId)}</Box>
-            <Box className={classes.text} width='30%'>{itemName}</Box>
+            <Tooltip title={unit}>
+                <Box className={classes.column} component='div' whiteSpace='normal' width='8vw'>{unit}</Box>
+            </Tooltip>
+            <Tooltip title={subjectId}>
+                <Box className={classes.column} width='15vw'>{trimmedMetadataField(subjectId, 25, 10)}</Box>
+            </Tooltip>
+            <Tooltip title={itemName}>
+                <Box className={classes.column} ml={1} width='10vw'>{trimmedMetadataField(itemName, 15, 5)}</Box>
+            </Tooltip>
         </Box>
     );
 }
