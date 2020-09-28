@@ -58,8 +58,8 @@ export function getSortedTreeEntries(entries: NavigationResultEntry[]): Navigati
     return lodash.orderBy(entries, [(entry: NavigationResultEntry) => entry.name.toLowerCase()], 'asc');
 }
 
-export function trimmedMetadataField(value: string): string {
+export function trimmedMetadataField(value: string, start: number, end: number): string {
     const { length } = value;
-    if (length < 40) return value;
-    return `${value.substring(0, 25)}.....${value.substring(length - 10, length)}`;
+    if (length < 30) return value;
+    return `${value.substring(0, start)}...${value.substring(length - end, length)}`;
 }

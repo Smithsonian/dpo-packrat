@@ -15,11 +15,19 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         display: 'flex',
         flex: 5,
         maxHeight: '72vh',
+        maxWidth: '83vw',
         flexDirection: 'column',
         overflow: 'auto',
         [breakpoints.down('lg')]: {
-            maxHeight: '70vh',
-        }
+            maxHeight: '71vh',
+            maxWidth: '80vw',
+        },
+    },
+    tree: {
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        width: '100vw',
     },
     fullView: {
         display: 'flex',
@@ -46,50 +54,53 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     const entries = getSortedTreeEntries(getRootObjectsData?.getObjectChildren?.entries ?? []);
 
     return (
-        <TreeView
-            className={classes.container}
-            defaultCollapseIcon={<BsChevronDown />}
-            defaultExpandIcon={<BsChevronRight />}
-        >
-            <RepositoryTreeHeader />
-            {noFilter && (
-                <Box className={classes.fullView}>
-                    <Typography variant='caption'>Please select a valid filter</Typography>
-                </Box>
-            )}
-            {!getRootObjectsLoading && !getRootObjectsError ? (
-                <>
-                    {entries.map((entry, index: number) => {
-                        const { idSystemObject, name, objectType, idObject, metadata } = entry;
-                        const variant = index % 2 ? RepositoryColorVariant.Light : RepositoryColorVariant.Dark;
-                        const { icon, color } = getObjectInterfaceDetails(objectType, variant);
+        <Box className={classes.container}>
 
-                        return (
-                            <RepositoryTreeNode
-                                key={index}
-                                idSystemObject={idSystemObject}
-                                name={name}
-                                icon={icon}
-                                color={color}
-                                objectType={objectType}
-                                idObject={idObject}
-                                metadata={metadata}
-                            />
-                        );
-                    })}
-                </>
-            )
-                : (
-                    <>
-                        {!noFilter && (
-                            <Box className={classes.fullView}>
-                                <CircularProgress size={30} />
-                            </Box>
-                        )}
-                    </>
+            <TreeView
+                className={classes.tree}
+                defaultCollapseIcon={<BsChevronDown />}
+                defaultExpandIcon={<BsChevronRight />}
+            >
+                <RepositoryTreeHeader />
+                {noFilter && (
+                    <Box className={classes.fullView}>
+                        <Typography variant='caption'>Please select a valid filter</Typography>
+                    </Box>
                 )}
+                {!getRootObjectsLoading && !getRootObjectsError ? (
+                    <>
+                        {entries.map((entry, index: number) => {
+                            const { idSystemObject, name, objectType, idObject, metadata } = entry;
+                            const variant = index % 2 ? RepositoryColorVariant.Light : RepositoryColorVariant.Dark;
+                            const { icon, color } = getObjectInterfaceDetails(objectType, variant);
 
-        </TreeView>
+                            return (
+                                <RepositoryTreeNode
+                                    key={index}
+                                    idSystemObject={idSystemObject}
+                                    name={name}
+                                    icon={icon}
+                                    color={color}
+                                    objectType={objectType}
+                                    idObject={idObject}
+                                    metadata={metadata}
+                                />
+                            );
+                        })}
+                    </>
+                )
+                    : (
+                        <>
+                            {!noFilter && (
+                                <Box className={classes.fullView}>
+                                    <CircularProgress size={30} />
+                                </Box>
+                            )}
+                        </>
+                    )}
+
+            </TreeView>
+        </Box>
     );
 }
 

@@ -7,21 +7,28 @@ import { getTermForSystemObjectType } from '../../../../utils/repository';
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
-        height: 50,
-        width: '10%',
+        height: 40,
+        marginLeft: 20,
+        position: 'sticky',
+        left: 20,
         alignItems: 'center',
-        justifyContent: 'center',
+        [breakpoints.down('lg')]: {
+            height: 30,
+        },
     },
     emptyList: {
         display: 'flex',
-        padding: '10px 5px',
+        height: 40,
+        padding: '10px 15px',
         alignItems: 'center',
         color: palette.grey[400],
         [breakpoints.down('lg')]: {
-            height: 40,
+            height: 25,
         },
     },
     emptyListText: {
+        position: 'sticky',
+        left: 15,
         [breakpoints.down('lg')]: {
             fontSize: 12,
         },
