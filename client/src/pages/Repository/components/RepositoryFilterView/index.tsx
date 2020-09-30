@@ -3,8 +3,10 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { RepositoryFilter } from '../../index';
 import { DebounceInput } from 'react-debounce-input';
-import { HiCheckCircle } from 'react-icons/hi';
 import { motion } from 'framer-motion';
+import { eSystemObjectType } from '../../../../types/server';
+import { RepositoryIcon } from '../../../../components';
+import { Colors, palette } from '../../../../theme';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -16,7 +18,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         marginBottom: 10,
         [breakpoints.down('lg')]: {
             padding: 10,
-            borderRadius: 5,
+            borderRadius: 5
         }
     },
     search: {
@@ -32,7 +34,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         [breakpoints.down('lg')]: {
             height: 20,
             fontSize: 14,
-            padding: '5px 0px',
+            padding: '5px 0px'
         },
         '&::placeholder': {
             fontStyle: 'italic'
@@ -54,28 +56,28 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         [breakpoints.down('lg')]: {
             minWidth: 100,
             width: 100,
-            padding: '5px 10px',
+            padding: '5px 10px'
         },
         '&:not(:first-child)': {
             marginLeft: 10
-        },
+        }
     },
     filterSelected: {
         color: palette.background.paper,
-        background: palette.primary.main,
+        background: palette.primary.main
     },
     filterText: {
         marginLeft: 10,
         [breakpoints.down('lg')]: {
             marginLeft: 5,
             fontSize: 10
-        },
+        }
     }
 }));
 
 interface RepositoryFilterViewProps {
     filter: RepositoryFilter;
-    onChange: (field: string, value: string | boolean) => void
+    onChange: (field: string, value: string | boolean) => void;
 }
 
 function RepositoryFilterView(props: RepositoryFilterViewProps): React.ReactElement {
@@ -85,11 +87,13 @@ function RepositoryFilterView(props: RepositoryFilterViewProps): React.ReactElem
     const CheckboxFilters = [
         {
             value: filter.units,
-            name: 'units'
+            name: 'units',
+            type: eSystemObjectType.eUnit
         },
         {
             value: filter.projects,
-            name: 'projects'
+            name: 'projects',
+            type: eSystemObjectType.eProject
         }
     ];
 
@@ -106,19 +110,29 @@ function RepositoryFilterView(props: RepositoryFilterViewProps): React.ReactElem
                 placeholder='Search...'
             />
             <Box display='flex' mt={2}>
-                {CheckboxFilters.map(({ value, name }, index: number) => (
-                    <motion.div
-                        key={index}
-                        className={`${classes.filter} ${!value || classes.filterSelected}`}
-                        initial='hidden'
-                        animate='visible'
-                        onClick={() => onChange(name, !value)}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        <HiCheckCircle size={20} />
-                        <Typography className={classes.filterText} variant='caption' color='inherit'>{name.toUpperCase()}</Typography>
-                    </motion.div>
-                ))}
+                {CheckboxFilters.map(({ value, name, type }, index: number) => {
+                    const selected = value;
+                    const textColor = selected ? palette.primary.main : Colors.defaults.white;
+                    const backgroundColor = selected ? Colors.defaults.white : palette.primary.contrastText;
+
+                    const iconProps = { objectType: type, textColor, backgroundColor };
+
+                    return (
+                        <motion.div
+                            key={index}
+                            className={`${classes.filter} ${!value || classes.filterSelected}`}
+                            initial='hidden'
+                            animate='visible'
+                            onClick={() => onChange(name, !value)}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <RepositoryIcon {...iconProps} />
+                            <Typography className={classes.filterText} variant='caption' color='inherit'>
+                                {name.toUpperCase()}
+                            </Typography>
+                        </motion.div>
+                    );
+                })}
             </Box>
         </Box>
     );

@@ -19,11 +19,10 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     emptyList: {
         display: 'flex',
         height: 40,
-        padding: '10px 15px',
         alignItems: 'center',
         color: palette.grey[400],
         [breakpoints.down('lg')]: {
-            height: 25,
+            height: 30,
         },
     },
     emptyListText: {

@@ -4,7 +4,7 @@ import Colors from './colors';
 import { createTypographyOverrides } from './typography';
 
 // https://material-ui.com/customization/palette/
-const palette = {
+export const palette = {
     primary: {
         light: '#ECF5FD',
         main: '#0079C4',
