@@ -37,6 +37,7 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         marginLeft: 5,
         position: 'sticky',
         left: 10,
+        zIndex: 10,
         [breakpoints.down('lg')]: {
             width: 15,
             marginLeft: 8,
@@ -62,7 +63,6 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         padding: '5px 10px',
         [breakpoints.down('lg')]: {
             fontSize: 12,
-            padding: '3px 6px',
         },
         backgroundColor: 'transparent !important',
         '&:hover': {
@@ -81,12 +81,13 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
     selected: {
         backgroundColor: 'transparent'
     }
-}))((props: TreeItemProps & StyledTreeItemProps) => <TreeItem {...props} label={<TreeLabel label={props.label} objectType={props.objectType} metadata={props.metadata} />} TransitionComponent={TransitionComponent} />);
+}))((props: TreeItemProps & StyledTreeItemProps) => <TreeItem {...props} label={<TreeLabel label={props.label} color={props.color} objectType={props.objectType} metadata={props.metadata} />} TransitionComponent={TransitionComponent} />);
 
 interface TreeLabelProps {
     label?: React.ReactNode;
     metadata: string[];
     objectType: number;
+    color: string;
 }
 
 const useTreeLabelStyles = makeStyles(({ breakpoints }) => ({
@@ -97,13 +98,18 @@ const useTreeLabelStyles = makeStyles(({ breakpoints }) => ({
         position: 'sticky',
         left: 45,
         [breakpoints.down('lg')]: {
-            left: 35,
-        },
+            left: 35
+        }
+    },
+    labelText: {
+        width: '60%',
+        background: ({ color }: TreeLabelProps) => color,
+        zIndex: 10
     }
 }));
 
 function TreeLabel(props: TreeLabelProps): React.ReactElement {
-    const classes = useTreeLabelStyles();
+    const classes = useTreeLabelStyles(props);
     const { label, metadata, objectType } = props;
 
     const objectTitle = `${getTermForSystemObjectType(objectType)} ${label}`;
@@ -112,7 +118,7 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
         <Box display='flex'>
             <Box className={classes.label}>
                 <Tooltip title={objectTitle}>
-                    <Box>{label}</Box>
+                    <Box className={classes.labelText}>{label}</Box>
                 </Tooltip>
             </Box>
             <MetadataView header={false} metadata={metadata} />
