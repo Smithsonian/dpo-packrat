@@ -13,7 +13,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         margin: '0px 0px 5px 0px',
         position: 'sticky',
         top: 0,
-        zIndex: 10,
+        zIndex: 20,
         [breakpoints.down('lg')]: {
             height: 40
         }
@@ -36,7 +36,6 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         left: 20,
         width: '60%',
         backgroundColor: palette.primary.light,
-        zIndex: 10
     }
 }));
 
