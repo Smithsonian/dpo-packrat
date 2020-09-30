@@ -20,18 +20,19 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         overflow: 'auto',
         [breakpoints.down('lg')]: {
             maxHeight: '71vh',
-            maxWidth: '80vw',
-        },
+            maxWidth: '80vw'
+        }
     },
     tree: {
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        width: '100vw',
+        width: '100vw'
     },
     fullView: {
         display: 'flex',
         flex: 1,
+        maxWidth: '83vw',
         alignItems: 'center',
         justifyContent: 'center',
         color: palette.primary.dark
