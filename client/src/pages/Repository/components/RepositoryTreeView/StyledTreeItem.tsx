@@ -75,7 +75,6 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         transition: 'all 200ms ease',
         '&:hover': {
             transform: 'scale(1.01)',
-            backgroundColor: ({ color }: StyledTreeItemProps) => fade(color, 0.4),
         }
     },
     selected: {
@@ -104,7 +103,7 @@ const useTreeLabelStyles = makeStyles(({ breakpoints }) => ({
     labelText: {
         width: '60%',
         background: ({ color }: TreeLabelProps) => color,
-        zIndex: 10
+        zIndex: 10,
     }
 }));
 
@@ -117,8 +116,10 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
     return (
         <Box display='flex'>
             <Box className={classes.label}>
-                <Tooltip title={objectTitle}>
-                    <Box className={classes.labelText}>{label}</Box>
+                <Tooltip title={objectTitle} placement='bottom-start'>
+                    <Box className={classes.labelText}>
+                        {label}
+                    </Box>
                 </Tooltip>
             </Box>
             <MetadataView header={false} metadata={metadata} />
@@ -160,13 +161,13 @@ export function MetadataView(props: MetadataViewProps): React.ReactElement {
 
     return (
         <Box className={classes.metadata}>
-            <Tooltip title={unit}>
+            <Tooltip arrow title={unit} placement='bottom-start'>
                 <Box className={classes.column} component='div' whiteSpace='normal' width='8vw'>{unit}</Box>
             </Tooltip>
-            <Tooltip title={subjectId}>
+            <Tooltip arrow title={subjectId} placement='bottom-start'>
                 <Box className={classes.column} width='15vw'>{trimmedMetadataField(subjectId, 20, 10)}</Box>
             </Tooltip>
-            <Tooltip title={itemName}>
+            <Tooltip arrow title={itemName} placement='bottom-start'>
                 <Box className={classes.column} ml={1} width='10vw'>{trimmedMetadataField(itemName, 15, 5)}</Box>
             </Tooltip>
         </Box>
