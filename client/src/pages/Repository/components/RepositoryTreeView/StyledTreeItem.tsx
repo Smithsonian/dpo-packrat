@@ -3,7 +3,7 @@ import { fade, withStyles, Theme, makeStyles } from '@material-ui/core/styles';
 import { TreeItem, TreeItemProps } from '@material-ui/lab';
 import React from 'react';
 import { animated, useSpring } from 'react-spring';
-import { trimmedMetadataField } from '../../../../utils/repository';
+import { getTermForSystemObjectType, trimmedMetadataField } from '../../../../utils/repository';
 
 interface TransitionComponentProps {
     in?: boolean;
@@ -28,6 +28,7 @@ function TransitionComponent(props: TransitionComponentProps): React.ReactElemen
 interface StyledTreeItemProps {
     color: string;
     metadata: string[];
+    objectType: number;
 }
 
 const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) => ({
@@ -80,11 +81,12 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
     selected: {
         backgroundColor: 'transparent'
     }
-}))((props: TreeItemProps & StyledTreeItemProps) => <TreeItem {...props} label={<TreeLabel label={props.label} metadata={props.metadata} />} TransitionComponent={TransitionComponent} />);
+}))((props: TreeItemProps & StyledTreeItemProps) => <TreeItem {...props} label={<TreeLabel label={props.label} objectType={props.objectType} metadata={props.metadata} />} TransitionComponent={TransitionComponent} />);
 
 interface TreeLabelProps {
     label?: React.ReactNode;
     metadata: string[];
+    objectType: number;
 }
 
 const useTreeLabelStyles = makeStyles(({ breakpoints }) => ({
@@ -102,11 +104,17 @@ const useTreeLabelStyles = makeStyles(({ breakpoints }) => ({
 
 function TreeLabel(props: TreeLabelProps): React.ReactElement {
     const classes = useTreeLabelStyles();
-    const { label, metadata } = props;
+    const { label, metadata, objectType } = props;
+
+    const objectTitle = `${getTermForSystemObjectType(objectType)} ${label}`;
 
     return (
         <Box display='flex'>
-            <Box className={classes.label}>{label}</Box>
+            <Box className={classes.label}>
+                <Tooltip title={objectTitle}>
+                    <Box>{label}</Box>
+                </Tooltip>
+            </Box>
             <MetadataView header={false} metadata={metadata} />
         </Box>
     );
@@ -150,7 +158,7 @@ export function MetadataView(props: MetadataViewProps): React.ReactElement {
                 <Box className={classes.column} component='div' whiteSpace='normal' width='8vw'>{unit}</Box>
             </Tooltip>
             <Tooltip title={subjectId}>
-                <Box className={classes.column} width='15vw'>{trimmedMetadataField(subjectId, 25, 10)}</Box>
+                <Box className={classes.column} width='15vw'>{trimmedMetadataField(subjectId, 20, 10)}</Box>
             </Tooltip>
             <Tooltip title={itemName}>
                 <Box className={classes.column} ml={1} width='10vw'>{trimmedMetadataField(itemName, 15, 5)}</Box>

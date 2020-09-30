@@ -71,7 +71,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                     <>
                         {entries.map((entry, index: number) => {
                             const { idSystemObject, name, objectType, idObject, metadata } = entry;
-                            const variant = index % 2 ? RepositoryColorVariant.Light : RepositoryColorVariant.Dark;
+                            const variant = index % 2 ? RepositoryColorVariant.light : RepositoryColorVariant.regular;
                             const { icon, color } = getObjectInterfaceDetails(objectType, variant);
 
                             return (
