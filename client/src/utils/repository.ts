@@ -1,7 +1,10 @@
-import { RepositoryFilter } from '../pages/Repository';
-import { eSystemObjectType } from '../types/server';
-import { NavigationResultEntry } from '../types/graphql';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import lodash from 'lodash';
+import * as qs from 'query-string';
+import { HOME_ROUTES } from '../constants';
+import { RepositoryFilter } from '../pages/Repository';
+import { NavigationResultEntry } from '../types/graphql';
+import { eSystemObjectType } from '../types/server';
 
 export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystemObjectType[] {
     const objectTypes: eSystemObjectType[] = [];
@@ -62,4 +65,25 @@ export function trimmedMetadataField(value: string, start: number, end: number):
     const { length } = value;
     if (length < 30) return value;
     return `${value.substring(0, start)}...${value.substring(length - end, length)}`;
+}
+
+export function parseRepositoryUrl(search: string): any {
+    return qs.parse(search, {
+        parseBooleans: true,
+        parseNumbers: true,
+        arrayFormat: 'comma'
+    });
+}
+
+export function generateRepositoryUrl(filter: RepositoryFilter): string {
+    const validate = (value: unknown) => {
+        if (lodash.isBoolean(value)) {
+            return value === true;
+        }
+
+        return true;
+    };
+
+    const queryResult = lodash.pickBy(filter, validate);
+    return `${HOME_ROUTES.REPOSITORY}?${qs.stringify(queryResult)}`;
 }

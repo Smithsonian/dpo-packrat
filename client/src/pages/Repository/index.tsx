@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import RepositoryFilterView from './components/RepositoryFilterView';
 import RepositoryTreeView from './components/RepositoryTreeView';
-import useDebounce from './hooks/useDebounce';
+import { useHistory, useLocation } from 'react-router';
+import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repository';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
@@ -25,29 +26,38 @@ export type RepositoryFilter = {
 
 function Repository(): React.ReactElement {
     const classes = useStyles();
+    const history = useHistory();
+    const { search } = useLocation();
+
+    const queries = parseRepositoryUrl(search);
+
     const initialFilterState = {
         units: true,
-        projects: false,
+        projects: false
     };
 
-    const [filter, setFilter] = useState<RepositoryFilter>(initialFilterState);
-    const debouncedFilter = useDebounce<RepositoryFilter>(filter, 200);
+    const defaultFilterState = Object.keys(queries).length ? queries : initialFilterState;
+
+    const [filter, setFilter] = useState<RepositoryFilter>(defaultFilterState);
+
+    useEffect(() => {
+        const route = generateRepositoryUrl(filter);
+        history.push(route);
+    }, [filter, history]);
 
     const onChange = (name: string, value: string | boolean) => {
-        setFilter(filter => {
-            return {
-                ...filter,
-                [name]: value,
-                ...(name === 'units' && { projects: false }),
-                ...(name === 'projects' && { units: false }),
-            };
-        });
+        setFilter(filter => ({
+            ...filter,
+            [name]: value,
+            ...(name === 'units' && { projects: false }),
+            ...(name === 'projects' && { units: false }),
+        }));
     };
 
     return (
         <Box className={classes.container}>
             <RepositoryFilterView filter={filter} onChange={onChange} />
-            <RepositoryTreeView filter={debouncedFilter} />
+            <RepositoryTreeView filter={filter} />
         </Box>
     );
 }
