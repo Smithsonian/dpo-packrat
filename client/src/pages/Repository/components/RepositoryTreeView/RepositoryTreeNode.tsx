@@ -2,12 +2,14 @@ import React from 'react';
 import StyledTreeItem from './StyledTreeItem';
 import TreeViewContents from './TreeViewContents';
 import { eSystemObjectType } from '../../../../types/server';
-import { getRepositoryTreeNodeId, getSortedTreeEntries } from '../../../../utils/repository';
+import { getRepositoryTreeNodeId, getSortedTreeEntries, getTreeColorVariant, getTreeViewColumns } from '../../../../utils/repository';
 import { useGetObjectChildren } from '../../hooks/useRepository';
 import { AiOutlineFileText } from 'react-icons/ai';
 import { Colors } from '../../../../theme';
 import { RepositoryColorVariant } from '../../../../theme/colors';
 import { RepositoryIcon } from '../../../../components';
+import { TreeViewColumn } from './StyledTreeItem';
+import { RepositoryFilter } from '../..';
 
 interface RepositoryTreeNodeProps {
     idSystemObject: number;
@@ -16,18 +18,19 @@ interface RepositoryTreeNodeProps {
     color: string;
     objectType: eSystemObjectType;
     icon: React.ReactElement;
-    metadata: string[];
+    treeColumns: TreeViewColumn[];
+    filter: RepositoryFilter;
 }
 
 function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement {
-    const { idSystemObject, idObject, name, objectType, icon, color, metadata } = props;
+    const { idSystemObject, idObject, name, objectType, icon, color, treeColumns, filter } = props;
     const nodeId = getRepositoryTreeNodeId(idSystemObject, idObject, objectType);
 
-    const { getObjectChildren, getObjectChildrenData, getObjectChildrenLoading, getObjectChildrenError } = useGetObjectChildren(idSystemObject);
+    const { getObjectChildren, getObjectChildrenData, getObjectChildrenLoading, getObjectChildrenError } = useGetObjectChildren(idSystemObject, filter);
 
     const isEmpty = !getObjectChildrenData?.getObjectChildren?.entries.length ?? false;
-
     const entries = getSortedTreeEntries(getObjectChildrenData?.getObjectChildren?.entries ?? []);
+    const metadataColumns = getObjectChildrenData?.getObjectChildren?.metadataColumns ?? [];
 
     return (
         <StyledTreeItem
@@ -38,13 +41,14 @@ function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement 
             objectType={objectType}
             nodeId={nodeId}
             label={name}
-            metadata={metadata}
+            treeColumns={treeColumns}
         >
             <TreeViewContents name={name} loading={getObjectChildrenLoading && !getObjectChildrenError} isEmpty={isEmpty} objectType={objectType}>
                 {entries.map((entry, index: number) => {
                     const { idSystemObject, name, objectType, idObject, metadata } = entry;
-                    const variant = index % 2 ? RepositoryColorVariant.light : RepositoryColorVariant.regular;
+                    const variant = getTreeColorVariant(index);
                     const { icon, color } = getObjectInterfaceDetails(objectType, variant);
+                    const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
 
                     return (
                         <RepositoryTreeNode
@@ -55,7 +59,8 @@ function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement 
                             color={color}
                             objectType={objectType}
                             idObject={idObject}
-                            metadata={metadata}
+                            treeColumns={treeColumns}
+                            filter={filter}
                         />
                     );
                 })}

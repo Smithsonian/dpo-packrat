@@ -3,8 +3,10 @@ import lodash from 'lodash';
 import * as qs from 'query-string';
 import { HOME_ROUTES } from '../constants';
 import { RepositoryFilter } from '../pages/Repository';
+import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/StyledTreeItem';
+import { RepositoryColorVariant } from '../theme/colors';
 import { NavigationResultEntry } from '../types/graphql';
-import { eSystemObjectType } from '../types/server';
+import { eMetadata, eSystemObjectType } from '../types/server';
 
 export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystemObjectType[] {
     const objectTypes: eSystemObjectType[] = [];
@@ -86,4 +88,56 @@ export function generateRepositoryUrl(filter: RepositoryFilter): string {
 
     const queryResult = lodash.pickBy(filter, validate);
     return `${HOME_ROUTES.REPOSITORY}?${qs.stringify(queryResult)}`;
+}
+
+export function getTreeWidth(columnSize: number): string {
+    const width = 50 + columnSize * 10;
+    if (width <= 80) {
+        return '83.5vw';
+    }
+
+    return `${width}vw`;
+}
+
+export function getTreeColorVariant(index: number): RepositoryColorVariant {
+    return index % 2 ? RepositoryColorVariant.light : RepositoryColorVariant.regular;
+}
+
+export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boolean, values?: string[]): TreeViewColumn[] {
+    const treeColumns: TreeViewColumn[] = [];
+    const MIN_SIZE = 10;
+
+    metadataColumns.forEach((metadataColumn, index: number) => {
+        const treeColumn: TreeViewColumn = {
+            metadataColumn,
+            label: values ? values[index] : 'Unknown',
+            size: MIN_SIZE
+        };
+
+        switch (metadataColumn) {
+            case eMetadata.eUnitAbbreviation:
+                if (isHeader) treeColumn.label = 'Unit';
+                break;
+
+            case eMetadata.eSubjectIdentifier:
+                if (isHeader) treeColumn.label = 'SubjectId';
+                treeColumn.size = MIN_SIZE * 2;
+                break;
+
+            case eMetadata.eItemName:
+                if (isHeader) treeColumn.label = 'Item name';
+                break;
+
+            default:
+                break;
+        }
+
+        treeColumns.push(treeColumn);
+    });
+
+    return treeColumns;
+}
+
+export function computeMetadataViewWidth(treeColumns: TreeViewColumn[]): string {
+    return `${treeColumns.reduce((prev, current) => prev + current.size, 0)}vw`;
 }
