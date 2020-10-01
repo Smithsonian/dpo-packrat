@@ -55,8 +55,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         background: palette.background.paper,
         [breakpoints.down('lg')]: {
             minWidth: 100,
-            width: 100,
-            padding: '5px 10px'
+            width: 100
         },
         '&:not(:first-child)': {
             marginLeft: 10
@@ -69,7 +68,6 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     filterText: {
         marginLeft: 10,
         [breakpoints.down('lg')]: {
-            marginLeft: 5,
             fontSize: 10
         }
     }

@@ -3,7 +3,8 @@ import { fade, withStyles, Theme, makeStyles } from '@material-ui/core/styles';
 import { TreeItem, TreeItemProps } from '@material-ui/lab';
 import React from 'react';
 import { animated, useSpring } from 'react-spring';
-import { getTermForSystemObjectType, trimmedMetadataField } from '../../../../utils/repository';
+import { eMetadata } from '../../../../types/server';
+import { computeMetadataViewWidth, getTermForSystemObjectType, trimmedMetadataField } from '../../../../utils/repository';
 
 interface TransitionComponentProps {
     in?: boolean;
@@ -25,10 +26,16 @@ function TransitionComponent(props: TransitionComponentProps): React.ReactElemen
     );
 }
 
+export type TreeViewColumn = {
+    metadataColumn: eMetadata;
+    label: string;
+    size: number;
+};
+
 interface StyledTreeItemProps {
     color: string;
-    metadata: string[];
     objectType: number;
+    treeColumns: TreeViewColumn[];
 }
 
 const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) => ({
@@ -40,20 +47,20 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         zIndex: 10,
         [breakpoints.down('lg')]: {
             width: 15,
-            marginLeft: 8,
+            marginLeft: 8
         },
         '& .close': {
             opacity: 0.3
-        },
+        }
     },
     root: {
-        marginTop: 5,
+        marginTop: 5
     },
     group: {
         paddingLeft: 20,
         borderLeft: `1px dashed ${fade(palette.text.primary, 0.2)}`,
         [breakpoints.down('lg')]: {
-            paddingLeft: 15,
+            paddingLeft: 15
         }
     },
     label: {
@@ -62,11 +69,11 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         borderRadius: 5,
         padding: '5px 10px',
         [breakpoints.down('lg')]: {
-            fontSize: 12,
+            fontSize: 12
         },
         backgroundColor: 'transparent !important',
         '&:hover': {
-            backgroundColor: 'transparent',
+            backgroundColor: 'transparent'
         }
     },
     content: {
@@ -74,19 +81,32 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
         borderRadius: 5,
         transition: 'all 200ms ease',
         '&:hover': {
-            transform: 'scale(1.01)',
+            transform: 'scale(1.01)'
         }
     },
     selected: {
         backgroundColor: 'transparent'
     }
-}))((props: TreeItemProps & StyledTreeItemProps) => <TreeItem {...props} label={<TreeLabel label={props.label} color={props.color} objectType={props.objectType} metadata={props.metadata} />} TransitionComponent={TransitionComponent} />);
+}))((props: TreeItemProps & StyledTreeItemProps) => (
+    <TreeItem
+        {...props}
+        TransitionComponent={TransitionComponent}
+        label={
+            <TreeLabel
+                label={props.label}
+                color={props.color}
+                objectType={props.objectType}
+                treeColumns={props.treeColumns}
+            />
+        }
+    />
+));
 
 interface TreeLabelProps {
     label?: React.ReactNode;
-    metadata: string[];
     objectType: number;
     color: string;
+    treeColumns: TreeViewColumn[];
 }
 
 const useTreeLabelStyles = makeStyles(({ breakpoints }) => ({
@@ -109,7 +129,7 @@ const useTreeLabelStyles = makeStyles(({ breakpoints }) => ({
 
 function TreeLabel(props: TreeLabelProps): React.ReactElement {
     const classes = useTreeLabelStyles(props);
-    const { label, metadata, objectType } = props;
+    const { label, objectType, treeColumns } = props;
 
     const objectTitle = `${getTermForSystemObjectType(objectType)} ${label}`;
 
@@ -122,22 +142,19 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
                     </Box>
                 </Tooltip>
             </Box>
-            <MetadataView header={false} metadata={metadata} />
+            <MetadataView header={false} treeColumns={treeColumns} />
         </Box>
     );
 }
 
 const useMetadataStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     metadata: {
-        display: 'flex',
-        width: '50vw',
-        [breakpoints.down('lg')]: {
-            width: '42vw',
-        }
+        display: 'flex'
     },
     column: {
         display: 'flex',
         alignItems: 'center',
+        padding: '0px 10px',
         fontSize: ({ header }: MetadataViewProps) => header ? typography.pxToRem(18) : undefined,
         color: ({ header }: MetadataViewProps) => header ? palette.primary.dark : palette.grey[900],
         fontWeight: ({ header }: MetadataViewProps) => header ? typography.fontWeightRegular : typography.fontWeightLight,
@@ -151,25 +168,24 @@ const useMetadataStyles = makeStyles(({ palette, typography, breakpoints }) => (
 
 interface MetadataViewProps {
     header: boolean;
-    metadata: string[];
+    treeColumns: TreeViewColumn[];
 }
 
 export function MetadataView(props: MetadataViewProps): React.ReactElement {
-    const { metadata } = props;
+    const { treeColumns } = props;
     const classes = useMetadataStyles(props);
-    const [unit, subjectId, itemName] = metadata;
+
+    const width = computeMetadataViewWidth(treeColumns);
 
     return (
-        <Box className={classes.metadata}>
-            <Tooltip arrow title={unit} placement='bottom-start'>
-                <Box className={classes.column} component='div' whiteSpace='normal' width='8vw'>{unit}</Box>
-            </Tooltip>
-            <Tooltip arrow title={subjectId} placement='bottom-start'>
-                <Box className={classes.column} width='15vw'>{trimmedMetadataField(subjectId, 20, 10)}</Box>
-            </Tooltip>
-            <Tooltip arrow title={itemName} placement='bottom-start'>
-                <Box className={classes.column} ml={1} width='10vw'>{trimmedMetadataField(itemName, 15, 5)}</Box>
-            </Tooltip>
+        <Box className={classes.metadata} style={{ width }}>
+            {treeColumns.map(({ label, size }, index: number) => (
+                <Tooltip key={index} arrow title={label} placement='bottom-start'>
+                    <Box className={classes.column} component='div' whiteSpace='normal' width={`${size}vw`}>
+                        {trimmedMetadataField(label, 20, 10)}
+                    </Box>
+                </Tooltip>
+            ))}
         </Box>
     );
 }
