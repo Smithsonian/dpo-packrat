@@ -1,8 +1,7 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Select, MenuItem } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { AppContext } from '../../../../context';
-import useProject from '../../hooks/useProject';
+import { useProject } from '../../../../store';
 import lodash from 'lodash';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -15,8 +14,7 @@ const useStyles = makeStyles(({ palette }) => ({
 
 function ProjectList(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion: { projects } } = useContext(AppContext);
-    const { getSelectedProject, updateSelectedProject } = useProject();
+    const { projects, getSelectedProject, updateSelectedProject } = useProject();
 
     const hasProjects = !projects.length;
     const selectedProject = getSelectedProject();

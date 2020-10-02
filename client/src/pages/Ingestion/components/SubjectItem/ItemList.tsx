@@ -1,10 +1,9 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { TableContainer, Table, TableCell, TableHead, TableRow, TableBody, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { AppContext, StateItem, defaultItem } from '../../../../context';
+import { useItem, StateItem, defaultItem } from '../../../../store';
 import { FaRegCircle, FaDotCircle } from 'react-icons/fa';
 import { grey, blue } from '@material-ui/core/colors';
-import useItem from '../../hooks/useItem';
 import { DebounceInput } from 'react-debounce-input';
 
 const useStyles = makeStyles(({ palette, spacing, typography }) => ({
@@ -52,8 +51,7 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
 
 function ItemList(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion: { items } } = useContext(AppContext);
-    const { updateItem } = useItem();
+    const { items, updateItem } = useItem();
 
     const selectableHeaderStyle = {
         width: 100

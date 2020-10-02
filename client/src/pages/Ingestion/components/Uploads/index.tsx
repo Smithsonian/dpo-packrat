@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import KeepAlive from 'react-activation';
 import { SidebarBottomNavigator, Loader } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
@@ -10,10 +10,8 @@ import UploadFilesPicker from './UploadFilesPicker';
 import UploadList from './UploadList';
 import UploadCompleteList from './UploadCompleteList';
 import { useHistory } from 'react-router';
-import useFilesUpload from '../../hooks/useFilesUpload';
 import { toast } from 'react-toastify';
-import { AppContext } from '../../../../context';
-import useVocabularyEntries from '../../hooks/useVocabularyEntries';
+import { useVocabulary, useUpload, useMetadata } from '../../../../store';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -59,9 +57,9 @@ function Uploads(): React.ReactElement {
     const [loadingVocabulary, setLoadingVocabulary] = useState(true);
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
-    const { ingestion: { uploads } } = useContext(AppContext);
-    const { updateMetadataSteps, discardFiles } = useFilesUpload();
-    const { updateVocabularyEntries } = useVocabularyEntries();
+    const { completed, discardFiles } = useUpload();
+    const { updateMetadataSteps } = useMetadata();
+    const { updateVocabularyEntries } = useVocabulary();
 
     const fetchVocabularyEntries = async () => {
         setLoadingVocabulary(true);
@@ -98,7 +96,7 @@ function Uploads(): React.ReactElement {
     };
 
     const onDiscard = async () => {
-        if (uploads.files.length) {
+        if (completed.length) {
             try {
                 setDiscardingFiles(true);
                 await discardFiles();

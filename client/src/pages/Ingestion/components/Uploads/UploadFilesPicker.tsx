@@ -1,11 +1,10 @@
 import { Button, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useContext } from 'react';
+import React from 'react';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
 import { Colors } from '../../../../theme';
-import useFilesUpload from '../../hooks/useFilesUpload';
-import { AppContext } from '../../../../context';
+import { useUpload } from '../../../../store';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -37,11 +36,10 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 
 function UploadFilesPicker(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion: { uploads: { loading } } } = useContext(AppContext);
-    const { loadFiles } = useFilesUpload();
+    const { loading, loadPending } = useUpload();
 
     const onDrop = (acceptedFiles: File[]) => {
-        loadFiles(acceptedFiles);
+        loadPending(acceptedFiles);
     };
 
     return (
