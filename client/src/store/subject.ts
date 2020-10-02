@@ -1,4 +1,4 @@
-import create from 'zustand';
+import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import { ApolloQueryResult } from '@apollo/client';
 import { toast } from 'react-toastify';
@@ -31,7 +31,7 @@ type SubjectStore = {
     reset: () => void;
 };
 
-export const useSubject = create<SubjectStore>((set, get) => ({
+export const useSubject = create<SubjectStore>((set: SetState<SubjectStore>, get: GetState<SubjectStore>) => ({
     subjects: [],
     addSubjects: async (fetchedSubjects: StateSubject[]): Promise<void> => {
         const { subjects } = get();

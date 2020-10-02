@@ -1,4 +1,4 @@
-import create from 'zustand';
+import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 
 export type StateProject = {
@@ -17,7 +17,7 @@ type ProjectStore = {
     reset: () => void;
 };
 
-export const useProject = create<ProjectStore>((set, get) => ({
+export const useProject = create<ProjectStore>((set: SetState<ProjectStore>, get: GetState<ProjectStore>) => ({
     projects: [],
     loading: false,
     getSelectedProject: () => {

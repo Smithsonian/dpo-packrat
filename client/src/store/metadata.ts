@@ -1,7 +1,7 @@
 import { ApolloQueryResult } from '@apollo/client';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
-import create from 'zustand';
+import create, { SetState, GetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import {
     AreCameraSettingsUniformDocument,
@@ -113,7 +113,7 @@ type MetadataStore = {
     reset: () => void;
 };
 
-export const useMetadata = create<MetadataStore>((set, get) => ({
+export const useMetadata = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
     metadatas: [],
     getSelectedIdentifiers: (metadata: StateMetadata): StateIdentifier[] | undefined => lodash.filter(metadata.photogrammetry.identifiers, { selected: true }),
     getFieldErrors: (metadata: StateMetadata): FieldErrors => {
