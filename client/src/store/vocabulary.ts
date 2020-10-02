@@ -1,4 +1,4 @@
-import create from 'zustand';
+import create, { SetState, GetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
 import { eVocabularySetID } from '../types/server';
@@ -21,7 +21,7 @@ type VocabularyStore = {
     getAssetType: (idVocabulary: number) => AssetType;
 };
 
-export const useVocabulary = create<VocabularyStore>((set, get) => ({
+export const useVocabulary = create<VocabularyStore>((set: SetState<VocabularyStore>, get: GetState<VocabularyStore>) => ({
     vocabularies: new Map<eVocabularySetID, VocabularyOption[]>(),
     updateVocabularyEntries: async (): Promise<StateVocabulary> => {
         const { data } = await apolloClient.query({

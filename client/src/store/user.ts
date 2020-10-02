@@ -1,4 +1,4 @@
-import create from 'zustand';
+import create, { SetState, GetState } from 'zustand';
 import { User, GetCurrentUserDocument } from '../types/graphql';
 import { apolloClient } from '../graphql';
 import { QueryOptions } from '@apollo/client';
@@ -11,7 +11,7 @@ type UserStore = {
     logout: () => Promise<AuthResponseType>;
 };
 
-export const useUser = create<UserStore>((set, get) => ({
+export const useUser = create<UserStore>((set: SetState<UserStore>, get: GetState<UserStore>) => ({
     user: null,
     initialize: async () => {
         const { user } = get();

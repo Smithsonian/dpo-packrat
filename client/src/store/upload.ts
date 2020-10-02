@@ -1,4 +1,4 @@
-import create from 'zustand';
+import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
 import { eVocabularySetID } from '../types/server';
@@ -50,7 +50,7 @@ type UploadStore = {
     reset: () => void;
 };
 
-export const useUpload = create<UploadStore>((set, get) => ({
+export const useUpload = create<UploadStore>((set: SetState<UploadStore>, get: GetState<UploadStore>) => ({
     completed: [],
     pending: [],
     loading: true,

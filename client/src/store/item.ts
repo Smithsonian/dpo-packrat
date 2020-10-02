@@ -1,4 +1,4 @@
-import create from 'zustand';
+import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 
 export const defaultItem: StateItem = {
@@ -24,7 +24,7 @@ type ItemStore = {
     reset: () => void;
 };
 
-export const useItem = create<ItemStore>((set, get) => ({
+export const useItem = create<ItemStore>((set: SetState<ItemStore>, get: GetState<ItemStore>) => ({
     items: [defaultItem],
     loading: false,
     getSelectedItem: () => {
