@@ -1,10 +1,7 @@
-import React, { useState, createContext } from 'react';
-import { User } from '../types/graphql';
+import React, { createContext } from 'react';
 import useIngestionContext, { Ingestion, IngestionDispatch } from './ingestion';
 
 type AppContextType = {
-    user: User | null;
-    updateUser: (user: User | null) => void;
     ingestion: Ingestion;
     ingestionDispatch: IngestionDispatch;
 };
@@ -12,16 +9,9 @@ type AppContextType = {
 export const AppContext = createContext({} as AppContextType);
 
 export const AppContextProvider = ({ children }: { children: React.ReactChild }): React.ReactElement => {
-    const [user, setUser] = useState<User | null>(null);
     const { ingestion, ingestionDispatch } = useIngestionContext();
 
-    const updateUser = (user: User | null) => {
-        setUser(user);
-    };
-
     const value = {
-        user,
-        updateUser,
         ingestion,
         ingestionDispatch
     };

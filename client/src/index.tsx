@@ -1,37 +1,33 @@
 import { ApolloProvider } from '@apollo/client';
 import { Box, CircularProgress, ThemeProvider } from '@material-ui/core';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { PrivateRoute, PublicRoute } from './components';
 import { ROUTES } from './constants';
-import { AppContext, AppContextProvider } from './context';
+import { AppContextProvider } from './context';
 import './global/root.css';
 import { apolloClient } from './graphql';
 import { About, Home, Login } from './pages';
 import theme from './theme';
-import { getAuthenticatedUser } from './utils/auth';
 import { AliveScope } from 'react-activation';
 import * as serviceWorker from './serviceWorker';
+import { useUser } from './store';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
-    const { user, updateUser } = useContext(AppContext);
+    const { initialize } = useUser();
 
-    const initialize = useCallback(async () => {
-        if (!user) {
-            const authenticatedUser = await getAuthenticatedUser();
-            updateUser(authenticatedUser);
-            setLoading(false);
-        }
-    }, [user, updateUser]);
-
-    useEffect(() => {
-        initialize();
+    const initializeUser = useCallback(async () => {
+        await initialize();
+        setLoading(false);
     }, [initialize]);
 
+    useEffect(() => {
+        initializeUser();
+    }, [initializeUser]);
 
     return (
         <Router>
