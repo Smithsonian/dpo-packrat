@@ -189,7 +189,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                 <Box className={classes.type}>
                     <Select
                         value={type}
-                        disabled={complete}
+                        disabled={complete || uploading}
                         className={classes.typeSelect}
                         onChange={({ target: { value } }) => onChangeType(id, value as number)}
                         disableUnderline
