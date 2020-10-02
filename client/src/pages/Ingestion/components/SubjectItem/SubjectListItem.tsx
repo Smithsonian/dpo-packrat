@@ -2,7 +2,7 @@ import React from 'react';
 import { TableRow, TableCell, Typography, Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { MdAddCircleOutline, MdRemoveCircleOutline } from 'react-icons/md';
-import { StateSubject } from '../../../../context';
+import { StateSubject } from '../../../../store';
 
 const useStyles = makeStyles(() => ({
     name: {

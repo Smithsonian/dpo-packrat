@@ -1,8 +1,4 @@
-import { useContext } from 'react';
-import { AppContext, StateItem, StateProject, StateIdentifier, defaultItem, IngestionDispatchAction, METADATA_ACTIONS, parseFileId, isNewItem } from '../../../context';
-import useItem from './useItem';
-import useProject from './useProject';
-import useMetadata from './useMetadata';
+import { useItem, useProject, useMetadata, useVocabulary, useSubject, useUpload, defaultItem, StateIdentifier, StateItem, StateProject } from '../../../store';
 import { IngestDataMutation, IngestIdentifierInput, IngestFolderInput, IngestPhotogrammetryInput, IngestDataDocument, IngestSubjectInput } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql';
 import lodash from 'lodash';
@@ -10,7 +6,7 @@ import { FetchResult } from '@apollo/client';
 import { toast } from 'react-toastify';
 import { useHistory } from 'react-router';
 import { HOME_ROUTES, resolveSubRoute, INGESTION_ROUTES_TYPE } from '../../../constants/routes';
-import useVocabularyEntries from './useVocabularyEntries';
+import { isNewItem, parseFileId } from '../../../store/utils';
 
 interface UseIngest {
     ingestPhotogrammetryData: () => Promise<boolean>;
@@ -19,17 +15,20 @@ interface UseIngest {
 }
 
 function useIngest(): UseIngest {
-    const {
-        ingestion: { subjects, metadatas },
-        ingestionDispatch
-    } = useContext(AppContext);
-
     const history = useHistory();
 
+    const { removeSelectedUploads } = useUpload();
+    const { subjects } = useSubject();
     const { getSelectedProject } = useProject();
     const { getSelectedItem } = useItem();
-    const { getSelectedIdentifiers } = useMetadata();
-    const { getAssetType } = useVocabularyEntries();
+    const { metadatas, getSelectedIdentifiers } = useMetadata();
+    const { getAssetType } = useVocabulary();
+
+    const resetUploads = useUpload(state => state.reset);
+    const resetSubjects = useSubject(state => state.reset);
+    const resetProjects = useProject(state => state.reset);
+    const resetItems = useItem(state => state.reset);
+    const resetMetadatas = useMetadata(state => state.reset);
 
     const ingestPhotogrammetryData = async (): Promise<boolean> => {
         try {
@@ -62,7 +61,7 @@ function useIngest(): UseIngest {
 
                 let ingestItemId: number | null = null;
 
-                if (!isDefaultItem || !isNewItem(id)) {
+                if (!isDefaultItem || isNewItem(id)) {
                     ingestItemId = Number.parseInt(id, 10);
                 }
 
@@ -188,23 +187,23 @@ function useIngest(): UseIngest {
         return false;
     };
 
+    const resetIngestionState = () => {
+        resetSubjects();
+        resetProjects();
+        resetItems();
+        resetMetadatas();
+    };
+
     const ingestionComplete = (): void => {
-        const ingestionCompleteAction: IngestionDispatchAction = {
-            type: METADATA_ACTIONS.INGESTION_COMPLETE
-        };
-
-        ingestionDispatch(ingestionCompleteAction);
-
+        removeSelectedUploads();
+        resetIngestionState();
         const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTES_TYPE.UPLOADS);
         history.push(nextRoute);
     };
 
     const ingestionReset = (): void => {
-        const ingestionResetAction: IngestionDispatchAction = {
-            type: METADATA_ACTIONS.INGESTION_RESET
-        };
-
-        ingestionDispatch(ingestionResetAction);
+        resetUploads();
+        resetIngestionState();
     };
 
     return {

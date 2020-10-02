@@ -4,14 +4,14 @@ import { apolloClient } from '../graphql';
 import { QueryOptions } from '@apollo/client';
 import API, { AuthResponseType } from '../api';
 
-type UserState = {
+type UserStore = {
     user: User | null;
     initialize: () => Promise<void>;
     login: (email: string, password: string) => Promise<AuthResponseType>;
     logout: () => Promise<AuthResponseType>;
 };
 
-const useUser = create<UserState>((set, get) => ({
+export const useUser = create<UserStore>((set, get) => ({
     user: null,
     initialize: async () => {
         const { user } = get();
@@ -61,5 +61,3 @@ async function getAuthenticatedUser(): Promise<User | null> {
         return null;
     }
 }
-
-export default useUser;

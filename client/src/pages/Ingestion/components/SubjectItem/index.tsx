@@ -1,19 +1,15 @@
 import { Box, Chip, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Redirect, useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { AppContext } from '../../../../context';
-import useItem from '../../hooks/useItem';
-import useProject from '../../hooks/useProject';
+import { useItem, useMetadata, useProject, useSubject, useVocabulary } from '../../../../store';
 import ItemList from './ItemList';
 import ProjectList from './ProjectList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
-import useVocabularyEntries from '../../hooks/useVocabularyEntries';
-import useMetadata from '../../hooks/useMetadata';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -41,7 +37,7 @@ const useStyles = makeStyles(({ palette }) => ({
 function SubjectItem(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const { ingestion: { metadatas, subjects, projects } } = useContext(AppContext);
+
     const { getSelectedProject } = useProject();
     const { getSelectedItem } = useItem();
     const [subjectError, setSubjectError] = useState(false);
@@ -51,8 +47,10 @@ function SubjectItem(): React.ReactElement {
 
     const selectedItem = getSelectedItem();
 
-    const { updateVocabularyEntries } = useVocabularyEntries();
-    const { updateMetadataFolders } = useMetadata();
+    const { updateVocabularyEntries } = useVocabulary();
+    const { subjects } = useSubject();
+    const { projects } = useProject();
+    const { metadatas, updateMetadataFolders } = useMetadata();
 
     useEffect(() => {
         if (subjects.length > 0) {

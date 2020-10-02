@@ -1,18 +1,14 @@
 import { Box, Breadcrumbs, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import * as qs from 'query-string';
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { MdNavigateNext } from 'react-icons/md';
 import { Redirect, useHistory, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { AppContext, FileId, StateItem, StateMetadata, StateProject } from '../../../../context';
-import useItem from '../../hooks/useItem';
-import useMetadata from '../../hooks/useMetadata';
-import useProject from '../../hooks/useProject';
+import { useItem, useMetadata, useProject, useVocabulary, FileId, StateItem, StateMetadata, StateProject } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
-import useVocabularyEntries from '../../hooks/useVocabularyEntries';
 import Photogrammetry from './Photogrammetry';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -42,17 +38,15 @@ type QueryParams = {
 function Metadata(): React.ReactElement {
     const classes = useStyles();
     const { search } = useLocation();
-    const { ingestion } = useContext(AppContext);
-    const { metadatas } = ingestion;
     const history = useHistory();
 
     const [ingestionLoading, setIngestionLoading] = useState(false);
 
     const { getSelectedProject } = useProject();
     const { getSelectedItem } = useItem();
-    const { getFieldErrors, getMetadataInfo } = useMetadata();
+    const { metadatas, getFieldErrors, getMetadataInfo } = useMetadata();
     const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
-    const { getAssetType } = useVocabularyEntries();
+    const { getAssetType } = useVocabulary();
 
     const metadataLength = metadatas.length;
     const query = qs.parse(search) as QueryParams;

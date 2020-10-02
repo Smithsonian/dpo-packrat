@@ -1,15 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Box, Checkbox, Typography } from '@material-ui/core';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FieldType } from '../../../../../components';
 import DateFnsUtils from '@date-io/date-fns';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
 import { Colors } from '../../../../../theme';
-import { StateMetadata, defaultPhotogrammetryFields, MetadataFieldValue, PhotogrammetryFields, AppContext, StateIdentifier } from '../../../../../context';
-import useMetadata from '../../../hooks/useMetadata';
+import { StateMetadata, defaultPhotogrammetryFields, MetadataFieldValue, useVocabulary, PhotogrammetryFields, useMetadata, StateIdentifier } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
-import useVocabularyEntries from '../../../hooks/useVocabularyEntries';
 import Description from './Description';
 import IdentifierList from './IdentifierList';
 import SelectField from './SelectField';
@@ -73,18 +71,16 @@ interface PhotogrammetryProps {
 
 function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { metadataIndex } = props;
-    const { ingestion: { metadatas } } = useContext(AppContext);
     const classes = useStyles();
 
+    const { metadatas, getFieldErrors, updatePhotogrammetryFields } = useMetadata();
     const metadata: StateMetadata = metadatas[metadataIndex];
-
-    const { getFieldErrors, updatePhotogrammetryFields } = useMetadata();
 
     const errors = getFieldErrors(metadata);
 
     const [values, setValues] = useState<PhotogrammetryFields>(defaultPhotogrammetryFields);
 
-    const { getEntries, getInitialEntry } = useVocabularyEntries();
+    const { getEntries, getInitialEntry } = useVocabulary();
 
     useEffect(() => {
         setValues(metadatas[metadataIndex].photogrammetry);

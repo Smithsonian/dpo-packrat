@@ -7,7 +7,7 @@ import { FaRedo, FaRegCircle, FaCheckCircle } from 'react-icons/fa';
 import { MdFileUpload } from 'react-icons/md';
 import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
-import { FileId, VocabularyOption } from '../../../../context';
+import { FileId, VocabularyOption } from '../../../../store';
 import { motion } from 'framer-motion';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -165,7 +165,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
             variants={variants}
             initial='hidden'
             animate='visible'
-            whileTap={{ scale: complete ? 0.95 : 1 }}
+            whileTap={{ scale: complete ? 0.98 : 1 }}
         >
             <Box className={classes.item} onClick={select}>
                 <Box className={classes.details}>

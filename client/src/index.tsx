@@ -7,7 +7,6 @@ import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { PrivateRoute, PublicRoute } from './components';
 import { ROUTES } from './constants';
-import { AppContextProvider } from './context';
 import './global/root.css';
 import { apolloClient } from './graphql';
 import { About, Home, Login } from './pages';
@@ -55,20 +54,18 @@ function AppRouter(): React.ReactElement {
 function App(): React.ReactElement {
     return (
         <ApolloProvider client={apolloClient}>
-            <AppContextProvider>
-                <ThemeProvider theme={theme}>
-                    <AppRouter />
-                    <ToastContainer
-                        transition={Slide}
-                        position='bottom-right'
-                        autoClose={5000}
-                        closeOnClick
-                        pauseOnFocusLoss
-                        draggable
-                        pauseOnHover
-                    />
-                </ThemeProvider>
-            </AppContextProvider>
+            <ThemeProvider theme={theme}>
+                <AppRouter />
+                <ToastContainer
+                    transition={Slide}
+                    position='bottom-right'
+                    autoClose={5000}
+                    closeOnClick
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                />
+            </ThemeProvider>
         </ApolloProvider>
     );
 }
