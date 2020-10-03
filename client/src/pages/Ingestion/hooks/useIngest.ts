@@ -15,20 +15,14 @@ interface UseIngest {
 }
 
 function useIngest(): UseIngest {
-    const history = useHistory();
-
-    const { removeSelectedUploads } = useUpload();
-    const { subjects } = useSubject();
-    const { getSelectedProject } = useProject();
-    const { getSelectedItem } = useItem();
-    const { metadatas, getSelectedIdentifiers } = useMetadata();
+    const [{ removeSelectedUploads }, resetUploads] = useUpload(state => [state, state.reset]);
+    const [{ subjects }, resetSubjects] = useSubject(state => [state, state.reset]);
+    const [{ getSelectedProject }, resetProjects] = useProject(state => [state, state.reset]);
+    const [{ getSelectedItem }, resetItems] = useItem(state => [state, state.reset]);
+    const [{ metadatas, getSelectedIdentifiers }, resetMetadatas] = useMetadata(state => [state, state.reset]);
     const { getAssetType } = useVocabulary();
 
-    const resetUploads = useUpload(state => state.reset);
-    const resetSubjects = useSubject(state => state.reset);
-    const resetProjects = useProject(state => state.reset);
-    const resetItems = useItem(state => state.reset);
-    const resetMetadatas = useMetadata(state => state.reset);
+    const history = useHistory();
 
     const ingestPhotogrammetryData = async (): Promise<boolean> => {
         try {

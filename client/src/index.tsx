@@ -17,7 +17,7 @@ import { useUser } from './store';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
-    const { initialize } = useUser();
+    const initialize = useUser(state => state.initialize);
 
     const initializeUser = useCallback(async () => {
         await initialize();

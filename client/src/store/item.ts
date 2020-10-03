@@ -27,7 +27,7 @@ type ItemStore = {
 export const useItem = create<ItemStore>((set: SetState<ItemStore>, get: GetState<ItemStore>) => ({
     items: [defaultItem],
     loading: false,
-    getSelectedItem: () => {
+    getSelectedItem: (): StateItem | undefined => {
         const { items } = get();
         return lodash.find(items, { selected: true });
     },
@@ -53,7 +53,7 @@ export const useItem = create<ItemStore>((set: SetState<ItemStore>, get: GetStat
             set({ items: newItems });
         }
     },
-    updateItem: (item: StateItem) => {
+    updateItem: (item: StateItem): void => {
         const { items, getSelectedItem } = get();
         const { selected } = item;
 
