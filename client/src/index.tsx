@@ -1,11 +1,11 @@
 import { ApolloProvider } from '@apollo/client';
-import { Box, CircularProgress, ThemeProvider } from '@material-ui/core';
+import { ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { PrivateRoute, PublicRoute } from './components';
+import { Loader, PrivateRoute, PublicRoute } from './components';
 import { ROUTES } from './constants';
 import './global/root.css';
 import { apolloClient } from './graphql';
@@ -28,25 +28,27 @@ function AppRouter(): React.ReactElement {
         initializeUser();
     }, [initializeUser]);
 
+    let content: React.ReactElement = <Loader size={30} />;
+
+    if (!loading) {
+        content = (
+            <React.Fragment>
+                <Switch>
+                    <PublicRoute restricted exact path={ROUTES.LOGIN} component={Login} />
+                    <PublicRoute exact path={ROUTES.ABOUT} component={About} />
+                    <PrivateRoute path={ROUTES.HOME}>
+                        <AliveScope>
+                            <Home />
+                        </AliveScope>
+                    </PrivateRoute>
+                </Switch>
+            </React.Fragment>
+        );
+    }
+
     return (
         <Router>
-            {loading ? (
-                <Box display='flex' flex={1} alignItems='center' justifyContent='center'>
-                    <CircularProgress color='primary' size={30} />
-                </Box>
-            ) : (
-                <React.Fragment>
-                    <Switch>
-                        <PublicRoute restricted exact path={ROUTES.LOGIN} component={Login} />
-                        <PublicRoute exact path={ROUTES.ABOUT} component={About} />
-                        <PrivateRoute path={ROUTES.HOME}>
-                            <AliveScope>
-                                <Home />
-                            </AliveScope>
-                        </PrivateRoute>
-                    </Switch>
-                </React.Fragment>
-            )}
+            {content}
         </Router>
     );
 }
