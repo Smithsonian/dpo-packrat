@@ -34,7 +34,7 @@ interface SubjectListProps {
 
 function SubjectList(props: SubjectListProps): React.ReactElement {
     const { subjects, emptyLabel, selected } = props;
-    const { addSubject, removeSubject } = useSubject();
+    const [addSubject, removeSubject] = useSubject(state => [state.addSubject, state.removeSubject]);
     const classes = useStyles();
 
     const header: string[] = ['ARK / ID', 'UNIT', 'NAME'];

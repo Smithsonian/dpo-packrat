@@ -14,7 +14,7 @@ const useStyles = makeStyles(({ palette }) => ({
 
 function ProjectList(): React.ReactElement {
     const classes = useStyles();
-    const { projects, getSelectedProject, updateSelectedProject } = useProject();
+    const [projects, getSelectedProject, updateSelectedProject] = useProject(state => [state.projects, state.getSelectedProject, state.updateSelectedProject]);
 
     const hasProjects = !projects.length;
     const selectedProject = getSelectedProject();

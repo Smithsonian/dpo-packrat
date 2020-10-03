@@ -51,7 +51,7 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
 
 function ItemList(): React.ReactElement {
     const classes = useStyles();
-    const { items, updateItem } = useItem();
+    const [items, updateItem] = useItem(state => [state.items, state.updateItem]);
 
     const selectableHeaderStyle = {
         width: 100

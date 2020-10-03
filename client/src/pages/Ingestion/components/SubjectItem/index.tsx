@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { useItem, useMetadata, useProject, useSubject, useVocabulary } from '../../../../store';
+import useIngest from '../../hooks/useIngest';
 import ItemList from './ItemList';
 import ProjectList from './ProjectList';
 import SearchList from './SearchList';
@@ -38,19 +39,20 @@ function SubjectItem(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
 
-    const { getSelectedProject } = useProject();
-    const { getSelectedItem } = useItem();
     const [subjectError, setSubjectError] = useState(false);
     const [projectError, setProjectError] = useState(false);
     const [itemError, setItemError] = useState(false);
     const [metadataStepLoading, setMetadataStepLoading] = useState(false);
 
-    const selectedItem = getSelectedItem();
+    const getSelectedProject = useProject(state => state.getSelectedProject);
+    const getSelectedItem = useItem(state => state.getSelectedItem);
+    const updateVocabularyEntries = useVocabulary(state => state.updateVocabularyEntries);
+    const subjects = useSubject(state => state.subjects);
+    const projects = useProject(state => state.projects);
+    const [metadatas, updateMetadataFolders] = useMetadata(state => [state.metadatas, state.updateMetadataFolders]);
 
-    const { updateVocabularyEntries } = useVocabulary();
-    const { subjects } = useSubject();
-    const { projects } = useProject();
-    const { metadatas, updateMetadataFolders } = useMetadata();
+    const selectedItem = getSelectedItem();
+    const { ingestionReset } = useIngest();
 
     useEffect(() => {
         if (subjects.length > 0) {
@@ -71,6 +73,15 @@ function SubjectItem(): React.ReactElement {
             }
         }
     }, [selectedItem]);
+
+    const onPrevious = async () => {
+        const isConfirmed = global.confirm('Are you sure you want to go to navigate away? changes might be lost');
+        if (isConfirmed) {
+            ingestionReset();
+            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS);
+            history.push(nextRoute);
+        }
+    };
 
     const onNext = async (): Promise<void> => {
         let error: boolean = false;
@@ -155,9 +166,9 @@ function SubjectItem(): React.ReactElement {
             <SidebarBottomNavigator
                 rightLoading={metadataStepLoading}
                 leftLabel='Previous'
-                leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)}
                 rightLabel='Next'
                 onClickRight={onNext}
+                onClickLeft={onPrevious}
             />
         </Box>
     );

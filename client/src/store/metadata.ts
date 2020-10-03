@@ -33,7 +33,7 @@ type FieldErrors = {
     };
 };
 
-export type MetadataFieldValue = string | number | boolean | Date;
+export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[];
 
 type MetadataUpdate = {
     valid: boolean;
@@ -107,7 +107,7 @@ type MetadataStore = {
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
     getMetadataInfo: (id: FileId) => MetadataInfo;
     updateMetadataSteps: () => Promise<MetadataUpdate>;
-    updatePhotogrammetryFields: (metadataIndex: number, values: PhotogrammetryFields) => void;
+    updatePhotogrammetryField: (metadataIndex: number, name: string, value: MetadataFieldValue) => void;
     updateMetadataFolders: () => Promise<void>;
     updateCameraSettings: (metadatas: StateMetadata[]) => Promise<StateMetadata[]>;
     reset: () => void;
@@ -292,14 +292,15 @@ export const useMetadata = create<MetadataStore>((set: SetState<MetadataStore>, 
             selectedFiles: true
         };
     },
-    updatePhotogrammetryFields: (metadataIndex: number, values: PhotogrammetryFields): void => {
+    updatePhotogrammetryField: (metadataIndex: number, name: string, value: MetadataFieldValue) => {
         const { metadatas } = get();
-        const updatedMetadatas = lodash.map([...metadatas], (metadata: StateMetadata, index: number) => {
+        const updatedMetadatas = lodash.map(metadatas, (metadata: StateMetadata, index: number) => {
             if (index === metadataIndex) {
                 return {
                     ...metadata,
                     photogrammetry: {
-                        ...values
+                        ...metadata.photogrammetry,
+                        [name]: value
                     }
                 };
             }

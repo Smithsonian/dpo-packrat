@@ -87,9 +87,7 @@ export const useSubject = create<SubjectStore>((set: SetState<SubjectStore>, get
             const { data } = projectsQueryResult;
             if (data) {
                 const { Project: foundProjects } = data.getIngestionProjectsForSubjects;
-
                 const projects: StateProject[] = foundProjects.map((project: Project, index: number) => parseProjectToState(project, !index));
-
                 addProjects(projects);
             }
         } catch (error) {
@@ -106,9 +104,7 @@ export const useSubject = create<SubjectStore>((set: SetState<SubjectStore>, get
 
             if (data) {
                 const { Item: foundItems } = data.getIngestionItemsForSubjects;
-
                 const items: StateItem[] = foundItems.map((item: Item, index: number) => parseItemToState(item, false, index));
-
                 addItems(items);
             }
         } catch (error) {

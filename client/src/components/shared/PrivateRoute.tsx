@@ -13,7 +13,7 @@ interface PrivateRouteProps {
 }
 
 function PrivateRoute({ component: Component, children, ...rest }: PrivateRouteProps & RouteProps): React.ReactElement {
-    const { user } = useUser();
+    const user = useUser(state => state.user);
 
     const render = props => {
 

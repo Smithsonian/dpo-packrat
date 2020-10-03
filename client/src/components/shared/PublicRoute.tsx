@@ -13,7 +13,7 @@ interface PublicRouteProps {
 }
 
 function PublicRoute({ component: Component, restricted = false, ...rest }: PublicRouteProps & RouteProps): React.ReactElement {
-    const { user } = useUser();
+    const user = useUser(state => state.user);
 
     const render = props => (
         !!user && restricted ? <Redirect to={ROUTES.HOME} /> : <Component {...props} />

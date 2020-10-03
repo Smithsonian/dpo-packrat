@@ -42,11 +42,11 @@ function Metadata(): React.ReactElement {
 
     const [ingestionLoading, setIngestionLoading] = useState(false);
 
-    const { getSelectedProject } = useProject();
-    const { getSelectedItem } = useItem();
-    const { metadatas, getFieldErrors, getMetadataInfo } = useMetadata();
+    const getSelectedProject = useProject(state => state.getSelectedProject);
+    const getSelectedItem = useItem(state => state.getSelectedItem);
+    const [metadatas, getFieldErrors, getMetadataInfo] = useMetadata(state => [state.metadatas, state.getFieldErrors, state.getMetadataInfo]);
     const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
-    const { getAssetType } = useVocabulary();
+    const getAssetType = useVocabulary(state => state.getAssetType);
 
     const metadataLength = metadatas.length;
     const query = qs.parse(search) as QueryParams;
