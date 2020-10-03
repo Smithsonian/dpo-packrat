@@ -107,22 +107,23 @@ function Uploads(): React.ReactElement {
         }
     };
 
+    let content: React.ReactElement = <Loader minHeight='60vh' />;
+
+    if (!loadingVocabulary) {
+        content = (
+            <>
+                <UploadFilesPicker />
+                <UploadCompleteList />
+                <UploadList />
+            </>
+        );
+    }
+
     return (
         <KeepAlive>
             <Box className={classes.container}>
                 <Box className={classes.content}>
-                    {
-                        loadingVocabulary ?
-                            <Loader minHeight='60vh' />
-                            : (
-                                <>
-                                    <UploadFilesPicker />
-                                    <UploadCompleteList />
-                                    <UploadList />
-                                </>
-                            )
-                    }
-
+                    {content}
                 </Box>
                 <SidebarBottomNavigator
                     leftLabel='Discard'

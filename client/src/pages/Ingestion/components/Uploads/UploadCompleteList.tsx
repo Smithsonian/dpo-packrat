@@ -74,19 +74,23 @@ function UploadListComplete(): React.ReactElement {
         }
     }, [data, loading, error]);
 
+    let content: React.ReactElement = <Typography className={classes.listDetail} variant='body1'>Fetching available files...</Typography>;
+
+    if (!loading) {
+        content = (
+            <>
+                {!completed.length && <Typography className={classes.listDetail} variant='body1'>No files available</Typography>}
+                <FileList files={completed} />
+            </>
+        );
+    }
+
     return (
         <Box className={classes.container}>
             <FieldType required align='center' label='Uploaded Files: Select assets to ingest which belong to the same Subject &amp; Item'>
                 <UploadListHeader />
                 <Box className={classes.list}>
-                    {loading ?
-                        <Typography className={classes.listDetail} variant='body1'>Fetching available files...</Typography>
-                        :
-                        <>
-                            {!completed.length && <Typography className={classes.listDetail} variant='body1'>No files available</Typography>}
-                            <FileList files={completed} />
-                        </>
-                    }
+                    {content}
                 </Box>
             </FieldType>
         </Box>

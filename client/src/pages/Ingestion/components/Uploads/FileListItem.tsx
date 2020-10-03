@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Select, MenuItem, CircularProgress } from '@material-ui/core';
+import { Box, Typography, Select, MenuItem } from '@material-ui/core';
 import { green, red, yellow, grey, blue } from '@material-ui/core/colors';
 import { makeStyles, fade } from '@material-ui/core/styles';
 import { IoIosCloseCircle } from 'react-icons/io';
@@ -9,6 +9,7 @@ import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
 import { FileId, VocabularyOption } from '../../../../store';
 import { motion } from 'framer-motion';
+import { Progress } from '../../../../components';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
@@ -136,7 +137,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         options = (
             <>
                 {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={26} color={green[500]} />}
-                {uploading && !failed && <CircularProgress className={classes.option} size={20} color='primary' />}
+                {uploading && !failed && <Progress className={classes.option} size={20} />}
                 {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={yellow[600]} />}
                 <IoIosCloseCircle className={classes.option} onClick={remove} size={24} color={red[500]} />
             </>
