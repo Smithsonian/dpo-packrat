@@ -135,21 +135,21 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
 
     if (!complete) {
         options = (
-            <>
+            <React.Fragment>
                 {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={26} color={green[500]} />}
                 {uploading && !failed && <Progress className={classes.option} size={20} />}
                 {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={yellow[600]} />}
                 <IoIosCloseCircle className={classes.option} onClick={remove} size={24} color={red[500]} />
-            </>
+            </React.Fragment>
         );
     }
 
     if (complete) {
         options = (
-            <>
+            <React.Fragment>
                 {!selected && <FaRegCircle className={classes.option} size={24} color={grey[500]} />}
                 {selected && <FaCheckCircle className={classes.option} size={24} color={blue[500]} />}
-            </>
+            </React.Fragment>
         );
     }
 

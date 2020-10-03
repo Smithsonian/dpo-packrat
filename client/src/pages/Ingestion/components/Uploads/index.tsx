@@ -111,11 +111,11 @@ function Uploads(): React.ReactElement {
 
     if (!loadingVocabulary) {
         content = (
-            <>
+            <React.Fragment>
                 <UploadFilesPicker />
                 <UploadCompleteList />
                 <UploadList />
-            </>
+            </React.Fragment>
         );
     }
 

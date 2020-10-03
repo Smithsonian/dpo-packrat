@@ -70,9 +70,9 @@ function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
     }
 
     return (
-        <>
+        <React.Fragment>
             {content}
-        </>
+        </React.Fragment>
     );
 }
 

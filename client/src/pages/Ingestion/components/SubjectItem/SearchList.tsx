@@ -87,9 +87,9 @@ function SearchList(): React.ReactElement {
                     <IoIosSearch color='inherit' size={20} />
                 </LoadingButton>
             </Box>
-            <>
+            <React.Fragment>
                 {content}
-            </>
+            </React.Fragment>
         </FieldType>
     );
 }

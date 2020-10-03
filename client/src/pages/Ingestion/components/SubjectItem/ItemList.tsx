@@ -62,9 +62,9 @@ function ItemList(): React.ReactElement {
         const isDefaultItem = id === defaultItem.id;
 
         let content: React.ReactElement = (
-            <>
+            <React.Fragment>
                 {name}
-            </>
+            </React.Fragment>
         );
 
         const onUpdateSelected = (selected: boolean) => {
