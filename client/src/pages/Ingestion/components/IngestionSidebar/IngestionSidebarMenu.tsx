@@ -63,7 +63,7 @@ export function IngestionSidebarMenu(props: IngestionSidebarMenuProps): React.Re
     }));
 
     return (
-        <>
+        <React.Fragment>
             <Box className={classes.container}>
                 <Typography className={classes.menuLabel} variant='caption'>{title}</Typography>
                 <IngestionSidebarMenuOption
@@ -78,6 +78,6 @@ export function IngestionSidebarMenu(props: IngestionSidebarMenuProps): React.Re
                 </Grid>
             </Box>
             {children}
-        </>
+        </React.Fragment>
     );
 }

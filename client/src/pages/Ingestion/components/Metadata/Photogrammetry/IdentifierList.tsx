@@ -74,7 +74,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
     return (
         <Box overflow='hidden'>
             <FieldType required={false} renderLabel={false} width='auto'>
-                <>
+                <React.Fragment>
                     {identifiers.map(({ id, selected, identifier, identifierType }, index) => {
                         const remove = () => onRemove(id);
                         const updateCheckbox = ({ target }) => onUpdate(id, target.name, target.checked);
@@ -124,7 +124,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                     >
                         Add
                     </Button>
-                </>
+                </React.Fragment>
             </FieldType>
         </Box>
     );

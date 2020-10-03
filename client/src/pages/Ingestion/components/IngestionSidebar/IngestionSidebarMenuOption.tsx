@@ -43,24 +43,31 @@ function IngestionSidebarMenuOption(props: IngestionSidebarMenuOptionProps): Rea
 
     const classes = useStyles(props);
 
-    const content = (
-        <>
+    const subContent: React.ReactElement = (
+        <React.Fragment>
             <Typography color='inherit' variant='body1'>{title}</Typography>
             <Typography color='textSecondary' variant='caption'>{subtitle}</Typography>
-        </>
+        </React.Fragment>
     );
 
+    let content = (
+        <Box className={classes.container}>
+            {subContent}
+        </Box>
+    );
+
+    if (enabled) {
+        content = (
+            <Link className={classes.container} to={route}>
+                {subContent}
+            </Link>
+        );
+    }
+
     return (
-        <>
-            {enabled ?
-                <Link className={classes.container} to={route}>
-                    {content}
-                </Link> :
-                <Box className={classes.container}>
-                    {content}
-                </Box>
-            }
-        </>
+        <React.Fragment>
+            {content}
+        </React.Fragment>
     );
 }
 

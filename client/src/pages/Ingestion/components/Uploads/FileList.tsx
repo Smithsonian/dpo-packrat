@@ -62,9 +62,9 @@ function FileList(props: FileListProps): React.ReactElement {
     };
 
     return (
-        <>
+        <React.Fragment>
             {files.map(getFileList)}
-        </>
+        </React.Fragment>
     );
 }
 

@@ -78,10 +78,10 @@ function UploadListComplete(): React.ReactElement {
 
     if (!loading) {
         content = (
-            <>
+            <React.Fragment>
                 {!completed.length && <Typography className={classes.listDetail} variant='body1'>No files available</Typography>}
                 <FileList files={completed} />
-            </>
+            </React.Fragment>
         );
     }
 
