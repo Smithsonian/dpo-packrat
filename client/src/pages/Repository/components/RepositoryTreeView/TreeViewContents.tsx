@@ -1,9 +1,9 @@
-import React from 'react';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import React from 'react';
+import { Progress } from '../../../../components';
 import { eSystemObjectType } from '../../../../types/server';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
-import { Progress } from '../../../../components';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -35,14 +35,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     }
 }));
 
-type ReactChildren = React.ReactElement | React.ReactElement[] | Element[] | undefined;
-
 interface TreeViewContentsProps {
     name: string;
     loading: boolean;
     isEmpty: boolean;
     objectType: eSystemObjectType;
-    children: ReactChildren
+    children: React.ReactNode
 }
 
 function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
@@ -51,7 +49,7 @@ function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
 
     const contentTerm = getTermForSystemObjectType(objectType);
 
-    let content: ReactChildren = (
+    let content: React.ReactNode = (
         <Box className={classes.container}>
             <Progress size={20} />
         </Box>

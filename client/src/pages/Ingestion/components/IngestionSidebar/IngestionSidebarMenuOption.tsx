@@ -43,7 +43,7 @@ function IngestionSidebarMenuOption(props: IngestionSidebarMenuOptionProps): Rea
 
     const classes = useStyles(props);
 
-    const subContent: React.ReactElement = (
+    const subContent: React.ReactNode = (
         <React.Fragment>
             <Typography color='inherit' variant='body1'>{title}</Typography>
             <Typography color='textSecondary' variant='caption'>{subtitle}</Typography>

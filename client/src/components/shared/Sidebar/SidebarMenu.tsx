@@ -33,7 +33,7 @@ interface SidebarMenuProps {
     paramIdentifier: string;
     initialRoute?: SidebarRouteTypes;
     options: SidebarOption[];
-    children: React.ReactElement[];
+    children: React.ReactNode;
 }
 
 export function SidebarMenu(props: SidebarMenuProps): React.ReactElement {

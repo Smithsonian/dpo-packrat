@@ -60,7 +60,7 @@ function SearchList(): React.ReactElement {
         searchSubject({ variables });
     };
 
-    let content: React.ReactElement | null = null;
+    let content: React.ReactNode = null;
 
     if (subjects.length) {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;

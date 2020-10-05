@@ -107,7 +107,7 @@ function Uploads(): React.ReactElement {
         }
     };
 
-    let content: React.ReactElement = <Loader minHeight='60vh' />;
+    let content: React.ReactNode = <Loader minHeight='60vh' />;
 
     if (!loadingVocabulary) {
         content = (

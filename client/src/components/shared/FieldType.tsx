@@ -27,14 +27,14 @@ interface FieldTypeProps {
     align?: PropTypes.Alignment;
     marginTop?: number;
     error?: boolean;
-    children: React.ReactElement | React.ReactElement[]
+    children: React.ReactNode
 }
 
 function FieldType(props: FieldTypeProps): React.ReactElement {
     const { label, renderLabel, children, align = 'left', direction, containerProps } = props;
     const classes = useStyles(props);
 
-    let content: React.ReactElement | null = <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>;
+    let content: React.ReactNode = <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>;
 
     if (renderLabel === false) {
         content = null;

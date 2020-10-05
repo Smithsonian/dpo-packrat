@@ -61,7 +61,7 @@ function ItemList(): React.ReactElement {
         const { id, selected, name, entireSubject } = item;
         const isDefaultItem = id === defaultItem.id;
 
-        let content: React.ReactElement = (
+        let content: React.ReactNode = (
             <React.Fragment>
                 {name}
             </React.Fragment>
@@ -134,7 +134,7 @@ interface ItemListItemProps {
     entireSubject: boolean;
     onUpdateSelected: (selected: boolean) => void;
     onUpdateEntireSubject: (entireSubject: boolean) => void;
-    children?: React.ReactElement | React.ReactElement[]
+    children?: React.ReactNode;
 }
 
 function ItemListItem(props: ItemListItemProps) {

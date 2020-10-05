@@ -18,7 +18,7 @@ interface RepositoryTreeNodeProps {
     name: string;
     color: string;
     objectType: eSystemObjectType;
-    icon: React.ReactElement;
+    icon: React.ReactNode;
     treeColumns: TreeViewColumn[];
     filter: RepositoryFilter;
 }
@@ -51,7 +51,7 @@ function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement 
     );
 }
 
-export const renderTreeNodes = (filter: RepositoryFilter, entries: NavigationResultEntry[], metadataColumns: eMetadata[]): React.ReactElement[] =>
+export const renderTreeNodes = (filter: RepositoryFilter, entries: NavigationResultEntry[], metadataColumns: eMetadata[]): React.ReactNode =>
     entries.map((entry, index: number) => {
         const { idSystemObject, name, objectType, idObject, metadata } = entry;
         const variant = getTreeColorVariant(index);
@@ -74,7 +74,7 @@ export const renderTreeNodes = (filter: RepositoryFilter, entries: NavigationRes
     });
 
 type ObjectInterfaceDetails = {
-    icon: React.ReactElement;
+    icon: React.ReactNode;
     color: string;
 };
 
