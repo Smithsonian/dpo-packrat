@@ -2,7 +2,7 @@ import { MenuItem, Select } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { FieldType } from '../../../../../components';
-import { VocabularyOption } from '../../../../../context';
+import { VocabularyOption } from '../../../../../store';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     select: {

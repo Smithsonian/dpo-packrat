@@ -1,6 +1,7 @@
+import { Box, BoxProps, PropTypes, Typography } from '@material-ui/core';
+import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
-import { Box, Typography, PropTypes, BoxProps } from '@material-ui/core';
-import { makeStyles, fade } from '@material-ui/core/styles';
+import Progress from './Progress';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
@@ -14,6 +15,11 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     label: {
         margin: '5px 0px 10px 0px',
         color: palette.primary.dark
+    },
+    loading: {
+        position: 'absolute',
+        top: 16,
+        right: 10
     }
 }));
 
@@ -27,23 +33,25 @@ interface FieldTypeProps {
     align?: PropTypes.Alignment;
     marginTop?: number;
     error?: boolean;
-    children: React.ReactElement | React.ReactElement[]
+    loading?: boolean;
+    children: React.ReactNode
 }
 
 function FieldType(props: FieldTypeProps): React.ReactElement {
-    const { label, renderLabel, children, align = 'left', direction, containerProps } = props;
+    const { label, renderLabel, children, align = 'left', direction, containerProps, loading } = props;
     const classes = useStyles(props);
 
-    let content: React.ReactElement | null = <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>;
+    let content: React.ReactNode = <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>;
 
     if (renderLabel === false) {
         content = null;
     }
 
     return (
-        <Box className={classes.container} flexDirection={direction || 'column'} {...containerProps}>
+        <Box position='relative' className={classes.container} flexDirection={direction || 'column'} {...containerProps}>
             {content}
             {children}
+            {loading && <Progress className={classes.loading} size={15} />}
         </Box>
     );
 }

@@ -1,6 +1,7 @@
-import React from 'react';
-import { Box, CircularProgress, Typography } from '@material-ui/core';
+import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import React from 'react';
+import { Progress } from '../../../../components';
 import { eSystemObjectType } from '../../../../types/server';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 
@@ -39,7 +40,7 @@ interface TreeViewContentsProps {
     loading: boolean;
     isEmpty: boolean;
     objectType: eSystemObjectType;
-    children: React.ReactElement | React.ReactElement[] | Element[] | undefined
+    children: React.ReactNode
 }
 
 function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
@@ -48,18 +49,28 @@ function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
 
     const contentTerm = getTermForSystemObjectType(objectType);
 
-    return (
-        <>
-            {loading ? (
-                <Box className={classes.container}>
-                    <CircularProgress size={20} />
-                </Box>
-            ) : isEmpty ? (
+    let content: React.ReactNode = (
+        <Box className={classes.container}>
+            <Progress size={20} />
+        </Box>
+    );
+
+    if (!loading) {
+        if (isEmpty) {
+            content = (
                 <Box className={classes.emptyList}>
                     <Typography className={classes.emptyListText} variant='caption' color='inherit'>No objects found for {contentTerm} {name}</Typography>
                 </Box>
-            ) : children}
-        </>
+            );
+        } else {
+            content = children;
+        }
+    }
+
+    return (
+        <React.Fragment>
+            {content}
+        </React.Fragment>
     );
 }
 

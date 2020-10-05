@@ -1,14 +1,17 @@
 import React from 'react';
-import { Box, CircularProgress } from '@material-ui/core';
+import { Box } from '@material-ui/core';
+import Progress from './Progress';
 
 interface LoaderProps {
     size?: number;
     height?: number | string;
+    width?: number | string;
     minHeight?: number | string;
+    maxWidth?: number | string;
 }
 
 function Loader(props: LoaderProps): React.ReactElement {
-    const { size, height, minHeight } = props;
+    const { size, height, width, minHeight, maxWidth } = props;
 
     return (
         <Box
@@ -17,9 +20,11 @@ function Loader(props: LoaderProps): React.ReactElement {
             alignItems='center'
             justifyContent='center'
             height={height || '100%'}
+            width={width || '100%'}
             minHeight={minHeight}
+            maxWidth={maxWidth}
         >
-            <CircularProgress color='primary' size={size} />
+            <Progress size={size || 25} />
         </Box>
     );
 }

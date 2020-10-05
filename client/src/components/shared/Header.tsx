@@ -1,14 +1,13 @@
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useContext } from 'react';
+import React from 'react';
 import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
 import { Link, useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import API from '../../api';
-import { ROUTES, HOME_ROUTES, resolveRoute } from '../../constants';
-import { AppContext } from '../../context';
-import { Colors } from '../../theme';
 import Logo from '../../assets/images/logo-packrat.square.png';
+import { HOME_ROUTES, resolveRoute, ROUTES } from '../../constants';
+import { useUser } from '../../store';
+import { Colors } from '../../theme';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
@@ -40,19 +39,18 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
 }));
 
 function Header(): React.ReactElement {
-    const { user, updateUser } = useContext(AppContext);
     const classes = useStyles();
     const history = useHistory();
+    const { user, logout } = useUser();
 
     const onLogout = async (): Promise<void> => {
         const isConfirmed = global.confirm('Are you sure you want to logout?');
         if (!isConfirmed) return;
 
         try {
-            const { success } = await API.logout();
+            const { success } = await logout();
 
             if (success) {
-                updateUser(null);
                 history.push(ROUTES.LOGIN);
             }
         } catch {
@@ -82,7 +80,7 @@ function Header(): React.ReactElement {
 }
 
 type NavOptionProps = {
-    children: React.ReactChild;
+    children: React.ReactNode;
     onClick?: () => void;
 };
 

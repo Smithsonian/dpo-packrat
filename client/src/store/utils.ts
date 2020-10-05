@@ -1,5 +1,8 @@
 import { Item, Project, SubjectUnitIdentifier, AssetVersion, Vocabulary } from '../types/graphql';
-import { StateSubject, StateItem, StateProject, IngestionFile, FileUploadStatus, FileId } from './ingestion';
+import { StateSubject } from './subject';
+import { StateItem } from './item';
+import { StateProject } from './project';
+import { IngestionFile, FileUploadStatus, FileId } from './upload';
 
 export function parseFileId(id: FileId): number {
     return Number.parseInt(id, 10);
