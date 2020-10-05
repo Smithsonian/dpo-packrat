@@ -1,7 +1,7 @@
 import React from 'react';
 import StyledTreeItem from './StyledTreeItem';
 import TreeViewContents from './TreeViewContents';
-import { eSystemObjectType } from '../../../../types/server';
+import { eMetadata, eSystemObjectType } from '../../../../types/server';
 import { getRepositoryTreeNodeId, getSortedTreeEntries, getTreeColorVariant, getTreeViewColumns } from '../../../../utils/repository';
 import { useGetObjectChildren } from '../../hooks/useRepository';
 import { AiOutlineFileText } from 'react-icons/ai';
@@ -10,6 +10,7 @@ import { RepositoryColorVariant } from '../../../../theme/colors';
 import { RepositoryIcon } from '../../../../components';
 import { TreeViewColumn } from './StyledTreeItem';
 import { RepositoryFilter } from '../..';
+import { NavigationResultEntry } from '../../../../types/graphql';
 
 interface RepositoryTreeNodeProps {
     idSystemObject: number;
@@ -17,17 +18,17 @@ interface RepositoryTreeNodeProps {
     name: string;
     color: string;
     objectType: eSystemObjectType;
-    icon: React.ReactElement;
+    icon: React.ReactNode;
     treeColumns: TreeViewColumn[];
     filter: RepositoryFilter;
 }
 
 function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement {
     const { idSystemObject, idObject, name, objectType, icon, color, treeColumns, filter } = props;
-    const nodeId = getRepositoryTreeNodeId(idSystemObject, idObject, objectType);
 
     const { getObjectChildren, getObjectChildrenData, getObjectChildrenLoading, getObjectChildrenError } = useGetObjectChildren(idSystemObject, filter);
 
+    const nodeId = getRepositoryTreeNodeId(idSystemObject, idObject, objectType);
     const isEmpty = !getObjectChildrenData?.getObjectChildren?.entries.length ?? false;
     const entries = getSortedTreeEntries(getObjectChildrenData?.getObjectChildren?.entries ?? []);
     const metadataColumns = getObjectChildrenData?.getObjectChildren?.metadataColumns ?? [];
@@ -44,33 +45,36 @@ function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement 
             treeColumns={treeColumns}
         >
             <TreeViewContents name={name} loading={getObjectChildrenLoading && !getObjectChildrenError} isEmpty={isEmpty} objectType={objectType}>
-                {entries.map((entry, index: number) => {
-                    const { idSystemObject, name, objectType, idObject, metadata } = entry;
-                    const variant = getTreeColorVariant(index);
-                    const { icon, color } = getObjectInterfaceDetails(objectType, variant);
-                    const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
-
-                    return (
-                        <RepositoryTreeNode
-                            key={index}
-                            idSystemObject={idSystemObject}
-                            name={name}
-                            icon={icon}
-                            color={color}
-                            objectType={objectType}
-                            idObject={idObject}
-                            treeColumns={treeColumns}
-                            filter={filter}
-                        />
-                    );
-                })}
+                {renderTreeNodes(filter, entries, metadataColumns)}
             </TreeViewContents>
         </StyledTreeItem>
     );
 }
 
+export const renderTreeNodes = (filter: RepositoryFilter, entries: NavigationResultEntry[], metadataColumns: eMetadata[]): React.ReactNode =>
+    entries.map((entry, index: number) => {
+        const { idSystemObject, name, objectType, idObject, metadata } = entry;
+        const variant = getTreeColorVariant(index);
+        const { icon, color } = getObjectInterfaceDetails(objectType, variant);
+        const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
+
+        return (
+            <RepositoryTreeNode
+                key={index}
+                idSystemObject={idSystemObject}
+                name={name}
+                icon={icon}
+                color={color}
+                objectType={objectType}
+                idObject={idObject}
+                treeColumns={treeColumns}
+                filter={filter}
+            />
+        );
+    });
+
 type ObjectInterfaceDetails = {
-    icon: React.ReactElement;
+    icon: React.ReactNode;
     color: string;
 };
 

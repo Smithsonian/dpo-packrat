@@ -1,9 +1,8 @@
-import React, { useContext } from 'react';
-import { Select, MenuItem } from '@material-ui/core';
+import { MenuItem, Select } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { AppContext } from '../../../../context';
-import useProject from '../../hooks/useProject';
 import lodash from 'lodash';
+import React from 'react';
+import { useProject } from '../../../../store';
 
 const useStyles = makeStyles(({ palette }) => ({
     projectSelect: {
@@ -15,10 +14,9 @@ const useStyles = makeStyles(({ palette }) => ({
 
 function ProjectList(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion: { projects } } = useContext(AppContext);
-    const { getSelectedProject, updateSelectedProject } = useProject();
+    const [projects, getSelectedProject, updateSelectedProject] = useProject(state => [state.projects, state.getSelectedProject, state.updateSelectedProject]);
 
-    const hasProjects = !projects.length;
+    const noProjects = !projects.length;
     const selectedProject = getSelectedProject();
 
     const uniqueSortedProjects = lodash.uniqBy(lodash.orderBy(projects, 'name', 'asc'), 'name');
@@ -26,7 +24,7 @@ function ProjectList(): React.ReactElement {
     return (
         <Select
             value={selectedProject?.id || 'none'}
-            disabled={hasProjects}
+            disabled={noProjects}
             className={classes.projectSelect}
             renderValue={() => `${selectedProject?.name || 'none'}`}
             onChange={({ target: { value } }) => updateSelectedProject(value as number)}

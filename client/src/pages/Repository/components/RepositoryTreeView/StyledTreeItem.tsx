@@ -172,20 +172,33 @@ interface MetadataViewProps {
 }
 
 export function MetadataView(props: MetadataViewProps): React.ReactElement {
-    const { treeColumns } = props;
+    const { header, treeColumns } = props;
     const classes = useMetadataStyles(props);
 
     const width = computeMetadataViewWidth(treeColumns);
 
-    return (
-        <Box className={classes.metadata} style={{ width }}>
-            {treeColumns.map(({ label, size }, index: number) => (
-                <Tooltip key={index} arrow title={label} placement='bottom-start'>
-                    <Box className={classes.column} component='div' whiteSpace='normal' width={`${size}vw`}>
+    const renderTreeColumns = (treeColumns: TreeViewColumn[]) =>
+        treeColumns.map((treeColumn: TreeViewColumn, index: number) => {
+            const { label, size } = treeColumn;
+            const width = `${size}vw`;
+
+            return (
+                <Tooltip
+                    key={index}
+                    disableHoverListener={header}
+                    arrow title={label}
+                    placement='bottom-start'
+                >
+                    <Box className={classes.column} component='div' whiteSpace='normal' width={width}>
                         {trimmedMetadataField(label, 20, 10)}
                     </Box>
                 </Tooltip>
-            ))}
+            );
+        });
+
+    return (
+        <Box className={classes.metadata} style={{ width }}>
+            {renderTreeColumns(treeColumns)}
         </Box>
     );
 }

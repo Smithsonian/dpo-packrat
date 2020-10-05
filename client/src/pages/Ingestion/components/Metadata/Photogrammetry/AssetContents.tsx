@@ -2,7 +2,7 @@ import { Box, Typography, Select, MenuItem } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { FieldType } from '../../../../../components';
-import { StateFolder, VocabularyOption } from '../../../../../context';
+import { StateFolder, VocabularyOption } from '../../../../../store';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     header: {
