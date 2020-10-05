@@ -127,7 +127,7 @@ function Metadata(): React.ReactElement {
         }
     };
 
-    const getMetadataComponent = (metadataIndex: number): React.ReactElement | null => {
+    const getMetadataComponent = (metadataIndex: number): React.ReactNode => {
         if (assetType.photogrammetry) {
             return <Photogrammetry metadataIndex={metadataIndex} />;
         }

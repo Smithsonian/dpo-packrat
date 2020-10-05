@@ -74,7 +74,7 @@ function UploadListComplete(): React.ReactElement {
         }
     }, [data, loading, error]);
 
-    let content: React.ReactElement = <Typography className={classes.listDetail} variant='body1'>Fetching available files...</Typography>;
+    let content: React.ReactNode = <Typography className={classes.listDetail} variant='body1'>Fetching available files...</Typography>;
 
     if (!loading) {
         content = (

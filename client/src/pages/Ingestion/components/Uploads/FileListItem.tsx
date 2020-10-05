@@ -131,7 +131,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     const retry = () => onRetry(id);
     const select = () => complete ? onSelect(id, !selected) : null;
 
-    let options: React.ReactElement | null = null;
+    let options: React.ReactNode = null;
 
     if (!complete) {
         options = (

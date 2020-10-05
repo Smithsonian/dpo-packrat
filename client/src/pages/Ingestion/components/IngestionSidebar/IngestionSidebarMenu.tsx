@@ -42,7 +42,7 @@ interface IngestionSidebarMenuProps {
     paramIdentifier: string;
     initialRoute?: SidebarRouteTypes;
     options: IngestionSidebarOption[];
-    children?: React.ReactElement[];
+    children?: React.ReactNode;
 }
 
 export function IngestionSidebarMenu(props: IngestionSidebarMenuProps): React.ReactElement {

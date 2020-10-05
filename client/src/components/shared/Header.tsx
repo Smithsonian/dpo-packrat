@@ -80,7 +80,7 @@ function Header(): React.ReactElement {
 }
 
 type NavOptionProps = {
-    children: React.ReactChild;
+    children: React.ReactNode;
     onClick?: () => void;
 };
 

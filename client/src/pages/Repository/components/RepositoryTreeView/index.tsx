@@ -55,7 +55,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     const metadataColumns = getRootObjectsData?.getObjectChildren?.metadataColumns ?? [];
     const width = getTreeWidth(metadataColumns.length);
 
-    let content: React.ReactElement | React.ReactElement[] | null = null;
+    let content: React.ReactNode = null;
 
     if (!getRootObjectsLoading && !getRootObjectsError) {
         content = renderTreeNodes(filter, entries, metadataColumns);
