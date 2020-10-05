@@ -46,11 +46,7 @@ function AppRouter(): React.ReactElement {
         );
     }
 
-    return (
-        <Router>
-            {content}
-        </Router>
-    );
+    return <Router>{content}</Router>;
 }
 
 function App(): React.ReactElement {
