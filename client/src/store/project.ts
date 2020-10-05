@@ -14,6 +14,7 @@ type ProjectStore = {
     addProjects: (projects: StateProject[]) => void;
     updateSelectedProject: (id: number) => void;
     updateProject: (project: StateProject) => void;
+    loadingProjects: () => void;
     reset: () => void;
 };
 
@@ -26,7 +27,7 @@ export const useProject = create<ProjectStore>((set: SetState<ProjectStore>, get
     },
     addProjects: (fetchedProjects: StateProject[]) => {
         if (!fetchedProjects.length) return;
-        set({ projects: fetchedProjects });
+        set({ projects: fetchedProjects, loading: false });
     },
     updateSelectedProject: (id: number): void => {
         const { projects, getSelectedProject, updateProject } = get();
@@ -63,6 +64,9 @@ export const useProject = create<ProjectStore>((set: SetState<ProjectStore>, get
             });
 
         set({ projects: updatedProjects(project) });
+    },
+    loadingProjects: (): void => {
+        set({ loading: true });
     },
     reset: () => {
         set({ projects: [], loading: false });

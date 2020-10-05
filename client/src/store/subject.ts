@@ -61,8 +61,8 @@ export const useSubject = create<SubjectStore>((set: SetState<SubjectStore>, get
         updateProjectsAndItemsForSubjects(selectedSubjects);
     },
     updateProjectsAndItemsForSubjects: async (selectedSubjects: StateSubject[]): Promise<void> => {
-        const { addItems } = useItem.getState();
-        const { addProjects } = useProject.getState();
+        const { addProjects, loadingProjects } = useProject.getState();
+        const { addItems, loadingItems } = useItem.getState();
 
         if (!selectedSubjects.length) {
             addItems([]);
@@ -79,6 +79,8 @@ export const useSubject = create<SubjectStore>((set: SetState<SubjectStore>, get
         };
 
         try {
+            loadingProjects();
+            loadingItems();
             const projectsQueryResult: ApolloQueryResult<GetIngestionProjectsForSubjectsQuery> = await apolloClient.query({
                 query: GetIngestionProjectsForSubjectsDocument,
                 variables

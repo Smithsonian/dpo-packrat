@@ -21,6 +21,7 @@ type ItemStore = {
     getSelectedItem: () => StateItem | undefined;
     addItems: (items: StateItem[]) => void;
     updateItem: (item: StateItem) => void;
+    loadingItems: () => void;
     reset: () => void;
 };
 
@@ -38,7 +39,7 @@ export const useItem = create<ItemStore>((set: SetState<ItemStore>, get: GetStat
         if (currentDefaultItem) {
             if (!fetchedItems.length) {
                 const selectedDefaultItem = { ...currentDefaultItem, selected: true };
-                set({ items: [selectedDefaultItem] });
+                set({ items: [selectedDefaultItem], loading: false });
                 return;
             }
 
@@ -50,7 +51,7 @@ export const useItem = create<ItemStore>((set: SetState<ItemStore>, get: GetStat
 
             const newItems: StateItem[] = [currentDefaultItem].concat(fetchedItems);
 
-            set({ items: newItems });
+            set({ items: newItems, loading: false });
         }
     },
     updateItem: (item: StateItem): void => {
@@ -81,6 +82,9 @@ export const useItem = create<ItemStore>((set: SetState<ItemStore>, get: GetStat
 
         updatedItems = mapItems(item);
         set({ items: updatedItems });
+    },
+    loadingItems: (): void => {
+        set({ loading: true });
     },
     reset: (): void => {
         set({ items: [defaultItem], loading: false });

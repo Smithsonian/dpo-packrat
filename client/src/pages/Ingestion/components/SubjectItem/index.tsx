@@ -44,11 +44,10 @@ function SubjectItem(): React.ReactElement {
     const [itemError, setItemError] = useState(false);
     const [metadataStepLoading, setMetadataStepLoading] = useState(false);
 
-    const getSelectedProject = useProject(state => state.getSelectedProject);
-    const getSelectedItem = useItem(state => state.getSelectedItem);
     const updateVocabularyEntries = useVocabulary(state => state.updateVocabularyEntries);
     const subjects = useSubject(state => state.subjects);
-    const projects = useProject(state => state.projects);
+    const [projects, projectsLoading, getSelectedProject] = useProject(state => [state.projects, state.loading, state.getSelectedProject]);
+    const [itemsLoading, getSelectedItem] = useItem(state => [state.loading, state.getSelectedItem]);
     const [metadatas, updateMetadataFolders] = useMetadata(state => [state.metadatas, state.updateMetadataFolders]);
 
     const selectedItem = getSelectedItem();
@@ -151,6 +150,7 @@ function SubjectItem(): React.ReactElement {
 
                 <FieldType
                     error={projectError}
+                    loading={projectsLoading}
                     width={'40%'}
                     required
                     label='Project'
@@ -159,7 +159,13 @@ function SubjectItem(): React.ReactElement {
                     <ProjectList />
                 </FieldType>
 
-                <FieldType error={itemError} required label='Item' marginTop={2}>
+                <FieldType
+                    loading={itemsLoading}
+                    error={itemError}
+                    required
+                    label='Item'
+                    marginTop={2}
+                >
                     <ItemList />
                 </FieldType>
             </Box>
