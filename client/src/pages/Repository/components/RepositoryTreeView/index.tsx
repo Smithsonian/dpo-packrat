@@ -1,14 +1,15 @@
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { TreeView } from '@material-ui/lab';
-import React from 'react';
+import lodash from 'lodash';
+import React, { useState } from 'react';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
 import { Loader } from '../../../../components';
 import { getSortedTreeEntries, getSystemObjectTypesForFilter, getTreeWidth } from '../../../../utils/repository';
 import { useGetRootObjects } from '../../hooks/useRepository';
 import { RepositoryFilter } from '../../index';
 import RepositoryTreeHeader from './RepositoryTreeHeader';
-import { renderTreeNodes } from './RepositoryTreeNode';
+import { ExpandedNodeMap, renderTreeNodes } from './RepositoryTreeNode';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -45,6 +46,7 @@ interface RepositoryTreeViewProps {
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { filter } = props;
     const classes = useStyles();
+    const [expandedNodes, setExpandedNodes] = useState<ExpandedNodeMap>(new Map() as ExpandedNodeMap);
 
     const objectTypes = getSystemObjectTypesForFilter(filter);
     const { getRootObjectsData, getRootObjectsLoading, getRootObjectsError } = useGetRootObjects(objectTypes, filter);
@@ -58,14 +60,26 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     let content: React.ReactNode = null;
 
     if (!getRootObjectsLoading && !getRootObjectsError) {
-        content = renderTreeNodes(filter, entries, metadataColumns);
+        content = renderTreeNodes(expandedNodes, filter, entries, metadataColumns);
     } else if (!noFilter) {
         content = <Loader maxWidth='83.5vw' size={30} />;
     }
 
+    const onNodeToggle = (_, nodeIds: string[]) => {
+        const keyValueArray: [string, undefined][] = lodash.map(nodeIds, (id: string) => [id, undefined]);
+        const updatedMap: ExpandedNodeMap = new Map(keyValueArray);
+        setExpandedNodes(updatedMap);
+    };
+
     return (
         <Box className={classes.container}>
-            <TreeView className={classes.tree} style={{ width }} defaultCollapseIcon={<BsChevronDown />} defaultExpandIcon={<BsChevronRight />}>
+            <TreeView
+                onNodeToggle={onNodeToggle}
+                className={classes.tree}
+                style={{ width }}
+                defaultCollapseIcon={<BsChevronDown />}
+                defaultExpandIcon={<BsChevronRight />}
+            >
                 <RepositoryTreeHeader metadataColumns={metadataColumns} />
                 {noFilter && (
                     <Box className={classes.fullView}>

@@ -1,16 +1,17 @@
 import React from 'react';
-import StyledTreeItem from './StyledTreeItem';
-import TreeViewContents from './TreeViewContents';
+import { AiOutlineFileText } from 'react-icons/ai';
+import { RepositoryFilter } from '../..';
+import { RepositoryIcon } from '../../../../components';
+import { Colors } from '../../../../theme';
+import { RepositoryColorVariant } from '../../../../theme/colors';
+import { NavigationResultEntry } from '../../../../types/graphql';
 import { eMetadata, eSystemObjectType } from '../../../../types/server';
 import { getRepositoryTreeNodeId, getSortedTreeEntries, getTreeColorVariant, getTreeViewColumns } from '../../../../utils/repository';
 import { useGetObjectChildren } from '../../hooks/useRepository';
-import { AiOutlineFileText } from 'react-icons/ai';
-import { Colors } from '../../../../theme';
-import { RepositoryColorVariant } from '../../../../theme/colors';
-import { RepositoryIcon } from '../../../../components';
-import { TreeViewColumn } from './StyledTreeItem';
-import { RepositoryFilter } from '../..';
-import { NavigationResultEntry } from '../../../../types/graphql';
+import StyledTreeItem, { TreeViewColumn } from './StyledTreeItem';
+import TreeViewContents from './TreeViewContents';
+
+export type ExpandedNodeMap = Map<string, void>;
 
 interface RepositoryTreeNodeProps {
     idSystemObject: number;
@@ -21,37 +22,51 @@ interface RepositoryTreeNodeProps {
     icon: React.ReactNode;
     treeColumns: TreeViewColumn[];
     filter: RepositoryFilter;
+    expandedNodes: ExpandedNodeMap;
 }
 
 function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement {
-    const { idSystemObject, idObject, name, objectType, icon, color, treeColumns, filter } = props;
+    const { idSystemObject, idObject, name, objectType, icon, color, treeColumns, filter, expandedNodes } = props;
+    const {
+        getObjectChildren,
+        getObjectChildrenData,
+        getObjectChildrenLoading,
+        getObjectChildrenError,
+    } = useGetObjectChildren(idSystemObject, filter);
 
-    const { getObjectChildren, getObjectChildrenData, getObjectChildrenLoading, getObjectChildrenError } = useGetObjectChildren(idSystemObject, filter);
+    const queryData = getObjectChildrenData?.getObjectChildren;
 
     const nodeId = getRepositoryTreeNodeId(idSystemObject, idObject, objectType);
-    const isEmpty = !getObjectChildrenData?.getObjectChildren?.entries.length ?? false;
-    const entries = getSortedTreeEntries(getObjectChildrenData?.getObjectChildren?.entries ?? []);
-    const metadataColumns = getObjectChildrenData?.getObjectChildren?.metadataColumns ?? [];
+    const isEmpty = !queryData?.entries.length ?? true;
+    const entries = getSortedTreeEntries(queryData?.entries ?? []);
+    const metadataColumns = queryData?.metadataColumns ?? [];
+    const loading = getObjectChildrenLoading && !getObjectChildrenError;
+
+    const loadData = expandedNodes.has(nodeId);
+
+    React.useEffect(() => {
+        if (loadData) {
+            getObjectChildren();
+        }
+    }, [loadData, getObjectChildren]);
 
     return (
         <StyledTreeItem
             icon={icon}
             color={color}
-            onLabelClick={getObjectChildren}
-            onIconClick={getObjectChildren}
             objectType={objectType}
             nodeId={nodeId}
             label={name}
             treeColumns={treeColumns}
         >
-            <TreeViewContents name={name} loading={getObjectChildrenLoading && !getObjectChildrenError} isEmpty={isEmpty} objectType={objectType}>
-                {renderTreeNodes(filter, entries, metadataColumns)}
+            <TreeViewContents name={name} loading={loading} isEmpty={isEmpty} objectType={objectType}>
+                {renderTreeNodes(expandedNodes, filter, entries, metadataColumns)}
             </TreeViewContents>
         </StyledTreeItem>
     );
 }
 
-export const renderTreeNodes = (filter: RepositoryFilter, entries: NavigationResultEntry[], metadataColumns: eMetadata[]): React.ReactNode =>
+export const renderTreeNodes = (expandedNodes: ExpandedNodeMap, filter: RepositoryFilter, entries: NavigationResultEntry[], metadataColumns: eMetadata[]): React.ReactNode =>
     entries.map((entry, index: number) => {
         const { idSystemObject, name, objectType, idObject, metadata } = entry;
         const variant = getTreeColorVariant(index);
@@ -69,6 +84,7 @@ export const renderTreeNodes = (filter: RepositoryFilter, entries: NavigationRes
                 idObject={idObject}
                 treeColumns={treeColumns}
                 filter={filter}
+                expandedNodes={expandedNodes}
             />
         );
     });
