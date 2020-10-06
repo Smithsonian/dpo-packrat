@@ -1,6 +1,6 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Redirect, useRouteMatch } from 'react-router';
 import { PrivateRoute } from '../../components';
 import { IngestionSidebarMenu, IngestionSidebarOption } from './components/IngestionSidebar';
@@ -8,9 +8,9 @@ import { HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, INGESTION_PARAMS_T
 import Uploads from './components/Uploads';
 import Metadata from './components/Metadata';
 import SubjectItem from './components/SubjectItem';
-import { AppContext } from '../../context';
 import { Prompt } from 'react-router-dom';
 import useIngest from './hooks/useIngest';
+import { useMetadata } from '../../store';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -22,7 +22,7 @@ const useStyles = makeStyles(() => ({
 function Ingestion(): React.ReactElement {
     const classes = useStyles();
     const { path } = useRouteMatch();
-    const { ingestion: { metadatas } } = useContext(AppContext);
+    const { metadatas } = useMetadata();
     const { ingestionReset } = useIngest();
 
     const [options, setOptions] = useState<IngestionSidebarOption[]>([]);
@@ -55,11 +55,11 @@ function Ingestion(): React.ReactElement {
         const { href: url } = window.location;
 
         if (url.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM)) {
-            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.UPLOADS) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
         }
 
         if (url.includes(INGESTION_ROUTES_TYPE.METADATA)) {
-            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.UPLOADS) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
         }
 
         if (allowChange) return true;

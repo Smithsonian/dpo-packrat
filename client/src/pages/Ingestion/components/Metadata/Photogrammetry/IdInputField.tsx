@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
@@ -16,7 +17,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 
 interface IdInputFieldProps {
     label: string;
-    value: number;
+    value: number | null;
     name: string;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -31,7 +32,8 @@ function IdInputField(props: IdInputFieldProps): React.ReactElement {
         <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps}>
             <DebounceInput
                 element='input'
-                value={value}
+                // @ts-ignore
+                value={value || ''}
                 className={classes.input}
                 type='number'
                 name={name}

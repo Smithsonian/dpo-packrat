@@ -2,8 +2,7 @@ import React from 'react';
 import { Typography, TableContainer, Table, TableCell, TableHead, TableRow, TableBody } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import SubjectListItem from './SubjectListItem';
-import { StateSubject } from '../../../../context';
-import useSubject from '../../hooks/useSubject';
+import { useSubject, StateSubject } from '../../../../store';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
@@ -35,7 +34,7 @@ interface SubjectListProps {
 
 function SubjectList(props: SubjectListProps): React.ReactElement {
     const { subjects, emptyLabel, selected } = props;
-    const { addSubject, removeSubject } = useSubject();
+    const [addSubject, removeSubject] = useSubject(state => [state.addSubject, state.removeSubject]);
     const classes = useStyles();
 
     const header: string[] = ['ARK / ID', 'UNIT', 'NAME'];

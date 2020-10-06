@@ -1,6 +1,7 @@
-import { eSystemObjectType, eMetadata } from '../../../types/server';
-import { useQuery, useLazyQuery, ApolloError } from '@apollo/client';
+import { ApolloError, useLazyQuery, useQuery } from '@apollo/client';
+import { RepositoryFilter } from '../index';
 import { GetObjectChildrenDocument, GetObjectChildrenQuery, GetObjectChildrenQueryVariables } from '../../../types/graphql';
+import { eMetadata, eSystemObjectType } from '../../../types/server';
 
 interface UseGetRootObjects {
     getRootObjectsData: GetObjectChildrenQuery | undefined;
@@ -8,7 +9,7 @@ interface UseGetRootObjects {
     getRootObjectsError: ApolloError | undefined;
 }
 
-function useGetRootObjects(objectTypes: eSystemObjectType[]): UseGetRootObjects {
+function useGetRootObjects(objectTypes: eSystemObjectType[], filter: RepositoryFilter): UseGetRootObjects {
     const { data: getRootObjectsData, loading: getRootObjectsLoading, error: getRootObjectsError } = useQuery<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>(
         GetObjectChildrenDocument,
         {
@@ -16,7 +17,7 @@ function useGetRootObjects(objectTypes: eSystemObjectType[]): UseGetRootObjects 
                 input: {
                     idRoot: 0,
                     objectTypes,
-                    metadataColumns: [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName]
+                    metadataColumns: getMetadataColumnsForFilter(filter)
                 }
             }
         }
@@ -36,7 +37,7 @@ interface UseGetObjectChildren {
     getObjectChildrenError: ApolloError | undefined;
 }
 
-function useGetObjectChildren(idRoot: number): UseGetObjectChildren {
+function useGetObjectChildren(idRoot: number, filter: RepositoryFilter): UseGetObjectChildren {
     const [getObjectChildren, { data: getObjectChildrenData, loading: getObjectChildrenLoading, error: getObjectChildrenError }] = useLazyQuery<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>(
         GetObjectChildrenDocument,
         {
@@ -44,7 +45,7 @@ function useGetObjectChildren(idRoot: number): UseGetObjectChildren {
                 input: {
                     idRoot,
                     objectTypes: [],
-                    metadataColumns: [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName]
+                    metadataColumns: getMetadataColumnsForFilter(filter)
                 }
             }
         }
@@ -54,8 +55,18 @@ function useGetObjectChildren(idRoot: number): UseGetObjectChildren {
         getObjectChildren,
         getObjectChildrenData,
         getObjectChildrenLoading,
-        getObjectChildrenError
+        getObjectChildrenError,
     };
+}
+
+function getMetadataColumnsForFilter(filter: RepositoryFilter): eMetadata[] {
+    const metadataColumns: eMetadata[] = [eMetadata.eSubjectIdentifier, eMetadata.eItemName];
+
+    if (filter.units || filter.projects) {
+        metadataColumns.unshift(eMetadata.eUnitAbbreviation);
+    }
+
+    return metadataColumns;
 }
 
 export { useGetRootObjects, useGetObjectChildren };

@@ -1,19 +1,16 @@
 import { Box, Chip, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Redirect, useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { AppContext } from '../../../../context';
-import useItem from '../../hooks/useItem';
-import useProject from '../../hooks/useProject';
+import { useItem, useMetadata, useProject, useSubject, useVocabulary } from '../../../../store';
+import useIngest from '../../hooks/useIngest';
 import ItemList from './ItemList';
 import ProjectList from './ProjectList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
-import useVocabularyEntries from '../../hooks/useVocabularyEntries';
-import useMetadata from '../../hooks/useMetadata';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -41,18 +38,20 @@ const useStyles = makeStyles(({ palette }) => ({
 function SubjectItem(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const { ingestion: { metadatas, subjects, projects } } = useContext(AppContext);
-    const { getSelectedProject } = useProject();
-    const { getSelectedItem } = useItem();
+
     const [subjectError, setSubjectError] = useState(false);
     const [projectError, setProjectError] = useState(false);
     const [itemError, setItemError] = useState(false);
     const [metadataStepLoading, setMetadataStepLoading] = useState(false);
 
-    const selectedItem = getSelectedItem();
+    const updateVocabularyEntries = useVocabulary(state => state.updateVocabularyEntries);
+    const subjects = useSubject(state => state.subjects);
+    const [projects, projectsLoading, getSelectedProject] = useProject(state => [state.projects, state.loading, state.getSelectedProject]);
+    const [itemsLoading, getSelectedItem] = useItem(state => [state.loading, state.getSelectedItem]);
+    const [metadatas, updateMetadataFolders] = useMetadata(state => [state.metadatas, state.updateMetadataFolders]);
 
-    const { updateVocabularyEntries } = useVocabularyEntries();
-    const { updateMetadataFolders } = useMetadata();
+    const selectedItem = getSelectedItem();
+    const { ingestionReset } = useIngest();
 
     useEffect(() => {
         if (subjects.length > 0) {
@@ -73,6 +72,15 @@ function SubjectItem(): React.ReactElement {
             }
         }
     }, [selectedItem]);
+
+    const onPrevious = async () => {
+        const isConfirmed = global.confirm('Are you sure you want to go to navigate away? changes might be lost');
+        if (isConfirmed) {
+            ingestionReset();
+            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS);
+            history.push(nextRoute);
+        }
+    };
 
     const onNext = async (): Promise<void> => {
         let error: boolean = false;
@@ -142,6 +150,7 @@ function SubjectItem(): React.ReactElement {
 
                 <FieldType
                     error={projectError}
+                    loading={projectsLoading}
                     width={'40%'}
                     required
                     label='Project'
@@ -150,16 +159,22 @@ function SubjectItem(): React.ReactElement {
                     <ProjectList />
                 </FieldType>
 
-                <FieldType error={itemError} required label='Item' marginTop={2}>
+                <FieldType
+                    loading={itemsLoading}
+                    error={itemError}
+                    required
+                    label='Item'
+                    marginTop={2}
+                >
                     <ItemList />
                 </FieldType>
             </Box>
             <SidebarBottomNavigator
                 rightLoading={metadataStepLoading}
                 leftLabel='Previous'
-                leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)}
                 rightLabel='Next'
                 onClickRight={onNext}
+                onClickLeft={onPrevious}
             />
         </Box>
     );

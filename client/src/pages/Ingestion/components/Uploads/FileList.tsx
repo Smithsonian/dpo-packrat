@@ -1,8 +1,6 @@
 import { AnimatePresence } from 'framer-motion';
-import React, { useContext } from 'react';
-import { AppContext, FileId, IngestionFile, FileUploadStatus, IngestionDispatchAction, UPLOAD_ACTIONS, VocabularyOption } from '../../../../context';
-import useFilesUpload from '../../hooks/useFilesUpload';
-import useVocabularyEntries from '../../hooks/useVocabularyEntries';
+import React from 'react';
+import { useUpload, useVocabulary, FileId, IngestionFile, FileUploadStatus, VocabularyOption } from '../../../../store';
 import FileListItem from './FileListItem';
 import { eVocabularySetID } from '../../../../types/server';
 
@@ -11,11 +9,11 @@ interface FileListProps {
 }
 
 function FileList(props: FileListProps): React.ReactElement {
-    const { ingestionDispatch } = useContext(AppContext);
-    const { getEntries } = useVocabularyEntries();
+    const { selectFile } = useUpload();
+    const { getEntries } = useVocabulary();
     const { files } = props;
 
-    const { changeAssetType, startUpload, retryUpload, cancelUpload, removeUpload } = useFilesUpload();
+    const { startUpload, retryUpload, cancelUpload, removeUpload, changeAssetType } = useUpload();
 
     const onChangeType = (id: FileId, assetType: number): void => changeAssetType(id, assetType);
 
@@ -27,15 +25,7 @@ function FileList(props: FileListProps): React.ReactElement {
 
     const onRemove = (id: FileId): void => removeUpload(id);
 
-    const onSelect = (id: FileId, selected: boolean): void => {
-        const selectAction: IngestionDispatchAction = {
-            type: UPLOAD_ACTIONS.SELECT,
-            id,
-            selected
-        };
-
-        ingestionDispatch(selectAction);
-    };
+    const onSelect = (id: FileId, selected: boolean): void => selectFile(id, selected);
 
     const getFileList = ({ id, name, size, status, selected, progress, type }: IngestionFile, index: number) => {
         const uploading = status === FileUploadStatus.UPLOADING;
@@ -72,9 +62,9 @@ function FileList(props: FileListProps): React.ReactElement {
     };
 
     return (
-        <>
+        <React.Fragment>
             {files.map(getFileList)}
-        </>
+        </React.Fragment>
     );
 }
 

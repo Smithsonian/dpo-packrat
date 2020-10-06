@@ -1,4 +1,6 @@
-import { Button, ButtonProps, CircularProgress } from '@material-ui/core'; import React from 'react';
+import React from 'react';
+import { Button, ButtonProps } from '@material-ui/core';
+import Progress from '../shared/Progress';
 
 type LoadingButtonProps = ButtonProps & {
     loading: boolean;
@@ -11,7 +13,7 @@ function LoadingButton(props: LoadingButtonProps): React.ReactElement {
     return (
         <Button {...rest}>
             {!loading && props.children}
-            {loading && <CircularProgress color='inherit' size={loaderSize || 20} />}
+            {loading && <Progress color='inherit' size={loaderSize || 20} />}
         </Button>
     );
 }

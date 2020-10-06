@@ -4,8 +4,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { IoIosSearch } from 'react-icons/io';
 import { FieldType, LoadingButton } from '../../../../components';
-import { StateSubject } from '../../../../context';
-import { parseSubjectUnitIdentifierToState } from '../../../../context';
+import { StateSubject, parseSubjectUnitIdentifierToState } from '../../../../store';
 import { SearchIngestionSubjectsDocument } from '../../../../types/graphql';
 import { SubjectUnitIdentifier } from '../../../../types/graphql';
 import SubjectList from './SubjectList';
@@ -61,7 +60,7 @@ function SearchList(): React.ReactElement {
         searchSubject({ variables });
     };
 
-    let content: React.ReactElement | null = null;
+    let content: React.ReactNode = null;
 
     if (subjects.length) {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
@@ -88,9 +87,9 @@ function SearchList(): React.ReactElement {
                     <IoIosSearch color='inherit' size={20} />
                 </LoadingButton>
             </Box>
-            <>
+            <React.Fragment>
                 {content}
-            </>
+            </React.Fragment>
         </FieldType>
     );
 }

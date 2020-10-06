@@ -33,7 +33,7 @@ interface SidebarMenuProps {
     paramIdentifier: string;
     initialRoute?: SidebarRouteTypes;
     options: SidebarOption[];
-    children: React.ReactElement[];
+    children: React.ReactNode;
 }
 
 export function SidebarMenu(props: SidebarMenuProps): React.ReactElement {
@@ -53,7 +53,7 @@ export function SidebarMenu(props: SidebarMenuProps): React.ReactElement {
     }));
 
     return (
-        <>
+        <React.Fragment>
             <Box className={classes.container}>
                 <Typography className={classes.menuLabel} variant='caption'>{title}</Typography>
                 <Grid container className={classes.menuOptions} direction='column'>
@@ -61,6 +61,6 @@ export function SidebarMenu(props: SidebarMenuProps): React.ReactElement {
                 </Grid>
             </Box>
             {children}
-        </>
+        </React.Fragment>
     );
 }
