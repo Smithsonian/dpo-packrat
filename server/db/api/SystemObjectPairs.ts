@@ -1,14 +1,13 @@
 /* eslint-disable camelcase */
 import * as P from '@prisma/client';
 import { Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model,
-    Project, ProjectDocumentation, Scene, Stakeholder, SystemObject, Subject, Unit,
-    Workflow, WorkflowStep } from '..';
+    Project, ProjectDocumentation, Scene, Stakeholder, SystemObject, Subject, Unit } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
 type SystemObjectPairsBase = P.SystemObject
 & { Actor: P.Actor | null}
-& { Asset: P.Asset | null}
+& { Asset_AssetToSystemObject_idAsset: P.Asset | null}
 & { AssetVersion: P.AssetVersion | null}
 & { CaptureData: P.CaptureData | null}
 & { IntermediaryFile: P.IntermediaryFile | null}
@@ -19,12 +18,10 @@ type SystemObjectPairsBase = P.SystemObject
 & { Scene: P.Scene | null}
 & { Stakeholder: P.Stakeholder | null}
 & { Subject: P.Subject | null}
-& { Unit: P.Unit | null}
-& { Workflow: P.Workflow | null}
-& { WorkflowStep: P.WorkflowStep | null};
+& { Unit: P.Unit | null};
 
 type SystemObjectActorBase = P.SystemObject & { Actor: P.Actor | null};
-type SystemObjectAssetBase = P.SystemObject & { Asset: P.Asset | null};
+type SystemObjectAssetBase = P.SystemObject & { Asset_AssetToSystemObject_idAsset: P.Asset | null};
 type SystemObjectAssetVersionBase = P.SystemObject & { AssetVersion: P.AssetVersion | null};
 type SystemObjectCaptureDataBase = P.SystemObject & { CaptureData: P.CaptureData | null};
 type SystemObjectIntermediaryFileBase = P.SystemObject & { IntermediaryFile: P.IntermediaryFile | null};
@@ -36,8 +33,6 @@ type SystemObjectSceneBase = P.SystemObject & { Scene: P.Scene | null};
 type SystemObjectStakeholderBase = P.SystemObject & { Stakeholder: P.Stakeholder | null};
 type SystemObjectSubjectBase = P.SystemObject & { Subject: P.Subject | null};
 type SystemObjectUnitBase = P.SystemObject & { Unit: P.Unit | null};
-type SystemObjectWorkflowBase = P.SystemObject & { Workflow: P.Workflow | null};
-type SystemObjectWorkflowStepBase = P.SystemObject & { WorkflowStep: P.WorkflowStep | null};
 
 export class SystemObjectActor extends SystemObject implements SystemObjectActorBase {
     Actor: Actor | null;
@@ -62,11 +57,18 @@ export class SystemObjectActor extends SystemObject implements SystemObjectActor
 }
 
 export class SystemObjectAsset extends SystemObject implements SystemObjectAssetBase {
-    Asset: Asset | null;
+    Asset_AssetToSystemObject_idAsset: Asset | null; // wacky name produced by prisma
+    get Asset(): Asset | null {
+        return this.Asset_AssetToSystemObject_idAsset;
+    }
+    set Asset(value: Asset | null) {
+        this.Asset_AssetToSystemObject_idAsset = value;
+    }
 
     constructor(input: SystemObjectAssetBase) {
         super(input);
-        this.Asset = (input.Asset) ? new Asset(input.Asset) : /* istanbul ignore next */ null;
+        this.Asset_AssetToSystemObject_idAsset = (input.Asset_AssetToSystemObject_idAsset)
+            ? new Asset(input.Asset_AssetToSystemObject_idAsset) : /* istanbul ignore next */ null;
     }
 
     static async fetch(idAsset: number): Promise<SystemObjectAsset | null> {
@@ -74,7 +76,7 @@ export class SystemObjectAsset extends SystemObject implements SystemObjectAsset
             return null;
         try {
             const SOPair: SystemObjectAssetBase | null =
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset: true, }, });
+                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAsset, }, include: { Asset_AssetToSystemObject_idAsset: true, }, });
             return SOPair ? new SystemObjectAsset(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectAsset.fetch', error);
@@ -325,53 +327,26 @@ export class SystemObjectUnit extends SystemObject implements SystemObjectUnitBa
     }
 }
 
-export class SystemObjectWorkflow extends SystemObject implements SystemObjectWorkflowBase {
-    Workflow: Workflow | null;
-
-    constructor(input: SystemObjectWorkflowBase) {
-        super(input);
-        this.Workflow = (input.Workflow) ? new Workflow(input.Workflow) : /* istanbul ignore next */ null;
-    }
-
-    static async fetch(idWorkflow: number): Promise<SystemObjectWorkflow | null> {
-        if (!idWorkflow)
-            return null;
-        try {
-            const SOPair: SystemObjectWorkflowBase | null =
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflow, }, include: { Workflow: true, }, });
-            return SOPair ? new SystemObjectWorkflow(SOPair) : null;
-        } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectWorkflow.fetch', error);
-            return null;
-        }
-    }
-}
-
-export class SystemObjectWorkflowStep extends SystemObject implements SystemObjectWorkflowStepBase {
-    WorkflowStep: WorkflowStep | null;
-
-    constructor(input: SystemObjectWorkflowStepBase) {
-        super(input);
-        this.WorkflowStep = (input.WorkflowStep) ? new WorkflowStep(input.WorkflowStep) : /* istanbul ignore next */ null;
-    }
-
-    static async fetch(idWorkflowStep: number): Promise<SystemObjectWorkflowStep | null> {
-        if (!idWorkflowStep)
-            return null;
-        try {
-            const SOPair: SystemObjectWorkflowStepBase | null =
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflowStep, }, include: { WorkflowStep: true, }, });
-            return SOPair ? new SystemObjectWorkflowStep(SOPair) : null;
-        } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectWorkflowStep.fetch', error);
-            return null;
-        }
-    }
+export enum eSystemObjectType {
+    eUnit,
+    eProject,
+    eSubject,
+    eItem,
+    eCaptureData,
+    eModel,
+    eScene,
+    eIntermediaryFile,
+    eProjectDocumentation,
+    eAsset,
+    eAssetVersion,
+    eActor,
+    eStakeholder,
+    eUnknown
 }
 
 export class SystemObjectPairs extends SystemObject implements SystemObjectPairsBase {
     Actor: Actor | null = null;
-    Asset: Asset | null = null;
+    Asset_AssetToSystemObject_idAsset: Asset | null = null;
     AssetVersion: AssetVersion | null = null;
     CaptureData: CaptureData | null = null;
     IntermediaryFile: IntermediaryFile | null = null;
@@ -383,13 +358,18 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
     Stakeholder: Stakeholder | null = null;
     Subject: Subject | null = null;
     Unit: Unit | null = null;
-    Workflow: Workflow | null = null;
-    WorkflowStep: WorkflowStep | null = null;
+
+    get Asset(): Asset | null {
+        return this.Asset_AssetToSystemObject_idAsset;
+    }
+    set Asset(value: Asset | null) {
+        this.Asset_AssetToSystemObject_idAsset = value;
+    }
 
     constructor(input: SystemObjectPairsBase) {
         super(input);
         if (input.Actor) this.Actor = new Actor(input.Actor);
-        if (input.Asset) this.Asset = new Asset(input.Asset);
+        if (input.Asset_AssetToSystemObject_idAsset) this.Asset_AssetToSystemObject_idAsset = new Asset(input.Asset_AssetToSystemObject_idAsset);
         if (input.AssetVersion) this.AssetVersion = new AssetVersion(input.AssetVersion);
         if (input.CaptureData) this.CaptureData = new CaptureData(input.CaptureData);
         if (input.IntermediaryFile) this.IntermediaryFile = new IntermediaryFile(input.IntermediaryFile);
@@ -401,8 +381,6 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
         if (input.Subject) this.Subject = new Subject(input.Subject);
         if (input.Stakeholder) this.Stakeholder = new Stakeholder(input.Stakeholder);
         if (input.Unit) this.Unit = new Unit(input.Unit);
-        if (input.Workflow) this.Workflow = new Workflow(input.Workflow);
-        if (input.WorkflowStep) this.WorkflowStep = new WorkflowStep(input.WorkflowStep);
     }
 
     static async fetch(idSystemObject: number): Promise<SystemObjectPairs | null> {
@@ -414,7 +392,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     where: { idSystemObject, },
                     include: {
                         Actor: true,
-                        Asset: true,
+                        Asset_AssetToSystemObject_idAsset: true,
                         AssetVersion: true,
                         CaptureData: true,
                         IntermediaryFile: true,
@@ -425,9 +403,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                         Scene: true,
                         Stakeholder: true,
                         Subject: true,
-                        Unit: true,
-                        Workflow: true,
-                        WorkflowStep: true
+                        Unit: true
                     },
                 });
             return (SOAPB ? new SystemObjectPairs(SOAPB) : null);
@@ -450,7 +426,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     },
                     include: {
                         Actor: true,
-                        Asset: true,
+                        Asset_AssetToSystemObject_idAsset: true,
                         AssetVersion: true,
                         CaptureData: true,
                         IntermediaryFile: true,
@@ -461,9 +437,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                         Scene: true,
                         Stakeholder: true,
                         Subject: true,
-                        Unit: true,
-                        Workflow: true,
-                        WorkflowStep: true
+                        Unit: true
                     },
                 }), SystemObjectPairs);
         } catch (error) /* istanbul ignore next */ {
@@ -485,7 +459,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     },
                     include: {
                         Actor: true,
-                        Asset: true,
+                        Asset_AssetToSystemObject_idAsset: true,
                         AssetVersion: true,
                         CaptureData: true,
                         IntermediaryFile: true,
@@ -496,9 +470,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                         Scene: true,
                         Stakeholder: true,
                         Subject: true,
-                        Unit: true,
-                        Workflow: true,
-                        WorkflowStep: true
+                        Unit: true
                     },
                 }), SystemObjectPairs);
         } catch (error) /* istanbul ignore next */ {

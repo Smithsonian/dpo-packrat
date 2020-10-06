@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/ban-types */
 /**
  * GraphQLApi
  * This helps with seamless access to our graphql api enabling
@@ -17,6 +16,8 @@ import {
     GetAssetResult,
     GetCaptureDataInput,
     GetCaptureDataResult,
+    GetCaptureDataPhotoInput,
+    GetCaptureDataPhotoResult,
     GetLicenseInput,
     GetLicenseResult,
     GetModelInput,
@@ -39,6 +40,8 @@ import {
     CreateUserResult,
     CreateCaptureDataInput,
     CreateCaptureDataResult,
+    CreateCaptureDataPhotoInput,
+    CreateCaptureDataPhotoResult,
     CreateModelInput,
     CreateModelResult,
     CreateSceneInput,
@@ -54,7 +57,40 @@ import {
     CreateVocabularyInput,
     CreateVocabularyResult,
     CreateVocabularySetInput,
-    CreateVocabularySetResult
+    UploadAssetInput,
+    UploadAssetResult,
+    GetUploadedAssetVersionResult,
+    CreateVocabularySetResult,
+    SearchIngestionSubjectsInput,
+    SearchIngestionSubjectsResult,
+    GetIngestionItemsForSubjectsInput,
+    GetIngestionItemsForSubjectsResult,
+    GetIngestionProjectsForSubjectsInput,
+    GetIngestionProjectsForSubjectsResult,
+    GetVocabularyEntriesInput,
+    GetVocabularyEntriesResult,
+    GetContentsForAssetVersionsInput,
+    GetContentsForAssetVersionsResult,
+    AreCameraSettingsUniformInput,
+    AreCameraSettingsUniformResult,
+    IngestDataInput,
+    IngestDataResult,
+    GetSubjectsForUnitInput,
+    GetSubjectsForUnitResult,
+    GetItemsForSubjectInput,
+    GetItemsForSubjectResult,
+    GetAssetVersionsDetailsInput,
+    GetAssetVersionsDetailsResult,
+    GetObjectsForItemInput,
+    GetObjectsForItemResult,
+    GetProjectDocumentationInput,
+    GetProjectDocumentationResult,
+    GetIntermediaryFileInput,
+    GetIntermediaryFileResult,
+    DiscardUploadedAssetVersionsInput,
+    DiscardUploadedAssetVersionsResult,
+    GetObjectChildrenInput,
+    GetObjectChildrenResult
 } from '../../types/graphql';
 
 // Queries
@@ -63,6 +99,7 @@ import getCurrentUser from './queries/user/getCurrentUser';
 import getAccessPolicy from './queries/accesscontrol/getAccessPolicy';
 import getAsset from './queries/asset/getAsset';
 import getCaptureData from './queries/capturedata/getCaptureData';
+import getCaptureDataPhoto from './queries/capturedata/getCaptureDataPhoto';
 import getLicense from './queries/license/getLicense';
 import getModel from './queries/model/getModel';
 import getScene from './queries/scene/getScene';
@@ -72,10 +109,25 @@ import getItem from './queries/unit/getItem';
 import getSubject from './queries/unit/getSubject';
 import getVocabulary from './queries/vocabulary/getVocabulary';
 import getWorkflow from './queries/workflow/getWorkflow';
+import getUploadedAssetVersion from './queries/asset/getUploadedAssetVersion';
+import searchIngestionSubjects from './queries/unit/searchIngestionSubjects';
+import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSubjects';
+import getIngestionProjectsForSubjects from './queries/unit/getIngestionProjectsForSubjects';
+import getVocabularyEntries from './queries/vocabulary/getVocabularyEntries';
+import getContentsForAssetVersions from './queries/asset/getContentsForAssetVersions';
+import areCameraSettingsUniform from './queries/ingestion/areCameraSettingsUniform';
+import getSubjectsForUnit from './queries/unit/getSubjectsForUnit';
+import getItemsForSubject from './queries/unit/getItemsForSubject';
+import getAssetVersionsDetails from './queries/asset/getAssetVersionsDetails';
+import getObjectsForItem from './queries/unit/getObjectsForItem';
+import getProjectDocumentation from './queries/unit/getProjectDocumentation';
+import getIntermediaryFile from './queries/scene/getIntermediaryFile';
+import getObjectChildren from './queries/repository/getObjectChildren';
 
 // Mutations
 import createUser from './mutations/user/createUser';
 import createCaptureData from './mutations/capturedata/createCaptureData';
+import createCaptureDataPhoto from './mutations/capturedata/createCaptureDataPhoto';
 import createModel from './mutations/model/createModel';
 import createScene from './mutations/scene/createScene';
 import createUnit from './mutations/unit/createUnit';
@@ -84,6 +136,10 @@ import createItem from './mutations/unit/createItem';
 import createSubject from './mutations/unit/createSubject';
 import createVocabulary from './mutations/vocabulary/createVocabulary';
 import createVocabularySet from './mutations/vocabulary/createVocabularySet';
+import uploadAsset from './mutations/asset/uploadAsset';
+import ingestData from './mutations/ingestion/ingestData';
+import discardUploadedAssetVersions from './mutations/asset/discardUploadedAssetVersions';
+
 import { Context } from '../../types/resolvers';
 
 const allQueries = {
@@ -92,6 +148,7 @@ const allQueries = {
     getAccessPolicy,
     getAsset,
     getCaptureData,
+    getCaptureDataPhoto,
     getLicense,
     getModel,
     getScene,
@@ -103,6 +160,7 @@ const allQueries = {
     getWorkflow,
     createUser,
     createCaptureData,
+    createCaptureDataPhoto,
     createModel,
     createScene,
     createUnit,
@@ -110,7 +168,24 @@ const allQueries = {
     createItem,
     createSubject,
     createVocabulary,
-    createVocabularySet
+    createVocabularySet,
+    uploadAsset,
+    getUploadedAssetVersion,
+    searchIngestionSubjects,
+    getIngestionItemsForSubjects,
+    getIngestionProjectsForSubjects,
+    getVocabularyEntries,
+    getContentsForAssetVersions,
+    areCameraSettingsUniform,
+    ingestData,
+    getSubjectsForUnit,
+    getItemsForSubject,
+    getAssetVersionsDetails,
+    getObjectsForItem,
+    getProjectDocumentation,
+    getIntermediaryFile,
+    discardUploadedAssetVersions,
+    getObjectChildren
 };
 
 type GraphQLRequest = {
@@ -133,6 +208,26 @@ class GraphQLApi {
 
     async getCurrentUser(context: Context): Promise<GetUserResult> {
         const operationName = 'getCurrentUser';
+        const variables = {};
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async uploadAsset(input: UploadAssetInput, context: Context): Promise<UploadAssetResult> {
+        const operationName = 'uploadAsset';
+        const variables = input;
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getUploadedAssetVersion(context: Context): Promise<GetUploadedAssetVersionResult> {
+        const operationName = 'getUploadedAssetVersion';
         const variables = {};
         return this.graphqlRequest({
             operationName,
@@ -181,8 +276,28 @@ class GraphQLApi {
         });
     }
 
+    async getCaptureDataPhoto(input: GetCaptureDataPhotoInput, context?: Context): Promise<GetCaptureDataPhotoResult> {
+        const operationName = 'getCaptureDataPhoto';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
     async createCaptureData(input: CreateCaptureDataInput, context?: Context): Promise<CreateCaptureDataResult> {
         const operationName = 'createCaptureData';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async createCaptureDataPhoto(input: CreateCaptureDataPhotoInput, context?: Context): Promise<CreateCaptureDataPhotoResult> {
+        const operationName = 'createCaptureDataPhoto';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
@@ -241,8 +356,158 @@ class GraphQLApi {
         });
     }
 
+    async searchIngestionSubjects(input: SearchIngestionSubjectsInput, context?: Context): Promise<SearchIngestionSubjectsResult> {
+        const operationName = 'searchIngestionSubjects';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput, context?: Context): Promise<GetIngestionItemsForSubjectsResult> {
+        const operationName = 'getIngestionItemsForSubjects';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput, context?: Context): Promise<GetIngestionProjectsForSubjectsResult> {
+        const operationName = 'getIngestionProjectsForSubjects';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getVocabularyEntries(input: GetVocabularyEntriesInput, context?: Context): Promise<GetVocabularyEntriesResult> {
+        const operationName = 'getVocabularyEntries';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getContentsForAssetVersions(input: GetContentsForAssetVersionsInput, context?: Context): Promise<GetContentsForAssetVersionsResult> {
+        const operationName = 'getContentsForAssetVersions';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async areCameraSettingsUniform(input: AreCameraSettingsUniformInput, context?: Context): Promise<AreCameraSettingsUniformResult> {
+        const operationName = 'areCameraSettingsUniform';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async ingestData(input: IngestDataInput, context?: Context): Promise<IngestDataResult> {
+        const operationName = 'ingestData';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getSubjectsForUnit(input: GetSubjectsForUnitInput, context?: Context): Promise<GetSubjectsForUnitResult> {
+        const operationName = 'getSubjectsForUnit';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getItemsForSubject(input: GetItemsForSubjectInput, context?: Context): Promise<GetItemsForSubjectResult> {
+        const operationName = 'getItemsForSubject';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getAssetVersionsDetails(input: GetAssetVersionsDetailsInput, context?: Context): Promise<GetAssetVersionsDetailsResult> {
+        const operationName = 'getAssetVersionsDetails';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getObjectsForItem(input: GetObjectsForItemInput, context?: Context): Promise<GetObjectsForItemResult> {
+        const operationName = 'getObjectsForItem';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getProjectDocumentation(input: GetProjectDocumentationInput, context?: Context): Promise<GetProjectDocumentationResult> {
+        const operationName = 'getProjectDocumentation';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getIntermediaryFile(input: GetIntermediaryFileInput, context?: Context): Promise<GetIntermediaryFileResult> {
+        const operationName = 'getIntermediaryFile';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
     async getUnit(input: GetUnitInput, context?: Context): Promise<GetUnitResult> {
         const operationName = 'getUnit';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput, context?: Context): Promise<DiscardUploadedAssetVersionsResult> {
+        const operationName = 'discardUploadedAssetVersions';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getObjectChildren(input: GetObjectChildrenInput, context?: Context): Promise<GetObjectChildrenResult> {
+        const operationName = 'getObjectChildren';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
@@ -361,7 +626,7 @@ class GraphQLApi {
         });
     }
 
-    private async graphqlRequest({ query, variables, context, operationName }: GraphQLRequest): Promise<Object> {
+    private async graphqlRequest({ query, variables, context, operationName }: GraphQLRequest): Promise<any> {
         const queryNode: DocumentNode = allQueries[operationName];
         const queryNodeString: string = print(queryNode);
         const source: string = query || queryNodeString;

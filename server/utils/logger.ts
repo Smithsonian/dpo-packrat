@@ -1,45 +1,91 @@
 import * as winston from 'winston';
 import * as path from 'path';
+import * as fs from 'fs';
+import Config from '../config';
 
 export type Logger = winston.Logger;
 export let logger: Logger;
 let LoggerRequestID: number = 1;
 
-/// Call this method once!
-export function configureLogger(logPath: string): void {
-    logger = winston.createLogger({
-        level: 'verbose',
-        format: winston.format.combine(
-            winston.format.errors({ stack: true }), // emit stack trace when Error objects are passed in
-            winston.format.timestamp(),
-            // winston.format.colorize(),
-            winston.format.json()
-        ),
-        transports: [
-            new winston.transports.File({
-                filename: path.join(logPath, 'PackratCombined.log'),
-                maxsize: 10485760 // 10MB
-            }),
-            new winston.transports.File({
-                filename: path.join(logPath, 'PackratError.log'),
-                level: 'error',
-                maxsize: 10485760 // 10MB
-            }),
-        ]
-    });
+function configureLogger(logPath: string | null): void {
+    /* istanbul ignore if */
+    if (logger)
+        return;
 
+    /* istanbul ignore else */
+    if (!logPath)
+        logPath = Config.log.root ? Config.log.root : /* istanbul ignore next */ './var/logs';
+
+    /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
+        logger = winston.createLogger({
+            level: 'verbose',
+            format: winston.format.combine(
+                winston.format.errors({ stack: true }), // emit stack trace when Error objects are passed in
+                /*
+                winston.format.timestamp(),
+                // winston.format.colorize(),
+                winston.format.json()
+                */
+                winston.format.simple()
+            ),
+            transports: [
+                new winston.transports.File({
+                    filename: path.join(logPath, 'PackratCombined.log'),
+                    maxsize: 10485760 // 10MB
+                }),
+                new winston.transports.File({
+                    filename: path.join(logPath, 'PackratError.log'),
+                    level: 'error',
+                    maxsize: 10485760 // 10MB
+                }),
+            ]
+        });
+
         logger.add(new winston.transports.Console({
             // format: winston.format.simple(), // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
             format: winston.format.combine(
                 winston.format.errors({ stack: true }), // emit stack trace when Error objects are passed in
-                winston.format.timestamp(),
+                // winston.format.timestamp(),
                 winston.format.colorize(),
                 winston.format.simple()
             )
         }));
+    } else {
+        logger = winston.createLogger({
+            level: 'verbose',
+            format: winston.format.combine(
+                winston.format.errors({ stack: true }), // emit stack trace when Error objects are passed in
+                winston.format.timestamp(),
+                winston.format.json()
+            ),
+            transports: [
+                new winston.transports.File({
+                    filename: path.join(logPath, 'PackratCombined.log'),
+                    maxsize: 10485760 // 10MB
+                }),
+                new winston.transports.File({
+                    filename: path.join(logPath, 'PackratError.log'),
+                    level: 'error',
+                    maxsize: 10485760 // 10MB
+                }),
+            ]
+        });
     }
+
+    try {
+        /* istanbul ignore if */
+        if (!fs.existsSync(logPath))
+            fs.mkdirSync(logPath);
+    } catch (error) /* istanbul ignore next */ {
+        logger.error(error);
+    }
+
+    logger.info('**************************');
+    logger.info(`Writing logs to ${path.resolve(logPath)}`);
 }
+
+configureLogger(null);
 
 /// Use this method to retrieve a logger that prepends a "request ID" to the logfile output
 /// Each call to this method will increment the request ID -- so stash and reuse the returned
@@ -49,52 +95,8 @@ export function getRequestLogger(): winston.Logger {
 }
 
 /*
-import { createLogger, format, transports } from 'winston';
-
-const { combine, timestamp, prettyPrint, colorize, errors,  } = format;
-
-
-const logger = createLogger({
-  format: combine(
-    errors({ stack: true }), // <-- use errors format
-    colorize(),
-    timestamp(),
-    prettyPrint()
-  ),
-  transports: [new transports.Console()],
-});
-
-or
-
-const errorStackTracerFormat = winston.format(info => {
-    if (info.meta && info.meta instanceof Error) {
-        info.message = `${info.message} ${info.meta.stack}`;
-    }
-    return info;
-});
-
-const logger = winston.createLogger({
-    format: winston.format.combine(
-        winston.format.splat(), // Necessary to produce the 'meta' property
-        errorStackTracerFormat(),
-        winston.format.simple()
-    )
-});
-
-or
-
-const errorStackFormat = winston.format(info => {
-  if (info instanceof Error) {
-    return Object.assign({}, info, {
-      stack: info.stack,
-      message: info.message
-    })
-  }
-  return info
-})
-
-const logger = winston.createLogger({
-  transports: [ ... ],
-  format: winston.format.combine(errorStackFormat(), myFormat)
-})
+function plainFormat(info) {
+    const formattedDate = info.timestamp.replace('T', ' ').replace('Z', '');
+    return `${formattedDate}: ${info.level} ${info.message};`;
+}
 */

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type Maybe<T> = T | null;
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
     ID: string;
@@ -8,6 +9,157 @@ export type Scalars = {
     Int: number;
     Float: number;
     DateTime: any;
+    Upload: any;
+};
+
+export type Query = {
+    __typename?: 'Query';
+    areCameraSettingsUniform: AreCameraSettingsUniformResult;
+    getAccessPolicy: GetAccessPolicyResult;
+    getAsset: GetAssetResult;
+    getAssetVersionsDetails: GetAssetVersionsDetailsResult;
+    getCaptureData: GetCaptureDataResult;
+    getCaptureDataPhoto: GetCaptureDataPhotoResult;
+    getContentsForAssetVersions: GetContentsForAssetVersionsResult;
+    getCurrentUser: GetCurrentUserResult;
+    getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
+    getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
+    getIntermediaryFile: GetIntermediaryFileResult;
+    getItem: GetItemResult;
+    getItemsForSubject: GetItemsForSubjectResult;
+    getLicense: GetLicenseResult;
+    getModel: GetModelResult;
+    getObjectChildren: GetObjectChildrenResult;
+    getObjectsForItem: GetObjectsForItemResult;
+    getProject: GetProjectResult;
+    getProjectDocumentation: GetProjectDocumentationResult;
+    getScene: GetSceneResult;
+    getSubject: GetSubjectResult;
+    getSubjectsForUnit: GetSubjectsForUnitResult;
+    getUnit: GetUnitResult;
+    getUploadedAssetVersion: GetUploadedAssetVersionResult;
+    getUser: GetUserResult;
+    getVocabulary: GetVocabularyResult;
+    getVocabularyEntries: GetVocabularyEntriesResult;
+    getWorkflow: GetWorkflowResult;
+    searchIngestionSubjects: SearchIngestionSubjectsResult;
+};
+
+export type QueryAreCameraSettingsUniformArgs = {
+    input: AreCameraSettingsUniformInput;
+};
+
+export type QueryGetAccessPolicyArgs = {
+    input: GetAccessPolicyInput;
+};
+
+export type QueryGetAssetArgs = {
+    input: GetAssetInput;
+};
+
+export type QueryGetAssetVersionsDetailsArgs = {
+    input: GetAssetVersionsDetailsInput;
+};
+
+export type QueryGetCaptureDataArgs = {
+    input: GetCaptureDataInput;
+};
+
+export type QueryGetCaptureDataPhotoArgs = {
+    input: GetCaptureDataPhotoInput;
+};
+
+export type QueryGetContentsForAssetVersionsArgs = {
+    input: GetContentsForAssetVersionsInput;
+};
+
+export type QueryGetIngestionItemsForSubjectsArgs = {
+    input: GetIngestionItemsForSubjectsInput;
+};
+
+export type QueryGetIngestionProjectsForSubjectsArgs = {
+    input: GetIngestionProjectsForSubjectsInput;
+};
+
+export type QueryGetIntermediaryFileArgs = {
+    input: GetIntermediaryFileInput;
+};
+
+export type QueryGetItemArgs = {
+    input: GetItemInput;
+};
+
+export type QueryGetItemsForSubjectArgs = {
+    input: GetItemsForSubjectInput;
+};
+
+export type QueryGetLicenseArgs = {
+    input: GetLicenseInput;
+};
+
+export type QueryGetModelArgs = {
+    input: GetModelInput;
+};
+
+export type QueryGetObjectChildrenArgs = {
+    input: GetObjectChildrenInput;
+};
+
+export type QueryGetObjectsForItemArgs = {
+    input: GetObjectsForItemInput;
+};
+
+export type QueryGetProjectArgs = {
+    input: GetProjectInput;
+};
+
+export type QueryGetProjectDocumentationArgs = {
+    input: GetProjectDocumentationInput;
+};
+
+export type QueryGetSceneArgs = {
+    input: GetSceneInput;
+};
+
+export type QueryGetSubjectArgs = {
+    input: GetSubjectInput;
+};
+
+export type QueryGetSubjectsForUnitArgs = {
+    input: GetSubjectsForUnitInput;
+};
+
+export type QueryGetUnitArgs = {
+    input: GetUnitInput;
+};
+
+export type QueryGetUserArgs = {
+    input: GetUserInput;
+};
+
+export type QueryGetVocabularyArgs = {
+    input: GetVocabularyInput;
+};
+
+export type QueryGetVocabularyEntriesArgs = {
+    input: GetVocabularyEntriesInput;
+};
+
+export type QueryGetWorkflowArgs = {
+    input: GetWorkflowInput;
+};
+
+export type QuerySearchIngestionSubjectsArgs = {
+    input: SearchIngestionSubjectsInput;
+};
+
+export type GetAccessPolicyInput = {
+    idAccessPolicy: Scalars['Int'];
+};
+
+export type GetAccessPolicyResult = {
+    __typename?: 'GetAccessPolicyResult';
+    AccessPolicy?: Maybe<AccessPolicy>;
 };
 
 export type AccessAction = {
@@ -58,14 +210,217 @@ export type AccessRole = {
     AccessAction?: Maybe<Array<Maybe<AccessAction>>>;
 };
 
+export type Mutation = {
+    __typename?: 'Mutation';
+    createCaptureData: CreateCaptureDataResult;
+    createCaptureDataPhoto: CreateCaptureDataPhotoResult;
+    createItem: CreateItemResult;
+    createModel: CreateModelResult;
+    createProject: CreateProjectResult;
+    createScene: CreateSceneResult;
+    createSubject: CreateSubjectResult;
+    createUnit: CreateUnitResult;
+    createUser: CreateUserResult;
+    createVocabulary: CreateVocabularyResult;
+    createVocabularySet: CreateVocabularySetResult;
+    discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
+    ingestData: IngestDataResult;
+    uploadAsset: UploadAssetResult;
+};
+
+export type MutationCreateCaptureDataArgs = {
+    input: CreateCaptureDataInput;
+};
+
+export type MutationCreateCaptureDataPhotoArgs = {
+    input: CreateCaptureDataPhotoInput;
+};
+
+export type MutationCreateItemArgs = {
+    input: CreateItemInput;
+};
+
+export type MutationCreateModelArgs = {
+    input: CreateModelInput;
+};
+
+export type MutationCreateProjectArgs = {
+    input: CreateProjectInput;
+};
+
+export type MutationCreateSceneArgs = {
+    input: CreateSceneInput;
+};
+
+export type MutationCreateSubjectArgs = {
+    input: CreateSubjectInput;
+};
+
+export type MutationCreateUnitArgs = {
+    input: CreateUnitInput;
+};
+
+export type MutationCreateUserArgs = {
+    input: CreateUserInput;
+};
+
+export type MutationCreateVocabularyArgs = {
+    input: CreateVocabularyInput;
+};
+
+export type MutationCreateVocabularySetArgs = {
+    input: CreateVocabularySetInput;
+};
+
+export type MutationDiscardUploadedAssetVersionsArgs = {
+    input: DiscardUploadedAssetVersionsInput;
+};
+
+export type MutationIngestDataArgs = {
+    input: IngestDataInput;
+};
+
+export type MutationUploadAssetArgs = {
+    file: Scalars['Upload'];
+    type: Scalars['Int'];
+};
+
+export type UploadAssetInput = {
+    __typename?: 'UploadAssetInput';
+    file: Scalars['Upload'];
+    type: Scalars['Int'];
+};
+
+export enum UploadStatus {
+    Complete = 'COMPLETE',
+    Failed = 'FAILED'
+}
+
+export type UploadAssetResult = {
+    __typename?: 'UploadAssetResult';
+    status: UploadStatus;
+    idAssetVersions?: Maybe<Array<Scalars['Int']>>;
+    error?: Maybe<Scalars['String']>;
+};
+
+export type DiscardUploadedAssetVersionsInput = {
+    idAssetVersions: Array<Scalars['Int']>;
+};
+
+export type DiscardUploadedAssetVersionsResult = {
+    __typename?: 'DiscardUploadedAssetVersionsResult';
+    success: Scalars['Boolean'];
+};
+
+export type GetAssetVersionsDetailsInput = {
+    idAssetVersions: Array<Scalars['Int']>;
+};
+
+export type IngestIdentifier = {
+    __typename?: 'IngestIdentifier';
+    identifier: Scalars['String'];
+    identifierType: Scalars['Int'];
+};
+
+export type IngestFolder = {
+    __typename?: 'IngestFolder';
+    name: Scalars['String'];
+    variantType: Scalars['Int'];
+};
+
+export type IngestPhotogrammetry = {
+    __typename?: 'IngestPhotogrammetry';
+    idAssetVersion: Scalars['Int'];
+    dateCaptured: Scalars['String'];
+    datasetType: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    description: Scalars['String'];
+    cameraSettingUniform: Scalars['Boolean'];
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    directory: Scalars['String'];
+    folders: Array<IngestFolder>;
+    identifiers: Array<IngestIdentifier>;
+};
+
+export type IngestModel = {
+    __typename?: 'IngestModel';
+    idAssetVersion: Scalars['Int'];
+    authoritative: Scalars['Boolean'];
+    dateCreated: Scalars['String'];
+    creationMethod: Scalars['Int'];
+    modality: Scalars['Int'];
+    purpose: Scalars['Int'];
+    units: Scalars['Int'];
+    master: Scalars['Boolean'];
+    directory: Scalars['String'];
+};
+
+export type GetAssetVersionDetailResult = {
+    __typename?: 'GetAssetVersionDetailResult';
+    idAssetVersion: Scalars['Int'];
+    SubjectUnitIdentifier?: Maybe<SubjectUnitIdentifier>;
+    Project?: Maybe<Array<Project>>;
+    Item?: Maybe<Item>;
+    CaptureDataPhoto?: Maybe<IngestPhotogrammetry>;
+    Model?: Maybe<IngestModel>;
+};
+
+export type GetAssetVersionsDetailsResult = {
+    __typename?: 'GetAssetVersionsDetailsResult';
+    valid: Scalars['Boolean'];
+    Details: Array<GetAssetVersionDetailResult>;
+};
+
+export type GetAssetInput = {
+    idAsset: Scalars['Int'];
+};
+
+export type GetAssetResult = {
+    __typename?: 'GetAssetResult';
+    Asset?: Maybe<Asset>;
+};
+
+export type GetUploadedAssetVersionResult = {
+    __typename?: 'GetUploadedAssetVersionResult';
+    AssetVersion: Array<AssetVersion>;
+};
+
+export type GetContentsForAssetVersionsInput = {
+    idAssetVersions: Array<Scalars['Int']>;
+};
+
+export type AssetVersionContent = {
+    __typename?: 'AssetVersionContent';
+    idAssetVersion: Scalars['Int'];
+    folders: Array<Scalars['String']>;
+    all: Array<Scalars['String']>;
+};
+
+export type GetContentsForAssetVersionsResult = {
+    __typename?: 'GetContentsForAssetVersionsResult';
+    AssetVersionContent: Array<AssetVersionContent>;
+};
+
 export type Asset = {
     __typename?: 'Asset';
     idAsset: Scalars['Int'];
     FileName: Scalars['String'];
     FilePath: Scalars['String'];
     idAssetGroup?: Maybe<Scalars['Int']>;
+    idSystemObject?: Maybe<Scalars['Int']>;
+    StorageKey?: Maybe<Scalars['String']>;
     AssetGroup?: Maybe<AssetGroup>;
+    SystemObjectSource?: Maybe<SystemObject>;
     AssetVersion?: Maybe<Array<Maybe<AssetVersion>>>;
+    VAssetType?: Maybe<Vocabulary>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -75,9 +430,12 @@ export type AssetVersion = {
     DateCreated: Scalars['DateTime'];
     idAsset: Scalars['Int'];
     idUserCreator: Scalars['Int'];
-    StorageChecksum: Scalars['String'];
-    StorageLocation: Scalars['String'];
+    StorageHash: Scalars['String'];
     StorageSize: Scalars['Int'];
+    StorageKeyStaging: Scalars['String'];
+    FileName: Scalars['String'];
+    Ingested: Scalars['Boolean'];
+    Version: Scalars['Int'];
     Asset?: Maybe<Asset>;
     User?: Maybe<User>;
     SystemObject?: Maybe<SystemObject>;
@@ -89,32 +447,65 @@ export type AssetGroup = {
     Asset?: Maybe<Array<Maybe<Asset>>>;
 };
 
+export type CreateCaptureDataInput = {
+    idVCaptureMethod: Scalars['Int'];
+    DateCaptured: Scalars['DateTime'];
+    Description: Scalars['String'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+};
+
+export type CreateCaptureDataResult = {
+    __typename?: 'CreateCaptureDataResult';
+    CaptureData?: Maybe<CaptureData>;
+};
+
+export type CreateCaptureDataPhotoInput = {
+    idCaptureData: Scalars['Int'];
+    idVCaptureDatasetType: Scalars['Int'];
+    CaptureDatasetFieldID: Scalars['Int'];
+    ItemPositionFieldID: Scalars['Int'];
+    ItemArrangementFieldID: Scalars['Int'];
+    idVBackgroundRemovalMethod: Scalars['Int'];
+    ClusterGeometryFieldID: Scalars['Int'];
+    CameraSettingsUniform: Scalars['Boolean'];
+    idVItemPositionType?: Maybe<Scalars['Int']>;
+    idVFocusType?: Maybe<Scalars['Int']>;
+    idVLightSourceType?: Maybe<Scalars['Int']>;
+    idVClusterType?: Maybe<Scalars['Int']>;
+};
+
+export type CreateCaptureDataPhotoResult = {
+    __typename?: 'CreateCaptureDataPhotoResult';
+    CaptureDataPhoto?: Maybe<CaptureDataPhoto>;
+};
+
+export type GetCaptureDataInput = {
+    idCaptureData: Scalars['Int'];
+};
+
+export type GetCaptureDataResult = {
+    __typename?: 'GetCaptureDataResult';
+    CaptureData?: Maybe<CaptureData>;
+};
+
+export type GetCaptureDataPhotoInput = {
+    idCaptureDataPhoto: Scalars['Int'];
+};
+
+export type GetCaptureDataPhotoResult = {
+    __typename?: 'GetCaptureDataPhotoResult';
+    CaptureDataPhoto?: Maybe<CaptureDataPhoto>;
+};
+
 export type CaptureData = {
     __typename?: 'CaptureData';
     idCaptureData: Scalars['Int'];
     DateCaptured: Scalars['DateTime'];
     Description: Scalars['String'];
-    idVCaptureDatasetType: Scalars['Int'];
     idVCaptureMethod: Scalars['Int'];
-    CameraSettingsUniform?: Maybe<Scalars['Boolean']>;
-    CaptureDatasetFieldID?: Maybe<Scalars['Int']>;
-    ClusterGeometryFieldID?: Maybe<Scalars['Int']>;
     idAssetThumbnail?: Maybe<Scalars['Int']>;
-    idVBackgroundRemovalMethod?: Maybe<Scalars['Int']>;
-    idVClusterType?: Maybe<Scalars['Int']>;
-    idVFocusType?: Maybe<Scalars['Int']>;
-    idVItemPositionType?: Maybe<Scalars['Int']>;
-    idVLightSourceType?: Maybe<Scalars['Int']>;
-    ItemArrangementFieldID?: Maybe<Scalars['Int']>;
-    ItemPositionFieldID?: Maybe<Scalars['Int']>;
     AssetThumbnail?: Maybe<Asset>;
-    VBackgroundRemovalMethod?: Maybe<Vocabulary>;
-    VCaptureDatasetType?: Maybe<Vocabulary>;
     VCaptureMethod?: Maybe<Vocabulary>;
-    VClusterType?: Maybe<Vocabulary>;
-    VFocusType?: Maybe<Vocabulary>;
-    VItemPositionType?: Maybe<Vocabulary>;
-    VLightSourceType?: Maybe<Vocabulary>;
     CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
     CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
     SystemObject?: Maybe<SystemObject>;
@@ -138,6 +529,121 @@ export type CaptureDataGroup = {
     CaptureData?: Maybe<Array<Maybe<CaptureData>>>;
 };
 
+export type CaptureDataPhoto = {
+    __typename?: 'CaptureDataPhoto';
+    idCaptureDataPhoto: Scalars['Int'];
+    idCaptureData: Scalars['Int'];
+    idVCaptureDatasetType: Scalars['Int'];
+    CameraSettingsUniform?: Maybe<Scalars['Boolean']>;
+    CaptureDatasetFieldID?: Maybe<Scalars['Int']>;
+    ClusterGeometryFieldID?: Maybe<Scalars['Int']>;
+    idVBackgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    idVClusterType?: Maybe<Scalars['Int']>;
+    idVFocusType?: Maybe<Scalars['Int']>;
+    idVItemPositionType?: Maybe<Scalars['Int']>;
+    idVLightSourceType?: Maybe<Scalars['Int']>;
+    ItemArrangementFieldID?: Maybe<Scalars['Int']>;
+    ItemPositionFieldID?: Maybe<Scalars['Int']>;
+    CaptureData?: Maybe<CaptureData>;
+    VBackgroundRemovalMethod?: Maybe<Vocabulary>;
+    VCaptureDatasetType?: Maybe<Vocabulary>;
+    VClusterType?: Maybe<Vocabulary>;
+    VFocusType?: Maybe<Vocabulary>;
+    VItemPositionType?: Maybe<Vocabulary>;
+    VLightSourceType?: Maybe<Vocabulary>;
+};
+
+export type IngestSubjectInput = {
+    id?: Maybe<Scalars['Int']>;
+    name: Scalars['String'];
+    arkId: Scalars['String'];
+    unit: Scalars['String'];
+};
+
+export type IngestProjectInput = {
+    id: Scalars['Int'];
+    name: Scalars['String'];
+};
+
+export type IngestItemInput = {
+    id?: Maybe<Scalars['Int']>;
+    name: Scalars['String'];
+    entireSubject: Scalars['Boolean'];
+};
+
+export type IngestIdentifierInput = {
+    identifier: Scalars['String'];
+    identifierType: Scalars['Int'];
+};
+
+export type IngestFolderInput = {
+    name: Scalars['String'];
+    variantType: Scalars['Int'];
+};
+
+export type IngestPhotogrammetryInput = {
+    idAssetVersion: Scalars['Int'];
+    dateCaptured: Scalars['String'];
+    datasetType: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    description: Scalars['String'];
+    cameraSettingUniform: Scalars['Boolean'];
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    directory: Scalars['String'];
+    folders: Array<IngestFolderInput>;
+    identifiers: Array<IngestIdentifierInput>;
+};
+
+export type IngestModelInput = {
+    idAssetVersion: Scalars['Int'];
+    authoritative: Scalars['Boolean'];
+    dateCreated: Scalars['String'];
+    creationMethod: Scalars['Int'];
+    modality: Scalars['Int'];
+    purpose: Scalars['Int'];
+    units: Scalars['Int'];
+    master: Scalars['Boolean'];
+    directory: Scalars['String'];
+};
+
+export type IngestDataInput = {
+    subjects: Array<IngestSubjectInput>;
+    project: IngestProjectInput;
+    item: IngestItemInput;
+    photogrammetry: Array<IngestPhotogrammetryInput>;
+};
+
+export type IngestDataResult = {
+    __typename?: 'IngestDataResult';
+    success: Scalars['Boolean'];
+};
+
+export type AreCameraSettingsUniformInput = {
+    idAssetVersion: Scalars['Int'];
+};
+
+export type AreCameraSettingsUniformResult = {
+    __typename?: 'AreCameraSettingsUniformResult';
+    isUniform: Scalars['Boolean'];
+};
+
+export type GetLicenseInput = {
+    idLicense: Scalars['Int'];
+};
+
+export type GetLicenseResult = {
+    __typename?: 'GetLicenseResult';
+    License?: Maybe<License>;
+};
+
 export type License = {
     __typename?: 'License';
     idLicense: Scalars['Int'];
@@ -157,6 +663,30 @@ export type LicenseAssignment = {
     License?: Maybe<License>;
     SystemObject?: Maybe<SystemObject>;
     UserCreator?: Maybe<User>;
+};
+
+export type CreateModelInput = {
+    Authoritative: Scalars['Boolean'];
+    idVCreationMethod: Scalars['Int'];
+    idVModality: Scalars['Int'];
+    idVPurpose: Scalars['Int'];
+    idVUnits: Scalars['Int'];
+    Master: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+};
+
+export type CreateModelResult = {
+    __typename?: 'CreateModelResult';
+    Model?: Maybe<Model>;
+};
+
+export type GetModelInput = {
+    idModel: Scalars['Int'];
+};
+
+export type GetModelResult = {
+    __typename?: 'GetModelResult';
+    Model?: Maybe<Model>;
 };
 
 export type Model = {
@@ -266,6 +796,66 @@ export type ModelUvMapFile = {
     Asset?: Maybe<Asset>;
     ModelGeometryFile?: Maybe<ModelGeometryFile>;
     ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
+};
+
+export type PaginationInput = {
+    first?: Maybe<Scalars['Int']>;
+    skip?: Maybe<Scalars['Int']>;
+    offset?: Maybe<Scalars['Int']>;
+    size?: Maybe<Scalars['Int']>;
+};
+
+export type GetObjectChildrenInput = {
+    idRoot: Scalars['Int'];
+    objectTypes: Array<Scalars['Int']>;
+    metadataColumns: Array<Scalars['Int']>;
+};
+
+export type NavigationResultEntry = {
+    __typename?: 'NavigationResultEntry';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    objectType: Scalars['Int'];
+    idObject: Scalars['Int'];
+    metadata: Array<Scalars['String']>;
+};
+
+export type GetObjectChildrenResult = {
+    __typename?: 'GetObjectChildrenResult';
+    success: Scalars['Boolean'];
+    error: Scalars['String'];
+    entries: Array<NavigationResultEntry>;
+    metadataColumns: Array<Scalars['Int']>;
+};
+
+export type CreateSceneInput = {
+    Name: Scalars['String'];
+    HasBeenQCd: Scalars['Boolean'];
+    IsOriented: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+};
+
+export type CreateSceneResult = {
+    __typename?: 'CreateSceneResult';
+    Scene?: Maybe<Scene>;
+};
+
+export type GetSceneInput = {
+    idScene: Scalars['Int'];
+};
+
+export type GetSceneResult = {
+    __typename?: 'GetSceneResult';
+    Scene?: Maybe<Scene>;
+};
+
+export type GetIntermediaryFileInput = {
+    idIntermediaryFile: Scalars['Int'];
+};
+
+export type GetIntermediaryFileResult = {
+    __typename?: 'GetIntermediaryFileResult';
+    IntermediaryFile?: Maybe<IntermediaryFile>;
 };
 
 export type Scene = {
@@ -378,6 +968,166 @@ export type Metadata = {
     VMetadataSource?: Maybe<Vocabulary>;
 };
 
+export type CreateUnitInput = {
+    Name: Scalars['String'];
+    Abbreviation: Scalars['String'];
+    ARKPrefix: Scalars['String'];
+};
+
+export type CreateUnitResult = {
+    __typename?: 'CreateUnitResult';
+    Unit?: Maybe<Unit>;
+};
+
+export type CreateProjectInput = {
+    Name: Scalars['String'];
+    Description: Scalars['String'];
+};
+
+export type CreateProjectResult = {
+    __typename?: 'CreateProjectResult';
+    Project?: Maybe<Project>;
+};
+
+export type CreateSubjectInput = {
+    idUnit: Scalars['Int'];
+    Name: Scalars['String'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idGeoLocation?: Maybe<Scalars['Int']>;
+    idIdentifierPreferred?: Maybe<Scalars['Int']>;
+};
+
+export type CreateSubjectResult = {
+    __typename?: 'CreateSubjectResult';
+    Subject?: Maybe<Subject>;
+};
+
+export type CreateItemInput = {
+    Name: Scalars['String'];
+    EntireSubject: Scalars['Boolean'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idGeoLocation?: Maybe<Scalars['Int']>;
+};
+
+export type CreateItemResult = {
+    __typename?: 'CreateItemResult';
+    Item?: Maybe<Item>;
+};
+
+export type GetSubjectsForUnitInput = {
+    idUnit: Scalars['Int'];
+    pagination?: Maybe<PaginationInput>;
+};
+
+export type GetSubjectsForUnitResult = {
+    __typename?: 'GetSubjectsForUnitResult';
+    Subject: Array<Subject>;
+};
+
+export type GetItemsForSubjectInput = {
+    idSubject: Scalars['Int'];
+    pagination?: Maybe<PaginationInput>;
+};
+
+export type GetItemsForSubjectResult = {
+    __typename?: 'GetItemsForSubjectResult';
+    Item: Array<Item>;
+};
+
+export type SubjectUnitIdentifier = {
+    __typename?: 'SubjectUnitIdentifier';
+    idSubject: Scalars['Int'];
+    SubjectName: Scalars['String'];
+    UnitAbbreviation: Scalars['String'];
+    IdentifierPublic?: Maybe<Scalars['String']>;
+    IdentifierCollection?: Maybe<Scalars['String']>;
+};
+
+export type GetObjectsForItemInput = {
+    idItem: Scalars['Int'];
+};
+
+export type GetObjectsForItemResult = {
+    __typename?: 'GetObjectsForItemResult';
+    CaptureData: Array<CaptureData>;
+    Model: Array<Model>;
+    Scene: Array<Scene>;
+    IntermediaryFile: Array<IntermediaryFile>;
+    ProjectDocumentation: Array<ProjectDocumentation>;
+};
+
+export type SearchIngestionSubjectsInput = {
+    query: Scalars['String'];
+};
+
+export type SearchIngestionSubjectsResult = {
+    __typename?: 'SearchIngestionSubjectsResult';
+    SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
+};
+
+export type GetIngestionItemsForSubjectsInput = {
+    idSubjects: Array<Scalars['Int']>;
+};
+
+export type GetIngestionItemsForSubjectsResult = {
+    __typename?: 'GetIngestionItemsForSubjectsResult';
+    Item: Array<Item>;
+};
+
+export type GetIngestionProjectsForSubjectsInput = {
+    idSubjects: Array<Scalars['Int']>;
+};
+
+export type GetIngestionProjectsForSubjectsResult = {
+    __typename?: 'GetIngestionProjectsForSubjectsResult';
+    Project: Array<Project>;
+};
+
+export type GetUnitInput = {
+    idUnit: Scalars['Int'];
+};
+
+export type GetUnitResult = {
+    __typename?: 'GetUnitResult';
+    Unit?: Maybe<Unit>;
+};
+
+export type GetProjectInput = {
+    idProject: Scalars['Int'];
+};
+
+export type GetProjectResult = {
+    __typename?: 'GetProjectResult';
+    Project?: Maybe<Project>;
+};
+
+export type GetProjectDocumentationInput = {
+    idProjectDocumentation: Scalars['Int'];
+};
+
+export type GetProjectDocumentationResult = {
+    __typename?: 'GetProjectDocumentationResult';
+    ProjectDocumentation?: Maybe<ProjectDocumentation>;
+};
+
+export type GetSubjectInput = {
+    idSubject: Scalars['Int'];
+};
+
+export type GetSubjectResult = {
+    __typename?: 'GetSubjectResult';
+    Subject?: Maybe<Subject>;
+};
+
+export type GetItemInput = {
+    idItem: Scalars['Int'];
+};
+
+export type GetItemResult = {
+    __typename?: 'GetItemResult';
+    Item?: Maybe<Item>;
+};
+
 export type Unit = {
     __typename?: 'Unit';
     idUnit: Scalars['Int'];
@@ -405,7 +1155,7 @@ export type ProjectDocumentation = {
     Description: Scalars['String'];
     idProject: Scalars['Int'];
     Name: Scalars['String'];
-    Project: Project;
+    Project?: Maybe<Project>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -444,8 +1194,10 @@ export type Subject = {
     AssetThumbnail?: Maybe<Asset>;
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
+    idIdentifierPreferred?: Maybe<Scalars['Int']>;
     GeoLocation?: Maybe<GeoLocation>;
     Unit?: Maybe<Unit>;
+    IdentifierPreferred?: Maybe<Identifier>;
     Item?: Maybe<Array<Maybe<Item>>>;
     SystemObject?: Maybe<SystemObject>;
 };
@@ -454,7 +1206,6 @@ export type Item = {
     __typename?: 'Item';
     idItem: Scalars['Int'];
     EntireSubject: Scalars['Boolean'];
-    idSubject: Scalars['Int'];
     Name: Scalars['String'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
     idGeoLocation?: Maybe<Scalars['Int']>;
@@ -462,6 +1213,31 @@ export type Item = {
     GeoLocation?: Maybe<GeoLocation>;
     Subject?: Maybe<Subject>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type CreateUserInput = {
+    Name: Scalars['String'];
+    EmailAddress: Scalars['String'];
+    SecurityID: Scalars['String'];
+};
+
+export type CreateUserResult = {
+    __typename?: 'CreateUserResult';
+    User?: Maybe<User>;
+};
+
+export type GetCurrentUserResult = {
+    __typename?: 'GetCurrentUserResult';
+    User?: Maybe<User>;
+};
+
+export type GetUserInput = {
+    idUser: Scalars['Int'];
+};
+
+export type GetUserResult = {
+    __typename?: 'GetUserResult';
+    User?: Maybe<User>;
 };
 
 export type User = {
@@ -504,418 +1280,6 @@ export type UserPersonalizationUrl = {
     User?: Maybe<User>;
 };
 
-export type Vocabulary = {
-    __typename?: 'Vocabulary';
-    idVocabulary: Scalars['Int'];
-    idVocabularySet: Scalars['Int'];
-    SortOrder: Scalars['Int'];
-    Term: Scalars['String'];
-    VocabularySet?: Maybe<VocabularySet>;
-};
-
-export type VocabularySet = {
-    __typename?: 'VocabularySet';
-    idVocabularySet: Scalars['Int'];
-    Name: Scalars['String'];
-    SystemMaintained: Scalars['Boolean'];
-    Vocabulary?: Maybe<Array<Maybe<Vocabulary>>>;
-};
-
-export type Workflow = {
-    __typename?: 'Workflow';
-    idWorkflow: Scalars['Int'];
-    DateInitiated: Scalars['DateTime'];
-    DateUpdated: Scalars['DateTime'];
-    idWorkflowTemplate: Scalars['Int'];
-    idProject?: Maybe<Scalars['Int']>;
-    idUserInitiator?: Maybe<Scalars['Int']>;
-    Project?: Maybe<Project>;
-    UserInitiator?: Maybe<User>;
-    WorkflowTemplate?: Maybe<WorkflowTemplate>;
-    SystemObject?: Maybe<SystemObject>;
-    WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
-};
-
-export type WorkflowStep = {
-    __typename?: 'WorkflowStep';
-    idWorkflowStep: Scalars['Int'];
-    DateCreated: Scalars['DateTime'];
-    idUserOwner: Scalars['Int'];
-    idVWorkflowStepType: Scalars['Int'];
-    idWorkflow: Scalars['Int'];
-    State: Scalars['Int'];
-    DateCompleted?: Maybe<Scalars['DateTime']>;
-    User?: Maybe<User>;
-    VWorkflowStepType?: Maybe<Vocabulary>;
-    Workflow?: Maybe<Workflow>;
-    SystemObject?: Maybe<SystemObject>;
-    WorkflowStepSystemObjectXref?: Maybe<Array<Maybe<WorkflowStepSystemObjectXref>>>;
-};
-
-export type WorkflowStepSystemObjectXref = {
-    __typename?: 'WorkflowStepSystemObjectXref';
-    idWorkflowStepSystemObjectXref: Scalars['Int'];
-    idSystemObject: Scalars['Int'];
-    idWorkflowStep: Scalars['Int'];
-    Input: Scalars['Boolean'];
-    SystemObject?: Maybe<SystemObject>;
-    WorkflowStep?: Maybe<WorkflowStep>;
-};
-
-export type WorkflowTemplate = {
-    __typename?: 'WorkflowTemplate';
-    idWorkflowTemplate: Scalars['Int'];
-    Name: Scalars['String'];
-    Workflow?: Maybe<Array<Maybe<Workflow>>>;
-};
-
-export type Query = {
-    __typename?: 'Query';
-    getAccessPolicy: GetAccessPolicyResult;
-    getAsset: GetAssetResult;
-    getCaptureData: GetCaptureDataResult;
-    getLicense: GetLicenseResult;
-    getModel: GetModelResult;
-    getScene: GetSceneResult;
-    getUnit: GetUnitResult;
-    getProject: GetProjectResult;
-    getSubject: GetUnitResult;
-    getItem: GetItemResult;
-    getUser: GetUserResult;
-    getVocabulary: GetVocabularyResult;
-    getWorkflow: GetWorkflowResult;
-};
-
-export type QueryGetAccessPolicyArgs = {
-    input: GetAccessPolicyInput;
-};
-
-export type QueryGetAssetArgs = {
-    input: GetAssetInput;
-};
-
-export type QueryGetCaptureDataArgs = {
-    input: GetCaptureDataInput;
-};
-
-export type QueryGetLicenseArgs = {
-    input: GetLicenseInput;
-};
-
-export type QueryGetModelArgs = {
-    input: GetModelInput;
-};
-
-export type QueryGetSceneArgs = {
-    input: GetSceneInput;
-};
-
-export type QueryGetUnitArgs = {
-    input: GetUnitInput;
-};
-
-export type QueryGetProjectArgs = {
-    input: GetProjectInput;
-};
-
-export type QueryGetSubjectArgs = {
-    input: GetSubjectInput;
-};
-
-export type QueryGetItemArgs = {
-    input: GetItemInput;
-};
-
-export type QueryGetUserArgs = {
-    input: GetUserInput;
-};
-
-export type QueryGetVocabularyArgs = {
-    input: GetVocabularyInput;
-};
-
-export type QueryGetWorkflowArgs = {
-    input: GetWorkflowInput;
-};
-
-export type GetAccessPolicyInput = {
-    idAccessPolicy: Scalars['Int'];
-};
-
-export type GetAccessPolicyResult = {
-    __typename?: 'GetAccessPolicyResult';
-    AccessPolicy?: Maybe<AccessPolicy>;
-};
-
-export type GetAssetInput = {
-    idAsset: Scalars['Int'];
-};
-
-export type GetAssetResult = {
-    __typename?: 'GetAssetResult';
-    Asset?: Maybe<Asset>;
-};
-
-export type GetCaptureDataInput = {
-    idCaptureData: Scalars['Int'];
-};
-
-export type GetCaptureDataResult = {
-    __typename?: 'GetCaptureDataResult';
-    CaptureData?: Maybe<CaptureData>;
-};
-
-export type GetLicenseInput = {
-    idLicense: Scalars['Int'];
-};
-
-export type GetLicenseResult = {
-    __typename?: 'GetLicenseResult';
-    License?: Maybe<License>;
-};
-
-export type GetModelInput = {
-    idModel: Scalars['Int'];
-};
-
-export type GetModelResult = {
-    __typename?: 'GetModelResult';
-    Model?: Maybe<Model>;
-};
-
-export type GetSceneInput = {
-    idScene: Scalars['Int'];
-};
-
-export type GetSceneResult = {
-    __typename?: 'GetSceneResult';
-    Scene?: Maybe<Scene>;
-};
-
-export type GetUnitInput = {
-    idUnit: Scalars['Int'];
-};
-
-export type GetUnitResult = {
-    __typename?: 'GetUnitResult';
-    Unit?: Maybe<Unit>;
-};
-
-export type GetProjectInput = {
-    idProject: Scalars['Int'];
-};
-
-export type GetProjectResult = {
-    __typename?: 'GetProjectResult';
-    Project?: Maybe<Project>;
-};
-
-export type GetSubjectInput = {
-    idSubject: Scalars['Int'];
-};
-
-export type GetSubjectResult = {
-    __typename?: 'GetSubjectResult';
-    Subject?: Maybe<Subject>;
-};
-
-export type GetItemInput = {
-    idItem: Scalars['Int'];
-};
-
-export type GetItemResult = {
-    __typename?: 'GetItemResult';
-    Item?: Maybe<Item>;
-};
-
-export type GetUserInput = {
-    idUser: Scalars['Int'];
-};
-
-export type GetUserResult = {
-    __typename?: 'GetUserResult';
-    User?: Maybe<User>;
-};
-
-export type GetVocabularyInput = {
-    idVocabulary: Scalars['Int'];
-};
-
-export type GetVocabularyResult = {
-    __typename?: 'GetVocabularyResult';
-    Vocabulary?: Maybe<Vocabulary>;
-};
-
-export type GetWorkflowInput = {
-    idWorkflow: Scalars['Int'];
-};
-
-export type GetWorkflowResult = {
-    __typename?: 'GetWorkflowResult';
-    Workflow?: Maybe<Workflow>;
-};
-
-export type Mutation = {
-    __typename?: 'Mutation';
-    createCaptureData: CreateCaptureDataResult;
-    createModel: CreateModelResult;
-    createScene: CreateSceneResult;
-    createUnit: CreateUnitResult;
-    createProject: CreateProjectResult;
-    createSubject: CreateSubjectResult;
-    createItem: CreateItemResult;
-    createUser: CreateUserResult;
-    createVocabulary: CreateVocabularyResult;
-    createVocabularySet: CreateVocabularySetResult;
-};
-
-export type MutationCreateCaptureDataArgs = {
-    input: CreateCaptureDataInput;
-};
-
-export type MutationCreateModelArgs = {
-    input: CreateModelInput;
-};
-
-export type MutationCreateSceneArgs = {
-    input: CreateSceneInput;
-};
-
-export type MutationCreateUnitArgs = {
-    input: CreateUnitInput;
-};
-
-export type MutationCreateProjectArgs = {
-    input: CreateProjectInput;
-};
-
-export type MutationCreateSubjectArgs = {
-    input: CreateSubjectInput;
-};
-
-export type MutationCreateItemArgs = {
-    input: CreateItemInput;
-};
-
-export type MutationCreateUserArgs = {
-    input: CreateUserInput;
-};
-
-export type MutationCreateVocabularyArgs = {
-    input: CreateVocabularyInput;
-};
-
-export type MutationCreateVocabularySetArgs = {
-    input: CreateVocabularySetInput;
-};
-
-export type CreateCaptureDataInput = {
-    idVCaptureMethod: Scalars['Int'];
-    idVCaptureDatasetType: Scalars['Int'];
-    DateCaptured: Scalars['DateTime'];
-    Description: Scalars['String'];
-    CaptureDatasetFieldID: Scalars['Int'];
-    ItemPositionFieldID: Scalars['Int'];
-    ItemArrangementFieldID: Scalars['Int'];
-    idVBackgroundRemovalMethod: Scalars['Int'];
-    ClusterGeometryFieldID: Scalars['Int'];
-    CameraSettingsUniform: Scalars['Boolean'];
-    idAssetThumbnail?: Maybe<Scalars['Int']>;
-    idVItemPositionType?: Maybe<Scalars['Int']>;
-    idVFocusType?: Maybe<Scalars['Int']>;
-    idVLightSourceType?: Maybe<Scalars['Int']>;
-    idVClusterType?: Maybe<Scalars['Int']>;
-};
-
-export type CreateCaptureDataResult = {
-    __typename?: 'CreateCaptureDataResult';
-    CaptureData?: Maybe<CaptureData>;
-};
-
-export type CreateModelInput = {
-    Authoritative: Scalars['Boolean'];
-    idVCreationMethod: Scalars['Int'];
-    idVModality: Scalars['Int'];
-    idVPurpose: Scalars['Int'];
-    idVUnits: Scalars['Int'];
-    Master: Scalars['Boolean'];
-    idAssetThumbnail?: Maybe<Scalars['Int']>;
-};
-
-export type CreateModelResult = {
-    __typename?: 'CreateModelResult';
-    Model?: Maybe<Model>;
-};
-
-export type CreateSceneInput = {
-    Name: Scalars['String'];
-    HasBeenQCd: Scalars['Boolean'];
-    IsOriented: Scalars['Boolean'];
-    idAssetThumbnail?: Maybe<Scalars['Int']>;
-};
-
-export type CreateSceneResult = {
-    __typename?: 'CreateSceneResult';
-    Scene?: Maybe<Scene>;
-};
-
-export type CreateUnitInput = {
-    Name: Scalars['String'];
-    Abbreviation: Scalars['String'];
-    ARKPrefix: Scalars['String'];
-};
-
-export type CreateUnitResult = {
-    __typename?: 'CreateUnitResult';
-    Unit?: Maybe<Unit>;
-};
-
-export type CreateProjectInput = {
-    Name: Scalars['String'];
-    Description: Scalars['String'];
-};
-
-export type CreateProjectResult = {
-    __typename?: 'CreateProjectResult';
-    Project?: Maybe<Project>;
-};
-
-export type CreateSubjectInput = {
-    idUnit: Scalars['Int'];
-    Name: Scalars['String'];
-    idAssetThumbnail?: Maybe<Scalars['Int']>;
-    idGeoLocation?: Maybe<Scalars['Int']>;
-};
-
-export type CreateSubjectResult = {
-    __typename?: 'CreateSubjectResult';
-    Subject?: Maybe<Subject>;
-};
-
-export type CreateItemInput = {
-    idSubject: Scalars['Int'];
-    Name: Scalars['String'];
-    EntireSubject: Scalars['Boolean'];
-    idAssetThumbnail?: Maybe<Scalars['Int']>;
-    idGeoLocation?: Maybe<Scalars['Int']>;
-};
-
-export type CreateItemResult = {
-    __typename?: 'CreateItemResult';
-    Item?: Maybe<Item>;
-};
-
-export type CreateUserInput = {
-    Name: Scalars['String'];
-    EmailAddress: Scalars['String'];
-    SecurityID: Scalars['String'];
-};
-
-export type CreateUserResult = {
-    __typename?: 'CreateUserResult';
-    User?: Maybe<User>;
-};
-
 export type CreateVocabularyInput = {
     idVocabularySet: Scalars['Int'];
     SortOrder: Scalars['Int'];
@@ -935,4 +1299,100 @@ export type CreateVocabularySetInput = {
 export type CreateVocabularySetResult = {
     __typename?: 'CreateVocabularySetResult';
     VocabularySet?: Maybe<VocabularySet>;
+};
+
+export type GetVocabularyInput = {
+    idVocabulary: Scalars['Int'];
+};
+
+export type GetVocabularyResult = {
+    __typename?: 'GetVocabularyResult';
+    Vocabulary?: Maybe<Vocabulary>;
+};
+
+export type GetVocabularyEntriesInput = {
+    eVocabSetIDs: Array<Scalars['Int']>;
+};
+
+export type VocabularyEntry = {
+    __typename?: 'VocabularyEntry';
+    eVocabSetID: Scalars['Int'];
+    Vocabulary: Array<Vocabulary>;
+};
+
+export type GetVocabularyEntriesResult = {
+    __typename?: 'GetVocabularyEntriesResult';
+    VocabularyEntries: Array<VocabularyEntry>;
+};
+
+export type Vocabulary = {
+    __typename?: 'Vocabulary';
+    idVocabulary: Scalars['Int'];
+    idVocabularySet: Scalars['Int'];
+    SortOrder: Scalars['Int'];
+    Term: Scalars['String'];
+    VocabularySet?: Maybe<VocabularySet>;
+};
+
+export type VocabularySet = {
+    __typename?: 'VocabularySet';
+    idVocabularySet: Scalars['Int'];
+    Name: Scalars['String'];
+    SystemMaintained: Scalars['Boolean'];
+    Vocabulary?: Maybe<Array<Maybe<Vocabulary>>>;
+};
+
+export type GetWorkflowInput = {
+    idWorkflow: Scalars['Int'];
+};
+
+export type GetWorkflowResult = {
+    __typename?: 'GetWorkflowResult';
+    Workflow?: Maybe<Workflow>;
+};
+
+export type Workflow = {
+    __typename?: 'Workflow';
+    idWorkflow: Scalars['Int'];
+    DateInitiated: Scalars['DateTime'];
+    DateUpdated: Scalars['DateTime'];
+    idWorkflowTemplate: Scalars['Int'];
+    idProject?: Maybe<Scalars['Int']>;
+    idUserInitiator?: Maybe<Scalars['Int']>;
+    Project?: Maybe<Project>;
+    UserInitiator?: Maybe<User>;
+    WorkflowTemplate?: Maybe<WorkflowTemplate>;
+    WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
+};
+
+export type WorkflowStep = {
+    __typename?: 'WorkflowStep';
+    idWorkflowStep: Scalars['Int'];
+    DateCreated: Scalars['DateTime'];
+    idUserOwner: Scalars['Int'];
+    idVWorkflowStepType: Scalars['Int'];
+    idWorkflow: Scalars['Int'];
+    State: Scalars['Int'];
+    DateCompleted?: Maybe<Scalars['DateTime']>;
+    User?: Maybe<User>;
+    VWorkflowStepType?: Maybe<Vocabulary>;
+    Workflow?: Maybe<Workflow>;
+    WorkflowStepSystemObjectXref?: Maybe<Array<Maybe<WorkflowStepSystemObjectXref>>>;
+};
+
+export type WorkflowStepSystemObjectXref = {
+    __typename?: 'WorkflowStepSystemObjectXref';
+    idWorkflowStepSystemObjectXref: Scalars['Int'];
+    idSystemObject: Scalars['Int'];
+    idWorkflowStep: Scalars['Int'];
+    Input: Scalars['Boolean'];
+    SystemObject?: Maybe<SystemObject>;
+    WorkflowStep?: Maybe<WorkflowStep>;
+};
+
+export type WorkflowTemplate = {
+    __typename?: 'WorkflowTemplate';
+    idWorkflowTemplate: Scalars['Int'];
+    Name: Scalars['String'];
+    Workflow?: Maybe<Array<Maybe<Workflow>>>;
 };

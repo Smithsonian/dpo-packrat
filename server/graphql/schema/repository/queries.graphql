@@ -1,0 +1,24 @@
+type Query {
+    getObjectChildren(input: GetObjectChildrenInput!): GetObjectChildrenResult!
+}
+
+input GetObjectChildrenInput {
+    idRoot: Int!
+    objectTypes: [Int!]!
+    metadataColumns: [Int!]!
+}
+
+type NavigationResultEntry {
+    idSystemObject: Int!
+    name: String!
+    objectType: Int!
+    idObject: Int!
+    metadata: [String!]!
+}
+
+type GetObjectChildrenResult {
+    success: Boolean!
+    error: String!
+    entries: [NavigationResultEntry!]!
+    metadataColumns: [Int!]!
+}

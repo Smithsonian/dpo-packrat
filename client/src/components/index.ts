@@ -2,8 +2,14 @@
  * Components
  * All reusable components are exported from here
  */
-import Header from './Header';
-import PrivateRoute from './PrivateRoute';
-import PublicRoute from './PublicRoute';
+import Header from './shared/Header';
+import PrivateRoute from './shared/PrivateRoute';
+import PublicRoute from './shared/PublicRoute';
+import FieldType from './shared/FieldType';
+import Loader from './shared/Loader';
+import Progress from './shared/Progress';
+import LoadingButton from './controls/LoadingButton';
+import RepositoryIcon from './controls/RepositoryIcon';
 
-export { Header, PrivateRoute, PublicRoute };
+export * from './shared/Sidebar';
+export { Header, PrivateRoute, PublicRoute, FieldType, LoadingButton, Loader, Progress, RepositoryIcon };

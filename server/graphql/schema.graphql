@@ -1,3 +1,43 @@
+type Query {
+  areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
+  getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
+  getAsset(input: GetAssetInput!): GetAssetResult!
+  getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
+  getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
+  getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
+  getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
+  getCurrentUser: GetCurrentUserResult!
+  getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
+  getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
+  getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
+  getItem(input: GetItemInput!): GetItemResult!
+  getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
+  getLicense(input: GetLicenseInput!): GetLicenseResult!
+  getModel(input: GetModelInput!): GetModelResult!
+  getObjectChildren(input: GetObjectChildrenInput!): GetObjectChildrenResult!
+  getObjectsForItem(input: GetObjectsForItemInput!): GetObjectsForItemResult!
+  getProject(input: GetProjectInput!): GetProjectResult!
+  getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
+  getScene(input: GetSceneInput!): GetSceneResult!
+  getSubject(input: GetSubjectInput!): GetSubjectResult!
+  getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
+  getUnit(input: GetUnitInput!): GetUnitResult!
+  getUploadedAssetVersion: GetUploadedAssetVersionResult!
+  getUser(input: GetUserInput!): GetUserResult!
+  getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
+  getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
+  getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
+  searchIngestionSubjects(input: SearchIngestionSubjectsInput!): SearchIngestionSubjectsResult!
+}
+
+input GetAccessPolicyInput {
+  idAccessPolicy: Int!
+}
+
+type GetAccessPolicyResult {
+  AccessPolicy: AccessPolicy
+}
+
 scalar DateTime
 
 type AccessAction {
@@ -43,13 +83,147 @@ type AccessRole {
   AccessAction: [AccessAction]
 }
 
+scalar Upload
+
+type Mutation {
+  createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
+  createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
+  createItem(input: CreateItemInput!): CreateItemResult!
+  createModel(input: CreateModelInput!): CreateModelResult!
+  createProject(input: CreateProjectInput!): CreateProjectResult!
+  createScene(input: CreateSceneInput!): CreateSceneResult!
+  createSubject(input: CreateSubjectInput!): CreateSubjectResult!
+  createUnit(input: CreateUnitInput!): CreateUnitResult!
+  createUser(input: CreateUserInput!): CreateUserResult!
+  createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
+  createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
+  discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
+  ingestData(input: IngestDataInput!): IngestDataResult!
+  uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
+}
+
+type UploadAssetInput {
+  file: Upload!
+  type: Int!
+}
+
+enum UploadStatus {
+  COMPLETE
+  FAILED
+}
+
+type UploadAssetResult {
+  status: UploadStatus!
+  idAssetVersions: [Int!]
+  error: String
+}
+
+input DiscardUploadedAssetVersionsInput {
+  idAssetVersions: [Int!]!
+}
+
+type DiscardUploadedAssetVersionsResult {
+  success: Boolean!
+}
+
+input GetAssetVersionsDetailsInput {
+  idAssetVersions: [Int!]!
+}
+
+type IngestIdentifier {
+  identifier: String!
+  identifierType: Int!
+}
+
+type IngestFolder {
+  name: String!
+  variantType: Int!
+}
+
+type IngestPhotogrammetry {
+  idAssetVersion: Int!
+  dateCaptured: String!
+  datasetType: Int!
+  systemCreated: Boolean!
+  description: String!
+  cameraSettingUniform: Boolean!
+  datasetFieldId: Int
+  itemPositionType: Int
+  itemPositionFieldId: Int
+  itemArrangementFieldId: Int
+  focusType: Int
+  lightsourceType: Int
+  backgroundRemovalMethod: Int
+  clusterType: Int
+  clusterGeometryFieldId: Int
+  directory: String!
+  folders: [IngestFolder!]!
+  identifiers: [IngestIdentifier!]!
+}
+
+type IngestModel {
+  idAssetVersion: Int!
+  authoritative: Boolean!
+  dateCreated: String!
+  creationMethod: Int!
+  modality: Int!
+  purpose: Int!
+  units: Int!
+  master: Boolean!
+  directory: String!
+}
+
+type GetAssetVersionDetailResult {
+  idAssetVersion: Int!
+  SubjectUnitIdentifier: SubjectUnitIdentifier
+  Project: [Project!]
+  Item: Item
+  CaptureDataPhoto: IngestPhotogrammetry
+  Model: IngestModel
+}
+
+type GetAssetVersionsDetailsResult {
+  valid: Boolean!
+  Details: [GetAssetVersionDetailResult!]!
+}
+
+input GetAssetInput {
+  idAsset: Int!
+}
+
+type GetAssetResult {
+  Asset: Asset
+}
+
+type GetUploadedAssetVersionResult {
+  AssetVersion: [AssetVersion!]!
+}
+
+input GetContentsForAssetVersionsInput {
+  idAssetVersions: [Int!]!
+}
+
+type AssetVersionContent {
+  idAssetVersion: Int!
+  folders: [String!]!
+  all: [String!]!
+}
+
+type GetContentsForAssetVersionsResult {
+  AssetVersionContent: [AssetVersionContent!]!
+}
+
 type Asset {
   idAsset: Int!
   FileName: String!
   FilePath: String!
   idAssetGroup: Int
+  idSystemObject: Int
+  StorageKey: String
   AssetGroup: AssetGroup
+  SystemObjectSource: SystemObject
   AssetVersion: [AssetVersion]
+  VAssetType: Vocabulary
   SystemObject: SystemObject
 }
 
@@ -58,9 +232,12 @@ type AssetVersion {
   DateCreated: DateTime!
   idAsset: Int!
   idUserCreator: Int!
-  StorageChecksum: String!
-  StorageLocation: String!
+  StorageHash: String!
   StorageSize: Int!
+  StorageKeyStaging: String!
+  FileName: String!
+  Ingested: Boolean!
+  Version: Int!
   Asset: Asset
   User: User
   SystemObject: SystemObject
@@ -71,31 +248,60 @@ type AssetGroup {
   Asset: [Asset]
 }
 
+input CreateCaptureDataInput {
+  idVCaptureMethod: Int!
+  DateCaptured: DateTime!
+  Description: String!
+  idAssetThumbnail: Int
+}
+
+type CreateCaptureDataResult {
+  CaptureData: CaptureData
+}
+
+input CreateCaptureDataPhotoInput {
+  idCaptureData: Int!
+  idVCaptureDatasetType: Int!
+  CaptureDatasetFieldID: Int!
+  ItemPositionFieldID: Int!
+  ItemArrangementFieldID: Int!
+  idVBackgroundRemovalMethod: Int!
+  ClusterGeometryFieldID: Int!
+  CameraSettingsUniform: Boolean!
+  idVItemPositionType: Int
+  idVFocusType: Int
+  idVLightSourceType: Int
+  idVClusterType: Int
+}
+
+type CreateCaptureDataPhotoResult {
+  CaptureDataPhoto: CaptureDataPhoto
+}
+
+input GetCaptureDataInput {
+  idCaptureData: Int!
+}
+
+type GetCaptureDataResult {
+  CaptureData: CaptureData
+}
+
+input GetCaptureDataPhotoInput {
+  idCaptureDataPhoto: Int!
+}
+
+type GetCaptureDataPhotoResult {
+  CaptureDataPhoto: CaptureDataPhoto
+}
+
 type CaptureData {
   idCaptureData: Int!
   DateCaptured: DateTime!
   Description: String!
-  idVCaptureDatasetType: Int!
   idVCaptureMethod: Int!
-  CameraSettingsUniform: Boolean
-  CaptureDatasetFieldID: Int
-  ClusterGeometryFieldID: Int
   idAssetThumbnail: Int
-  idVBackgroundRemovalMethod: Int
-  idVClusterType: Int
-  idVFocusType: Int
-  idVItemPositionType: Int
-  idVLightSourceType: Int
-  ItemArrangementFieldID: Int
-  ItemPositionFieldID: Int
   AssetThumbnail: Asset
-  VBackgroundRemovalMethod: Vocabulary
-  VCaptureDatasetType: Vocabulary
   VCaptureMethod: Vocabulary
-  VClusterType: Vocabulary
-  VFocusType: Vocabulary
-  VItemPositionType: Vocabulary
-  VLightSourceType: Vocabulary
   CaptureDataFile: [CaptureDataFile]
   CaptureDataGroup: [CaptureDataGroup]
   SystemObject: SystemObject
@@ -117,6 +323,117 @@ type CaptureDataGroup {
   CaptureData: [CaptureData]
 }
 
+type CaptureDataPhoto {
+  idCaptureDataPhoto: Int!
+  idCaptureData: Int!
+  idVCaptureDatasetType: Int!
+  CameraSettingsUniform: Boolean
+  CaptureDatasetFieldID: Int
+  ClusterGeometryFieldID: Int
+  idVBackgroundRemovalMethod: Int
+  idVClusterType: Int
+  idVFocusType: Int
+  idVItemPositionType: Int
+  idVLightSourceType: Int
+  ItemArrangementFieldID: Int
+  ItemPositionFieldID: Int
+  CaptureData: CaptureData
+  VBackgroundRemovalMethod: Vocabulary
+  VCaptureDatasetType: Vocabulary
+  VClusterType: Vocabulary
+  VFocusType: Vocabulary
+  VItemPositionType: Vocabulary
+  VLightSourceType: Vocabulary
+}
+
+input IngestSubjectInput {
+  id: Int
+  name: String!
+  arkId: String!
+  unit: String!
+}
+
+input IngestProjectInput {
+  id: Int!
+  name: String!
+}
+
+input IngestItemInput {
+  id: Int
+  name: String!
+  entireSubject: Boolean!
+}
+
+input IngestIdentifierInput {
+  identifier: String!
+  identifierType: Int!
+}
+
+input IngestFolderInput {
+  name: String!
+  variantType: Int!
+}
+
+input IngestPhotogrammetryInput {
+  idAssetVersion: Int!
+  dateCaptured: String!
+  datasetType: Int!
+  systemCreated: Boolean!
+  description: String!
+  cameraSettingUniform: Boolean!
+  datasetFieldId: Int
+  itemPositionType: Int
+  itemPositionFieldId: Int
+  itemArrangementFieldId: Int
+  focusType: Int
+  lightsourceType: Int
+  backgroundRemovalMethod: Int
+  clusterType: Int
+  clusterGeometryFieldId: Int
+  directory: String!
+  folders: [IngestFolderInput!]!
+  identifiers: [IngestIdentifierInput!]!
+}
+
+input IngestModelInput {
+  idAssetVersion: Int!
+  authoritative: Boolean!
+  dateCreated: String!
+  creationMethod: Int!
+  modality: Int!
+  purpose: Int!
+  units: Int!
+  master: Boolean!
+  directory: String!
+}
+
+input IngestDataInput {
+  subjects: [IngestSubjectInput!]!
+  project: IngestProjectInput!
+  item: IngestItemInput!
+  photogrammetry: [IngestPhotogrammetryInput!]!
+}
+
+type IngestDataResult {
+  success: Boolean!
+}
+
+input AreCameraSettingsUniformInput {
+  idAssetVersion: Int!
+}
+
+type AreCameraSettingsUniformResult {
+  isUniform: Boolean!
+}
+
+input GetLicenseInput {
+  idLicense: Int!
+}
+
+type GetLicenseResult {
+  License: License
+}
+
 type License {
   idLicense: Int!
   Description: String!
@@ -134,6 +451,28 @@ type LicenseAssignment {
   License: License
   SystemObject: SystemObject
   UserCreator: User
+}
+
+input CreateModelInput {
+  Authoritative: Boolean!
+  idVCreationMethod: Int!
+  idVModality: Int!
+  idVPurpose: Int!
+  idVUnits: Int!
+  Master: Boolean!
+  idAssetThumbnail: Int
+}
+
+type CreateModelResult {
+  Model: Model
+}
+
+input GetModelInput {
+  idModel: Int!
+}
+
+type GetModelResult {
+  Model: Model
 }
 
 type Model {
@@ -236,6 +575,61 @@ type ModelUVMapFile {
   Asset: Asset
   ModelGeometryFile: ModelGeometryFile
   ModelUVMapChannel: [ModelUVMapChannel]
+}
+
+input PaginationInput {
+  first: Int
+  skip: Int
+  offset: Int
+  size: Int
+}
+
+input GetObjectChildrenInput {
+  idRoot: Int!
+  objectTypes: [Int!]!
+  metadataColumns: [Int!]!
+}
+
+type NavigationResultEntry {
+  idSystemObject: Int!
+  name: String!
+  objectType: Int!
+  idObject: Int!
+  metadata: [String!]!
+}
+
+type GetObjectChildrenResult {
+  success: Boolean!
+  error: String!
+  entries: [NavigationResultEntry!]!
+  metadataColumns: [Int!]!
+}
+
+input CreateSceneInput {
+  Name: String!
+  HasBeenQCd: Boolean!
+  IsOriented: Boolean!
+  idAssetThumbnail: Int
+}
+
+type CreateSceneResult {
+  Scene: Scene
+}
+
+input GetSceneInput {
+  idScene: Int!
+}
+
+type GetSceneResult {
+  Scene: Scene
+}
+
+input GetIntermediaryFileInput {
+  idIntermediaryFile: Int!
+}
+
+type GetIntermediaryFileResult {
+  IntermediaryFile: IntermediaryFile
 }
 
 type Scene {
@@ -341,6 +735,150 @@ type Metadata {
   VMetadataSource: Vocabulary
 }
 
+input CreateUnitInput {
+  Name: String!
+  Abbreviation: String!
+  ARKPrefix: String!
+}
+
+type CreateUnitResult {
+  Unit: Unit
+}
+
+input CreateProjectInput {
+  Name: String!
+  Description: String!
+}
+
+type CreateProjectResult {
+  Project: Project
+}
+
+input CreateSubjectInput {
+  idUnit: Int!
+  Name: String!
+  idAssetThumbnail: Int
+  idGeoLocation: Int
+  idIdentifierPreferred: Int
+}
+
+type CreateSubjectResult {
+  Subject: Subject
+}
+
+input CreateItemInput {
+  Name: String!
+  EntireSubject: Boolean!
+  idAssetThumbnail: Int
+  idGeoLocation: Int
+}
+
+type CreateItemResult {
+  Item: Item
+}
+
+input GetSubjectsForUnitInput {
+  idUnit: Int!
+  pagination: PaginationInput = {}
+}
+
+type GetSubjectsForUnitResult {
+  Subject: [Subject!]!
+}
+
+input GetItemsForSubjectInput {
+  idSubject: Int!
+  pagination: PaginationInput = {}
+}
+
+type GetItemsForSubjectResult {
+  Item: [Item!]!
+}
+
+type SubjectUnitIdentifier {
+  idSubject: Int!
+  SubjectName: String!
+  UnitAbbreviation: String!
+  IdentifierPublic: String
+  IdentifierCollection: String
+}
+
+input GetObjectsForItemInput {
+  idItem: Int!
+}
+
+type GetObjectsForItemResult {
+  CaptureData: [CaptureData!]!
+  Model: [Model!]!
+  Scene: [Scene!]!
+  IntermediaryFile: [IntermediaryFile!]!
+  ProjectDocumentation: [ProjectDocumentation!]!
+}
+
+input SearchIngestionSubjectsInput {
+  query: String!
+}
+
+type SearchIngestionSubjectsResult {
+  SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
+}
+
+input GetIngestionItemsForSubjectsInput {
+  idSubjects: [Int!]!
+}
+
+type GetIngestionItemsForSubjectsResult {
+  Item: [Item!]!
+}
+
+input GetIngestionProjectsForSubjectsInput {
+  idSubjects: [Int!]!
+}
+
+type GetIngestionProjectsForSubjectsResult {
+  Project: [Project!]!
+}
+
+input GetUnitInput {
+  idUnit: Int!
+}
+
+type GetUnitResult {
+  Unit: Unit
+}
+
+input GetProjectInput {
+  idProject: Int!
+}
+
+type GetProjectResult {
+  Project: Project
+}
+
+input GetProjectDocumentationInput {
+  idProjectDocumentation: Int!
+}
+
+type GetProjectDocumentationResult {
+  ProjectDocumentation: ProjectDocumentation
+}
+
+input GetSubjectInput {
+  idSubject: Int!
+}
+
+type GetSubjectResult {
+  Subject: Subject
+}
+
+input GetItemInput {
+  idItem: Int!
+}
+
+type GetItemResult {
+  Item: Item
+}
+
 type Unit {
   idUnit: Int!
   Abbreviation: String
@@ -365,7 +903,7 @@ type ProjectDocumentation {
   Description: String!
   idProject: Int!
   Name: String!
-  Project: Project!
+  Project: Project
   SystemObject: SystemObject
 }
 
@@ -401,8 +939,10 @@ type Subject {
   AssetThumbnail: Asset
   idAssetThumbnail: Int
   idGeoLocation: Int
+  idIdentifierPreferred: Int
   GeoLocation: GeoLocation
   Unit: Unit
+  IdentifierPreferred: Identifier
   Item: [Item]
   SystemObject: SystemObject
 }
@@ -410,7 +950,6 @@ type Subject {
 type Item {
   idItem: Int!
   EntireSubject: Boolean!
-  idSubject: Int!
   Name: String!
   idAssetThumbnail: Int
   idGeoLocation: Int
@@ -418,6 +957,28 @@ type Item {
   GeoLocation: GeoLocation
   Subject: Subject
   SystemObject: SystemObject
+}
+
+input CreateUserInput {
+  Name: String!
+  EmailAddress: String!
+  SecurityID: String!
+}
+
+type CreateUserResult {
+  User: User
+}
+
+type GetCurrentUserResult {
+  User: User
+}
+
+input GetUserInput {
+  idUser: Int!
+}
+
+type GetUserResult {
+  User: User
 }
 
 type User {
@@ -457,296 +1018,6 @@ type UserPersonalizationUrl {
   User: User
 }
 
-type Vocabulary {
-  idVocabulary: Int!
-  idVocabularySet: Int!
-  SortOrder: Int!
-  VocabularySet: VocabularySet
-}
-
-type VocabularySet {
-  idVocabularySet: Int!
-  Name: String!
-  SystemMaintained: Boolean!
-  Vocabulary: [Vocabulary]
-}
-
-type Workflow {
-  idWorkflow: Int!
-  DateInitiated: DateTime!
-  DateUpdated: DateTime!
-  idWorkflowTemplate: Int!
-  idProject: Int
-  idUserInitiator: Int
-  Project: Project
-  UserInitiator: User
-  WorkflowTemplate: WorkflowTemplate
-  SystemObject: SystemObject
-  WorkflowStep: [WorkflowStep]
-}
-
-type WorkflowStep {
-  idWorkflowStep: Int!
-  DateCreated: DateTime!
-  idUserOwner: Int!
-  idVWorkflowStepType: Int!
-  idWorkflow: Int!
-  State: Int!
-  DateCompleted: DateTime
-  User: User
-  VWorkflowStepType: Vocabulary
-  Workflow: Workflow
-  SystemObject: SystemObject
-  WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]
-}
-
-type WorkflowStepSystemObjectXref {
-  idWorkflowStepSystemObjectXref: Int!
-  idSystemObject: Int!
-  idWorkflowStep: Int!
-  Input: Boolean!
-  SystemObject: SystemObject
-  WorkflowStep: WorkflowStep
-}
-
-type WorkflowTemplate {
-  idWorkflowTemplate: Int!
-  Name: String!
-  Workflow: [Workflow]
-}
-
-type Query {
-  getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
-  getAsset(input: GetAssetInput!): GetAssetResult!
-  getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
-  getLicense(input: GetLicenseInput!): GetLicenseResult!
-  getModel(input: GetModelInput!): GetModelResult!
-  getScene(input: GetSceneInput!): GetSceneResult!
-  getUnit(input: GetUnitInput!): GetUnitResult!
-  getProject(input: GetProjectInput!): GetProjectResult!
-  getSubject(input: GetSubjectInput!): GetUnitResult!
-  getItem(input: GetItemInput!): GetItemResult!
-  getUser(input: GetUserInput!): GetUserResult!
-  getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
-  getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
-}
-
-input GetAccessPolicyInput {
-  idAccessPolicy: Int!
-}
-
-type GetAccessPolicyResult {
-  AccessPolicy: AccessPolicy
-}
-
-input GetAssetInput {
-  idAsset: Int!
-}
-
-type GetAssetResult {
-  Asset: Asset
-}
-
-input GetCaptureDataInput {
-  idCaptureData: Int!
-}
-
-type GetCaptureDataResult {
-  CaptureData: CaptureData
-}
-
-input GetLicenseInput {
-  idLicense: Int!
-}
-
-type GetLicenseResult {
-  License: License
-}
-
-input GetModelInput {
-  idModel: Int!
-}
-
-type GetModelResult {
-  Model: Model
-}
-
-input GetSceneInput {
-  idScene: Int!
-}
-
-type GetSceneResult {
-  Scene: Scene
-}
-
-input GetUnitInput {
-  idUnit: Int!
-}
-
-type GetUnitResult {
-  Unit: Unit
-}
-
-input GetProjectInput {
-  idProject: Int!
-}
-
-type GetProjectResult {
-  Project: Project
-}
-
-input GetSubjectInput {
-  idSubject: Int!
-}
-
-type GetSubjectResult {
-  Subject: Subject
-}
-
-input GetItemInput {
-  idItem: Int!
-}
-
-type GetItemResult {
-  Item: Item
-}
-
-input GetUserInput {
-  idUser: Int!
-}
-
-type GetUserResult {
-  User: User
-}
-
-input GetVocabularyInput {
-  idVocabulary: Int!
-}
-
-type GetVocabularyResult {
-  Vocabulary: Vocabulary
-}
-
-input GetWorkflowInput {
-  idWorkflow: Int!
-}
-
-type GetWorkflowResult {
-  Workflow: Workflow
-}
-
-type Mutation {
-  createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
-  createModel(input: CreateModelInput!): CreateModelResult!
-  createScene(input: CreateSceneInput!): CreateSceneResult!
-  createUnit(input: CreateUnitInput!): CreateUnitResult!
-  createProject(input: CreateProjectInput!): CreateProjectResult!
-  createSubject(input: CreateSubjectInput!): CreateSubjectResult!
-  createItem(input: CreateItemInput!): CreateItemResult!
-  createUser(input: CreateUserInput!): CreateUserResult!
-  createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
-  createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
-}
-
-input CreateCaptureDataInput {
-  idVCaptureMethod: Int!
-  idVCaptureDatasetType: Int!
-  DateCaptured: DateTime!
-  Description: String!
-  CaptureDatasetFieldID: Int!
-  ItemPositionFieldID: Int!
-  ItemArrangementFieldID: Int!
-  idVBackgroundRemovalMethod: Int!
-  ClusterGeometryFieldID: Int!
-  CameraSettingsUniform: Boolean!
-  idAssetThumbnail: Int
-  idVItemPositionType: Int
-  idVFocusType: Int
-  idVLightSourceType: Int
-  idVClusterType: Int
-}
-
-type CreateCaptureDataResult {
-  CaptureData: CaptureData
-}
-
-input CreateModelInput {
-  Authoritative: Boolean!
-  idVCreationMethod: Int!
-  idVModality: Int!
-  idVPurpose: Int!
-  idVUnits: Int!
-  Master: Boolean!
-  idAssetThumbnail: Int
-}
-
-type CreateModelResult {
-  Model: Model
-}
-
-input CreateSceneInput {
-  Name: String!
-  HasBeenQCd: Boolean!
-  IsOriented: Boolean!
-  idAssetThumbnail: Int
-}
-
-type CreateSceneResult {
-  Scene: Scene
-}
-
-input CreateUnitInput {
-  Name: String!
-  Abbreviation: String!
-  ARKPrefix: String!
-}
-
-type CreateUnitResult {
-  Unit: Unit
-}
-
-input CreateProjectInput {
-  Name: String!
-  Description: String!
-}
-
-type CreateProjectResult {
-  Project: Project
-}
-
-input CreateSubjectInput {
-  idUnit: Int!
-  Name: String!
-  idAssetThumbnail: Int
-  idGeoLocation: Int
-}
-
-type CreateSubjectResult {
-  Subject: Subject
-}
-
-input CreateItemInput {
-  idSubject: Int!
-  Name: String!
-  EntireSubject: Boolean!
-  idAssetThumbnail: Int
-  idGeoLocation: Int
-}
-
-type CreateItemResult {
-  Item: Item
-}
-
-input CreateUserInput {
-  Name: String!
-  EmailAddress: String!
-  SecurityID: String!
-}
-
-type CreateUserResult {
-  User: User
-}
-
 input CreateVocabularyInput {
   idVocabularySet: Int!
   SortOrder: Int!
@@ -764,4 +1035,90 @@ input CreateVocabularySetInput {
 
 type CreateVocabularySetResult {
   VocabularySet: VocabularySet
+}
+
+input GetVocabularyInput {
+  idVocabulary: Int!
+}
+
+type GetVocabularyResult {
+  Vocabulary: Vocabulary
+}
+
+input GetVocabularyEntriesInput {
+  eVocabSetIDs: [Int!]!
+}
+
+type VocabularyEntry {
+  eVocabSetID: Int!
+  Vocabulary: [Vocabulary!]!
+}
+
+type GetVocabularyEntriesResult {
+  VocabularyEntries: [VocabularyEntry!]!
+}
+
+type Vocabulary {
+  idVocabulary: Int!
+  idVocabularySet: Int!
+  SortOrder: Int!
+  Term: String!
+  VocabularySet: VocabularySet
+}
+
+type VocabularySet {
+  idVocabularySet: Int!
+  Name: String!
+  SystemMaintained: Boolean!
+  Vocabulary: [Vocabulary]
+}
+
+input GetWorkflowInput {
+  idWorkflow: Int!
+}
+
+type GetWorkflowResult {
+  Workflow: Workflow
+}
+
+type Workflow {
+  idWorkflow: Int!
+  DateInitiated: DateTime!
+  DateUpdated: DateTime!
+  idWorkflowTemplate: Int!
+  idProject: Int
+  idUserInitiator: Int
+  Project: Project
+  UserInitiator: User
+  WorkflowTemplate: WorkflowTemplate
+  WorkflowStep: [WorkflowStep]
+}
+
+type WorkflowStep {
+  idWorkflowStep: Int!
+  DateCreated: DateTime!
+  idUserOwner: Int!
+  idVWorkflowStepType: Int!
+  idWorkflow: Int!
+  State: Int!
+  DateCompleted: DateTime
+  User: User
+  VWorkflowStepType: Vocabulary
+  Workflow: Workflow
+  WorkflowStepSystemObjectXref: [WorkflowStepSystemObjectXref]
+}
+
+type WorkflowStepSystemObjectXref {
+  idWorkflowStepSystemObjectXref: Int!
+  idSystemObject: Int!
+  idWorkflowStep: Int!
+  Input: Boolean!
+  SystemObject: SystemObject
+  WorkflowStep: WorkflowStep
+}
+
+type WorkflowTemplate {
+  idWorkflowTemplate: Int!
+  Name: String!
+  Workflow: [Workflow]
 }

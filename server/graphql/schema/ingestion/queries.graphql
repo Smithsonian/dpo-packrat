@@ -1,0 +1,11 @@
+type Query {
+    areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
+}
+
+input AreCameraSettingsUniformInput {
+    idAssetVersion: Int!
+}
+
+type AreCameraSettingsUniformResult {
+    isUniform: Boolean!
+}

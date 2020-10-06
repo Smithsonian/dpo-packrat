@@ -1,6 +1,10 @@
-import ApolloClient from 'apollo-boost';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ApolloClient, InMemoryCache, NormalizedCacheObject } from '@apollo/client';
+import { createUploadLink } from 'apollo-upload-client';
+import { apolloFetch } from './utils';
+import { DocumentNode } from 'graphql';
 
-function configureApolloClient(): ApolloClient<unknown> {
+function configureApolloClient(): ApolloClient<NormalizedCacheObject> {
     const { REACT_APP_SERVER_ENDPOINT } = process.env;
 
     if (!REACT_APP_SERVER_ENDPOINT) {
@@ -9,9 +13,15 @@ function configureApolloClient(): ApolloClient<unknown> {
 
     const uri: string = `${REACT_APP_SERVER_ENDPOINT}/graphql`;
 
-    const client = new ApolloClient({
+    const link = createUploadLink({
         uri,
-        credentials: 'include'
+        credentials: 'include',
+        fetch: apolloFetch
+    });
+
+    const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache()
     });
 
     return client;
@@ -19,5 +29,30 @@ function configureApolloClient(): ApolloClient<unknown> {
 
 const apolloClient = configureApolloClient();
 
-export { apolloClient };
-export * from './queries';
+interface IApolloUploader {
+    mutation: DocumentNode;
+    variables: unknown;
+    useUpload: boolean;
+    refetchQueries?: string[];
+    onProgress: (event: ProgressEvent) => void;
+    onCancel: (cancelHandler: () => void) => void;
+}
+
+const apolloUploader = (options: IApolloUploader): Promise<any> => {
+    const { mutation, variables, useUpload, refetchQueries, onProgress, onCancel } = options;
+
+    return apolloClient.mutate({
+        mutation,
+        variables,
+        refetchQueries,
+        context: {
+            fetchOptions: {
+                useUpload,
+                onProgress,
+                onCancel
+            }
+        }
+    });
+};
+
+export { apolloClient, apolloUploader };

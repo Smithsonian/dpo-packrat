@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
-import { Unit as UnitBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { Unit as UnitBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Unit extends DBC.DBObject<UnitBase> implements UnitBase {
+export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObjectBased {
     idUnit!: number;
     Abbreviation!: string | null;
     ARKPrefix!: string | null;
@@ -59,7 +58,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase {
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findOne({ where: { idUnit, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.unit.fetchSystemObject', error);
+            LOG.logger.error('DBAPI.Unit.fetchSystemObject', error);
             return null;
         }
     }
@@ -72,6 +71,68 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase {
                 await DBC.DBConnection.prisma.unit.findOne({ where: { idUnit, }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchAll(): Promise<Unit[] | null> {
+        try {
+            return DBC.CopyArray<UnitBase, Unit>(
+                await DBC.DBConnection.prisma.unit.findMany(), Unit);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Unit.fetchAll', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of units that are connected to any of the specified projects.
+     * Units  are connected to system objects; we examine those system objects which are in a *master* relationship
+     * to system objects connected to any of the specified projects.
+     * @param idProjects Array of Project.idProject
+     */
+    static async fetchMasterFromProjects(idProjects: number[]): Promise<Unit[] | null> {
+        if (!idProjects || idProjects.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<UnitBase, Unit>(
+                await DBC.DBConnection.prisma.$queryRaw<Unit[]>`
+                SELECT DISTINCT U.*
+                FROM Unit AS U
+                JOIN SystemObject AS SOU ON (U.idUnit = SOU.idUnit)
+                JOIN SystemObjectXref AS SOX ON (SOU.idSystemObject = SOX.idSystemObjectMaster)
+                JOIN SystemObject AS SOP ON (SOX.idSystemObjectDerived = SOP.idSystemObject)
+                WHERE SOP.idProject IN (${join(idProjects)})`, Unit);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Unit.fetchMasterFromProjects', error);
+            return null;
+        }
+    }
+
+    static async fetchFromUnitEdanAbbreviation(Abbreviation: string): Promise<Unit[] | null> {
+        if (!Abbreviation)
+            return null;
+        try {
+            return DBC.CopyArray<UnitBase, Unit>(
+                await DBC.DBConnection.prisma.unit.findMany({ where: { UnitEdan: { some: { Abbreviation }, }, }, }), Unit);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Unit.fetchFromUnitEdanAbbreviation', error);
+            return null;
+        }
+    }
+
+    static async fetchFromNameSearch(search: string): Promise<Unit[] | null> {
+        if (!search)
+            return null;
+        try {
+            return DBC.CopyArray<UnitBase, Unit>(
+                await DBC.DBConnection.prisma.unit.findMany({ where: { OR: [
+                    { UnitEdan: { some: { Abbreviation: { contains: search }, }, }, },
+                    { Abbreviation: { contains: search }, },
+                    { Name: { contains: search }, },
+                ] }, }), Unit);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Unit.fetchFromNameSearch', error);
             return null;
         }
     }
