@@ -136,11 +136,11 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
     return (
         <Box display='flex'>
             <Box className={classes.label}>
-                <Tooltip title={objectTitle} placement='bottom-start'>
-                    <Box className={classes.labelText}>
-                        {label}
-                    </Box>
-                </Tooltip>
+                <Box className={classes.labelText}>
+                    <Tooltip title={objectTitle} placement='bottom-start'>
+                        <span>{label}</span>
+                    </Tooltip>
+                </Box>
             </Box>
             <MetadataView header={false} treeColumns={treeColumns} />
         </Box>

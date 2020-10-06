@@ -31,7 +31,7 @@ function Repository(): React.ReactElement {
 
     const queries = parseRepositoryUrl(search);
 
-    const initialFilterState = {
+    const initialFilterState: RepositoryFilter = {
         units: true,
         projects: false
     };

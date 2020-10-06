@@ -1,14 +1,13 @@
-import { eSystemObjectType, eMetadata } from '../../../types/server';
-import { useQuery, useLazyQuery, ApolloError } from '@apollo/client';
+import { ApolloError, useLazyQuery, useQuery } from '@apollo/client';
+import { RepositoryFilter } from '../index';
 import { GetObjectChildrenDocument, GetObjectChildrenQuery, GetObjectChildrenQueryVariables } from '../../../types/graphql';
-import { RepositoryFilter } from '..';
+import { eMetadata, eSystemObjectType } from '../../../types/server';
 
 interface UseGetRootObjects {
     getRootObjectsData: GetObjectChildrenQuery | undefined;
     getRootObjectsLoading: boolean;
     getRootObjectsError: ApolloError | undefined;
 }
-
 
 function useGetRootObjects(objectTypes: eSystemObjectType[], filter: RepositoryFilter): UseGetRootObjects {
     const { data: getRootObjectsData, loading: getRootObjectsLoading, error: getRootObjectsError } = useQuery<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>(
