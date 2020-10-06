@@ -1,4 +1,15 @@
-const Colors = {
+import { eSystemObjectType } from '../types/server';
+
+type ColorMap = { [key: string]: string };
+
+type ColorType = {
+    defaults: ColorMap;
+    sidebarOptions: ColorMap;
+    upload: ColorMap;
+    repository: { [key in number | string]: ColorMap };
+};
+
+const Colors: ColorType = {
     defaults: {
         white: '#FFFFFF'
     },
@@ -13,20 +24,44 @@ const Colors = {
     upload: {
         success: '#AFFFA9'
     },
-    // Repository tree view colors [Dark variant, Light Variant]
     repository: {
-        default: ['#e9f4fe', '#f4fafe'],
-        unit: ['#e9f4fe', '#f4fafe'],
-        project: ['#f6f3fb', '#faf9fd'],
-        subject: ['#fff9e6', '#fffcf3'],
-        item: ['#ffe6de', '#ffeee9'],
-        captureData: ['#edf7ed', '#f6fbf6']
+        default: {
+            dark: '#82b6e0',
+            regular: '#e9f4fe',
+            light: '#f4fafe'
+        },
+        [eSystemObjectType.eUnit]: {
+            dark: '#82b6e0',
+            regular: '#e9f4fe',
+            light: '#f4fafe'
+        },
+        [eSystemObjectType.eProject]: {
+            dark: '#b39ddb',
+            regular: '#f6f3fb',
+            light: '#faf9fd'
+        },
+        [eSystemObjectType.eSubject]: {
+            dark: '#ffe082',
+            regular: '#fff9e6',
+            light: '#fffcf3'
+        },
+        [eSystemObjectType.eItem]: {
+            dark: '#ffab91',
+            regular: '#ffe6de',
+            light: '#ffeee9'
+        },
+        [eSystemObjectType.eCaptureData]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        }
     }
 };
 
 export enum RepositoryColorVariant {
-    Dark,
-    Light
+    dark = 'dark',
+    regular = 'regular',
+    light = 'light'
 }
 
 export default Colors;

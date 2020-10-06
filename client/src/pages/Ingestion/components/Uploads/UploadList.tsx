@@ -1,8 +1,8 @@
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useContext } from 'react';
+import React from 'react';
 import { FieldType } from '../../../../components';
-import { AppContext, FileUploadStatus } from '../../../../context';
+import { useUpload } from '../../../../store';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 
@@ -46,18 +46,15 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
 
 function UploadList(): React.ReactElement {
     const classes = useStyles();
-    const { ingestion: { uploads } } = useContext(AppContext);
-    const { files } = uploads;
-
-    const uploadingFiles = [...files].filter(({ status }) => status !== FileUploadStatus.COMPLETE);
+    const { pending } = useUpload();
 
     return (
         <Box className={classes.container}>
             <FieldType required align='center' label='Uploading files'>
                 <UploadListHeader />
                 <Box className={classes.list}>
-                    {!uploadingFiles.length && <Typography className={classes.listDetail} variant='body1'>Add files to upload</Typography>}
-                    <FileList files={uploadingFiles} />
+                    {!pending.length && <Typography className={classes.listDetail} variant='body1'>Add files to upload</Typography>}
+                    <FileList files={pending} />
                 </Box>
             </FieldType>
         </Box>

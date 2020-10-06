@@ -1,27 +1,34 @@
-import React from 'react';
-import { Box, CircularProgress, Typography } from '@material-ui/core';
+import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import React from 'react';
+import { Progress } from '../../../../components';
 import { eSystemObjectType } from '../../../../types/server';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
-        height: 50,
-        width: '10%',
+        height: 40,
+        marginLeft: 20,
+        position: 'sticky',
+        left: 20,
         alignItems: 'center',
-        justifyContent: 'center',
+        [breakpoints.down('lg')]: {
+            height: 30,
+        },
     },
     emptyList: {
         display: 'flex',
-        padding: '10px 5px',
+        height: 40,
         alignItems: 'center',
         color: palette.grey[400],
         [breakpoints.down('lg')]: {
-            height: 40,
+            height: 30,
         },
     },
     emptyListText: {
+        position: 'sticky',
+        left: 15,
         [breakpoints.down('lg')]: {
             fontSize: 12,
         },
@@ -33,7 +40,7 @@ interface TreeViewContentsProps {
     loading: boolean;
     isEmpty: boolean;
     objectType: eSystemObjectType;
-    children: React.ReactElement | React.ReactElement[] | Element[] | undefined
+    children: React.ReactNode
 }
 
 function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
@@ -42,18 +49,28 @@ function TreeViewContents(props: TreeViewContentsProps): React.ReactElement {
 
     const contentTerm = getTermForSystemObjectType(objectType);
 
-    return (
-        <>
-            {loading ? (
-                <Box className={classes.container}>
-                    <CircularProgress size={20} />
-                </Box>
-            ) : isEmpty ? (
+    let content: React.ReactNode = (
+        <Box className={classes.container}>
+            <Progress size={20} />
+        </Box>
+    );
+
+    if (!loading) {
+        if (isEmpty) {
+            content = (
                 <Box className={classes.emptyList}>
                     <Typography className={classes.emptyListText} variant='caption' color='inherit'>No objects found for {contentTerm} {name}</Typography>
                 </Box>
-            ) : children}
-        </>
+            );
+        } else {
+            content = children;
+        }
+    }
+
+    return (
+        <React.Fragment>
+            {content}
+        </React.Fragment>
     );
 }
 

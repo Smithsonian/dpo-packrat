@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Select, MenuItem, CircularProgress } from '@material-ui/core';
+import { Box, Typography, Select, MenuItem } from '@material-ui/core';
 import { green, red, yellow, grey, blue } from '@material-ui/core/colors';
 import { makeStyles, fade } from '@material-ui/core/styles';
 import { IoIosCloseCircle } from 'react-icons/io';
@@ -7,8 +7,9 @@ import { FaRedo, FaRegCircle, FaCheckCircle } from 'react-icons/fa';
 import { MdFileUpload } from 'react-icons/md';
 import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
-import { FileId, VocabularyOption } from '../../../../context';
+import { FileId, VocabularyOption } from '../../../../store';
 import { motion } from 'framer-motion';
+import { Progress } from '../../../../components';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
@@ -130,33 +131,33 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     const retry = () => onRetry(id);
     const select = () => complete ? onSelect(id, !selected) : null;
 
-    let options: React.ReactElement | null = null;
+    let options: React.ReactNode = null;
 
     if (!complete) {
         options = (
-            <>
+            <React.Fragment>
                 {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={26} color={green[500]} />}
-                {uploading && !failed && <CircularProgress className={classes.option} size={20} color='primary' />}
+                {uploading && !failed && <Progress className={classes.option} size={20} />}
                 {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={yellow[600]} />}
                 <IoIosCloseCircle className={classes.option} onClick={remove} size={24} color={red[500]} />
-            </>
+            </React.Fragment>
         );
     }
 
     if (complete) {
         options = (
-            <>
+            <React.Fragment>
                 {!selected && <FaRegCircle className={classes.option} size={24} color={grey[500]} />}
                 {selected && <FaCheckCircle className={classes.option} size={24} color={blue[500]} />}
-            </>
+            </React.Fragment>
         );
     }
 
     const uploadStatus = status.charAt(0) + status.slice(1).toLowerCase();
 
     const variants = {
-        visible: { opacity: 1, y: 0 },
-        hidden: { opacity: 0.5, y: 10 },
+        visible: { opacity: 1, },
+        hidden: { opacity: 0.5 },
     };
 
     return (
@@ -165,7 +166,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
             variants={variants}
             initial='hidden'
             animate='visible'
-            whileTap={{ scale: complete ? 0.95 : 1 }}
+            whileTap={{ scale: complete ? 0.98 : 1 }}
         >
             <Box className={classes.item} onClick={select}>
                 <Box className={classes.details}>
@@ -189,7 +190,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                 <Box className={classes.type}>
                     <Select
                         value={type}
-                        disabled={complete}
+                        disabled={complete || uploading}
                         className={classes.typeSelect}
                         onChange={({ target: { value } }) => onChangeType(id, value as number)}
                         disableUnderline

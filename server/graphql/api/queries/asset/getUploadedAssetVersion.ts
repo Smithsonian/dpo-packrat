@@ -6,9 +6,9 @@ const getUploadedAssetVersion = gql`
             AssetVersion {
                 idAssetVersion
                 StorageSize
+                FileName
                 Asset {
                     idAsset
-                    FileName
                     VAssetType {
                         idVocabulary
                         Term

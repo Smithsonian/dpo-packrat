@@ -1,29 +1,38 @@
+import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Typography, CircularProgress } from '@material-ui/core';
 import { TreeView } from '@material-ui/lab';
-import React from 'react';
+import lodash from 'lodash';
+import React, { useState } from 'react';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
-import RepositoryTreeNode, { getObjectInterfaceDetails } from './RepositoryTreeNode';
-import { RepositoryFilter } from '../../index';
+import { Loader } from '../../../../components';
+import { getSortedTreeEntries, getSystemObjectTypesForFilter, getTreeWidth } from '../../../../utils/repository';
 import { useGetRootObjects } from '../../hooks/useRepository';
-import { getSystemObjectTypesForFilter, getSortedTreeEntries } from '../../../../utils/repository';
-import { RepositoryColorVariant } from '../../../../theme/colors';
+import { RepositoryFilter } from '../../index';
 import RepositoryTreeHeader from './RepositoryTreeHeader';
+import { ExpandedNodeMap, renderTreeNodes } from './RepositoryTreeNode';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 5,
         maxHeight: '72vh',
+        maxWidth: '83.5vw',
         flexDirection: 'column',
         overflow: 'auto',
         [breakpoints.down('lg')]: {
-            maxHeight: '70vh',
+            maxHeight: '71vh',
+            maxWidth: '80.5vw'
         }
+    },
+    tree: {
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1
     },
     fullView: {
         display: 'flex',
         flex: 1,
+        maxWidth: '83.5vw',
         alignItems: 'center',
         justifyContent: 'center',
         color: palette.primary.dark
@@ -37,59 +46,49 @@ interface RepositoryTreeViewProps {
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { filter } = props;
     const classes = useStyles();
+    const [expandedNodes, setExpandedNodes] = useState<ExpandedNodeMap>(new Map() as ExpandedNodeMap);
 
     const objectTypes = getSystemObjectTypesForFilter(filter);
-    const { getRootObjectsData, getRootObjectsLoading, getRootObjectsError } = useGetRootObjects(objectTypes);
+    const { getRootObjectsData, getRootObjectsLoading, getRootObjectsError } = useGetRootObjects(objectTypes, filter);
 
     const noFilter = !filter.units && !filter.projects;
 
     const entries = getSortedTreeEntries(getRootObjectsData?.getObjectChildren?.entries ?? []);
+    const metadataColumns = getRootObjectsData?.getObjectChildren?.metadataColumns ?? [];
+    const width = getTreeWidth(metadataColumns.length);
+
+    let content: React.ReactNode = null;
+
+    if (!getRootObjectsLoading && !getRootObjectsError) {
+        content = renderTreeNodes(expandedNodes, filter, entries, metadataColumns);
+    } else if (!noFilter) {
+        content = <Loader maxWidth='83.5vw' size={30} />;
+    }
+
+    const onNodeToggle = (_, nodeIds: string[]) => {
+        const keyValueArray: [string, undefined][] = lodash.map(nodeIds, (id: string) => [id, undefined]);
+        const updatedMap: ExpandedNodeMap = new Map(keyValueArray);
+        setExpandedNodes(updatedMap);
+    };
 
     return (
-        <TreeView
-            className={classes.container}
-            defaultCollapseIcon={<BsChevronDown />}
-            defaultExpandIcon={<BsChevronRight />}
-        >
-            <RepositoryTreeHeader />
-            {noFilter && (
-                <Box className={classes.fullView}>
-                    <Typography variant='caption'>Please select a valid filter</Typography>
-                </Box>
-            )}
-            {!getRootObjectsLoading && !getRootObjectsError ? (
-                <>
-                    {entries.map((entry, index: number) => {
-                        const { idSystemObject, name, objectType, idObject, metadata } = entry;
-                        const variant = index % 2 ? RepositoryColorVariant.Light : RepositoryColorVariant.Dark;
-                        const { icon, color } = getObjectInterfaceDetails(objectType, variant);
-
-                        return (
-                            <RepositoryTreeNode
-                                key={index}
-                                idSystemObject={idSystemObject}
-                                name={name}
-                                icon={icon}
-                                color={color}
-                                objectType={objectType}
-                                idObject={idObject}
-                                metadata={metadata}
-                            />
-                        );
-                    })}
-                </>
-            )
-                : (
-                    <>
-                        {!noFilter && (
-                            <Box className={classes.fullView}>
-                                <CircularProgress size={30} />
-                            </Box>
-                        )}
-                    </>
+        <Box className={classes.container}>
+            <TreeView
+                onNodeToggle={onNodeToggle}
+                className={classes.tree}
+                style={{ width }}
+                defaultCollapseIcon={<BsChevronDown />}
+                defaultExpandIcon={<BsChevronRight />}
+            >
+                <RepositoryTreeHeader metadataColumns={metadataColumns} />
+                {noFilter && (
+                    <Box className={classes.fullView}>
+                        <Typography variant='caption'>Please select a valid filter</Typography>
+                    </Box>
                 )}
-
-        </TreeView>
+                {content}
+            </TreeView>
+        </Box>
     );
 }
 

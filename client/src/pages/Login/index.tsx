@@ -1,19 +1,17 @@
 import { Box, Container, Typography } from '@material-ui/core';
-import { makeStyles, fade } from '@material-ui/core/styles';
+import { fade, makeStyles } from '@material-ui/core/styles';
 import { Field, Formik, FormikHelpers } from 'formik';
 import { TextField } from 'formik-material-ui';
-import React, { useContext } from 'react';
+import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import API from '../../api';
+import LoginBackground from '../../assets/images/login-background.png';
 import { LoadingButton } from '../../components';
+import Config from '../../config';
 import { ROUTES } from '../../constants';
-import { AppContext } from '../../context';
-import { getAuthenticatedUser } from '../../utils/auth';
+import { useUser } from '../../store';
 import { actionOnKeyPress } from '../../utils/shared';
 import useLoginForm, { ILoginForm } from './hooks/useLoginForm';
-import Config from '../../config';
-import LoginBackground from '../../assets/images/login-background.png';
 
 const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
     container: {
@@ -92,9 +90,9 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
 }));
 
 function Login(): React.ReactElement {
-    const { updateUser } = useContext(AppContext);
     const classes = useStyles();
     const history = useHistory();
+    const { login } = useUser();
 
     const { initialValues, loginValidationSchema } = useLoginForm();
 
@@ -109,12 +107,10 @@ function Login(): React.ReactElement {
         const { setSubmitting } = actions;
 
         try {
-            const { success, message } = await API.login(email, password);
+            const { success, message } = await login(email, password);
             setSubmitting(false);
 
             if (success) {
-                const authenticatedUser = await getAuthenticatedUser();
-                updateUser(authenticatedUser);
                 toast.success('Welcome to Packrat');
                 history.push(ROUTES.HOME);
             } else {
