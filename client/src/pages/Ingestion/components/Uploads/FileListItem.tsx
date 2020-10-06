@@ -156,8 +156,8 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     const uploadStatus = status.charAt(0) + status.slice(1).toLowerCase();
 
     const variants = {
-        visible: { opacity: 1, y: 0 },
-        hidden: { opacity: 0.5, y: 10 },
+        visible: { opacity: 1, },
+        hidden: { opacity: 0.5 },
     };
 
     return (
