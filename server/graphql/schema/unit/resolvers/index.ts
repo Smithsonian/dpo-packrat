@@ -12,13 +12,27 @@ import createUnit from './mutations/createUnit';
 import createProject from './mutations/createProject';
 import createSubject from './mutations/createSubject';
 import createItem from './mutations/createItem';
+import searchIngestionSubjects from './queries/searchIngestionSubjects';
+import getIngestionProjectsForSubjects from './queries/getIngestionProjectsForSubjects';
+import getIngestionItemsForSubjects from './queries/getIngestionItemsForSubjects';
+import getSubjectsForUnit from './queries/getSubjectsForUnit';
+import getItemsForSubject from './queries/getItemsForSubject';
+import getObjectsForItem from './queries/getObjectsForItem';
+import getProjectDocumentation from './queries/getProjectDocumentation';
 
 const resolvers = {
     Query: {
         getUnit,
         getProject,
         getSubject,
-        getItem
+        getItem,
+        searchIngestionSubjects,
+        getIngestionProjectsForSubjects,
+        getIngestionItemsForSubjects,
+        getSubjectsForUnit,
+        getItemsForSubject,
+        getObjectsForItem,
+        getProjectDocumentation
     },
     Mutation: {
         createUnit,

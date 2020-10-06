@@ -1,27 +1,37 @@
 scalar DateTime
+scalar Upload
 
 type Mutation {
     createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
+    createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
 }
 
 input CreateCaptureDataInput {
     idVCaptureMethod: Int!
-    idVCaptureDatasetType: Int!
     DateCaptured: DateTime!
     Description: String!
+    idAssetThumbnail: Int
+}
+
+type CreateCaptureDataResult {
+    CaptureData: CaptureData
+}
+
+input CreateCaptureDataPhotoInput {
+    idCaptureData: Int!
+    idVCaptureDatasetType: Int!
     CaptureDatasetFieldID: Int!
     ItemPositionFieldID: Int!
     ItemArrangementFieldID: Int!
     idVBackgroundRemovalMethod: Int!
     ClusterGeometryFieldID: Int!
     CameraSettingsUniform: Boolean!
-    idAssetThumbnail: Int
     idVItemPositionType: Int
     idVFocusType: Int
     idVLightSourceType: Int
     idVClusterType: Int
 }
 
-type CreateCaptureDataResult {
-    CaptureData: CaptureData
+type CreateCaptureDataPhotoResult {
+    CaptureDataPhoto: CaptureDataPhoto
 }

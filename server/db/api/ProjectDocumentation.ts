@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
-import { ProjectDocumentation as ProjectDocumentationBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { ProjectDocumentation as ProjectDocumentationBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase> implements ProjectDocumentationBase {
+export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase> implements ProjectDocumentationBase, SystemObjectBased {
     idProjectDocumentation!: number;
     Description!: string;
     idProject!: number;
@@ -85,6 +84,25 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
                 await DBC.DBConnection.prisma.projectDocumentation.findMany({ where: { idProject } }), ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.fetchFromProject', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of ProjectDocumentation that are connected to any of the specified projects.
+     * @param idProjects Array of Project.idProject
+     */
+    static async fetchDerivedFromProjects(idProjects: number[]): Promise<ProjectDocumentation[] | null> {
+        if (!idProjects || idProjects.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(
+                await DBC.DBConnection.prisma.$queryRaw<ProjectDocumentation[]>`
+                SELECT DISTINCT PD.*
+                FROM ProjectDocumentation AS PD
+                WHERE PD.idProject IN (${join(idProjects)})`, ProjectDocumentation);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.ProjectDocumentation.fetchDerivedFromProjects', error);
             return null;
         }
     }

@@ -1,0 +1,30 @@
+scalar Upload
+
+type Mutation {
+    uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
+    discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
+}
+
+type UploadAssetInput {
+    file: Upload!
+    type: Int!
+}
+
+enum UploadStatus {
+    COMPLETE
+    FAILED
+}
+
+type UploadAssetResult {
+    status: UploadStatus!
+    idAssetVersions: [Int!]
+    error: String
+}
+
+input DiscardUploadedAssetVersionsInput {
+    idAssetVersions: [Int!]!
+}
+
+type DiscardUploadedAssetVersionsResult {
+    success: Boolean!
+}

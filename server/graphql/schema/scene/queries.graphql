@@ -1,5 +1,6 @@
 type Query {
     getScene(input: GetSceneInput!): GetSceneResult!
+    getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
 }
 
 input GetSceneInput {
@@ -8,4 +9,12 @@ input GetSceneInput {
 
 type GetSceneResult {
     Scene: Scene
+}
+
+input GetIntermediaryFileInput {
+    idIntermediaryFile: Int!
+}
+
+type GetIntermediaryFileResult {
+    IntermediaryFile: IntermediaryFile
 }

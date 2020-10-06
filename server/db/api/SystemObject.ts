@@ -1,9 +1,12 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import * as P from '@prisma/client';
 import { WorkflowStep } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+
+export interface SystemObjectBased {
+    fetchSystemObject(): Promise<SystemObject | null>;
+}
 
 export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.SystemObject {
     idActor!: number | null;
@@ -20,8 +23,6 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
     idSubject!: number | null;
     idSystemObject!: number;
     idUnit!: number | null;
-    idWorkflow!: number | null;
-    idWorkflowStep!: number | null;
     Retired!: boolean;
 
     constructor(input: P.SystemObject) {
@@ -40,6 +41,46 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
         throw new ReferenceError('DBAPI.SystemObject.update() should never be called; used the explict update methods of objects linked to SystemObject');
     }
 
+    static async retireSystemObject(SOBased: SystemObjectBased): Promise<boolean> {
+        const SO: SystemObject | null = await SOBased.fetchSystemObject();
+        return (SO != null) ? await SO.retireObject() : /* istanbul ignore next */ false;
+    }
+
+    static async reinstateSystemObject(SOBased: SystemObjectBased): Promise<boolean> {
+        const SO: SystemObject | null = await SOBased.fetchSystemObject();
+        return (SO != null) ? await SO.reinstateObject() : /* istanbul ignore next */ false;
+    }
+
+    async retireObject(): Promise<boolean> {
+        if (this.Retired)
+            return true;
+        this.Retired = true;
+        return this.updateRetired();
+    }
+
+    async reinstateObject(): Promise<boolean> {
+        if (!this.Retired)
+            return true;
+        this.Retired = false;
+        return this.updateRetired();
+    }
+
+    private async updateRetired(): Promise<boolean> {
+        try {
+            const { idSystemObject, Retired } = this;
+            const retValue: boolean = await DBC.DBConnection.prisma.systemObject.update({
+                where: { idSystemObject, },
+                data: {
+                    Retired
+                },
+            }) ? true : /* istanbul ignore next */ false;
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.SystemObject.updateRetired', error);
+            return false;
+        }
+    }
+
     static async fetch(idSystemObject: number): Promise<SystemObject | null> {
         if (!idSystemObject)
             return null;
@@ -48,6 +89,16 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
                 await DBC.DBConnection.prisma.systemObject.findOne({ where: { idSystemObject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchAll(): Promise<SystemObject[] | null> {
+        try {
+            return DBC.CopyArray<P.SystemObject, SystemObject>(
+                await DBC.DBConnection.prisma.systemObject.findMany(), SystemObject);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.SystemObject.fetchAll', error);
             return null;
         }
     }
@@ -258,30 +309,6 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
                 await DBC.DBConnection.prisma.systemObject.findOne({ where: { idUnit } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromUnit', error);
-            return null;
-        }
-    }
-
-    static async fetchFromWorkflowID(idWorkflow: number): Promise<SystemObject | null> {
-        if (!idWorkflow)
-            return null;
-        try {
-            return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflow } }), SystemObject);
-        } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromWorkflow', error);
-            return null;
-        }
-    }
-
-    static async fetchFromWorkflowStepID(idWorkflowStep: number): Promise<SystemObject | null> {
-        if (!idWorkflowStep)
-            return null;
-        try {
-            return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idWorkflowStep } }), SystemObject);
-        } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromWorkflowStep', error);
             return null;
         }
     }

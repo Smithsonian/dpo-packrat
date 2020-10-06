@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { Vocabulary as VocabularyBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -71,6 +70,16 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
                 await DBC.DBConnection.prisma.vocabulary.findMany({ where: { idVocabularySet } }), Vocabulary);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Vocabulary.fetchFromVocabularySet', error);
+            return null;
+        }
+    }
+
+    static async fetchAll(): Promise<Vocabulary[] | null> {
+        try {
+            return DBC.CopyArray<VocabularyBase, Vocabulary>(
+                await DBC.DBConnection.prisma.vocabulary.findMany(), Vocabulary);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Vocabulary.fetchAll', error);
             return null;
         }
     }

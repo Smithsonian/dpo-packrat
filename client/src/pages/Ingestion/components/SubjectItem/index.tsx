@@ -1,0 +1,183 @@
+import { Box, Chip, Typography } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
+import React, { useEffect, useState } from 'react';
+import { Redirect, useHistory } from 'react-router';
+import { toast } from 'react-toastify';
+import { FieldType, SidebarBottomNavigator } from '../../../../components';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
+import { useItem, useMetadata, useProject, useSubject, useVocabulary } from '../../../../store';
+import useIngest from '../../hooks/useIngest';
+import ItemList from './ItemList';
+import ProjectList from './ProjectList';
+import SearchList from './SearchList';
+import SubjectList from './SubjectList';
+
+const useStyles = makeStyles(({ palette }) => ({
+    container: {
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'column'
+    },
+    content: {
+        display: 'flex',
+        flex: 1,
+        width: '50vw',
+        flexDirection: 'column',
+        padding: '40px 0px 0px 40px'
+    },
+    filesLabel: {
+        color: palette.primary.dark,
+        marginRight: 20
+    },
+    fileChip: {
+        marginRight: 10,
+        marginBottom: 5
+    }
+}));
+
+function SubjectItem(): React.ReactElement {
+    const classes = useStyles();
+    const history = useHistory();
+
+    const [subjectError, setSubjectError] = useState(false);
+    const [projectError, setProjectError] = useState(false);
+    const [itemError, setItemError] = useState(false);
+    const [metadataStepLoading, setMetadataStepLoading] = useState(false);
+
+    const updateVocabularyEntries = useVocabulary(state => state.updateVocabularyEntries);
+    const subjects = useSubject(state => state.subjects);
+    const [projects, projectsLoading, getSelectedProject] = useProject(state => [state.projects, state.loading, state.getSelectedProject]);
+    const [itemsLoading, getSelectedItem] = useItem(state => [state.loading, state.getSelectedItem]);
+    const [metadatas, updateMetadataFolders] = useMetadata(state => [state.metadatas, state.updateMetadataFolders]);
+
+    const selectedItem = getSelectedItem();
+    const { ingestionReset } = useIngest();
+
+    useEffect(() => {
+        if (subjects.length > 0) {
+            setSubjectError(false);
+        }
+    }, [subjects]);
+
+    useEffect(() => {
+        if (projects.length > 0) {
+            setProjectError(false);
+        }
+    }, [projects]);
+
+    useEffect(() => {
+        if (selectedItem) {
+            if (selectedItem.name.length) {
+                setItemError(false);
+            }
+        }
+    }, [selectedItem]);
+
+    const onPrevious = async () => {
+        const isConfirmed = global.confirm('Are you sure you want to go to navigate away? changes might be lost');
+        if (isConfirmed) {
+            ingestionReset();
+            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS);
+            history.push(nextRoute);
+        }
+    };
+
+    const onNext = async (): Promise<void> => {
+        let error: boolean = false;
+
+        if (!subjects.length) {
+            error = true;
+            setSubjectError(true);
+            toast.warn('Please provide at least one subject', { autoClose: false });
+        }
+
+        const selectedProject = getSelectedProject();
+
+        if (!selectedProject) {
+            error = true;
+            setProjectError(true);
+            toast.warn('Please select a project', { autoClose: false });
+        }
+
+        if (!selectedItem) {
+            error = true;
+            setItemError(true);
+            toast.warn('Please select or provide an item', { autoClose: false });
+        }
+
+        if (selectedItem?.name.trim() === '') {
+            error = true;
+            setItemError(true);
+            toast.warn('Please provide a valid name for item', { autoClose: false });
+        }
+
+        if (error) return;
+
+        try {
+            setMetadataStepLoading(true);
+            await updateVocabularyEntries();
+            await updateMetadataFolders();
+            setMetadataStepLoading(false);
+        } catch (error) {
+            toast.error(error);
+            setMetadataStepLoading(false);
+            return;
+        }
+
+        const { file: { id, type } } = metadatas[0];
+        const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
+
+        history.push(nextRoute);
+    };
+
+    const metadataLength = metadatas.length;
+
+    if (!metadataLength) {
+        return <Redirect to={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)} />;
+    }
+
+    return (
+        <Box className={classes.container}>
+            <Box className={classes.content}>
+                <Box display='flex' flexDirection='row' alignItems='center' flexWrap='wrap'>
+                    <Typography className={classes.filesLabel}>Select Subject and Item for:</Typography>
+                    {metadatas.map(({ file }, index) => <Chip key={index} className={classes.fileChip} label={file.name} variant='outlined' />)}
+                </Box>
+                <SearchList />
+                <FieldType error={subjectError} required label='Subject(s) Selected' marginTop={2}>
+                    <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
+                </FieldType>
+
+                <FieldType
+                    error={projectError}
+                    loading={projectsLoading}
+                    width={'40%'}
+                    required
+                    label='Project'
+                    marginTop={2}
+                >
+                    <ProjectList />
+                </FieldType>
+
+                <FieldType
+                    loading={itemsLoading}
+                    error={itemError}
+                    required
+                    label='Item'
+                    marginTop={2}
+                >
+                    <ItemList />
+                </FieldType>
+            </Box>
+            <SidebarBottomNavigator
+                rightLoading={metadataStepLoading}
+                leftLabel='Previous'
+                rightLabel='Next'
+                onClickRight={onNext}
+                onClickLeft={onPrevious}
+            />
+        </Box>
+    );
+}
+
+export default SubjectItem;

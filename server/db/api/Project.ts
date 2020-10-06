@@ -1,11 +1,10 @@
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-empty-function */
-import { Project as ProjectBase, SystemObject as SystemObjectBase } from '@prisma/client';
-import { SystemObject } from '..';
+import { Project as ProjectBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
-export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
+export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, SystemObjectBased {
     idProject!: number;
     Name!: string;
     Description!: string | null;
@@ -66,6 +65,133 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase {
                 await DBC.DBConnection.prisma.project.findOne({ where: { idProject, }, }), Project);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Project.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchAll(): Promise<Project[] | null> {
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(
+                await DBC.DBConnection.prisma.project.findMany(), Project);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Project.fetchAll', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of projects that are connected to any of the specified subjects.
+     * Projects are connected to system objects; we examine those system objects which are in a *master* relationship
+     * to system objects connected to any of the specified subjects.
+     * @param idSubjects Array of Subject.idSubject
+     */
+    static async fetchMasterFromSubjects(idSubjects: number[]): Promise<Project[] | null> {
+        if (!idSubjects || idSubjects.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(
+                await DBC.DBConnection.prisma.$queryRaw<Project[]>`
+                SELECT DISTINCT P.*
+                FROM Project AS P
+                JOIN SystemObject AS SOP ON (P.idProject = SOP.idProject)
+                JOIN SystemObjectXref AS SOX ON (SOP.idSystemObject = SOX.idSystemObjectMaster)
+                JOIN SystemObject AS SOS ON (SOX.idSystemObjectDerived = SOS.idSystemObject)
+                WHERE SOS.idSubject IN (${join(idSubjects)})`, Project);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.PRoject.fetchMasterFromSubjects', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of projects that are connected to any of the specified stakeholders.
+     * Projects are connected to system objects; we examine those system objects which are in a *master* relationship
+     * to system objects connected to any of the specified stakeholders.
+     * @param idStakeholders Array of Stakeholder.idStakeholder
+     */
+    static async fetchMasterFromStakeholders(idStakeholders: number[]): Promise<Project[] | null> {
+        if (!idStakeholders || idStakeholders.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(
+                await DBC.DBConnection.prisma.$queryRaw<Project[]>`
+                SELECT DISTINCT P.*
+                FROM Project AS P
+                JOIN SystemObject AS SOP ON (P.idProject = SOP.idProject)
+                JOIN SystemObjectXref AS SOX ON (SOP.idSystemObject = SOX.idSystemObjectMaster)
+                JOIN SystemObject AS SOS ON (SOX.idSystemObjectDerived = SOS.idSystemObject)
+                WHERE SOS.idStakeholder IN (${join(idStakeholders)})`, Project);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.PRoject.fetchMasterFromSubjects', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of projects that are connected to any of the specified project documentation.
+     * @param idProjectDocumentations Array of ProjectDocumentation.idProjectDocumentation
+     */
+    static async fetchMasterFromProjectDocumentations(idProjectDocumentations: number[]): Promise<Project[] | null> {
+        if (!idProjectDocumentations || idProjectDocumentations.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(
+                await DBC.DBConnection.prisma.$queryRaw<Project[]>`
+                SELECT DISTINCT P.*
+                FROM Project AS P
+                JOIN ProjectDocumentation AS PD ON (PD.idProject = P.idProject)
+                WHERE PD.idProjectDocumentation IN (${join(idProjectDocumentations)})`, Project);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.PRoject.fetchMasterFromProjectDocumentations', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of projects that are connected to any of the specified units.
+     * Projects are connected to system objects; we examine those system objects which are in a *derived* relationship
+     * to system objects connected to the specified units.
+     * @param idUnits Array of Units.idUnit
+     */
+    static async fetchDerivedFromUnits(idUnits: number[]): Promise<Project[] | null> {
+        if (!idUnits || idUnits.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(
+                await DBC.DBConnection.prisma.$queryRaw<Project[]>`
+                SELECT DISTINCT P.*
+                FROM Project AS P
+                JOIN SystemObject AS SOProject ON (P.idProject = SOProject.idProject)
+                JOIN SystemObjectXref AS SOX ON (SOProject.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOUnit ON (SOX.idSystemObjectMaster = SOUnit.idSystemObject)
+                WHERE SOUnit.idUnit IN (${join(idUnits)})`, Project);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.PRoject.fetchDerivedFromSubjectsUnits', error);
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of projects that are connected to any of the specified subjects' units.
+     * Projects are connected to system objects; we examine those system objects which are in a *derived* relationship
+     * to system objects connected to any unit, which in turn is connected to any of the specified subjects.
+     * @param idSubjects Array of Subject.idSubject
+     */
+    static async fetchDerivedFromSubjectsUnits(idSubjects: number[]): Promise<Project[] | null> {
+        if (!idSubjects || idSubjects.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(
+                await DBC.DBConnection.prisma.$queryRaw<Project[]>`
+                SELECT DISTINCT P.*
+                FROM Project AS P
+                JOIN SystemObject AS SOProject ON (P.idProject = SOProject.idProject)
+                JOIN SystemObjectXref AS SOX ON (SOProject.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOUnit ON (SOX.idSystemObjectMaster = SOUnit.idSystemObject)
+                JOIN Subject AS S ON (SOUnit.idUnit = S.idUnit)
+                WHERE S.idSubject IN (${join(idSubjects)})`, Project);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.PRoject.fetchDerivedFromSubjectsUnits', error);
             return null;
         }
     }

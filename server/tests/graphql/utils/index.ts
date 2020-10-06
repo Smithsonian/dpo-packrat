@@ -4,9 +4,8 @@
  * for testing graphql api
  */
 import GraphQLApi from '../../../graphql';
-import * as LOG from '../../../utils/logger';
 import * as DBC from '../../../db/connection';
-import * as path from 'path';
+// import * as H from '../../../utils/helpers';
 import {
     CreateUserInput,
     CreateVocabularySetInput,
@@ -17,8 +16,14 @@ import {
     CreateProjectInput,
     CreateSceneInput,
     CreateModelInput,
-    CreateCaptureDataInput
+    CreateCaptureDataInput,
+    CreateCaptureDataPhotoInput,
+    VocabularyEntry,
+    Vocabulary
 } from '../../../types/graphql';
+import { Asset, AssetVersion } from '@prisma/client';
+import { randomStorageKey, nowCleansed } from '../../db/utils';
+import { eVocabularySetID } from '../../../cache';
 
 class TestSuiteUtils {
     graphQLApi!: GraphQLApi;
@@ -29,16 +34,11 @@ class TestSuiteUtils {
     };
 
     private beforeAll = (): void => {
-        const logPath: string = './logs';
-        LOG.configureLogger(logPath);
-        LOG.logger.info('**************************');
-        LOG.logger.info('GraphQL Test Suite');
-        LOG.logger.info(`GraphQL Tests writing logs to ${path.resolve(logPath)}`);
-
         this.graphQLApi = new GraphQLApi();
     };
 
     private afterAll = async (done: () => void): Promise<void> => {
+        // await H.Helpers.sleep(5000);
         await DBC.DBConnection.disconnect();
         done();
     };
@@ -81,9 +81,8 @@ class TestSuiteUtils {
         };
     };
 
-    createItemInput = (idSubject: number): CreateItemInput => {
+    createItemInput = (): CreateItemInput => {
         return {
-            idSubject,
             Name: 'Test Item',
             EntireSubject: true
         };
@@ -118,9 +117,15 @@ class TestSuiteUtils {
     createCaptureDataInput = (idVocabulary: number): CreateCaptureDataInput => {
         return {
             idVCaptureMethod: idVocabulary,
-            idVCaptureDatasetType: idVocabulary,
             DateCaptured: new Date(),
-            Description: 'Test Description',
+            Description: 'Test Description'
+        };
+    };
+
+    createCaptureDataPhotoInput = (idCaptureData: number, idVocabulary: number): CreateCaptureDataPhotoInput => {
+        return {
+            idCaptureData,
+            idVCaptureDatasetType: idVocabulary,
             CaptureDatasetFieldID: 0,
             ItemPositionFieldID: 0,
             ItemArrangementFieldID: 0,
@@ -132,6 +137,54 @@ class TestSuiteUtils {
             idVLightSourceType: idVocabulary,
             idVClusterType: idVocabulary
         };
+    };
+
+    createAssetInput = (idVAssetType: number): Asset => {
+        return {
+            FileName: 'Test Asset Thumbnail',
+            FilePath: '/test/asset/path',
+            idSystemObject: null,
+            idAssetGroup: null,
+            idVAssetType,
+            StorageKey: randomStorageKey('/test/asset/path/'),
+            idAsset: 0
+        };
+    };
+
+    createAssetVersionInput = (idAsset: number, idUser: number): AssetVersion => {
+        return {
+            idAsset,
+            FileName: 'Test file',
+            idUserCreator: idUser,
+            DateCreated: nowCleansed(),
+            StorageHash: 'Asset Checksum',
+            StorageKeyStaging: '',
+            StorageSize: 50,
+            idAssetVersion: 0,
+            Ingested: false,
+            BulkIngest: false,
+            Version: 0
+        };
+    };
+
+    getVocabularyEntryMap = (vocabularyEntries: VocabularyEntry[]): Map<number, Vocabulary[]> => {
+        const vocabularyMap = new Map<number, Vocabulary[]>();
+
+        vocabularyEntries.forEach(({ eVocabSetID, Vocabulary }) => {
+            vocabularyMap.set(eVocabSetID, Vocabulary);
+        });
+
+        return vocabularyMap;
+    };
+
+    getInitialEntryWithVocabularies = (vocabularies: Map<number, Vocabulary[]>, eVocabularyID: eVocabularySetID): number | null => {
+        const vocabularyEntry = vocabularies.get(eVocabularyID);
+
+        if (vocabularyEntry) {
+            return vocabularyEntry[0].idVocabulary;
+        }
+
+        return null;
     };
 }
 

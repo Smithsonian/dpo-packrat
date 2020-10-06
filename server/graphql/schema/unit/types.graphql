@@ -22,7 +22,7 @@ type ProjectDocumentation {
     Description: String!
     idProject: Int!
     Name: String!
-    Project: Project!
+    Project: Project
     SystemObject: SystemObject
 }
 
@@ -58,8 +58,10 @@ type Subject {
     AssetThumbnail: Asset
     idAssetThumbnail: Int
     idGeoLocation: Int
+    idIdentifierPreferred: Int
     GeoLocation: GeoLocation
     Unit: Unit
+    IdentifierPreferred: Identifier
     Item: [Item]
     SystemObject: SystemObject
 }
@@ -67,7 +69,6 @@ type Subject {
 type Item {
     idItem: Int!
     EntireSubject: Boolean!
-    idSubject: Int!
     Name: String!
     idAssetThumbnail: Int
     idGeoLocation: Int
