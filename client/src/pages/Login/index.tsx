@@ -168,8 +168,6 @@ function Login(): React.ReactElement {
                                     type='submit'
                                     className={classes.loginButton}
                                     disableElevation
-                                    variant='contained'
-                                    color='primary'
                                     onKeyDown={({ key }) => actionOnKeyPress(key, 'Enter', submitForm)}
                                     loading={isSubmitting}
                                 >

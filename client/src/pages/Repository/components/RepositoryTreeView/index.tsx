@@ -20,8 +20,8 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         flexDirection: 'column',
         overflow: 'auto',
         [breakpoints.down('lg')]: {
-            maxHeight: '71vh',
-            maxWidth: '80.5vw'
+            maxHeight: '70vh',
+            maxWidth: '81.5vw'
         }
     },
     tree: {

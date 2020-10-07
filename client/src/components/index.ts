@@ -8,8 +8,8 @@ import PublicRoute from './shared/PublicRoute';
 import FieldType from './shared/FieldType';
 import Loader from './shared/Loader';
 import Progress from './shared/Progress';
+import SidebarBottomNavigator from './shared/SidebarBottomNavigator';
 import LoadingButton from './controls/LoadingButton';
 import RepositoryIcon from './controls/RepositoryIcon';
 
-export * from './shared/Sidebar';
-export { Header, PrivateRoute, PublicRoute, FieldType, LoadingButton, Loader, Progress, RepositoryIcon };
+export { Header, PrivateRoute, PublicRoute, FieldType, LoadingButton, Loader, Progress, SidebarBottomNavigator, RepositoryIcon };

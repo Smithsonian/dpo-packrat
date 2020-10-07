@@ -6,24 +6,30 @@ import { toast } from 'react-toastify';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { useItem, useMetadata, useProject, useSubject, useVocabulary } from '../../../../store';
-import useIngest from '../../hooks/useIngest';
 import ItemList from './ItemList';
 import ProjectList from './ProjectList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'auto',
+        maxHeight: 'calc(100vh - 60px)'
     },
     content: {
         display: 'flex',
         flex: 1,
         width: '50vw',
         flexDirection: 'column',
-        padding: '40px 0px 0px 40px'
+        padding: 40,
+        paddingBottom: 0,
+        [breakpoints.down('lg')]: {
+            padding: 20,
+            paddingBottom: 0,
+        }
     },
     filesLabel: {
         color: palette.primary.dark,
@@ -51,7 +57,6 @@ function SubjectItem(): React.ReactElement {
     const [metadatas, updateMetadataFolders] = useMetadata(state => [state.metadatas, state.updateMetadataFolders]);
 
     const selectedItem = getSelectedItem();
-    const { ingestionReset } = useIngest();
 
     useEffect(() => {
         if (subjects.length > 0) {
@@ -72,15 +77,6 @@ function SubjectItem(): React.ReactElement {
             }
         }
     }, [selectedItem]);
-
-    const onPrevious = async () => {
-        const isConfirmed = global.confirm('Are you sure you want to go to navigate away? changes might be lost');
-        if (isConfirmed) {
-            ingestionReset();
-            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS);
-            history.push(nextRoute);
-        }
-    };
 
     const onNext = async (): Promise<void> => {
         let error: boolean = false;
@@ -173,8 +169,8 @@ function SubjectItem(): React.ReactElement {
                 rightLoading={metadataStepLoading}
                 leftLabel='Previous'
                 rightLabel='Next'
+                leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)}
                 onClickRight={onNext}
-                onClickLeft={onPrevious}
             />
         </Box>
     );

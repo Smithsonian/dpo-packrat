@@ -1,4 +1,4 @@
-import { makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { FieldType } from '../../../../../components';
@@ -10,7 +10,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         padding: 10,
         resize: 'none',
         overflow: 'scroll',
-        border: `1px solid ${palette.primary.contrastText}`,
+        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         borderRadius: 5,
         fontFamily: typography.fontFamily
     }

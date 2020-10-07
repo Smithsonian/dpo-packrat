@@ -8,7 +8,8 @@ const useStyles = makeStyles(({ palette }) => ({
     projectSelect: {
         width: '100%',
         padding: '0px 10px',
-        backgroundColor: palette.background.paper
+        backgroundColor: palette.background.paper,
+        fontSize: '0.8em'
     }
 }));
 

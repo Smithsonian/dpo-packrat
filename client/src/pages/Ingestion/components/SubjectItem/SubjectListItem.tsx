@@ -5,14 +5,15 @@ import { MdAddCircleOutline, MdRemoveCircleOutline } from 'react-icons/md';
 import { StateSubject } from '../../../../store';
 
 const useStyles = makeStyles(() => ({
-    name: {
+    label: {
         width: '100%',
     },
     options: {
         marginLeft: 20
     },
     option: {
-        cursor: 'pointer'
+        cursor: 'pointer',
+        marginTop: 4
     }
 }));
 
@@ -49,13 +50,17 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
 
     return (
         <TableRow>
-            <TableCell style={cellStyle}>{arkId}</TableCell>
-            <TableCell style={cellStyle} align='left'>{unit}</TableCell>
+            <TableCell style={cellStyle}>
+                <Typography className={classes.label} variant='caption'>{arkId}</Typography>
+            </TableCell>
             <TableCell style={cellStyle} align='left'>
-                <Box display='flex' flexDirection='row'>
-                    <Typography className={classes.name} variant='caption'>{name}</Typography>
+                <Typography className={classes.label} variant='caption'>{unit}</Typography>
+            </TableCell>
+            <TableCell style={cellStyle} align='left'>
+                <Box display='flex' flexDirection='row' alignItems='center'>
+                    <Typography className={classes.label} variant='caption'>{name}</Typography>
                     <Box className={classes.options}>
-                        {selected ? <MdRemoveCircleOutline className={classes.option} onClick={remove} size={24} /> : <MdAddCircleOutline className={classes.option} onClick={add} size={24} />}
+                        {selected ? <MdRemoveCircleOutline className={classes.option} onClick={remove} size={20} /> : <MdAddCircleOutline className={classes.option} onClick={add} size={20} />}
                     </Box>
                 </Box>
             </TableCell>

@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Box, Checkbox, Typography } from '@material-ui/core';
-import { makeStyles, withStyles } from '@material-ui/core/styles';
+import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { FieldType } from '../../../../../components';
 import DateFnsUtils from '@date-io/date-fns';
@@ -15,7 +15,7 @@ import IdInputField from './IdInputField';
 import lodash from 'lodash';
 import AssetContents from './AssetContents';
 
-const useStyles = makeStyles(({ palette, typography, spacing }) => ({
+const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
     container: {
         marginTop: 20
     },
@@ -41,11 +41,18 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     date: {
         width: '50%',
         background: palette.background.paper,
-        border: `1px solid ${palette.primary.contrastText}`,
+        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         padding: '1px 8px',
         color: Colors.defaults.white,
         borderRadius: 5,
-        fontFamily: typography.fontFamily
+        fontFamily: typography.fontFamily,
+        [breakpoints.down('lg')]: {
+            minWidth: 160,
+            maxWidth: 160,
+            '& > div > input': {
+                fontSize: '0.8em',
+            }
+        }
     }
 }));
 

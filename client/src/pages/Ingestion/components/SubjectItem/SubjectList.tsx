@@ -4,7 +4,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import SubjectListItem from './SubjectListItem';
 import { useSubject, StateSubject } from '../../../../store';
 
-const useStyles = makeStyles(({ palette, spacing }) => ({
+const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
     container: {
         maxHeight: '20vh',
         backgroundColor: palette.background.paper
@@ -12,8 +12,12 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     headerText: {
         position: 'sticky',
         top: 0,
+        fontSize: '0.8em',
         backgroundColor: palette.background.paper,
-        color: palette.primary.contrastText
+        color: palette.primary.contrastText,
+        [breakpoints.down('lg')]: {
+            padding: '5px 16px',
+        }
     },
     body: {
         overflow: 'auto'
@@ -56,7 +60,7 @@ function SubjectList(props: SubjectListProps): React.ReactElement {
         <TableContainer className={classes.container}>
             <Table>
                 <TableHead>
-                    <TableRow>
+                    <TableRow style={{ padding: 0 }}>
                         {header.map((label, index) => <TableCell key={index} className={classes.headerText} align='left'>{label}</TableCell>)}
                     </TableRow>
                 </TableHead>

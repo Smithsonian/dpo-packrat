@@ -11,7 +11,7 @@ import SubjectList from './SubjectList';
 import { toast } from 'react-toastify';
 import { actionOnKeyPress } from '../../../../utils/shared';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         alignItems: 'center',
@@ -25,7 +25,11 @@ const useStyles = makeStyles(({ palette }) => ({
     searchButton: {
         height: 35,
         width: 60,
-        color: palette.background.paper
+        color: palette.background.paper,
+        [breakpoints.down('lg')]: {
+            height: 30
+        }
+
     }
 }));
 
@@ -77,8 +81,6 @@ function SearchList(): React.ReactElement {
                 />
                 <LoadingButton
                     className={classes.searchButton}
-                    variant='contained'
-                    color='primary'
                     disableElevation
                     loaderSize={12}
                     loading={loading}

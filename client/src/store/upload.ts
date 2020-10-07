@@ -298,7 +298,14 @@ export const useUpload = create<UploadStore>((set: SetState<UploadStore>, get: G
         set({ completed: updatedCompleted });
     },
     reset: (): void => {
-        set({ completed: [], pending: [], loading: true });
+        const { completed } = get();
+        const unselectFiles = (file: IngestionFile): IngestionFile => ({
+            ...file,
+            selected: false
+        });
+
+        const updatedCompleted: IngestionFile[] = completed.map(unselectFiles);
+        set({ completed: updatedCompleted, loading: false });
     }
 }));
 

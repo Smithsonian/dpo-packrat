@@ -2,10 +2,10 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Colors } from '../../../theme';
-import LoadingButton from '../../controls/LoadingButton';
+import { Colors } from '../../theme';
+import LoadingButton from '../controls/LoadingButton';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         bottom: 0,
@@ -14,12 +14,18 @@ const useStyles = makeStyles(({ palette }) => ({
         width: '51vw',
         padding: '20px 0px',
         marginLeft: 40,
-        background: palette.background.paper
+        background: palette.background.paper,
+        [breakpoints.down('lg')]: {
+            marginLeft: 20
+        }
     },
     navButton: {
-        minHeight: 36,
+        minHeight: 35,
         minWidth: 100,
-        color: Colors.defaults.white
+        color: Colors.defaults.white,
+        [breakpoints.down('lg')]: {
+            height: 30,
+        }
     },
     link: {
         textDecoration: 'none'
@@ -44,8 +50,6 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
     let leftButton = (
         <LoadingButton
             className={classes.navButton}
-            variant='contained'
-            color='primary'
             disableElevation
             loaderSize={15}
             loading={leftLoading || false}
@@ -58,8 +62,6 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
     let rightButton = (
         <LoadingButton
             className={classes.navButton}
-            variant='contained'
-            color='primary'
             disableElevation
             loaderSize={15}
             loading={rightLoading || false}
