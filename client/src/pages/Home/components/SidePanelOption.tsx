@@ -7,7 +7,7 @@ import { HOME_ROUTES, resolveRoute } from '../../../constants';
 import { Colors } from '../../../theme';
 import { Link } from 'react-router-dom';
 
-const useStyles = makeStyles(({ palette, spacing, typography }) => ({
+const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => ({
     container: {
         display: 'flex',
         alignItems: 'center',
@@ -22,16 +22,23 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
             cursor: 'pointer',
             backgroundColor: fade(palette.primary.light, 0.2)
         },
+        [breakpoints.down('lg')]: {
+            width: ({ isExpanded }: SidePanelOptionProps) => isExpanded ? 180 : 50,
+        }
     },
     iconContainer: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 8,
-        borderRadius: 10,
+        borderRadius: 5,
         backgroundColor: ({ color }: SidePanelOptionProps) => fade(color, 0.2),
         minHeight: 32,
-        minWidth: 32
+        minWidth: 32,
+        [breakpoints.down('lg')]: {
+            minHeight: 25,
+            minWidth: 25,
+        }
     },
     detailsContainer: {
         display: 'flex',

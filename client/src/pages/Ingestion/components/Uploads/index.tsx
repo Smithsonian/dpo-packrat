@@ -13,16 +13,24 @@ import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { useVocabulary, useUpload, useMetadata } from '../../../../store';
 
-const useStyles = makeStyles(({ palette, typography, spacing }) => ({
+const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
     container: {
         display: 'flex',
-        flexDirection: 'column'
+        flex: 1,
+        flexDirection: 'column',
+        overflow: 'auto',
+        maxHeight: 'calc(100vh - 60px)'
     },
     content: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        padding: '40px 0px 0px 40px'
+        padding: 40,
+        paddingBottom: 0,
+        [breakpoints.down('lg')]: {
+            padding: 20,
+            paddingBottom: 0,
+        }
     },
     fileDrop: {
         display: 'flex',
@@ -111,30 +119,30 @@ function Uploads(): React.ReactElement {
 
     if (!loadingVocabulary) {
         content = (
-            <React.Fragment>
-                <UploadFilesPicker />
-                <UploadCompleteList />
-                <UploadList />
-            </React.Fragment>
+            <KeepAlive>
+                <React.Fragment>
+                    <UploadFilesPicker />
+                    <UploadCompleteList />
+                    <UploadList />
+                </React.Fragment>
+            </KeepAlive>
         );
     }
 
     return (
-        <KeepAlive>
-            <Box className={classes.container}>
-                <Box className={classes.content}>
-                    {content}
-                </Box>
-                <SidebarBottomNavigator
-                    leftLabel='Discard'
-                    rightLabel='Ingest'
-                    leftLoading={discardingFiles}
-                    rightLoading={gettingAssetDetails}
-                    onClickLeft={onDiscard}
-                    onClickRight={onIngest}
-                />
+        <Box className={classes.container}>
+            <Box className={classes.content}>
+                {content}
             </Box>
-        </KeepAlive >
+            <SidebarBottomNavigator
+                leftLabel='Discard'
+                rightLabel='Ingest'
+                leftLoading={discardingFiles}
+                rightLoading={gettingAssetDetails}
+                onClickLeft={onDiscard}
+                onClickRight={onIngest}
+            />
+        </Box>
     );
 }
 

@@ -6,7 +6,7 @@ import { useUpload } from '../../../../store';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 
-const useStyles = makeStyles(({ palette, spacing }) => ({
+export const useUploadListStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -19,8 +19,8 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        minHeight: 80,
-        maxHeight: '20vh',
+        minHeight: '16vh',
+        maxHeight: '16vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
         width: '100%',
@@ -34,23 +34,30 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
             borderRadius: 8,
             border: '2px solid white',
             backgroundColor: palette.text.disabled
+        },
+        [breakpoints.down('lg')]: {
+            minHeight: '20vh',
+            maxHeight: '20vh',
         }
     },
     listDetail: {
         textAlign: 'center',
         color: palette.grey[500],
         fontStyle: 'italic',
-        marginTop: spacing(4)
+        marginTop: '8%',
+        [breakpoints.down('lg')]: {
+            marginTop: '10%',
+        }
     },
 }));
 
 function UploadList(): React.ReactElement {
-    const classes = useStyles();
+    const classes = useUploadListStyles();
     const { pending } = useUpload();
 
     return (
         <Box className={classes.container}>
-            <FieldType required align='center' label='Uploading files'>
+            <FieldType required align='center' label='Upload files'>
                 <UploadListHeader />
                 <Box className={classes.list}>
                     {!pending.length && <Typography className={classes.listDetail} variant='body1'>Add files to upload</Typography>}

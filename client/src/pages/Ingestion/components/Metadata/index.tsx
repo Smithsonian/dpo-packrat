@@ -11,18 +11,25 @@ import { useItem, useMetadata, useProject, useVocabulary, FileId, StateItem, Sta
 import useIngest from '../../hooks/useIngest';
 import Photogrammetry from './Photogrammetry';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'auto',
+        maxHeight: 'calc(100vh - 60px)'
     },
     content: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
         width: '50vw',
-        padding: '40px 0px 0px 40px'
+        padding: 40,
+        paddingBottom: 0,
+        [breakpoints.down('lg')]: {
+            padding: 20,
+            paddingBottom: 0,
+        }
     },
     breadcrumbs: {
         marginBottom: 10,
