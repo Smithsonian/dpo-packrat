@@ -1,9 +1,9 @@
-import React from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { MetadataView } from './StyledTreeItem';
-import { getTreeViewColumns, getTreeWidth } from '../../../../utils/repository';
+import React from 'react';
 import { eMetadata } from '../../../../types/server';
+import { getTreeViewColumns, getTreeWidth } from '../../../../utils/repository';
+import { MetadataView } from './StyledTreeItem';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -33,8 +33,9 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         }
     },
     treeViewText: {
-        paddingLeft: 20,
         left: 20,
+        height: 20,
+        paddingLeft: 20,
         width: '60%',
         backgroundColor: palette.primary.light,
         [breakpoints.down('lg')]: {
@@ -43,6 +44,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         }
     }
 }));
+
 interface RepositoryTreeHeaderProps {
     metadataColumns: eMetadata[];
 }
@@ -57,7 +59,7 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
     return (
         <Box className={classes.container} style={{ width }}>
             <Box className={classes.treeView}>
-                <Box className={classes.treeViewText}>Tree view</Box>
+                <Box className={classes.treeViewText} />
             </Box>
             <MetadataView header treeColumns={treeColumns} />
         </Box>

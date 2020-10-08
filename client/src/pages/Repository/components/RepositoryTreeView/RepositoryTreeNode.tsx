@@ -45,10 +45,10 @@ function RepositoryTreeNode(props: RepositoryTreeNodeProps): React.ReactElement 
     const loadData = expandedNodes.has(nodeId);
 
     React.useEffect(() => {
-        if (loadData) {
+        if (loadData && !getObjectChildrenLoading) {
             getObjectChildren();
         }
-    }, [loadData, getObjectChildren]);
+    }, [loadData, getObjectChildrenLoading, getObjectChildren]);
 
     return (
         <StyledTreeItem
