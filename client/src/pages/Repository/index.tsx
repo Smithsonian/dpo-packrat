@@ -13,6 +13,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         maxWidth: '100vw',
         flexDirection: 'column',
         padding: 40,
+        paddingBottom: 0,
         [breakpoints.down('lg')]: {
             padding: 20,
         }
@@ -38,12 +39,17 @@ function Repository(): React.ReactElement {
 
     const defaultFilterState = Object.keys(queries).length ? queries : initialFilterState;
 
+    const [isExpanded, setIsExpanded] = useState(true);
     const [filter, setFilter] = useState<RepositoryFilter>(defaultFilterState);
 
     useEffect(() => {
         const route = generateRepositoryUrl(filter);
         history.push(route);
     }, [filter, history]);
+
+    const onToggle = (): void => {
+        setIsExpanded(isExpanded => !isExpanded);
+    };
 
     const onChange = (name: string, value: string | boolean) => {
         setFilter(filter => ({
@@ -56,8 +62,8 @@ function Repository(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <RepositoryFilterView filter={filter} onChange={onChange} />
-            <RepositoryTreeView filter={filter} />
+            <RepositoryFilterView isExpanded={isExpanded} onToggle={onToggle} filter={filter} onChange={onChange} />
+            <RepositoryTreeView isExpanded={isExpanded} filter={filter} />
         </Box>
     );
 }

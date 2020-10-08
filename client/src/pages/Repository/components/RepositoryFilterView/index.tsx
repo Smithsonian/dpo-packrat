@@ -1,136 +1,112 @@
-import React from 'react';
 import { Box, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles } from '@material-ui/core/styles';
+import React from 'react';
 import { RepositoryFilter } from '../../index';
-import { DebounceInput } from 'react-debounce-input';
-import { motion } from 'framer-motion';
-import { eSystemObjectType } from '../../../../types/server';
-import { RepositoryIcon } from '../../../../components';
-import { Colors, palette } from '../../../../theme';
+import { FaChevronUp, FaChevronDown } from 'react-icons/fa';
+import { FiLink2 } from 'react-icons/fi';
+import { palette } from '../../../../theme';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
         display: 'flex',
-        flexDirection: 'column',
+        height: ({ isExpanded }: RepositoryFilterViewProps) => isExpanded ? 150 : 30,
         background: palette.primary.light,
-        borderRadius: 10,
+        borderRadius: 5,
         padding: 20,
         marginBottom: 10,
+        transition: '250ms height ease',
         [breakpoints.down('lg')]: {
             padding: 10,
-            borderRadius: 5
         }
     },
-    search: {
-        height: 30,
-        width: '100%',
-        padding: '10px 0px',
-        fontSize: 18,
-        outline: 'none',
-        border: 'none',
-        background: 'transparent',
-        borderBottom: `1px solid ${palette.primary.main}`,
-        fontFamily: typography.fontFamily,
-        [breakpoints.down('lg')]: {
-            height: 20,
-            fontSize: 14,
-            padding: '5px 0px'
-        },
-        '&::placeholder': {
-            fontStyle: 'italic'
-        },
-        '&::-moz-placeholder': {
-            fontStyle: 'italic'
-        }
+    content: {
+        display: 'flex',
+        flex: 1,
+        alignItems: 'center',
     },
-    filter: {
+    defaultFilter: {
+        color: palette.primary.dark,
+        fontWeight: typography.fontWeightRegular
+    },
+    anchor: {
         display: 'flex',
         alignItems: 'center',
-        minWidth: 125,
-        width: 125,
-        padding: '8px 10px',
-        borderRadius: 5,
-        cursor: 'pointer',
-        color: palette.primary.contrastText,
-        background: palette.background.paper,
+        justifyContent: 'flex-end',
+        height: 30,
+        padding: '0px 10px',
+        borderRadius: 10,
+        marginLeft: 5,
+        transition: 'all 250ms linear',
         [breakpoints.down('lg')]: {
-            minWidth: 100,
-            width: 100
+            padding: '0px 5px',
         },
-        '&:not(:first-child)': {
-            marginLeft: 10
-        }
+        '&:hover': {
+            cursor: 'pointer',
+            backgroundColor: fade(palette.primary.light, 0.2)
+        },
     },
-    filterSelected: {
-        color: palette.background.paper,
-        background: palette.primary.main
-    },
-    filterText: {
-        marginLeft: 10,
-        [breakpoints.down('lg')]: {
-            fontSize: 10
-        }
+    options: {
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'center'
     }
 }));
 
 interface RepositoryFilterViewProps {
     filter: RepositoryFilter;
     onChange: (field: string, value: string | boolean) => void;
+    isExpanded: boolean;
+    onToggle: () => void;
 }
 
 function RepositoryFilterView(props: RepositoryFilterViewProps): React.ReactElement {
-    const { filter, onChange } = props;
-    const classes = useStyles();
+    const { isExpanded, onToggle } = props;
+    const classes = useStyles(props);
 
-    const CheckboxFilters = [
-        {
-            value: filter.units,
-            name: 'units',
-            type: eSystemObjectType.eUnit
-        },
-        {
-            value: filter.projects,
-            name: 'projects',
-            type: eSystemObjectType.eProject
+    const onCopyLink = (): void => {
+        if ('clipboard' in navigator) {
+            navigator.clipboard.writeText('');
+            toast.success('Link has been copied to your clipboard');
         }
-    ];
+    };
+
+    let content: React.ReactNode = (
+        <Typography className={classes.defaultFilter} variant='body1'>
+            Filter
+        </Typography>
+    );
+
+    if (isExpanded) {
+        content = (
+            <React.Fragment>
+
+            </React.Fragment>
+        );
+    }
 
     return (
         <Box className={classes.container}>
-            <DebounceInput
-                element='input'
-                className={classes.search}
-                name='search'
-                value={''}
-                onChange={() => null}
-                forceNotifyByEnter
-                debounceTimeout={400}
-                placeholder='Search...'
-            />
-            <Box display='flex' mt={2}>
-                {CheckboxFilters.map(({ value, name, type }, index: number) => {
-                    const selected = value;
-                    const textColor = selected ? palette.primary.main : Colors.defaults.white;
-                    const backgroundColor = selected ? Colors.defaults.white : palette.primary.contrastText;
-
-                    const iconProps = { objectType: type, textColor, backgroundColor };
-
-                    return (
-                        <motion.div
-                            key={index}
-                            className={`${classes.filter} ${!value || classes.filterSelected}`}
-                            initial='hidden'
-                            animate='visible'
-                            onClick={() => onChange(name, !value)}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <RepositoryIcon {...iconProps} />
-                            <Typography className={classes.filterText} variant='caption' color='inherit'>
-                                {name.toUpperCase()}
-                            </Typography>
-                        </motion.div>
-                    );
-                })}
+            <Box className={classes.content}>
+                {content}
+            </Box>
+            <Box className={classes.options}>
+                <Box display='flex' >
+                    <FiLink2 className={classes.anchor} color={palette.primary.main} size={18} onClick={onCopyLink} />
+                    {isExpanded ?
+                        <FaChevronUp
+                            className={classes.anchor}
+                            size={15}
+                            color={palette.primary.main}
+                            onClick={onToggle}
+                        /> :
+                        <FaChevronDown
+                            className={classes.anchor}
+                            size={15}
+                            color={palette.primary.main}
+                            onClick={onToggle}
+                        />}
+                </Box>
             </Box>
         </Box>
     );
