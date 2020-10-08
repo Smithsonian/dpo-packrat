@@ -15,12 +15,13 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        maxHeight: '72vh',
+        maxHeight: ({ isExpanded }: RepositoryTreeViewProps) => isExpanded ? '70vh' : '80vh',
         maxWidth: '83.5vw',
         flexDirection: 'column',
         overflow: 'auto',
+        transition: '250ms height ease',
         [breakpoints.down('lg')]: {
-            maxHeight: '70vh',
+            maxHeight: ({ isExpanded }: RepositoryTreeViewProps) => isExpanded ? '60vh' : '77vh',
             maxWidth: '81.5vw'
         }
     },
@@ -35,17 +36,21 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         maxWidth: '83.5vw',
         alignItems: 'center',
         justifyContent: 'center',
-        color: palette.primary.dark
+        color: palette.primary.dark,
+        [breakpoints.down('lg')]: {
+            maxHeight: ({ isExpanded }: RepositoryTreeViewProps) => isExpanded ? '60vh' : '77vh',
+        }
     }
 }));
 
 interface RepositoryTreeViewProps {
     filter: RepositoryFilter;
+    isExpanded: boolean;
 }
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { filter } = props;
-    const classes = useStyles();
+    const classes = useStyles(props);
     const [expandedNodes, setExpandedNodes] = useState<ExpandedNodeMap>(new Map() as ExpandedNodeMap);
 
     const objectTypes = getSystemObjectTypesForFilter(filter);

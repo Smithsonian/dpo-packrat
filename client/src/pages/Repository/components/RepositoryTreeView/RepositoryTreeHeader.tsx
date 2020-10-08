@@ -37,6 +37,10 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         left: 20,
         width: '60%',
         backgroundColor: palette.primary.light,
+        [breakpoints.down('lg')]: {
+            paddingLeft: 10,
+            left: 10,
+        }
     }
 }));
 interface RepositoryTreeHeaderProps {
