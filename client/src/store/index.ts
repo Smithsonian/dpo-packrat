@@ -5,4 +5,5 @@ export * from './subject';
 export * from './project';
 export * from './item';
 export * from './metadata';
+export * from './repository';
 export * from './utils';
