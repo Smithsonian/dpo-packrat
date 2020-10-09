@@ -16,6 +16,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         paddingBottom: 0,
         [breakpoints.down('lg')]: {
             padding: 20,
+            paddingBottom: 0,
         }
     }
 }));
@@ -39,25 +40,16 @@ function Repository(): React.ReactElement {
 
     const defaultFilterState = Object.keys(queries).length ? queries : initialFilterState;
 
-    const [filter, setFilter] = useState<RepositoryFilter>(defaultFilterState);
+    const [filter,] = useState<RepositoryFilter>(defaultFilterState);
 
     useEffect(() => {
         const route = generateRepositoryUrl(filter);
         history.push(route);
     }, [filter, history]);
 
-    const onChange = (name: string, value: string | boolean) => {
-        setFilter(filter => ({
-            ...filter,
-            [name]: value,
-            ...(name === 'units' && { projects: false }),
-            ...(name === 'projects' && { units: false }),
-        }));
-    };
-
     return (
         <Box className={classes.container}>
-            <RepositoryFilterView filter={filter} onChange={onChange} />
+            <RepositoryFilterView />
             <RepositoryTreeView filter={filter} />
         </Box>
     );

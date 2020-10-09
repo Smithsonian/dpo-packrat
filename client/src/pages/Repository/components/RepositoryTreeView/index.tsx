@@ -16,13 +16,13 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        maxHeight: (isExpanded: boolean) => isExpanded ? '70vh' : '80vh',
+        maxHeight: (isExpanded: boolean) => isExpanded ? '64vh' : '82vh',
         maxWidth: '83.5vw',
         flexDirection: 'column',
         overflow: 'auto',
         transition: '250ms height ease',
         [breakpoints.down('lg')]: {
-            maxHeight: (isExpanded: boolean) => isExpanded ? '61vh' : '79vh',
+            maxHeight: (isExpanded: boolean) => isExpanded ? '50vh' : '80vh',
             maxWidth: '81.5vw'
         }
     },
