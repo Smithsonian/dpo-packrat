@@ -5,6 +5,7 @@ import lodash from 'lodash';
 import React, { useState } from 'react';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
 import { Loader } from '../../../../components';
+import { useRepositoryFilter } from '../../../../store';
 import { getSortedTreeEntries, getSystemObjectTypesForFilter, getTreeWidth } from '../../../../utils/repository';
 import { useGetRootObjects } from '../../hooks/useRepository';
 import { RepositoryFilter } from '../../index';
@@ -15,13 +16,13 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        maxHeight: ({ isExpanded }: RepositoryTreeViewProps) => isExpanded ? '70vh' : '80vh',
+        maxHeight: (isExpanded: boolean) => isExpanded ? '70vh' : '80vh',
         maxWidth: '83.5vw',
         flexDirection: 'column',
         overflow: 'auto',
         transition: '250ms height ease',
         [breakpoints.down('lg')]: {
-            maxHeight: ({ isExpanded }: RepositoryTreeViewProps) => isExpanded ? '60vh' : '77vh',
+            maxHeight: (isExpanded: boolean) => isExpanded ? '61vh' : '79vh',
             maxWidth: '81.5vw'
         }
     },
@@ -38,19 +39,19 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         justifyContent: 'center',
         color: palette.primary.dark,
         [breakpoints.down('lg')]: {
-            maxHeight: ({ isExpanded }: RepositoryTreeViewProps) => isExpanded ? '60vh' : '77vh',
+            maxHeight: (isExpanded: boolean) => isExpanded ? '60vh' : '77vh',
         }
     }
 }));
 
 interface RepositoryTreeViewProps {
     filter: RepositoryFilter;
-    isExpanded: boolean;
 }
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { filter } = props;
-    const classes = useStyles(props);
+    const { isExpanded } = useRepositoryFilter();
+    const classes = useStyles(isExpanded);
     const [expandedNodes, setExpandedNodes] = useState<ExpandedNodeMap>(new Map() as ExpandedNodeMap);
 
     const objectTypes = getSystemObjectTypesForFilter(filter);

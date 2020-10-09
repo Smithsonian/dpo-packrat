@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import RepositoryFilterView from './components/RepositoryFilterView';
-import RepositoryTreeView from './components/RepositoryTreeView';
+import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repository';
+import RepositoryFilterView from './components/RepositoryFilterView';
+import RepositoryTreeView from './components/RepositoryTreeView';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
@@ -39,17 +39,12 @@ function Repository(): React.ReactElement {
 
     const defaultFilterState = Object.keys(queries).length ? queries : initialFilterState;
 
-    const [isExpanded, setIsExpanded] = useState(true);
     const [filter, setFilter] = useState<RepositoryFilter>(defaultFilterState);
 
     useEffect(() => {
         const route = generateRepositoryUrl(filter);
         history.push(route);
     }, [filter, history]);
-
-    const onToggle = (): void => {
-        setIsExpanded(isExpanded => !isExpanded);
-    };
 
     const onChange = (name: string, value: string | boolean) => {
         setFilter(filter => ({
@@ -62,8 +57,8 @@ function Repository(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <RepositoryFilterView isExpanded={isExpanded} onToggle={onToggle} filter={filter} onChange={onChange} />
-            <RepositoryTreeView isExpanded={isExpanded} filter={filter} />
+            <RepositoryFilterView filter={filter} onChange={onChange} />
+            <RepositoryTreeView filter={filter} />
         </Box>
     );
 }
