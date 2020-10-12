@@ -63,7 +63,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         padding: '5px 8px',
         borderRadius: 5,
         backgroundColor: Colors.defaults.white,
-        fontSize: '0.8em'
+        fontSize: '0.8em',
+        cursor: 'pointer'
     },
     chip: {
         marginLeft: 10,
