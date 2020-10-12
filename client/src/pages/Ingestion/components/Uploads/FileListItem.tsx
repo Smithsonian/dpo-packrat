@@ -23,7 +23,11 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         borderRadius: 5,
         width: '100%',
         zIndex: 10,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        [breakpoints.down('lg')]: {
+            minHeight: 50,
+            marginTop: 5,
+        }
     },
     item: {
         display: 'flex',
@@ -147,10 +151,10 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     if (!complete) {
         options = (
             <React.Fragment>
-                {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={24} color={green[500]} />}
+                {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={22} color={green[500]} />}
                 {uploading && !failed && <Progress className={classes.option} size={20} />}
                 {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={yellow[600]} />}
-                <IoIosCloseCircle className={classes.option} onClick={remove} size={22} color={red[500]} />
+                <IoIosCloseCircle className={classes.option} onClick={remove} size={20} color={red[500]} />
             </React.Fragment>
         );
     }
@@ -158,8 +162,8 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     if (complete) {
         options = (
             <React.Fragment>
-                {!selected && <FaRegCircle className={classes.option} size={20} color={grey[400]} />}
-                {selected && <FaCheckCircle className={classes.option} size={20} color={palette.primary.main} />}
+                {!selected && <FaRegCircle className={classes.option} size={18} color={grey[400]} />}
+                {selected && <FaCheckCircle className={classes.option} size={18} color={palette.primary.main} />}
             </React.Fragment>
         );
     }
