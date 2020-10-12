@@ -54,7 +54,7 @@ function SubjectItem(): React.ReactElement {
     const subjects = useSubject(state => state.subjects);
     const [projects, projectsLoading, getSelectedProject] = useProject(state => [state.projects, state.loading, state.getSelectedProject]);
     const [itemsLoading, getSelectedItem] = useItem(state => [state.loading, state.getSelectedItem]);
-    const [metadatas, updateMetadataFolders] = useMetadata(state => [state.metadatas, state.updateMetadataFolders]);
+    const [metadatas, updateMetadataFolders, getMetadataInfo] = useMetadata(state => [state.metadatas, state.updateMetadataFolders, state.getMetadataInfo]);
 
     const selectedItem = getSelectedItem();
 
@@ -121,7 +121,8 @@ function SubjectItem(): React.ReactElement {
         }
 
         const { file: { id, type } } = metadatas[0];
-        const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
+        const { isLast } = getMetadataInfo(id);
+        const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
 
         history.push(nextRoute);
     };
