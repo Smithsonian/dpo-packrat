@@ -42,6 +42,7 @@
     "@types/yup": "0.29.7",
     "apollo-upload-client": "14.1.2",
     "customize-cra": "1.0.0",
+    "customize-cra-react-refresh": "1.1.0",
     "formik": "2.1.5",
     "formik-material-ui": "3.0.0",
     "framer-motion": "2.6.13",
