@@ -66,7 +66,6 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
         format: 'MM/dd/yyyy',
         name,
         className: classes.date,
-        style: fromDateStyle,
         keyboardIcon,
         InputProps
     };
@@ -77,6 +76,7 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
             <MuiPickersUtilsProvider utils={DateFnsUtils}>
                 <KeyboardDatePicker
                     {...datePickerProps}
+                    style={fromDateStyle}
                     value={new Date()}
                     onChange={(_, value) => onFromDate(value)}
                     variant='inline'
