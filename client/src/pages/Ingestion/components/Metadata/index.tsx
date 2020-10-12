@@ -128,8 +128,8 @@ function Metadata(): React.ReactElement {
         } else {
             const nextMetadata = metadatas[metadataIndex + 1];
             const { file: { id, type } } = nextMetadata;
-            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
-
+            const { isLast } = getMetadataInfo(id);
+            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
             history.push(nextRoute);
         }
     };

@@ -37,11 +37,11 @@ function Ingestion(): React.ReactElement {
                 enabled: false
             });
 
-            metadatas.forEach(({ file: { id, name, type } }) => {
+            metadatas.forEach(({ file: { name } }) => {
                 updatedOptions.push({
                     title: 'Metadata',
                     subtitle: name,
-                    route: `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`,
+                    route: INGESTION_ROUTE.ROUTES.METADATA,
                     enabled: false
                 });
             });
@@ -59,7 +59,8 @@ function Ingestion(): React.ReactElement {
         }
 
         if (url.includes(INGESTION_ROUTES_TYPE.METADATA)) {
-            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+            if (url.includes('last=true')) return true;
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM);
         }
 
         if (allowChange) return true;
