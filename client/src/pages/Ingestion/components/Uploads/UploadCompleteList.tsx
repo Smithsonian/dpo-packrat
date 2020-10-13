@@ -8,6 +8,7 @@ import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
 import FileList from './FileList';
 import { useUploadListStyles } from './UploadList';
 import UploadListHeader from './UploadListHeader';
+import lodash from 'lodash';
 
 function UploadListComplete(): React.ReactElement {
     const classes = useUploadListStyles();
@@ -21,13 +22,19 @@ function UploadListComplete(): React.ReactElement {
             const { AssetVersion } = getUploadedAssetVersion;
             const fileIds: string[] = completed.map(({ id }) => id);
 
-            const completedFiles = AssetVersion.map(assetVersion => {
+            const sortedAssetVersion = lodash.orderBy(AssetVersion, ['DateCreated'], ['desc']);
+
+            if (!sortedAssetVersion) {
+                return;
+            }
+
+            const completedFiles = sortedAssetVersion.map(assetVersion => {
                 const { idAssetVersion } = assetVersion;
 
                 const id = String(idAssetVersion);
 
                 if (fileIds.includes(id)) {
-                    return completed.find(file => file.id === id);
+                    return completed.find(file => file.id === id) || assetVersion;
                 }
                 return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType);
             });
