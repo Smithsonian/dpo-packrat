@@ -28,7 +28,7 @@ function AppRouter(): React.ReactElement {
         initializeUser();
     }, [initializeUser]);
 
-    let content: React.ReactNode = <Loader size={30} />;
+    let content: React.ReactNode = <Loader size={40} />;
 
     if (!loading) {
         content = (
