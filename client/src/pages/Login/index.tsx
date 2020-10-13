@@ -9,7 +9,7 @@ import LoginBackground from '../../assets/images/login-background.png';
 import { LoadingButton } from '../../components';
 import Config from '../../config';
 import { ROUTES } from '../../constants';
-import { useUser } from '../../store';
+import { useUserStore } from '../../store';
 import { actionOnKeyPress } from '../../utils/shared';
 import useLoginForm, { ILoginForm } from './hooks/useLoginForm';
 
@@ -92,7 +92,7 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
 function Login(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const { login } = useUser();
+    const { login } = useUserStore();
 
     const { initialValues, loginValidationSchema } = useLoginForm();
 

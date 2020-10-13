@@ -5,7 +5,7 @@ import lodash from 'lodash';
 import React, { useState } from 'react';
 import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
 import { Loader } from '../../../../components';
-import { useRepositoryFilter } from '../../../../store';
+import { useRepositoryFilterStore } from '../../../../store';
 import { getSortedTreeEntries, getSystemObjectTypesForFilter, getTreeWidth } from '../../../../utils/repository';
 import { useGetRootObjects } from '../../hooks/useRepository';
 import { RepositoryFilter } from '../../index';
@@ -50,7 +50,7 @@ interface RepositoryTreeViewProps {
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { filter } = props;
-    const { isExpanded } = useRepositoryFilter();
+    const { isExpanded } = useRepositoryFilterStore();
     const classes = useStyles(isExpanded);
     const [expandedNodes, setExpandedNodes] = useState<ExpandedNodeMap>(new Map() as ExpandedNodeMap);
 

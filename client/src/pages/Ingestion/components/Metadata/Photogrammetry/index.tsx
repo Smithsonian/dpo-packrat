@@ -1,19 +1,19 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import DateFnsUtils from '@date-io/date-fns';
 import { Box, Checkbox, Typography } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
+import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
+import lodash from 'lodash';
 import React from 'react';
 import { FieldType } from '../../../../../components';
-import DateFnsUtils from '@date-io/date-fns';
-import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
+import { StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { Colors } from '../../../../../theme';
-import { StateMetadata, useVocabulary, useMetadata, StateIdentifier } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
+import AssetContents from './AssetContents';
 import Description from './Description';
 import IdentifierList from './IdentifierList';
-import SelectField from './SelectField';
 import IdInputField from './IdInputField';
-import lodash from 'lodash';
-import AssetContents from './AssetContents';
+import SelectField from './SelectField';
 
 const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
     container: {
@@ -80,12 +80,12 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { metadataIndex } = props;
     const classes = useStyles();
 
-    const { getFieldErrors, updatePhotogrammetryField } = useMetadata();
-    const metadata: StateMetadata = useMetadata(state => state.metadatas[metadataIndex]);
+    const { getFieldErrors, updatePhotogrammetryField } = useMetadataStore();
+    const metadata: StateMetadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const errors = getFieldErrors(metadata);
 
     const { photogrammetry } = metadata;
-    const { getEntries, getInitialEntry } = useVocabulary();
+    const { getEntries, getInitialEntry } = useVocabularyStore();
 
     const setField = ({ target }): void => {
         const { name, value } = target;

@@ -12,8 +12,8 @@ import {
     GetIngestionItemsForSubjectsDocument,
     Item
 } from '../types/graphql';
-import { useItem, StateItem } from './item';
-import { useProject, StateProject } from './project';
+import { useItemStore, StateItem } from './item';
+import { useProjectStore, StateProject } from './project';
 
 export type StateSubject = {
     id: number;
@@ -31,7 +31,7 @@ type SubjectStore = {
     reset: () => void;
 };
 
-export const useSubject = create<SubjectStore>((set: SetState<SubjectStore>, get: GetState<SubjectStore>) => ({
+export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>, get: GetState<SubjectStore>) => ({
     subjects: [],
     addSubjects: async (fetchedSubjects: StateSubject[]): Promise<void> => {
         const { subjects } = get();
@@ -61,8 +61,8 @@ export const useSubject = create<SubjectStore>((set: SetState<SubjectStore>, get
         updateProjectsAndItemsForSubjects(selectedSubjects);
     },
     updateProjectsAndItemsForSubjects: async (selectedSubjects: StateSubject[]): Promise<void> => {
-        const { addProjects, loadingProjects } = useProject.getState();
-        const { addItems, loadingItems } = useItem.getState();
+        const { addProjects, loadingProjects } = useProjectStore.getState();
+        const { addItems, loadingItems } = useItemStore.getState();
 
         if (!selectedSubjects.length) {
             addItems([]);

@@ -7,7 +7,7 @@ type RepositoryStore = {
     toggleFilter: () => void;
 };
 
-export const useRepositoryFilter = create<RepositoryStore>((set: SetState<RepositoryStore>, get: GetState<RepositoryStore>) => ({
+export const useRepositoryFilterStore = create<RepositoryStore>((set: SetState<RepositoryStore>, get: GetState<RepositoryStore>) => ({
     isExpanded: true,
     search: '',
     updateSearch: (value: string): void => {

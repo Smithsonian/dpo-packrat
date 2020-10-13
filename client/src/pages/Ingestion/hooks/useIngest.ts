@@ -1,12 +1,23 @@
-import { useItem, useProject, useMetadata, useVocabulary, useSubject, useUpload, defaultItem, StateIdentifier, StateItem, StateProject } from '../../../store';
-import { IngestDataMutation, IngestIdentifierInput, IngestFolderInput, IngestPhotogrammetryInput, IngestDataDocument, IngestSubjectInput } from '../../../types/graphql';
-import { apolloClient } from '../../../graphql';
-import lodash from 'lodash';
 import { FetchResult } from '@apollo/client';
-import { toast } from 'react-toastify';
+import lodash from 'lodash';
 import { useHistory } from 'react-router';
-import { HOME_ROUTES, resolveSubRoute, INGESTION_ROUTES_TYPE } from '../../../constants/routes';
+import { toast } from 'react-toastify';
+import { HOME_ROUTES, INGESTION_ROUTES_TYPE, resolveSubRoute } from '../../../constants/routes';
+import { apolloClient } from '../../../graphql';
+import {
+    defaultItem,
+    StateIdentifier,
+    StateItem,
+    StateProject,
+    useItemStore,
+    useMetadataStore,
+    useProjectStore,
+    useSubjectStore,
+    useUploadStore,
+    useVocabularyStore
+} from '../../../store';
 import { isNewItem, parseFileId } from '../../../store/utils';
+import { IngestDataDocument, IngestDataMutation, IngestFolderInput, IngestIdentifierInput, IngestPhotogrammetryInput, IngestSubjectInput } from '../../../types/graphql';
 
 interface UseIngest {
     ingestPhotogrammetryData: () => Promise<boolean>;
@@ -15,12 +26,12 @@ interface UseIngest {
 }
 
 function useIngest(): UseIngest {
-    const [{ removeSelectedUploads }, resetUploads] = useUpload(state => [state, state.reset]);
-    const [{ subjects }, resetSubjects] = useSubject(state => [state, state.reset]);
-    const [{ getSelectedProject }, resetProjects] = useProject(state => [state, state.reset]);
-    const [{ getSelectedItem }, resetItems] = useItem(state => [state, state.reset]);
-    const [{ metadatas, getSelectedIdentifiers }, resetMetadatas] = useMetadata(state => [state, state.reset]);
-    const { getAssetType } = useVocabulary();
+    const [{ removeSelectedUploads }, resetUploads] = useUploadStore(state => [state, state.reset]);
+    const [{ subjects }, resetSubjects] = useSubjectStore(state => [state, state.reset]);
+    const [{ getSelectedProject }, resetProjects] = useProjectStore(state => [state, state.reset]);
+    const [{ getSelectedItem }, resetItems] = useItemStore(state => [state, state.reset]);
+    const [{ metadatas, getSelectedIdentifiers }, resetMetadatas] = useMetadataStore(state => [state, state.reset]);
+    const { getAssetType } = useVocabularyStore();
 
     const history = useHistory();
 

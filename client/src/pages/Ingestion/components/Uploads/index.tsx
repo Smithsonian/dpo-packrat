@@ -1,17 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import KeepAlive from 'react-activation';
-import { SidebarBottomNavigator, Loader } from '../../../../components';
-import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { Colors } from '../../../../theme';
-import UploadFilesPicker from './UploadFilesPicker';
-import UploadList from './UploadList';
-import UploadCompleteList from './UploadCompleteList';
 import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
-import { useVocabulary, useUpload, useMetadata } from '../../../../store';
+import { Loader, SidebarBottomNavigator } from '../../../../components';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
+import { useMetadataStore, useUploadStore, useVocabularyStore } from '../../../../store';
+import { Colors } from '../../../../theme';
+import UploadCompleteList from './UploadCompleteList';
+import UploadFilesPicker from './UploadFilesPicker';
+import UploadList from './UploadList';
 
 const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
     container: {
@@ -65,9 +65,9 @@ function Uploads(): React.ReactElement {
     const [loadingVocabulary, setLoadingVocabulary] = useState(true);
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
-    const { completed, discardFiles } = useUpload();
-    const { updateMetadataSteps } = useMetadata();
-    const { updateVocabularyEntries } = useVocabulary();
+    const { completed, discardFiles } = useUploadStore();
+    const { updateMetadataSteps } = useMetadataStore();
+    const { updateVocabularyEntries } = useVocabularyStore();
 
     const fetchVocabularyEntries = async () => {
         setLoadingVocabulary(true);

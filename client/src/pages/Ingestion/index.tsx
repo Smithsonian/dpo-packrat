@@ -2,15 +2,15 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { Redirect, useRouteMatch } from 'react-router';
+import { Prompt } from 'react-router-dom';
 import { PrivateRoute } from '../../components';
+import { HOME_ROUTES, INGESTION_PARAMS_TYPE, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
+import { useMetadataStore } from '../../store';
 import { IngestionSidebarMenu, IngestionSidebarOption } from './components/IngestionSidebar';
-import { HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, INGESTION_PARAMS_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
-import Uploads from './components/Uploads';
 import Metadata from './components/Metadata';
 import SubjectItem from './components/SubjectItem';
-import { Prompt } from 'react-router-dom';
+import Uploads from './components/Uploads';
 import useIngest from './hooks/useIngest';
-import { useMetadata } from '../../store';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -22,7 +22,7 @@ const useStyles = makeStyles(() => ({
 function Ingestion(): React.ReactElement {
     const classes = useStyles();
     const { path } = useRouteMatch();
-    const { metadatas } = useMetadata();
+    const { metadatas } = useMetadataStore();
     const { ingestionReset } = useIngest();
 
     const [options, setOptions] = useState<IngestionSidebarOption[]>([]);

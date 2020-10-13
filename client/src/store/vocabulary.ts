@@ -20,7 +20,7 @@ type VocabularyStore = {
     getAssetType: (idVocabulary: number) => AssetType;
 };
 
-export const useVocabulary = create<VocabularyStore>((set: SetState<VocabularyStore>, get: GetState<VocabularyStore>) => ({
+export const useVocabularyStore = create<VocabularyStore>((set: SetState<VocabularyStore>, get: GetState<VocabularyStore>) => ({
     vocabularies: new Map<eVocabularySetID, VocabularyOption[]>(),
     updateVocabularyEntries: async (): Promise<StateVocabulary> => {
         const variables = {

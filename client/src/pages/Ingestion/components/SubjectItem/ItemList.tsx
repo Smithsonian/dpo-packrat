@@ -3,9 +3,9 @@ import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
-import { RiRecordCircleFill, RiCheckboxBlankCircleLine } from 'react-icons/ri';
 import { MdCheckBox, MdCheckBoxOutlineBlank } from 'react-icons/md';
-import { defaultItem, StateItem, useItem } from '../../../../store';
+import { RiCheckboxBlankCircleLine, RiRecordCircleFill } from 'react-icons/ri';
+import { defaultItem, StateItem, useItemStore } from '../../../../store';
 import { palette } from '../../../../theme';
 
 const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => ({
@@ -58,7 +58,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
 
 function ItemList(): React.ReactElement {
     const classes = useStyles();
-    const [items, updateItem] = useItem(state => [state.items, state.updateItem]);
+    const [items, updateItem] = useItemStore(state => [state.items, state.updateItem]);
 
     const selectableHeaderStyle = {
         width: 100

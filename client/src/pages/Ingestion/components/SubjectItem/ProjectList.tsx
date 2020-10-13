@@ -2,7 +2,7 @@ import { MenuItem, Select } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import lodash from 'lodash';
 import React from 'react';
-import { useProject } from '../../../../store';
+import { useProjectStore } from '../../../../store';
 
 const useStyles = makeStyles(({ palette }) => ({
     projectSelect: {
@@ -15,7 +15,7 @@ const useStyles = makeStyles(({ palette }) => ({
 
 function ProjectList(): React.ReactElement {
     const classes = useStyles();
-    const [projects, getSelectedProject, updateSelectedProject] = useProject(state => [state.projects, state.getSelectedProject, state.updateSelectedProject]);
+    const [projects, getSelectedProject, updateSelectedProject] = useProjectStore(state => [state.projects, state.getSelectedProject, state.updateSelectedProject]);
 
     const noProjects = !projects.length;
     const selectedProject = getSelectedProject();

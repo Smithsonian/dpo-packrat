@@ -18,10 +18,10 @@ type ProjectStore = {
     reset: () => void;
 };
 
-export const useProject = create<ProjectStore>((set: SetState<ProjectStore>, get: GetState<ProjectStore>) => ({
+export const useProjectStore = create<ProjectStore>((set: SetState<ProjectStore>, get: GetState<ProjectStore>) => ({
     projects: [],
     loading: false,
-    getSelectedProject: () => {
+    getSelectedProject: (): StateProject | undefined => {
         const { projects } = get();
         return lodash.find(projects, { selected: true });
     },

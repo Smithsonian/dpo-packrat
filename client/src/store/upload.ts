@@ -3,7 +3,7 @@ import lodash from 'lodash';
 import { toast } from 'react-toastify';
 import { eVocabularySetID } from '../types/server';
 import { generateFileId } from '../utils/upload';
-import { useVocabulary } from './vocabulary';
+import { useVocabularyStore } from './vocabulary';
 import { apolloClient, apolloUploader } from '../graphql';
 import { DiscardUploadedAssetVersionsDocument, DiscardUploadedAssetVersionsMutation, UploadAssetDocument, UploadAssetMutation, UploadStatus } from '../types/graphql';
 import { FetchResult } from '@apollo/client';
@@ -50,7 +50,7 @@ type UploadStore = {
     reset: () => void;
 };
 
-export const useUpload = create<UploadStore>((set: SetState<UploadStore>, get: GetState<UploadStore>) => ({
+export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, get: GetState<UploadStore>) => ({
     completed: [],
     pending: [],
     loading: true,
@@ -65,7 +65,7 @@ export const useUpload = create<UploadStore>((set: SetState<UploadStore>, get: G
                 const alreadyContains = !!lodash.find(pending, { id });
 
                 const { name, size } = file;
-                const { getInitialEntry } = useVocabulary.getState();
+                const { getInitialEntry } = useVocabularyStore.getState();
                 const type = getInitialEntry(eVocabularySetID.eAssetAssetType);
 
                 if (!type) {

@@ -5,7 +5,7 @@ import { Redirect, useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { useItem, useMetadata, useProject, useSubject, useVocabulary } from '../../../../store';
+import { useItemStore, useMetadataStore, useProjectStore, useSubjectStore, useVocabularyStore } from '../../../../store';
 import ItemList from './ItemList';
 import ProjectList from './ProjectList';
 import SearchList from './SearchList';
@@ -50,11 +50,11 @@ function SubjectItem(): React.ReactElement {
     const [itemError, setItemError] = useState(false);
     const [metadataStepLoading, setMetadataStepLoading] = useState(false);
 
-    const updateVocabularyEntries = useVocabulary(state => state.updateVocabularyEntries);
-    const subjects = useSubject(state => state.subjects);
-    const [projects, projectsLoading, getSelectedProject] = useProject(state => [state.projects, state.loading, state.getSelectedProject]);
-    const [itemsLoading, getSelectedItem] = useItem(state => [state.loading, state.getSelectedItem]);
-    const [metadatas, updateMetadataFolders, getMetadataInfo] = useMetadata(state => [state.metadatas, state.updateMetadataFolders, state.getMetadataInfo]);
+    const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
+    const subjects = useSubjectStore(state => state.subjects);
+    const [projects, projectsLoading, getSelectedProject] = useProjectStore(state => [state.projects, state.loading, state.getSelectedProject]);
+    const [itemsLoading, getSelectedItem] = useItemStore(state => [state.loading, state.getSelectedItem]);
+    const [metadatas, updateMetadataFolders, getMetadataInfo] = useMetadataStore(state => [state.metadatas, state.updateMetadataFolders, state.getMetadataInfo]);
 
     const selectedItem = getSelectedItem();
 
