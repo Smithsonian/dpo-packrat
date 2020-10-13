@@ -5,7 +5,7 @@ import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { FiLink2 } from 'react-icons/fi';
 import { IoIosRemoveCircle } from 'react-icons/io';
 import { toast } from 'react-toastify';
-import { useRepositoryFilter } from '../../../../store';
+import { useRepositoryFilterStore } from '../../../../store';
 import { Colors, palette } from '../../../../theme';
 import FilterDate from './FilterDate';
 import FilterSelect from './FilterSelect';
@@ -91,7 +91,7 @@ const StyledChip = withStyles(({ palette }) => ({
 }))(Chip);
 
 function RepositoryFilterView(): React.ReactElement {
-    const [isExpanded, toggleFilter] = useRepositoryFilter(state => [state.isExpanded, state.toggleFilter]);
+    const [isExpanded, toggleFilter] = useRepositoryFilterStore(state => [state.isExpanded, state.toggleFilter]);
     const classes = useStyles(isExpanded);
     const [chips] = useState([
         {

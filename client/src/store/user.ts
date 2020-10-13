@@ -11,7 +11,7 @@ type UserStore = {
     logout: () => Promise<AuthResponseType>;
 };
 
-export const useUser = create<UserStore>((set: SetState<UserStore>, get: GetState<UserStore>) => ({
+export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: GetState<UserStore>) => ({
     user: null,
     initialize: async () => {
         const { user } = get();

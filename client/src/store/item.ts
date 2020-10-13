@@ -25,7 +25,7 @@ type ItemStore = {
     reset: () => void;
 };
 
-export const useItem = create<ItemStore>((set: SetState<ItemStore>, get: GetState<ItemStore>) => ({
+export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: GetState<ItemStore>) => ({
     items: [defaultItem],
     loading: false,
     getSelectedItem: (): StateItem | undefined => {

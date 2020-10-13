@@ -1,8 +1,8 @@
-import React from 'react';
-import { Typography, TableContainer, Table, TableCell, TableHead, TableRow, TableBody } from '@material-ui/core';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import React from 'react';
+import { StateSubject, useSubjectStore } from '../../../../store';
 import SubjectListItem from './SubjectListItem';
-import { useSubject, StateSubject } from '../../../../store';
 
 const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
     container: {
@@ -38,7 +38,7 @@ interface SubjectListProps {
 
 function SubjectList(props: SubjectListProps): React.ReactElement {
     const { subjects, emptyLabel, selected } = props;
-    const [addSubject, removeSubject] = useSubject(state => [state.addSubject, state.removeSubject]);
+    const [addSubject, removeSubject] = useSubjectStore(state => [state.addSubject, state.removeSubject]);
     const classes = useStyles();
 
     const header: string[] = ['ARK / ID', 'UNIT', 'NAME'];

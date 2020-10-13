@@ -7,7 +7,7 @@ import { Link, useHistory, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Logo from '../../assets/images/logo-packrat.square.png';
 import { HOME_ROUTES, resolveRoute, ROUTES } from '../../constants';
-import { useRepositoryFilter, useUser } from '../../store';
+import { useRepositoryFilterStore, useUserStore } from '../../store';
 import { Colors } from '../../theme';
 
 const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => ({
@@ -78,8 +78,8 @@ function Header(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
     const { pathname } = useLocation();
-    const { user, logout } = useUser();
-    const [search, updateSearch] = useRepositoryFilter(state => [state.search, state.updateSearch]);
+    const { user, logout } = useUserStore();
+    const [search, updateSearch] = useRepositoryFilterStore(state => [state.search, state.updateSearch]);
 
     const onSearch = (): void => {
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);

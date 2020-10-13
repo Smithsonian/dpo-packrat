@@ -7,7 +7,7 @@ import { Redirect, useHistory, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { useItem, useMetadata, useProject, useVocabulary, FileId, StateItem, StateMetadata, StateProject } from '../../../../store';
+import { FileId, StateItem, StateMetadata, StateProject, useItemStore, useMetadataStore, useProjectStore, useVocabularyStore } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
 import Photogrammetry from './Photogrammetry';
 
@@ -49,11 +49,11 @@ function Metadata(): React.ReactElement {
 
     const [ingestionLoading, setIngestionLoading] = useState(false);
 
-    const getSelectedProject = useProject(state => state.getSelectedProject);
-    const getSelectedItem = useItem(state => state.getSelectedItem);
-    const [metadatas, getFieldErrors, getMetadataInfo] = useMetadata(state => [state.metadatas, state.getFieldErrors, state.getMetadataInfo]);
+    const getSelectedProject = useProjectStore(state => state.getSelectedProject);
+    const getSelectedItem = useItemStore(state => state.getSelectedItem);
+    const [metadatas, getFieldErrors, getMetadataInfo] = useMetadataStore(state => [state.metadatas, state.getFieldErrors, state.getMetadataInfo]);
     const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
-    const getAssetType = useVocabulary(state => state.getAssetType);
+    const getAssetType = useVocabularyStore(state => state.getAssetType);
 
     const metadataLength = metadatas.length;
     const query = qs.parse(search) as QueryParams;

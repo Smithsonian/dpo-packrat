@@ -13,12 +13,12 @@ import {
     Project
 } from '../types/graphql';
 import { eVocabularySetID } from '../types/server';
-import { useItem, StateItem } from './item';
-import { useProject, StateProject } from './project';
-import { useSubject, StateSubject } from './subject';
-import { useUpload, FileId, IngestionFile } from './upload';
+import { useItemStore, StateItem } from './item';
+import { useProjectStore, StateProject } from './project';
+import { useSubjectStore, StateSubject } from './subject';
+import { useUploadStore, FileId, IngestionFile } from './upload';
 import { parseFileId, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from './utils';
-import { useVocabulary } from './vocabulary';
+import { useVocabularyStore } from './vocabulary';
 
 type MetadataInfo = {
     metadata: StateMetadata;
@@ -113,11 +113,11 @@ type MetadataStore = {
     reset: () => void;
 };
 
-export const useMetadata = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
+export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
     metadatas: [],
     getSelectedIdentifiers: (metadata: StateMetadata): StateIdentifier[] | undefined => lodash.filter(metadata.photogrammetry.identifiers, { selected: true }),
     getFieldErrors: (metadata: StateMetadata): FieldErrors => {
-        const { getAssetType } = useVocabulary.getState();
+        const { getAssetType } = useVocabularyStore.getState();
         const errors: FieldErrors = {
             photogrammetry: {
                 dateCaptured: false,
@@ -156,11 +156,11 @@ export const useMetadata = create<MetadataStore>((set: SetState<MetadataStore>, 
     },
     updateMetadataSteps: async (): Promise<MetadataUpdate> => {
         const { getStateFolders } = get();
-        const { completed, getSelectedFiles } = useUpload.getState();
-        const { getInitialEntry } = useVocabulary.getState();
-        const { addSubjects } = useSubject.getState();
-        const { addProjects } = useProject.getState();
-        const { addItems } = useItem.getState();
+        const { completed, getSelectedFiles } = useUploadStore.getState();
+        const { getInitialEntry } = useVocabularyStore.getState();
+        const { addSubjects } = useSubjectStore.getState();
+        const { addProjects } = useProjectStore.getState();
+        const { addItems } = useItemStore.getState();
 
         const selectedFiles = getSelectedFiles(completed, true);
 
@@ -320,7 +320,7 @@ export const useMetadata = create<MetadataStore>((set: SetState<MetadataStore>, 
         return stateFolders;
     },
     getInitialStateFolders: (folders: string[]): StateFolder[] => {
-        const { getInitialEntry } = useVocabulary.getState();
+        const { getInitialEntry } = useVocabularyStore.getState();
         const stateFolders: StateFolder[] = folders.map((folder, index: number) => ({
             id: index,
             name: folder,
@@ -378,7 +378,7 @@ export const useMetadata = create<MetadataStore>((set: SetState<MetadataStore>, 
         set({ metadatas: updatedMetadatas });
     },
     updateCameraSettings: async (metadatas: StateMetadata[]): Promise<StateMetadata[]> => {
-        const { getAssetType } = useVocabulary.getState();
+        const { getAssetType } = useVocabularyStore.getState();
 
         const updatedMetadatas = metadatas.slice();
 

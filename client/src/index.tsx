@@ -1,6 +1,7 @@
 import { ApolloProvider } from '@apollo/client';
 import { ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
+import { AliveScope } from 'react-activation';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
 import { Slide, ToastContainer } from 'react-toastify';
@@ -10,14 +11,13 @@ import { ROUTES } from './constants';
 import './global/root.css';
 import { apolloClient } from './graphql';
 import { About, Home, Login } from './pages';
-import theme from './theme';
-import { AliveScope } from 'react-activation';
 import * as serviceWorker from './serviceWorker';
-import { useUser } from './store';
+import { useUserStore } from './store';
+import theme from './theme';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
-    const initialize = useUser(state => state.initialize);
+    const initialize = useUserStore(state => state.initialize);
 
     const initializeUser = useCallback(async () => {
         await initialize();

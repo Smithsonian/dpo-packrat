@@ -1,19 +1,19 @@
 import { AnimatePresence } from 'framer-motion';
 import React from 'react';
-import { useUpload, useVocabulary, FileId, IngestionFile, FileUploadStatus, VocabularyOption } from '../../../../store';
-import FileListItem from './FileListItem';
+import { FileId, FileUploadStatus, IngestionFile, useUploadStore, useVocabularyStore, VocabularyOption } from '../../../../store';
 import { eVocabularySetID } from '../../../../types/server';
+import FileListItem from './FileListItem';
 
 interface FileListProps {
     files: IngestionFile[];
 }
 
 function FileList(props: FileListProps): React.ReactElement {
-    const { selectFile } = useUpload();
-    const { getEntries } = useVocabulary();
+    const { selectFile } = useUploadStore();
+    const { getEntries } = useVocabularyStore();
     const { files } = props;
 
-    const { startUpload, retryUpload, cancelUpload, removeUpload, changeAssetType } = useUpload();
+    const { startUpload, retryUpload, cancelUpload, removeUpload, changeAssetType } = useUploadStore();
 
     const onChangeType = (id: FileId, assetType: number): void => changeAssetType(id, assetType);
 

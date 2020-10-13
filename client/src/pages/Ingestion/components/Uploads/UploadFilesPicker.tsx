@@ -3,8 +3,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
+import { useUploadStore } from '../../../../store';
 import { Colors } from '../../../../theme';
-import { useUpload } from '../../../../store';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -37,7 +37,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 
 function UploadFilesPicker(): React.ReactElement {
     const classes = useStyles();
-    const { loading, loadPending } = useUpload();
+    const { loading, loadPending } = useUploadStore();
 
     const onDrop = (acceptedFiles: File[]) => {
         loadPending(acceptedFiles);

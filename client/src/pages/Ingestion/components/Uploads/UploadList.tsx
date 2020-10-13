@@ -2,7 +2,7 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { FieldType } from '../../../../components';
-import { useUpload } from '../../../../store';
+import { useUploadStore } from '../../../../store';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 
@@ -53,7 +53,7 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints }) => ({
 
 function UploadList(): React.ReactElement {
     const classes = useUploadListStyles();
-    const { pending } = useUpload();
+    const { pending } = useUploadStore();
 
     return (
         <Box className={classes.container}>

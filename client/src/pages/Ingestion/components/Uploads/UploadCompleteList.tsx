@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client';
 import { Box, Typography } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { FieldType } from '../../../../components';
-import { parseAssetVersionToState, useUpload } from '../../../../store';
+import { parseAssetVersionToState, useUploadStore } from '../../../../store';
 import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
 import FileList from './FileList';
 import { useUploadListStyles } from './UploadList';
@@ -12,7 +12,7 @@ import UploadListHeader from './UploadListHeader';
 function UploadListComplete(): React.ReactElement {
     const classes = useUploadListStyles();
 
-    const { completed, loadCompleted } = useUpload();
+    const { completed, loadCompleted } = useUploadStore();
     const { data, loading, error } = useQuery(GetUploadedAssetVersionDocument);
 
     useEffect(() => {
