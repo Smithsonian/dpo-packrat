@@ -25,6 +25,9 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         [breakpoints.down('lg')]: {
             fontSize: ({ header }: MetadataViewProps) => header ? typography.pxToRem(14) : undefined,
         }
+    },
+    text: {
+        fontSize: '0.8em'
     }
 }));
 
@@ -46,7 +49,7 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
 
             return (
                 <div key={index} className={classes.column} style={{ width }}>
-                    <span title={header ? undefined : label} data-tooltip-position='bottom'>
+                    <span className={classes.text} title={header ? undefined : label} data-tooltip-position='bottom'>
                         {trimmedMetadataField(label, 20, 10)}
                     </span>
                 </div>

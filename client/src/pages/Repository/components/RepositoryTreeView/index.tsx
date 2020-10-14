@@ -7,7 +7,7 @@ import { Loader } from '../../../../components';
 import { useRepositoryFilterStore } from '../../../../store';
 import { NavigationResultEntry } from '../../../../types/graphql';
 import { eMetadata, eSystemObjectType } from '../../../../types/server';
-import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, parseRepositoryTreeNodeId } from '../../../../utils/repository';
+import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeWidth, parseRepositoryTreeNodeId } from '../../../../utils/repository';
 import { getObjectChildren, useGetRootObjects } from '../../hooks/useRepository';
 import RepositoryTreeHeader from './RepositoryTreeHeader';
 import StyledTreeItem from './StyledTreeItem';
@@ -17,8 +17,8 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        maxHeight: (isExpanded: boolean) => isExpanded ? '64vh' : '82vh',
-        maxWidth: '83.5vw',
+        maxHeight: (isExpanded: boolean) => isExpanded ? '60vh' : '82vh',
+        maxWidth: '85vw',
         flexDirection: 'column',
         overflow: 'auto',
         transition: '250ms height ease',
@@ -30,7 +30,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     tree: {
         display: 'flex',
         flexDirection: 'column',
-        flex: 1
+        flex: 1,
     }
 }));
 
@@ -102,15 +102,19 @@ function RepositoryTreeView(): React.ReactElement {
         });
     };
 
-    let content: React.ReactNode = <Loader maxWidth='83.5vw' size={30} />;
+    let content: React.ReactNode = <Loader maxWidth='85vw' size={20} />;
 
     if (!loading) {
+        const treeColumns = getTreeViewColumns(metadataColumns, false);
+        const width = getTreeWidth(treeColumns.length);
+
         content = (
             <TreeView
                 className={classes.tree}
                 defaultCollapseIcon={<ExpandMoreIcon />}
                 defaultExpandIcon={<ChevronRightIcon />}
                 onNodeToggle={onNodeToggle}
+                style={{ width }}
             >
                 <RepositoryTreeHeader metadataColumns={metadataColumns} />
                 {renderTree(tree.get('root'))}

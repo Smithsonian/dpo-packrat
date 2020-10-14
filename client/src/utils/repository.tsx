@@ -115,7 +115,7 @@ export function generateRepositoryUrl(filter: RepositoryFilter): string {
 export function getTreeWidth(columnSize: number): string {
     const width = 50 + columnSize * 10;
     if (width <= 80) {
-        return '83.5vw';
+        return '85vw';
     }
 
     return `${width}vw`;
