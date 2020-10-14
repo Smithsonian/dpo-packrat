@@ -1,5 +1,5 @@
-import { Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import clsx from 'clsx';
 import React from 'react';
 import { Progress } from '../../../../components';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
@@ -16,11 +16,12 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         position: 'sticky',
         left: 45,
         [breakpoints.down('lg')]: {
-            left: 35
+            left: 30
         }
     },
     labelText: {
         width: '60%',
+        fontSize: '0.8em',
         background: ({ color }: TreeLabelProps) => color,
         zIndex: 10,
     }
@@ -55,16 +56,21 @@ const useLabelStyle = makeStyles(({ breakpoints, palette, typography }) => ({
         display: 'flex',
         alignItems: 'center',
         height: 40,
-        position: 'sticky',
-        left: 20,
         [breakpoints.down('lg')]: {
             height: 30,
         }
     },
     emptyText: {
-        fontSize: '0.75em',
+        fontSize: '0.8em',
         fontWeight: typography.fontWeightLight,
-        color: palette.grey[500]
+        color: palette.grey[500],
+        [breakpoints.down('lg')]: {
+            fontSize: '0.65em',
+        }
+    },
+    stickyItem: {
+        position: 'sticky',
+        left: 0,
     }
 }));
 
@@ -72,7 +78,7 @@ export function TreeLabelLoading(): React.ReactElement {
     const classes = useLabelStyle();
     return (
         <div className={classes.container}>
-            <Progress size={15} />
+            <Progress className={classes.stickyItem} size={15} />
         </div>
     );
 }
@@ -90,7 +96,7 @@ export function TreeLabelEmpty(props: TreeLabelEmptyProps): React.ReactElement {
 
     return (
         <div className={classes.container}>
-            <Typography className={classes.emptyText}>{contentTerm}</Typography>
+            <span className={clsx(classes.emptyText, classes.stickyItem)}>{contentTerm}</span>
         </div>
     );
 }

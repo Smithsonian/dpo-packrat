@@ -10,13 +10,13 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        maxWidth: '100vw',
+        maxWidth: '85vw',
         flexDirection: 'column',
-        padding: 40,
+        padding: 20,
         paddingBottom: 0,
+        paddingRight: 0,
         [breakpoints.down('lg')]: {
-            padding: 20,
-            paddingBottom: 0,
+            paddingRight: 20,
         }
     }
 }));
