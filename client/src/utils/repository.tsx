@@ -1,10 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import lodash from 'lodash';
 import * as qs from 'query-string';
+import React from 'react';
+import { AiOutlineFileText } from 'react-icons/ai';
+import { RepositoryIcon } from '../components';
 import { HOME_ROUTES } from '../constants';
 import { RepositoryFilter } from '../pages/Repository';
-import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/StyledTreeItem';
-import { RepositoryColorVariant } from '../theme/colors';
+import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/MetadataView';
+import Colors, { RepositoryColorVariant } from '../theme/colors';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
 
@@ -57,6 +60,25 @@ export function getTermForSystemObjectType(objectType: eSystemObjectType): strin
 
 export function getRepositoryTreeNodeId(idSystemObject: number, idObject: number, objectType: eSystemObjectType): string {
     return `${idSystemObject}-${eSystemObjectType[objectType]}-${idObject}`;
+}
+
+type ParsedNodeId = {
+    idSystemObject: number;
+    idObject: number;
+    objectType: eSystemObjectType;
+};
+
+export function parseRepositoryTreeNodeId(nodeId: string): ParsedNodeId {
+    const [nodeSystemObjectId, nodeObjectType, nodeObjectId] = nodeId.split('-');
+    const idSystemObject = Number.parseInt(nodeSystemObjectId, 10);
+    const objectType = Number.parseInt(nodeObjectType, 10);
+    const idObject = Number.parseInt(nodeObjectId, 10);
+
+    return {
+        idSystemObject,
+        objectType,
+        idObject
+    };
 }
 
 export function getSortedTreeEntries(entries: NavigationResultEntry[]): NavigationResultEntry[] {
@@ -140,4 +162,34 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
 
 export function computeMetadataViewWidth(treeColumns: TreeViewColumn[]): string {
     return `${treeColumns.reduce((prev, current) => prev + current.size, 0)}vw`;
+}
+
+
+type ObjectInterfaceDetails = {
+    icon: React.ReactNode;
+    color: string;
+};
+
+export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant: RepositoryColorVariant): ObjectInterfaceDetails {
+    const color: string = Colors.repository[objectType][variant];
+    const textColor: string = Colors.defaults.white;
+    const backgroundColor: string = Colors.repository[objectType][RepositoryColorVariant.dark] || Colors.repository.default[RepositoryColorVariant.dark];
+
+    const iconProps = { objectType, backgroundColor, textColor };
+
+    switch (objectType) {
+        case eSystemObjectType.eUnit:
+            return { icon: <RepositoryIcon {...iconProps} />, color };
+        case eSystemObjectType.eProject:
+            return { icon: <RepositoryIcon {...iconProps} />, color };
+        case eSystemObjectType.eSubject:
+            return { icon: <RepositoryIcon {...iconProps} />, color };
+        case eSystemObjectType.eItem:
+            return { icon: <RepositoryIcon {...iconProps} />, color };
+        case eSystemObjectType.eCaptureData:
+            return { icon: <AiOutlineFileText />, color };
+
+        default:
+            return { icon: <AiOutlineFileText />, color: Colors.repository.default[variant] };
+    }
 }
