@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { eMetadata } from '../../../../types/server';
 import { getTreeViewColumns, getTreeWidth } from '../../../../utils/repository';
-import { MetadataView } from './StyledTreeItem';
+import MetadataView from './MetadataView';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {

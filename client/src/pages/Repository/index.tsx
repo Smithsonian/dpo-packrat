@@ -40,7 +40,7 @@ function Repository(): React.ReactElement {
 
     const defaultFilterState = Object.keys(queries).length ? queries : initialFilterState;
 
-    const [filter,] = useState<RepositoryFilter>(defaultFilterState);
+    const [filter] = useState<RepositoryFilter>(defaultFilterState);
 
     useEffect(() => {
         const route = generateRepositoryUrl(filter);
@@ -50,7 +50,7 @@ function Repository(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <RepositoryFilterView />
-            <RepositoryTreeView filter={filter} />
+            <RepositoryTreeView />
         </Box>
     );
 }
