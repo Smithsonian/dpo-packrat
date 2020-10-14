@@ -142,12 +142,12 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
                 break;
 
             case eMetadata.eSubjectIdentifier:
-                if (isHeader) treeColumn.label = 'SubjectId';
+                if (isHeader) treeColumn.label = 'Subject';
                 treeColumn.size = MIN_SIZE * 2;
                 break;
 
             case eMetadata.eItemName:
-                if (isHeader) treeColumn.label = 'Item name';
+                if (isHeader) treeColumn.label = 'Item';
                 break;
 
             default:
