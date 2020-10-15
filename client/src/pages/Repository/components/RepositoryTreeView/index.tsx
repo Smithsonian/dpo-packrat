@@ -2,13 +2,11 @@ import { makeStyles } from '@material-ui/core/styles';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Loader } from '../../../../components';
-import { useRepositoryFilterStore } from '../../../../store';
+import { treeRootKey, useRepositoryStore } from '../../../../store';
 import { NavigationResultEntry } from '../../../../types/graphql';
-import { eMetadata, eSystemObjectType } from '../../../../types/server';
-import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeWidth, parseRepositoryTreeNodeId } from '../../../../utils/repository';
-import { getObjectChildren, useGetRootObjects } from '../../hooks/useRepository';
+import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeWidth } from '../../../../utils/repository';
 import RepositoryTreeHeader from './RepositoryTreeHeader';
 import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
@@ -35,36 +33,20 @@ const useStyles = makeStyles(({ breakpoints }) => ({
 }));
 
 function RepositoryTreeView(): React.ReactElement {
-    const { isExpanded } = useRepositoryFilterStore();
+    const [loading, isExpanded] = useRepositoryStore(state => [state.loading, state.isExpanded]);
     const classes = useStyles(isExpanded);
-    const metadataColumns: eMetadata[] = [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName];
 
-    const { data, loading, error } = useGetRootObjects([eSystemObjectType.eUnit], metadataColumns);
-
-    const [tree, setTree] = useState<Map<string | number, NavigationResultEntry[]>>(() => new Map([['root', []]]));
+    const [tree, initializeTree, getChildren] = useRepositoryStore(state => [state.tree, state.initializeTree, state.getChildren]);
+    const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
 
     useEffect(() => {
-        if (data && !loading && !error) {
-            const { getObjectChildren } = data;
-            const { entries } = getObjectChildren;
-            const updatedRootMap = new Map([['root', entries]]);
-            setTree(updatedRootMap);
-        }
-    }, [data, loading, error]);
+        initializeTree();
+    }, [initializeTree]);
 
     const onNodeToggle = async (_, nodeIds: string[]) => {
         if (!nodeIds.length) return;
         const [nodeId] = nodeIds.slice();
-        const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
-        const { data, error } = await getObjectChildren(idSystemObject, metadataColumns);
-
-        if (data && !error) {
-            const { getObjectChildren } = data;
-            const { entries } = getObjectChildren;
-            const updatedTree = new Map(tree);
-            updatedTree.set(nodeId, entries);
-            setTree(updatedTree);
-        }
+        getChildren(nodeId);
     };
 
     const renderTree = (children: NavigationResultEntry[] | undefined) => {
@@ -117,7 +99,7 @@ function RepositoryTreeView(): React.ReactElement {
                 style={{ width }}
             >
                 <RepositoryTreeHeader metadataColumns={metadataColumns} />
-                {renderTree(tree.get('root'))}
+                {renderTree(tree.get(treeRootKey))}
             </TreeView>
         );
     }
