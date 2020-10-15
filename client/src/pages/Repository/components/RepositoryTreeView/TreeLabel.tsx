@@ -24,6 +24,9 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         fontSize: '0.8em',
         background: ({ color }: TreeLabelProps) => color,
         zIndex: 10,
+        [breakpoints.down('lg')]: {
+            fontSize: '0.9em',
+        }
     }
 }));
 
@@ -65,7 +68,7 @@ const useLabelStyle = makeStyles(({ breakpoints, palette, typography }) => ({
         fontWeight: typography.fontWeightLight,
         color: palette.grey[500],
         [breakpoints.down('lg')]: {
-            fontSize: '0.65em',
+            fontSize: '0.7em',
         }
     },
     stickyItem: {

@@ -11,7 +11,7 @@ const useStyles = makeStyles(({ palette }) => ({
         alignItems: 'flex-start',
         justifyContent: 'center',
         flexDirection: 'column',
-        padding: '0.8rem 1rem',
+        padding: '0.8rem',
         width: 150,
         transition: 'all 250ms ease-in',
         textDecoration: 'none',

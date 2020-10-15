@@ -27,7 +27,10 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         }
     },
     text: {
-        fontSize: '0.8em'
+        fontSize: '0.8em',
+        [breakpoints.down('lg')]: {
+            fontSize: '0.9em',
+        }
     }
 }));
 
