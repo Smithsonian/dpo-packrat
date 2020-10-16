@@ -193,3 +193,7 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
             return { icon: <AiOutlineFileText />, color: Colors.repository.default[variant] };
     }
 }
+
+export function sortEntriesAlphabetically(entries: NavigationResultEntry[]): NavigationResultEntry[] {
+    return lodash.orderBy(entries, [entry => entry.name.toLowerCase().trim()], ['asc']);
+}

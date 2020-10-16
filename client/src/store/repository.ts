@@ -2,7 +2,7 @@ import create, { GetState, SetState } from 'zustand';
 import { getObjectChildren, getObjectChildrenForRoot } from '../pages/Repository/hooks/useRepository';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
-import { parseRepositoryTreeNodeId } from '../utils/repository';
+import { parseRepositoryTreeNodeId, sortEntriesAlphabetically } from '../utils/repository';
 
 type RepositoryStore = {
     isExpanded: boolean;
@@ -12,7 +12,17 @@ type RepositoryStore = {
     updateSearch: (value: string) => void;
     toggleFilter: () => void;
     repositoryRootType: eSystemObjectType[];
+    objectsToDisplay: number[];
     metadataToDisplay: eMetadata[];
+    units: number[];
+    projects: number[];
+    has: number;
+    missing: number;
+    captureMethod: number;
+    variantType: number;
+    modelPurpose: number;
+    modelFileType: number;
+    updateFilterValue: (name: string, value: number | number[]) => void;
     initializeTree: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
 };
@@ -25,7 +35,21 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
     loading: true,
     repositoryRootType: [eSystemObjectType.eUnit],
+    objectsToDisplay: [0],
     metadataToDisplay: [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName],
+    units: [0],
+    projects: [0],
+    has: 0,
+    missing: 0,
+    captureMethod: 0,
+    variantType: 0,
+    modelPurpose: 0,
+    modelFileType: 0,
+    updateFilterValue: (name: string, value: number | number[]): void => {
+        const { initializeTree } = get();
+        set({ [name]: value, loading: true });
+        initializeTree();
+    },
     updateSearch: (value: string): void => {
         set({ search: value });
     },
@@ -40,7 +64,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;
-            const entry: [string, NavigationResultEntry[]] = [treeRootKey, entries];
+            const sortedEntries = sortEntriesAlphabetically(entries);
+            const entry: [string, NavigationResultEntry[]] = [treeRootKey, sortedEntries];
             const updatedTree = new Map([entry]);
             set({ tree: updatedTree, loading: false });
         }
@@ -53,8 +78,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;
+            const sortedEntries = sortEntriesAlphabetically(entries);
             const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
-            updatedTree.set(nodeId, entries);
+            updatedTree.set(nodeId, sortedEntries);
             set({ tree: updatedTree });
         }
     }
