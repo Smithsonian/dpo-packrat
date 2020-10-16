@@ -87,7 +87,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 const StyledChip = withStyles(({ palette }) => ({
     outlined: {
         height: 30,
-        fontSize: '0.8em',
+        fontSize: '0.75em',
         border: `0.5px solid ${palette.primary.contrastText}`
     }
 }))(Chip);
@@ -142,6 +142,15 @@ function RepositoryFilterView(): React.ReactElement {
         </Box>
     );
 
+    let expandIcon: React.ReactNode = (
+        <FaChevronDown
+            className={classes.anchor}
+            size={15}
+            color={palette.primary.main}
+            onClick={toggleFilter}
+        />
+    );
+
     if (isExpanded) {
         content = (
             <React.Fragment>
@@ -172,6 +181,15 @@ function RepositoryFilterView(): React.ReactElement {
                 </Box>
             </React.Fragment>
         );
+
+        expandIcon = (
+            <FaChevronUp
+                className={classes.anchor}
+                size={15}
+                color={palette.primary.main}
+                onClick={toggleFilter}
+            />
+        );
     }
 
     return (
@@ -182,19 +200,7 @@ function RepositoryFilterView(): React.ReactElement {
             <Box className={classes.options}>
                 <Box display='flex' >
                     <FiLink2 className={classes.anchor} color={palette.primary.main} size={20} onClick={onCopyLink} />
-                    {isExpanded ?
-                        <FaChevronUp
-                            className={classes.anchor}
-                            size={15}
-                            color={palette.primary.main}
-                            onClick={toggleFilter}
-                        /> :
-                        <FaChevronDown
-                            className={classes.anchor}
-                            size={15}
-                            color={palette.primary.main}
-                            onClick={toggleFilter}
-                        />}
+                    {expandIcon}
                 </Box>
             </Box>
         </Box>
