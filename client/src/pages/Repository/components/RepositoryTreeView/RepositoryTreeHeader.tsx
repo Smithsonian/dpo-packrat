@@ -11,7 +11,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         height: 50,
         backgroundColor: palette.primary.light,
         borderRadius: 5,
-        margin: '0px 0px 5px 0px',
+        marginBottom: 5,
         position: 'sticky',
         top: 0,
         zIndex: 20,
@@ -66,4 +66,4 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
     );
 }
 
-export default RepositoryTreeHeader;
+export default React.memo(RepositoryTreeHeader);

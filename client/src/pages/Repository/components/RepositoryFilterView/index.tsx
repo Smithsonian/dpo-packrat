@@ -14,14 +14,14 @@ import FilterSelect from './FilterSelect';
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
         display: 'flex',
-        height: (isExpanded: boolean) => isExpanded ? 250 : 35,
+        height: (isExpanded: boolean) => isExpanded ? 235 : 35,
         background: palette.primary.light,
         borderRadius: 5,
         padding: 10,
         marginBottom: 10,
         transition: '250ms height ease',
         [breakpoints.down('lg')]: {
-            height: (isExpanded: boolean) => isExpanded ? 230 : 20,
+            height: (isExpanded: boolean) => isExpanded ? 215 : 30
         }
     },
     content: {
@@ -63,6 +63,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         width: 280,
         padding: '5px 8px',
         borderRadius: 5,
+        color: palette.primary.dark,
         backgroundColor: Colors.defaults.white,
         fontSize: '0.8em',
         cursor: 'pointer'
@@ -78,7 +79,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     options: {
         display: 'flex',
-        alignItems: 'flex-end',
+        alignItems: (isExpanded: boolean) => isExpanded ? 'flex-end' : 'center',
         justifyContent: 'center'
     }
 }));
@@ -115,39 +116,37 @@ function RepositoryFilterView(): React.ReactElement {
         }
     };
 
-    let content: React.ReactNode = null;
+    let content: React.ReactNode = (
+        <Box display='flex' alignItems='center'>
+            <Box className={classes.textArea}>
+                <Typography variant='body1'>Unit: All</Typography>
+            </Box>
+
+            {chips.map((chip, index: number) => {
+                const { type, name } = chip;
+                const handleDelete = () => null;
+                const label = `${type}: ${name}`;
+
+                return (
+                    <StyledChip
+                        key={index}
+                        label={label}
+                        size='small'
+                        deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
+                        className={classes.chip}
+                        onDelete={handleDelete}
+                        variant='outlined'
+                    />
+                );
+            })}
+        </Box>
+    );
 
     if (isExpanded) {
         content = (
             <React.Fragment>
-                <Box display='flex'>
-                    <Box display='flex' flexDirection='column'>
-                        <Box className={classes.textArea}>
-                            <Typography variant='body1'>Unit: All</Typography>
-                        </Box>
-                        <Typography className={classes.caption} variant='caption'>click to select</Typography>
-                    </Box>
-
-                    {chips.map((chip, index: number) => {
-                        const { type, name } = chip;
-                        const handleDelete = () => null;
-                        const label = `${type}: ${name}`;
-
-                        return (
-                            <StyledChip
-                                key={index}
-                                label={label}
-                                size='small'
-                                deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
-                                className={classes.chip}
-                                onDelete={handleDelete}
-                                variant='outlined'
-                            />
-                        );
-                    })}
-                </Box>
-
-                <Box display='flex' flex={1} mt={1}>
+                {content}
+                <Box display='flex' flex={1} mt={2}>
                     <Box className={classes.selectContainer} width={300}>
                         <FilterSelect multiple label='Repository Root Type' name='repositoryRootType' options={repositoryRootTypes} />
                         <FilterSelect multiple label='Objects To Display' name='objectsToDisplay' options={mockOptions} />

@@ -15,13 +15,13 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        maxHeight: (isExpanded: boolean) => isExpanded ? '60vh' : '82vh',
+        maxHeight: (isExpanded: boolean) => isExpanded ? '62vh' : '82vh',
         maxWidth: '85vw',
         flexDirection: 'column',
         overflow: 'auto',
         transition: '250ms height ease',
         [breakpoints.down('lg')]: {
-            maxHeight: (isExpanded: boolean) => isExpanded ? '50vh' : '80vh',
+            maxHeight: (isExpanded: boolean) => isExpanded ? '54vh' : '79vh',
             maxWidth: '81.5vw'
         }
     },
@@ -111,4 +111,4 @@ function RepositoryTreeView(): React.ReactElement {
     );
 }
 
-export default RepositoryTreeView;
+export default React.memo(RepositoryTreeView);

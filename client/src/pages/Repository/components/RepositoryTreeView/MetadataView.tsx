@@ -66,4 +66,4 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
     );
 }
 
-export default MetadataView;
+export default React.memo(MetadataView);
