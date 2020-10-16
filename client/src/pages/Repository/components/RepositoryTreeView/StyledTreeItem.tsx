@@ -58,4 +58,4 @@ const StyledTreeItem = withStyles(({ palette, typography, breakpoints }: Theme) 
     }
 }))((props: TreeItemProps & StyledTreeItemProps) => <TreeItem {...props} />);
 
-export default StyledTreeItem;
+export default React.memo(StyledTreeItem);

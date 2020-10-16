@@ -104,4 +104,4 @@ export function TreeLabelEmpty(props: TreeLabelEmptyProps): React.ReactElement {
     );
 }
 
-export default TreeLabel;
+export default React.memo(TreeLabel);
