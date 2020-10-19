@@ -13,7 +13,7 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints }) => ({
         flexDirection: 'column',
         marginTop: 20,
         maxHeight: 'auto',
-        width: '50vw',
+        width: '52vw',
     },
     list: {
         display: 'flex',
