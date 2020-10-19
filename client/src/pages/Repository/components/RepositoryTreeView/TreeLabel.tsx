@@ -1,6 +1,7 @@
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
-import React from 'react';
+import lodash from 'lodash';
+import React, { useMemo } from 'react';
 import { Progress } from '../../../../components';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import MetadataView, { TreeViewColumn } from './MetadataView';
@@ -40,7 +41,7 @@ interface TreeLabelProps {
 function TreeLabel(props: TreeLabelProps): React.ReactElement {
     const { label, treeColumns, objectType } = props;
     const classes = useStyles(props);
-    const objectTitle = `${getTermForSystemObjectType(objectType)} ${label}`;
+    const objectTitle = useMemo(() => `${getTermForSystemObjectType(objectType)} ${label}`, [objectType, label]);
 
     return (
         <div className={classes.container}>
@@ -104,4 +105,4 @@ export function TreeLabelEmpty(props: TreeLabelEmptyProps): React.ReactElement {
     );
 }
 
-export default React.memo(TreeLabel);
+export default React.memo(TreeLabel, lodash.isEqual);

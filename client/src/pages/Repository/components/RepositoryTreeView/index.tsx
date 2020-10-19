@@ -59,7 +59,7 @@ function RepositoryTreeView(): React.ReactElement {
             let childNodesContent: React.ReactNode = <TreeLabelLoading />;
 
             if (childNodes) {
-                if (childNodes.length > 0) {
+                if (childNodes.length) {
                     childNodesContent = renderTree(childNodes);
                 } else {
                     childNodesContent = <TreeLabelEmpty label={name} objectType={objectType} />;
@@ -70,13 +70,15 @@ function RepositoryTreeView(): React.ReactElement {
             const { icon, color } = getObjectInterfaceDetails(objectType, variant);
             const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
 
+            const label: React.ReactNode = <TreeLabel label={name} objectType={objectType} color={color} treeColumns={treeColumns} />;
+
             return (
                 <StyledTreeItem
                     key={idSystemObject}
                     nodeId={nodeId}
                     icon={icon}
                     color={color}
-                    label={<TreeLabel label={name} objectType={objectType} color={color} treeColumns={treeColumns} />}
+                    label={label}
                 >
                     {childNodesContent}
                 </StyledTreeItem>
