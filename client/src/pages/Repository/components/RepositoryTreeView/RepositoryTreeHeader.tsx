@@ -1,6 +1,7 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
+import { useControlStore } from '../../../../store';
 import { eMetadata } from '../../../../types/server';
 import { getTreeViewColumns, getTreeWidth } from '../../../../utils/repository';
 import MetadataView from './MetadataView';
@@ -53,8 +54,9 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
     const { metadataColumns } = props;
     const classes = useStyles();
 
+    const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
     const treeColumns = getTreeViewColumns(metadataColumns, true);
-    const width = getTreeWidth(treeColumns.length);
+    const width = getTreeWidth(treeColumns.length, sideBarExpanded);
 
     return (
         <Box className={classes.container} style={{ width }}>
