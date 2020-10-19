@@ -1,4 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
+import lodash from 'lodash';
 import React from 'react';
 import { eMetadata } from '../../../../types/server';
 import { computeMetadataViewWidth, trimmedMetadataField } from '../../../../utils/repository';
@@ -66,4 +67,4 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
     );
 }
 
-export default React.memo(MetadataView);
+export default React.memo(MetadataView, lodash.isEqual);
