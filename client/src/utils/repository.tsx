@@ -58,7 +58,7 @@ export function getTermForSystemObjectType(objectType: eSystemObjectType): strin
     }
 }
 
-export function getRepositoryTreeNodeId(idSystemObject: number, idObject: number, objectType: eSystemObjectType): string {
+export function getRepositoryTreeNodeId(idSystemObject: number, objectType: eSystemObjectType, idObject: number): string {
     return `${idSystemObject}-${eSystemObjectType[objectType]}-${idObject}`;
 }
 
