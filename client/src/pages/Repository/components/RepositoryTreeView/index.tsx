@@ -2,7 +2,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Loader } from '../../../../components';
 import { treeRootKey, useRepositoryStore } from '../../../../store';
 import { NavigationResultEntry } from '../../../../types/graphql';
@@ -33,7 +33,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
 }));
 
 function RepositoryTreeView(): React.ReactElement {
-    const [loading, isExpanded] = useRepositoryStore(state => [state.loading, state.isExpanded]);
+    const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const classes = useStyles(isExpanded);
 
     const [tree, initializeTree, getChildren] = useRepositoryStore(state => [state.tree, state.initializeTree, state.getChildren]);
@@ -43,13 +43,13 @@ function RepositoryTreeView(): React.ReactElement {
         initializeTree();
     }, [initializeTree]);
 
-    const onNodeToggle = async (_, nodeIds: string[]) => {
+    const onNodeToggle = useCallback(async (_, nodeIds: string[]) => {
         if (!nodeIds.length) return;
         const [nodeId] = nodeIds.slice();
         getChildren(nodeId);
-    };
+    }, [getChildren]);
 
-    const renderTree = (children: NavigationResultEntry[] | undefined) => {
+    const renderTree = useCallback((children: NavigationResultEntry[] | undefined) => {
         if (!children) return null;
         return children.map((child: NavigationResultEntry, index: number) => {
             const { idSystemObject, objectType, idObject, name, metadata } = child;
@@ -82,13 +82,14 @@ function RepositoryTreeView(): React.ReactElement {
                 </StyledTreeItem>
             );
         });
-    };
+    }, [tree, metadataColumns]);
 
     let content: React.ReactNode = <Loader maxWidth='85vw' size={20} />;
 
     if (!loading) {
         const treeColumns = getTreeViewColumns(metadataColumns, false);
         const width = getTreeWidth(treeColumns.length);
+        const children = tree.get(treeRootKey);
 
         content = (
             <TreeView
@@ -99,7 +100,7 @@ function RepositoryTreeView(): React.ReactElement {
                 style={{ width }}
             >
                 <RepositoryTreeHeader metadataColumns={metadataColumns} />
-                {renderTree(tree.get(treeRootKey))}
+                {renderTree(children)}
             </TreeView>
         );
     }

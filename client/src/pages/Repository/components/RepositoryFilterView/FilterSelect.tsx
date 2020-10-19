@@ -40,7 +40,13 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
     const [value, updateFilterValue] = useRepositoryStore(state => [state[name], state.updateFilterValue]);
 
     const onChange = ({ target }) => {
-        updateFilterValue(name, target.value);
+        let { value } = target;
+
+        if (multiple) {
+            value = value.sort();
+        }
+
+        updateFilterValue(name, value);
     };
 
     const inputProps = {
