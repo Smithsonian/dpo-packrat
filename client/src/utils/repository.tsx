@@ -112,13 +112,21 @@ export function generateRepositoryUrl(filter: RepositoryFilter): string {
     return `${HOME_ROUTES.REPOSITORY}?${qs.stringify(queryResult)}`;
 }
 
-export function getTreeWidth(columnSize: number): string {
-    const width = 50 + columnSize * 10;
-    if (width <= 80) {
-        return '85vw';
+export function getTreeWidth(columnSize: number, sideBarExpanded: boolean): string {
+    const computedWidth = 50 + columnSize * 10;
+    const isXLScreen = window.innerWidth >= 1600;
+
+    if (computedWidth <= 80) {
+        if (isXLScreen) {
+            if (sideBarExpanded) return '85vw';
+            return '93vw';
+        } else {
+            if (sideBarExpanded) return '81.5vw';
+            return '91vw';
+        }
     }
 
-    return `${width}vw`;
+    return `${computedWidth}vw`;
 }
 
 export function getTreeColorVariant(index: number): RepositoryColorVariant {
@@ -127,7 +135,7 @@ export function getTreeColorVariant(index: number): RepositoryColorVariant {
 
 export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boolean, values?: string[]): TreeViewColumn[] {
     const treeColumns: TreeViewColumn[] = [];
-    const MIN_SIZE = 10;
+    const MIN_SIZE = 5;
 
     metadataColumns.forEach((metadataColumn, index: number) => {
         const treeColumn: TreeViewColumn = {
@@ -143,11 +151,12 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
 
             case eMetadata.eSubjectIdentifier:
                 if (isHeader) treeColumn.label = 'Subject';
-                treeColumn.size = MIN_SIZE * 2;
+                treeColumn.size = MIN_SIZE * 3;
                 break;
 
             case eMetadata.eItemName:
                 if (isHeader) treeColumn.label = 'Item';
+                treeColumn.size = MIN_SIZE * 3;
                 break;
 
             default:
