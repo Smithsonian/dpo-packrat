@@ -41,7 +41,8 @@
     "postinstall": "lerna run postinstall",
     "lint": "yarn eslint --ext .js,.jsx,.ts,.tsx .",
     "lint:fix": "yarn prettier --write . && yarn lint --fix",
-    "test": "yarn workspaces run test"
+    "test": "yarn workspaces run test",
+    "test:e2e": "cd e2e && yarn test"
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "4.1.0",
