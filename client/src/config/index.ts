@@ -10,3 +10,4 @@ const Config = {
 };
 
 export default Config;
+export * from './test.selectors';

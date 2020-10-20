@@ -1,4 +1,5 @@
 import playwright, { ChromiumBrowser, ChromiumBrowserContext, LaunchOptions, Page } from 'playwright';
+import { Selectors } from '../client/src/config';
 
 class E2ETestUtils {
     public page: Page | null = null;
@@ -33,6 +34,25 @@ class E2ETestUtils {
     private async afterEach(): Promise<void> {
         await this.browser?.close();
     }
+
+    public login = async (): Promise<void> => {
+        if (!this.page) {
+            throw new Error('E2E tests: page was not initialized');
+        }
+
+        const TEST_USER_EMAIL: string = 'karan.pratapsingh686@gmail.com';
+        const TEST_USER_PASSWORD: string = 'karan.pratapsingh686@gmail.com';
+
+        await this.page.type(ID(Selectors.AUTH.EMAIL_FIELD), TEST_USER_EMAIL);
+        await this.page.type(ID(Selectors.AUTH.PASSWORD_FIELD), TEST_USER_PASSWORD);
+        await this.page.click(ID(Selectors.AUTH.LOGIN_BUTTON));
+        await this.page.waitForNavigation({
+            timeout: 20000,
+            waitUntil: 'domcontentloaded'
+        });
+    };
 }
 
-export default E2ETestUtils;
+const ID = (selector: string): string => `#${selector}`;
+
+export { E2ETestUtils as default, Selectors, ID };
