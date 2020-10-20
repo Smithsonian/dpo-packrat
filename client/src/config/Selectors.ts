@@ -1,3 +1,9 @@
+/**
+ * Selectors
+ *
+ * These are the selectors for various elements in the client,
+ * and are shared with E2E testing
+ */
 const Selectors = {
     AUTH: {
         EMAIL_FIELD: 'auth-email-field',
