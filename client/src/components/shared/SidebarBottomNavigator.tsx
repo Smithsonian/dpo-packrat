@@ -11,13 +11,10 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
-        width: '51vw',
+        width: '53vw',
         padding: '20px 0px',
-        marginLeft: 40,
+        marginLeft: 20,
         background: palette.background.paper,
-        [breakpoints.down('lg')]: {
-            marginLeft: 20
-        }
     },
     navButton: {
         minHeight: 35,

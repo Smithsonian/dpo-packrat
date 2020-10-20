@@ -13,7 +13,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         alignItems: 'center',
         justifyContent: 'center',
         height: '20vh',
-        width: '50vw',
+        width: '52vw',
         border: `1px dashed ${palette.primary.main}`,
         borderRadius: 10,
         padding: 10,

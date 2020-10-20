@@ -13,7 +13,7 @@ import UploadCompleteList from './UploadCompleteList';
 import UploadFilesPicker from './UploadFilesPicker';
 import UploadList from './UploadList';
 
-const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -25,12 +25,8 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        padding: 40,
+        padding: 20,
         paddingBottom: 0,
-        [breakpoints.down('lg')]: {
-            padding: 20,
-            paddingBottom: 0,
-        }
     },
     fileDrop: {
         display: 'flex',
@@ -115,7 +111,7 @@ function Uploads(): React.ReactElement {
         }
     };
 
-    let content: React.ReactNode = <Loader minHeight='60vh' />;
+    let content: React.ReactNode = <Loader maxWidth='55vw' minHeight='60vh' />;
 
     if (!loadingVocabulary) {
         content = (

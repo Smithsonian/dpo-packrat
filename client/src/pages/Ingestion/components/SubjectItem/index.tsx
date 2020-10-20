@@ -11,7 +11,7 @@ import ProjectList from './ProjectList';
 import SearchList from './SearchList';
 import SubjectList from './SubjectList';
 
-const useStyles = makeStyles(({ palette, breakpoints }) => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -22,14 +22,10 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     content: {
         display: 'flex',
         flex: 1,
-        width: '50vw',
+        width: '52vw',
         flexDirection: 'column',
-        padding: 40,
-        paddingBottom: 0,
-        [breakpoints.down('lg')]: {
-            padding: 20,
-            paddingBottom: 0,
-        }
+        padding: 20,
+        paddingBottom: 0
     },
     filesLabel: {
         color: palette.primary.dark,

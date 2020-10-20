@@ -5,7 +5,7 @@ import React from 'react';
 
 const useStyles = makeStyles(() => ({
     container: {
-        animationDuration: '750ms'
+        animationDuration: '650ms'
     }
 }));
 
