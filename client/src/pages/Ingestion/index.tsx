@@ -37,11 +37,12 @@ function Ingestion(): React.ReactElement {
                 enabled: false
             });
 
-            metadatas.forEach(({ file: { name } }) => {
+            metadatas.forEach(({ file: { id, name, type } }) => {
+                const route = `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`;
                 updatedOptions.push({
                     title: 'Metadata',
                     subtitle: name,
-                    route: INGESTION_ROUTE.ROUTES.METADATA,
+                    route,
                     enabled: false
                 });
             });

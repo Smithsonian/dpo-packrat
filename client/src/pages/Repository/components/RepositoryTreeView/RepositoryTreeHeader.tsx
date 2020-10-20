@@ -1,9 +1,10 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
+import { useControlStore } from '../../../../store';
 import { eMetadata } from '../../../../types/server';
 import { getTreeViewColumns, getTreeWidth } from '../../../../utils/repository';
-import { MetadataView } from './StyledTreeItem';
+import MetadataView from './MetadataView';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -11,7 +12,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         height: 50,
         backgroundColor: palette.primary.light,
         borderRadius: 5,
-        margin: '0px 0px 5px 0px',
+        marginBottom: 5,
         position: 'sticky',
         top: 0,
         zIndex: 20,
@@ -53,8 +54,9 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
     const { metadataColumns } = props;
     const classes = useStyles();
 
+    const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
     const treeColumns = getTreeViewColumns(metadataColumns, true);
-    const width = getTreeWidth(treeColumns.length);
+    const width = getTreeWidth(treeColumns.length, sideBarExpanded);
 
     return (
         <Box className={classes.container} style={{ width }}>
@@ -66,4 +68,4 @@ function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElem
     );
 }
 
-export default RepositoryTreeHeader;
+export default React.memo(RepositoryTreeHeader);

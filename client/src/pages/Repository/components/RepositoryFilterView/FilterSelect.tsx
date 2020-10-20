@@ -1,6 +1,7 @@
 import { Box, MenuItem, Select, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
+import { useRepositoryStore } from '../../../../store';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     label: {
@@ -28,15 +29,24 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
 interface FilterSelectProps {
     label: string;
     name: string;
+    options: number[];
+    multiple?: boolean;
 }
 
 function FilterSelect(props: FilterSelectProps): React.ReactElement {
-    const { label, name } = props;
-
+    const { label, name, multiple, options } = props;
     const classes = useStyles();
 
-    const onChange = (v) => {
-        console.log(v);
+    const [value, updateFilterValue] = useRepositoryStore(state => [state[name], state.updateFilterValue]);
+
+    const onChange = ({ target }) => {
+        let { value } = target;
+
+        if (multiple) {
+            value = value.sort();
+        }
+
+        updateFilterValue(name, value);
     };
 
     const inputProps = {
@@ -49,14 +59,15 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
         <Box display='flex' alignItems='center' justifyContent='space-between' mb={1}>
             <Typography className={classes.label}>{label}</Typography>
             <Select
-                value={0}
+                value={value}
+                multiple={multiple || false}
                 className={classes.select}
                 name={name}
                 onChange={onChange}
                 disableUnderline
                 inputProps={inputProps}
             >
-                {[0, 1, 2, 3].map((v, index) => <MenuItem key={index} value={v}>{v}</MenuItem>)}
+                {options.map((v, index) => <MenuItem key={index} value={v}>{v}</MenuItem>)}
             </Select>
         </Box>
     );

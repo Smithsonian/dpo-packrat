@@ -57,11 +57,10 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
         cursor: 'pointer'
     },
     addIdentifier: {
-        color: palette.background.paper,
+        height: 30,
         width: 80,
-        [breakpoints.down('lg')]: {
-            fontSize: '0.8em',
-        }
+        fontSize: '0.8em',
+        color: palette.background.paper,
     }
 }));
 
@@ -117,7 +116,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                                 >
                                     {identifierTypes.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                 </Select>
-                                <MdRemoveCircleOutline className={classes.identifierOption} onClick={remove} size={35} />
+                                <MdRemoveCircleOutline className={classes.identifierOption} onClick={remove} size={30} />
                             </Box>
                         );
                     })}

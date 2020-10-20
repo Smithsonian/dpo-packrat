@@ -11,7 +11,7 @@ import { FileId, StateItem, StateMetadata, StateProject, useItemStore, useMetada
 import useIngest from '../../hooks/useIngest';
 import Photogrammetry from './Photogrammetry';
 
-const useStyles = makeStyles(({ palette, breakpoints }) => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         flex: 1,
@@ -23,13 +23,9 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        width: '50vw',
-        padding: 40,
-        paddingBottom: 0,
-        [breakpoints.down('lg')]: {
-            padding: 20,
-            paddingBottom: 0,
-        }
+        width: '52vw',
+        padding: 20,
+        paddingBottom: 0
     },
     breadcrumbs: {
         marginBottom: 10,
