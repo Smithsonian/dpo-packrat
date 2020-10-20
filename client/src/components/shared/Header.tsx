@@ -6,6 +6,7 @@ import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Logo from '../../assets/images/logo-packrat.square.png';
+import { Selectors } from '../../config';
 import { HOME_ROUTES, resolveRoute, ROUTES } from '../../constants';
 import { useRepositoryStore, useUserStore } from '../../store';
 import { Colors } from '../../theme';
@@ -136,7 +137,7 @@ function Header(): React.ReactElement {
                     <IoIosNotifications size={25} color={Colors.defaults.white} />
                 </NavOption>
                 <NavOption onClick={onLogout}>
-                    <IoIosLogOut size={25} color={Colors.defaults.white} />
+                    <IoIosLogOut id={Selectors.AUTH.LOGOUT_BUTTON} size={25} color={Colors.defaults.white} />
                 </NavOption>
             </Box>
         </Box>
