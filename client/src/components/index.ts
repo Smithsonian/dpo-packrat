@@ -11,5 +11,6 @@ import Progress from './shared/Progress';
 import SidebarBottomNavigator from './shared/SidebarBottomNavigator';
 import LoadingButton from './controls/LoadingButton';
 import RepositoryIcon from './controls/RepositoryIcon';
+import ErrorBoundary from './shared/ErrorBoundary';
 
-export { Header, PrivateRoute, PublicRoute, FieldType, LoadingButton, Loader, Progress, SidebarBottomNavigator, RepositoryIcon };
+export { Header, PrivateRoute, PublicRoute, FieldType, LoadingButton, Loader, Progress, SidebarBottomNavigator, RepositoryIcon, ErrorBoundary };
