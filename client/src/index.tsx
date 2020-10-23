@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Loader, PrivateRoute, PublicRoute } from './components';
+import { ErrorBoundary, Loader, PrivateRoute, PublicRoute } from './components';
 import { ROUTES } from './constants';
 import './global/root.css';
 import { apolloClient } from './graphql';
@@ -32,7 +32,7 @@ function AppRouter(): React.ReactElement {
 
     if (!loading) {
         content = (
-            <React.Fragment>
+            <ErrorBoundary>
                 <Switch>
                     <PublicRoute restricted exact path={ROUTES.LOGIN} component={Login} />
                     <PublicRoute exact path={ROUTES.ABOUT} component={About} />
@@ -42,7 +42,7 @@ function AppRouter(): React.ReactElement {
                         </AliveScope>
                     </PrivateRoute>
                 </Switch>
-            </React.Fragment>
+            </ErrorBoundary>
         );
     }
 
