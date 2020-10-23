@@ -7,7 +7,7 @@ import { useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import LoginBackground from '../../assets/images/login-background.png';
 import { LoadingButton } from '../../components';
-import Config from '../../config';
+import Config, { Selectors } from '../../config';
 import { ROUTES } from '../../constants';
 import { useUserStore } from '../../store';
 import { actionOnKeyPress } from '../../utils/shared';
@@ -141,6 +141,7 @@ function Login(): React.ReactElement {
                         {({ handleSubmit, handleChange, values, isSubmitting, submitForm }) => (
                             <form className={classes.loginForm} onSubmit={handleSubmit}>
                                 <Field
+                                    id={Selectors.AUTH.EMAIL_FIELD}
                                     value={values.email}
                                     onChange={handleChange}
                                     className={classes.textFields}
@@ -153,6 +154,7 @@ function Login(): React.ReactElement {
                                     variant='outlined'
                                 />
                                 <Field
+                                    id={Selectors.AUTH.PASSWORD_FIELD}
                                     value={values.password}
                                     onChange={handleChange}
                                     className={classes.textFields}
@@ -165,6 +167,7 @@ function Login(): React.ReactElement {
                                     variant='outlined'
                                 />
                                 <LoadingButton
+                                    id={Selectors.AUTH.LOGIN_BUTTON}
                                     type='submit'
                                     className={classes.loginButton}
                                     disableElevation
