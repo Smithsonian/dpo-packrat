@@ -31,12 +31,12 @@ interface UseIngest {
 }
 
 function useIngest(): UseIngest {
-    const [{ removeSelectedUploads }, resetUploads] = useUploadStore(state => [state, state.reset]);
-    const [{ subjects }, resetSubjects] = useSubjectStore(state => [state, state.reset]);
-    const [{ getSelectedProject }, resetProjects] = useProjectStore(state => [state, state.reset]);
-    const [{ getSelectedItem }, resetItems] = useItemStore(state => [state, state.reset]);
-    const [{ metadatas, getSelectedIdentifiers }, resetMetadatas] = useMetadataStore(state => [state, state.reset]);
-    const { getAssetType } = useVocabularyStore();
+    const [removeSelectedUploads, resetUploads] = useUploadStore(state => [state.removeSelectedUploads, state.reset]);
+    const [subjects, resetSubjects] = useSubjectStore(state => [state.subjects, state.reset]);
+    const [getSelectedProject, resetProjects] = useProjectStore(state => [state.getSelectedProject, state.reset]);
+    const [getSelectedItem, resetItems] = useItemStore(state => [state.getSelectedItem, state.reset]);
+    const [metadatas, getSelectedIdentifiers, resetMetadatas] = useMetadataStore(state => [state.metadatas, state.getSelectedIdentifiers, state.reset]);
+    const getAssetType = useVocabularyStore(state => state.getAssetType);
 
     const history = useHistory();
 
