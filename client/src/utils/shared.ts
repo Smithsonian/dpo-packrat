@@ -1,3 +1,8 @@
+/**
+ * Shared utilities
+ *
+ * Shared utilities for components, functionality.
+ */
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
 export const actionOnKeyPress = (key: string, actionKey: string, func: () => void): void => {

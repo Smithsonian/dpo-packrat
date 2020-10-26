@@ -1,3 +1,8 @@
+/**
+ * Upload utilities
+ *
+ * Utils for upload specific components, functionality.
+ */
 import randomize from 'randomatic';
 
 export function formatBytes(bytes: number, decimals: number = 2): string {

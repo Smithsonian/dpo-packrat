@@ -1,3 +1,9 @@
+/**
+ * Typography
+ *
+ * Material UI typography overrides for packrat client.
+ * https://material-ui.com/customization/breakpoints
+ */
 import { grey } from '@material-ui/core/colors';
 import { Breakpoints } from '@material-ui/core/styles/createBreakpoints';
 import { Overrides } from '@material-ui/core/styles/overrides';
@@ -6,7 +12,6 @@ function pxToRem(value: number): string {
     return `${value / 16}rem`;
 }
 
-// https://material-ui.com/customization/breakpoints/
 function createTypographyOverrides(breakpoints: Breakpoints): Overrides {
     return {
         MuiTableCell: {
