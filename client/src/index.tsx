@@ -16,7 +16,7 @@ import { ErrorBoundary, Loader, PrivateRoute, PublicRoute } from './components';
 import { ROUTES } from './constants';
 import './global/root.css';
 import { apolloClient } from './graphql';
-import { About, Home, Login } from './pages';
+import { Home, Login } from './pages';
 import * as serviceWorker from './serviceWorker';
 import { useUserStore } from './store';
 import theme from './theme';
@@ -41,7 +41,6 @@ function AppRouter(): React.ReactElement {
             <ErrorBoundary>
                 <Switch>
                     <PublicRoute restricted exact path={ROUTES.LOGIN} component={Login} />
-                    <PublicRoute exact path={ROUTES.ABOUT} component={About} />
                     <PrivateRoute path={ROUTES.HOME}>
                         <AliveScope>
                             <Home />
