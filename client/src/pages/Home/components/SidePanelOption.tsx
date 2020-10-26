@@ -1,3 +1,8 @@
+/**
+ * SidePanelOption
+ *
+ * This component renders options for collapsable SidePanel in then homepage UI.
+ */
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles, fade } from '@material-ui/core/styles';
 import React, { memo } from 'react';

@@ -1,3 +1,8 @@
+/**
+ * RepositoryFilterView
+ *
+ * This component renders repository filter view for the Repository UI.
+ */
 import { Box, Chip, Typography } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';

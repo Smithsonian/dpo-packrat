@@ -1,3 +1,8 @@
+/**
+ * FieldType
+ *
+ * This component wraps content and highlights it as required field or not.
+ */
 import { Box, BoxProps, PropTypes, Typography } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';

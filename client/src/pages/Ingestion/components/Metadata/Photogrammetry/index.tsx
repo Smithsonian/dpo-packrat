@@ -1,4 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/**
+ * Metadata - Photogrammetry
+ *
+ * This component renders the metadata fields specific to photogrammetry asset.
+ */
 import DateFnsUtils from '@date-io/date-fns';
 import { Box, Checkbox, Typography } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';

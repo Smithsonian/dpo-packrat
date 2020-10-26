@@ -1,4 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/**
+ * Uploads
+ *
+ * This component renders the upload specific components for Ingestion UI.
+ */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';

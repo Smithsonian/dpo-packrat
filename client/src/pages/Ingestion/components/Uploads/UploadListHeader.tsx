@@ -1,3 +1,8 @@
+/**
+ * UploadListHeader
+ *
+ * This component renders upload list header for FileList component.
+ */
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';

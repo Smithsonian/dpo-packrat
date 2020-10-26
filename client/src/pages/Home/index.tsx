@@ -1,3 +1,9 @@
+/**
+ * Home
+ *
+ * This component renders Home page UI and all the sub routes like Dashboard, Ingestion,
+ * Repository, Workflow.
+ */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';

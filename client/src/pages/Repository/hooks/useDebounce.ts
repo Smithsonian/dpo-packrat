@@ -1,4 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/**
+ * Debounce hook
+ *
+ * This custom hook provides de-bouncing functionality.
+ */
 import { useState, useEffect } from 'react';
 
 export default function useDebounce<T>(value: T, delay: number): T {

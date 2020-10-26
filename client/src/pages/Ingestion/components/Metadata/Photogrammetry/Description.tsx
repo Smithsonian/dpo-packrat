@@ -1,3 +1,8 @@
+/**
+ * Description
+ *
+ * This component renders description field used in photogrammetry metadata component.
+ */
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';

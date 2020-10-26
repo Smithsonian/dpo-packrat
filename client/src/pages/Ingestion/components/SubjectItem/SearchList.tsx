@@ -1,3 +1,8 @@
+/**
+ * SearchList
+ *
+ * This component renders search list used in SubjectItem component.
+ */
 import { useLazyQuery } from '@apollo/client';
 import { Box, TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';

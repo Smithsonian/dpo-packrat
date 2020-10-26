@@ -1,6 +1,7 @@
 /**
  * PublicRoute
- * Renders a route based on authentication and restriction specified
+ *
+ * Renders a route based on authentication and restriction specified.
  */
 import React from 'react';
 import { Redirect, Route, RouteProps } from 'react-router-dom';

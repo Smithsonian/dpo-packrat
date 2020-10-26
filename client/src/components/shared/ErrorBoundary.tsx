@@ -1,4 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * ErrorBoundary
+ *
+ * This component catch errors during rendering, in lifecycle methods,
+ * and in constructors of the whole tree below them.
+ */
 import { Box, Button, Typography } from '@material-ui/core';
 import { Theme, withStyles } from '@material-ui/core/styles';
 import React, { Component } from 'react';

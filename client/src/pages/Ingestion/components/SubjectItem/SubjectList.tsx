@@ -1,3 +1,8 @@
+/**
+ * SubjectList
+ *
+ * This component renders subject list table used in SubjectItem component.
+ */
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';

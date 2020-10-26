@@ -1,3 +1,8 @@
+/**
+ * IdentifierList
+ *
+ * This component renders identifier list used in photogrammetry metadata component.
+ */
 import { Box, Button, Checkbox, MenuItem, Select } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';

@@ -1,3 +1,9 @@
+/**
+ * RepositoryTreeView
+ *
+ * This component renders repository tree view along with metadata view
+ * for the Repository UI.
+ */
 import { makeStyles } from '@material-ui/core/styles';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';

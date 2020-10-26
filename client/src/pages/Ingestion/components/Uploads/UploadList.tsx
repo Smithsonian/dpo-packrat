@@ -1,3 +1,8 @@
+/**
+ * UploadList
+ *
+ * This component renders upload list for pending files only.
+ */
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
