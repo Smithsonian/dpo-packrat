@@ -1,3 +1,8 @@
+/**
+ * User Store
+ *
+ * This store manages state for user.
+ */
 import create, { SetState, GetState } from 'zustand';
 import { User, GetCurrentUserDocument } from '../types/graphql';
 import { apolloClient } from '../graphql';

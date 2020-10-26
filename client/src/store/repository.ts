@@ -1,3 +1,8 @@
+/**
+ * Repository Store
+ *
+ * This store manages state for Repository filter and tree view.
+ */
 import create, { GetState, SetState } from 'zustand';
 import { getObjectChildren, getObjectChildrenForRoot } from '../pages/Repository/hooks/useRepository';
 import { NavigationResultEntry } from '../types/graphql';

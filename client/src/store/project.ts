@@ -1,3 +1,8 @@
+/**
+ * Project Store
+ *
+ * This store manages state for project used in Ingestion flow.
+ */
 import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 

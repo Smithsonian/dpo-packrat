@@ -1,3 +1,8 @@
+/**
+ * Metadata Store
+ *
+ * This store manages state for metadata used in Ingestion flow.
+ */
 import { ApolloQueryResult } from '@apollo/client';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';

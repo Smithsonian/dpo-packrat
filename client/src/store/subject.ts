@@ -1,3 +1,8 @@
+/**
+ * Subject Store
+ *
+ * This store manages state for subject used in Ingestion flow.
+ */
 import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import { ApolloQueryResult } from '@apollo/client';
