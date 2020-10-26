@@ -1,4 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Repository utilities
+ *
+ * Utilities for components associated with Repository UI.
+ */
 import lodash from 'lodash';
 import * as qs from 'query-string';
 import React from 'react';

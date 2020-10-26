@@ -1,4 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * GraphQL Client
+ *
+ * This file configures and exports apollo client and apollo uploader client.
+ */
 import { ApolloClient, InMemoryCache, NormalizedCacheObject } from '@apollo/client';
 import { createUploadLink } from 'apollo-upload-client';
 import { apolloFetch } from './utils';

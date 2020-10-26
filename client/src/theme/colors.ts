@@ -1,3 +1,8 @@
+/**
+ * Colors
+ *
+ * Custom colors used in client.
+ */
 import { eSystemObjectType } from '../types/server';
 
 type ColorMap = { [key: string]: string };

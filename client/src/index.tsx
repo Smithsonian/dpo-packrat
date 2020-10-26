@@ -1,3 +1,9 @@
+/**
+ * Packrat Client
+ *
+ * This is the root component of the client where we mount apollo, theme provider and
+ * router.
+ */
 import { ApolloProvider } from '@apollo/client';
 import { ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
