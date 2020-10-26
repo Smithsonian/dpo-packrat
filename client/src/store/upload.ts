@@ -1,3 +1,8 @@
+/**
+ * Upload Store
+ *
+ * This store manages state for file uploads used in Ingestion flow.
+ */
 import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';

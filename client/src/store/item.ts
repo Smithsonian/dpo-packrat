@@ -1,3 +1,8 @@
+/**
+ * Item Store
+ *
+ * This store manages state for items used in Ingestion flow.
+ */
 import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 

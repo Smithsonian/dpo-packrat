@@ -1,3 +1,8 @@
+/**
+ * Vocabulary Store
+ *
+ * This store manages state for vocabularies used in Ingestion flow.
+ */
 import create, { SetState, GetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';

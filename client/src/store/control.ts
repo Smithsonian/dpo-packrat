@@ -1,3 +1,8 @@
+/**
+ * Control Store
+ *
+ * This store manages state for root level sidebar.
+ */
 import create, { SetState } from 'zustand';
 
 type ControlStore = {

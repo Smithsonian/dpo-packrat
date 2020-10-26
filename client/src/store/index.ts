@@ -1,3 +1,8 @@
+/**
+ * Store
+ *
+ * This file exports all the client side stores.
+ */
 export * from './user';
 export * from './vocabulary';
 export * from './upload';
