@@ -1,3 +1,8 @@
+/**
+ * RepositoryIcon
+ *
+ * This component renders the icons for the repository tree view item.
+ */
 import React from 'react';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';

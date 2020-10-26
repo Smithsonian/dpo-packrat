@@ -1,3 +1,8 @@
+/**
+ * StyledTreeItem
+ *
+ * This component renders a custom tree item for RepositoryTreeView.
+ */
 import { fade, Theme, withStyles } from '@material-ui/core/styles';
 import { TreeItem, TreeItemProps } from '@material-ui/lab';
 import React from 'react';

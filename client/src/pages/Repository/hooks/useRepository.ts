@@ -1,3 +1,8 @@
+/**
+ * Repository hook
+ *
+ * This custom hook provides reusable functions for getting repository tree data.
+ */
 import { ApolloQueryResult } from '@apollo/client';
 import { apolloClient } from '../../../graphql';
 import { GetObjectChildrenDocument, GetObjectChildrenQuery } from '../../../types/graphql';

@@ -1,3 +1,8 @@
+/**
+ * SelectField
+ *
+ * This component renders select input fields used in photogrammetry metadata component.
+ */
 import { MenuItem, Select } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';

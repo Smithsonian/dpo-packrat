@@ -1,3 +1,8 @@
+/**
+ * MetadataView
+ *
+ * This component renders metadata view used in RepositoryTreeView and RepositoryTreeHeader.
+ */
 import { makeStyles } from '@material-ui/core/styles';
 import lodash from 'lodash';
 import React from 'react';

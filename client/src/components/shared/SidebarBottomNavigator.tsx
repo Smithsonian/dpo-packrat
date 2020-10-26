@@ -1,3 +1,9 @@
+/**
+ * SidebarBottomNavigator
+ *
+ * This component renders bottom navigation view, used in data upload
+ * and ingestion flow
+ */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';

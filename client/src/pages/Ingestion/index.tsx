@@ -1,3 +1,9 @@
+/**
+ * Ingestion
+ *
+ * This component renders Ingestion UI and all the sub routes like Uploads, Subject Item
+ * and Metadata.
+ */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';

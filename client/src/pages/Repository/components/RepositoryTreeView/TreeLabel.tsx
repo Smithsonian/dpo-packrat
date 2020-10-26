@@ -1,3 +1,8 @@
+/**
+ * TreeLabel
+ *
+ * This component renders a tree label for StyledTreeItem.
+ */
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import lodash from 'lodash';

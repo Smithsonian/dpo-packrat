@@ -1,3 +1,9 @@
+/**
+ * AssetContents
+ *
+ * This component renders the folder type selector for contents present in
+ * the uploaded assets
+ */
 import { Box, MenuItem, Select, Typography } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';

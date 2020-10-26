@@ -1,4 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+/**
+ * IdInputField
+ *
+ * This component renders id input fields used in photogrammetry metadata component.
+ */
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';

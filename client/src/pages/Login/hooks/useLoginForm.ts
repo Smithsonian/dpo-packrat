@@ -1,3 +1,8 @@
+/**
+ * Login Form Hook
+ *
+ * This hook provides easy validation and initial values for login form.
+ */
 import * as Yup from 'yup';
 
 export interface ILoginForm {
@@ -16,7 +21,12 @@ const initialValues = {
     password: ''
 };
 
-function useLoginForm(): { initialValues: ILoginForm; loginValidationSchema: typeof loginValidationSchema } {
+interface UseLoginForm {
+    initialValues: ILoginForm;
+    loginValidationSchema: typeof loginValidationSchema;
+}
+
+function useLoginForm(): UseLoginForm {
     return {
         initialValues,
         loginValidationSchema

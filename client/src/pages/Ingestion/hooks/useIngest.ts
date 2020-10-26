@@ -1,3 +1,8 @@
+/**
+ * Ingest Hook
+ *
+ * This custom hooks provides easy access ingestion functionality.
+ */
 import { FetchResult } from '@apollo/client';
 import lodash from 'lodash';
 import { useHistory } from 'react-router';

@@ -1,3 +1,8 @@
+/**
+ * ItemList
+ *
+ * This component renders item list used in SubjectItem component.
+ */
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
 import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';

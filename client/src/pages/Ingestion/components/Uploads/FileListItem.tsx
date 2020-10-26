@@ -1,3 +1,8 @@
+/**
+ * FileListItem
+ *
+ * This component renders file list item used in FileListItem component.
+ */
 import { Box, MenuItem, Select, Typography } from '@material-ui/core';
 import { green, grey, red, yellow } from '@material-ui/core/colors';
 import { fade, makeStyles } from '@material-ui/core/styles';

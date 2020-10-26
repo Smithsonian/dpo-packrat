@@ -1,3 +1,8 @@
+/**
+ * LoadingButton
+ *
+ * This is a button component that supports loading behavior.
+ */
 import { Button, ButtonProps } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';

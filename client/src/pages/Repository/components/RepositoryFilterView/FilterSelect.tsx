@@ -1,3 +1,8 @@
+/**
+ * FilterSelect
+ *
+ * This component renders select input fields used in RepositoryFilterView component.
+ */
 import { Box, MenuItem, Select, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';

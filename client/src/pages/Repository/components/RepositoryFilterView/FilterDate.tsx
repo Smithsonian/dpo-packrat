@@ -1,3 +1,8 @@
+/**
+ * FilterDate
+ *
+ * This component renders date input fields used in RepositoryFilterView component.
+ */
 import DateFnsUtils from '@date-io/date-fns';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';

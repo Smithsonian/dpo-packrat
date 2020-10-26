@@ -1,3 +1,8 @@
+/**
+ * FileList
+ *
+ * This component renders file list used in UploadList and UploadCompleteList components.
+ */
 import { AnimatePresence } from 'framer-motion';
 import React from 'react';
 import { FileId, FileUploadStatus, IngestionFile, useUploadStore, useVocabularyStore, VocabularyOption } from '../../../../store';

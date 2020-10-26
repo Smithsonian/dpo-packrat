@@ -1,3 +1,8 @@
+/**
+ * RepositoryTreeHeader
+ *
+ * This component renders header for RepositoryTreeView.
+ */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';

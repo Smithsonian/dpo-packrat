@@ -1,4 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/**
+ * UploadCompleteList
+ *
+ * This component renders upload list for completed files only.
+ */
 import { useQuery } from '@apollo/client';
 import { Box, Typography } from '@material-ui/core';
 import React, { useEffect } from 'react';
