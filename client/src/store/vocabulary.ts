@@ -14,6 +14,8 @@ export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
 
 type AssetType = {
     photogrammetry: boolean;
+    scene: boolean;
+    model: boolean;
     bagit: boolean;
 };
 
@@ -89,6 +91,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
 
         const assetType: AssetType = {
             photogrammetry: false,
+            scene: false,
+            model: false,
             bagit: false
         };
 
@@ -97,6 +101,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
 
             if (foundVocabulary) {
                 assetType.photogrammetry = foundVocabulary.Term.toLowerCase().includes('photogrammetry');
+                assetType.scene = foundVocabulary.Term.toLowerCase().includes('scene');
+                assetType.model = foundVocabulary.Term.toLowerCase().includes('model');
                 assetType.bagit = foundVocabulary.Term.toLowerCase().includes('bulk');
             }
         }

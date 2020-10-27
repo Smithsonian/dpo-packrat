@@ -14,7 +14,10 @@ import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { FileId, StateItem, StateMetadata, StateProject, useItemStore, useMetadataStore, useProjectStore, useVocabularyStore } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
+import Other from './Other';
+import Model from './Model';
 import Photogrammetry from './Photogrammetry';
+import Scene from './Scene';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -140,11 +143,15 @@ function Metadata(): React.ReactElement {
             return <Photogrammetry metadataIndex={metadataIndex} />;
         }
 
-        return (
-            <Box display='flex' flex={1} alignItems='center' justifyContent='center'>
-                <Typography variant='subtitle1' color='primary'>Metadata type not yet implemented</Typography>
-            </Box>
-        );
+        if (assetType.scene) {
+            return <Scene metadataIndex={metadataIndex} />;
+        }
+
+        if (assetType.model) {
+            return <Model metadataIndex={metadataIndex} />;
+        }
+
+        return <Other metadataIndex={metadataIndex} />;
     };
 
     return (
