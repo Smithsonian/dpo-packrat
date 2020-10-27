@@ -14,8 +14,8 @@ import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { FileId, StateItem, StateMetadata, StateProject, useItemStore, useMetadataStore, useProjectStore, useVocabularyStore } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
-import Other from './Other';
 import Model from './Model';
+import Other from './Other';
 import Photogrammetry from './Photogrammetry';
 import Scene from './Scene';
 
@@ -55,7 +55,7 @@ function Metadata(): React.ReactElement {
 
     const getSelectedProject = useProjectStore(state => state.getSelectedProject);
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
-    const [metadatas, getFieldErrors, getMetadataInfo] = useMetadataStore(state => [state.metadatas, state.getFieldErrors, state.getMetadataInfo]);
+    const [metadatas, validatePhotogrammetryFields, getMetadataInfo] = useMetadataStore(state => [state.metadatas, state.validatePhotogrammetryFields, state.getMetadataInfo]);
     const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
     const getAssetType = useVocabularyStore(state => state.getAssetType);
 
@@ -76,45 +76,9 @@ function Metadata(): React.ReactElement {
         history.goBack();
     };
 
-    const onNext = async () => {
+    const onNext = async (): Promise<void> => {
         if (assetType.photogrammetry) {
-            const { photogrammetry } = getFieldErrors(metadata);
-            const { photogrammetry: { datasetType, description, systemCreated, identifiers } } = metadata;
-            let hasError: boolean = false;
-
-            if (!datasetType) {
-                toast.warn('Please select a valid dataset type', { autoClose: false });
-            }
-
-            if (!systemCreated) {
-                hasError = true;
-            }
-
-            identifiers.forEach(({ identifier, selected }) => {
-                if (selected) {
-                    hasError = false;
-                    if (identifier.trim() === '') {
-                        toast.warn('Please provide a valid identifier', { autoClose: false });
-                        hasError = true;
-                    }
-                }
-            });
-
-            if (hasError && !systemCreated) {
-                toast.warn('Should select/provide at least 1 identifier', { autoClose: false });
-            }
-
-            if (description.trim() === '') {
-                toast.warn('Description cannot be empty', { autoClose: false });
-                hasError = true;
-            }
-
-            for (const fieldValue of Object.values(photogrammetry)) {
-                if (fieldValue) {
-                    hasError = true;
-                }
-            }
-
+            const hasError: boolean = validatePhotogrammetryFields(metadata.photogrammetry);
             if (hasError) return;
         }
 
