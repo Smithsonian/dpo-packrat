@@ -1,3 +1,8 @@
+/**
+ * SidePanel
+ *
+ * This component renders the collapsable left side panel in homepage UI.
+ */
 import { Box, Grid } from '@material-ui/core';
 import { makeStyles, fade } from '@material-ui/core/styles';
 import React, { memo, useState, useEffect } from 'react';

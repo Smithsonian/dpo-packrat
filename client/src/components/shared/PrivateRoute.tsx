@@ -1,11 +1,12 @@
 /**
  * PrivateRoute
- * Renders a route only if the user is authenticated else redirects to login
+ *
+ * Renders a route only if the user is authenticated else redirects to login.
  */
 import React from 'react';
-import { Route, Redirect, RouteProps } from 'react-router-dom';
+import { Redirect, Route, RouteProps } from 'react-router-dom';
 import { ROUTES } from '../../constants';
-import { useUser } from '../../store';
+import { useUserStore } from '../../store';
 
 interface PrivateRouteProps {
     component?: React.ComponentType<unknown>;
@@ -13,10 +14,9 @@ interface PrivateRouteProps {
 }
 
 function PrivateRoute({ component: Component, children, ...rest }: PrivateRouteProps & RouteProps): React.ReactElement {
-    const user = useUser(state => state.user);
+    const user = useUserStore(state => state.user);
 
     const render = props => {
-
         if (!user) {
             return <Redirect to={ROUTES.LOGIN} />;
         } else {

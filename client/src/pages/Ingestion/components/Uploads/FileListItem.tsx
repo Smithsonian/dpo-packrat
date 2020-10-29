@@ -1,17 +1,23 @@
+/**
+ * FileListItem
+ *
+ * This component renders file list item used in FileListItem component.
+ */
+import { Box, MenuItem, Select, Typography } from '@material-ui/core';
+import { green, grey, red, yellow } from '@material-ui/core/colors';
+import { fade, makeStyles } from '@material-ui/core/styles';
+import { motion } from 'framer-motion';
 import React from 'react';
-import { Box, Typography, Select, MenuItem } from '@material-ui/core';
-import { green, red, yellow, grey, blue } from '@material-ui/core/colors';
-import { makeStyles, fade } from '@material-ui/core/styles';
+import { FaCheckCircle, FaRedo, FaRegCircle } from 'react-icons/fa';
 import { IoIosCloseCircle } from 'react-icons/io';
-import { FaRedo, FaRegCircle, FaCheckCircle } from 'react-icons/fa';
 import { MdFileUpload } from 'react-icons/md';
+import { Progress } from '../../../../components';
+import { FileId, VocabularyOption } from '../../../../store';
+import { palette } from '../../../../theme';
 import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
-import { FileId, VocabularyOption } from '../../../../store';
-import { motion } from 'framer-motion';
-import { Progress } from '../../../../components';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
         position: 'relative',
         display: 'flex',
@@ -22,7 +28,11 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         borderRadius: 5,
         width: '100%',
         zIndex: 10,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        [breakpoints.down('lg')]: {
+            minHeight: 50,
+            marginTop: 5,
+        }
     },
     item: {
         display: 'flex',
@@ -33,10 +43,10 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     details: {
         display: 'flex',
         flexDirection: 'column',
-        flex: 2,
         zIndex: 'inherit',
-        padding: '10px 0px',
-        marginLeft: 20
+        paddingRight: 10,
+        marginLeft: 15,
+        flex: 2
     },
     name: {
         fontWeight: typography.fontWeightMedium,
@@ -65,23 +75,33 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     },
     type: {
         display: 'flex',
-        flex: 2,
+        padding: '0px 10px',
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center'
     },
     typeSelect: {
-        width: '80%',
+        maxWidth: 250,
+        minWidth: 250,
         padding: '0px 10px',
         borderRadius: 5,
         fontSize: '0.8rem',
-        border: `1px solid ${fade(palette.primary.main, 0.3)}`
+        border: `1px solid ${fade(palette.primary.main, 0.3)}`,
+        [breakpoints.down('lg')]: {
+            maxWidth: 180,
+            minWidth: 180,
+            fontSize: '0.6rem',
+        }
     },
     options: {
         display: 'flex',
-        width: '8vw',
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-end',
         zIndex: 'inherit',
+        [breakpoints.down('lg')]: {
+            flex: 1,
+        }
     },
     option: {
         cursor: 'pointer',
@@ -136,10 +156,10 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     if (!complete) {
         options = (
             <React.Fragment>
-                {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={26} color={green[500]} />}
+                {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={22} color={green[500]} />}
                 {uploading && !failed && <Progress className={classes.option} size={20} />}
                 {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={yellow[600]} />}
-                <IoIosCloseCircle className={classes.option} onClick={remove} size={24} color={red[500]} />
+                <IoIosCloseCircle className={classes.option} onClick={remove} size={20} color={red[500]} />
             </React.Fragment>
         );
     }
@@ -147,8 +167,8 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     if (complete) {
         options = (
             <React.Fragment>
-                {!selected && <FaRegCircle className={classes.option} size={24} color={grey[500]} />}
-                {selected && <FaCheckCircle className={classes.option} size={24} color={blue[500]} />}
+                {!selected && <FaRegCircle className={classes.option} size={18} color={grey[400]} />}
+                {selected && <FaCheckCircle className={classes.option} size={18} color={palette.primary.main} />}
             </React.Fragment>
         );
     }

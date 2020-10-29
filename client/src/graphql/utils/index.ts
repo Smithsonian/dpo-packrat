@@ -1,5 +1,10 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any */
+/**
+ * GraphQL Utils
+ *
+ * These utility provides custom implementation for upload functionality in
+ * apollo client.
+ */
 const parseHeaders = (rawHeaders: any) => {
     const headers = new Headers();
     const preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ');

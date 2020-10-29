@@ -1,3 +1,8 @@
+/**
+ * Utils
+ *
+ * These are store specific utilities.
+ */
 import { Item, Project, SubjectUnitIdentifier, AssetVersion, Vocabulary } from '../types/graphql';
 import { StateSubject } from './subject';
 import { StateItem } from './item';

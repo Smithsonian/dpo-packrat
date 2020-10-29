@@ -1,3 +1,8 @@
+/**
+ * Vocabulary Store
+ *
+ * This store manages state for vocabularies used in Ingestion flow.
+ */
 import create, { SetState, GetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
@@ -9,6 +14,8 @@ export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
 
 type AssetType = {
     photogrammetry: boolean;
+    scene: boolean;
+    model: boolean;
     bagit: boolean;
 };
 
@@ -20,7 +27,7 @@ type VocabularyStore = {
     getAssetType: (idVocabulary: number) => AssetType;
 };
 
-export const useVocabulary = create<VocabularyStore>((set: SetState<VocabularyStore>, get: GetState<VocabularyStore>) => ({
+export const useVocabularyStore = create<VocabularyStore>((set: SetState<VocabularyStore>, get: GetState<VocabularyStore>) => ({
     vocabularies: new Map<eVocabularySetID, VocabularyOption[]>(),
     updateVocabularyEntries: async (): Promise<StateVocabulary> => {
         const variables = {
@@ -84,6 +91,8 @@ export const useVocabulary = create<VocabularyStore>((set: SetState<VocabularySt
 
         const assetType: AssetType = {
             photogrammetry: false,
+            scene: false,
+            model: false,
             bagit: false
         };
 
@@ -92,6 +101,8 @@ export const useVocabulary = create<VocabularyStore>((set: SetState<VocabularySt
 
             if (foundVocabulary) {
                 assetType.photogrammetry = foundVocabulary.Term.toLowerCase().includes('photogrammetry');
+                assetType.scene = foundVocabulary.Term.toLowerCase().includes('scene');
+                assetType.model = foundVocabulary.Term.toLowerCase().includes('model');
                 assetType.bagit = foundVocabulary.Term.toLowerCase().includes('bulk');
             }
         }

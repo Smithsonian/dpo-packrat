@@ -1,3 +1,8 @@
+/**
+ * Metadata
+ *
+ * This component renders the metadata specific components for Ingestion UI.
+ */
 import { Box, Breadcrumbs, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import * as qs from 'query-string';
@@ -7,22 +12,28 @@ import { Redirect, useHistory, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { useItem, useMetadata, useProject, useVocabulary, FileId, StateItem, StateMetadata, StateProject } from '../../../../store';
+import { FileId, StateItem, StateMetadata, StateProject, useItemStore, useMetadataStore, useProjectStore, useVocabularyStore } from '../../../../store';
 import useIngest from '../../hooks/useIngest';
+import Model from './Model';
+import Other from './Other';
 import Photogrammetry from './Photogrammetry';
+import Scene from './Scene';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'auto',
+        maxHeight: 'calc(100vh - 60px)'
     },
     content: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        width: '50vw',
-        padding: '40px 0px 0px 40px'
+        width: '52vw',
+        padding: 20,
+        paddingBottom: 0
     },
     breadcrumbs: {
         marginBottom: 10,
@@ -42,11 +53,11 @@ function Metadata(): React.ReactElement {
 
     const [ingestionLoading, setIngestionLoading] = useState(false);
 
-    const getSelectedProject = useProject(state => state.getSelectedProject);
-    const getSelectedItem = useItem(state => state.getSelectedItem);
-    const [metadatas, getFieldErrors, getMetadataInfo] = useMetadata(state => [state.metadatas, state.getFieldErrors, state.getMetadataInfo]);
+    const getSelectedProject = useProjectStore(state => state.getSelectedProject);
+    const getSelectedItem = useItemStore(state => state.getSelectedItem);
+    const [metadatas, validatePhotogrammetryFields, getMetadataInfo] = useMetadataStore(state => [state.metadatas, state.validatePhotogrammetryFields, state.getMetadataInfo]);
     const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
-    const getAssetType = useVocabulary(state => state.getAssetType);
+    const getAssetType = useVocabularyStore(state => state.getAssetType);
 
     const metadataLength = metadatas.length;
     const query = qs.parse(search) as QueryParams;
@@ -65,45 +76,9 @@ function Metadata(): React.ReactElement {
         history.goBack();
     };
 
-    const onNext = async () => {
+    const onNext = async (): Promise<void> => {
         if (assetType.photogrammetry) {
-            const { photogrammetry } = getFieldErrors(metadata);
-            const { photogrammetry: { datasetType, description, systemCreated, identifiers } } = metadata;
-            let hasError: boolean = false;
-
-            if (!datasetType) {
-                toast.warn('Please select a valid dataset type', { autoClose: false });
-            }
-
-            if (!systemCreated) {
-                hasError = true;
-            }
-
-            identifiers.forEach(({ identifier, selected }) => {
-                if (selected) {
-                    hasError = false;
-                    if (identifier.trim() === '') {
-                        toast.warn('Please provide a valid identifier', { autoClose: false });
-                        hasError = true;
-                    }
-                }
-            });
-
-            if (hasError && !systemCreated) {
-                toast.warn('Should select/provide at least 1 identifier', { autoClose: false });
-            }
-
-            if (description.trim() === '') {
-                toast.warn('Description cannot be empty', { autoClose: false });
-                hasError = true;
-            }
-
-            for (const fieldValue of Object.values(photogrammetry)) {
-                if (fieldValue) {
-                    hasError = true;
-                }
-            }
-
+            const hasError: boolean = validatePhotogrammetryFields(metadata.photogrammetry);
             if (hasError) return;
         }
 
@@ -121,8 +96,8 @@ function Metadata(): React.ReactElement {
         } else {
             const nextMetadata = metadatas[metadataIndex + 1];
             const { file: { id, type } } = nextMetadata;
-            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
-
+            const { isLast } = getMetadataInfo(id);
+            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
             history.push(nextRoute);
         }
     };
@@ -132,11 +107,15 @@ function Metadata(): React.ReactElement {
             return <Photogrammetry metadataIndex={metadataIndex} />;
         }
 
-        return (
-            <Box display='flex' flex={1} alignItems='center' justifyContent='center'>
-                <Typography variant='subtitle1' color='primary'>Metadata type not yet implemented</Typography>
-            </Box>
-        );
+        if (assetType.scene) {
+            return <Scene metadataIndex={metadataIndex} />;
+        }
+
+        if (assetType.model) {
+            return <Model metadataIndex={metadataIndex} />;
+        }
+
+        return <Other metadataIndex={metadataIndex} />;
     };
 
     return (

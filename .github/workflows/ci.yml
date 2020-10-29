@@ -25,10 +25,13 @@ jobs:
       - name: Setup node version
         uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 12.18.4
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Install E2E dependencies
+        run: cd e2e && yarn install --frozen-lockfile && cd ..
 
       - name: Check for lint errors
         run: yarn lint
@@ -61,11 +64,15 @@ jobs:
       - name: Setup node version
         uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 12.18.4
 
       # Install dependencies in CI mode
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      # Install E2E dependencies in CI mode
+      - name: Install E2E dependencies
+        run: cd e2e && yarn install --frozen-lockfile && cd ..
 
       # Run tests using test DB
       - name: Run Tests

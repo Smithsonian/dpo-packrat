@@ -1,11 +1,12 @@
 /**
  * PublicRoute
- * Renders a route based on authentication and restriction specified
+ *
+ * Renders a route based on authentication and restriction specified.
  */
 import React from 'react';
-import { Route, Redirect, RouteProps } from 'react-router-dom';
+import { Redirect, Route, RouteProps } from 'react-router-dom';
 import { ROUTES } from '../../constants';
-import { useUser } from '../../store';
+import { useUserStore } from '../../store';
 
 interface PublicRouteProps {
     restricted?: boolean;
@@ -13,7 +14,7 @@ interface PublicRouteProps {
 }
 
 function PublicRoute({ component: Component, restricted = false, ...rest }: PublicRouteProps & RouteProps): React.ReactElement {
-    const user = useUser(state => state.user);
+    const user = useUserStore(state => state.user);
 
     const render = props => (
         !!user && restricted ? <Redirect to={ROUTES.HOME} /> : <Component {...props} />

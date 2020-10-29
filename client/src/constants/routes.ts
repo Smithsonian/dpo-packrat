@@ -1,3 +1,9 @@
+/**
+ * Routes
+ *
+ * This file exports all the route, types associated with
+ * routing.
+ */
 export enum ROUTES {
     HOME = '/',
     LOGIN = '/login',

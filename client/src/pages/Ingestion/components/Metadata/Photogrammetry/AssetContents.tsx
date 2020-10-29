@@ -1,10 +1,16 @@
-import { Box, Typography, Select, MenuItem } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+/**
+ * AssetContents
+ *
+ * This component renders the folder type selector for contents present in
+ * the uploaded assets
+ */
+import { Box, MenuItem, Select, Typography } from '@material-ui/core';
+import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { FieldType } from '../../../../../components';
 import { StateFolder, VocabularyOption } from '../../../../../store';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     header: {
         display: 'flex',
         flex: 1,
@@ -16,7 +22,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        color: palette.primary.contrastText
+        color: palette.primary.dark
     },
     emptyFolders: {
         marginTop: 10,
@@ -28,12 +34,18 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     },
     select: {
         height: 30,
-        width: '100%',
+        minWidth: 200,
+        maxWidth: 200,
         padding: '0px 10px',
         background: palette.background.paper,
-        border: `1px solid ${palette.primary.contrastText}`,
+        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         borderRadius: 5,
-        fontFamily: typography.fontFamily
+        fontFamily: typography.fontFamily,
+        [breakpoints.down('lg')]: {
+            fontSize: '0.8em',
+            minWidth: 180,
+            maxWidth: 180,
+        }
     },
 }));
 
@@ -65,7 +77,7 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
 
                     return (
                         <Box key={index} display='flex' my={1}>
-                            <Box display='flex' flex={3} maxWidth='60%'>
+                            <Box display='flex' flex={3} alignItems='center' maxWidth='60%'>
                                 <Typography className={classes.contentText} variant='caption'>{name}</Typography>
                             </Box>
                             <Box display='flex' flex={2} alignItems='center' justifyContent='center'>
