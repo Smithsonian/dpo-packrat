@@ -67,6 +67,10 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile && cd e2e && yarn install --frozen-lockfile && cd ..
 
+      # Install E2E dependencies in CI mode
+      - name: Install dependencies
+        run: cd e2e && yarn install --frozen-lockfile && cd ..
+
       # Run tests using test DB
       - name: Run Tests
         run: yarn test
