@@ -1,3 +1,8 @@
+/**
+ * User Store
+ *
+ * This store manages state for user.
+ */
 import create, { SetState, GetState } from 'zustand';
 import { User, GetCurrentUserDocument } from '../types/graphql';
 import { apolloClient } from '../graphql';
@@ -11,7 +16,7 @@ type UserStore = {
     logout: () => Promise<AuthResponseType>;
 };
 
-export const useUser = create<UserStore>((set: SetState<UserStore>, get: GetState<UserStore>) => ({
+export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: GetState<UserStore>) => ({
     user: null,
     initialize: async () => {
         const { user } = get();

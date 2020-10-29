@@ -1,3 +1,8 @@
+/**
+ * IngestionSidebarMenuOption
+ *
+ * This component renders sidebar menu option for IngestionSidebarMenu component.
+ */
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { memo } from 'react';
@@ -11,12 +16,12 @@ const useStyles = makeStyles(({ palette }) => ({
         alignItems: 'flex-start',
         justifyContent: 'center',
         flexDirection: 'column',
-        padding: '0.8rem 1.25rem',
+        padding: '0.8rem',
         width: 150,
         transition: 'all 250ms ease-in',
         textDecoration: 'none',
         overflow: 'hidden',
-        borderRadius: 10,
+        borderRadius: 5,
         marginTop: 2,
         color: ({ isSelected }: IngestionSidebarMenuOptionProps) => isSelected ? palette.primary.main : palette.primary.dark,
         backgroundColor: ({ isSelected }: IngestionSidebarMenuOptionProps) => isSelected ? palette.primary.light : Colors.defaults.white,

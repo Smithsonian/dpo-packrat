@@ -1,28 +1,37 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/**
+ * Uploads
+ *
+ * This component renders the upload specific components for Ingestion UI.
+ */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import KeepAlive from 'react-activation';
-import { SidebarBottomNavigator, Loader } from '../../../../components';
-import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { Colors } from '../../../../theme';
-import UploadFilesPicker from './UploadFilesPicker';
-import UploadList from './UploadList';
-import UploadCompleteList from './UploadCompleteList';
 import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
-import { useVocabulary, useUpload, useMetadata } from '../../../../store';
+import { Loader, SidebarBottomNavigator } from '../../../../components';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
+import { useMetadataStore, useUploadStore, useVocabularyStore } from '../../../../store';
+import { Colors } from '../../../../theme';
+import UploadCompleteList from './UploadCompleteList';
+import UploadFilesPicker from './UploadFilesPicker';
+import UploadList from './UploadList';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
         display: 'flex',
-        flexDirection: 'column'
+        flex: 1,
+        flexDirection: 'column',
+        overflow: 'auto',
+        maxHeight: 'calc(100vh - 60px)'
     },
     content: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        padding: '40px 0px 0px 40px'
+        padding: 20,
+        paddingBottom: 0,
     },
     fileDrop: {
         display: 'flex',
@@ -57,9 +66,9 @@ function Uploads(): React.ReactElement {
     const [loadingVocabulary, setLoadingVocabulary] = useState(true);
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
-    const { completed, discardFiles } = useUpload();
-    const { updateMetadataSteps } = useMetadata();
-    const { updateVocabularyEntries } = useVocabulary();
+    const { completed, discardFiles } = useUploadStore();
+    const { updateMetadataSteps } = useMetadataStore();
+    const { updateVocabularyEntries } = useVocabularyStore();
 
     const fetchVocabularyEntries = async () => {
         setLoadingVocabulary(true);
@@ -107,34 +116,34 @@ function Uploads(): React.ReactElement {
         }
     };
 
-    let content: React.ReactNode = <Loader minHeight='60vh' />;
+    let content: React.ReactNode = <Loader maxWidth='55vw' minHeight='60vh' />;
 
     if (!loadingVocabulary) {
         content = (
-            <React.Fragment>
-                <UploadFilesPicker />
-                <UploadCompleteList />
-                <UploadList />
-            </React.Fragment>
+            <KeepAlive>
+                <React.Fragment>
+                    <UploadFilesPicker />
+                    <UploadCompleteList />
+                    <UploadList />
+                </React.Fragment>
+            </KeepAlive>
         );
     }
 
     return (
-        <KeepAlive>
-            <Box className={classes.container}>
-                <Box className={classes.content}>
-                    {content}
-                </Box>
-                <SidebarBottomNavigator
-                    leftLabel='Discard'
-                    rightLabel='Ingest'
-                    leftLoading={discardingFiles}
-                    rightLoading={gettingAssetDetails}
-                    onClickLeft={onDiscard}
-                    onClickRight={onIngest}
-                />
+        <Box className={classes.container}>
+            <Box className={classes.content}>
+                {content}
             </Box>
-        </KeepAlive >
+            <SidebarBottomNavigator
+                leftLabel='Discard'
+                rightLabel='Ingest'
+                leftLoading={discardingFiles}
+                rightLoading={gettingAssetDetails}
+                onClickLeft={onDiscard}
+                onClickRight={onIngest}
+            />
+        </Box>
     );
 }
 

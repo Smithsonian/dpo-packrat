@@ -1,17 +1,27 @@
+/**
+ * SelectField
+ *
+ * This component renders select input fields used in photogrammetry metadata component.
+ */
 import { MenuItem, Select } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { FieldType } from '../../../../../components';
 import { VocabularyOption } from '../../../../../store';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     select: {
         width: '54%',
         padding: '0px 10px',
         background: palette.background.paper,
-        border: `1px solid ${palette.primary.contrastText}`,
+        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         borderRadius: 5,
-        fontFamily: typography.fontFamily
+        fontFamily: typography.fontFamily,
+        [breakpoints.down('lg')]: {
+            fontSize: '0.8em',
+            minWidth: 180,
+            maxWidth: 180,
+        }
     },
 }));
 

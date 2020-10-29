@@ -1,10 +1,15 @@
+/**
+ * UploadFilesPicker
+ *
+ * This component renders file picker with drag and drop functionality.
+ */
 import { Button, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
+import { useUploadStore } from '../../../../store';
 import { Colors } from '../../../../theme';
-import { useUpload } from '../../../../store';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -13,9 +18,10 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         alignItems: 'center',
         justifyContent: 'center',
         height: '20vh',
-        width: '51vw',
+        width: '52vw',
         border: `1px dashed ${palette.primary.main}`,
         borderRadius: 10,
+        padding: 10,
         backgroundColor: palette.primary.light
     },
     icon: {
@@ -36,7 +42,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 
 function UploadFilesPicker(): React.ReactElement {
     const classes = useStyles();
-    const { loading, loadPending } = useUpload();
+    const { loading, loadPending } = useUploadStore();
 
     const onDrop = (acceptedFiles: File[]) => {
         loadPending(acceptedFiles);

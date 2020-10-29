@@ -1,20 +1,30 @@
-import React, { useEffect, useState } from 'react';
+/**
+ * Repository
+ *
+ * This component renders Repository UI and all the sub-components like Filter and
+ * TreeView.
+ */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import React, { useEffect, useState } from 'react';
+import { useHistory, useLocation } from 'react-router';
+import { useControlStore } from '../../store';
+import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repository';
 import RepositoryFilterView from './components/RepositoryFilterView';
 import RepositoryTreeView from './components/RepositoryTreeView';
-import { useHistory, useLocation } from 'react-router';
-import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repository';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        maxWidth: '100vw',
+        maxWidth: (sideBarExpanded: boolean) => sideBarExpanded ? '85vw' : '93vw',
         flexDirection: 'column',
-        padding: 40,
+        padding: 20,
+        paddingBottom: 0,
+        paddingRight: 0,
         [breakpoints.down('lg')]: {
-            padding: 20,
+            paddingRight: 20,
+            maxWidth: (sideBarExpanded: boolean) => sideBarExpanded ? '85vw' : '92vw',
         }
     }
 }));
@@ -25,7 +35,8 @@ export type RepositoryFilter = {
 };
 
 function Repository(): React.ReactElement {
-    const classes = useStyles();
+    const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
+    const classes = useStyles(sideBarExpanded);
     const history = useHistory();
     const { search } = useLocation();
 
@@ -38,26 +49,17 @@ function Repository(): React.ReactElement {
 
     const defaultFilterState = Object.keys(queries).length ? queries : initialFilterState;
 
-    const [filter, setFilter] = useState<RepositoryFilter>(defaultFilterState);
+    const [filter] = useState<RepositoryFilter>(defaultFilterState);
 
     useEffect(() => {
         const route = generateRepositoryUrl(filter);
         history.push(route);
     }, [filter, history]);
 
-    const onChange = (name: string, value: string | boolean) => {
-        setFilter(filter => ({
-            ...filter,
-            [name]: value,
-            ...(name === 'units' && { projects: false }),
-            ...(name === 'projects' && { units: false }),
-        }));
-    };
-
     return (
         <Box className={classes.container}>
-            <RepositoryFilterView filter={filter} onChange={onChange} />
-            <RepositoryTreeView filter={filter} />
+            <RepositoryFilterView />
+            <RepositoryTreeView />
         </Box>
     );
 }

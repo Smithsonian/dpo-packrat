@@ -1,3 +1,8 @@
+/**
+ * Loader
+ *
+ * This component wraps the Progress in a view.
+ */
 import React from 'react';
 import { Box } from '@material-ui/core';
 import Progress from './Progress';

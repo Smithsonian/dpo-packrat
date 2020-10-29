@@ -1,12 +1,17 @@
+/**
+ * IdentifierList
+ *
+ * This component renders identifier list used in photogrammetry metadata component.
+ */
 import { Box, Button, Checkbox, MenuItem, Select } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { FieldType } from '../../../../../components';
 import { StateIdentifier, VocabularyOption } from '../../../../../store';
 
-const useStyles = makeStyles(({ palette, typography, spacing }) => ({
+const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
     container: {
         marginTop: 20
     },
@@ -27,7 +32,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         padding: '0px 2px',
         paddingBottom: 5,
         backgroundColor: 'transparent',
-        fontSize: typography.body1.fontSize,
+        fontSize: '0.9em',
         fontFamily: typography.fontFamily,
         borderBottom: `1px solid ${palette.grey[300]}`,
         '&:focus': {
@@ -45,17 +50,22 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         padding: '0px 10px',
         marginLeft: 20,
         background: palette.background.paper,
-        border: `1px solid ${palette.primary.contrastText}`,
+        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         borderRadius: 5,
-        fontFamily: typography.fontFamily
+        fontFamily: typography.fontFamily,
+        [breakpoints.down('lg')]: {
+            fontSize: '0.8em',
+        }
     },
     identifierOption: {
         marginLeft: 20,
         cursor: 'pointer'
     },
     addIdentifier: {
+        height: 30,
+        width: 80,
+        fontSize: '0.8em',
         color: palette.background.paper,
-        width: 80
     }
 }));
 
@@ -111,7 +121,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                                 >
                                     {identifierTypes.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                 </Select>
-                                <MdRemoveCircleOutline className={classes.identifierOption} onClick={remove} size={35} />
+                                <MdRemoveCircleOutline className={classes.identifierOption} onClick={remove} size={30} />
                             </Box>
                         );
                     })}

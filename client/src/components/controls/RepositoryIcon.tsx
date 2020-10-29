@@ -1,3 +1,8 @@
+/**
+ * RepositoryIcon
+ *
+ * This component renders the icons for the repository tree view item.
+ */
 import React from 'react';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -9,8 +14,8 @@ const useStyles = makeStyles(({ typography, breakpoints }) => ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: 20,
-        width: 20,
+        height: 18,
+        width: 18,
         borderRadius: 2.5,
         backgroundColor: ({ backgroundColor }: RepositoryIconProps) => backgroundColor,
         [breakpoints.down('lg')]: {
@@ -20,7 +25,7 @@ const useStyles = makeStyles(({ typography, breakpoints }) => ({
     },
     initial: {
         fontSize: 10,
-        fontWeight: typography.fontWeightBold,
+        fontWeight: typography.fontWeightMedium,
         color: ({ textColor }: RepositoryIconProps) => textColor,
     }
 }));
