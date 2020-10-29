@@ -8,8 +8,8 @@ import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { MdRemoveCircleOutline } from 'react-icons/md';
-import { FieldType } from '../../../../../components';
-import { StateIdentifier, VocabularyOption } from '../../../../../store';
+import FieldType from './FieldType';
+import { StateIdentifier, VocabularyOption } from '../../store';
 
 const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
     container: {

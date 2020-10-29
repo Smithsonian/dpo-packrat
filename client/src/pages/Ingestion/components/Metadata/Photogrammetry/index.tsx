@@ -5,34 +5,22 @@
  * This component renders the metadata fields specific to photogrammetry asset.
  */
 import DateFnsUtils from '@date-io/date-fns';
-import { Box, Checkbox, Typography } from '@material-ui/core';
+import { Box, Checkbox } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
-import lodash from 'lodash';
 import React from 'react';
-import { FieldType } from '../../../../../components';
+import { AssetIdentifiers, FieldType } from '../../../../../components';
 import { StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { Colors } from '../../../../../theme';
 import { eVocabularySetID } from '../../../../../types/server';
 import AssetContents from './AssetContents';
 import Description from './Description';
-import IdentifierList from './IdentifierList';
 import IdInputField from './IdInputField';
 import SelectField from './SelectField';
 
-const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
         marginTop: 20
-    },
-    assetIdentifier: {
-        display: 'flex',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    systemCreatedText: {
-        marginLeft: spacing(2),
-        fontStyle: 'italic',
-        color: palette.primary.contrastText
     },
     fieldsContainer: {
         display: 'flex',
@@ -61,22 +49,6 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
     }
 }));
 
-const checkboxStyles = ({ palette }) => ({
-    root: {
-        color: palette.primary.main,
-        '&$checked': {
-            color: palette.primary.main,
-        },
-        '&$disabled': {
-            color: palette.primary.main,
-        }
-    },
-    checked: {},
-    disabled: {}
-});
-
-const CustomCheckbox = withStyles(checkboxStyles)(Checkbox);
-
 interface PhotogrammetryProps {
     metadataIndex: number;
 }
@@ -100,6 +72,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const setIdField = ({ target }): void => {
         const { name, value } = target;
         let idFieldValue: number | null = null;
+
         if (value) {
             idFieldValue = Number.parseInt(value, 10);
         }
@@ -116,41 +89,11 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
-
         updatePhotogrammetryField(metadataIndex, name, checked);
     };
 
-    const addIdentifer = (initialEntry: number | null) => {
-        const { identifiers } = photogrammetry;
-        const newIdentifier: StateIdentifier = {
-            id: identifiers.length + 1,
-            identifier: '',
-            identifierType: getInitialEntry(eVocabularySetID.eIdentifierIdentifierType) || initialEntry,
-            selected: false
-        };
-
-        const updatedIdentifiers = lodash.concat(identifiers, [newIdentifier]);
-        updatePhotogrammetryField(metadataIndex, 'identifiers', updatedIdentifiers);
-    };
-
-    const removeIdentifier = (id: number) => {
-        const { identifiers } = photogrammetry;
-        const updatedIdentifiers = lodash.filter(identifiers, identifier => identifier.id !== id);
-        updatePhotogrammetryField(metadataIndex, 'identifiers', updatedIdentifiers);
-    };
-
-    const updateIdentifierFields = (id: number, name: string, value: string | number | boolean) => {
-        const { identifiers } = photogrammetry;
-        const updatedIdentifiers = identifiers.map(identifier => {
-            if (identifier.id === id) {
-                return {
-                    ...identifier,
-                    [name]: value
-                };
-            }
-            return identifier;
-        });
-        updatePhotogrammetryField(metadataIndex, 'identifiers', updatedIdentifiers);
+    const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
+        updatePhotogrammetryField(metadataIndex, 'identifiers', identifiers);
     };
 
     const updateFolderVariant = (folderId: number, variantType: number) => {
@@ -171,26 +114,14 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <Box marginBottom='10px'>
-                <FieldType required label='Asset Identifier(s)'>
-                    <Box className={classes.assetIdentifier}>
-                        <Checkbox
-                            name='systemCreated'
-                            checked={photogrammetry.systemCreated}
-                            color='primary'
-                            onChange={setCheckboxField}
-                        />
-                        <Typography className={classes.systemCreatedText} variant='body1'>System will create an identifier</Typography>
-                    </Box>
-                    <IdentifierList
-                        identifiers={photogrammetry.identifiers}
-                        identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
-                        onAdd={addIdentifer}
-                        onRemove={removeIdentifier}
-                        onUpdate={updateIdentifierFields}
-                    />
-                </FieldType>
-            </Box>
+            <AssetIdentifiers
+                systemCreated={photogrammetry.systemCreated}
+                identifiers={photogrammetry.identifiers}
+                onSystemCreatedChange={setCheckboxField}
+                onAddIdentifer={onIdentifersChange}
+                onUpdateIdentifer={onIdentifersChange}
+                onRemoveIdentifer={onIdentifersChange}
+            />
 
             <Description value={photogrammetry.description} onChange={setField} />
 
@@ -291,5 +222,21 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         </Box>
     );
 }
+
+const checkboxStyles = ({ palette }) => ({
+    root: {
+        color: palette.primary.main,
+        '&$checked': {
+            color: palette.primary.main,
+        },
+        '&$disabled': {
+            color: palette.primary.main,
+        }
+    },
+    checked: {},
+    disabled: {}
+});
+
+const CustomCheckbox = withStyles(checkboxStyles)(Checkbox);
 
 export default Photogrammetry;
