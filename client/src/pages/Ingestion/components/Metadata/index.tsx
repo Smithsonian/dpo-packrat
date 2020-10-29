@@ -12,7 +12,18 @@ import { Redirect, useHistory, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { FileId, StateItem, StateMetadata, StateProject, useItemStore, useMetadataStore, useProjectStore, useVocabularyStore } from '../../../../store';
+import {
+    FileId,
+    modelFieldsSchema,
+    photogrammetryFieldsSchema,
+    StateItem,
+    StateMetadata,
+    StateProject,
+    useItemStore,
+    useMetadataStore,
+    useProjectStore,
+    useVocabularyStore
+} from '../../../../store';
 import useIngest from '../../hooks/useIngest';
 import Model from './Model';
 import Other from './Other';
@@ -55,7 +66,7 @@ function Metadata(): React.ReactElement {
 
     const getSelectedProject = useProjectStore(state => state.getSelectedProject);
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
-    const [metadatas, validatePhotogrammetryFields, getMetadataInfo] = useMetadataStore(state => [state.metadatas, state.validatePhotogrammetryFields, state.getMetadataInfo]);
+    const [metadatas, getMetadataInfo, validateFields] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields]);
     const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
     const getAssetType = useVocabularyStore(state => state.getAssetType);
 
@@ -78,7 +89,12 @@ function Metadata(): React.ReactElement {
 
     const onNext = async (): Promise<void> => {
         if (assetType.photogrammetry) {
-            const hasError: boolean = validatePhotogrammetryFields(metadata.photogrammetry);
+            const hasError: boolean = validateFields(metadata.photogrammetry, photogrammetryFieldsSchema);
+            if (hasError) return;
+        }
+
+        if (assetType.model) {
+            const hasError: boolean = validateFields(metadata.model, modelFieldsSchema);
             if (hasError) return;
         }
 

@@ -3,9 +3,17 @@
  *
  * This component renders the metadata fields specific to model asset.
  */
-import { Box, Typography } from '@material-ui/core';
+import { Box } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
-import { useMetadataStore } from '../../../../../store';
+import { AssetIdentifiers } from '../../../../../components';
+import { StateIdentifier, useMetadataStore } from '../../../../../store';
+
+const useStyles = makeStyles(() => ({
+    container: {
+        marginTop: 20
+    }
+}));
 
 interface ModelProps {
     metadataIndex: number;
@@ -13,11 +21,30 @@ interface ModelProps {
 
 function Model(props: ModelProps): React.ReactElement {
     const { metadataIndex } = props;
+    const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
+    const { model } = metadata;
+    const updateModelField = useMetadataStore(state => state.updateModelField);
+
+    const setCheckboxField = ({ target }): void => {
+        const { name, checked } = target;
+        updateModelField(metadataIndex, name, checked);
+    };
+
+    const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
+        updateModelField(metadataIndex, 'identifiers', identifiers);
+    };
 
     return (
-        <Box display='flex' flex={1} alignItems='center' justifyContent='center'>
-            <Typography variant='subtitle1' color='primary'>Metadata For Model {metadata.file.name}</Typography>
+        <Box className={classes.container}>
+            <AssetIdentifiers
+                systemCreated={model.systemCreated}
+                identifiers={model.identifiers}
+                onSystemCreatedChange={setCheckboxField}
+                onAddIdentifer={onIdentifersChange}
+                onUpdateIdentifer={onIdentifersChange}
+                onRemoveIdentifer={onIdentifersChange}
+            />
         </Box>
     );
 }
