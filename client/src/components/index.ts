@@ -12,5 +12,6 @@ import SidebarBottomNavigator from './shared/SidebarBottomNavigator';
 import LoadingButton from './controls/LoadingButton';
 import RepositoryIcon from './controls/RepositoryIcon';
 import ErrorBoundary from './shared/ErrorBoundary';
+import AssetIdentifiers from './shared/AssetIdentifiers';
 
-export { Header, PrivateRoute, PublicRoute, FieldType, LoadingButton, Loader, Progress, SidebarBottomNavigator, RepositoryIcon, ErrorBoundary };
+export { Header, PrivateRoute, PublicRoute, FieldType, LoadingButton, Loader, Progress, SidebarBottomNavigator, RepositoryIcon, ErrorBoundary, AssetIdentifiers };
