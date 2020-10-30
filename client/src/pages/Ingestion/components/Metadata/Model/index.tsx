@@ -12,6 +12,7 @@ import { AssetIdentifiers, FieldType, IdInputField, SelectField } from '../../..
 import { StateIdentifier, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { Colors } from '../../../../../theme';
 import { eVocabularySetID } from '../../../../../types/server';
+import BoundingBoxInput from './BoundingBoxInput';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -47,7 +48,6 @@ function Model(props: ModelProps): React.ReactElement {
     const { model } = metadata;
     const updateModelField = useMetadataStore(state => state.updateModelField);
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
-
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
         updateModelField(metadataIndex, 'identifiers', identifiers);
@@ -92,6 +92,7 @@ function Model(props: ModelProps): React.ReactElement {
             <Box display='flex' flexDirection='row' mt={1}>
                 <Box display='flex' flex={1} flexDirection='column'>
                     <FieldType
+                        // TODO: KARAN: add error fields
                         error={false}
                         required
                         label='Date Captured'
@@ -217,6 +218,8 @@ function Model(props: ModelProps): React.ReactElement {
                             onChange={setCheckboxField}
                         />
                     </FieldType>
+
+                    <BoundingBoxInput model={model} onChange={setIdField} />
                 </Box>
 
             </Box>
