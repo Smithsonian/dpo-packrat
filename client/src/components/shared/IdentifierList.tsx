@@ -96,7 +96,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                                 display='flex'
                                 flexDirection='row'
                                 alignItems='center'
-                                paddingY={'10px'}
+                                paddingBottom={'10px'}
                             >
                                 <Checkbox
                                     checked={selected}
