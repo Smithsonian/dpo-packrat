@@ -15,6 +15,7 @@ import ErrorBoundary from './shared/ErrorBoundary';
 import AssetIdentifiers from './shared/AssetIdentifiers';
 import SelectField from './controls/SelectField';
 import IdInputField from './controls/IdInputField';
+import DateInputField from './controls/DateInputField';
 
 export {
     Header,
@@ -29,5 +30,6 @@ export {
     ErrorBoundary,
     AssetIdentifiers,
     SelectField,
-    IdInputField
+    IdInputField,
+    DateInputField
 };
