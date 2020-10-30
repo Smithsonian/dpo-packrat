@@ -3,11 +3,11 @@
  *
  * This store manages state for vocabularies used in Ingestion flow.
  */
-import create, { SetState, GetState } from 'zustand';
+import lodash from 'lodash';
+import create, { GetState, SetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
 import { eVocabularySetID } from '../types/server';
-import lodash from 'lodash';
 
 export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
 export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
@@ -41,7 +41,12 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eCaptureDataBackgroundRemovalMethod,
                     eVocabularySetID.eCaptureDataClusterType,
                     eVocabularySetID.eCaptureDataFileVariantType,
-                    eVocabularySetID.eAssetAssetType
+                    eVocabularySetID.eAssetAssetType,
+                    eVocabularySetID.eModelCreationMethod,
+                    eVocabularySetID.eModelModality,
+                    eVocabularySetID.eModelUnits,
+                    eVocabularySetID.eModelPurpose,
+                    eVocabularySetID.eModelGeometryFileModelFileType
                 ]
             }
         };

@@ -13,5 +13,21 @@ import LoadingButton from './controls/LoadingButton';
 import RepositoryIcon from './controls/RepositoryIcon';
 import ErrorBoundary from './shared/ErrorBoundary';
 import AssetIdentifiers from './shared/AssetIdentifiers';
+import SelectField from './controls/SelectField';
+import IdInputField from './controls/IdInputField';
 
-export { Header, PrivateRoute, PublicRoute, FieldType, LoadingButton, Loader, Progress, SidebarBottomNavigator, RepositoryIcon, ErrorBoundary, AssetIdentifiers };
+export {
+    Header,
+    PrivateRoute,
+    PublicRoute,
+    FieldType,
+    LoadingButton,
+    Loader,
+    Progress,
+    SidebarBottomNavigator,
+    RepositoryIcon,
+    ErrorBoundary,
+    AssetIdentifiers,
+    SelectField,
+    IdInputField
+};

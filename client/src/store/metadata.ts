@@ -100,16 +100,15 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     directory: ''
 };
 
+const identifierWhenSelectedValidation = {
+    is: true,
+    then: yup.string().trim().required('Enter a valid identifier'),
+    otherwise: yup.string().trim()
+};
+
 const identifierSchema = yup.object().shape({
     id: yup.number().required(),
-    identifier: yup
-        .string()
-        .trim()
-        .when('selected', {
-            is: true,
-            then: yup.string().trim().required('Enter a valid identifier'),
-            otherwise: yup.string().trim()
-        }),
+    identifier: yup.string().trim().when('selected', identifierWhenSelectedValidation),
     identifierType: yup.number().nullable(true),
     selected: yup.boolean().required()
 });
@@ -155,11 +154,55 @@ export const photogrammetryFieldsSchema = yup.object().shape({
 export type ModelFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    dateCaptured: Date;
+    creationMethod: number | null;
+    masterModel: boolean;
+    authoritativeModel: boolean;
+    modality: number | null;
+    units: number | null;
+    purpose: number | null;
+    modelFileType: number | null;
+    roughness: number | null;
+    metalness: number | null;
+    pointCount: number | null;
+    faceCount: number | null;
+    isWatertight: boolean;
+    hasNormals: boolean;
+    hasVertexColor: boolean;
+    hasUVSpace: boolean;
+    boundingBoxP1X: number | null;
+    boundingBoxP1Y: number | null;
+    boundingBoxP1Z: number | null;
+    boundingBoxP2X: number | null;
+    boundingBoxP2Y: number | null;
+    boundingBoxP2Z: number | null;
 };
 
 export const defaultModelFields: ModelFields = {
     systemCreated: true,
-    identifiers: []
+    identifiers: [],
+    dateCaptured: new Date(),
+    creationMethod: null,
+    masterModel: false,
+    authoritativeModel: false,
+    modality: null,
+    units: null,
+    purpose: null,
+    modelFileType: null,
+    roughness: null,
+    metalness: null,
+    pointCount: null,
+    faceCount: null,
+    isWatertight: false,
+    hasNormals: false,
+    hasVertexColor: false,
+    hasUVSpace: false,
+    boundingBoxP1X: null,
+    boundingBoxP1Y: null,
+    boundingBoxP1Z: null,
+    boundingBoxP2X: null,
+    boundingBoxP2Y: null,
+    boundingBoxP2Z: null
 };
 
 type ModelSchemaType = typeof modelFieldsSchema;
@@ -288,7 +331,12 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         const defaultModel = {
             ...defaultModelFields,
-            identifiers: defaultIdentifierField
+            identifiers: defaultIdentifierField,
+            creationMethod: getInitialEntry(eVocabularySetID.eModelCreationMethod),
+            modality: getInitialEntry(eVocabularySetID.eModelModality),
+            units: getInitialEntry(eVocabularySetID.eModelUnits),
+            purpose: getInitialEntry(eVocabularySetID.eModelPurpose),
+            modelFileType: getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType)
         };
 
         try {

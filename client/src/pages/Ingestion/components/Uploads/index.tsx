@@ -97,7 +97,7 @@ function Uploads(): React.ReactElement {
                 toast.warn('Please select valid combination of files');
                 return;
             }
-
+            toast.dismiss();
             history.push(nextStep);
         } catch {
             setGettingAssetDetails(false);
