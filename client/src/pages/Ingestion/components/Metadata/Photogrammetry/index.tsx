@@ -38,6 +38,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         padding: '1px 8px',
         color: Colors.defaults.white,
         borderRadius: 5,
+        marginTop: 0,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
             minWidth: 160,
