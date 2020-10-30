@@ -7,14 +7,16 @@
 import { Box, MenuItem, Select, Typography } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
+import { AiFillFolder } from 'react-icons/ai';
 import { FieldType } from '../../../../../components';
 import { StateFolder, VocabularyOption } from '../../../../../store';
+import { palette } from '../../../../../theme';
 
-const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, typography, breakpoints, spacing }) => ({
     header: {
         display: 'flex',
         flex: 1,
-        borderBottom: `1px solid ${palette.grey[400]}`,
+        borderBottom: `1px solid ${palette.primary.contrastText}`,
         paddingBottom: 10
     },
     headerTitle: {
@@ -30,7 +32,9 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         textAlign: 'center'
     },
     contentText: {
-        color: palette.primary.dark
+        color: palette.primary.dark,
+        margin: `0px ${spacing(1)}px`,
+        wordBreak: 'break-word'
     },
     select: {
         height: 30,
@@ -76,11 +80,14 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
                     const update = ({ target }) => onUpdate(id, target.value);
 
                     return (
-                        <Box key={index} display='flex' my={1}>
-                            <Box display='flex' flex={3} alignItems='center' maxWidth='60%'>
-                                <Typography className={classes.contentText} variant='caption'>{name}</Typography>
+                        <Box key={index} display='flex' my={1} justifyContent='space-between'>
+                            <Box display='flex' flex={1} alignItems='center'>
+                                <Box>
+                                    <AiFillFolder color={palette.primary.contrastText} size={24} />
+                                </Box>
+                                <Typography noWrap={false} className={classes.contentText} variant='caption'>{name}</Typography>
                             </Box>
-                            <Box display='flex' flex={2} alignItems='center' justifyContent='center'>
+                            <Box display='flex' alignItems='center' justifyContent='center'>
                                 <Select
                                     value={variantType || initialEntry}
                                     className={classes.select}
