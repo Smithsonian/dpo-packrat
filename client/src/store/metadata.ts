@@ -38,6 +38,14 @@ type FieldErrors = {
         dateCaptured: boolean;
         datasetType: boolean;
     };
+    model: {
+        dateCaptured: boolean;
+        creationMethod: boolean;
+        modality: boolean;
+        units: boolean;
+        purpose: boolean;
+        modelFileType: boolean;
+    };
 };
 
 export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[];
@@ -137,7 +145,7 @@ export const photogrammetryFieldsSchema = yup.object().shape({
     folders: yup.array().of(folderSchema),
     description: yup.string().required('Description cannot be empty'),
     dateCaptured: yup.date().required(),
-    datasetType: yup.number().required('Please select a valid dataset type'),
+    datasetType: yup.number().typeError('Please select a valid dataset type'),
     datasetFieldId: yup.number().nullable(true),
     itemPositionType: yup.number().nullable(true),
     itemPositionFieldId: yup.number().nullable(true),
@@ -166,10 +174,10 @@ export type ModelFields = {
     metalness: number | null;
     pointCount: number | null;
     faceCount: number | null;
-    isWatertight: boolean;
-    hasNormals: boolean;
-    hasVertexColor: boolean;
-    hasUVSpace: boolean;
+    isWatertight: boolean | null;
+    hasNormals: boolean | null;
+    hasVertexColor: boolean | null;
+    hasUVSpace: boolean | null;
     boundingBoxP1X: number | null;
     boundingBoxP1Y: number | null;
     boundingBoxP1Z: number | null;
@@ -193,10 +201,10 @@ export const defaultModelFields: ModelFields = {
     metalness: null,
     pointCount: null,
     faceCount: null,
-    isWatertight: false,
-    hasNormals: false,
-    hasVertexColor: false,
-    hasUVSpace: false,
+    isWatertight: null,
+    hasNormals: null,
+    hasVertexColor: null,
+    hasUVSpace: null,
     boundingBoxP1X: null,
     boundingBoxP1Y: null,
     boundingBoxP1Z: null,
@@ -209,7 +217,29 @@ type ModelSchemaType = typeof modelFieldsSchema;
 
 export const modelFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
-    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation)
+    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
+    dateCaptured: yup.date().typeError('Date Captured is required'),
+    creationMethod: yup.number().typeError('Creation method is required'),
+    masterModel: yup.boolean().required(),
+    authoritativeModel: yup.boolean().required(),
+    modality: yup.number().typeError('Modality is required'),
+    units: yup.number().typeError('Units is required'),
+    purpose: yup.number().typeError('Purpose is required'),
+    modelFileType: yup.number().typeError('Model File Type is required'),
+    roughness: yup.number().nullable(true),
+    metalness: yup.number().nullable(true),
+    pointCount: yup.number().nullable(true),
+    faceCount: yup.number().nullable(true),
+    isWatertight: yup.boolean().nullable(true),
+    hasNormals: yup.boolean().nullable(true),
+    hasVertexColor: yup.boolean().nullable(true),
+    hasUVSpace: yup.boolean().nullable(true),
+    boundingBoxP1X: yup.number().nullable(true),
+    boundingBoxP1Y: yup.number().nullable(true),
+    boundingBoxP1Z: yup.number().nullable(true),
+    boundingBoxP2X: yup.number().nullable(true),
+    boundingBoxP2Y: yup.number().nullable(true),
+    boundingBoxP2Z: yup.number().nullable(true)
 });
 
 export type StateMetadata = {
@@ -244,6 +274,14 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             photogrammetry: {
                 dateCaptured: false,
                 datasetType: false
+            },
+            model: {
+                dateCaptured: false,
+                creationMethod: false,
+                modality: false,
+                units: false,
+                purpose: false,
+                modelFileType: false
             }
         };
 
@@ -255,6 +293,14 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         if (assetType.photogrammetry) {
             errors.photogrammetry.dateCaptured = metadata.photogrammetry.dateCaptured.toString() === 'Invalid Date';
             errors.photogrammetry.datasetType = metadata.photogrammetry.datasetType === null;
+        }
+
+        if (assetType.model) {
+            errors.model.dateCaptured = metadata.model.dateCaptured.toString() === 'Invalid Date';
+            errors.model.modality = metadata.model.modality === null;
+            errors.model.units = metadata.model.units === null;
+            errors.model.purpose = metadata.model.purpose === null;
+            errors.model.modelFileType = metadata.model.modelFileType === null;
         }
 
         return errors;
@@ -271,6 +317,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             schema.validateSync(fields, options);
         } catch (error) {
             hasError = true;
+
             for (const message of error.errors) {
                 toast.warn(message, { autoClose: false });
             }
@@ -427,7 +474,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
                         metadatas.push(metadataStep);
                     } else if (Model) {
-                        // TODO: KARAN: autofill model and stuff
+                        // TODO: KARAN: update model fields after api implementation
                         metadatas.push(metadataStep);
                     } else {
                         metadatas.push(metadataStep);

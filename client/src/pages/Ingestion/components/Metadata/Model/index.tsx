@@ -3,38 +3,19 @@
  *
  * This component renders the metadata fields specific to model asset.
  */
-import DateFnsUtils from '@date-io/date-fns';
 import { Box, Checkbox } from '@material-ui/core';
-import { fade, makeStyles } from '@material-ui/core/styles';
-import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
+import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
-import { AssetIdentifiers, FieldType, IdInputField, SelectField } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, FieldType, IdInputField, SelectField } from '../../../../../components';
 import { StateIdentifier, useMetadataStore, useVocabularyStore } from '../../../../../store';
-import { Colors } from '../../../../../theme';
 import { eVocabularySetID } from '../../../../../types/server';
+import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../../utils/shared';
 import BoundingBoxInput from './BoundingBoxInput';
 
-const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
+const useStyles = makeStyles(() => ({
     container: {
         marginTop: 20
     },
-    date: {
-        width: '50%',
-        background: palette.background.paper,
-        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
-        padding: '1px 8px',
-        color: Colors.defaults.white,
-        borderRadius: 5,
-        marginTop: 0,
-        fontFamily: typography.fontFamily,
-        [breakpoints.down('lg')]: {
-            minWidth: 160,
-            maxWidth: 160,
-            '& > div > input': {
-                fontSize: '0.8em',
-            }
-        }
-    }
 }));
 
 interface ModelProps {
@@ -46,8 +27,10 @@ function Model(props: ModelProps): React.ReactElement {
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { model } = metadata;
-    const updateModelField = useMetadataStore(state => state.updateModelField);
+    const [updateModelField, getFieldErrors] = useMetadataStore(state => [state.updateModelField, state.getFieldErrors]);
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
+
+    const errors = getFieldErrors(metadata);
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
         updateModelField(metadataIndex, 'identifiers', identifiers);
@@ -92,31 +75,21 @@ function Model(props: ModelProps): React.ReactElement {
             <Box display='flex' flexDirection='row' mt={1}>
                 <Box display='flex' flex={1} flexDirection='column'>
                     <FieldType
-                        // TODO: KARAN: add error fields
-                        error={false}
+                        error={errors.model.dateCaptured}
                         required
                         label='Date Captured'
                         direction='row'
                         containerProps={rowFieldProps}
                     >
-                        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                            <KeyboardDatePicker
-                                disableToolbar
-                                variant='inline'
-                                format='MM/dd/yyyy'
-                                margin='normal'
-                                value={model.dateCaptured}
-                                className={classes.date}
-                                InputProps={{ disableUnderline: true }}
-                                onChange={(_, value) => setDateField('dateCaptured', value)}
-                            />
-                        </MuiPickersUtilsProvider>
+
+                        <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
                     </FieldType>
 
                     <SelectField
                         required
                         label='Creation Method'
-                        value={model.creationMethod || getInitialEntry(eVocabularySetID.eModelCreationMethod)}
+                        error={errors.model.creationMethod}
+                        value={withDefaultValueNumber(model.creationMethod, getInitialEntry(eVocabularySetID.eModelCreationMethod))}
                         name='creationMethod'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eModelCreationMethod)}
@@ -143,7 +116,8 @@ function Model(props: ModelProps): React.ReactElement {
                     <SelectField
                         required
                         label='Modality'
-                        value={model.modality || getInitialEntry(eVocabularySetID.eModelModality)}
+                        error={errors.model.modality}
+                        value={withDefaultValueNumber(model.modality, getInitialEntry(eVocabularySetID.eModelModality))}
                         name='modality'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eModelModality)}
@@ -152,7 +126,8 @@ function Model(props: ModelProps): React.ReactElement {
                     <SelectField
                         required
                         label='Units'
-                        value={model.units || getInitialEntry(eVocabularySetID.eModelUnits)}
+                        error={errors.model.units}
+                        value={withDefaultValueNumber(model.units, getInitialEntry(eVocabularySetID.eModelUnits))}
                         name='units'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eModelUnits)}
@@ -161,7 +136,8 @@ function Model(props: ModelProps): React.ReactElement {
                     <SelectField
                         required
                         label='Purpose'
-                        value={model.purpose || getInitialEntry(eVocabularySetID.eModelPurpose)}
+                        error={errors.model.purpose}
+                        value={withDefaultValueNumber(model.purpose, getInitialEntry(eVocabularySetID.eModelPurpose))}
                         name='purpose'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eModelPurpose)}
@@ -170,7 +146,8 @@ function Model(props: ModelProps): React.ReactElement {
                     <SelectField
                         required
                         label='Model File Type'
-                        value={model.modelFileType || getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType)}
+                        error={errors.model.modelFileType}
+                        value={withDefaultValueNumber(model.modelFileType, getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType))}
                         name='modelFileType'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eModelGeometryFileModelFileType)}
@@ -185,7 +162,7 @@ function Model(props: ModelProps): React.ReactElement {
                     <FieldType required={false} label='Is Watertight?' direction='row' containerProps={rowFieldProps}>
                         <Checkbox
                             name='isWatertight'
-                            checked={model.isWatertight}
+                            checked={withDefaultValueBoolean(model.isWatertight, false)}
                             color='primary'
                             onChange={setCheckboxField}
                         />
@@ -194,7 +171,7 @@ function Model(props: ModelProps): React.ReactElement {
                     <FieldType required={false} label='Has Normals?' direction='row' containerProps={rowFieldProps}>
                         <Checkbox
                             name='hasNormals'
-                            checked={model.hasNormals}
+                            checked={withDefaultValueBoolean(model.hasNormals, false)}
                             color='primary'
                             onChange={setCheckboxField}
                         />
@@ -204,7 +181,7 @@ function Model(props: ModelProps): React.ReactElement {
                     <FieldType required={false} label='Has Vertex Color?' direction='row' containerProps={rowFieldProps}>
                         <Checkbox
                             name='hasVertexColor'
-                            checked={model.hasVertexColor}
+                            checked={withDefaultValueBoolean(model.hasVertexColor, false)}
                             color='primary'
                             onChange={setCheckboxField}
                         />
@@ -213,7 +190,7 @@ function Model(props: ModelProps): React.ReactElement {
                     <FieldType required={false} label='Has UV Space?' direction='row' containerProps={rowFieldProps}>
                         <Checkbox
                             name='hasUVSpace'
-                            checked={model.hasUVSpace}
+                            checked={withDefaultValueBoolean(model.hasUVSpace, false)}
                             color='primary'
                             onChange={setCheckboxField}
                         />

@@ -36,7 +36,7 @@ function BoundingBoxInput(props: BoundingBoxInputProps): React.ReactElement {
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     input: {
-        width: '20%',
+        width: '16%',
         outline: 'none',
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         padding: 8,

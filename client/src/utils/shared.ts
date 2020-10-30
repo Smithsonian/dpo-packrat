@@ -5,6 +5,18 @@
  */
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
+export const withDefaultValueBoolean = (value: boolean | null, defaultValue: boolean): boolean => value || defaultValue;
+
+export const withDefaultValueNumber = (value: number | null, defaultValue: number | null): number => {
+    if (value) {
+        return value;
+    }
+
+    if (defaultValue === null) throw new Error('Default value is null');
+
+    return defaultValue;
+};
+
 export const actionOnKeyPress = (key: string, actionKey: string, func: () => void): void => {
     if (key === actionKey) {
         func();
