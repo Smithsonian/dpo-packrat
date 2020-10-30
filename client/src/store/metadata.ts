@@ -287,7 +287,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         };
 
         const defaultModel = {
-            ...defaultModelFields
+            ...defaultModelFields,
+            identifiers: defaultIdentifierField
         };
 
         try {
