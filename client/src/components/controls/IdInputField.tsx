@@ -2,12 +2,12 @@
 /**
  * IdInputField
  *
- * This component renders id input fields used in photogrammetry metadata component.
+ * This component renders id input fields used in metadata components.
  */
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
-import { FieldType } from '../../../../../components';
+import FieldType from '../shared/FieldType';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     input: {

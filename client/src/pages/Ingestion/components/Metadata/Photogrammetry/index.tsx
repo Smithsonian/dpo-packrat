@@ -9,14 +9,12 @@ import { Box, Checkbox } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
 import React from 'react';
-import { AssetIdentifiers, FieldType } from '../../../../../components';
+import { AssetIdentifiers, FieldType, IdInputField, SelectField } from '../../../../../components';
 import { StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { Colors } from '../../../../../theme';
 import { eVocabularySetID } from '../../../../../types/server';
 import AssetContents from './AssetContents';
 import Description from './Description';
-import IdInputField from './IdInputField';
-import SelectField from './SelectField';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -25,11 +23,6 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     fieldsContainer: {
         display: 'flex',
         marginTop: 10
-    },
-    divider: {
-        display: 'flex',
-        height: 20,
-        width: 30
     },
     date: {
         width: '50%',
@@ -58,12 +51,12 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { metadataIndex } = props;
     const classes = useStyles();
 
-    const { getFieldErrors, updatePhotogrammetryField } = useMetadataStore();
+    const [getFieldErrors, updatePhotogrammetryField] = useMetadataStore(state => [state.getFieldErrors, state.updatePhotogrammetryField]);
     const metadata: StateMetadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const errors = getFieldErrors(metadata);
 
     const { photogrammetry } = metadata;
-    const { getEntries, getInitialEntry } = useVocabularyStore();
+    const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
 
     const setField = ({ target }): void => {
         const { name, value } = target;
@@ -81,7 +74,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         updatePhotogrammetryField(metadataIndex, name, idFieldValue);
     };
 
-    const setDateField = (name: string, value: string | null | undefined): void => {
+    const setDateField = (name: string, value?: string | null): void => {
         if (value) {
             const date = new Date(value);
             updatePhotogrammetryField(metadataIndex, name, date);
@@ -164,8 +157,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                         onUpdate={updateFolderVariant}
                     />
                 </Box>
-                <Box className={classes.divider} />
-                <Box display='flex' flex={1} flexDirection='column'>
+                <Box display='flex' flex={1} flexDirection='column' ml='30px'>
                     <IdInputField label='Dataset Field ID' value={photogrammetry.datasetFieldId} name='datasetFieldId' onChange={setIdField} />
                     <SelectField
                         label='Item Position Type'
