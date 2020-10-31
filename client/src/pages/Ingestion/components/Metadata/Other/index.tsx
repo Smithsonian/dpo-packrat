@@ -8,7 +8,7 @@ import React from 'react';
 import { useMetadataStore } from '../../../../../store';
 
 interface OtherProps {
-    metadataIndex: number;
+    readonly metadataIndex: number;
 }
 
 function Other(props: OtherProps): React.ReactElement {

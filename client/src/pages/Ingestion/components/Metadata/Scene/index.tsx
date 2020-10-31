@@ -8,7 +8,7 @@ import React from 'react';
 import { useMetadataStore } from '../../../../../store';
 
 interface SceneProps {
-    metadataIndex: number;
+    readonly metadataIndex: number;
 }
 
 function Scene(props: SceneProps): React.ReactElement {
