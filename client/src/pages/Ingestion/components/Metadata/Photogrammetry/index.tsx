@@ -21,7 +21,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 interface PhotogrammetryProps {
-    metadataIndex: number;
+    readonly metadataIndex: number;
 }
 
 function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {

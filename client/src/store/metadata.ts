@@ -29,7 +29,7 @@ import { useVocabularyStore } from './vocabulary';
 
 type MetadataInfo = {
     metadata: StateMetadata;
-    metadataIndex: number;
+    readonly metadataIndex: number;
     isLast: boolean;
 };
 
@@ -258,8 +258,8 @@ type MetadataStore = {
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
     getMetadataInfo: (id: FileId) => MetadataInfo;
     updateMetadataSteps: () => Promise<MetadataUpdate>;
-    updatePhotogrammetryField: (metadataIndex: number, name: string, value: MetadataFieldValue) => void;
-    updateModelField: (metadataIndex: number, name: string, value: MetadataFieldValue) => void;
+    updatePhotogrammetryField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue) => void;
+    updateModelField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue) => void;
     updateMetadataFolders: () => Promise<void>;
     updateCameraSettings: (metadatas: StateMetadata[]) => Promise<StateMetadata[]>;
     reset: () => void;

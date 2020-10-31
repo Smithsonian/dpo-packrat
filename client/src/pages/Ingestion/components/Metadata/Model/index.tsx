@@ -19,7 +19,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 interface ModelProps {
-    metadataIndex: number;
+    readonly metadataIndex: number;
 }
 
 function Model(props: ModelProps): React.ReactElement {
