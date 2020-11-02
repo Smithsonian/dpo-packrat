@@ -117,3 +117,5 @@ export type OtherFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
 };
+
+export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields;

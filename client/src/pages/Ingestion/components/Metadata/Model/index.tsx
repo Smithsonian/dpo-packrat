@@ -199,7 +199,6 @@ function Model(props: ModelProps): React.ReactElement {
 
                     <BoundingBoxInput model={model} onChange={setIdField} />
                 </Box>
-
             </Box>
         </Box>
     );

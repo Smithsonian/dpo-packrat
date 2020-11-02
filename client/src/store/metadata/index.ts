@@ -26,7 +26,7 @@ import { StateSubject, useSubjectStore } from '../subject';
 import { FileId, IngestionFile, useUploadStore } from '../upload';
 import { parseFileId, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from '../utils';
 import { useVocabularyStore } from '../vocabulary';
-import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ModelSchemaType, PhotogrammetrySchemaType } from './metadata.defaults';
+import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema } from './metadata.defaults';
 import {
     FieldErrors,
     MetadataFieldValue,
@@ -39,7 +39,8 @@ import {
     SceneFields,
     StateFolder,
     StateIdentifier,
-    StateMetadata
+    StateMetadata,
+    ValidateFields
 } from './metadata.types';
 
 type MetadataStore = {
@@ -48,7 +49,7 @@ type MetadataStore = {
     getInitialStateFolders: (folders: string[]) => StateFolder[];
     getSelectedIdentifiers: (metadata: StateMetadata) => StateIdentifier[] | undefined;
     getFieldErrors: (metadata: StateMetadata) => FieldErrors;
-    validateFields: (fields: PhotogrammetryFields | ModelFields, schema: PhotogrammetrySchemaType | ModelSchemaType) => boolean;
+    validateFields: (fields: ValidateFields, schema: ValidateFieldsSchema) => boolean;
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
     getMetadataInfo: (id: FileId) => MetadataInfo;
     updateMetadataSteps: () => Promise<MetadataUpdate>;
@@ -99,7 +100,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         return errors;
     },
-    validateFields: (fields: PhotogrammetryFields | ModelFields, schema: PhotogrammetrySchemaType | ModelSchemaType): boolean => {
+    validateFields: (fields: ValidateFields, schema: ValidateFieldsSchema): boolean => {
         let hasError: boolean = false;
         const options: yup.ValidateOptions = {
             abortEarly: false
