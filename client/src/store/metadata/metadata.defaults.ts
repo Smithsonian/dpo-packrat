@@ -157,3 +157,5 @@ export const otherFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation)
 });
+
+export type ValidateFieldsSchema = PhotogrammetrySchemaType | ModelSchemaType | SceneSchemaType | OtherSchemaType;

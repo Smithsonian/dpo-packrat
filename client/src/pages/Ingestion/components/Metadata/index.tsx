@@ -15,7 +15,9 @@ import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../const
 import {
     FileId,
     modelFieldsSchema,
+    otherFieldsSchema,
     photogrammetryFieldsSchema,
+    sceneFieldsSchema,
     StateItem,
     StateMetadata,
     StateProject,
@@ -96,6 +98,16 @@ function Metadata(): React.ReactElement {
 
         if (assetType.model) {
             const hasError: boolean = validateFields(metadata.model, modelFieldsSchema);
+            if (hasError) return;
+        }
+
+        if (assetType.scene) {
+            const hasError: boolean = validateFields(metadata.scene, sceneFieldsSchema);
+            if (hasError) return;
+        }
+
+        if (assetType.other) {
+            const hasError: boolean = validateFields(metadata.other, otherFieldsSchema);
             if (hasError) return;
         }
 
