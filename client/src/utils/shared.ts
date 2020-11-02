@@ -23,6 +23,11 @@ export const actionOnKeyPress = (key: string, actionKey: string, func: () => voi
     }
 };
 
+export const multiIncludes = (text: string, values: string[]): boolean => {
+    const expression = new RegExp(values.join('|'));
+    return expression.test(text);
+};
+
 export const scrollBarProperties = (vertical: boolean, horizontal: boolean, backgroundColor: string): CSSProperties => ({
     scrollBehavior: 'smooth',
     '&::-webkit-scrollbar': {

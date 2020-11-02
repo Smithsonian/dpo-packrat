@@ -8,6 +8,7 @@ import create, { GetState, SetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
 import { eVocabularySetID } from '../types/server';
+import { multiIncludes } from '../utils/shared';
 
 export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
 export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
@@ -16,7 +17,7 @@ type AssetType = {
     photogrammetry: boolean;
     scene: boolean;
     model: boolean;
-    bagit: boolean;
+    other: boolean;
 };
 
 type VocabularyStore = {
@@ -98,17 +99,20 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             photogrammetry: false,
             scene: false,
             model: false,
-            bagit: false
+            other: false
         };
 
         if (vocabularyEntry) {
             const foundVocabulary = lodash.find(vocabularyEntry, option => option.idVocabulary === idVocabulary);
 
             if (foundVocabulary) {
-                assetType.photogrammetry = foundVocabulary.Term.toLowerCase().includes('photogrammetry');
-                assetType.scene = foundVocabulary.Term.toLowerCase().includes('scene');
-                assetType.model = foundVocabulary.Term.toLowerCase().includes('model');
-                assetType.bagit = foundVocabulary.Term.toLowerCase().includes('bulk');
+                const { Term } = foundVocabulary;
+                const term = Term.toLowerCase();
+
+                assetType.photogrammetry = term.includes('photogrammetry');
+                assetType.scene = term.includes('scene');
+                assetType.model = term.includes('model');
+                assetType.other = !multiIncludes(term, ['photogrammetry', 'scene', 'model']);
             }
         }
 
