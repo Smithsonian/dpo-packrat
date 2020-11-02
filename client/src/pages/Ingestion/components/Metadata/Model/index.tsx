@@ -13,10 +13,25 @@ import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../../utils/shared';
 import BoundingBoxInput from './BoundingBoxInput';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
         marginTop: 20
     },
+    notRequiredFields: {
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'column',
+        marginLeft: 30,
+        borderRadius: 5,
+        backgroundColor: palette.secondary.light
+    },
+    noteText: {
+        marginTop: 10,
+        fontSize: '0.8em',
+        fontWeight: typography.fontWeightLight,
+        fontStyle: 'italic',
+        textAlign: 'center'
+    }
 }));
 
 interface ModelProps {
@@ -61,6 +76,8 @@ function Model(props: ModelProps): React.ReactElement {
         }
     };
 
+    const noteLabelProps = { style: { fontStyle: 'italic' } };
+    const noteFieldProps = { alignItems: 'center', style: { paddingBottom: 0 } };
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
@@ -82,7 +99,6 @@ function Model(props: ModelProps): React.ReactElement {
                         direction='row'
                         containerProps={rowFieldProps}
                     >
-
                         <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
                     </FieldType>
 
@@ -154,7 +170,8 @@ function Model(props: ModelProps): React.ReactElement {
                         options={getEntries(eVocabularySetID.eModelGeometryFileModelFileType)}
                     />
                 </Box>
-                <Box display='flex' flex={1} flexDirection='column' ml='30px'>
+                <Box className={classes.notRequiredFields}>
+                    <FieldType required={false} label='(These values may be updated by Cook during ingestion)' labelProps={noteLabelProps} containerProps={noteFieldProps} />
                     <IdInputField label='Roughness' value={model.roughness} name='roughness' onChange={setIdField} />
                     <IdInputField label='Metalness' value={model.metalness} name='metalness' onChange={setIdField} />
                     <IdInputField label='Point Count' value={model.pointCount} name='pointCount' onChange={setIdField} />

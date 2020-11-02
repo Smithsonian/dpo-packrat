@@ -1,3 +1,9 @@
+/**
+ * BoundingBoxInput
+ * 
+ * This is the component used in Model metadata component for 
+ * bounding box input.
+ */
 import { Box } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
@@ -33,7 +39,6 @@ function BoundingBoxInput(props: BoundingBoxInputProps): React.ReactElement {
     );
 }
 
-
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     input: {
         width: '16%',
@@ -41,7 +46,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         padding: 8,
         borderRadius: 5,
-        marginRight: 5,
+        marginLeft: 5,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
             fontSize: '0.8em',
