@@ -8,7 +8,7 @@ import lodash from 'lodash';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
 import create, { GetState, SetState } from 'zustand';
-import { apolloClient } from '../graphql';
+import { apolloClient } from '../../graphql';
 import {
     AreCameraSettingsUniformDocument,
     AssetVersionContent,
@@ -18,242 +18,29 @@ import {
     GetContentsForAssetVersionsDocument,
     IngestFolder,
     Project
-} from '../types/graphql';
-import { eVocabularySetID } from '../types/server';
-import { StateItem, useItemStore } from './item';
-import { StateProject, useProjectStore } from './project';
-import { StateSubject, useSubjectStore } from './subject';
-import { FileId, IngestionFile, useUploadStore } from './upload';
-import { parseFileId, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from './utils';
-import { useVocabularyStore } from './vocabulary';
-
-type MetadataInfo = {
-    metadata: StateMetadata;
-    readonly metadataIndex: number;
-    isLast: boolean;
-};
-
-type FieldErrors = {
-    photogrammetry: {
-        dateCaptured: boolean;
-        datasetType: boolean;
-    };
-    model: {
-        dateCaptured: boolean;
-        creationMethod: boolean;
-        modality: boolean;
-        units: boolean;
-        purpose: boolean;
-        modelFileType: boolean;
-    };
-};
-
-export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[];
-
-type MetadataUpdate = {
-    valid: boolean;
-    selectedFiles: boolean;
-};
-
-export type StateIdentifier = {
-    id: number;
-    identifier: string;
-    identifierType: number | null;
-    selected: boolean;
-};
-
-export type StateFolder = {
-    id: number;
-    name: string;
-    variantType: number | null;
-};
-
-export type PhotogrammetryFields = {
-    systemCreated: boolean;
-    identifiers: StateIdentifier[];
-    folders: StateFolder[];
-    description: string;
-    dateCaptured: Date;
-    datasetType: number | null;
-    datasetFieldId: number | null;
-    itemPositionType: number | null;
-    itemPositionFieldId: number | null;
-    itemArrangementFieldId: number | null;
-    focusType: number | null;
-    lightsourceType: number | null;
-    backgroundRemovalMethod: number | null;
-    clusterType: number | null;
-    clusterGeometryFieldId: number | null;
-    cameraSettingUniform: boolean;
-    directory: string;
-};
-
-export const defaultPhotogrammetryFields: PhotogrammetryFields = {
-    systemCreated: true,
-    identifiers: [],
-    folders: [],
-    description: '',
-    dateCaptured: new Date(),
-    datasetType: null,
-    datasetFieldId: null,
-    itemPositionType: null,
-    itemPositionFieldId: null,
-    itemArrangementFieldId: null,
-    focusType: null,
-    lightsourceType: null,
-    backgroundRemovalMethod: null,
-    clusterType: null,
-    clusterGeometryFieldId: null,
-    cameraSettingUniform: false,
-    directory: ''
-};
-
-const identifierWhenSelectedValidation = {
-    is: true,
-    then: yup.string().trim().required('Enter a valid identifier'),
-    otherwise: yup.string().trim()
-};
-
-const identifierSchema = yup.object().shape({
-    id: yup.number().required(),
-    identifier: yup.string().trim().when('selected', identifierWhenSelectedValidation),
-    identifierType: yup.number().nullable(true),
-    selected: yup.boolean().required()
-});
-
-const folderSchema = yup.object().shape({
-    id: yup.number().required(),
-    name: yup.string().required(),
-    variantType: yup.number().nullable(true)
-});
-
-const identifierValidation = {
-    test: array => !!lodash.filter(array as StateIdentifier[], { selected: true }).length,
-    message: 'Should select/provide at least 1 identifier'
-};
-
-const identifiersWhenValidation = {
-    is: false,
-    then: yup.array().of(identifierSchema).test(identifierValidation)
-};
-
-type PhotogrammetrySchemaType = typeof photogrammetryFieldsSchema;
-
-export const photogrammetryFieldsSchema = yup.object().shape({
-    systemCreated: yup.boolean().required(),
-    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
-    folders: yup.array().of(folderSchema),
-    description: yup.string().required('Description cannot be empty'),
-    dateCaptured: yup.date().required(),
-    datasetType: yup.number().typeError('Please select a valid dataset type'),
-    datasetFieldId: yup.number().nullable(true),
-    itemPositionType: yup.number().nullable(true),
-    itemPositionFieldId: yup.number().nullable(true),
-    itemArrangementFieldId: yup.number().nullable(true),
-    focusType: yup.number().nullable(true),
-    lightsourceType: yup.number().nullable(true),
-    backgroundRemovalMethod: yup.number().nullable(true),
-    clusterType: yup.number().nullable(true),
-    clusterGeometryFieldId: yup.number().nullable(true),
-    cameraSettingUniform: yup.boolean().required(),
-    directory: yup.string().required()
-});
-
-export type ModelFields = {
-    systemCreated: boolean;
-    identifiers: StateIdentifier[];
-    dateCaptured: Date;
-    creationMethod: number | null;
-    masterModel: boolean;
-    authoritativeModel: boolean;
-    modality: number | null;
-    units: number | null;
-    purpose: number | null;
-    modelFileType: number | null;
-    roughness: number | null;
-    metalness: number | null;
-    pointCount: number | null;
-    faceCount: number | null;
-    isWatertight: boolean | null;
-    hasNormals: boolean | null;
-    hasVertexColor: boolean | null;
-    hasUVSpace: boolean | null;
-    boundingBoxP1X: number | null;
-    boundingBoxP1Y: number | null;
-    boundingBoxP1Z: number | null;
-    boundingBoxP2X: number | null;
-    boundingBoxP2Y: number | null;
-    boundingBoxP2Z: number | null;
-};
-
-export const defaultModelFields: ModelFields = {
-    systemCreated: true,
-    identifiers: [],
-    dateCaptured: new Date(),
-    creationMethod: null,
-    masterModel: false,
-    authoritativeModel: false,
-    modality: null,
-    units: null,
-    purpose: null,
-    modelFileType: null,
-    roughness: null,
-    metalness: null,
-    pointCount: null,
-    faceCount: null,
-    isWatertight: null,
-    hasNormals: null,
-    hasVertexColor: null,
-    hasUVSpace: null,
-    boundingBoxP1X: null,
-    boundingBoxP1Y: null,
-    boundingBoxP1Z: null,
-    boundingBoxP2X: null,
-    boundingBoxP2Y: null,
-    boundingBoxP2Z: null
-};
-
-type ModelSchemaType = typeof modelFieldsSchema;
-
-export const modelFieldsSchema = yup.object().shape({
-    systemCreated: yup.boolean().required(),
-    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
-    dateCaptured: yup.date().typeError('Date Captured is required'),
-    creationMethod: yup.number().typeError('Creation method is required'),
-    masterModel: yup.boolean().required(),
-    authoritativeModel: yup.boolean().required(),
-    modality: yup.number().typeError('Modality is required'),
-    units: yup.number().typeError('Units is required'),
-    purpose: yup.number().typeError('Purpose is required'),
-    modelFileType: yup.number().typeError('Model File Type is required'),
-    roughness: yup.number().nullable(true),
-    metalness: yup.number().nullable(true),
-    pointCount: yup.number().nullable(true),
-    faceCount: yup.number().nullable(true),
-    isWatertight: yup.boolean().nullable(true),
-    hasNormals: yup.boolean().nullable(true),
-    hasVertexColor: yup.boolean().nullable(true),
-    hasUVSpace: yup.boolean().nullable(true),
-    boundingBoxP1X: yup.number().nullable(true),
-    boundingBoxP1Y: yup.number().nullable(true),
-    boundingBoxP1Z: yup.number().nullable(true),
-    boundingBoxP2X: yup.number().nullable(true),
-    boundingBoxP2Y: yup.number().nullable(true),
-    boundingBoxP2Z: yup.number().nullable(true)
-});
-
-export type StateMetadata = {
-    photogrammetry: PhotogrammetryFields;
-    model: ModelFields;
-    file: IngestionFile;
-};
-
-export enum MetadataType {
-    photogrammetry = 'photogrammetry',
-    model = 'model',
-    scene = 'scene',
-    other = 'other'
-}
+} from '../../types/graphql';
+import { eVocabularySetID } from '../../types/server';
+import { StateItem, useItemStore } from '../item';
+import { StateProject, useProjectStore } from '../project';
+import { StateSubject, useSubjectStore } from '../subject';
+import { FileId, IngestionFile, useUploadStore } from '../upload';
+import { parseFileId, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from '../utils';
+import { useVocabularyStore } from '../vocabulary';
+import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ModelSchemaType, PhotogrammetrySchemaType } from './metadata.defaults';
+import {
+    FieldErrors,
+    MetadataFieldValue,
+    MetadataInfo,
+    MetadataType,
+    MetadataUpdate,
+    ModelFields,
+    OtherFields,
+    PhotogrammetryFields,
+    SceneFields,
+    StateFolder,
+    StateIdentifier,
+    StateMetadata
+} from './metadata.types';
 
 type MetadataStore = {
     metadatas: StateMetadata[];
@@ -377,13 +164,13 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         const defaultIdentifierField = [defaultIdentifier];
 
-        const defaultPhotogrammetry = {
+        const defaultPhotogrammetry: PhotogrammetryFields = {
             ...defaultPhotogrammetryFields,
             datasetType: getInitialEntry(eVocabularySetID.eCaptureDataDatasetType),
             identifiers: defaultIdentifierField
         };
 
-        const defaultModel = {
+        const defaultModel: ModelFields = {
             ...defaultModelFields,
             identifiers: defaultIdentifierField,
             creationMethod: getInitialEntry(eVocabularySetID.eModelCreationMethod),
@@ -391,6 +178,16 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             units: getInitialEntry(eVocabularySetID.eModelUnits),
             purpose: getInitialEntry(eVocabularySetID.eModelPurpose),
             modelFileType: getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType)
+        };
+
+        const defaultScene: SceneFields = {
+            ...defaultSceneFields,
+            identifiers: defaultIdentifierField
+        };
+
+        const defaultOther: OtherFields = {
+            ...defaultOtherFields,
+            identifiers: defaultIdentifierField
         };
 
         try {
@@ -450,7 +247,9 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     let metadataStep: StateMetadata = {
                         file,
                         photogrammetry: defaultPhotogrammetry,
-                        model: defaultModel
+                        model: defaultModel,
+                        scene: defaultScene,
+                        other: defaultOther
                     };
 
                     if (CaptureDataPhoto) {
@@ -637,3 +436,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         set({ metadatas: [] });
     }
 }));
+
+export * from './metadata.defaults';
+export * from './metadata.types';
