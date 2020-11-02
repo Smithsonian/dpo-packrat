@@ -84,6 +84,7 @@ function Metadata(): React.ReactElement {
     const assetType = getAssetType(Number.parseInt(type, 10));
 
     const onPrevious = () => {
+        toast.dismiss();
         history.goBack();
     };
 

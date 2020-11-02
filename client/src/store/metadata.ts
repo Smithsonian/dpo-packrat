@@ -248,6 +248,13 @@ export type StateMetadata = {
     file: IngestionFile;
 };
 
+export enum MetadataType {
+    photogrammetry = 'photogrammetry',
+    model = 'model',
+    scene = 'scene',
+    other = 'other'
+}
+
 type MetadataStore = {
     metadatas: StateMetadata[];
     getStateFolders: (folders: IngestFolder[]) => StateFolder[];
@@ -258,8 +265,7 @@ type MetadataStore = {
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
     getMetadataInfo: (id: FileId) => MetadataInfo;
     updateMetadataSteps: () => Promise<MetadataUpdate>;
-    updatePhotogrammetryField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue) => void;
-    updateModelField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue) => void;
+    updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => void;
     updateMetadataFolders: () => Promise<void>;
     updateCameraSettings: (metadatas: StateMetadata[]) => Promise<StateMetadata[]>;
     reset: () => void;
@@ -292,15 +298,16 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         if (assetType.photogrammetry) {
             errors.photogrammetry.dateCaptured = metadata.photogrammetry.dateCaptured.toString() === 'Invalid Date';
-            errors.photogrammetry.datasetType = metadata.photogrammetry.datasetType === null;
+            errors.photogrammetry.datasetType = lodash.isNull(metadata.photogrammetry.datasetType);
         }
 
         if (assetType.model) {
             errors.model.dateCaptured = metadata.model.dateCaptured.toString() === 'Invalid Date';
-            errors.model.modality = metadata.model.modality === null;
-            errors.model.units = metadata.model.units === null;
-            errors.model.purpose = metadata.model.purpose === null;
-            errors.model.modelFileType = metadata.model.modelFileType === null;
+            errors.model.creationMethod = lodash.isNull(metadata.model.creationMethod);
+            errors.model.modality = lodash.isNull(metadata.model.modality);
+            errors.model.units = lodash.isNull(metadata.model.units);
+            errors.model.purpose = lodash.isNull(metadata.model.purpose);
+            errors.model.modelFileType = lodash.isNull(metadata.model.modelFileType);
         }
 
         return errors;
@@ -504,32 +511,14 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             selectedFiles: true
         };
     },
-    updatePhotogrammetryField: (metadataIndex: number, name: string, value: MetadataFieldValue) => {
+    updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => {
         const { metadatas } = get();
         const updatedMetadatas = lodash.map(metadatas, (metadata: StateMetadata, index: number) => {
             if (index === metadataIndex) {
                 return {
                     ...metadata,
-                    photogrammetry: {
-                        ...metadata.photogrammetry,
-                        [name]: value
-                    }
-                };
-            }
-
-            return metadata;
-        });
-
-        set({ metadatas: updatedMetadatas });
-    },
-    updateModelField: (metadataIndex: number, name: string, value: MetadataFieldValue) => {
-        const { metadatas } = get();
-        const updatedMetadatas = lodash.map(metadatas, (metadata: StateMetadata, index: number) => {
-            if (index === metadataIndex) {
-                return {
-                    ...metadata,
-                    model: {
-                        ...metadata.model,
+                    [metadataType]: {
+                        ...metadata[metadataType],
                         [name]: value
                     }
                 };

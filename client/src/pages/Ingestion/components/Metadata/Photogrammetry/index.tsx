@@ -8,7 +8,7 @@ import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, IdInputField, SelectField } from '../../../../../components';
-import { StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore } from '../../../../../store';
+import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from './AssetContents';
@@ -28,7 +28,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { metadataIndex } = props;
     const classes = useStyles();
 
-    const [getFieldErrors, updatePhotogrammetryField] = useMetadataStore(state => [state.getFieldErrors, state.updatePhotogrammetryField]);
+    const [getFieldErrors, updateMetadataField] = useMetadataStore(state => [state.getFieldErrors, state.updateMetadataField]);
     const metadata: StateMetadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const errors = getFieldErrors(metadata);
 
@@ -37,7 +37,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const setField = ({ target }): void => {
         const { name, value } = target;
-        updatePhotogrammetryField(metadataIndex, name, value);
+        updateMetadataField(metadataIndex, name, value, MetadataType.photogrammetry);
     };
 
     const setIdField = ({ target }): void => {
@@ -48,23 +48,23 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
             idFieldValue = Number.parseInt(value, 10);
         }
 
-        updatePhotogrammetryField(metadataIndex, name, idFieldValue);
+        updateMetadataField(metadataIndex, name, idFieldValue, MetadataType.photogrammetry);
     };
 
     const setDateField = (name: string, value?: string | null): void => {
         if (value) {
             const date = new Date(value);
-            updatePhotogrammetryField(metadataIndex, name, date);
+            updateMetadataField(metadataIndex, name, date, MetadataType.photogrammetry);
         }
     };
 
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
-        updatePhotogrammetryField(metadataIndex, name, checked);
+        updateMetadataField(metadataIndex, name, checked, MetadataType.photogrammetry);
     };
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
-        updatePhotogrammetryField(metadataIndex, 'identifiers', identifiers);
+        updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.photogrammetry);
     };
 
     const updateFolderVariant = (folderId: number, variantType: number) => {
@@ -78,7 +78,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
             }
             return folder;
         });
-        updatePhotogrammetryField(metadataIndex, 'folders', updatedFolders);
+        updateMetadataField(metadataIndex, 'folders', updatedFolders, MetadataType.photogrammetry);
     };
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };

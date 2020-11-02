@@ -8,6 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, IdInputField, SelectField } from '../../../../../components';
 import { StateIdentifier, useMetadataStore, useVocabularyStore } from '../../../../../store';
+import { MetadataType } from '../../../../../store/metadata';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../../utils/shared';
 import BoundingBoxInput from './BoundingBoxInput';
@@ -27,18 +28,18 @@ function Model(props: ModelProps): React.ReactElement {
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { model } = metadata;
-    const [updateModelField, getFieldErrors] = useMetadataStore(state => [state.updateModelField, state.getFieldErrors]);
+    const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
 
     const errors = getFieldErrors(metadata);
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
-        updateModelField(metadataIndex, 'identifiers', identifiers);
+        updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.model);
     };
 
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
-        updateModelField(metadataIndex, name, checked);
+        updateMetadataField(metadataIndex, name, checked, MetadataType.model);
     };
 
     const setIdField = ({ target }): void => {
@@ -49,14 +50,14 @@ function Model(props: ModelProps): React.ReactElement {
             idFieldValue = Number.parseInt(value, 10);
         }
 
-        updateModelField(metadataIndex, name, idFieldValue);
+        updateMetadataField(metadataIndex, name, idFieldValue, MetadataType.model);
     };
 
 
     const setDateField = (name: string, value?: string | null): void => {
         if (value) {
             const date = new Date(value);
-            updateModelField(metadataIndex, name, date);
+            updateMetadataField(metadataIndex, name, date, MetadataType.model);
         }
     };
 
