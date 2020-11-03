@@ -17,6 +17,12 @@ export const withDefaultValueNumber = (value: number | null, defaultValue: numbe
     return defaultValue;
 };
 
+export function nonNullValue<T>(name: string, value: T | null | undefined): T {
+    if (value === null || value === undefined) throw new Error(`Provided ${name} is null`);
+
+    return value;
+}
+
 export const actionOnKeyPress = (key: string, actionKey: string, func: () => void): void => {
     if (key === actionKey) {
         func();

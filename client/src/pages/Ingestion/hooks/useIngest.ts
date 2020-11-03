@@ -11,9 +11,13 @@ import { HOME_ROUTES, INGESTION_ROUTES_TYPE, resolveSubRoute } from '../../../co
 import { apolloClient } from '../../../graphql';
 import {
     defaultItem,
+    isNewItem,
+    parseFileId,
+    StateFolder,
     StateIdentifier,
     StateItem,
     StateProject,
+    StateUVMap,
     useItemStore,
     useMetadataStore,
     useProjectStore,
@@ -21,11 +25,25 @@ import {
     useUploadStore,
     useVocabularyStore
 } from '../../../store';
-import { isNewItem, parseFileId } from '../../../store/utils';
-import { IngestDataDocument, IngestDataMutation, IngestFolderInput, IngestIdentifierInput, IngestPhotogrammetryInput, IngestSubjectInput } from '../../../types/graphql';
+import {
+    IngestDataDocument,
+    IngestDataInput,
+    IngestDataMutation,
+    IngestFolderInput,
+    IngestIdentifierInput,
+    IngestItemInput,
+    IngestModelInput,
+    IngestOtherInput,
+    IngestPhotogrammetryInput,
+    IngestProjectInput,
+    IngestSceneInput,
+    IngestSubjectInput,
+    IngestUvMapInput
+} from '../../../types/graphql';
+import { nonNullValue } from '../../../utils/shared';
 
 interface UseIngest {
-    ingestPhotogrammetryData: () => Promise<boolean>;
+    ingestionStart: () => Promise<boolean>;
     ingestionComplete: () => void;
     ingestionReset: () => void;
 }
@@ -40,51 +58,44 @@ function useIngest(): UseIngest {
 
     const history = useHistory();
 
-    const ingestPhotogrammetryData = async (): Promise<boolean> => {
+    const ingestionStart = async (): Promise<boolean> => {
         try {
-            let ingestProject = {};
-            let ingestItem = {};
-
-            const ingestPhotogrammetry: IngestPhotogrammetryInput[] = [];
-
             const ingestSubjects: IngestSubjectInput[] = subjects.map(subject => ({
                 ...subject,
                 id: subject.id || null
             }));
 
-            const project: StateProject | undefined = getSelectedProject();
+            const project: StateProject = nonNullValue<StateProject>('project', getSelectedProject());
 
-            if (project) {
-                const { id, name } = project;
-                ingestProject = {
-                    id,
-                    name
-                };
+            const ingestProject: IngestProjectInput = {
+                id: project.id,
+                name: project.name
+            };
+
+            const item: StateItem = nonNullValue<StateItem>('item', getSelectedItem());
+
+            const isDefaultItem = item.id === defaultItem.id;
+
+            let ingestItemId: number | null = null;
+
+            if (!isDefaultItem || isNewItem(item.id)) {
+                ingestItemId = Number.parseInt(item.id, 10);
             }
 
-            const item: StateItem | undefined = getSelectedItem();
+            const ingestItem: IngestItemInput = {
+                id: ingestItemId,
+                name: item.name,
+                entireSubject: item.entireSubject
+            };
 
-            if (item) {
-                const { id, name, entireSubject } = item;
-
-                const isDefaultItem = id === defaultItem.id;
-
-                let ingestItemId: number | null = null;
-
-                if (!isDefaultItem || isNewItem(id)) {
-                    ingestItemId = Number.parseInt(id, 10);
-                }
-
-                ingestItem = {
-                    id: ingestItemId,
-                    name,
-                    entireSubject
-                };
-            }
+            const ingestPhotogrammetry: IngestPhotogrammetryInput[] = [];
+            const ingestModel: IngestModelInput[] = [];
+            const ingestScene: IngestSceneInput[] = [];
+            const ingestOther: IngestOtherInput[] = [];
 
             lodash.forEach(metadatas, metadata => {
-                const { file, photogrammetry } = metadata;
-                const { photogrammetry: isPhotogrammetry } = getAssetType(file.type);
+                const { file, photogrammetry, model, scene, other } = metadata;
+                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, other: isOther } = getAssetType(file.type);
 
                 if (isPhotogrammetry) {
                     const {
@@ -102,51 +113,18 @@ function useIngest(): UseIngest {
                         backgroundRemovalMethod,
                         clusterType,
                         clusterGeometryFieldId,
-                        directory
+                        directory,
+                        identifiers,
+                        folders
                     } = photogrammetry;
 
-                    const ingestIdentifiers: IngestIdentifierInput[] = [];
-                    const identifiers: StateIdentifier[] | undefined = getSelectedIdentifiers(metadata);
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+                    const ingestFolders: IngestFolderInput[] = getIngestFolders(folders);
 
-                    if (identifiers) {
-                        lodash.forEach(identifiers, data => {
-                            const { identifier, identifierType } = data;
-                            if (!identifierType) {
-                                throw Error('Identifer type is null');
-                            }
-
-                            const identifierData: IngestIdentifierInput = {
-                                identifier,
-                                identifierType
-                            };
-                            ingestIdentifiers.push(identifierData);
-                        });
-                    }
-
-                    const ingestFolders: IngestFolderInput[] = [];
-                    lodash.forEach(photogrammetry.folders, folder => {
-                        const { name, variantType } = folder;
-
-                        if (!variantType) {
-                            throw Error('Folder variantType type is null');
-                        }
-
-                        const folderData = {
-                            name,
-                            variantType
-                        };
-
-                        ingestFolders.push(folderData);
-                    });
-
-                    if (!datasetType) {
-                        throw Error('Dataset Type type is null');
-                    }
-
-                    const photogrammetryData = {
+                    const photogrammetryData: IngestPhotogrammetryInput = {
                         idAssetVersion: parseFileId(file.id),
                         dateCaptured: dateCaptured.toISOString(),
-                        datasetType,
+                        datasetType: nonNullValue<number>('datasetType', datasetType),
                         systemCreated,
                         description,
                         cameraSettingUniform,
@@ -163,22 +141,116 @@ function useIngest(): UseIngest {
                         clusterType,
                         clusterGeometryFieldId
                     };
+
                     ingestPhotogrammetry.push(photogrammetryData);
+                }
+
+                if (isModel) {
+                    const {
+                        systemCreated,
+                        identifiers,
+                        uvMaps,
+                        dateCaptured,
+                        creationMethod,
+                        master,
+                        authoritative,
+                        modality,
+                        units,
+                        purpose,
+                        modelFileType,
+                        roughness,
+                        metalness,
+                        pointCount,
+                        faceCount,
+                        isWatertight,
+                        hasNormals,
+                        hasVertexColor,
+                        hasUVSpace,
+                        boundingBoxP1X,
+                        boundingBoxP1Y,
+                        boundingBoxP1Z,
+                        boundingBoxP2X,
+                        boundingBoxP2Y,
+                        boundingBoxP2Z,
+                        directory
+                    } = model;
+
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+                    const ingestUVMaps: IngestUvMapInput[] = getIngestUVMaps(uvMaps);
+
+                    const modelData: IngestModelInput = {
+                        idAssetVersion: parseFileId(file.id),
+                        dateCaptured: dateCaptured.toISOString(),
+                        identifiers: ingestIdentifiers,
+                        uvMaps: ingestUVMaps,
+                        systemCreated,
+                        creationMethod: nonNullValue<number>('creationMethod', creationMethod),
+                        master,
+                        authoritative,
+                        modality: nonNullValue<number>('modality', modality),
+                        units: nonNullValue<number>('units', units),
+                        purpose: nonNullValue<number>('purpose', purpose),
+                        modelFileType: nonNullValue<number>('modelFileType', modelFileType),
+                        roughness,
+                        metalness,
+                        pointCount,
+                        faceCount,
+                        isWatertight,
+                        hasNormals,
+                        hasVertexColor,
+                        hasUVSpace,
+                        boundingBoxP1X,
+                        boundingBoxP1Y,
+                        boundingBoxP1Z,
+                        boundingBoxP2X,
+                        boundingBoxP2Y,
+                        boundingBoxP2Z,
+                        directory
+                    };
+
+                    ingestModel.push(modelData);
+                }
+
+                if (isScene) {
+                    const { identifiers } = scene;
+
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+
+                    const sceneData: IngestSceneInput = {
+                        idAssetVersion: parseFileId(file.id),
+                        identifiers: ingestIdentifiers
+                    };
+
+                    ingestScene.push(sceneData);
+                }
+
+                if (isOther) {
+                    const { identifiers } = other;
+
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+
+                    const otherData: IngestOtherInput = {
+                        idAssetVersion: parseFileId(file.id),
+                        identifiers: ingestIdentifiers
+                    };
+
+                    ingestOther.push(otherData);
                 }
             });
 
-            const variables = {
-                input: {
-                    subjects: ingestSubjects,
-                    project: ingestProject,
-                    item: ingestItem,
-                    photogrammetry: ingestPhotogrammetry
-                }
+            const input: IngestDataInput = {
+                subjects: ingestSubjects,
+                project: ingestProject,
+                item: ingestItem,
+                photogrammetry: ingestPhotogrammetry,
+                model: ingestModel,
+                scene: ingestScene,
+                other: ingestOther
             };
 
             const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
                 mutation: IngestDataDocument,
-                variables,
+                variables: { input },
                 refetchQueries: ['getUploadedAssetVersion']
             });
 
@@ -216,8 +288,59 @@ function useIngest(): UseIngest {
         resetIngestionState();
     };
 
+    const getIngestIdentifiers = (identifiers: StateIdentifier[]): IngestIdentifierInput[] => {
+        const ingestIdentifiers: IngestIdentifierInput[] = [];
+        const selectedIdentifiers: StateIdentifier[] | undefined = getSelectedIdentifiers(identifiers);
+
+        if (selectedIdentifiers) {
+            lodash.forEach(selectedIdentifiers, (data: StateIdentifier) => {
+                const { identifier, identifierType } = data;
+
+                const identifierData: IngestIdentifierInput = {
+                    identifier,
+                    identifierType: nonNullValue<number>('identifierType', identifierType)
+                };
+                ingestIdentifiers.push(identifierData);
+            });
+        }
+
+        return ingestIdentifiers;
+    };
+
+    const getIngestFolders = (folders: StateFolder[]): IngestFolderInput[] => {
+        const ingestFolders: IngestFolderInput[] = [];
+        lodash.forEach(folders, (folder: StateFolder) => {
+            const { name, variantType } = folder;
+
+            const folderData: IngestFolderInput = {
+                name,
+                variantType: nonNullValue<number>('variantType', variantType)
+            };
+
+            ingestFolders.push(folderData);
+        });
+
+        return ingestFolders;
+    };
+
+    const getIngestUVMaps = (uvMaps: StateUVMap[]): IngestUvMapInput[] => {
+        const ingestUVMaps: IngestUvMapInput[] = [];
+        lodash.forEach(uvMaps, (uvMap: StateUVMap) => {
+            const { name, mapType } = uvMap;
+
+            const uvMapData: IngestUvMapInput = {
+                name,
+                mapType: nonNullValue<number>('mapType', mapType)
+            };
+
+            ingestUVMaps.push(uvMapData);
+        });
+
+        return ingestUVMaps;
+    };
+
     return {
-        ingestPhotogrammetryData,
+        ingestionStart,
         ingestionComplete,
         ingestionReset
     };
