@@ -69,7 +69,7 @@ function Metadata(): React.ReactElement {
     const getSelectedProject = useProjectStore(state => state.getSelectedProject);
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
     const [metadatas, getMetadataInfo, validateFields] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields]);
-    const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
+    const { ingestionStart, ingestionComplete } = useIngest();
     const getAssetType = useVocabularyStore(state => state.getAssetType);
 
     const metadataLength = metadatas.length;
@@ -113,7 +113,7 @@ function Metadata(): React.ReactElement {
 
         if (isLast) {
             setIngestionLoading(true);
-            const success: boolean = await ingestPhotogrammetryData();
+            const success: boolean = await ingestionStart();
             setIngestionLoading(false);
 
             if (success) {

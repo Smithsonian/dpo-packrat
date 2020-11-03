@@ -602,16 +602,49 @@ export type IngestPhotogrammetryInput = {
     identifiers: Array<IngestIdentifierInput>;
 };
 
+export type IngestUvMapInput = {
+    name: Scalars['String'];
+    mapType: Scalars['Int'];
+};
+
 export type IngestModelInput = {
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    master: Scalars['Boolean'];
     authoritative: Scalars['Boolean'];
-    dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
     modality: Scalars['Int'];
     purpose: Scalars['Int'];
     units: Scalars['Int'];
-    master: Scalars['Boolean'];
+    dateCaptured: Scalars['String'];
+    modelFileType: Scalars['Int'];
     directory: Scalars['String'];
+    identifiers: Array<IngestIdentifierInput>;
+    uvMaps: Array<IngestUvMapInput>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Int']>;
+    boundingBoxP1Y?: Maybe<Scalars['Int']>;
+    boundingBoxP1Z?: Maybe<Scalars['Int']>;
+    boundingBoxP2X?: Maybe<Scalars['Int']>;
+    boundingBoxP2Y?: Maybe<Scalars['Int']>;
+    boundingBoxP2Z?: Maybe<Scalars['Int']>;
+};
+
+export type IngestSceneInput = {
+    idAssetVersion: Scalars['Int'];
+    identifiers: Array<IngestIdentifierInput>;
+};
+
+export type IngestOtherInput = {
+    idAssetVersion: Scalars['Int'];
+    identifiers: Array<IngestIdentifierInput>;
 };
 
 export type IngestDataInput = {
@@ -619,6 +652,9 @@ export type IngestDataInput = {
     project: IngestProjectInput;
     item: IngestItemInput;
     photogrammetry: Array<IngestPhotogrammetryInput>;
+    model: Array<IngestModelInput>;
+    scene: Array<IngestSceneInput>;
+    other: Array<IngestOtherInput>;
 };
 
 export type IngestDataResult = {
