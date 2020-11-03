@@ -12,6 +12,7 @@ import { MetadataType } from '../../../../../store/metadata';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../../utils/shared';
 import BoundingBoxInput from './BoundingBoxInput';
+import UVContents from './UVContents';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
@@ -74,6 +75,20 @@ function Model(props: ModelProps): React.ReactElement {
             const date = new Date(value);
             updateMetadataField(metadataIndex, name, date, MetadataType.model);
         }
+    };
+
+    const updateUVMapsVariant = (uvMapId: number, mapType: number) => {
+        const { uvMaps } = model;
+        const updatedUVMaps = uvMaps.map(uvMap => {
+            if (uvMapId === uvMap.id) {
+                return {
+                    ...uvMap,
+                    mapType
+                };
+            }
+            return uvMap;
+        });
+        updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
     };
 
     const noteLabelProps = { style: { fontStyle: 'italic' } };
@@ -168,6 +183,12 @@ function Model(props: ModelProps): React.ReactElement {
                         name='modelFileType'
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eModelGeometryFileModelFileType)}
+                    />
+                    <UVContents
+                        initialEntry={getInitialEntry(eVocabularySetID.eModelUVMapChannelUVMapType)}
+                        uvMaps={model.uvMaps}
+                        options={getEntries(eVocabularySetID.eModelUVMapChannelUVMapType)}
+                        onUpdate={updateUVMapsVariant}
                     />
                 </Box>
                 <Box className={classes.notRequiredFields}>

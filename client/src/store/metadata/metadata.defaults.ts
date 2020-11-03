@@ -78,9 +78,16 @@ export const photogrammetryFieldsSchema = yup.object().shape({
     directory: yup.string().required()
 });
 
+const uvMapSchema = yup.object().shape({
+    id: yup.number().required(),
+    name: yup.string().required(),
+    mapType: yup.number().nullable(true)
+});
+
 export const defaultModelFields: ModelFields = {
     systemCreated: true,
     identifiers: [],
+    uvMaps: [],
     dateCaptured: new Date(),
     creationMethod: null,
     masterModel: false,
@@ -110,6 +117,7 @@ export type ModelSchemaType = typeof modelFieldsSchema;
 export const modelFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
+    uvMaps: yup.array().of(uvMapSchema),
     dateCaptured: yup.date().typeError('Date Captured is required'),
     creationMethod: yup.number().typeError('Creation method is required'),
     masterModel: yup.boolean().required(),

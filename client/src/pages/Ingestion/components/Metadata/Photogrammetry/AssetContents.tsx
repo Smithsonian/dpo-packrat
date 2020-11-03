@@ -62,47 +62,105 @@ interface AssetContentsProps {
 
 function AssetContents(props: AssetContentsProps): React.ReactElement {
     const { folders, options, initialEntry, onUpdate } = props;
-    const classes = useStyles();
 
     return (
         <FieldType required renderLabel={false} marginTop={1.5}>
-            <Box className={classes.header}>
-                <Box className={classes.headerTitle}>
-                    <Typography variant='body1'>Folder Name</Typography>
-                </Box>
-                <Box className={classes.headerTitle}>
-                    <Typography variant='body1'>Variant Type</Typography>
-                </Box>
-            </Box>
+            <ContentHeader titles={['Folder Name', 'Variant Type']} />
             <Box display='flex' flex={1} flexDirection='column' mt={1}>
-                {!folders.length && <Typography className={classes.emptyFolders} variant='caption'>No folders detected</Typography>}
-                {folders.map(({ id, name, variantType }, index: number) => {
+                <EmptyContent label='folders' isEmpty={!folders.length} />
+                {folders.map(({ id, name, variantType }: StateFolder, index: number) => {
                     const update = ({ target }) => onUpdate(id, target.value);
 
                     return (
-                        <Box key={index} display='flex' my={1} justifyContent='space-between'>
-                            <Box display='flex' flex={1} alignItems='center'>
-                                <Box>
-                                    <AiFillFolder color={palette.primary.contrastText} size={24} />
-                                </Box>
-                                <Typography noWrap={false} className={classes.contentText} variant='caption'>{name}</Typography>
-                            </Box>
-                            <Box display='flex' alignItems='center' justifyContent='center'>
-                                <Select
-                                    value={variantType || initialEntry}
-                                    className={classes.select}
-                                    name='folders'
-                                    onChange={update}
-                                    disableUnderline
-                                >
-                                    {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                </Select>
-                            </Box>
-                        </Box>
+                        <Content
+                            key={index}
+                            name={name}
+                            fieldName='folders'
+                            value={variantType}
+                            icon={<AiFillFolder color={palette.primary.contrastText} size={24} />}
+                            initialEntry={initialEntry}
+                            options={options}
+                            update={update}
+                        />
                     );
                 })}
             </Box>
         </FieldType>
+    );
+}
+
+interface EmptyContentProps {
+    isEmpty: boolean;
+    label: string;
+}
+
+export function EmptyContent(props: EmptyContentProps): React.ReactElement {
+    const { isEmpty, label } = props;
+    const classes = useStyles();
+
+    if (!isEmpty) {
+        return <React.Fragment />;
+    }
+
+    return <Typography className={classes.emptyFolders} variant='caption'>No {label} detected</Typography>;
+}
+
+interface ContentHeaderProps {
+    titles: string[];
+}
+
+export function ContentHeader(props: ContentHeaderProps): React.ReactElement {
+    const { titles } = props;
+    const classes = useStyles();
+
+    return (
+        <Box className={classes.header}>
+            {titles.map((title: string, index: number) => (
+                <Box key={index} className={classes.headerTitle}>
+                    <Typography variant='body1'>{title}</Typography>
+                </Box>
+            ))}
+        </Box>
+    );
+}
+
+interface ContentProps {
+    fieldName: string;
+    value: number | null;
+    name: string;
+    icon: React.ReactNode;
+    initialEntry: number | null;
+    options: VocabularyOption[];
+    update: (event: React.ChangeEvent<{
+        name?: string | undefined;
+        value: unknown;
+    }>) => void;
+}
+
+export function Content(props: ContentProps): React.ReactElement {
+    const { fieldName, value, name, icon, initialEntry, update, options } = props;
+    const classes = useStyles();
+
+    return (
+        <Box display='flex' my={1} justifyContent='space-between'>
+            <Box display='flex' flex={1} alignItems='center'>
+                <Box>
+                    {icon}
+                </Box>
+                <Typography noWrap={false} className={classes.contentText} variant='caption'>{name}</Typography>
+            </Box>
+            <Box display='flex' alignItems='center' justifyContent='center'>
+                <Select
+                    value={value || initialEntry}
+                    className={classes.select}
+                    name={fieldName}
+                    onChange={update}
+                    disableUnderline
+                >
+                    {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                </Select>
+            </Box>
+        </Box>
     );
 }
 
