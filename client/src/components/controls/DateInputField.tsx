@@ -7,6 +7,7 @@
 import DateFnsUtils from '@date-io/date-fns';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
+import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 import React from 'react';
 import { Colors } from '../../theme';
 
@@ -32,7 +33,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 
 interface DateInputFieldProps {
     value: Date;
-    onChange: any;
+    onChange: (date: MaterialUiPickersDate, value?: string | null | undefined) => void;
 }
 
 function DateInputField(props: DateInputFieldProps): React.ReactElement {

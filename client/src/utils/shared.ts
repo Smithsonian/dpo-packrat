@@ -31,13 +31,13 @@ export const multiIncludes = (text: string, values: string[]): boolean => {
 export const scrollBarProperties = (vertical: boolean, horizontal: boolean, backgroundColor: string): CSSProperties => ({
     scrollBehavior: 'smooth',
     '&::-webkit-scrollbar': {
-        '-webkit-appearance': 'none'
+        '-webkit-appearance': 'none',
+        maxWidth: 8
     },
     '&::-webkit-scrollbar:vertical': vertical ? { width: 12 } : null,
     '&::-webkit-scrollbar:horizontal': horizontal ? { height: 12 } : null,
     '&::-webkit-scrollbar-thumb': {
-        borderRadius: 8,
-        border: '2px solid white',
+        borderRadius: 10,
         backgroundColor
     }
 });
