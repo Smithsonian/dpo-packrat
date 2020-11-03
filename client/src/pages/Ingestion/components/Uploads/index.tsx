@@ -66,9 +66,9 @@ function Uploads(): React.ReactElement {
     const [loadingVocabulary, setLoadingVocabulary] = useState(true);
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
-    const { completed, discardFiles } = useUploadStore();
-    const { updateMetadataSteps } = useMetadataStore();
-    const { updateVocabularyEntries } = useVocabularyStore();
+    const [completed, discardFiles] = useUploadStore(state => [state.completed,state.discardFiles]);
+    const updateMetadataSteps = useMetadataStore(state => state.updateMetadataSteps);
+    const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
 
     const fetchVocabularyEntries = async () => {
         setLoadingVocabulary(true);
@@ -80,13 +80,15 @@ function Uploads(): React.ReactElement {
         fetchVocabularyEntries();
     }, []);
 
-    const onIngest = async () => {
+    const onIngest = async (): Promise<void> => {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
         try {
             setGettingAssetDetails(true);
-            const { valid, selectedFiles } = await updateMetadataSteps();
+            const { valid, selectedFiles, error } = await updateMetadataSteps();
 
             setGettingAssetDetails(false);
+
+            if (error) return;
 
             if (!selectedFiles) {
                 toast.warn('Please select at least 1 file to ingest');

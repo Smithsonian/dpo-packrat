@@ -46,6 +46,7 @@ export type MetadataFieldValue = string | number | boolean | null | Date | State
 export type MetadataUpdate = {
     valid: boolean;
     selectedFiles: boolean;
+    error: boolean;
 };
 
 export type StateIdentifier = {

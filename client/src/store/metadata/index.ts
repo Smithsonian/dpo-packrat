@@ -24,6 +24,7 @@ import { StateItem, useItemStore } from '../item';
 import { StateProject, useProjectStore } from '../project';
 import { StateSubject, useSubjectStore } from '../subject';
 import { FileId, IngestionFile, useUploadStore } from '../upload';
+import { useUserStore } from '../user';
 import { parseFileId, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from '../utils';
 import { useVocabularyStore } from '../vocabulary';
 import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema } from './metadata.defaults';
@@ -139,6 +140,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     },
     updateMetadataSteps: async (): Promise<MetadataUpdate> => {
         const { getStateFolders } = get();
+        const { isAuthenticated } = useUserStore.getState();
         const { completed, getSelectedFiles } = useUploadStore.getState();
         const { getInitialEntry } = useVocabularyStore.getState();
         const { addSubjects } = useSubjectStore.getState();
@@ -150,7 +152,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         if (!selectedFiles.length) {
             return {
                 valid: false,
-                selectedFiles: false
+                selectedFiles: false,
+                error: false
             };
         }
 
@@ -192,6 +195,11 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         };
 
         try {
+            if (!(await isAuthenticated())) {
+                toast.error('user is not authenticated, please login');
+                return { valid: true, selectedFiles: true, error: true };
+            }
+
             const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({
                 query: GetAssetVersionsDetailsDocument,
                 variables: {
@@ -299,7 +307,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
                 return {
                     valid: true,
-                    selectedFiles: true
+                    selectedFiles: true,
+                    error: false
                 };
             }
         } catch {
@@ -308,7 +317,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         return {
             valid: false,
-            selectedFiles: true
+            selectedFiles: true,
+            error: false
         };
     },
     updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => {
@@ -440,3 +450,4 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
 export * from './metadata.defaults';
 export * from './metadata.types';
+

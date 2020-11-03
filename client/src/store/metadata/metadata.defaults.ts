@@ -141,7 +141,7 @@ export const modelFieldsSchema = yup.object().shape({
     boundingBoxP2X: yup.number().nullable(true),
     boundingBoxP2Y: yup.number().nullable(true),
     boundingBoxP2Z: yup.number().nullable(true),
-    directory: yup.string().required()
+    directory: yup.string()
 });
 
 export const defaultSceneFields: SceneFields = {
