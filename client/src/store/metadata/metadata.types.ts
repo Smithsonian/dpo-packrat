@@ -41,7 +41,7 @@ export type FieldErrors = {
     };
 };
 
-export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[];
+export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateUVMap[];
 
 export type MetadataUpdate = {
     valid: boolean;
@@ -81,9 +81,16 @@ export type PhotogrammetryFields = {
     directory: string;
 };
 
+export type StateUVMap = {
+    id: number;
+    name: string;
+    mapType: number | null;
+};
+
 export type ModelFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    uvMaps: StateUVMap[];
     dateCaptured: Date;
     creationMethod: number | null;
     masterModel: boolean;
