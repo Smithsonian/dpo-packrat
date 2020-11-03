@@ -93,8 +93,8 @@ export type ModelFields = {
     uvMaps: StateUVMap[];
     dateCaptured: Date;
     creationMethod: number | null;
-    masterModel: boolean;
-    authoritativeModel: boolean;
+    master: boolean;
+    authoritative: boolean;
     modality: number | null;
     units: number | null;
     purpose: number | null;
@@ -113,6 +113,7 @@ export type ModelFields = {
     boundingBoxP2X: number | null;
     boundingBoxP2Y: number | null;
     boundingBoxP2Z: number | null;
+    directory: string;
 };
 
 export type SceneFields = {

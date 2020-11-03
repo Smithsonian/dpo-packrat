@@ -129,8 +129,8 @@ function Model(props: ModelProps): React.ReactElement {
 
                     <FieldType required label='Master' direction='row' containerProps={rowFieldProps}>
                         <Checkbox
-                            name='masterModel'
-                            checked={model.masterModel}
+                            name='master'
+                            checked={model.master}
                             color='primary'
                             onChange={setCheckboxField}
                         />
@@ -138,8 +138,8 @@ function Model(props: ModelProps): React.ReactElement {
 
                     <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
                         <Checkbox
-                            name='authoritativeModel'
-                            checked={model.authoritativeModel}
+                            name='authoritative'
+                            checked={model.authoritative}
                             color='primary'
                             onChange={setCheckboxField}
                         />

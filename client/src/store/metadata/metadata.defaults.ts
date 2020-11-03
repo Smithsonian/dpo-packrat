@@ -90,8 +90,8 @@ export const defaultModelFields: ModelFields = {
     uvMaps: [],
     dateCaptured: new Date(),
     creationMethod: null,
-    masterModel: false,
-    authoritativeModel: false,
+    master: false,
+    authoritative: false,
     modality: null,
     units: null,
     purpose: null,
@@ -109,7 +109,8 @@ export const defaultModelFields: ModelFields = {
     boundingBoxP1Z: null,
     boundingBoxP2X: null,
     boundingBoxP2Y: null,
-    boundingBoxP2Z: null
+    boundingBoxP2Z: null,
+    directory: ''
 };
 
 export type ModelSchemaType = typeof modelFieldsSchema;
@@ -120,8 +121,8 @@ export const modelFieldsSchema = yup.object().shape({
     uvMaps: yup.array().of(uvMapSchema),
     dateCaptured: yup.date().typeError('Date Captured is required'),
     creationMethod: yup.number().typeError('Creation method is required'),
-    masterModel: yup.boolean().required(),
-    authoritativeModel: yup.boolean().required(),
+    master: yup.boolean().required(),
+    authoritative: yup.boolean().required(),
     modality: yup.number().typeError('Modality is required'),
     units: yup.number().typeError('Units is required'),
     purpose: yup.number().typeError('Purpose is required'),
@@ -139,7 +140,8 @@ export const modelFieldsSchema = yup.object().shape({
     boundingBoxP1Z: yup.number().nullable(true),
     boundingBoxP2X: yup.number().nullable(true),
     boundingBoxP2Y: yup.number().nullable(true),
-    boundingBoxP2Z: yup.number().nullable(true)
+    boundingBoxP2Z: yup.number().nullable(true),
+    directory: yup.string().required()
 });
 
 export const defaultSceneFields: SceneFields = {

@@ -51,16 +51,49 @@ input IngestPhotogrammetryInput {
     identifiers: [IngestIdentifierInput!]!
 }
 
+input IngestUVMapInput {
+    name: String!
+    mapType: Int!
+}
+
 input IngestModelInput {
     idAssetVersion: Int!
+    systemCreated: Boolean!
+    master: Boolean!
     authoritative: Boolean!
-    dateCreated: String!
     creationMethod: Int!
     modality: Int!
     purpose: Int!
     units: Int!
-    master: Boolean!
+    dateCaptured: String!
+    modelFileType: Int!
     directory: String!
+    identifiers: [IngestIdentifierInput!]!
+    uvMaps: [IngestUVMapInput!]!
+    roughness: Int
+    metalness: Int
+    pointCount: Int
+    faceCount: Int
+    isWatertight: Boolean
+    hasNormals: Boolean
+    hasVertexColor: Boolean
+    hasUVSpace: Boolean
+    boundingBoxP1X: Int
+    boundingBoxP1Y: Int
+    boundingBoxP1Z: Int
+    boundingBoxP2X: Int
+    boundingBoxP2Y: Int
+    boundingBoxP2Z: Int
+}
+
+input IngestSceneInput {
+    idAssetVersion: Int!
+    identifiers: [IngestIdentifierInput!]!
+}
+
+input IngestOtherInput {
+    idAssetVersion: Int!
+    identifiers: [IngestIdentifierInput!]!
 }
 
 input IngestDataInput {
@@ -68,6 +101,9 @@ input IngestDataInput {
     project: IngestProjectInput!
     item: IngestItemInput!
     photogrammetry: [IngestPhotogrammetryInput!]!
+    model: [IngestModelInput!]!
+    scene: [IngestSceneInput!]!
+    other: [IngestOtherInput!]!
 }
 
 type IngestDataResult {

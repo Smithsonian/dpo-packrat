@@ -47,7 +47,7 @@ type MetadataStore = {
     metadatas: StateMetadata[];
     getStateFolders: (folders: IngestFolder[]) => StateFolder[];
     getInitialStateFolders: (folders: string[]) => StateFolder[];
-    getSelectedIdentifiers: (metadata: StateMetadata) => StateIdentifier[] | undefined;
+    getSelectedIdentifiers: (identifiers: StateIdentifier[]) => StateIdentifier[] | undefined;
     getFieldErrors: (metadata: StateMetadata) => FieldErrors;
     validateFields: (fields: ValidateFields, schema: ValidateFieldsSchema) => boolean;
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
@@ -61,7 +61,7 @@ type MetadataStore = {
 
 export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
     metadatas: [],
-    getSelectedIdentifiers: (metadata: StateMetadata): StateIdentifier[] | undefined => lodash.filter(metadata.photogrammetry.identifiers, { selected: true }),
+    getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => lodash.filter(identifiers, { selected: true }),
     getFieldErrors: (metadata: StateMetadata): FieldErrors => {
         const { getAssetType } = useVocabularyStore.getState();
         const errors: FieldErrors = {
