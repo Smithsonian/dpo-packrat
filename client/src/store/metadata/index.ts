@@ -16,7 +16,6 @@ import {
     GetAssetVersionsDetailsDocument,
     GetAssetVersionsDetailsQuery,
     GetContentsForAssetVersionsDocument,
-    IngestFolder,
     Project
 } from '../../types/graphql';
 import { eVocabularySetID } from '../../types/server';
@@ -25,7 +24,7 @@ import { StateProject, useProjectStore } from '../project';
 import { StateSubject, useSubjectStore } from '../subject';
 import { FileId, IngestionFile, useUploadStore } from '../upload';
 import { useUserStore } from '../user';
-import { parseFileId, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from '../utils';
+import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState, parseUVMapsToState } from '../utils';
 import { useVocabularyStore } from '../vocabulary';
 import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema } from './metadata.defaults';
 import {
@@ -46,7 +45,6 @@ import {
 
 type MetadataStore = {
     metadatas: StateMetadata[];
-    getStateFolders: (folders: IngestFolder[]) => StateFolder[];
     getInitialStateFolders: (folders: string[]) => StateFolder[];
     getSelectedIdentifiers: (identifiers: StateIdentifier[]) => StateIdentifier[] | undefined;
     getFieldErrors: (metadata: StateMetadata) => FieldErrors;
@@ -139,7 +137,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         };
     },
     updateMetadataSteps: async (): Promise<MetadataUpdate> => {
-        const { getStateFolders } = get();
         const { isAuthenticated } = useUserStore.getState();
         const { completed, getSelectedFiles } = useUploadStore.getState();
         const { getInitialEntry } = useVocabularyStore.getState();
@@ -228,7 +225,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         Project: foundProject,
                         Item: foundItem,
                         CaptureDataPhoto,
-                        Model
+                        Model,
+                        Scene
                     }: GetAssetVersionDetailResult = Details[index];
 
                     if (foundSubjectUnitIdentifier) {
@@ -263,16 +261,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
                     if (CaptureDataPhoto) {
                         const { identifiers, folders } = CaptureDataPhoto;
-                        const parsedIdentifiers: StateIdentifier[] = identifiers.map(
-                            ({ identifier, identifierType }, index): StateIdentifier => ({
-                                id: index,
-                                identifier,
-                                identifierType,
-                                selected: true
-                            })
-                        );
-
-                        const stateIdentifiers = parsedIdentifiers.length ? parsedIdentifiers : defaultIdentifierField;
+                        const stateIdentifiers: StateIdentifier[] = parseIdentifiersToState(identifiers, defaultIdentifierField);
 
                         metadataStep = {
                             ...metadataStep,
@@ -281,7 +270,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                                 ...(CaptureDataPhoto && {
                                     ...CaptureDataPhoto,
                                     dateCaptured: new Date(CaptureDataPhoto.dateCaptured),
-                                    folders: getStateFolders(folders),
+                                    folders: parseFoldersToState(folders),
                                     identifiers: stateIdentifiers
                                 })
                             }
@@ -289,7 +278,36 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
                         metadatas.push(metadataStep);
                     } else if (Model) {
-                        // TODO: KARAN: update model fields after api implementation
+                        const { identifiers, uvMaps } = Model;
+                        const stateIdentifiers: StateIdentifier[] = parseIdentifiersToState(identifiers, defaultIdentifierField);
+
+                        metadataStep = {
+                            ...metadataStep,
+                            model: {
+                                ...metadataStep.model,
+                                ...(Model && {
+                                    ...Model,
+                                    dateCaptured: new Date(Model.dateCaptured),
+                                    identifiers: stateIdentifiers,
+                                    uvMaps: parseUVMapsToState(uvMaps)
+                                })
+                            }
+                        };
+                        metadatas.push(metadataStep);
+                    } else if (Scene) {
+                        const { identifiers } = Scene;
+                        const stateIdentifiers: StateIdentifier[] = parseIdentifiersToState(identifiers, defaultIdentifierField);
+
+                        metadataStep = {
+                            ...metadataStep,
+                            scene: {
+                                ...metadataStep.scene,
+                                ...(Scene && {
+                                    ...Scene,
+                                    identifiers: stateIdentifiers
+                                })
+                            }
+                        };
                         metadatas.push(metadataStep);
                     } else {
                         metadatas.push(metadataStep);
@@ -323,6 +341,11 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
     },
     updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => {
         const { metadatas } = get();
+
+        if (!(name in metadatas[metadataIndex][metadataType])) {
+            throw new Error(`Field ${name} doesn't exist on a ${metadataType} asset`);
+        }
+
         const updatedMetadatas = lodash.map(metadatas, (metadata: StateMetadata, index: number) => {
             if (index === metadataIndex) {
                 return {
@@ -338,15 +361,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         });
 
         set({ metadatas: updatedMetadatas });
-    },
-    getStateFolders: (folders: IngestFolder[]): StateFolder[] => {
-        const stateFolders: StateFolder[] = folders.map(({ name, variantType }, index: number) => ({
-            id: index,
-            name,
-            variantType
-        }));
-
-        return stateFolders;
     },
     getInitialStateFolders: (folders: string[]): StateFolder[] => {
         const { getInitialEntry } = useVocabularyStore.getState();
@@ -450,4 +464,3 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
 export * from './metadata.defaults';
 export * from './metadata.types';
-
