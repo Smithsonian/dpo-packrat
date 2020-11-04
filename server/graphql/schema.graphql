@@ -161,16 +161,44 @@ type IngestPhotogrammetry {
   identifiers: [IngestIdentifier!]!
 }
 
+type IngestUVMap {
+  name: String!
+  mapType: Int!
+}
+
 type IngestModel {
   idAssetVersion: Int!
+  systemCreated: Boolean!
+  master: Boolean!
   authoritative: Boolean!
-  dateCreated: String!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
   units: Int!
-  master: Boolean!
+  dateCaptured: String!
+  modelFileType: Int!
   directory: String!
+  identifiers: [IngestIdentifier!]!
+  uvMaps: [IngestUVMap!]!
+  roughness: Int
+  metalness: Int
+  pointCount: Int
+  faceCount: Int
+  isWatertight: Boolean
+  hasNormals: Boolean
+  hasVertexColor: Boolean
+  hasUVSpace: Boolean
+  boundingBoxP1X: Int
+  boundingBoxP1Y: Int
+  boundingBoxP1Z: Int
+  boundingBoxP2X: Int
+  boundingBoxP2Y: Int
+  boundingBoxP2Z: Int
+}
+
+type IngestScene {
+  idAssetVersion: Int!
+  identifiers: [IngestIdentifier!]!
 }
 
 type GetAssetVersionDetailResult {
@@ -180,6 +208,7 @@ type GetAssetVersionDetailResult {
   Item: Item
   CaptureDataPhoto: IngestPhotogrammetry
   Model: IngestModel
+  Scene: IngestScene
 }
 
 type GetAssetVersionsDetailsResult {

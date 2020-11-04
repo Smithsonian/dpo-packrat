@@ -397,17 +397,47 @@ export type IngestPhotogrammetry = {
     identifiers: Array<IngestIdentifier>;
 };
 
+export type IngestUvMap = {
+    __typename?: 'IngestUVMap';
+    name: Scalars['String'];
+    mapType: Scalars['Int'];
+};
+
 export type IngestModel = {
     __typename?: 'IngestModel';
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    master: Scalars['Boolean'];
     authoritative: Scalars['Boolean'];
-    dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
     modality: Scalars['Int'];
     purpose: Scalars['Int'];
     units: Scalars['Int'];
-    master: Scalars['Boolean'];
+    dateCaptured: Scalars['String'];
+    modelFileType: Scalars['Int'];
     directory: Scalars['String'];
+    identifiers: Array<IngestIdentifier>;
+    uvMaps: Array<IngestUvMap>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Int']>;
+    boundingBoxP1Y?: Maybe<Scalars['Int']>;
+    boundingBoxP1Z?: Maybe<Scalars['Int']>;
+    boundingBoxP2X?: Maybe<Scalars['Int']>;
+    boundingBoxP2Y?: Maybe<Scalars['Int']>;
+    boundingBoxP2Z?: Maybe<Scalars['Int']>;
+};
+
+export type IngestScene = {
+    __typename?: 'IngestScene';
+    idAssetVersion: Scalars['Int'];
+    identifiers: Array<IngestIdentifier>;
 };
 
 export type GetAssetVersionDetailResult = {
@@ -418,6 +448,7 @@ export type GetAssetVersionDetailResult = {
     Item?: Maybe<Item>;
     CaptureDataPhoto?: Maybe<IngestPhotogrammetry>;
     Model?: Maybe<IngestModel>;
+    Scene?: Maybe<IngestScene>;
 };
 
 export type GetAssetVersionsDetailsResult = {
@@ -1825,7 +1856,25 @@ export type GetAssetVersionsDetailsQuery = (
                             }
                         )>, Model?: Maybe<(
                             { __typename?: 'IngestModel' }
-                            & Pick<IngestModel, 'idAssetVersion' | 'authoritative' | 'dateCreated' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'master' | 'directory'>
+                            & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory' | 'roughness' | 'metalness' | 'pointCount' | 'faceCount' | 'isWatertight' | 'hasNormals' | 'hasVertexColor' | 'hasUVSpace' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z'>
+                            & {
+                                identifiers: Array<(
+                                    { __typename?: 'IngestIdentifier' }
+                                    & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+                                )>, uvMaps: Array<(
+                                    { __typename?: 'IngestUVMap' }
+                                    & Pick<IngestUvMap, 'name' | 'mapType'>
+                                )>
+                            }
+                        )>, Scene?: Maybe<(
+                            { __typename?: 'IngestScene' }
+                            & Pick<IngestScene, 'idAssetVersion'>
+                            & {
+                                identifiers: Array<(
+                                    { __typename?: 'IngestIdentifier' }
+                                    & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+                                )>
+                            }
                         )>
                     }
                 )>
@@ -2973,14 +3022,45 @@ export const GetAssetVersionsDetailsDocument = gql`
       }
       Model {
         idAssetVersion
+        systemCreated
+        master
         authoritative
-        dateCreated
         creationMethod
         modality
         purpose
         units
-        master
+        dateCaptured
+        modelFileType
         directory
+        identifiers {
+          identifier
+          identifierType
+        }
+        uvMaps {
+          name
+          mapType
+        }
+        roughness
+        metalness
+        pointCount
+        faceCount
+        isWatertight
+        hasNormals
+        hasVertexColor
+        hasUVSpace
+        boundingBoxP1X
+        boundingBoxP1Y
+        boundingBoxP1Z
+        boundingBoxP2X
+        boundingBoxP2Y
+        boundingBoxP2Z
+      }
+      Scene {
+        idAssetVersion
+        identifiers {
+          identifier
+          identifierType
+        }
       }
     }
   }
