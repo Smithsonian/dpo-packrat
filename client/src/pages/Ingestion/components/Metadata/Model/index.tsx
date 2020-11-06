@@ -5,13 +5,15 @@
  */
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useState } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, IdInputField, SelectField } from '../../../../../components';
 import { StateIdentifier, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../../utils/shared';
 import BoundingBoxInput from './BoundingBoxInput';
+import ObjectSelectModal from './ObjectSelectModal';
+import SourceObjects, { StateSourceObject } from './SourceObjects';
 import UVContents from './UVContents';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -35,6 +37,15 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     }
 }));
 
+const mockSourceObjects: StateSourceObject[] = [
+    {
+        id: 0,
+        name: 'PhotoSet1.zip',
+        identifier: 'kq4f7fdb94c-e9ea-4a34-b616-0806e8576da4',
+        objectType: 4
+    }
+];
+
 interface ModelProps {
     readonly metadataIndex: number;
 }
@@ -46,6 +57,9 @@ function Model(props: ModelProps): React.ReactElement {
     const { model } = metadata;
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
+
+    const [modalOpen, setModalOpen] = useState(false);
+    const [sourceObjects, setSourceObjects] = useState(mockSourceObjects);
 
     const errors = getFieldErrors(metadata);
 
@@ -91,154 +105,176 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
     };
 
+    const openSourceObjectModal = () => {
+        setModalOpen(true);
+    };
+
+    const onRemoveSourceObject = (id: number) => {
+        const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.id !== id);
+        setSourceObjects(updatedSourceObjects);
+    };
+
+    const onModalClose = () => {
+        setModalOpen(false);
+    };
+
+    const onSelectedObjects = (newSourceObjects: StateSourceObject[]) => {
+        setSourceObjects([...sourceObjects, ...newSourceObjects]);
+        setModalOpen(false);
+    };
+
     const noteLabelProps = { style: { fontStyle: 'italic' } };
     const noteFieldProps = { alignItems: 'center', style: { paddingBottom: 0 } };
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
-        <Box className={classes.container}>
-            <AssetIdentifiers
-                systemCreated={model.systemCreated}
-                identifiers={model.identifiers}
-                onSystemCreatedChange={setCheckboxField}
-                onAddIdentifer={onIdentifersChange}
-                onUpdateIdentifer={onIdentifersChange}
-                onRemoveIdentifer={onIdentifersChange}
-            />
-            <Box display='flex' flexDirection='row' mt={1}>
-                <Box display='flex' flex={1} flexDirection='column'>
-                    <FieldType
-                        error={errors.model.dateCaptured}
-                        required
-                        label='Date Captured'
-                        direction='row'
-                        containerProps={rowFieldProps}
-                    >
-                        <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
-                    </FieldType>
+        <React.Fragment>
+            <Box className={classes.container}>
+                <AssetIdentifiers
+                    systemCreated={model.systemCreated}
+                    identifiers={model.identifiers}
+                    onSystemCreatedChange={setCheckboxField}
+                    onAddIdentifer={onIdentifersChange}
+                    onUpdateIdentifer={onIdentifersChange}
+                    onRemoveIdentifer={onIdentifersChange}
+                />
+                <SourceObjects sourceObjects={sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                <Box display='flex' flexDirection='row' mt={1}>
+                    <Box display='flex' flex={1} flexDirection='column'>
+                        <FieldType
+                            error={errors.model.dateCaptured}
+                            required
+                            label='Date Captured'
+                            direction='row'
+                            containerProps={rowFieldProps}
+                        >
+                            <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
+                        </FieldType>
 
-                    <SelectField
-                        required
-                        label='Creation Method'
-                        error={errors.model.creationMethod}
-                        value={withDefaultValueNumber(model.creationMethod, getInitialEntry(eVocabularySetID.eModelCreationMethod))}
-                        name='creationMethod'
-                        onChange={setIdField}
-                        options={getEntries(eVocabularySetID.eModelCreationMethod)}
-                    />
-
-                    <FieldType required label='Master' direction='row' containerProps={rowFieldProps}>
-                        <Checkbox
-                            name='master'
-                            checked={model.master}
-                            color='primary'
-                            onChange={setCheckboxField}
+                        <SelectField
+                            required
+                            label='Creation Method'
+                            error={errors.model.creationMethod}
+                            value={withDefaultValueNumber(model.creationMethod, getInitialEntry(eVocabularySetID.eModelCreationMethod))}
+                            name='creationMethod'
+                            onChange={setIdField}
+                            options={getEntries(eVocabularySetID.eModelCreationMethod)}
                         />
-                    </FieldType>
 
-                    <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
-                        <Checkbox
-                            name='authoritative'
-                            checked={model.authoritative}
-                            color='primary'
-                            onChange={setCheckboxField}
+                        <FieldType required label='Master' direction='row' containerProps={rowFieldProps}>
+                            <Checkbox
+                                name='master'
+                                checked={model.master}
+                                color='primary'
+                                onChange={setCheckboxField}
+                            />
+                        </FieldType>
+
+                        <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
+                            <Checkbox
+                                name='authoritative'
+                                checked={model.authoritative}
+                                color='primary'
+                                onChange={setCheckboxField}
+                            />
+                        </FieldType>
+
+                        <SelectField
+                            required
+                            label='Modality'
+                            error={errors.model.modality}
+                            value={withDefaultValueNumber(model.modality, getInitialEntry(eVocabularySetID.eModelModality))}
+                            name='modality'
+                            onChange={setIdField}
+                            options={getEntries(eVocabularySetID.eModelModality)}
                         />
-                    </FieldType>
 
-                    <SelectField
-                        required
-                        label='Modality'
-                        error={errors.model.modality}
-                        value={withDefaultValueNumber(model.modality, getInitialEntry(eVocabularySetID.eModelModality))}
-                        name='modality'
-                        onChange={setIdField}
-                        options={getEntries(eVocabularySetID.eModelModality)}
-                    />
-
-                    <SelectField
-                        required
-                        label='Units'
-                        error={errors.model.units}
-                        value={withDefaultValueNumber(model.units, getInitialEntry(eVocabularySetID.eModelUnits))}
-                        name='units'
-                        onChange={setIdField}
-                        options={getEntries(eVocabularySetID.eModelUnits)}
-                    />
-
-                    <SelectField
-                        required
-                        label='Purpose'
-                        error={errors.model.purpose}
-                        value={withDefaultValueNumber(model.purpose, getInitialEntry(eVocabularySetID.eModelPurpose))}
-                        name='purpose'
-                        onChange={setIdField}
-                        options={getEntries(eVocabularySetID.eModelPurpose)}
-                    />
-
-                    <SelectField
-                        required
-                        label='Model File Type'
-                        error={errors.model.modelFileType}
-                        value={withDefaultValueNumber(model.modelFileType, getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType))}
-                        name='modelFileType'
-                        onChange={setIdField}
-                        options={getEntries(eVocabularySetID.eModelGeometryFileModelFileType)}
-                    />
-                    <UVContents
-                        initialEntry={getInitialEntry(eVocabularySetID.eModelUVMapChannelUVMapType)}
-                        uvMaps={model.uvMaps}
-                        options={getEntries(eVocabularySetID.eModelUVMapChannelUVMapType)}
-                        onUpdate={updateUVMapsVariant}
-                    />
-                </Box>
-                <Box className={classes.notRequiredFields}>
-                    <FieldType required={false} label='(These values may be updated by Cook during ingestion)' labelProps={noteLabelProps} containerProps={noteFieldProps} />
-                    <IdInputField label='Roughness' value={model.roughness} name='roughness' onChange={setIdField} />
-                    <IdInputField label='Metalness' value={model.metalness} name='metalness' onChange={setIdField} />
-                    <IdInputField label='Point Count' value={model.pointCount} name='pointCount' onChange={setIdField} />
-                    <IdInputField label='Face Count' value={model.faceCount} name='faceCount' onChange={setIdField} />
-
-                    <FieldType required={false} label='Is Watertight?' direction='row' containerProps={rowFieldProps}>
-                        <Checkbox
-                            name='isWatertight'
-                            checked={withDefaultValueBoolean(model.isWatertight, false)}
-                            color='primary'
-                            onChange={setCheckboxField}
+                        <SelectField
+                            required
+                            label='Units'
+                            error={errors.model.units}
+                            value={withDefaultValueNumber(model.units, getInitialEntry(eVocabularySetID.eModelUnits))}
+                            name='units'
+                            onChange={setIdField}
+                            options={getEntries(eVocabularySetID.eModelUnits)}
                         />
-                    </FieldType>
 
-                    <FieldType required={false} label='Has Normals?' direction='row' containerProps={rowFieldProps}>
-                        <Checkbox
-                            name='hasNormals'
-                            checked={withDefaultValueBoolean(model.hasNormals, false)}
-                            color='primary'
-                            onChange={setCheckboxField}
+                        <SelectField
+                            required
+                            label='Purpose'
+                            error={errors.model.purpose}
+                            value={withDefaultValueNumber(model.purpose, getInitialEntry(eVocabularySetID.eModelPurpose))}
+                            name='purpose'
+                            onChange={setIdField}
+                            options={getEntries(eVocabularySetID.eModelPurpose)}
                         />
-                    </FieldType>
 
-
-                    <FieldType required={false} label='Has Vertex Color?' direction='row' containerProps={rowFieldProps}>
-                        <Checkbox
-                            name='hasVertexColor'
-                            checked={withDefaultValueBoolean(model.hasVertexColor, false)}
-                            color='primary'
-                            onChange={setCheckboxField}
+                        <SelectField
+                            required
+                            label='Model File Type'
+                            error={errors.model.modelFileType}
+                            value={withDefaultValueNumber(model.modelFileType, getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType))}
+                            name='modelFileType'
+                            onChange={setIdField}
+                            options={getEntries(eVocabularySetID.eModelGeometryFileModelFileType)}
                         />
-                    </FieldType>
-
-                    <FieldType required={false} label='Has UV Space?' direction='row' containerProps={rowFieldProps}>
-                        <Checkbox
-                            name='hasUVSpace'
-                            checked={withDefaultValueBoolean(model.hasUVSpace, false)}
-                            color='primary'
-                            onChange={setCheckboxField}
+                        <UVContents
+                            initialEntry={getInitialEntry(eVocabularySetID.eModelUVMapChannelUVMapType)}
+                            uvMaps={model.uvMaps}
+                            options={getEntries(eVocabularySetID.eModelUVMapChannelUVMapType)}
+                            onUpdate={updateUVMapsVariant}
                         />
-                    </FieldType>
+                    </Box>
+                    <Box className={classes.notRequiredFields}>
+                        <FieldType required={false} label='(These values may be updated by Cook during ingestion)' labelProps={noteLabelProps} containerProps={noteFieldProps} />
+                        <IdInputField label='Roughness' value={model.roughness} name='roughness' onChange={setIdField} />
+                        <IdInputField label='Metalness' value={model.metalness} name='metalness' onChange={setIdField} />
+                        <IdInputField label='Point Count' value={model.pointCount} name='pointCount' onChange={setIdField} />
+                        <IdInputField label='Face Count' value={model.faceCount} name='faceCount' onChange={setIdField} />
 
-                    <BoundingBoxInput model={model} onChange={setIdField} />
+                        <FieldType required={false} label='Is Watertight?' direction='row' containerProps={rowFieldProps}>
+                            <Checkbox
+                                name='isWatertight'
+                                checked={withDefaultValueBoolean(model.isWatertight, false)}
+                                color='primary'
+                                onChange={setCheckboxField}
+                            />
+                        </FieldType>
+
+                        <FieldType required={false} label='Has Normals?' direction='row' containerProps={rowFieldProps}>
+                            <Checkbox
+                                name='hasNormals'
+                                checked={withDefaultValueBoolean(model.hasNormals, false)}
+                                color='primary'
+                                onChange={setCheckboxField}
+                            />
+                        </FieldType>
+
+
+                        <FieldType required={false} label='Has Vertex Color?' direction='row' containerProps={rowFieldProps}>
+                            <Checkbox
+                                name='hasVertexColor'
+                                checked={withDefaultValueBoolean(model.hasVertexColor, false)}
+                                color='primary'
+                                onChange={setCheckboxField}
+                            />
+                        </FieldType>
+
+                        <FieldType required={false} label='Has UV Space?' direction='row' containerProps={rowFieldProps}>
+                            <Checkbox
+                                name='hasUVSpace'
+                                checked={withDefaultValueBoolean(model.hasUVSpace, false)}
+                                color='primary'
+                                onChange={setCheckboxField}
+                            />
+                        </FieldType>
+
+                        <BoundingBoxInput model={model} onChange={setIdField} />
+                    </Box>
                 </Box>
             </Box>
-        </Box>
+            <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} />
+        </React.Fragment>
     );
 }
 
