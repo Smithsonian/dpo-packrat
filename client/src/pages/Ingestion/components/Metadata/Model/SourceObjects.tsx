@@ -8,6 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
 import { MdRemoveCircleOutline } from 'react-icons/md';
+import { StateSourceObject } from '../../../../../store';
 import { eSystemObjectType } from '../../../../../types/server';
 import { getTermForSystemObjectType } from '../../../../../utils/repository';
 
@@ -22,6 +23,7 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     list: {
         padding: 10,
+        paddingBottom: 0,
         marginBottom: 10,
         borderRadius: 5,
         backgroundColor: palette.secondary.light
@@ -50,13 +52,6 @@ const useStyles = makeStyles(({ palette }) => ({
         color: palette.background.paper,
     }
 }));
-
-export type StateSourceObject = {
-    id: number;
-    name: string;
-    identifier: string;
-    objectType: eSystemObjectType;
-};
 
 interface SourceObjectsListProps {
     sourceObjects: StateSourceObject[];
@@ -101,10 +96,10 @@ function Header(): React.ReactElement {
             marginBottom={1}
             width='90%'
         >
-            <Box display='flex' flex={1}>
+            <Box display='flex' flex={2}>
                 <Typography className={classes.header}>Source Object(s)</Typography>
             </Box>
-            <Box display='flex' flex={2}>
+            <Box display='flex' flex={3}>
                 <Typography className={classes.header}>Identifiers</Typography>
             </Box>
             <Box display='flex' flex={1}>
@@ -115,7 +110,7 @@ function Header(): React.ReactElement {
 }
 
 interface ItemProps {
-    id: number;
+    idObject: number;
     name: string;
     identifier: string;
     objectType: eSystemObjectType;
@@ -123,10 +118,10 @@ interface ItemProps {
 }
 
 function Item(props: ItemProps): React.ReactElement {
-    const { id, name, identifier, objectType, onRemove } = props;
+    const { idObject, name, identifier, objectType, onRemove } = props;
     const classes = useStyles();
 
-    const remove = () => onRemove(id);
+    const remove = () => onRemove(idObject);
 
     return (
         <Box
@@ -134,18 +129,18 @@ function Item(props: ItemProps): React.ReactElement {
             flex={1}
             flexDirection='row'
             alignItems='center'
-            pb='5px'
+            pb='10px'
         >
-            <Box display='flex' flex={1}>
+            <Box display='flex' flex={2}>
                 <Typography className={clsx(classes.label, classes.labelUnderline)}>{name}</Typography>
             </Box>
-            <Box display='flex' flex={2}>
+            <Box display='flex' flex={3}>
                 <Typography className={classes.label}>{identifier}</Typography>
             </Box>
             <Box display='flex' flex={1}>
                 <Typography className={classes.label}>{getTermForSystemObjectType(objectType)}</Typography>
             </Box>
-            <MdRemoveCircleOutline className={classes.removeIcon} onClick={remove} size={25} />
+            <MdRemoveCircleOutline className={classes.removeIcon} onClick={remove} size={24} />
         </Box>
     );
 }

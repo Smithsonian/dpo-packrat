@@ -3,11 +3,15 @@
  *
  * This component renders a tree label for StyledTreeItem.
  */
+import { Box } from '@material-ui/core';
+import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import lodash from 'lodash';
 import React, { useMemo } from 'react';
+import { FaCheckCircle, FaRegCircle } from 'react-icons/fa';
 import { Progress } from '../../../../components';
+import { palette } from '../../../../theme';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import MetadataView, { TreeViewColumn } from './MetadataView';
 
@@ -41,16 +45,26 @@ interface TreeLabelProps {
     objectType: number;
     color: string;
     treeColumns: TreeViewColumn[];
+    renderSelected?: boolean;
+    selected?: boolean;
+    onSelect?: (event: React.MouseEvent<SVGElement, MouseEvent>) => void;
+    onUnSelect?: (event: React.MouseEvent<SVGElement, MouseEvent>) => void;
 }
 
 function TreeLabel(props: TreeLabelProps): React.ReactElement {
-    const { label, treeColumns, objectType } = props;
+    const { label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType } = props;
     const classes = useStyles(props);
     const objectTitle = useMemo(() => `${getTermForSystemObjectType(objectType)} ${label}`, [objectType, label]);
 
     return (
         <div className={classes.container}>
             <div className={classes.label}>
+                {renderSelected && (
+                    <Box display='flex' alignItems='center' mr='10px'>
+                        {!selected && <FaRegCircle size={16} color={grey[400]} onClick={onSelect} />}
+                        {selected && <FaCheckCircle size={16} color={palette.primary.main} onClick={onUnSelect} />}
+                    </Box>
+                )}
                 <div className={classes.labelText}>
                     <span title={objectTitle}>{label}</span>
                 </div>

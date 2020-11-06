@@ -4,36 +4,59 @@
  * This component renders the source object select modal which let's user select
  * the source objects for a model.
  */
-import { AppBar, Button, Dialog, IconButton, Slide, Toolbar, Typography } from '@material-ui/core';
+import { AppBar, Box, Button, Dialog, IconButton, Slide, Toolbar, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { TransitionProps } from '@material-ui/core/transitions';
 import CloseIcon from '@material-ui/icons/Close';
 import React from 'react';
-import { StateSourceObject } from './SourceObjects';
+import { StateSourceObject } from '../../../../../store';
+import RepositoryFilterView from '../../../../Repository/components/RepositoryFilterView';
+import RepositoryTreeView from '../../../../Repository/components/RepositoryTreeView';
 
-const useStyles = makeStyles(({ spacing }) => ({
+const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
     title: {
         marginLeft: spacing(2),
         flex: 1,
     },
     appBar: {
         position: 'relative',
-        color: 'white'
+        color: palette.background.paper
     },
+    repositoryContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        padding: 20,
+        paddingBottom: 0,
+        [breakpoints.down('lg')]: {
+            padding: 10
+        }
+    }
 }));
 
 interface ObjectSelectModalProps {
     open: boolean;
+    selectedObjects: StateSourceObject[];
     onSelectedObjects: (newSourceObjects: StateSourceObject[]) => void;
     onModalClose: () => void;
 }
 
 function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
-    const { open, onSelectedObjects, onModalClose } = props;
+    const { open, onSelectedObjects, selectedObjects, onModalClose } = props;
     const classes = useStyles();
+    const [selected, setSelected] = React.useState<StateSourceObject[]>(selectedObjects);
 
     const onSave = () => {
-        onSelectedObjects([]);
+        onSelectedObjects(selected);
+        setSelected([]);
+    };
+
+    const onSelect = (sourceObject: StateSourceObject) => {
+        setSelected([...selected, sourceObject]);
+    };
+
+    const onUnSelect = (idObject: number) => {
+        const updatedSelected = selected.filter(sourceObject => sourceObject.idObject !== idObject);
+        setSelected(updatedSelected);
     };
 
     return (
@@ -51,6 +74,10 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                     </Button>
                 </Toolbar>
             </AppBar>
+            <Box className={classes.repositoryContainer}>
+                <RepositoryFilterView />
+                <RepositoryTreeView isModal selectedItems={selected} onSelect={onSelect} onUnSelect={onUnSelect} />
+            </Box>
         </Dialog>
     );
 }
