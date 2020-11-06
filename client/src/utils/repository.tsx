@@ -12,6 +12,7 @@ import { RepositoryIcon } from '../components';
 import { HOME_ROUTES } from '../constants';
 import { RepositoryFilter } from '../pages/Repository';
 import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/MetadataView';
+import { StateSourceObject } from '../store';
 import Colors, { RepositoryColorVariant } from '../theme/colors';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
@@ -117,9 +118,13 @@ export function generateRepositoryUrl(filter: RepositoryFilter): string {
     return `${HOME_ROUTES.REPOSITORY}?${qs.stringify(queryResult)}`;
 }
 
-export function getTreeWidth(columnSize: number, sideBarExpanded: boolean): string {
+export function getTreeWidth(columnSize: number, sideBarExpanded: boolean, fullWidth: boolean): string {
     const computedWidth = 50 + columnSize * 10;
     const isXLScreen = window.innerWidth >= 1600;
+
+    if (fullWidth) {
+        return '98vw';
+    }
 
     if (computedWidth <= 80) {
         if (isXLScreen) {
@@ -210,4 +215,18 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
 
 export function sortEntriesAlphabetically(entries: NavigationResultEntry[]): NavigationResultEntry[] {
     return lodash.orderBy(entries, [entry => entry.name.toLowerCase().trim()], ['asc']);
+}
+
+export function isRepositoryItemSelected(nodeId: string, sourceObjects: StateSourceObject[]): boolean {
+    const { idObject } = parseRepositoryTreeNodeId(nodeId);
+
+    for (let i = 0; i < sourceObjects.length; i++) {
+        const sourceObject = sourceObjects[i];
+
+        if (sourceObject.idObject === idObject) {
+            return true;
+        }
+    }
+
+    return false;
 }

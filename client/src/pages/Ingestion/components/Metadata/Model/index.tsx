@@ -7,13 +7,13 @@ import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, IdInputField, SelectField } from '../../../../../components';
-import { StateIdentifier, useMetadataStore, useVocabularyStore } from '../../../../../store';
+import { StateIdentifier, StateSourceObject, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../../utils/shared';
 import BoundingBoxInput from './BoundingBoxInput';
 import ObjectSelectModal from './ObjectSelectModal';
-import SourceObjects, { StateSourceObject } from './SourceObjects';
+import SourceObjects from './SourceObjects';
 import UVContents from './UVContents';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -37,15 +37,6 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     }
 }));
 
-const mockSourceObjects: StateSourceObject[] = [
-    {
-        id: 0,
-        name: 'PhotoSet1.zip',
-        identifier: 'kq4f7fdb94c-e9ea-4a34-b616-0806e8576da4',
-        objectType: 4
-    }
-];
-
 interface ModelProps {
     readonly metadataIndex: number;
 }
@@ -59,7 +50,7 @@ function Model(props: ModelProps): React.ReactElement {
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
 
     const [modalOpen, setModalOpen] = useState(false);
-    const [sourceObjects, setSourceObjects] = useState(mockSourceObjects);
+    const [sourceObjects, setSourceObjects] = useState<StateSourceObject[]>([]);
 
     const errors = getFieldErrors(metadata);
 
@@ -109,8 +100,8 @@ function Model(props: ModelProps): React.ReactElement {
         setModalOpen(true);
     };
 
-    const onRemoveSourceObject = (id: number) => {
-        const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.id !== id);
+    const onRemoveSourceObject = (idObject: number) => {
+        const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.idObject !== idObject);
         setSourceObjects(updatedSourceObjects);
     };
 
@@ -273,7 +264,7 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                 </Box>
             </Box>
-            <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} />
+            <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={sourceObjects} />
         </React.Fragment>
     );
 }

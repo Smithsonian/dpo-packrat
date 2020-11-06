@@ -1,3 +1,4 @@
+import { eSystemObjectType } from '../../types/server';
 /**
  * Metadata Store Types
  *
@@ -125,6 +126,13 @@ export type SceneFields = {
 export type OtherFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+};
+
+export type StateSourceObject = {
+    idObject: number;
+    name: string;
+    identifier: string;
+    objectType: eSystemObjectType;
 };
 
 export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields;

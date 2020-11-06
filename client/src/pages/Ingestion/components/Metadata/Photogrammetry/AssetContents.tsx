@@ -27,7 +27,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints, spacing }) => 
         color: palette.primary.dark
     },
     emptyFolders: {
-        marginTop: 10,
+        margin: '10px 0px',
         color: palette.grey[600],
         textAlign: 'center'
     },
