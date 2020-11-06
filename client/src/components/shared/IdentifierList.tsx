@@ -11,20 +11,7 @@ import { MdRemoveCircleOutline } from 'react-icons/md';
 import FieldType from './FieldType';
 import { StateIdentifier, VocabularyOption } from '../../store';
 
-const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => ({
-    container: {
-        marginTop: 20
-    },
-    assetIdentifier: {
-        display: 'flex',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    systemCreatedText: {
-        marginLeft: spacing(2),
-        fontStyle: 'italic',
-        color: palette.primary.contrastText
-    },
+const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     identifierInput: {
         width: '75%',
         border: 'none',
@@ -62,6 +49,14 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
         cursor: 'pointer'
     },
     addIdentifier: {
+        display: 'flex',
+        alignItems: 'center',
+        width: 80,
+        borderRadius: 5,
+        padding: 10,
+        backgroundColor: palette.secondary.light
+    },
+    addIdentifierButton: {
         height: 30,
         width: 80,
         fontSize: '0.8em',
@@ -83,8 +78,8 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
 
     return (
         <Box overflow='hidden'>
-            <FieldType required={false} renderLabel={false} width='auto'>
-                <React.Fragment>
+            {!!identifiers.length && (
+                <FieldType required={false} renderLabel={false} width='auto'>
                     {identifiers.map(({ id, selected, identifier, identifierType }, index) => {
                         const remove = () => onRemove(id);
                         const updateCheckbox = ({ target }) => onUpdate(id, target.name, target.checked);
@@ -125,17 +120,19 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                             </Box>
                         );
                     })}
-                    <Button
-                        className={classes.addIdentifier}
-                        disableElevation
-                        color='primary'
-                        variant='contained'
-                        onClick={() => onAdd(identifierTypes[0].idVocabulary)}
-                    >
-                        Add
-                    </Button>
-                </React.Fragment>
-            </FieldType>
+                </FieldType>
+            )}
+            <Box className={classes.addIdentifier}>
+                <Button
+                    className={classes.addIdentifierButton}
+                    disableElevation
+                    color='primary'
+                    variant='contained'
+                    onClick={() => onAdd(identifierTypes[0].idVocabulary)}
+                >
+                    Add
+                </Button>
+            </Box>
         </Box>
     );
 }
