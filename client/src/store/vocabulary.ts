@@ -25,6 +25,7 @@ type VocabularyStore = {
     updateVocabularyEntries: () => Promise<StateVocabulary>;
     getEntries: (eVocabularySetID: eVocabularySetID) => VocabularyOption[];
     getInitialEntry: (eVocabularySetID: eVocabularySetID) => number | null;
+    getVocabularyTerm: (eVocabularySetID: eVocabularySetID) => string | null;
     getAssetType: (idVocabulary: number) => AssetType;
 };
 
@@ -88,6 +89,16 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
 
         if (vocabularyEntry && vocabularyEntry.length) {
             return vocabularyEntry[0].idVocabulary;
+        }
+
+        return null;
+    },
+    getVocabularyTerm: (eVocabularySetID: eVocabularySetID): string | null => {
+        const { vocabularies } = get();
+        const vocabularyEntry = vocabularies.get(eVocabularySetID);
+
+        if (vocabularyEntry && vocabularyEntry.length) {
+            return vocabularyEntry[0].Term;
         }
 
         return null;
