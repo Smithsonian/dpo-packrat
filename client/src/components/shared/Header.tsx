@@ -34,11 +34,11 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         display: 'flex',
         alignItems: 'center',
         marginLeft: 50,
-        padding: 5,
+        padding: '5px 10px',
         width: '40vw',
         minWidth: '30vw',
         borderRadius: 5,
-        border: `0.25px solid ${fade(Colors.defaults.white, 0.65)}`,
+        backgroundColor: fade(Colors.defaults.white, 0.1),
         [breakpoints.down('lg')]: {
             marginLeft: 30,
         },
