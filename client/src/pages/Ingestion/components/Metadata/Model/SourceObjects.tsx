@@ -1,7 +1,7 @@
 /**
  * SourceObjectsList
  *
- * This component renders the source object list with add capability
+ * This component renders the source object list with add capability.
  */
 import { Box, Button, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -9,7 +9,6 @@ import clsx from 'clsx';
 import React from 'react';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { StateSourceObject } from '../../../../../store';
-import { eSystemObjectType } from '../../../../../types/server';
 import { getTermForSystemObjectType } from '../../../../../utils/repository';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -29,7 +28,7 @@ const useStyles = makeStyles(({ palette }) => ({
         backgroundColor: palette.secondary.light
     },
     header: {
-        fontSize: '0.9em',
+        fontSize: '0.8em',
         color: palette.primary.dark
     },
     label: {
@@ -63,12 +62,14 @@ function SourceObjectsList(props: SourceObjectsListProps): React.ReactElement {
     const { sourceObjects, onAdd, onRemove } = props;
     const classes = useStyles();
 
+    const hasSourceObjects = !!sourceObjects.length;
+
     return (
         <Box className={classes.container}>
             <Header />
-            {!!sourceObjects.length && (
+            {hasSourceObjects && (
                 <Box className={classes.list}>
-                    {sourceObjects.map((sourceObject: StateSourceObject, index: number) => <Item key={index} {...sourceObject} onRemove={onRemove} />)}
+                    {sourceObjects.map((sourceObject: StateSourceObject, index: number) => <Item key={index} sourceObject={sourceObject} onRemove={onRemove} />)}
                 </Box>
             )}
             <Button
@@ -110,18 +111,20 @@ function Header(): React.ReactElement {
 }
 
 interface ItemProps {
-    idSystemObject: number;
-    name: string;
-    identifier: string;
-    objectType: eSystemObjectType;
+    sourceObject: StateSourceObject;
     onRemove: (id: number) => void;
 }
 
 function Item(props: ItemProps): React.ReactElement {
-    const { idSystemObject, name, identifier, objectType, onRemove } = props;
+    const { sourceObject, onRemove } = props;
+    const { idSystemObject, name, identifier, objectType } = sourceObject;
     const classes = useStyles();
 
     const remove = () => onRemove(idSystemObject);
+
+    const onModelDetail = () => {
+        alert('TODO: Handle source object click');
+    };
 
     return (
         <Box
@@ -132,7 +135,7 @@ function Item(props: ItemProps): React.ReactElement {
             pb='10px'
         >
             <Box display='flex' flex={2}>
-                <Typography className={clsx(classes.label, classes.labelUnderline)}>{name}</Typography>
+                <Typography onClick={onModelDetail} className={clsx(classes.label, classes.labelUnderline)}>{name}</Typography>
             </Box>
             <Box display='flex' flex={3}>
                 <Typography className={classes.label}>{identifier}</Typography>
