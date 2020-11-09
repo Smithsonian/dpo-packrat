@@ -218,12 +218,12 @@ export function sortEntriesAlphabetically(entries: NavigationResultEntry[]): Nav
 }
 
 export function isRepositoryItemSelected(nodeId: string, sourceObjects: StateSourceObject[]): boolean {
-    const { idObject } = parseRepositoryTreeNodeId(nodeId);
+    const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
 
     for (let i = 0; i < sourceObjects.length; i++) {
         const sourceObject = sourceObjects[i];
 
-        if (sourceObject.idObject === idObject) {
+        if (sourceObject.idSystemObject === idSystemObject) {
             return true;
         }
     }

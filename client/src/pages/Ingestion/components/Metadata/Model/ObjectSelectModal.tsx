@@ -50,12 +50,12 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
         setSelected([]);
     };
 
-    const onSelect = (sourceObject: StateSourceObject) => {
+    const onSelect = (sourceObject: StateSourceObject): void => {
         setSelected([...selected, sourceObject]);
     };
 
-    const onUnSelect = (idObject: number) => {
-        const updatedSelected = selected.filter(sourceObject => sourceObject.idObject !== idObject);
+    const onUnSelect = (idSystemObject: number): void => {
+        const updatedSelected = selected.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
         setSelected(updatedSelected);
     };
 
