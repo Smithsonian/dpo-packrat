@@ -9,6 +9,7 @@ import React from 'react';
 import { AssetIdentifiers } from '../../../../../components';
 import { StateIdentifier, useMetadataStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
+import ReferenceModels from './ReferenceModels';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -46,6 +47,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 onUpdateIdentifer={onIdentifersChange}
                 onRemoveIdentifer={onIdentifersChange}
             />
+            <ReferenceModels />
         </Box>
     );
 }

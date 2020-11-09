@@ -135,4 +135,17 @@ export type StateSourceObject = {
     objectType: eSystemObjectType;
 };
 
+export enum ReferenceModelAction {
+    Update = 'Update',
+    Ingest = 'Ingest'
+}
+
+export type StateReferenceModel = {
+    model: string;
+    fileSize: number;
+    uvResolution: number;
+    boundingBox: string; // TODO: convert into individual points
+    action: ReferenceModelAction;
+};
+
 export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields;
