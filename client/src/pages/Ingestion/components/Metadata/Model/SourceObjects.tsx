@@ -110,7 +110,7 @@ function Header(): React.ReactElement {
 }
 
 interface ItemProps {
-    idObject: number;
+    idSystemObject: number;
     name: string;
     identifier: string;
     objectType: eSystemObjectType;
@@ -118,10 +118,10 @@ interface ItemProps {
 }
 
 function Item(props: ItemProps): React.ReactElement {
-    const { idObject, name, identifier, objectType, onRemove } = props;
+    const { idSystemObject, name, identifier, objectType, onRemove } = props;
     const classes = useStyles();
 
-    const remove = () => onRemove(idObject);
+    const remove = () => onRemove(idSystemObject);
 
     return (
         <Box

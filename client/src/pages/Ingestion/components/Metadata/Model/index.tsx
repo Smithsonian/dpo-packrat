@@ -100,8 +100,8 @@ function Model(props: ModelProps): React.ReactElement {
         setModalOpen(true);
     };
 
-    const onRemoveSourceObject = (idObject: number) => {
-        const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.idObject !== idObject);
+    const onRemoveSourceObject = (idSystemObject: number): void => {
+        const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
         setSourceObjects(updatedSourceObjects);
     };
 

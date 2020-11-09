@@ -129,7 +129,7 @@ export type OtherFields = {
 };
 
 export type StateSourceObject = {
-    idObject: number;
+    idSystemObject: number;
     name: string;
     identifier: string;
     objectType: eSystemObjectType;

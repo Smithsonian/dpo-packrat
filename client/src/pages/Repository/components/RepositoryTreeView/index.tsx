@@ -103,8 +103,8 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             const select = (event: React.MouseEvent<SVGElement, MouseEvent>) => {
                 if (onSelect) {
                     event.stopPropagation();
-                    const repositoryItem = {
-                        idObject,
+                    const repositoryItem: StateSourceObject = {
+                        idSystemObject,
                         name,
                         objectType,
                         identifier: 'TODO: get identifier'
@@ -114,10 +114,9 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             };
 
             const unSelect = (event: React.MouseEvent<SVGElement, MouseEvent>) => {
-                // TODO: implement unselect
                 if (onUnSelect) {
                     event.stopPropagation();
-                    onUnSelect(idObject);
+                    onUnSelect(idSystemObject);
                 }
             };
 
