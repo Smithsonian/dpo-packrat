@@ -7,9 +7,12 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
-import { useHistory, useLocation } from 'react-router';
+import { Redirect, useHistory, useLocation } from 'react-router';
+import { PrivateRoute } from '../../components';
+import { HOME_ROUTES, REPOSITORY_ROUTE, resolveRoute, resolveSubRoute } from '../../constants';
 import { useControlStore } from '../../store';
 import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repository';
+import DetailsView from './components/DetailsView';
 import RepositoryFilterView from './components/RepositoryFilterView';
 import RepositoryTreeView from './components/RepositoryTreeView';
 
@@ -37,6 +40,29 @@ export type RepositoryFilter = {
 function Repository(): React.ReactElement {
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
     const classes = useStyles(sideBarExpanded);
+
+    return (
+        <Box className={classes.container}>
+            <PrivateRoute path={resolveRoute(HOME_ROUTES.REPOSITORY)}>
+                <PrivateRoute
+                    exact
+                    path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)}
+                    component={TreeViewPage}
+                />
+                <PrivateRoute
+                    exact
+                    path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.DETAILS)}
+                    component={DetailsView}
+                />
+                <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, 'details')}>
+                    <Redirect to={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} />
+                </PrivateRoute>
+            </PrivateRoute>
+        </Box>
+    );
+}
+
+function TreeViewPage(): React.ReactElement {
     const history = useHistory();
     const { search } = useLocation();
 
@@ -57,10 +83,10 @@ function Repository(): React.ReactElement {
     }, [filter, history]);
 
     return (
-        <Box className={classes.container}>
+        <React.Fragment>
             <RepositoryFilterView />
             <RepositoryTreeView />
-        </Box>
+        </React.Fragment>
     );
 }
 

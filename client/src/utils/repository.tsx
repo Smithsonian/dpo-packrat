@@ -9,7 +9,6 @@ import * as qs from 'query-string';
 import React from 'react';
 import { AiOutlineFileText } from 'react-icons/ai';
 import { RepositoryIcon } from '../components';
-import { HOME_ROUTES } from '../constants';
 import { RepositoryFilter } from '../pages/Repository';
 import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/MetadataView';
 import { StateSourceObject } from '../store';
@@ -115,7 +114,7 @@ export function generateRepositoryUrl(filter: RepositoryFilter): string {
     };
 
     const queryResult = lodash.pickBy(filter, validate);
-    return `${HOME_ROUTES.REPOSITORY}?${qs.stringify(queryResult)}`;
+    return `?${qs.stringify(queryResult)}`;
 }
 
 export function getTreeWidth(columnSize: number, sideBarExpanded: boolean, fullWidth: boolean): string {
