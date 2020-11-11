@@ -70,6 +70,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         borderRadius: 5,
         color: palette.primary.dark,
         backgroundColor: Colors.defaults.white,
+        border: `0.5px solid ${palette.primary.contrastText}`,
         fontSize: '0.8em',
         cursor: 'pointer'
     },
