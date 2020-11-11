@@ -107,7 +107,7 @@ function Header(): React.ReactElement {
         }
     };
 
-    const isRepository = pathname === resolveRoute(HOME_ROUTES.REPOSITORY);
+    const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
 
     return (
         <Box className={classes.container}>
