@@ -16,6 +16,7 @@ import AssetIdentifiers from './shared/AssetIdentifiers';
 import SelectField from './controls/SelectField';
 import IdInputField from './controls/IdInputField';
 import DateInputField from './controls/DateInputField';
+import BreadcrumbsView from './shared/BreadcrumbsView';
 
 export {
     Header,
@@ -31,5 +32,6 @@ export {
     AssetIdentifiers,
     SelectField,
     IdInputField,
-    DateInputField
+    DateInputField,
+    BreadcrumbsView
 };

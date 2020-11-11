@@ -33,33 +33,33 @@ export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystem
 export function getTermForSystemObjectType(objectType: eSystemObjectType): string {
     switch (objectType) {
         case eSystemObjectType.eUnit:
-            return 'unit';
+            return 'Unit';
         case eSystemObjectType.eProject:
-            return 'project';
+            return 'Project';
         case eSystemObjectType.eSubject:
-            return 'subject';
+            return 'Subject';
         case eSystemObjectType.eItem:
-            return 'item';
+            return 'Item';
         case eSystemObjectType.eCaptureData:
-            return 'capture data';
+            return 'Capture Data';
         case eSystemObjectType.eModel:
-            return 'model';
+            return 'Model';
         case eSystemObjectType.eScene:
-            return 'scene';
+            return 'Scene';
         case eSystemObjectType.eIntermediaryFile:
-            return 'intermediary file';
+            return 'Intermediary File';
         case eSystemObjectType.eProjectDocumentation:
-            return 'project documentation';
+            return 'Project Documentation';
         case eSystemObjectType.eAsset:
-            return 'asset';
+            return 'Asset';
         case eSystemObjectType.eAssetVersion:
-            return 'asset version';
+            return 'Asset Version';
         case eSystemObjectType.eActor:
-            return 'actor';
+            return 'Actor';
         case eSystemObjectType.eStakeholder:
-            return 'stakeholder';
+            return 'Stakeholder';
         default:
-            return 'unknown';
+            return 'Unknown';
     }
 }
 
@@ -228,4 +228,8 @@ export function isRepositoryItemSelected(nodeId: string, sourceObjects: StateSou
     }
 
     return false;
+}
+
+export function getDetailsUrlForObject(idSystemObject: number): string {
+    return `/repository/details/${idSystemObject}`;
 }
