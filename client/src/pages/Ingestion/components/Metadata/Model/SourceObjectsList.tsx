@@ -11,31 +11,28 @@ import { MdRemoveCircleOutline } from 'react-icons/md';
 import { NewTabLink } from '../../../../../components';
 import { StateSourceObject } from '../../../../../store';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
+import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared';
 
-const useStyles = makeStyles(({ palette }) => ({
+export const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         width: '52vw',
         flexDirection: 'column',
         borderRadius: 5,
         padding: 10,
-        backgroundColor: palette.primary.light
+        marginTop: (viewMode: boolean) => viewMode ? 10 : 0,
+        backgroundColor: (viewMode: boolean) => viewMode ? palette.secondary.light : palette.primary.light
     },
     list: {
-        padding: 10,
-        paddingBottom: 0,
-        marginBottom: 10,
+        paddingTop: 10,
+        paddingLeft: (viewMode: boolean) => viewMode ? 0: 10,
         borderRadius: 5,
-        backgroundColor: palette.secondary.light
+        backgroundColor: palette.secondary.light,
     },
     header: {
-        fontSize: '0.8em',
-        color: palette.primary.dark
+        ...sharedLabelProps
     },
-    label: {
-        fontSize: '0.8em',
-        color: palette.primary.dark
-    },
+    label: sharedLabelProps,
     labelUnderline: {
         textDecoration: 'underline',
         cursor: 'pointer'
@@ -45,32 +42,41 @@ const useStyles = makeStyles(({ palette }) => ({
         cursor: 'pointer'
     },
     addButton: {
-        height: 30,
-        width: 80,
-        marginLeft: 5,
-        fontSize: '0.8em',
-        color: palette.background.paper,
+        ...sharedButtonProps,
+        marginTop: 5
     }
 }));
 
 interface SourceObjectsListProps {
     sourceObjects: StateSourceObject[];
     onAdd: () => void;
-    onRemove: (id: number) => void;
+    onRemove?: (id: number) => void;
+    viewMode?: boolean;
+    disabled?: boolean;
 }
 
 function SourceObjectsList(props: SourceObjectsListProps): React.ReactElement {
-    const { sourceObjects, onAdd, onRemove } = props;
-    const classes = useStyles();
+    const { sourceObjects, onAdd, onRemove, viewMode = false, disabled = false } = props;
+    const classes = useStyles(viewMode);
 
+    const titles = ['Source Object(s)', 'Identifiers', 'Object Type'];
     const hasSourceObjects = !!sourceObjects.length;
+
+    const buttonLabel: string = viewMode ? 'Connect' : 'Add';
 
     return (
         <Box className={classes.container}>
-            <Header />
+            <Header titles={titles} />
             {hasSourceObjects && (
                 <Box className={classes.list}>
-                    {sourceObjects.map((sourceObject: StateSourceObject, index: number) => <Item key={index} sourceObject={sourceObject} onRemove={onRemove} />)}
+                    {sourceObjects.map((sourceObject: StateSourceObject, index: number) => (
+                        <Item
+                            key={index}
+                            viewMode={viewMode}
+                            sourceObject={sourceObject}
+                            onRemove={onRemove}
+                        />
+                    ))}
                 </Box>
             )}
             <Button
@@ -79,33 +85,39 @@ function SourceObjectsList(props: SourceObjectsListProps): React.ReactElement {
                 color='primary'
                 variant='contained'
                 onClick={() => onAdd()}
+                disabled={disabled}
             >
-                Add
+                {buttonLabel}
             </Button>
         </Box>
     );
 }
 
-function Header(): React.ReactElement {
-    const classes = useStyles();
+interface ObjectHeader {
+    titles: string[];
+}
+
+export function Header(props: ObjectHeader): React.ReactElement {
+    const { titles } = props;
+    const classes = useStyles(false);
+    const [title1, title2, title3] = titles;
 
     return (
         <Box
             display='flex'
             flex={1}
             flexDirection='row'
-            px={1}
             marginBottom={1}
-            width='90%'
+            width='92%'
         >
             <Box display='flex' flex={2}>
-                <Typography className={classes.header}>Source Object(s)</Typography>
+                <Typography className={classes.header}>{title1}</Typography>
             </Box>
             <Box display='flex' flex={3}>
-                <Typography className={classes.header}>Identifiers</Typography>
+                <Typography className={classes.header}>{title2}</Typography>
             </Box>
             <Box display='flex' flex={1}>
-                <Typography className={classes.header}>Object Type</Typography>
+                <Typography className={classes.header}>{title3}</Typography>
             </Box>
         </Box>
     );
@@ -113,15 +125,16 @@ function Header(): React.ReactElement {
 
 interface ItemProps {
     sourceObject: StateSourceObject;
-    onRemove: (id: number) => void;
+    onRemove?: (id: number) => void;
+    viewMode?: boolean;
 }
 
 function Item(props: ItemProps): React.ReactElement {
-    const { sourceObject, onRemove } = props;
+    const { sourceObject, onRemove, viewMode = false } = props;
     const { idSystemObject, name, identifier, objectType } = sourceObject;
-    const classes = useStyles();
+    const classes = useStyles(viewMode);
 
-    const remove = () => onRemove(idSystemObject);
+    const remove = () => onRemove?.(idSystemObject);
 
     return (
         <Box
@@ -142,7 +155,9 @@ function Item(props: ItemProps): React.ReactElement {
             <Box display='flex' flex={1}>
                 <Typography className={classes.label}>{getTermForSystemObjectType(objectType)}</Typography>
             </Box>
-            <MdRemoveCircleOutline className={classes.removeIcon} onClick={remove} size={24} />
+            <Box width='50px'>
+                {!viewMode && <MdRemoveCircleOutline className={classes.removeIcon} onClick={remove} size={24} />}
+            </Box>
         </Box>
     );
 }
