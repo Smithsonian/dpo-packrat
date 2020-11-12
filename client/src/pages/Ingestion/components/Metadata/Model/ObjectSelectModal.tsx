@@ -70,7 +70,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                         Select Source Objects
                     </Typography>
                     <Button autoFocus color='inherit' onClick={onSave}>
-                        save
+                        Save
                     </Button>
                 </Toolbar>
             </AppBar>

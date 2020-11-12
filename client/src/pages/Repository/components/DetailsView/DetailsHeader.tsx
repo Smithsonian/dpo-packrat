@@ -36,15 +36,15 @@ interface DetailsHeaderProps {
     path: RepositoryPath[];
     name: string;
     retired: boolean;
-    editable: boolean;
+    disabled: boolean;
 }
 
 function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
-    const { objectType, path, name, retired, editable } = props;
+    const { objectType, path, name, retired, disabled } = props;
     const classes = useStyles();
 
     return (
-        <Box display='flex' flexDirection='column' justifyContent='center'>
+        <Box display='flex' flexDirection='column' justifyContent='center' mb={1}>
             <Box display='flex'>
                 <Box display='flex' flex={1}>
                     <Typography className={classes.header} variant='h5'>{getTermForSystemObjectType(objectType)}</Typography>
@@ -61,7 +61,7 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
                     className={classes.checkboxLabel}
                     labelPlacement='start'
                     label='Retired'
-                    control={<Checkbox contentEditable={editable} checked={retired} name='retired' color='primary' />}
+                    control={<Checkbox disabled={disabled} checked={retired} name='retired' color='primary' />}
                 />
             </Box>
         </Box>

@@ -8,8 +8,9 @@ import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { MdRemoveCircleOutline } from 'react-icons/md';
-import FieldType from './FieldType';
 import { StateIdentifier, VocabularyOption } from '../../store';
+import { sharedButtonProps } from '../../utils/shared';
+import FieldType from './FieldType';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     identifierInput: {
@@ -48,20 +49,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         marginLeft: 20,
         cursor: 'pointer'
     },
-    addIdentifier: {
-        display: 'flex',
-        alignItems: 'center',
-        width: 80,
-        borderRadius: 5,
-        padding: 10,
-        backgroundColor: palette.secondary.light
-    },
-    addIdentifierButton: {
-        height: 30,
-        width: 80,
-        fontSize: '0.8em',
-        color: palette.background.paper,
-    }
+    addIdentifierButton: sharedButtonProps
 }));
 
 interface IdentifierListProps {
@@ -70,10 +58,11 @@ interface IdentifierListProps {
     onUpdate: (id: number, fieldName: string, fieldValue: number | string | boolean) => void;
     onRemove: (id: number) => void;
     identifierTypes: VocabularyOption[];
+    disabled?: boolean;
 }
 
 function IdentifierList(props: IdentifierListProps): React.ReactElement {
-    const { identifiers, onAdd, onUpdate, identifierTypes, onRemove } = props;
+    const { identifiers, onAdd, onUpdate, identifierTypes, onRemove, disabled = false } = props;
     const classes = useStyles();
 
     return (
@@ -98,6 +87,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                                     name='selected'
                                     color='primary'
                                     onChange={updateCheckbox}
+                                    disabled={disabled}
                                 />
                                 <DebounceInput
                                     value={identifier}
@@ -106,6 +96,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                                     onChange={update}
                                     debounceTimeout={500}
                                     placeholder='Add new identifer'
+                                    disabled={disabled}
                                 />
                                 <Select
                                     value={identifierType}
@@ -113,6 +104,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                                     name='identifierType'
                                     onChange={update}
                                     disableUnderline
+                                    disabled={disabled}
                                 >
                                     {identifierTypes.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                 </Select>
@@ -120,19 +112,18 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                             </Box>
                         );
                     })}
+                    <Button
+                        className={classes.addIdentifierButton}
+                        disableElevation
+                        color='primary'
+                        variant='contained'
+                        onClick={() => onAdd(identifierTypes[0].idVocabulary)}
+                        disabled={disabled}
+                    >
+                        Add
+                    </Button>
                 </FieldType>
             )}
-            <Box className={classes.addIdentifier}>
-                <Button
-                    className={classes.addIdentifierButton}
-                    disableElevation
-                    color='primary'
-                    variant='contained'
-                    onClick={() => onAdd(identifierTypes[0].idVocabulary)}
-                >
-                    Add
-                </Button>
-            </Box>
         </Box>
     );
 }
