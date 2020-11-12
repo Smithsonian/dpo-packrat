@@ -8,8 +8,9 @@ import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
 import { MdRemoveCircleOutline } from 'react-icons/md';
+import { NewTabLink } from '../../../../../components';
 import { StateSourceObject } from '../../../../../store';
-import { getTermForSystemObjectType } from '../../../../../utils/repository';
+import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -122,10 +123,6 @@ function Item(props: ItemProps): React.ReactElement {
 
     const remove = () => onRemove(idSystemObject);
 
-    const onModelDetail = () => {
-        alert('TODO: Handle source object click');
-    };
-
     return (
         <Box
             display='flex'
@@ -135,7 +132,9 @@ function Item(props: ItemProps): React.ReactElement {
             pb='10px'
         >
             <Box display='flex' flex={2}>
-                <Typography onClick={onModelDetail} className={clsx(classes.label, classes.labelUnderline)}>{name}</Typography>
+                <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
+                    <Typography className={clsx(classes.label, classes.labelUnderline)}>{name}</Typography>
+                </NewTabLink>
             </Box>
             <Box display='flex' flex={3}>
                 <Typography className={classes.label}>{identifier}</Typography>

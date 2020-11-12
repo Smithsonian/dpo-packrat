@@ -7,7 +7,9 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
+import { NewTabLink } from '../../../../../components';
 import { ReferenceModelAction, StateReferenceModel } from '../../../../../store';
+import { getDetailsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -48,6 +50,7 @@ const useStyles = makeStyles(({ palette }) => ({
 
 const mockReferenceModels: StateReferenceModel[] = [
     {
+        idSystemObject: 1,
         model: 'Armstrong1.obj',
         fileSize: 1.27e+7,
         uvResolution: 2000,
@@ -55,6 +58,7 @@ const mockReferenceModels: StateReferenceModel[] = [
         action: ReferenceModelAction.Update
     },
     {
+        idSystemObject: 1,
         model: 'Armstrong2.obj',
         fileSize: 8.7e+6,
         uvResolution: 500,
@@ -116,15 +120,11 @@ interface ItemProps {
 
 function Item(props: ItemProps): React.ReactElement {
     const { referenceModel } = props;
-    const { model, fileSize, uvResolution, boundingBox, action } = referenceModel;
+    const { idSystemObject, model, fileSize, uvResolution, boundingBox, action } = referenceModel;
     const classes = useStyles();
 
-    const onModelDetail = () => {
-        alert('TODO: Handle model click');
-    };
-
     const onAction = () => {
-        alert(`TODO: Handle ${action.toString()} action`);
+        alert(`TODO: KARAN: Handle ${action.toString()} action`);
     };
 
     return (
@@ -136,7 +136,9 @@ function Item(props: ItemProps): React.ReactElement {
             marginBottom={1}
         >
             <Box display='flex' flex={2}>
-                <Typography onClick={onModelDetail} className={clsx(classes.label, classes.labelUnderline)}>{model}</Typography>
+                <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
+                    <Typography className={clsx(classes.label, classes.labelUnderline)}>{model}</Typography>
+                </NewTabLink>
             </Box>
             <Box display='flex' flex={1} justifyContent='center'>
                 <Typography className={classes.label}>{formatBytes(fileSize)}</Typography>

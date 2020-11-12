@@ -27,7 +27,6 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         color: Colors.defaults.white
     },
     logo: {
-        cursor: 'pointer',
         paddingRight: spacing(2),
     },
     searchBox: {
