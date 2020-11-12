@@ -25,7 +25,7 @@ function DerivedObjectsList(props: DerivedObjectsListProps): React.ReactElement 
     const { derivedObjects, onAdd, onRemove, viewMode = false, disabled = false } = props;
     const classes = useStyles(viewMode);
 
-    const titles = ['Source Object(s)', 'Variant Type', 'Object Type'];
+    const titles = ['Derived Object(s)', 'Variant Type', 'Object Type'];
     const hasDerivedObjects = !!derivedObjects.length;
 
     return (
