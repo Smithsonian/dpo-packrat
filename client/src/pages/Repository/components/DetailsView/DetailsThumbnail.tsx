@@ -27,7 +27,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
 
     return (
         <Box display='flex' flex={1} flexDirection='column' alignItems='center'>
-            <img className={classes.thumbnail} src={thumbnail} loading='lazy' />
+            <img className={classes.thumbnail} src={thumbnail} loading='lazy' alt='asset thumbnail' />
         </Box>
     );
 }
