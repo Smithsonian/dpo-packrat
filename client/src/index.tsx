@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { AliveScope } from 'react-activation';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
-import { Slide, ToastContainer } from 'react-toastify';
+import { Slide, toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ErrorBoundary, Loader, PrivateRoute, PublicRoute } from './components';
 import { ROUTES } from './constants';
@@ -27,9 +27,13 @@ function AppRouter(): React.ReactElement {
     const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
 
     const initializeUser = useCallback(async () => {
-        await initialize();
-        await updateVocabularyEntries();
-        setLoading(false);
+        try {
+            await initialize();
+            await updateVocabularyEntries();
+            setLoading(false);
+        } catch {
+            toast.error('Error occurred while initializing');
+        }
     }, [initialize, updateVocabularyEntries]);
 
     useEffect(() => {
