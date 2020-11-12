@@ -49,9 +49,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         marginLeft: 20,
         cursor: 'pointer'
     },
-    header: {
-        ...sharedLabelProps, fontSize: '0.9em'
-    },
+    header: sharedLabelProps,
     addIdentifierButton: sharedButtonProps
 }));
 
