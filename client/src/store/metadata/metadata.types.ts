@@ -135,6 +135,13 @@ export type StateSourceObject = {
     objectType: eSystemObjectType;
 };
 
+export type StateDerivedObject = {
+    idSystemObject: number;
+    name: string;
+    variantType: number;
+    objectType: eSystemObjectType;
+};
+
 export enum ReferenceModelAction {
     Update = 'Update',
     Ingest = 'Ingest'
