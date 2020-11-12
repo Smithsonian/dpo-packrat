@@ -4,6 +4,7 @@
  * Shared utilities for components, functionality.
  */
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
+import { Colors } from '../theme';
 
 export const withDefaultValueBoolean = (value: boolean | null, defaultValue: boolean): boolean => value || defaultValue;
 
@@ -46,4 +47,11 @@ export const scrollBarProperties = (vertical: boolean, horizontal: boolean, back
         borderRadius: 10,
         backgroundColor
     }
+});
+
+export const sharedButtonProps: CSSProperties = ({
+    height: 30,
+    width: 80,
+    fontSize: '0.8em',
+    color: Colors.defaults.white
 });

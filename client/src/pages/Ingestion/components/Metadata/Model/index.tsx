@@ -13,7 +13,7 @@ import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../../utils/shared';
 import BoundingBoxInput from './BoundingBoxInput';
 import ObjectSelectModal from './ObjectSelectModal';
-import SourceObjects from './SourceObjects';
+import SourceObjectsList from './SourceObjectsList';
 import UVContents from './UVContents';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -129,7 +129,7 @@ function Model(props: ModelProps): React.ReactElement {
                     onUpdateIdentifer={onIdentifersChange}
                     onRemoveIdentifer={onIdentifersChange}
                 />
-                <SourceObjects sourceObjects={sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                <SourceObjectsList sourceObjects={sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
                 <Box display='flex' flexDirection='row' mt={1}>
                     <Box display='flex' flex={1} flexDirection='column'>
                         <FieldType
