@@ -32,7 +32,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
     searchBox: {
         display: 'flex',
         alignItems: 'center',
-        marginLeft: 50,
+        marginLeft: 35,
         padding: '5px 10px',
         width: '40vw',
         minWidth: '30vw',

@@ -22,7 +22,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        maxHeight: 'calc(100vh - 160px)',
+        maxHeight: 'calc(100vh - 140px)',
         padding: 20,
         marginBottom: 20,
         borderRadius: 10,
@@ -77,12 +77,6 @@ const mockData = {
                 name: 'PhotoSetAlpha1.zip',
                 identifier: 'a5cf8642-7466-4896-a0a2-d698f2009cd3',
                 objectType: eSystemObjectType.eModel
-            },
-            {
-                idSystemObject: 0,
-                name: 'PhotoSetAlpha2.zip',
-                identifier: 'a5cf8642-7466-4896-a0a2-d698f2009cd3',
-                objectType: eSystemObjectType.eCaptureData
             }
         ],
         derivedObjects: [
