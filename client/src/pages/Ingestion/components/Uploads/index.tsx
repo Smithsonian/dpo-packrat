@@ -6,13 +6,13 @@
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import KeepAlive from 'react-activation';
 import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
-import { Loader, SidebarBottomNavigator } from '../../../../components';
+import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { useMetadataStore, useUploadStore, useVocabularyStore } from '../../../../store';
+import { useMetadataStore, useUploadStore } from '../../../../store';
 import { Colors } from '../../../../theme';
 import UploadCompleteList from './UploadCompleteList';
 import UploadFilesPicker from './UploadFilesPicker';
@@ -63,22 +63,10 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 function Uploads(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const [loadingVocabulary, setLoadingVocabulary] = useState(true);
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
     const [completed, discardFiles] = useUploadStore(state => [state.completed,state.discardFiles]);
     const updateMetadataSteps = useMetadataStore(state => state.updateMetadataSteps);
-    const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
-
-    const fetchVocabularyEntries = async () => {
-        setLoadingVocabulary(true);
-        await updateVocabularyEntries();
-        setLoadingVocabulary(false);
-    };
-
-    useEffect(() => {
-        fetchVocabularyEntries();
-    }, []);
 
     const onIngest = async (): Promise<void> => {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
@@ -118,24 +106,16 @@ function Uploads(): React.ReactElement {
         }
     };
 
-    let content: React.ReactNode = <Loader maxWidth='55vw' minHeight='60vh' />;
-
-    if (!loadingVocabulary) {
-        content = (
-            <KeepAlive>
-                <React.Fragment>
-                    <UploadFilesPicker />
-                    <UploadCompleteList />
-                    <UploadList />
-                </React.Fragment>
-            </KeepAlive>
-        );
-    }
-
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
-                {content}
+                <KeepAlive>
+                    <React.Fragment>
+                        <UploadFilesPicker />
+                        <UploadCompleteList />
+                        <UploadList />
+                    </React.Fragment>
+                </KeepAlive>
             </Box>
             <SidebarBottomNavigator
                 leftLabel='Discard'

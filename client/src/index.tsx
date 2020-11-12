@@ -18,17 +18,19 @@ import './global/root.css';
 import { apolloClient } from './graphql';
 import { Home, Login } from './pages';
 import * as serviceWorker from './serviceWorker';
-import { useUserStore } from './store';
+import { useUserStore, useVocabularyStore } from './store';
 import theme from './theme';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
     const initialize = useUserStore(state => state.initialize);
+    const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
 
     const initializeUser = useCallback(async () => {
         await initialize();
+        await updateVocabularyEntries();
         setLoading(false);
-    }, [initialize]);
+    }, [initialize, updateVocabularyEntries]);
 
     useEffect(() => {
         initializeUser();
