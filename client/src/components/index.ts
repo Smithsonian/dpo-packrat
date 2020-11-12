@@ -17,6 +17,7 @@ import SelectField from './controls/SelectField';
 import IdInputField from './controls/IdInputField';
 import DateInputField from './controls/DateInputField';
 import BreadcrumbsView from './shared/BreadcrumbsView';
+import NewTabLink from './shared/NewTabLink';
 
 export {
     Header,
@@ -33,5 +34,6 @@ export {
     SelectField,
     IdInputField,
     DateInputField,
-    BreadcrumbsView
+    BreadcrumbsView,
+    NewTabLink
 };

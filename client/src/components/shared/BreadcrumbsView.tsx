@@ -8,9 +8,10 @@ import { fade, makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
 import { MdNavigateNext } from 'react-icons/md';
-import { Link } from 'react-router-dom';
 import { RepositoryPath } from '../../store';
+import { Colors } from '../../theme';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../utils/repository';
+import NewTabLink from './NewTabLink';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -22,10 +23,6 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         color: palette.background.paper,
         padding: '5px 10px',
         borderRadius: 5,
-    },
-    link: {
-        color: palette.background.paper,
-        textDecoration: 'none'
     },
     label: {
         [breakpoints.down('lg')]: {
@@ -44,9 +41,9 @@ function BreadcrumbsView(props: BreadcrumbsViewProps): React.ReactElement {
     const classes = useStyles();
 
     const renderBreadcrumbs = ({ idSystemObject, name, objectType }: RepositoryPath, index: number) => (
-        <Link key={index} target='_blank' className={classes.link} to={getDetailsUrlForObject(idSystemObject)}>
+        <NewTabLink key={index} to={getDetailsUrlForObject(idSystemObject)} color={Colors.defaults.white}>
             <Typography className={classes.label} color='inherit'>{getTermForSystemObjectType(objectType)} {name}</Typography>
-        </Link>
+        </NewTabLink>
     );
 
     return (

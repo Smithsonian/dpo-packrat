@@ -141,10 +141,11 @@ export enum ReferenceModelAction {
 }
 
 export type StateReferenceModel = {
+    idSystemObject: number;
     model: string;
     fileSize: number;
     uvResolution: number;
-    boundingBox: string; // TODO: convert into individual points
+    boundingBox: string; // TODO: KARAN: convert into individual points
     action: ReferenceModelAction;
 };
 
