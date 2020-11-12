@@ -14,6 +14,7 @@ import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../utils/
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
+        display: 'flex',
         color: palette.primary.dark
     },
     highlighted: {
@@ -43,7 +44,7 @@ function BreadcrumbsView(props: BreadcrumbsViewProps): React.ReactElement {
     const classes = useStyles();
 
     const renderBreadcrumbs = ({ idSystemObject, name, objectType }: RepositoryPath, index: number) => (
-        <Link key={index} className={classes.link} to={getDetailsUrlForObject(idSystemObject)}>
+        <Link key={index} target='_blank' className={classes.link} to={getDetailsUrlForObject(idSystemObject)}>
             <Typography className={classes.label} color='inherit'>{getTermForSystemObjectType(objectType)} {name}</Typography>
         </Link>
     );
