@@ -3,13 +3,13 @@
  *
  * This component renders identifier list used in photogrammetry metadata component.
  */
-import { Box, Button, Checkbox, MenuItem, Select } from '@material-ui/core';
+import { Box, Button, Checkbox, MenuItem, Select, Typography } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { StateIdentifier, VocabularyOption } from '../../store';
-import { sharedButtonProps } from '../../utils/shared';
+import { sharedButtonProps, sharedLabelProps } from '../../utils/shared';
 import FieldType from './FieldType';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
@@ -49,6 +49,9 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         marginLeft: 20,
         cursor: 'pointer'
     },
+    header: {
+        ...sharedLabelProps, fontSize: '0.9em'
+    },
     addIdentifierButton: sharedButtonProps
 }));
 
@@ -67,63 +70,78 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
 
     return (
         <Box overflow='hidden'>
-            {!!identifiers.length && (
-                <FieldType required={false} renderLabel={false} width='auto'>
-                    {identifiers.map(({ id, selected, identifier, identifierType }, index) => {
-                        const remove = () => onRemove(id);
-                        const updateCheckbox = ({ target }) => onUpdate(id, target.name, target.checked);
-                        const update = ({ target }) => onUpdate(id, target.name, target.value);
+            <FieldType required={false} renderLabel={false} width='auto'>
+                {!!identifiers.length && <Header />}
+                {identifiers.map(({ id, selected, identifier, identifierType }, index) => {
+                    const remove = () => onRemove(id);
+                    const updateCheckbox = ({ target }) => onUpdate(id, target.name, target.checked);
+                    const update = ({ target }) => onUpdate(id, target.name, target.value);
 
-                        return (
-                            <Box
-                                key={index}
-                                display='flex'
-                                flexDirection='row'
-                                alignItems='center'
-                                paddingBottom={'10px'}
+                    return (
+                        <Box
+                            key={index}
+                            display='flex'
+                            flexDirection='row'
+                            alignItems='center'
+                            paddingBottom='10px'
+                        >
+                            <Checkbox
+                                checked={selected}
+                                name='selected'
+                                color='primary'
+                                onChange={updateCheckbox}
+                                disabled={disabled}
+                            />
+                            <DebounceInput
+                                value={identifier}
+                                name='identifier'
+                                className={classes.identifierInput}
+                                onChange={update}
+                                debounceTimeout={500}
+                                placeholder='Add new identifer'
+                                disabled={disabled}
+                            />
+                            <Select
+                                value={identifierType}
+                                className={classes.identifierSelect}
+                                name='identifierType'
+                                onChange={update}
+                                disableUnderline
+                                disabled={disabled}
                             >
-                                <Checkbox
-                                    checked={selected}
-                                    name='selected'
-                                    color='primary'
-                                    onChange={updateCheckbox}
-                                    disabled={disabled}
-                                />
-                                <DebounceInput
-                                    value={identifier}
-                                    name='identifier'
-                                    className={classes.identifierInput}
-                                    onChange={update}
-                                    debounceTimeout={500}
-                                    placeholder='Add new identifer'
-                                    disabled={disabled}
-                                />
-                                <Select
-                                    value={identifierType}
-                                    className={classes.identifierSelect}
-                                    name='identifierType'
-                                    onChange={update}
-                                    disableUnderline
-                                    disabled={disabled}
-                                >
-                                    {identifierTypes.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                </Select>
-                                <MdRemoveCircleOutline className={classes.identifierOption} onClick={remove} size={30} />
-                            </Box>
-                        );
-                    })}
-                    <Button
-                        className={classes.addIdentifierButton}
-                        disableElevation
-                        color='primary'
-                        variant='contained'
-                        onClick={() => onAdd(identifierTypes[0].idVocabulary)}
-                        disabled={disabled}
-                    >
-                        Add
-                    </Button>
-                </FieldType>
-            )}
+                                {identifierTypes.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                            </Select>
+                            <MdRemoveCircleOutline className={classes.identifierOption} onClick={remove} size={30} />
+                        </Box>
+                    );
+                })}
+                <Button
+                    className={classes.addIdentifierButton}
+                    disableElevation
+                    color='primary'
+                    variant='contained'
+                    onClick={() => onAdd(identifierTypes[0].idVocabulary)}
+                    disabled={disabled}
+                >
+                    Add
+                </Button>
+            </FieldType>
+        </Box>
+    );
+}
+
+function Header(): React.ReactElement {
+    const classes = useStyles();
+
+    return (
+        <Box display='flex' flex={1} mb={1}>
+            <Box display='flex' style={{ width: 40 }}></Box>
+            <Box display='flex' flex={1}>
+                <Typography className={classes.header}>Identifer</Typography>
+            </Box>
+            <Box display='flex' style={{ width: 220 }}>
+                <Typography className={classes.header}>Identifer Type</Typography>
+            </Box>
         </Box>
     );
 }
