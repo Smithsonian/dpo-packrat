@@ -403,6 +403,22 @@ export type IngestUvMap = {
     mapType: Scalars['Int'];
 };
 
+export type SourceObject = {
+    __typename?: 'SourceObject';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    identifier: Scalars['String'];
+    objectType: Scalars['Int'];
+};
+
+export type DerivedObject = {
+    __typename?: 'DerivedObject';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    variantType: Scalars['Int'];
+    objectType: Scalars['Int'];
+};
+
 export type IngestModel = {
     __typename?: 'IngestModel';
     idAssetVersion: Scalars['Int'];
@@ -418,6 +434,7 @@ export type IngestModel = {
     directory: Scalars['String'];
     identifiers: Array<IngestIdentifier>;
     uvMaps: Array<IngestUvMap>;
+    sourceObjects: Array<SourceObject>;
     roughness?: Maybe<Scalars['Int']>;
     metalness?: Maybe<Scalars['Int']>;
     pointCount?: Maybe<Scalars['Int']>;
@@ -426,18 +443,40 @@ export type IngestModel = {
     hasNormals?: Maybe<Scalars['Boolean']>;
     hasVertexColor?: Maybe<Scalars['Boolean']>;
     hasUVSpace?: Maybe<Scalars['Boolean']>;
-    boundingBoxP1X?: Maybe<Scalars['Int']>;
-    boundingBoxP1Y?: Maybe<Scalars['Int']>;
-    boundingBoxP1Z?: Maybe<Scalars['Int']>;
-    boundingBoxP2X?: Maybe<Scalars['Int']>;
-    boundingBoxP2Y?: Maybe<Scalars['Int']>;
-    boundingBoxP2Z?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export enum ReferenceModelAction {
+    Update = 'Update',
+    Ingest = 'Ingest'
+}
+
+export type ReferenceModel = {
+    __typename?: 'ReferenceModel';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    fileSize: Scalars['Int'];
+    resolution?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    action: ReferenceModelAction;
 };
 
 export type IngestScene = {
     __typename?: 'IngestScene';
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
     identifiers: Array<IngestIdentifier>;
+    referenceModels: Array<ReferenceModel>;
 };
 
 export type GetAssetVersionDetailResult = {
@@ -685,6 +724,13 @@ export type IngestUvMapInput = {
     mapType: Scalars['Int'];
 };
 
+export type SourceObjectInput = {
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    identifier: Scalars['String'];
+    objectType: Scalars['Int'];
+};
+
 export type IngestModelInput = {
     idAssetVersion: Scalars['Int'];
     systemCreated: Scalars['Boolean'];
@@ -699,6 +745,7 @@ export type IngestModelInput = {
     directory: Scalars['String'];
     identifiers: Array<IngestIdentifierInput>;
     uvMaps: Array<IngestUvMapInput>;
+    sourceObjects: Array<SourceObjectInput>;
     roughness?: Maybe<Scalars['Int']>;
     metalness?: Maybe<Scalars['Int']>;
     pointCount?: Maybe<Scalars['Int']>;
@@ -707,21 +754,38 @@ export type IngestModelInput = {
     hasNormals?: Maybe<Scalars['Boolean']>;
     hasVertexColor?: Maybe<Scalars['Boolean']>;
     hasUVSpace?: Maybe<Scalars['Boolean']>;
-    boundingBoxP1X?: Maybe<Scalars['Int']>;
-    boundingBoxP1Y?: Maybe<Scalars['Int']>;
-    boundingBoxP1Z?: Maybe<Scalars['Int']>;
-    boundingBoxP2X?: Maybe<Scalars['Int']>;
-    boundingBoxP2Y?: Maybe<Scalars['Int']>;
-    boundingBoxP2Z?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export type ReferenceModelInput = {
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    fileSize: Scalars['Int'];
+    resolution?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    action: ReferenceModelAction;
 };
 
 export type IngestSceneInput = {
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
     identifiers: Array<IngestIdentifierInput>;
+    referenceModels: Array<ReferenceModelInput>;
 };
 
 export type IngestOtherInput = {
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
     identifiers: Array<IngestIdentifierInput>;
 };
 

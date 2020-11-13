@@ -12,7 +12,7 @@ import { apolloClient } from '../../graphql';
 import {
     AreCameraSettingsUniformDocument,
     AssetVersionContent,
-    GetAssetVersionDetailResult,
+
     GetAssetVersionsDetailsDocument,
     GetAssetVersionsDetailsQuery,
     GetContentsForAssetVersionsDocument,
@@ -227,7 +227,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         CaptureDataPhoto,
                         Model,
                         Scene
-                    }: GetAssetVersionDetailResult = Details[index];
+                    } = Details[index];
 
                     if (foundSubjectUnitIdentifier) {
                         const subject: StateSubject = parseSubjectUnitIdentifierToState(foundSubjectUnitIdentifier);
@@ -464,3 +464,4 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
 export * from './metadata.defaults';
 export * from './metadata.types';
+
