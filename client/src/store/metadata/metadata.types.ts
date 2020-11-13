@@ -1,9 +1,9 @@
-import { eSystemObjectType } from '../../types/server';
 /**
  * Metadata Store Types
  *
  * Type definitions for the metadata store.
  */
+import { DerivedObject, ReferenceModel, ReferenceModelAction, SourceObject } from '../../types/graphql';
 import { IngestionFile } from '../upload';
 
 export type StateMetadata = {
@@ -42,7 +42,7 @@ export type FieldErrors = {
     };
 };
 
-export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateUVMap[];
+export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateUVMap[] | SourceObject[];
 
 export type MetadataUpdate = {
     valid: boolean;
@@ -93,6 +93,7 @@ export type ModelFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     uvMaps: StateUVMap[];
+    sourceObjects: StateSourceObject[];
     dateCaptured: Date;
     creationMethod: number | null;
     master: boolean;
@@ -121,6 +122,7 @@ export type ModelFields = {
 export type SceneFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
+    referenceModels: StateReferenceModel[];
 };
 
 export type OtherFields = {
@@ -128,32 +130,12 @@ export type OtherFields = {
     identifiers: StateIdentifier[];
 };
 
-export type StateSourceObject = {
-    idSystemObject: number;
-    name: string;
-    identifier: string;
-    objectType: eSystemObjectType;
-};
+export type StateSourceObject = SourceObject;
 
-export type StateDerivedObject = {
-    idSystemObject: number;
-    name: string;
-    variantType: number;
-    objectType: eSystemObjectType;
-};
+export type StateDerivedObject = DerivedObject;
 
-export enum ReferenceModelAction {
-    Update = 'Update',
-    Ingest = 'Ingest'
-}
-
-export type StateReferenceModel = {
-    idSystemObject: number;
-    model: string;
-    fileSize: number;
-    uvResolution: number;
-    boundingBox: string; // TODO: KARAN: convert into individual points
-    action: ReferenceModelAction;
-};
+export type StateReferenceModel = ReferenceModel;
 
 export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields;
+
+export { ReferenceModelAction };

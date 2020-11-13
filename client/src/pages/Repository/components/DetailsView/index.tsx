@@ -41,23 +41,28 @@ const mockData = {
         retired: true,
         objectType: eSystemObjectType.eCaptureData,
         path: [
+            // TODO: KARAN: 2 Dimensional array
             {
                 idSystemObject: 0,
                 name: 'USNM',
                 objectType: eSystemObjectType.eUnit,
-            }, {
+            },
+            {
                 idSystemObject: 1,
                 name: 'Armstrong Suit',
                 objectType: eSystemObjectType.eProject,
-            }, {
+            },
+            {
                 idSystemObject: 2,
                 name: 'Armstrong Glove',
                 objectType: eSystemObjectType.eSubject,
-            }, {
+            },
+            {
                 idSystemObject: 3,
                 name: 'Armstrong Glove Full',
                 objectType: eSystemObjectType.eItem,
-            }, {
+            },
+            {
                 idSystemObject: 4,
                 name: 'PhotoSet1.zip',
                 objectType: eSystemObjectType.eCaptureData,

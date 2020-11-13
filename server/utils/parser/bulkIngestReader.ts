@@ -378,7 +378,8 @@ export class BulkIngestReader {
             systemCreated: true,
             modelFileType: 0,
             identifiers: [],
-            uvMaps: []
+            uvMaps: [],
+            sourceObjects: []
         };
     }
 

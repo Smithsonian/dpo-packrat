@@ -166,6 +166,20 @@ type IngestUVMap {
   mapType: Int!
 }
 
+type SourceObject {
+  idSystemObject: Int!
+  name: String!
+  identifier: String!
+  objectType: Int!
+}
+
+type DerivedObject {
+  idSystemObject: Int!
+  name: String!
+  variantType: Int!
+  objectType: Int!
+}
+
 type IngestModel {
   idAssetVersion: Int!
   systemCreated: Boolean!
@@ -180,6 +194,7 @@ type IngestModel {
   directory: String!
   identifiers: [IngestIdentifier!]!
   uvMaps: [IngestUVMap!]!
+  sourceObjects: [SourceObject!]!
   roughness: Int
   metalness: Int
   pointCount: Int
@@ -188,17 +203,38 @@ type IngestModel {
   hasNormals: Boolean
   hasVertexColor: Boolean
   hasUVSpace: Boolean
-  boundingBoxP1X: Int
-  boundingBoxP1Y: Int
-  boundingBoxP1Z: Int
-  boundingBoxP2X: Int
-  boundingBoxP2Y: Int
-  boundingBoxP2Z: Int
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+}
+
+enum ReferenceModelAction {
+  Update
+  Ingest
+}
+
+type ReferenceModel {
+  idSystemObject: Int!
+  name: String!
+  fileSize: Int!
+  resolution: Int
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+  action: ReferenceModelAction!
 }
 
 type IngestScene {
   idAssetVersion: Int!
+  systemCreated: Boolean!
   identifiers: [IngestIdentifier!]!
+  referenceModels: [ReferenceModel!]!
 }
 
 type GetAssetVersionDetailResult {
@@ -429,6 +465,13 @@ input IngestUVMapInput {
   mapType: Int!
 }
 
+input SourceObjectInput {
+  idSystemObject: Int!
+  name: String!
+  identifier: String!
+  objectType: Int!
+}
+
 input IngestModelInput {
   idAssetVersion: Int!
   systemCreated: Boolean!
@@ -443,6 +486,7 @@ input IngestModelInput {
   directory: String!
   identifiers: [IngestIdentifierInput!]!
   uvMaps: [IngestUVMapInput!]!
+  sourceObjects: [SourceObjectInput!]!
   roughness: Int
   metalness: Int
   pointCount: Int
@@ -451,21 +495,38 @@ input IngestModelInput {
   hasNormals: Boolean
   hasVertexColor: Boolean
   hasUVSpace: Boolean
-  boundingBoxP1X: Int
-  boundingBoxP1Y: Int
-  boundingBoxP1Z: Int
-  boundingBoxP2X: Int
-  boundingBoxP2Y: Int
-  boundingBoxP2Z: Int
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+}
+
+input ReferenceModelInput {
+  idSystemObject: Int!
+  name: String!
+  fileSize: Int!
+  resolution: Int
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+  action: ReferenceModelAction!
 }
 
 input IngestSceneInput {
   idAssetVersion: Int!
+  systemCreated: Boolean!
   identifiers: [IngestIdentifierInput!]!
+  referenceModels: [ReferenceModelInput!]!
 }
 
 input IngestOtherInput {
   idAssetVersion: Int!
+  systemCreated: Boolean!
   identifiers: [IngestIdentifierInput!]!
 }
 

@@ -84,10 +84,18 @@ const uvMapSchema = yup.object().shape({
     mapType: yup.number().nullable(true)
 });
 
+const sourceObjectSchema = yup.object().shape({
+    idSystemObject: yup.number().required(),
+    name: yup.string().required(),
+    identifier: yup.string().required(),
+    objectType: yup.number().required()
+});
+
 export const defaultModelFields: ModelFields = {
     systemCreated: true,
     identifiers: [],
     uvMaps: [],
+    sourceObjects: [],
     dateCaptured: new Date(),
     creationMethod: null,
     master: false,
@@ -119,6 +127,7 @@ export const modelFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     uvMaps: yup.array().of(uvMapSchema),
+    sourceObjects: yup.array().of(sourceObjectSchema),
     dateCaptured: yup.date().typeError('Date Captured is required'),
     creationMethod: yup.number().typeError('Creation method is required'),
     master: yup.boolean().required(),
@@ -146,14 +155,30 @@ export const modelFieldsSchema = yup.object().shape({
 
 export const defaultSceneFields: SceneFields = {
     systemCreated: true,
-    identifiers: []
+    identifiers: [],
+    referenceModels: []
 };
 
 export type SceneSchemaType = typeof sceneFieldsSchema;
 
+export const referenceModelSchema = yup.object().shape({
+    idSystemObject: yup.number().required(),
+    name: yup.string().required(),
+    fileSize: yup.number().required(),
+    resolution: yup.number().nullable(true),
+    boundingBoxP1X: yup.number().nullable(true),
+    boundingBoxP1Y: yup.number().nullable(true),
+    boundingBoxP1Z: yup.number().nullable(true),
+    boundingBoxP2X: yup.number().nullable(true),
+    boundingBoxP2Y: yup.number().nullable(true),
+    boundingBoxP2Z: yup.number().nullable(true),
+    action: yup.number().required()
+});
+
 export const sceneFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
+    referenceModels: yup.array().of(referenceModelSchema)
 });
 
 export const defaultOtherFields: OtherFields = {

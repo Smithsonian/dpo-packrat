@@ -51,19 +51,29 @@ const useStyles = makeStyles(({ palette }) => ({
 const mockReferenceModels: StateReferenceModel[] = [
     {
         idSystemObject: 1,
-        model: 'Armstrong1.obj',
+        name: 'Armstrong1.obj',
         fileSize: 1.27e+7,
-        uvResolution: 2000,
-        boundingBox: '(1.0, 1.0, 1.0) - (10.0, 10.0, 10.0)',
+        resolution: 2000,
+        boundingBoxP1X: 1.0,
+        boundingBoxP1Y: 1.0,
+        boundingBoxP1Z: 1.0,
+        boundingBoxP2X: 10.0,
+        boundingBoxP2Y: 10.0,
+        boundingBoxP2Z: 10.0,
         action: ReferenceModelAction.Update
     },
     {
         idSystemObject: 1,
-        model: 'Armstrong2.obj',
-        fileSize: 8.7e+6,
-        uvResolution: 500,
-        boundingBox: '(1.0, 1.0, 1.0) - (10.0, 10.0, 10.0)',
-        action: ReferenceModelAction.Ingest
+        name: 'Armstrong2.obj',
+        fileSize: 1.27e+7,
+        resolution: 2000,
+        boundingBoxP1X: 1.0,
+        boundingBoxP1Y: 1.0,
+        boundingBoxP1Z: 1.0,
+        boundingBoxP2X: 10.0,
+        boundingBoxP2Y: 10.0,
+        boundingBoxP2Z: 10.0,
+        action: ReferenceModelAction.Update
     }
 ];
 
@@ -120,12 +130,15 @@ interface ItemProps {
 
 function Item(props: ItemProps): React.ReactElement {
     const { referenceModel } = props;
-    const { idSystemObject, model, fileSize, uvResolution, boundingBox, action } = referenceModel;
+    const { idSystemObject, name, fileSize, resolution, action } = referenceModel;
+    const { boundingBoxP1X, boundingBoxP1Y, boundingBoxP1Z, boundingBoxP2X, boundingBoxP2Y, boundingBoxP2Z } = referenceModel;
     const classes = useStyles();
 
     const onAction = () => {
         alert(`TODO: KARAN: Handle ${action.toString()} action`);
     };
+
+    const boundingBox: string = `(${boundingBoxP1X}, ${boundingBoxP1Y}, ${boundingBoxP1Z}) - (${boundingBoxP2X}, ${boundingBoxP2Y}, ${boundingBoxP2Z})`;
 
     return (
         <Box
@@ -137,14 +150,14 @@ function Item(props: ItemProps): React.ReactElement {
         >
             <Box display='flex' flex={2}>
                 <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
-                    <Typography className={clsx(classes.label, classes.labelUnderline)}>{model}</Typography>
+                    <Typography className={clsx(classes.label, classes.labelUnderline)}>{name}</Typography>
                 </NewTabLink>
             </Box>
             <Box display='flex' flex={1} justifyContent='center'>
                 <Typography className={classes.label}>{formatBytes(fileSize)}</Typography>
             </Box>
             <Box display='flex' flex={1} justifyContent='center'>
-                <Typography className={classes.label}>{uvResolution}</Typography>
+                <Typography className={classes.label}>{resolution}</Typography>
             </Box>
             <Box display='flex' flex={2} justifyContent='center'>
                 <Typography className={classes.label}>{boundingBox}</Typography>

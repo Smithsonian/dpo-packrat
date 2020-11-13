@@ -150,6 +150,7 @@ function useIngest(): UseIngest {
                         systemCreated,
                         identifiers,
                         uvMaps,
+                        sourceObjects,
                         dateCaptured,
                         creationMethod,
                         master,
@@ -191,6 +192,7 @@ function useIngest(): UseIngest {
                         units: nonNullValue<number>('units', units),
                         purpose: nonNullValue<number>('purpose', purpose),
                         modelFileType: nonNullValue<number>('modelFileType', modelFileType),
+                        sourceObjects,
                         roughness,
                         metalness,
                         pointCount,
@@ -212,26 +214,29 @@ function useIngest(): UseIngest {
                 }
 
                 if (isScene) {
-                    const { identifiers } = scene;
+                    const { identifiers, systemCreated, referenceModels } = scene;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const sceneData: IngestSceneInput = {
                         idAssetVersion: parseFileId(file.id),
-                        identifiers: ingestIdentifiers
+                        identifiers: ingestIdentifiers,
+                        systemCreated,
+                        referenceModels
                     };
 
                     ingestScene.push(sceneData);
                 }
 
                 if (isOther) {
-                    const { identifiers } = other;
+                    const { identifiers, systemCreated } = other;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const otherData: IngestOtherInput = {
                         idAssetVersion: parseFileId(file.id),
-                        identifiers: ingestIdentifiers
+                        identifiers: ingestIdentifiers,
+                        systemCreated
                     };
 
                     ingestOther.push(otherData);

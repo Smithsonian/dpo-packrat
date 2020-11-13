@@ -50,7 +50,6 @@ function Model(props: ModelProps): React.ReactElement {
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
 
     const [modalOpen, setModalOpen] = useState(false);
-    const [sourceObjects, setSourceObjects] = useState<StateSourceObject[]>([]);
 
     const errors = getFieldErrors(metadata);
 
@@ -101,8 +100,9 @@ function Model(props: ModelProps): React.ReactElement {
     };
 
     const onRemoveSourceObject = (idSystemObject: number): void => {
+        const { sourceObjects } = model;
         const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
-        setSourceObjects(updatedSourceObjects);
+        updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.model);
     };
 
     const onModalClose = () => {
@@ -110,8 +110,9 @@ function Model(props: ModelProps): React.ReactElement {
     };
 
     const onSelectedObjects = (newSourceObjects: StateSourceObject[]) => {
-        setSourceObjects([...sourceObjects, ...newSourceObjects]);
-        setModalOpen(false);
+        const { sourceObjects } = model;
+        const updatedSourceObjects = [...sourceObjects, ...newSourceObjects];
+        updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.model);
     };
 
     const noteLabelProps = { style: { fontStyle: 'italic' } };
@@ -129,7 +130,7 @@ function Model(props: ModelProps): React.ReactElement {
                     onUpdateIdentifer={onIdentifersChange}
                     onRemoveIdentifer={onIdentifersChange}
                 />
-                <SourceObjectsList sourceObjects={sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                <SourceObjectsList sourceObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
                 <Box display='flex' flexDirection='row' mt={1}>
                     <Box display='flex' flex={1} flexDirection='column'>
                         <FieldType
@@ -264,7 +265,7 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                 </Box>
             </Box>
-            <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={sourceObjects} />
+            <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={model.sourceObjects} />
         </React.Fragment>
     );
 }
