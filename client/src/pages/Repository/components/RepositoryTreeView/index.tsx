@@ -12,7 +12,7 @@ import React, { useCallback, useEffect } from 'react';
 import { Loader } from '../../../../components';
 import { StateSourceObject, treeRootKey, useControlStore, useRepositoryStore } from '../../../../store';
 import { NavigationResultEntry } from '../../../../types/graphql';
-import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeWidth, isRepositoryItemSelected } from '../../../../utils/repository';
+import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeViewStyleHeight, getTreeViewStyleWidth, getTreeWidth, isRepositoryItemSelected } from '../../../../utils/repository';
 import RepositoryTreeHeader from './RepositoryTreeHeader';
 import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
@@ -21,14 +21,14 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        maxHeight: ({ isExpanded }: StyleProps) => isExpanded ? '62vh' : '82vh',
-        maxWidth: ({ sideBarExpanded }: StyleProps) => sideBarExpanded ? '85vw' : '93vw',
+        maxHeight: ({ isExpanded, isModal }: StyleProps) => getTreeViewStyleHeight(isExpanded, isModal, 'xl'),
+        maxWidth: ({ sideBarExpanded }: StyleProps) => getTreeViewStyleWidth(sideBarExpanded, 'xl'),
         flexDirection: 'column',
         overflow: 'auto',
         transition: '250ms height, width ease',
         [breakpoints.down('lg')]: {
-            maxHeight: ({ isExpanded }: StyleProps) => isExpanded ? '54vh' : '79vh',
-            maxWidth: ({ sideBarExpanded }: StyleProps) => sideBarExpanded ? '81.5vw' : '92vw'
+            maxHeight: ({ isExpanded, isModal }: StyleProps) => getTreeViewStyleHeight(isExpanded, isModal, 'lg'),
+            maxWidth: ({ sideBarExpanded }: StyleProps) => getTreeViewStyleWidth(sideBarExpanded, 'lg')
         }
     },
     tree: {
@@ -44,6 +44,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
 type StyleProps = {
     sideBarExpanded: boolean;
     isExpanded: boolean;
+    isModal: boolean;
 };
 
 interface RepositoryTreeViewProps {
@@ -59,7 +60,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
 
-    const classes = useStyles({ isExpanded, sideBarExpanded });
+    const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
 
     const [tree, initializeTree, getChildren] = useRepositoryStore(state => [state.tree, state.initializeTree, state.getChildren]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);

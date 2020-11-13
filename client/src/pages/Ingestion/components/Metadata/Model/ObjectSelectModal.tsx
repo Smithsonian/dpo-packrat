@@ -5,11 +5,9 @@
  * the source objects for a model.
  */
 import { ApolloQueryResult } from '@apollo/client';
-import { AppBar, Box, Button, Dialog, IconButton, Slide, Toolbar, Typography } from '@material-ui/core';
+import { AppBar, Box, Button, Dialog, Toolbar, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { TransitionProps } from '@material-ui/core/transitions';
-import CloseIcon from '@material-ui/icons/Close';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { apolloClient } from '../../../../../graphql';
 import { StateSourceObject } from '../../../../../store';
@@ -20,6 +18,7 @@ import RepositoryTreeView from '../../../../Repository/components/RepositoryTree
 const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
     title: {
         marginLeft: spacing(2),
+        textAlign: 'center',
         flex: 1,
     },
     appBar: {
@@ -50,8 +49,12 @@ interface ObjectSelectModalProps {
 function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
     const { open, onSelectedObjects, selectedObjects, onModalClose } = props;
     const classes = useStyles();
-    const [selected, setSelected] = useState<StateSourceObject[]>(selectedObjects);
+    const [selected, setSelected] = useState<StateSourceObject[]>([]);
     const [isSaving, setIsSaving] = useState<boolean>(false);
+
+    useEffect(() => {
+        setSelected(selectedObjects);
+    }, [selectedObjects]);
 
     const onSave = async (): Promise<void> => {
         try {
@@ -95,12 +98,12 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
     };
 
     return (
-        <Dialog fullScreen open={open} onClose={onModalClose} TransitionComponent={Transition}>
+        <Dialog maxWidth='xl' open={open} onClose={onModalClose}>
             <AppBar className={classes.appBar}>
                 <Toolbar>
-                    <IconButton edge='start' color='inherit' onClick={onModalClose} aria-label='close'>
-                        <CloseIcon />
-                    </IconButton>
+                    <Button autoFocus color='inherit' onClick={onModalClose}>
+                        Close
+                    </Button>
                     <Typography variant='h6' className={classes.title}>
                         Select Source Objects
                     </Typography>
@@ -116,12 +119,5 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
         </Dialog >
     );
 }
-
-const Transition = React.forwardRef(function Transition(
-    props: TransitionProps & { children?: React.ReactElement },
-    ref: React.Ref<unknown>,
-) {
-    return <Slide direction='up' ref={ref} {...props} />;
-});
 
 export default ObjectSelectModal;

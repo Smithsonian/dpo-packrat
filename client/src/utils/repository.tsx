@@ -4,6 +4,7 @@
  *
  * Utilities for components associated with Repository UI.
  */
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import lodash from 'lodash';
 import * as qs from 'query-string';
 import React from 'react';
@@ -225,4 +226,23 @@ export function isRepositoryItemSelected(nodeId: string, sourceObjects: StateSou
 
 export function getDetailsUrlForObject(idSystemObject: number): string {
     return `/repository/details/${idSystemObject}`;
+}
+
+export function getTreeViewStyleHeight(isExpanded: boolean, isModal: boolean, breakpoint: Breakpoint): string {
+    const isSmallScreen: boolean = breakpoint === 'lg';
+
+    if (isExpanded) {
+        if (isModal) return isSmallScreen ? '45vh' : '55vh';
+        else return isSmallScreen ? '54vh' : '62vh';
+    } else {
+        if (isModal) return isSmallScreen ? '70vh' : '75vh';
+        else return isSmallScreen ? '79vh' : '82vh';
+    }
+}
+
+export function getTreeViewStyleWidth(sideBarExpanded: boolean, breakpoint: Breakpoint): string {
+    const isSmallScreen: boolean = breakpoint === 'lg';
+
+    if (sideBarExpanded) return isSmallScreen ? '81.5vw' : '85vw';
+    else return isSmallScreen ? '92vw' : '93vw';
 }
