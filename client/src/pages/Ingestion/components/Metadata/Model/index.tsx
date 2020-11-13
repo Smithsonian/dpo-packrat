@@ -110,9 +110,7 @@ function Model(props: ModelProps): React.ReactElement {
     };
 
     const onSelectedObjects = (newSourceObjects: StateSourceObject[]) => {
-        const { sourceObjects } = model;
-        const updatedSourceObjects = [...sourceObjects, ...newSourceObjects];
-        updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.model);
+        updateMetadataField(metadataIndex, 'sourceObjects', newSourceObjects, MetadataType.model);
         onModalClose();
     };
 
