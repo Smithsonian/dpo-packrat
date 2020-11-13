@@ -113,6 +113,7 @@ function Model(props: ModelProps): React.ReactElement {
         const { sourceObjects } = model;
         const updatedSourceObjects = [...sourceObjects, ...newSourceObjects];
         updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.model);
+        onModalClose();
     };
 
     const noteLabelProps = { style: { fontStyle: 'italic' } };

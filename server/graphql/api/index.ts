@@ -90,7 +90,9 @@ import {
     DiscardUploadedAssetVersionsInput,
     DiscardUploadedAssetVersionsResult,
     GetObjectChildrenInput,
-    GetObjectChildrenResult
+    GetObjectChildrenResult,
+    GetSourceObjectIdentiferInput,
+    GetSourceObjectIdentiferResult
 } from '../../types/graphql';
 
 // Queries
@@ -123,6 +125,7 @@ import getObjectsForItem from './queries/unit/getObjectsForItem';
 import getProjectDocumentation from './queries/unit/getProjectDocumentation';
 import getIntermediaryFile from './queries/scene/getIntermediaryFile';
 import getObjectChildren from './queries/repository/getObjectChildren';
+import getSourceObjectIdentifer from './queries/systemobject/getSourceObjectIdentifer';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -185,7 +188,8 @@ const allQueries = {
     getProjectDocumentation,
     getIntermediaryFile,
     discardUploadedAssetVersions,
-    getObjectChildren
+    getObjectChildren,
+    getSourceObjectIdentifer
 };
 
 type GraphQLRequest = {
@@ -508,6 +512,16 @@ class GraphQLApi {
 
     async getObjectChildren(input: GetObjectChildrenInput, context?: Context): Promise<GetObjectChildrenResult> {
         const operationName = 'getObjectChildren';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput, context?: Context): Promise<GetSourceObjectIdentiferResult> {
+        const operationName = 'getSourceObjectIdentifer';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

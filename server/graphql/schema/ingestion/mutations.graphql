@@ -59,7 +59,7 @@ input IngestUVMapInput {
 input SourceObjectInput {
     idSystemObject: Int!
     name: String!
-    identifier: String!
+    identifier: String
     objectType: Int!
 }
 

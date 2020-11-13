@@ -38,6 +38,7 @@ export type Query = {
     getProject: GetProjectResult;
     getProjectDocumentation: GetProjectDocumentationResult;
     getScene: GetSceneResult;
+    getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
     getSubject: GetSubjectResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
     getUnit: GetUnitResult;
@@ -142,6 +143,11 @@ export type QueryGetProjectDocumentationArgs = {
 
 export type QueryGetSceneArgs = {
     input: GetSceneInput;
+};
+
+
+export type QueryGetSourceObjectIdentiferArgs = {
+    input: GetSourceObjectIdentiferInput;
 };
 
 
@@ -407,7 +413,7 @@ export type SourceObject = {
     __typename?: 'SourceObject';
     idSystemObject: Scalars['Int'];
     name: Scalars['String'];
-    identifier: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
     objectType: Scalars['Int'];
 };
 
@@ -727,7 +733,7 @@ export type IngestUvMapInput = {
 export type SourceObjectInput = {
     idSystemObject: Scalars['Int'];
     name: Scalars['String'];
-    identifier: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
     objectType: Scalars['Int'];
 };
 
@@ -1065,6 +1071,21 @@ export type IntermediaryFile = {
     idAsset: Scalars['Int'];
     Asset?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type GetSourceObjectIdentiferInput = {
+    idSystemObjects: Array<Scalars['Int']>;
+};
+
+export type SourceObjectIdentifier = {
+    __typename?: 'SourceObjectIdentifier';
+    idSystemObject: Scalars['Int'];
+    identifier?: Maybe<Scalars['String']>;
+};
+
+export type GetSourceObjectIdentiferResult = {
+    __typename?: 'GetSourceObjectIdentiferResult';
+    sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
 };
 
 export type SystemObject = {
@@ -2147,6 +2168,26 @@ export type GetSceneQuery = (
                 Scene?: Maybe<(
                     { __typename?: 'Scene' }
                     & Pick<Scene, 'idScene'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetSourceObjectIdentiferQueryVariables = Exact<{
+    input: GetSourceObjectIdentiferInput;
+}>;
+
+
+export type GetSourceObjectIdentiferQuery = (
+    { __typename?: 'Query' }
+    & {
+        getSourceObjectIdentifer: (
+            { __typename?: 'GetSourceObjectIdentiferResult' }
+            & {
+                sourceObjectIdentifiers: Array<(
+                    { __typename?: 'SourceObjectIdentifier' }
+                    & Pick<SourceObjectIdentifier, 'idSystemObject' | 'identifier'>
                 )>
             }
         )
@@ -3522,6 +3563,42 @@ export function useGetSceneLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetSceneQueryHookResult = ReturnType<typeof useGetSceneQuery>;
 export type GetSceneLazyQueryHookResult = ReturnType<typeof useGetSceneLazyQuery>;
 export type GetSceneQueryResult = Apollo.QueryResult<GetSceneQuery, GetSceneQueryVariables>;
+export const GetSourceObjectIdentiferDocument = gql`
+    query getSourceObjectIdentifer($input: GetSourceObjectIdentiferInput!) {
+  getSourceObjectIdentifer(input: $input) {
+    sourceObjectIdentifiers {
+      idSystemObject
+      identifier
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSourceObjectIdentiferQuery__
+ *
+ * To run a query within a React component, call `useGetSourceObjectIdentiferQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSourceObjectIdentiferQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSourceObjectIdentiferQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSourceObjectIdentiferQuery(baseOptions?: Apollo.QueryHookOptions<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>) {
+    return Apollo.useQuery<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>(GetSourceObjectIdentiferDocument, baseOptions);
+}
+export function useGetSourceObjectIdentiferLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>) {
+    return Apollo.useLazyQuery<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>(GetSourceObjectIdentiferDocument, baseOptions);
+}
+export type GetSourceObjectIdentiferQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferQuery>;
+export type GetSourceObjectIdentiferLazyQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferLazyQuery>;
+export type GetSourceObjectIdentiferQueryResult = Apollo.QueryResult<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>;
 export const GetIngestionItemsForSubjectsDocument = gql`
     query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
   getIngestionItemsForSubjects(input: $input) {

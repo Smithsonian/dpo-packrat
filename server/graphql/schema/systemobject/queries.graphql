@@ -1,0 +1,16 @@
+type Query {
+    getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
+}
+
+input GetSourceObjectIdentiferInput {
+    idSystemObjects: [Int!]!
+}
+
+type SourceObjectIdentifier {
+    idSystemObject: Int!
+    identifier: String
+}
+
+type GetSourceObjectIdentiferResult {
+    sourceObjectIdentifiers: [SourceObjectIdentifier!]!
+}

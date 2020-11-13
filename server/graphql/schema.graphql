@@ -19,6 +19,7 @@ type Query {
   getProject(input: GetProjectInput!): GetProjectResult!
   getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
@@ -169,7 +170,7 @@ type IngestUVMap {
 type SourceObject {
   idSystemObject: Int!
   name: String!
-  identifier: String!
+  identifier: String
   objectType: Int!
 }
 
@@ -468,7 +469,7 @@ input IngestUVMapInput {
 input SourceObjectInput {
   idSystemObject: Int!
   name: String!
-  identifier: String!
+  identifier: String
   objectType: Int!
 }
 
@@ -784,6 +785,19 @@ type IntermediaryFile {
   idAsset: Int!
   Asset: Asset
   SystemObject: SystemObject
+}
+
+input GetSourceObjectIdentiferInput {
+  idSystemObjects: [Int!]!
+}
+
+type SourceObjectIdentifier {
+  idSystemObject: Int!
+  identifier: String
+}
+
+type GetSourceObjectIdentiferResult {
+  sourceObjectIdentifiers: [SourceObjectIdentifier!]!
 }
 
 type SystemObject {
