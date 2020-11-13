@@ -1,7 +1,7 @@
 /**
  * BoundingBoxInput
- * 
- * This is the component used in Model metadata component for 
+ *
+ * This is the component used in Model metadata component for
  * bounding box input.
  */
 import { Box } from '@material-ui/core';
