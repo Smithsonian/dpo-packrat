@@ -54,7 +54,7 @@ interface RepositoryTreeViewProps {
 }
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
-    const { isModal = false, selectedItems, onSelect, onUnSelect } = props;
+    const { isModal = false, selectedItems = [], onSelect, onUnSelect } = props;
 
     const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
@@ -98,7 +98,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             const variant = getTreeColorVariant(index);
             const { icon, color } = getObjectInterfaceDetails(objectType, variant);
             const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
-            const isSelected = isRepositoryItemSelected(nodeId, selectedItems || []);
+            const isSelected = isRepositoryItemSelected(nodeId, selectedItems);
 
             const select = (event: React.MouseEvent<SVGElement, MouseEvent>) => {
                 if (onSelect) {
@@ -107,7 +107,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                         idSystemObject,
                         name,
                         objectType,
-                        identifier: 'TODO: get identifier'
+                        identifier: ''
                     };
                     onSelect(repositoryItem);
                 }

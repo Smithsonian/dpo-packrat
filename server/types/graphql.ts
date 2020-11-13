@@ -34,6 +34,7 @@ export type Query = {
     getProject: GetProjectResult;
     getProjectDocumentation: GetProjectDocumentationResult;
     getScene: GetSceneResult;
+    getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
     getSubject: GetSubjectResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
     getUnit: GetUnitResult;
@@ -119,6 +120,10 @@ export type QueryGetProjectDocumentationArgs = {
 
 export type QueryGetSceneArgs = {
     input: GetSceneInput;
+};
+
+export type QueryGetSourceObjectIdentiferArgs = {
+    input: GetSourceObjectIdentiferInput;
 };
 
 export type QueryGetSubjectArgs = {
@@ -360,7 +365,7 @@ export type SourceObject = {
     __typename?: 'SourceObject';
     idSystemObject: Scalars['Int'];
     name: Scalars['String'];
-    identifier: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
     objectType: Scalars['Int'];
 };
 
@@ -680,7 +685,7 @@ export type IngestUvMapInput = {
 export type SourceObjectInput = {
     idSystemObject: Scalars['Int'];
     name: Scalars['String'];
-    identifier: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
     objectType: Scalars['Int'];
 };
 
@@ -1018,6 +1023,21 @@ export type IntermediaryFile = {
     idAsset: Scalars['Int'];
     Asset?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type GetSourceObjectIdentiferInput = {
+    idSystemObjects: Array<Scalars['Int']>;
+};
+
+export type SourceObjectIdentifier = {
+    __typename?: 'SourceObjectIdentifier';
+    idSystemObject: Scalars['Int'];
+    identifier?: Maybe<Scalars['String']>;
+};
+
+export type GetSourceObjectIdentiferResult = {
+    __typename?: 'GetSourceObjectIdentiferResult';
+    sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
 };
 
 export type SystemObject = {
