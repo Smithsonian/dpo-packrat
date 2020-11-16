@@ -9,12 +9,6 @@ import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
 import { parseRepositoryTreeNodeId, sortEntriesAlphabetically } from '../utils/repository';
 
-export type RepositoryPath = {
-    idSystemObject: number;
-    name: string;
-    objectType: eSystemObjectType;
-};
-
 type RepositoryStore = {
     isExpanded: boolean;
     search: string;

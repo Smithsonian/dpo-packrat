@@ -41,6 +41,7 @@ export type Query = {
     getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
     getSubject: GetSubjectResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
+    getSystemObjectDetails: GetSystemObjectDetailsResult;
     getUnit: GetUnitResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getUser: GetUserResult;
@@ -158,6 +159,11 @@ export type QueryGetSubjectArgs = {
 
 export type QueryGetSubjectsForUnitArgs = {
     input: GetSubjectsForUnitInput;
+};
+
+
+export type QueryGetSystemObjectDetailsArgs = {
+    input: GetSystemObjectDetailsInput;
 };
 
 
@@ -1071,6 +1077,30 @@ export type IntermediaryFile = {
     idAsset: Scalars['Int'];
     Asset?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type GetSystemObjectDetailsInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type RepositoryPath = {
+    __typename?: 'RepositoryPath';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    objectType: Scalars['Int'];
+};
+
+export type GetSystemObjectDetailsResult = {
+    __typename?: 'GetSystemObjectDetailsResult';
+    name: Scalars['String'];
+    retired: Scalars['Boolean'];
+    objectType: Scalars['Int'];
+    allowed: Scalars['Boolean'];
+    thumbnail?: Maybe<Scalars['String']>;
+    identifiers: Array<IngestIdentifier>;
+    objectAncestors: Array<Array<RepositoryPath>>;
+    sourceObjects: Array<SourceObject>;
+    derivedObjects: Array<DerivedObject>;
 };
 
 export type GetSourceObjectIdentiferInput = {
@@ -2188,6 +2218,36 @@ export type GetSourceObjectIdentiferQuery = (
                 sourceObjectIdentifiers: Array<(
                     { __typename?: 'SourceObjectIdentifier' }
                     & Pick<SourceObjectIdentifier, 'idSystemObject' | 'identifier'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetSystemObjectDetailsQueryVariables = Exact<{
+    input: GetSystemObjectDetailsInput;
+}>;
+
+
+export type GetSystemObjectDetailsQuery = (
+    { __typename?: 'Query' }
+    & {
+        getSystemObjectDetails: (
+            { __typename?: 'GetSystemObjectDetailsResult' }
+            & Pick<GetSystemObjectDetailsResult, 'name' | 'retired' | 'objectType' | 'allowed' | 'thumbnail'>
+            & {
+                identifiers: Array<(
+                    { __typename?: 'IngestIdentifier' }
+                    & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+                )>, objectAncestors: Array<Array<(
+                    { __typename?: 'RepositoryPath' }
+                    & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
+                )>>, sourceObjects: Array<(
+                    { __typename?: 'SourceObject' }
+                    & Pick<SourceObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
+                )>, derivedObjects: Array<(
+                    { __typename?: 'DerivedObject' }
+                    & Pick<DerivedObject, 'idSystemObject' | 'name' | 'variantType' | 'objectType'>
                 )>
             }
         )
@@ -3599,6 +3659,64 @@ export function useGetSourceObjectIdentiferLazyQuery(baseOptions?: Apollo.LazyQu
 export type GetSourceObjectIdentiferQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferQuery>;
 export type GetSourceObjectIdentiferLazyQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferLazyQuery>;
 export type GetSourceObjectIdentiferQueryResult = Apollo.QueryResult<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>;
+export const GetSystemObjectDetailsDocument = gql`
+    query getSystemObjectDetails($input: GetSystemObjectDetailsInput!) {
+  getSystemObjectDetails(input: $input) {
+    name
+    retired
+    objectType
+    allowed
+    thumbnail
+    identifiers {
+      identifier
+      identifierType
+    }
+    objectAncestors {
+      idSystemObject
+      name
+      objectType
+    }
+    sourceObjects {
+      idSystemObject
+      name
+      identifier
+      objectType
+    }
+    derivedObjects {
+      idSystemObject
+      name
+      variantType
+      objectType
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSystemObjectDetailsQuery__
+ *
+ * To run a query within a React component, call `useGetSystemObjectDetailsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSystemObjectDetailsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSystemObjectDetailsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSystemObjectDetailsQuery(baseOptions?: Apollo.QueryHookOptions<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>) {
+    return Apollo.useQuery<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>(GetSystemObjectDetailsDocument, baseOptions);
+}
+export function useGetSystemObjectDetailsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>) {
+    return Apollo.useLazyQuery<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>(GetSystemObjectDetailsDocument, baseOptions);
+}
+export type GetSystemObjectDetailsQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsQuery>;
+export type GetSystemObjectDetailsLazyQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsLazyQuery>;
+export type GetSystemObjectDetailsQueryResult = Apollo.QueryResult<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>;
 export const GetIngestionItemsForSubjectsDocument = gql`
     query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
   getIngestionItemsForSubjects(input: $input) {
