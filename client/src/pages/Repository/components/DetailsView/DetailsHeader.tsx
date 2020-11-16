@@ -7,9 +7,9 @@ import { Box, Checkbox, FormControlLabel, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { BreadcrumbsView } from '../../../../components';
-import { RepositoryPath } from '../../../../store/repository';
 import Colors from '../../../../theme/colors';
 import { eSystemObjectType } from '../../../../types/server';
+import { RepositoryPath } from '../../../../types/graphql';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -33,7 +33,7 @@ const useStyles = makeStyles(({ palette }) => ({
 
 interface DetailsHeaderProps {
     objectType: eSystemObjectType;
-    path: RepositoryPath[];
+    path: RepositoryPath[][];
     name: string;
     retired: boolean;
     disabled: boolean;
@@ -50,7 +50,7 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
                     <Typography className={classes.header} variant='h5'>{getTermForSystemObjectType(objectType)}</Typography>
                 </Box>
                 <Box display='flex' flex={3} justifyContent='flex-end'>
-                    <BreadcrumbsView highlighted items={path} />
+                    {!!path.length && <BreadcrumbsView highlighted items={path} />}
                 </Box>
             </Box>
             <Box display='flex' alignItems='center' mt={1}>
