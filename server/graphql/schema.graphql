@@ -22,6 +22,7 @@ type Query {
   getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
+  getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
@@ -785,6 +786,28 @@ type IntermediaryFile {
   idAsset: Int!
   Asset: Asset
   SystemObject: SystemObject
+}
+
+input GetSystemObjectDetailsInput {
+  idSystemObject: Int!
+}
+
+type RepositoryPath {
+  idSystemObject: Int!
+  name: String!
+  objectType: Int!
+}
+
+type GetSystemObjectDetailsResult {
+  name: String!
+  retired: Boolean!
+  objectType: Int!
+  allowed: Boolean!
+  thumbnail: String
+  identifiers: [IngestIdentifier!]!
+  objectAncestors: [[RepositoryPath!]!]!
+  sourceObjects: [SourceObject!]!
+  derivedObjects: [DerivedObject!]!
 }
 
 input GetSourceObjectIdentiferInput {

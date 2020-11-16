@@ -37,6 +37,7 @@ export type Query = {
     getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
     getSubject: GetSubjectResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
+    getSystemObjectDetails: GetSystemObjectDetailsResult;
     getUnit: GetUnitResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getUser: GetUserResult;
@@ -132,6 +133,10 @@ export type QueryGetSubjectArgs = {
 
 export type QueryGetSubjectsForUnitArgs = {
     input: GetSubjectsForUnitInput;
+};
+
+export type QueryGetSystemObjectDetailsArgs = {
+    input: GetSystemObjectDetailsInput;
 };
 
 export type QueryGetUnitArgs = {
@@ -1023,6 +1028,30 @@ export type IntermediaryFile = {
     idAsset: Scalars['Int'];
     Asset?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type GetSystemObjectDetailsInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type RepositoryPath = {
+    __typename?: 'RepositoryPath';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    objectType: Scalars['Int'];
+};
+
+export type GetSystemObjectDetailsResult = {
+    __typename?: 'GetSystemObjectDetailsResult';
+    name: Scalars['String'];
+    retired: Scalars['Boolean'];
+    objectType: Scalars['Int'];
+    allowed: Scalars['Boolean'];
+    thumbnail?: Maybe<Scalars['String']>;
+    identifiers: Array<IngestIdentifier>;
+    objectAncestors: Array<Array<RepositoryPath>>;
+    sourceObjects: Array<SourceObject>;
+    derivedObjects: Array<DerivedObject>;
 };
 
 export type GetSourceObjectIdentiferInput = {
