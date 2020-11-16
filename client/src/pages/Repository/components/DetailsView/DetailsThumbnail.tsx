@@ -4,8 +4,8 @@
  * This component renders details thumbnail for the Repository Details UI.
  */
 import { Box } from '@material-ui/core';
-import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
+import React from 'react';
 import DefaultThumbnail from '../../../../assets/images/default-thumbnail.png';
 
 const useStyles = makeStyles(() => ({
@@ -18,16 +18,16 @@ const useStyles = makeStyles(() => ({
 }));
 
 interface DetailsThumbnailProps {
-    thumbnail?: string;
+    thumbnail?: string | null;
 }
 
 function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
-    const { thumbnail = DefaultThumbnail } = props;
+    const { thumbnail } = props;
     const classes = useStyles();
 
     return (
         <Box display='flex' flex={1} flexDirection='column' alignItems='center'>
-            <img className={classes.thumbnail} src={thumbnail} loading='lazy' alt='asset thumbnail' />
+            <img className={classes.thumbnail} src={thumbnail || DefaultThumbnail} loading='lazy' alt='asset thumbnail' />
         </Box>
     );
 }
