@@ -148,7 +148,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         });
     };
 
-    let content: React.ReactNode = <Loader maxWidth='85vw' size={20} />;
+    let content: React.ReactNode = <Loader maxWidth='85vw' minHeight='40vh' size={20} />;
 
     if (!loading) {
         const treeColumns = getTreeViewColumns(metadataColumns, false);
