@@ -1,7 +1,15 @@
 import * as CACHE from '../../../../../cache';
 import * as DBAPI from '../../../../../db';
 import { eObjectGraphMode, eSystemObjectType } from '../../../../../db';
-import { GetSystemObjectDetailsResult, QueryGetSystemObjectDetailsArgs, RepositoryPath } from '../../../../../types/graphql';
+import {
+    DerivedObject,
+    GetSystemObjectDetailsResult,
+    IngestIdentifier,
+    QueryGetSystemObjectDetailsArgs,
+    RepositoryPath,
+    SourceObject,
+    SystemObject
+} from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as LOGGER from '../../../../../utils/logger';
 
@@ -12,68 +20,105 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const oID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
     const objectAncestors: RepositoryPath[][] = await getRepositoryPathFromObjectGraph(idSystemObject);
 
-    const systemObject = await DBAPI.SystemObject.fetch(idSystemObject);
+    const systemObject: SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+    const sourceObjects: SourceObject[] = await getSourceObjects(idSystemObject);
+    const derivedObjects: DerivedObject[] = await getDerivedObjects(idSystemObject);
+
+    const identifiers = await getIngestIdentifiers(idSystemObject);
 
     if (!oID) {
-        const message: string = `No system object for ID: ${idSystemObject}`;
+        const message: string = `No object ID found for ID: ${idSystemObject}`;
         LOGGER.logger.error(message);
         throw new Error(message);
     }
 
     if (!systemObject) {
-        const message: string = `No system object for ID: ${idSystemObject}`;
+        const message: string = `No system object found for ID: ${idSystemObject}`;
         LOGGER.logger.error(message);
         throw new Error(message);
     }
 
+    const name: string = await resolveNameForObjectType(systemObject, oID.eObjectType);
+
     return {
-        name: 'PhotoSet1.zip',
+        name,
         retired: systemObject.Retired,
         objectType: oID.eObjectType,
-        allowed: true,
+        allowed: true, // TODO: KARAN: tell the client if user has access to edit
         thumbnail: null,
         objectAncestors,
-        identifiers: [
-            {
-                identifier: '31958de82-ab13-4049-c979-746e2fbe229e',
-                identifierType: 75
-            }
-        ],
-        sourceObjects: [
-            {
-                idSystemObject: 0,
-                name: 'PhotoSetAlpha1.zip',
-                identifier: 'a5cf8642-7466-4896-a0a2-d698f2009cd3',
-                objectType: eSystemObjectType.eModel
-            }
-        ],
-        derivedObjects: [
-            {
-                idSystemObject: 0,
-                name: 'Photo1.zip',
-                variantType: 28,
-                objectType: eSystemObjectType.eAsset
-            },
-            {
-                idSystemObject: 1,
-                name: 'Photo2.zip',
-                variantType: 28,
-                objectType: eSystemObjectType.eAsset
-            },
-            {
-                idSystemObject: 2,
-                name: 'Photo3.zip',
-                variantType: 28,
-                objectType: eSystemObjectType.eAsset
-            },
-            {
-                idSystemObject: 3,
-                name: 'Photo4.zip',
-                variantType: 28,
-                objectType: eSystemObjectType.eAsset
-            }
-        ]
+        identifiers,
+        sourceObjects,
+        derivedObjects
     };
+}
+
+async function getSourceObjects(idSystemObject: number): Promise<SourceObject[]> {
+    const masterObjects = await DBAPI.SystemObject.fetchMasterFromXref(idSystemObject);
+    if (!masterObjects) return [];
+
+    const sourceObjects: SourceObject[] = [];
+
+    for (const masterObject of masterObjects) {
+        const identifier: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(idSystemObject);
+        const oID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(masterObject.idSystemObject);
+
+        if (!oID) {
+            const message: string = `No object ID found for ID: ${idSystemObject}`;
+            LOGGER.logger.error(message);
+            throw new Error(message);
+        }
+
+        const sourceObject: SourceObject = {
+            idSystemObject: masterObject.idSystemObject,
+            name: await resolveNameForObjectType(masterObject, oID.eObjectType),
+            identifier: identifier?.[0]?.IdentifierValue ?? null,
+            objectType: oID.eObjectType
+        };
+
+        sourceObjects.push(sourceObject);
+    }
+
+    return sourceObjects;
+}
+
+async function getDerivedObjects(idSystemObject: number): Promise<DerivedObject[]> {
+    const derivedSystemObjects = await DBAPI.SystemObject.fetchDerivedFromXref(idSystemObject);
+    if (!derivedSystemObjects) return [];
+
+    const derivedObjects: DerivedObject[] = [];
+
+    for (const derivedSystemObject of derivedSystemObjects) {
+        const oID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(derivedSystemObject.idSystemObject);
+
+        if (!oID) {
+            const message: string = `No object ID found for ID: ${idSystemObject}`;
+            LOGGER.logger.error(message);
+            throw new Error(message);
+        }
+
+        const derivedObject: DerivedObject = {
+            idSystemObject: derivedSystemObject.idSystemObject,
+            name: await resolveNameForObjectType(derivedSystemObject, oID.eObjectType),
+            variantType: 28, // TODO: KARAN: how to compute variant?
+            objectType: oID.eObjectType
+        };
+
+        derivedObjects.push(derivedObject);
+    }
+
+    return derivedObjects;
+}
+
+async function getIngestIdentifiers(idSystemObject: number): Promise<IngestIdentifier[]> {
+    const identifier: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(idSystemObject);
+
+    if (!identifier) return [];
+
+    return identifier.map(({ IdentifierValue, idVIdentifierType }) => ({
+        identifier: IdentifierValue,
+        identifierType: idVIdentifierType
+    }));
 }
 
 async function getRepositoryPathFromObjectGraph(idSystemObject: number): Promise<RepositoryPath[][]> {
@@ -298,4 +343,116 @@ async function stakeholdersToRepositoryPath(stakeholders: DBAPI.Stakeholder[]): 
     }
 
     return paths;
+}
+
+
+async function resolveNameForObjectType(systemObject: SystemObject, objectType: eSystemObjectType): Promise<string> {
+    const unknownName: string = '<UNKNOWN>';
+
+    switch (objectType) {
+        case eSystemObjectType.eUnit:
+            if (systemObject.idUnit) {
+                const Unit = await DBAPI.Unit.fetch(systemObject.idUnit);
+                if (Unit) {
+                    return Unit.Name;
+                }
+            }
+
+            return unknownName;
+
+        case eSystemObjectType.eProject:
+            if (systemObject.idProject) {
+                const Project = await DBAPI.Project.fetch(systemObject.idProject);
+                if (Project) {
+                    return Project.Name;
+                }
+            }
+
+            return unknownName;
+
+        case eSystemObjectType.eSubject:
+            if (systemObject.idSubject) {
+                const Subject = await DBAPI.Subject.fetch(systemObject.idSubject);
+                if (Subject) {
+                    return Subject.Name;
+                }
+            }
+
+            return unknownName;
+
+        case eSystemObjectType.eItem:
+            if (systemObject.idItem) {
+                const Item = await DBAPI.Item.fetch(systemObject.idItem);
+                if (Item) {
+                    return Item.Name;
+                }
+            }
+
+            return unknownName;
+
+        case eSystemObjectType.eCaptureData:
+            return unknownName;
+
+        case eSystemObjectType.eModel:
+            return unknownName;
+
+        case eSystemObjectType.eScene:
+            if (systemObject.idScene) {
+                const Scene = await DBAPI.Scene.fetch(systemObject.idScene);
+                if (Scene) {
+                    return Scene.Name;
+                }
+            }
+
+            return unknownName;
+
+        case eSystemObjectType.eIntermediaryFile:
+            return unknownName;
+
+        case eSystemObjectType.eProjectDocumentation:
+            if (systemObject.idProjectDocumentation) {
+                const ProjectDocumentation = await DBAPI.ProjectDocumentation.fetch(systemObject.idProjectDocumentation);
+                if (ProjectDocumentation) {
+                    return ProjectDocumentation.Name;
+                }
+            }
+
+            return unknownName;
+
+        case eSystemObjectType.eAsset:
+            if (systemObject.idAsset) {
+                const Asset = await DBAPI.Asset.fetch(systemObject.idAsset);
+                if (Asset) {
+                    return Asset.FileName;
+                }
+            }
+
+            return unknownName;
+
+        case eSystemObjectType.eAssetVersion:
+            if (systemObject.idAssetVersion) {
+                const AssetVersion = await DBAPI.AssetVersion.fetch(systemObject.idAssetVersion);
+                if (AssetVersion) {
+                    return AssetVersion.FileName;
+                }
+            }
+
+            return unknownName;
+
+        case eSystemObjectType.eActor:
+            return unknownName;
+
+        case eSystemObjectType.eStakeholder:
+            if (systemObject.idStakeholder) {
+                const Stakeholder = await DBAPI.Stakeholder.fetch(systemObject.idStakeholder);
+                if (Stakeholder) {
+                    return Stakeholder.IndividualName;
+                }
+            }
+
+            return unknownName;
+
+        default:
+            return unknownName;
+    }
 }
