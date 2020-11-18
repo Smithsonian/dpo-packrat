@@ -10,9 +10,9 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
 import React, { useCallback, useEffect } from 'react';
 import { Loader } from '../../../../components';
-import { treeRootKey, useControlStore, useRepositoryStore } from '../../../../store';
+import { StateSourceObject, treeRootKey, useControlStore, useRepositoryStore } from '../../../../store';
 import { NavigationResultEntry } from '../../../../types/graphql';
-import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeWidth } from '../../../../utils/repository';
+import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeViewStyleHeight, getTreeViewStyleWidth, getTreeWidth, isRepositoryItemSelected } from '../../../../utils/repository';
 import RepositoryTreeHeader from './RepositoryTreeHeader';
 import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
@@ -21,33 +21,46 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        maxHeight: ({ isExpanded }: StyleProps) => isExpanded ? '62vh' : '82vh',
-        maxWidth: ({ sideBarExpanded }: StyleProps) => sideBarExpanded ? '85vw' : '93vw',
+        maxHeight: ({ isExpanded, isModal }: StyleProps) => getTreeViewStyleHeight(isExpanded, isModal, 'xl'),
+        maxWidth: ({ sideBarExpanded }: StyleProps) => getTreeViewStyleWidth(sideBarExpanded, 'xl'),
         flexDirection: 'column',
         overflow: 'auto',
         transition: '250ms height, width ease',
         [breakpoints.down('lg')]: {
-            maxHeight: ({ isExpanded }: StyleProps) => isExpanded ? '54vh' : '79vh',
-            maxWidth: ({ sideBarExpanded }: StyleProps) => sideBarExpanded ? '81.5vw' : '92vw'
+            maxHeight: ({ isExpanded, isModal }: StyleProps) => getTreeViewStyleHeight(isExpanded, isModal, 'lg'),
+            maxWidth: ({ sideBarExpanded }: StyleProps) => getTreeViewStyleWidth(sideBarExpanded, 'lg')
         }
     },
     tree: {
         display: 'flex',
         flexDirection: 'column',
-        flex: 1,
+        flex: 1
+    },
+    fullWidth: {
+        maxWidth: '95.5vw'
     }
 }));
 
 type StyleProps = {
     sideBarExpanded: boolean;
     isExpanded: boolean;
+    isModal: boolean;
 };
 
-function RepositoryTreeView(): React.ReactElement {
+interface RepositoryTreeViewProps {
+    isModal?: boolean;
+    selectedItems?: StateSourceObject[];
+    onSelect?: (item: StateSourceObject) => void;
+    onUnSelect?: (id: number) => void;
+}
+
+function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
+    const { isModal = false, selectedItems = [], onSelect, onUnSelect } = props;
+
     const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
 
-    const classes = useStyles({ isExpanded, sideBarExpanded });
+    const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
 
     const [tree, initializeTree, getChildren] = useRepositoryStore(state => [state.tree, state.initializeTree, state.getChildren]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
@@ -66,7 +79,7 @@ function RepositoryTreeView(): React.ReactElement {
         }
     }, [tree, getChildren]);
 
-    const renderTree = useCallback((children: NavigationResultEntry[] | undefined) => {
+    const renderTree = (children: NavigationResultEntry[] | undefined) => {
         if (!children) return null;
         return children.map((child: NavigationResultEntry, index: number) => {
             const { idSystemObject, objectType, idObject, name, metadata } = child;
@@ -86,8 +99,40 @@ function RepositoryTreeView(): React.ReactElement {
             const variant = getTreeColorVariant(index);
             const { icon, color } = getObjectInterfaceDetails(objectType, variant);
             const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
+            const isSelected = isRepositoryItemSelected(nodeId, selectedItems);
 
-            const label: React.ReactNode = <TreeLabel label={name} objectType={objectType} color={color} treeColumns={treeColumns} />;
+            const select = (event: React.MouseEvent<SVGElement, MouseEvent>) => {
+                if (onSelect) {
+                    event.stopPropagation();
+                    const repositoryItem: StateSourceObject = {
+                        idSystemObject,
+                        name,
+                        objectType,
+                        identifier: ''
+                    };
+                    onSelect(repositoryItem);
+                }
+            };
+
+            const unSelect = (event: React.MouseEvent<SVGElement, MouseEvent>) => {
+                if (onUnSelect) {
+                    event.stopPropagation();
+                    onUnSelect(idSystemObject);
+                }
+            };
+
+            const label: React.ReactNode = (
+                <TreeLabel
+                    label={name}
+                    renderSelected={isModal}
+                    selected={isSelected}
+                    onSelect={select}
+                    onUnSelect={unSelect}
+                    objectType={objectType}
+                    color={color}
+                    treeColumns={treeColumns}
+                />
+            );
 
             return (
                 <StyledTreeItem
@@ -101,13 +146,13 @@ function RepositoryTreeView(): React.ReactElement {
                 </StyledTreeItem>
             );
         });
-    }, [tree, metadataColumns]);
+    };
 
-    let content: React.ReactNode = <Loader maxWidth='85vw' size={20} />;
+    let content: React.ReactNode = <Loader maxWidth='85vw' minHeight='40vh' size={20} />;
 
     if (!loading) {
         const treeColumns = getTreeViewColumns(metadataColumns, false);
-        const width = getTreeWidth(treeColumns.length, sideBarExpanded);
+        const width = getTreeWidth(treeColumns.length, sideBarExpanded, isModal);
         const children = tree.get(treeRootKey);
 
         content = (
@@ -118,14 +163,16 @@ function RepositoryTreeView(): React.ReactElement {
                 onNodeToggle={onNodeToggle}
                 style={{ width }}
             >
-                <RepositoryTreeHeader metadataColumns={metadataColumns} />
+                <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />
                 {renderTree(children)}
             </TreeView>
         );
     }
 
+    const fullWidthStyles = isModal ? { maxWidth: '98vw' } : {};
+
     return (
-        <div className={classes.container}>
+        <div className={classes.container} style={fullWidthStyles}>
             {content}
         </div>
     );

@@ -38,8 +38,10 @@ export type Query = {
     getProject: GetProjectResult;
     getProjectDocumentation: GetProjectDocumentationResult;
     getScene: GetSceneResult;
+    getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
     getSubject: GetSubjectResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
+    getSystemObjectDetails: GetSystemObjectDetailsResult;
     getUnit: GetUnitResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getUser: GetUserResult;
@@ -145,6 +147,11 @@ export type QueryGetSceneArgs = {
 };
 
 
+export type QueryGetSourceObjectIdentiferArgs = {
+    input: GetSourceObjectIdentiferInput;
+};
+
+
 export type QueryGetSubjectArgs = {
     input: GetSubjectInput;
 };
@@ -152,6 +159,11 @@ export type QueryGetSubjectArgs = {
 
 export type QueryGetSubjectsForUnitArgs = {
     input: GetSubjectsForUnitInput;
+};
+
+
+export type QueryGetSystemObjectDetailsArgs = {
+    input: GetSystemObjectDetailsInput;
 };
 
 
@@ -397,17 +409,86 @@ export type IngestPhotogrammetry = {
     identifiers: Array<IngestIdentifier>;
 };
 
+export type IngestUvMap = {
+    __typename?: 'IngestUVMap';
+    name: Scalars['String'];
+    mapType: Scalars['Int'];
+};
+
+export type SourceObject = {
+    __typename?: 'SourceObject';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
+    objectType: Scalars['Int'];
+};
+
+export type DerivedObject = {
+    __typename?: 'DerivedObject';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    variantType: Scalars['Int'];
+    objectType: Scalars['Int'];
+};
+
 export type IngestModel = {
     __typename?: 'IngestModel';
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    master: Scalars['Boolean'];
     authoritative: Scalars['Boolean'];
-    dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
     modality: Scalars['Int'];
     purpose: Scalars['Int'];
     units: Scalars['Int'];
-    master: Scalars['Boolean'];
+    dateCaptured: Scalars['String'];
+    modelFileType: Scalars['Int'];
     directory: Scalars['String'];
+    identifiers: Array<IngestIdentifier>;
+    uvMaps: Array<IngestUvMap>;
+    sourceObjects: Array<SourceObject>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export enum ReferenceModelAction {
+    Update = 'Update',
+    Ingest = 'Ingest'
+}
+
+export type ReferenceModel = {
+    __typename?: 'ReferenceModel';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    fileSize: Scalars['Int'];
+    resolution?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    action: ReferenceModelAction;
+};
+
+export type IngestScene = {
+    __typename?: 'IngestScene';
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifier>;
+    referenceModels: Array<ReferenceModel>;
 };
 
 export type GetAssetVersionDetailResult = {
@@ -418,6 +499,7 @@ export type GetAssetVersionDetailResult = {
     Item?: Maybe<Item>;
     CaptureDataPhoto?: Maybe<IngestPhotogrammetry>;
     Model?: Maybe<IngestModel>;
+    Scene?: Maybe<IngestScene>;
 };
 
 export type GetAssetVersionsDetailsResult = {
@@ -649,16 +731,74 @@ export type IngestPhotogrammetryInput = {
     identifiers: Array<IngestIdentifierInput>;
 };
 
+export type IngestUvMapInput = {
+    name: Scalars['String'];
+    mapType: Scalars['Int'];
+};
+
+export type SourceObjectInput = {
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
+    objectType: Scalars['Int'];
+};
+
 export type IngestModelInput = {
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    master: Scalars['Boolean'];
     authoritative: Scalars['Boolean'];
-    dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
     modality: Scalars['Int'];
     purpose: Scalars['Int'];
     units: Scalars['Int'];
-    master: Scalars['Boolean'];
+    dateCaptured: Scalars['String'];
+    modelFileType: Scalars['Int'];
     directory: Scalars['String'];
+    identifiers: Array<IngestIdentifierInput>;
+    uvMaps: Array<IngestUvMapInput>;
+    sourceObjects: Array<SourceObjectInput>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export type ReferenceModelInput = {
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    fileSize: Scalars['Int'];
+    resolution?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    action: ReferenceModelAction;
+};
+
+export type IngestSceneInput = {
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifierInput>;
+    referenceModels: Array<ReferenceModelInput>;
+};
+
+export type IngestOtherInput = {
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifierInput>;
 };
 
 export type IngestDataInput = {
@@ -666,6 +806,9 @@ export type IngestDataInput = {
     project: IngestProjectInput;
     item: IngestItemInput;
     photogrammetry: Array<IngestPhotogrammetryInput>;
+    model: Array<IngestModelInput>;
+    scene: Array<IngestSceneInput>;
+    other: Array<IngestOtherInput>;
 };
 
 export type IngestDataResult = {
@@ -934,6 +1077,45 @@ export type IntermediaryFile = {
     idAsset: Scalars['Int'];
     Asset?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type GetSystemObjectDetailsInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type RepositoryPath = {
+    __typename?: 'RepositoryPath';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    objectType: Scalars['Int'];
+};
+
+export type GetSystemObjectDetailsResult = {
+    __typename?: 'GetSystemObjectDetailsResult';
+    name: Scalars['String'];
+    retired: Scalars['Boolean'];
+    objectType: Scalars['Int'];
+    allowed: Scalars['Boolean'];
+    thumbnail?: Maybe<Scalars['String']>;
+    identifiers: Array<IngestIdentifier>;
+    objectAncestors: Array<Array<RepositoryPath>>;
+    sourceObjects: Array<SourceObject>;
+    derivedObjects: Array<DerivedObject>;
+};
+
+export type GetSourceObjectIdentiferInput = {
+    idSystemObjects: Array<Scalars['Int']>;
+};
+
+export type SourceObjectIdentifier = {
+    __typename?: 'SourceObjectIdentifier';
+    idSystemObject: Scalars['Int'];
+    identifier?: Maybe<Scalars['String']>;
+};
+
+export type GetSourceObjectIdentiferResult = {
+    __typename?: 'GetSourceObjectIdentiferResult';
+    sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
 };
 
 export type SystemObject = {
@@ -1789,7 +1971,25 @@ export type GetAssetVersionsDetailsQuery = (
                             }
                         )>, Model?: Maybe<(
                             { __typename?: 'IngestModel' }
-                            & Pick<IngestModel, 'idAssetVersion' | 'authoritative' | 'dateCreated' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'master' | 'directory'>
+                            & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory' | 'roughness' | 'metalness' | 'pointCount' | 'faceCount' | 'isWatertight' | 'hasNormals' | 'hasVertexColor' | 'hasUVSpace' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z'>
+                            & {
+                                identifiers: Array<(
+                                    { __typename?: 'IngestIdentifier' }
+                                    & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+                                )>, uvMaps: Array<(
+                                    { __typename?: 'IngestUVMap' }
+                                    & Pick<IngestUvMap, 'name' | 'mapType'>
+                                )>
+                            }
+                        )>, Scene?: Maybe<(
+                            { __typename?: 'IngestScene' }
+                            & Pick<IngestScene, 'idAssetVersion'>
+                            & {
+                                identifiers: Array<(
+                                    { __typename?: 'IngestIdentifier' }
+                                    & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+                                )>
+                            }
                         )>
                     }
                 )>
@@ -1998,6 +2198,56 @@ export type GetSceneQuery = (
                 Scene?: Maybe<(
                     { __typename?: 'Scene' }
                     & Pick<Scene, 'idScene'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetSourceObjectIdentiferQueryVariables = Exact<{
+    input: GetSourceObjectIdentiferInput;
+}>;
+
+
+export type GetSourceObjectIdentiferQuery = (
+    { __typename?: 'Query' }
+    & {
+        getSourceObjectIdentifer: (
+            { __typename?: 'GetSourceObjectIdentiferResult' }
+            & {
+                sourceObjectIdentifiers: Array<(
+                    { __typename?: 'SourceObjectIdentifier' }
+                    & Pick<SourceObjectIdentifier, 'idSystemObject' | 'identifier'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetSystemObjectDetailsQueryVariables = Exact<{
+    input: GetSystemObjectDetailsInput;
+}>;
+
+
+export type GetSystemObjectDetailsQuery = (
+    { __typename?: 'Query' }
+    & {
+        getSystemObjectDetails: (
+            { __typename?: 'GetSystemObjectDetailsResult' }
+            & Pick<GetSystemObjectDetailsResult, 'name' | 'retired' | 'objectType' | 'allowed' | 'thumbnail'>
+            & {
+                identifiers: Array<(
+                    { __typename?: 'IngestIdentifier' }
+                    & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+                )>, objectAncestors: Array<Array<(
+                    { __typename?: 'RepositoryPath' }
+                    & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
+                )>>, sourceObjects: Array<(
+                    { __typename?: 'SourceObject' }
+                    & Pick<SourceObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
+                )>, derivedObjects: Array<(
+                    { __typename?: 'DerivedObject' }
+                    & Pick<DerivedObject, 'idSystemObject' | 'name' | 'variantType' | 'objectType'>
                 )>
             }
         )
@@ -2937,14 +3187,45 @@ export const GetAssetVersionsDetailsDocument = gql`
       }
       Model {
         idAssetVersion
+        systemCreated
+        master
         authoritative
-        dateCreated
         creationMethod
         modality
         purpose
         units
-        master
+        dateCaptured
+        modelFileType
         directory
+        identifiers {
+          identifier
+          identifierType
+        }
+        uvMaps {
+          name
+          mapType
+        }
+        roughness
+        metalness
+        pointCount
+        faceCount
+        isWatertight
+        hasNormals
+        hasVertexColor
+        hasUVSpace
+        boundingBoxP1X
+        boundingBoxP1Y
+        boundingBoxP1Z
+        boundingBoxP2X
+        boundingBoxP2Y
+        boundingBoxP2Z
+      }
+      Scene {
+        idAssetVersion
+        identifiers {
+          identifier
+          identifierType
+        }
       }
     }
   }
@@ -3342,6 +3623,100 @@ export function useGetSceneLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetSceneQueryHookResult = ReturnType<typeof useGetSceneQuery>;
 export type GetSceneLazyQueryHookResult = ReturnType<typeof useGetSceneLazyQuery>;
 export type GetSceneQueryResult = Apollo.QueryResult<GetSceneQuery, GetSceneQueryVariables>;
+export const GetSourceObjectIdentiferDocument = gql`
+    query getSourceObjectIdentifer($input: GetSourceObjectIdentiferInput!) {
+  getSourceObjectIdentifer(input: $input) {
+    sourceObjectIdentifiers {
+      idSystemObject
+      identifier
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSourceObjectIdentiferQuery__
+ *
+ * To run a query within a React component, call `useGetSourceObjectIdentiferQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSourceObjectIdentiferQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSourceObjectIdentiferQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSourceObjectIdentiferQuery(baseOptions?: Apollo.QueryHookOptions<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>) {
+    return Apollo.useQuery<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>(GetSourceObjectIdentiferDocument, baseOptions);
+}
+export function useGetSourceObjectIdentiferLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>) {
+    return Apollo.useLazyQuery<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>(GetSourceObjectIdentiferDocument, baseOptions);
+}
+export type GetSourceObjectIdentiferQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferQuery>;
+export type GetSourceObjectIdentiferLazyQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferLazyQuery>;
+export type GetSourceObjectIdentiferQueryResult = Apollo.QueryResult<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>;
+export const GetSystemObjectDetailsDocument = gql`
+    query getSystemObjectDetails($input: GetSystemObjectDetailsInput!) {
+  getSystemObjectDetails(input: $input) {
+    name
+    retired
+    objectType
+    allowed
+    thumbnail
+    identifiers {
+      identifier
+      identifierType
+    }
+    objectAncestors {
+      idSystemObject
+      name
+      objectType
+    }
+    sourceObjects {
+      idSystemObject
+      name
+      identifier
+      objectType
+    }
+    derivedObjects {
+      idSystemObject
+      name
+      variantType
+      objectType
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSystemObjectDetailsQuery__
+ *
+ * To run a query within a React component, call `useGetSystemObjectDetailsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSystemObjectDetailsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSystemObjectDetailsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSystemObjectDetailsQuery(baseOptions?: Apollo.QueryHookOptions<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>) {
+    return Apollo.useQuery<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>(GetSystemObjectDetailsDocument, baseOptions);
+}
+export function useGetSystemObjectDetailsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>) {
+    return Apollo.useLazyQuery<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>(GetSystemObjectDetailsDocument, baseOptions);
+}
+export type GetSystemObjectDetailsQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsQuery>;
+export type GetSystemObjectDetailsLazyQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsLazyQuery>;
+export type GetSystemObjectDetailsQueryResult = Apollo.QueryResult<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>;
 export const GetIngestionItemsForSubjectsDocument = gql`
     query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
   getIngestionItemsForSubjects(input: $input) {

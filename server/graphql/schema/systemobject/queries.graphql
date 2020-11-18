@@ -1,0 +1,39 @@
+type Query {
+    getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
+    getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
+}
+
+input GetSystemObjectDetailsInput {
+    idSystemObject: Int!
+}
+
+type RepositoryPath {
+    idSystemObject: Int!
+    name: String!
+    objectType: Int!
+}
+
+type GetSystemObjectDetailsResult {
+    name: String!
+    retired: Boolean!
+    objectType: Int!
+    allowed: Boolean!
+    thumbnail: String
+    identifiers: [IngestIdentifier!]!
+    objectAncestors: [[RepositoryPath!]!]!
+    sourceObjects: [SourceObject!]!
+    derivedObjects: [DerivedObject!]!
+}
+
+input GetSourceObjectIdentiferInput {
+    idSystemObjects: [Int!]!
+}
+
+type SourceObjectIdentifier {
+    idSystemObject: Int!
+    identifier: String
+}
+
+type GetSourceObjectIdentiferResult {
+    sourceObjectIdentifiers: [SourceObjectIdentifier!]!
+}

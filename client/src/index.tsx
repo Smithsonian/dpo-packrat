@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { AliveScope } from 'react-activation';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
-import { Slide, ToastContainer } from 'react-toastify';
+import { Slide, toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ErrorBoundary, Loader, PrivateRoute, PublicRoute } from './components';
 import { ROUTES } from './constants';
@@ -18,17 +18,23 @@ import './global/root.css';
 import { apolloClient } from './graphql';
 import { Home, Login } from './pages';
 import * as serviceWorker from './serviceWorker';
-import { useUserStore } from './store';
+import { useUserStore, useVocabularyStore } from './store';
 import theme from './theme';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
     const initialize = useUserStore(state => state.initialize);
+    const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
 
     const initializeUser = useCallback(async () => {
-        await initialize();
-        setLoading(false);
-    }, [initialize]);
+        try {
+            await initialize();
+            await updateVocabularyEntries();
+            setLoading(false);
+        } catch {
+            toast.error('Error occurred while initializing');
+        }
+    }, [initialize, updateVocabularyEntries]);
 
     useEffect(() => {
         initializeUser();

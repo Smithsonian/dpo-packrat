@@ -48,6 +48,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         outline: 'none',
         padding: '0px 2px',
         fontSize: '1em',
+        fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         '&:focus': {
             outline: 'none',

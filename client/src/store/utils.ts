@@ -3,11 +3,12 @@
  *
  * These are store specific utilities.
  */
-import { Item, Project, SubjectUnitIdentifier, AssetVersion, Vocabulary } from '../types/graphql';
-import { StateSubject } from './subject';
+import { AssetVersion, IngestFolder, IngestIdentifier, IngestUvMap, Item, Project, SubjectUnitIdentifier, Vocabulary } from '../types/graphql';
 import { StateItem } from './item';
+import { StateFolder, StateIdentifier, StateUVMap } from './metadata';
 import { StateProject } from './project';
-import { IngestionFile, FileUploadStatus, FileId } from './upload';
+import { StateSubject } from './subject';
+import { FileId, FileUploadStatus, IngestionFile } from './upload';
 
 export function parseFileId(id: FileId): number {
     return Number.parseInt(id, 10);
@@ -67,4 +68,39 @@ export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary:
         selected: false,
         cancel: null
     };
+}
+
+export function parseIdentifiersToState(identifiers: IngestIdentifier[], defaultIdentifierField: StateIdentifier[]): StateIdentifier[] {
+    const parsedIdentifiers = identifiers.map(
+        ({ identifier, identifierType }: IngestIdentifier, index: number): StateIdentifier => ({
+            id: index,
+            identifier,
+            identifierType,
+            selected: true
+        })
+    );
+
+    const stateIdentifiers = parsedIdentifiers.length ? parsedIdentifiers : defaultIdentifierField;
+
+    return stateIdentifiers;
+}
+
+export function parseFoldersToState(folders: IngestFolder[]): StateFolder[] {
+    const stateFolders: StateFolder[] = folders.map(({ name, variantType }: IngestFolder, index: number) => ({
+        id: index,
+        name,
+        variantType
+    }));
+
+    return stateFolders;
+}
+
+export function parseUVMapsToState(folders: IngestUvMap[]): StateUVMap[] {
+    const stateFolders: StateUVMap[] = folders.map(({ name, mapType }: IngestUvMap, index: number) => ({
+        id: index,
+        name,
+        mapType
+    }));
+
+    return stateFolders;
 }

@@ -40,6 +40,16 @@ export const INGESTION_ROUTE = {
     ROUTES: INGESTION_ROUTES_TYPE
 };
 
+export enum REPOSITORY_ROUTES_TYPE {
+    VIEW = '',
+    DETAILS = 'details/:idSystemObject'
+}
+
+export const REPOSITORY_ROUTE = {
+    TYPE: 'repository',
+    ROUTES: REPOSITORY_ROUTES_TYPE
+};
+
 export function resolveRoute(route: string): string {
     return `/${route}`;
 }

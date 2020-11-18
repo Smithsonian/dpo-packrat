@@ -5,13 +5,13 @@
  */
 import { eSystemObjectType } from '../types/server';
 
-type ColorMap = { [key: string]: string };
+type ColorMap = Record<string, string>;
 
 type ColorType = {
     defaults: ColorMap;
     sidebarOptions: ColorMap;
     upload: ColorMap;
-    repository: { [key in number | string]: ColorMap };
+    repository: Record<string | number, ColorMap>;
 };
 
 const Colors: ColorType = {

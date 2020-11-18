@@ -364,17 +364,22 @@ export class BulkIngestReader {
         { LOG.logger.error(vocabResult.error); return null; }
         const units: number = vocabResult.idVocabulary;
 
-        // directory_path: string;
+        // TODO: model fields, not sure what is needed here
         return {
-            idAssetVersion: 0, // TODO: not sure what is needed here
-            dateCreated: bagitModel.date_created,
+            idAssetVersion: 0,
+            dateCaptured: bagitModel.date_created,
             creationMethod,
             master: bagitModel.master != 0,
             authoritative: bagitModel.authoritative != 0,
             modality,
             units,
             purpose,
-            directory: bagitModel.directory_path
+            directory: bagitModel.directory_path,
+            systemCreated: true,
+            modelFileType: 0,
+            identifiers: [],
+            uvMaps: [],
+            sourceObjects: []
         };
     }
 
