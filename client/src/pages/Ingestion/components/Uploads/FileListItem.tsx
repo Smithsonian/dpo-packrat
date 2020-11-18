@@ -157,7 +157,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         options = (
             <React.Fragment>
                 {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={22} color={green[500]} />}
-                {uploading && !failed && <Progress className={classes.option} size={20} />}
+                {uploading && !failed && <Progress className={classes.option} size={16} />}
                 {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={yellow[600]} />}
                 <IoIosCloseCircle className={classes.option} onClick={remove} size={20} color={red[500]} />
             </React.Fragment>

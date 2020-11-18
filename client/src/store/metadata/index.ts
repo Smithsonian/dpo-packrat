@@ -8,164 +8,51 @@ import lodash from 'lodash';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
 import create, { GetState, SetState } from 'zustand';
-import { apolloClient } from '../graphql';
+import { apolloClient } from '../../graphql';
 import {
     AreCameraSettingsUniformDocument,
     AssetVersionContent,
+
     GetAssetVersionsDetailsDocument,
     GetAssetVersionsDetailsQuery,
     GetContentsForAssetVersionsDocument,
-    IngestFolder,
     Project
-} from '../types/graphql';
-import { eVocabularySetID } from '../types/server';
-import { StateItem, useItemStore } from './item';
-import { StateProject, useProjectStore } from './project';
-import { StateSubject, useSubjectStore } from './subject';
-import { FileId, IngestionFile, useUploadStore } from './upload';
-import { parseFileId, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from './utils';
-import { useVocabularyStore } from './vocabulary';
-
-type MetadataInfo = {
-    metadata: StateMetadata;
-    metadataIndex: number;
-    isLast: boolean;
-};
-
-type FieldErrors = {
-    photogrammetry: {
-        dateCaptured: boolean;
-        datasetType: boolean;
-    };
-};
-
-export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[];
-
-type MetadataUpdate = {
-    valid: boolean;
-    selectedFiles: boolean;
-};
-
-export type StateIdentifier = {
-    id: number;
-    identifier: string;
-    identifierType: number | null;
-    selected: boolean;
-};
-
-export type StateFolder = {
-    id: number;
-    name: string;
-    variantType: number | null;
-};
-
-export type PhotogrammetryFields = {
-    systemCreated: boolean;
-    identifiers: StateIdentifier[];
-    folders: StateFolder[];
-    description: string;
-    dateCaptured: Date;
-    datasetType: number | null;
-    datasetFieldId: number | null;
-    itemPositionType: number | null;
-    itemPositionFieldId: number | null;
-    itemArrangementFieldId: number | null;
-    focusType: number | null;
-    lightsourceType: number | null;
-    backgroundRemovalMethod: number | null;
-    clusterType: number | null;
-    clusterGeometryFieldId: number | null;
-    cameraSettingUniform: boolean;
-    directory: string;
-};
-
-export const defaultPhotogrammetryFields: PhotogrammetryFields = {
-    systemCreated: true,
-    identifiers: [],
-    folders: [],
-    description: '',
-    dateCaptured: new Date(),
-    datasetType: null,
-    datasetFieldId: null,
-    itemPositionType: null,
-    itemPositionFieldId: null,
-    itemArrangementFieldId: null,
-    focusType: null,
-    lightsourceType: null,
-    backgroundRemovalMethod: null,
-    clusterType: null,
-    clusterGeometryFieldId: null,
-    cameraSettingUniform: false,
-    directory: ''
-};
-
-const identifierSchema = yup.object().shape({
-    id: yup.number().required(),
-    identifier: yup
-        .string()
-        .trim()
-        .when('selected', {
-            is: true,
-            then: yup.string().trim().required('Enter a valid identifier'),
-            otherwise: yup.string().trim()
-        }),
-    identifierType: yup.number().nullable(true),
-    selected: yup.boolean().required()
-});
-
-const folderSchema = yup.object().shape({
-    id: yup.number().required(),
-    name: yup.string().required(),
-    variantType: yup.number().nullable(true)
-});
-
-const identifierValidation = {
-    test: array => !!lodash.filter(array as StateIdentifier[], { selected: true }).length,
-    message: 'Should select/provide at least 1 identifier'
-};
-
-const photogrammetryFieldsSchema = yup.object().shape({
-    systemCreated: yup.boolean().required(),
-    identifiers: yup
-        .array()
-        .of(identifierSchema)
-        .when('systemCreated', {
-            is: false,
-            then: yup.array().of(identifierSchema).test(identifierValidation)
-        }),
-    folders: yup.array().of(folderSchema),
-    description: yup.string().required('Description cannot be empty'),
-    dateCaptured: yup.date().required(),
-    datasetType: yup.number().required('Please select a valid dataset type'),
-    datasetFieldId: yup.number().nullable(true),
-    itemPositionType: yup.number().nullable(true),
-    itemPositionFieldId: yup.number().nullable(true),
-    itemArrangementFieldId: yup.number().nullable(true),
-    focusType: yup.number().nullable(true),
-    lightsourceType: yup.number().nullable(true),
-    backgroundRemovalMethod: yup.number().nullable(true),
-    clusterType: yup.number().nullable(true),
-    clusterGeometryFieldId: yup.number().nullable(true),
-    cameraSettingUniform: yup.boolean().required(),
-    directory: yup.string().required()
-});
-
-export type StateMetadata = {
-    photogrammetry: PhotogrammetryFields;
-    file: IngestionFile;
-};
+} from '../../types/graphql';
+import { eVocabularySetID } from '../../types/server';
+import { StateItem, useItemStore } from '../item';
+import { StateProject, useProjectStore } from '../project';
+import { StateSubject, useSubjectStore } from '../subject';
+import { FileId, IngestionFile, useUploadStore } from '../upload';
+import { useUserStore } from '../user';
+import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState, parseUVMapsToState } from '../utils';
+import { useVocabularyStore } from '../vocabulary';
+import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema } from './metadata.defaults';
+import {
+    FieldErrors,
+    MetadataFieldValue,
+    MetadataInfo,
+    MetadataType,
+    MetadataUpdate,
+    ModelFields,
+    OtherFields,
+    PhotogrammetryFields,
+    SceneFields,
+    StateFolder,
+    StateIdentifier,
+    StateMetadata,
+    ValidateFields
+} from './metadata.types';
 
 type MetadataStore = {
     metadatas: StateMetadata[];
-    getStateFolders: (folders: IngestFolder[]) => StateFolder[];
     getInitialStateFolders: (folders: string[]) => StateFolder[];
-    getSelectedIdentifiers: (metadata: StateMetadata) => StateIdentifier[] | undefined;
+    getSelectedIdentifiers: (identifiers: StateIdentifier[]) => StateIdentifier[] | undefined;
     getFieldErrors: (metadata: StateMetadata) => FieldErrors;
-    validatePhotogrammetryFields: (fields: PhotogrammetryFields) => boolean;
+    validateFields: (fields: ValidateFields, schema: ValidateFieldsSchema) => boolean;
     getCurrentMetadata: (id: FileId) => StateMetadata | undefined;
     getMetadataInfo: (id: FileId) => MetadataInfo;
     updateMetadataSteps: () => Promise<MetadataUpdate>;
-    updatePhotogrammetryField: (metadataIndex: number, name: string, value: MetadataFieldValue) => void;
+    updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => void;
     updateMetadataFolders: () => Promise<void>;
     updateCameraSettings: (metadatas: StateMetadata[]) => Promise<StateMetadata[]>;
     reset: () => void;
@@ -173,13 +60,21 @@ type MetadataStore = {
 
 export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
     metadatas: [],
-    getSelectedIdentifiers: (metadata: StateMetadata): StateIdentifier[] | undefined => lodash.filter(metadata.photogrammetry.identifiers, { selected: true }),
+    getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => lodash.filter(identifiers, { selected: true }),
     getFieldErrors: (metadata: StateMetadata): FieldErrors => {
         const { getAssetType } = useVocabularyStore.getState();
         const errors: FieldErrors = {
             photogrammetry: {
                 dateCaptured: false,
                 datasetType: false
+            },
+            model: {
+                dateCaptured: false,
+                creationMethod: false,
+                modality: false,
+                units: false,
+                purpose: false,
+                modelFileType: false
             }
         };
 
@@ -190,12 +85,21 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         if (assetType.photogrammetry) {
             errors.photogrammetry.dateCaptured = metadata.photogrammetry.dateCaptured.toString() === 'Invalid Date';
-            errors.photogrammetry.datasetType = metadata.photogrammetry.datasetType === null;
+            errors.photogrammetry.datasetType = lodash.isNull(metadata.photogrammetry.datasetType);
+        }
+
+        if (assetType.model) {
+            errors.model.dateCaptured = metadata.model.dateCaptured.toString() === 'Invalid Date';
+            errors.model.creationMethod = lodash.isNull(metadata.model.creationMethod);
+            errors.model.modality = lodash.isNull(metadata.model.modality);
+            errors.model.units = lodash.isNull(metadata.model.units);
+            errors.model.purpose = lodash.isNull(metadata.model.purpose);
+            errors.model.modelFileType = lodash.isNull(metadata.model.modelFileType);
         }
 
         return errors;
     },
-    validatePhotogrammetryFields: (fields: PhotogrammetryFields): boolean => {
+    validateFields: (fields: ValidateFields, schema: ValidateFieldsSchema): boolean => {
         let hasError: boolean = false;
         const options: yup.ValidateOptions = {
             abortEarly: false
@@ -204,10 +108,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         toast.dismiss();
 
         try {
-            photogrammetryFieldsSchema.validateSync(fields, options);
+            schema.validateSync(fields, options);
         } catch (error) {
             hasError = true;
-            console.log(error);
+
             for (const message of error.errors) {
                 toast.warn(message, { autoClose: false });
             }
@@ -233,7 +137,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         };
     },
     updateMetadataSteps: async (): Promise<MetadataUpdate> => {
-        const { getStateFolders } = get();
+        const { isAuthenticated } = useUserStore.getState();
         const { completed, getSelectedFiles } = useUploadStore.getState();
         const { getInitialEntry } = useVocabularyStore.getState();
         const { addSubjects } = useSubjectStore.getState();
@@ -245,7 +149,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         if (!selectedFiles.length) {
             return {
                 valid: false,
-                selectedFiles: false
+                selectedFiles: false,
+                error: false
             };
         }
 
@@ -258,13 +163,40 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             selected: false
         };
 
-        const defaultVocabularyFields = {
+        const defaultIdentifierField = [defaultIdentifier];
+
+        const defaultPhotogrammetry: PhotogrammetryFields = {
             ...defaultPhotogrammetryFields,
             datasetType: getInitialEntry(eVocabularySetID.eCaptureDataDatasetType),
-            identifiers: [defaultIdentifier]
+            identifiers: defaultIdentifierField
+        };
+
+        const defaultModel: ModelFields = {
+            ...defaultModelFields,
+            identifiers: defaultIdentifierField,
+            creationMethod: getInitialEntry(eVocabularySetID.eModelCreationMethod),
+            modality: getInitialEntry(eVocabularySetID.eModelModality),
+            units: getInitialEntry(eVocabularySetID.eModelUnits),
+            purpose: getInitialEntry(eVocabularySetID.eModelPurpose),
+            modelFileType: getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType)
+        };
+
+        const defaultScene: SceneFields = {
+            ...defaultSceneFields,
+            identifiers: defaultIdentifierField
+        };
+
+        const defaultOther: OtherFields = {
+            ...defaultOtherFields,
+            identifiers: defaultIdentifierField
         };
 
         try {
+            if (!(await isAuthenticated())) {
+                toast.error('user is not authenticated, please login');
+                return { valid: true, selectedFiles: true, error: true };
+            }
+
             const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({
                 query: GetAssetVersionsDetailsDocument,
                 variables: {
@@ -287,7 +219,15 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 const metadatas: StateMetadata[] = [];
 
                 for (let index = 0; index < Details.length; index++) {
-                    const { idAssetVersion, SubjectUnitIdentifier: foundSubjectUnitIdentifier, Project: foundProject, Item: foundItem, CaptureDataPhoto } = Details[index];
+                    const {
+                        idAssetVersion,
+                        SubjectUnitIdentifier: foundSubjectUnitIdentifier,
+                        Project: foundProject,
+                        Item: foundItem,
+                        CaptureDataPhoto,
+                        Model,
+                        Scene
+                    } = Details[index];
 
                     if (foundSubjectUnitIdentifier) {
                         const subject: StateSubject = parseSubjectUnitIdentifierToState(foundSubjectUnitIdentifier);
@@ -304,7 +244,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         items.push(item);
                     }
 
-                    let metadataStep: StateMetadata;
                     const file = completed.find((file: IngestionFile) => parseFileId(file.id) === idAssetVersion);
 
                     if (!file) {
@@ -312,53 +251,82 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         throw new Error();
                     }
 
+                    let metadataStep: StateMetadata = {
+                        file,
+                        photogrammetry: defaultPhotogrammetry,
+                        model: defaultModel,
+                        scene: defaultScene,
+                        other: defaultOther
+                    };
+
                     if (CaptureDataPhoto) {
                         const { identifiers, folders } = CaptureDataPhoto;
-                        const parsedIdentifiers: StateIdentifier[] = identifiers.map(
-                            ({ identifier, identifierType }, index): StateIdentifier => ({
-                                id: index,
-                                identifier,
-                                identifierType,
-                                selected: true
-                            })
-                        );
-
-                        const stateIdentifiers = parsedIdentifiers.length ? parsedIdentifiers : defaultVocabularyFields.identifiers;
+                        const stateIdentifiers: StateIdentifier[] = parseIdentifiersToState(identifiers, defaultIdentifierField);
 
                         metadataStep = {
-                            file,
+                            ...metadataStep,
                             photogrammetry: {
-                                ...defaultVocabularyFields,
+                                ...metadataStep.photogrammetry,
                                 ...(CaptureDataPhoto && {
                                     ...CaptureDataPhoto,
                                     dateCaptured: new Date(CaptureDataPhoto.dateCaptured),
-                                    folders: getStateFolders(folders),
+                                    folders: parseFoldersToState(folders),
                                     identifiers: stateIdentifiers
                                 })
                             }
                         };
 
                         metadatas.push(metadataStep);
-                    } else {
+                    } else if (Model) {
+                        const { identifiers, uvMaps } = Model;
+                        const stateIdentifiers: StateIdentifier[] = parseIdentifiersToState(identifiers, defaultIdentifierField);
+
                         metadataStep = {
-                            file,
-                            photogrammetry: {
-                                ...defaultVocabularyFields
+                            ...metadataStep,
+                            model: {
+                                ...metadataStep.model,
+                                ...(Model && {
+                                    ...Model,
+                                    dateCaptured: new Date(Model.dateCaptured),
+                                    identifiers: stateIdentifiers,
+                                    uvMaps: parseUVMapsToState(uvMaps)
+                                })
                             }
                         };
+                        metadatas.push(metadataStep);
+                    } else if (Scene) {
+                        const { identifiers } = Scene;
+                        const stateIdentifiers: StateIdentifier[] = parseIdentifiersToState(identifiers, defaultIdentifierField);
+
+                        metadataStep = {
+                            ...metadataStep,
+                            scene: {
+                                ...metadataStep.scene,
+                                ...(Scene && {
+                                    ...Scene,
+                                    identifiers: stateIdentifiers
+                                })
+                            }
+                        };
+                        metadatas.push(metadataStep);
+                    } else {
                         metadatas.push(metadataStep);
                     }
                 }
 
-                addSubjects(lodash.uniqBy(subjects, 'arkId'));
+                const uniqueSubjects = lodash.uniqBy(subjects, 'arkId');
+                const uniqueItems = lodash.uniqBy(items, 'name');
+
+                addSubjects(uniqueSubjects);
                 addProjects(projects);
-                addItems(lodash.uniqBy(items, 'name'));
+                addItems(uniqueItems);
 
                 set({ metadatas });
 
                 return {
                     valid: true,
-                    selectedFiles: true
+                    selectedFiles: true,
+                    error: false
                 };
             }
         } catch {
@@ -367,17 +335,23 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         return {
             valid: false,
-            selectedFiles: true
+            selectedFiles: true,
+            error: false
         };
     },
-    updatePhotogrammetryField: (metadataIndex: number, name: string, value: MetadataFieldValue) => {
+    updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => {
         const { metadatas } = get();
+
+        if (!(name in metadatas[metadataIndex][metadataType])) {
+            throw new Error(`Field ${name} doesn't exist on a ${metadataType} asset`);
+        }
+
         const updatedMetadatas = lodash.map(metadatas, (metadata: StateMetadata, index: number) => {
             if (index === metadataIndex) {
                 return {
                     ...metadata,
-                    photogrammetry: {
-                        ...metadata.photogrammetry,
+                    [metadataType]: {
+                        ...metadata[metadataType],
                         [name]: value
                     }
                 };
@@ -387,15 +361,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         });
 
         set({ metadatas: updatedMetadatas });
-    },
-    getStateFolders: (folders: IngestFolder[]): StateFolder[] => {
-        const stateFolders: StateFolder[] = folders.map(({ name, variantType }, index: number) => ({
-            id: index,
-            name,
-            variantType
-        }));
-
-        return stateFolders;
     },
     getInitialStateFolders: (folders: string[]): StateFolder[] => {
         const { getInitialEntry } = useVocabularyStore.getState();
@@ -496,3 +461,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         set({ metadatas: [] });
     }
 }));
+
+export * from './metadata.defaults';
+export * from './metadata.types';
+

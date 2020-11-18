@@ -4,14 +4,15 @@
  *
  * Utilities for components associated with Repository UI.
  */
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import lodash from 'lodash';
 import * as qs from 'query-string';
 import React from 'react';
 import { AiOutlineFileText } from 'react-icons/ai';
 import { RepositoryIcon } from '../components';
-import { HOME_ROUTES } from '../constants';
 import { RepositoryFilter } from '../pages/Repository';
 import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/MetadataView';
+import { StateSourceObject } from '../store';
 import Colors, { RepositoryColorVariant } from '../theme/colors';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
@@ -33,33 +34,33 @@ export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystem
 export function getTermForSystemObjectType(objectType: eSystemObjectType): string {
     switch (objectType) {
         case eSystemObjectType.eUnit:
-            return 'unit';
+            return 'Unit';
         case eSystemObjectType.eProject:
-            return 'project';
+            return 'Project';
         case eSystemObjectType.eSubject:
-            return 'subject';
+            return 'Subject';
         case eSystemObjectType.eItem:
-            return 'item';
+            return 'Item';
         case eSystemObjectType.eCaptureData:
-            return 'capture data';
+            return 'Capture Data';
         case eSystemObjectType.eModel:
-            return 'model';
+            return 'Model';
         case eSystemObjectType.eScene:
-            return 'scene';
+            return 'Scene';
         case eSystemObjectType.eIntermediaryFile:
-            return 'intermediary file';
+            return 'Intermediary File';
         case eSystemObjectType.eProjectDocumentation:
-            return 'project documentation';
+            return 'Project Documentation';
         case eSystemObjectType.eAsset:
-            return 'asset';
+            return 'Asset';
         case eSystemObjectType.eAssetVersion:
-            return 'asset version';
+            return 'Asset Version';
         case eSystemObjectType.eActor:
-            return 'actor';
+            return 'Actor';
         case eSystemObjectType.eStakeholder:
-            return 'stakeholder';
+            return 'Stakeholder';
         default:
-            return 'unknown';
+            return 'Unknown';
     }
 }
 
@@ -114,12 +115,16 @@ export function generateRepositoryUrl(filter: RepositoryFilter): string {
     };
 
     const queryResult = lodash.pickBy(filter, validate);
-    return `${HOME_ROUTES.REPOSITORY}?${qs.stringify(queryResult)}`;
+    return `?${qs.stringify(queryResult)}`;
 }
 
-export function getTreeWidth(columnSize: number, sideBarExpanded: boolean): string {
+export function getTreeWidth(columnSize: number, sideBarExpanded: boolean, fullWidth: boolean): string {
     const computedWidth = 50 + columnSize * 10;
     const isXLScreen = window.innerWidth >= 1600;
+
+    if (fullWidth) {
+        return '98vw';
+    }
 
     if (computedWidth <= 80) {
         if (isXLScreen) {
@@ -210,4 +215,34 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
 
 export function sortEntriesAlphabetically(entries: NavigationResultEntry[]): NavigationResultEntry[] {
     return lodash.orderBy(entries, [entry => entry.name.toLowerCase().trim()], ['asc']);
+}
+
+export function isRepositoryItemSelected(nodeId: string, sourceObjects: StateSourceObject[]): boolean {
+    const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
+    const idSystemObjects: number[] = sourceObjects.map(({ idSystemObject }) => idSystemObject);
+
+    return idSystemObjects.includes(idSystemObject);
+}
+
+export function getDetailsUrlForObject(idSystemObject: number): string {
+    return `/repository/details/${idSystemObject}`;
+}
+
+export function getTreeViewStyleHeight(isExpanded: boolean, isModal: boolean, breakpoint: Breakpoint): string {
+    const isSmallScreen: boolean = breakpoint === 'lg';
+
+    if (isExpanded) {
+        if (isModal) return isSmallScreen ? '45vh' : '55vh';
+        else return isSmallScreen ? '54vh' : '62vh';
+    } else {
+        if (isModal) return isSmallScreen ? '70vh' : '75vh';
+        else return isSmallScreen ? '79vh' : '82vh';
+    }
+}
+
+export function getTreeViewStyleWidth(sideBarExpanded: boolean, breakpoint: Breakpoint): string {
+    const isSmallScreen: boolean = breakpoint === 'lg';
+
+    if (sideBarExpanded) return isSmallScreen ? '81.5vw' : '85vw';
+    else return isSmallScreen ? '92vw' : '93vw';
 }

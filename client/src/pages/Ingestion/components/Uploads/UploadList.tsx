@@ -40,10 +40,7 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints }) => ({
         textAlign: 'center',
         color: palette.grey[500],
         fontStyle: 'italic',
-        marginTop: '8%',
-        [breakpoints.down('lg')]: {
-            marginTop: '10%',
-        }
+        marginTop: '8%'
     },
 }));
 

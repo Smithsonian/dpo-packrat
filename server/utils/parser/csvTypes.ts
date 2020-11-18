@@ -4,9 +4,7 @@ export enum CSVTypes {
     captureDataPhoto = 'capture_data_photo',
 }
 
-type CSVHeadersType = {
-    [key: string]: string[];
-};
+type CSVHeadersType = Record<string, string[]>;
 
 export const CSVHeaders: CSVHeadersType = {
     models: ['subject_guid', 'subject_name', 'unit_guid', 'unit_name', 'item_guid', 'item_name', 'entire_subject', 'date_created', 'creation_method', 'master', 'authoritative', 'modality', 'units', 'purpose', 'directory_path'],

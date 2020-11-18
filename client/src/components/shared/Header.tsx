@@ -27,18 +27,17 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         color: Colors.defaults.white
     },
     logo: {
-        cursor: 'pointer',
         paddingRight: spacing(2),
     },
     searchBox: {
         display: 'flex',
         alignItems: 'center',
-        marginLeft: 50,
-        padding: 5,
+        marginLeft: 35,
+        padding: '5px 10px',
         width: '40vw',
         minWidth: '30vw',
         borderRadius: 5,
-        border: `0.25px solid ${fade(Colors.defaults.white, 0.65)}`,
+        backgroundColor: fade(Colors.defaults.white, 0.1),
         [breakpoints.down('lg')]: {
             marginLeft: 30,
         },
@@ -52,6 +51,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         border: 'none',
         color: fade(Colors.defaults.white, 0.65),
         background: 'transparent',
+        fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
             height: 20,
@@ -107,7 +107,7 @@ function Header(): React.ReactElement {
         }
     };
 
-    const isRepository = pathname === resolveRoute(HOME_ROUTES.REPOSITORY);
+    const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
 
     return (
         <Box className={classes.container}>

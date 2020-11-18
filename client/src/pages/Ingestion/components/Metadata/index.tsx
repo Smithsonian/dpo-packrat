@@ -12,7 +12,20 @@ import { Redirect, useHistory, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { FileId, StateItem, StateMetadata, StateProject, useItemStore, useMetadataStore, useProjectStore, useVocabularyStore } from '../../../../store';
+import {
+    FileId,
+    modelFieldsSchema,
+    otherFieldsSchema,
+    photogrammetryFieldsSchema,
+    sceneFieldsSchema,
+    StateItem,
+    StateMetadata,
+    StateProject,
+    useItemStore,
+    useMetadataStore,
+    useProjectStore,
+    useVocabularyStore
+} from '../../../../store';
 import useIngest from '../../hooks/useIngest';
 import Model from './Model';
 import Other from './Other';
@@ -55,8 +68,8 @@ function Metadata(): React.ReactElement {
 
     const getSelectedProject = useProjectStore(state => state.getSelectedProject);
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
-    const [metadatas, validatePhotogrammetryFields, getMetadataInfo] = useMetadataStore(state => [state.metadatas, state.validatePhotogrammetryFields, state.getMetadataInfo]);
-    const { ingestPhotogrammetryData, ingestionComplete } = useIngest();
+    const [metadatas, getMetadataInfo, validateFields] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields]);
+    const { ingestionStart, ingestionComplete } = useIngest();
     const getAssetType = useVocabularyStore(state => state.getAssetType);
 
     const metadataLength = metadatas.length;
@@ -73,18 +86,34 @@ function Metadata(): React.ReactElement {
     const assetType = getAssetType(Number.parseInt(type, 10));
 
     const onPrevious = () => {
+        toast.dismiss();
         history.goBack();
     };
 
     const onNext = async (): Promise<void> => {
         if (assetType.photogrammetry) {
-            const hasError: boolean = validatePhotogrammetryFields(metadata.photogrammetry);
+            const hasError: boolean = validateFields(metadata.photogrammetry, photogrammetryFieldsSchema);
+            if (hasError) return;
+        }
+
+        if (assetType.model) {
+            const hasError: boolean = validateFields(metadata.model, modelFieldsSchema);
+            if (hasError) return;
+        }
+
+        if (assetType.scene) {
+            const hasError: boolean = validateFields(metadata.scene, sceneFieldsSchema);
+            if (hasError) return;
+        }
+
+        if (assetType.other) {
+            const hasError: boolean = validateFields(metadata.other, otherFieldsSchema);
             if (hasError) return;
         }
 
         if (isLast) {
             setIngestionLoading(true);
-            const success: boolean = await ingestPhotogrammetryData();
+            const success: boolean = await ingestionStart();
             setIngestionLoading(false);
 
             if (success) {

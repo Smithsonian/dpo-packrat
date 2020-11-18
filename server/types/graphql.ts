@@ -34,8 +34,10 @@ export type Query = {
     getProject: GetProjectResult;
     getProjectDocumentation: GetProjectDocumentationResult;
     getScene: GetSceneResult;
+    getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
     getSubject: GetSubjectResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
+    getSystemObjectDetails: GetSystemObjectDetailsResult;
     getUnit: GetUnitResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getUser: GetUserResult;
@@ -121,12 +123,20 @@ export type QueryGetSceneArgs = {
     input: GetSceneInput;
 };
 
+export type QueryGetSourceObjectIdentiferArgs = {
+    input: GetSourceObjectIdentiferInput;
+};
+
 export type QueryGetSubjectArgs = {
     input: GetSubjectInput;
 };
 
 export type QueryGetSubjectsForUnitArgs = {
     input: GetSubjectsForUnitInput;
+};
+
+export type QueryGetSystemObjectDetailsArgs = {
+    input: GetSystemObjectDetailsInput;
 };
 
 export type QueryGetUnitArgs = {
@@ -350,17 +360,86 @@ export type IngestPhotogrammetry = {
     identifiers: Array<IngestIdentifier>;
 };
 
+export type IngestUvMap = {
+    __typename?: 'IngestUVMap';
+    name: Scalars['String'];
+    mapType: Scalars['Int'];
+};
+
+export type SourceObject = {
+    __typename?: 'SourceObject';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
+    objectType: Scalars['Int'];
+};
+
+export type DerivedObject = {
+    __typename?: 'DerivedObject';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    variantType: Scalars['Int'];
+    objectType: Scalars['Int'];
+};
+
 export type IngestModel = {
     __typename?: 'IngestModel';
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    master: Scalars['Boolean'];
     authoritative: Scalars['Boolean'];
-    dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
     modality: Scalars['Int'];
     purpose: Scalars['Int'];
     units: Scalars['Int'];
-    master: Scalars['Boolean'];
+    dateCaptured: Scalars['String'];
+    modelFileType: Scalars['Int'];
     directory: Scalars['String'];
+    identifiers: Array<IngestIdentifier>;
+    uvMaps: Array<IngestUvMap>;
+    sourceObjects: Array<SourceObject>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export enum ReferenceModelAction {
+    Update = 'Update',
+    Ingest = 'Ingest'
+}
+
+export type ReferenceModel = {
+    __typename?: 'ReferenceModel';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    fileSize: Scalars['Int'];
+    resolution?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    action: ReferenceModelAction;
+};
+
+export type IngestScene = {
+    __typename?: 'IngestScene';
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifier>;
+    referenceModels: Array<ReferenceModel>;
 };
 
 export type GetAssetVersionDetailResult = {
@@ -371,6 +450,7 @@ export type GetAssetVersionDetailResult = {
     Item?: Maybe<Item>;
     CaptureDataPhoto?: Maybe<IngestPhotogrammetry>;
     Model?: Maybe<IngestModel>;
+    Scene?: Maybe<IngestScene>;
 };
 
 export type GetAssetVersionsDetailsResult = {
@@ -602,16 +682,74 @@ export type IngestPhotogrammetryInput = {
     identifiers: Array<IngestIdentifierInput>;
 };
 
+export type IngestUvMapInput = {
+    name: Scalars['String'];
+    mapType: Scalars['Int'];
+};
+
+export type SourceObjectInput = {
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
+    objectType: Scalars['Int'];
+};
+
 export type IngestModelInput = {
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    master: Scalars['Boolean'];
     authoritative: Scalars['Boolean'];
-    dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
     modality: Scalars['Int'];
     purpose: Scalars['Int'];
     units: Scalars['Int'];
-    master: Scalars['Boolean'];
+    dateCaptured: Scalars['String'];
+    modelFileType: Scalars['Int'];
     directory: Scalars['String'];
+    identifiers: Array<IngestIdentifierInput>;
+    uvMaps: Array<IngestUvMapInput>;
+    sourceObjects: Array<SourceObjectInput>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export type ReferenceModelInput = {
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    fileSize: Scalars['Int'];
+    resolution?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    action: ReferenceModelAction;
+};
+
+export type IngestSceneInput = {
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifierInput>;
+    referenceModels: Array<ReferenceModelInput>;
+};
+
+export type IngestOtherInput = {
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifierInput>;
 };
 
 export type IngestDataInput = {
@@ -619,6 +757,9 @@ export type IngestDataInput = {
     project: IngestProjectInput;
     item: IngestItemInput;
     photogrammetry: Array<IngestPhotogrammetryInput>;
+    model: Array<IngestModelInput>;
+    scene: Array<IngestSceneInput>;
+    other: Array<IngestOtherInput>;
 };
 
 export type IngestDataResult = {
@@ -887,6 +1028,45 @@ export type IntermediaryFile = {
     idAsset: Scalars['Int'];
     Asset?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type GetSystemObjectDetailsInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type RepositoryPath = {
+    __typename?: 'RepositoryPath';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    objectType: Scalars['Int'];
+};
+
+export type GetSystemObjectDetailsResult = {
+    __typename?: 'GetSystemObjectDetailsResult';
+    name: Scalars['String'];
+    retired: Scalars['Boolean'];
+    objectType: Scalars['Int'];
+    allowed: Scalars['Boolean'];
+    thumbnail?: Maybe<Scalars['String']>;
+    identifiers: Array<IngestIdentifier>;
+    objectAncestors: Array<Array<RepositoryPath>>;
+    sourceObjects: Array<SourceObject>;
+    derivedObjects: Array<DerivedObject>;
+};
+
+export type GetSourceObjectIdentiferInput = {
+    idSystemObjects: Array<Scalars['Int']>;
+};
+
+export type SourceObjectIdentifier = {
+    __typename?: 'SourceObjectIdentifier';
+    idSystemObject: Scalars['Int'];
+    identifier?: Maybe<Scalars['String']>;
+};
+
+export type GetSourceObjectIdentiferResult = {
+    __typename?: 'GetSourceObjectIdentiferResult';
+    sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
 };
 
 export type SystemObject = {

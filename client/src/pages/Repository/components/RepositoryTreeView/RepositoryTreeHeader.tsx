@@ -52,16 +52,17 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 }));
 
 interface RepositoryTreeHeaderProps {
+    fullWidth?: boolean;
     metadataColumns: eMetadata[];
 }
 
 function RepositoryTreeHeader(props: RepositoryTreeHeaderProps): React.ReactElement {
-    const { metadataColumns } = props;
+    const { fullWidth = false, metadataColumns } = props;
     const classes = useStyles();
 
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
     const treeColumns = getTreeViewColumns(metadataColumns, true);
-    const width = getTreeWidth(treeColumns.length, sideBarExpanded);
+    const width = getTreeWidth(treeColumns.length, sideBarExpanded, fullWidth);
 
     return (
         <Box className={classes.container} style={{ width }}>

@@ -19,8 +19,10 @@ type Query {
   getProject(input: GetProjectInput!): GetProjectResult!
   getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
+  getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
@@ -161,16 +163,80 @@ type IngestPhotogrammetry {
   identifiers: [IngestIdentifier!]!
 }
 
+type IngestUVMap {
+  name: String!
+  mapType: Int!
+}
+
+type SourceObject {
+  idSystemObject: Int!
+  name: String!
+  identifier: String
+  objectType: Int!
+}
+
+type DerivedObject {
+  idSystemObject: Int!
+  name: String!
+  variantType: Int!
+  objectType: Int!
+}
+
 type IngestModel {
   idAssetVersion: Int!
+  systemCreated: Boolean!
+  master: Boolean!
   authoritative: Boolean!
-  dateCreated: String!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
   units: Int!
-  master: Boolean!
+  dateCaptured: String!
+  modelFileType: Int!
   directory: String!
+  identifiers: [IngestIdentifier!]!
+  uvMaps: [IngestUVMap!]!
+  sourceObjects: [SourceObject!]!
+  roughness: Int
+  metalness: Int
+  pointCount: Int
+  faceCount: Int
+  isWatertight: Boolean
+  hasNormals: Boolean
+  hasVertexColor: Boolean
+  hasUVSpace: Boolean
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+}
+
+enum ReferenceModelAction {
+  Update
+  Ingest
+}
+
+type ReferenceModel {
+  idSystemObject: Int!
+  name: String!
+  fileSize: Int!
+  resolution: Int
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+  action: ReferenceModelAction!
+}
+
+type IngestScene {
+  idAssetVersion: Int!
+  systemCreated: Boolean!
+  identifiers: [IngestIdentifier!]!
+  referenceModels: [ReferenceModel!]!
 }
 
 type GetAssetVersionDetailResult {
@@ -180,6 +246,7 @@ type GetAssetVersionDetailResult {
   Item: Item
   CaptureDataPhoto: IngestPhotogrammetry
   Model: IngestModel
+  Scene: IngestScene
 }
 
 type GetAssetVersionsDetailsResult {
@@ -395,16 +462,74 @@ input IngestPhotogrammetryInput {
   identifiers: [IngestIdentifierInput!]!
 }
 
+input IngestUVMapInput {
+  name: String!
+  mapType: Int!
+}
+
+input SourceObjectInput {
+  idSystemObject: Int!
+  name: String!
+  identifier: String
+  objectType: Int!
+}
+
 input IngestModelInput {
   idAssetVersion: Int!
+  systemCreated: Boolean!
+  master: Boolean!
   authoritative: Boolean!
-  dateCreated: String!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
   units: Int!
-  master: Boolean!
+  dateCaptured: String!
+  modelFileType: Int!
   directory: String!
+  identifiers: [IngestIdentifierInput!]!
+  uvMaps: [IngestUVMapInput!]!
+  sourceObjects: [SourceObjectInput!]!
+  roughness: Int
+  metalness: Int
+  pointCount: Int
+  faceCount: Int
+  isWatertight: Boolean
+  hasNormals: Boolean
+  hasVertexColor: Boolean
+  hasUVSpace: Boolean
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+}
+
+input ReferenceModelInput {
+  idSystemObject: Int!
+  name: String!
+  fileSize: Int!
+  resolution: Int
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+  action: ReferenceModelAction!
+}
+
+input IngestSceneInput {
+  idAssetVersion: Int!
+  systemCreated: Boolean!
+  identifiers: [IngestIdentifierInput!]!
+  referenceModels: [ReferenceModelInput!]!
+}
+
+input IngestOtherInput {
+  idAssetVersion: Int!
+  systemCreated: Boolean!
+  identifiers: [IngestIdentifierInput!]!
 }
 
 input IngestDataInput {
@@ -412,6 +537,9 @@ input IngestDataInput {
   project: IngestProjectInput!
   item: IngestItemInput!
   photogrammetry: [IngestPhotogrammetryInput!]!
+  model: [IngestModelInput!]!
+  scene: [IngestSceneInput!]!
+  other: [IngestOtherInput!]!
 }
 
 type IngestDataResult {
@@ -658,6 +786,41 @@ type IntermediaryFile {
   idAsset: Int!
   Asset: Asset
   SystemObject: SystemObject
+}
+
+input GetSystemObjectDetailsInput {
+  idSystemObject: Int!
+}
+
+type RepositoryPath {
+  idSystemObject: Int!
+  name: String!
+  objectType: Int!
+}
+
+type GetSystemObjectDetailsResult {
+  name: String!
+  retired: Boolean!
+  objectType: Int!
+  allowed: Boolean!
+  thumbnail: String
+  identifiers: [IngestIdentifier!]!
+  objectAncestors: [[RepositoryPath!]!]!
+  sourceObjects: [SourceObject!]!
+  derivedObjects: [DerivedObject!]!
+}
+
+input GetSourceObjectIdentiferInput {
+  idSystemObjects: [Int!]!
+}
+
+type SourceObjectIdentifier {
+  idSystemObject: Int!
+  identifier: String
+}
+
+type GetSourceObjectIdentiferResult {
+  sourceObjectIdentifiers: [SourceObjectIdentifier!]!
 }
 
 type SystemObject {
