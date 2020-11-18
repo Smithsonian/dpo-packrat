@@ -98,7 +98,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
     };
 
     return (
-        <Dialog maxWidth='xl' open={open} onClose={onModalClose}>
+        <Dialog open={open} onClose={onModalClose} maxWidth='xl' >
             <AppBar className={classes.appBar}>
                 <Toolbar>
                     <Button autoFocus color='inherit' onClick={onModalClose}>
