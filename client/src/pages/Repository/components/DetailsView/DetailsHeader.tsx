@@ -17,7 +17,7 @@ const useStyles = makeStyles(({ palette }) => ({
         color: palette.primary.dark
     },
     name: {
-        width: 180,
+        minWidth: 180,
         padding: '5px 8px',
         borderRadius: 5,
         marginRight: 20,

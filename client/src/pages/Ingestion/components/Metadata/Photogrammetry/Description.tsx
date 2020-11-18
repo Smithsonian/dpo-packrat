@@ -17,6 +17,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         overflow: 'scroll',
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         borderRadius: 5,
+        fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily
     }
 }));

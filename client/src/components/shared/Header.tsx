@@ -51,6 +51,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         border: 'none',
         color: fade(Colors.defaults.white, 0.65),
         background: 'transparent',
+        fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
             height: 20,

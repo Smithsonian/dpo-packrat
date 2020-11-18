@@ -16,6 +16,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         padding: 8,
         borderRadius: 5,
+        fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
             fontSize: '0.8em',
