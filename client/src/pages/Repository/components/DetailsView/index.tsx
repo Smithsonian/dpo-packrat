@@ -97,6 +97,7 @@ function DetailsView(): React.ReactElement {
             <Box display='flex' flex={1}>
                 <Box display='flex' flex={1} flexDirection='column'>
                     <IdentifierList
+                        viewMode
                         disabled={disabled}
                         identifiers={parseIdentifiersToState(identifiers, [])}
                         identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}

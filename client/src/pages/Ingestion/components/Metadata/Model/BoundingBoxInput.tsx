@@ -47,6 +47,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         padding: 8,
         borderRadius: 5,
         marginLeft: 5,
+        fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
             fontSize: '0.8em',

@@ -20,7 +20,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         padding: '0px 2px',
         paddingBottom: 5,
         backgroundColor: 'transparent',
-        fontSize: '0.9em',
+        fontSize: '0.8em',
+        fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         borderBottom: `1px solid ${palette.grey[300]}`,
         '&:focus': {
@@ -49,6 +50,11 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         marginLeft: 20,
         cursor: 'pointer'
     },
+    empty: {
+        fontSize: '0.8em',
+        color: palette.primary.dark,
+        fontStyle: 'italic'
+    },
     header: sharedLabelProps,
     addIdentifierButton: sharedButtonProps
 }));
@@ -60,16 +66,24 @@ interface IdentifierListProps {
     onRemove: (id: number) => void;
     identifierTypes: VocabularyOption[];
     disabled?: boolean;
+    viewMode?: boolean;
 }
 
 function IdentifierList(props: IdentifierListProps): React.ReactElement {
-    const { identifiers, onAdd, onUpdate, identifierTypes, onRemove, disabled = false } = props;
+    const { identifiers, onAdd, onUpdate, identifierTypes, onRemove, viewMode = false, disabled = false } = props;
     const classes = useStyles();
+
+    const hasIdentifiers: boolean = !!identifiers.length;
 
     return (
         <Box overflow='hidden'>
             <FieldType required={false} renderLabel={false} width='auto'>
-                {!!identifiers.length && <Header />}
+                {hasIdentifiers && <Header />}
+                {!hasIdentifiers && viewMode && (
+                    <Box pb={1}>
+                        <Typography className={classes.empty}>No Identifiers</Typography>
+                    </Box>
+                )}
                 {identifiers.map(({ id, selected, identifier, identifierType }, index) => {
                     const remove = () => onRemove(id);
                     const updateCheckbox = ({ target }) => onUpdate(id, target.name, target.checked);
