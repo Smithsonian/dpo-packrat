@@ -21,8 +21,8 @@ type GetSystemObjectDetailsResult {
     thumbnail: String
     identifiers: [IngestIdentifier!]!
     objectAncestors: [[RepositoryPath!]!]!
-    sourceObjects: [SourceObject!]!
-    derivedObjects: [DerivedObject!]!
+    sourceObjects: [RelatedObject!]!
+    derivedObjects: [RelatedObject!]!
 }
 
 input GetSourceObjectIdentiferInput {

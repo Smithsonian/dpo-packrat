@@ -26,7 +26,7 @@ const getSystemObjectDetails = gql`
             derivedObjects {
                 idSystemObject
                 name
-                variantType
+                identifier
                 objectType
             }
         }
