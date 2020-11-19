@@ -7,13 +7,14 @@ import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, IdInputField, SelectField } from '../../../../../components';
-import { StateIdentifier, StateSourceObject, useMetadataStore, useVocabularyStore } from '../../../../../store';
+import { StateIdentifier, StateRelatedObject, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
+import { RelatedObjectType } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../../utils/shared';
 import BoundingBoxInput from './BoundingBoxInput';
 import ObjectSelectModal from './ObjectSelectModal';
-import SourceObjectsList from './SourceObjectsList';
+import RelatedObjectsList from './RelatedObjectsList';
 import UVContents from './UVContents';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -109,7 +110,7 @@ function Model(props: ModelProps): React.ReactElement {
         setModalOpen(false);
     };
 
-    const onSelectedObjects = (newSourceObjects: StateSourceObject[]) => {
+    const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
         updateMetadataField(metadataIndex, 'sourceObjects', newSourceObjects, MetadataType.model);
         onModalClose();
     };
@@ -129,7 +130,7 @@ function Model(props: ModelProps): React.ReactElement {
                     onUpdateIdentifer={onIdentifersChange}
                     onRemoveIdentifer={onIdentifersChange}
                 />
-                <SourceObjectsList sourceObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
                 <Box display='flex' flexDirection='row' mt={1}>
                     <Box display='flex' flex={1} flexDirection='column'>
                         <FieldType

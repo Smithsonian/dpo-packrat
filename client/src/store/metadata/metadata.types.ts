@@ -3,7 +3,7 @@
  *
  * Type definitions for the metadata store.
  */
-import { DerivedObject, ReferenceModel, ReferenceModelAction, SourceObject } from '../../types/graphql';
+import { RelatedObject, ReferenceModel, ReferenceModelAction } from '../../types/graphql';
 import { IngestionFile } from '../upload';
 
 export type StateMetadata = {
@@ -42,7 +42,7 @@ export type FieldErrors = {
     };
 };
 
-export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateUVMap[] | SourceObject[];
+export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateUVMap[] | StateRelatedObject[];
 
 export type MetadataUpdate = {
     valid: boolean;
@@ -93,7 +93,7 @@ export type ModelFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     uvMaps: StateUVMap[];
-    sourceObjects: StateSourceObject[];
+    sourceObjects: StateRelatedObject[];
     dateCaptured: Date;
     creationMethod: number | null;
     master: boolean;
@@ -130,9 +130,7 @@ export type OtherFields = {
     identifiers: StateIdentifier[];
 };
 
-export type StateSourceObject = SourceObject;
-
-export type StateDerivedObject = DerivedObject;
+export type StateRelatedObject = RelatedObject;
 
 export type StateReferenceModel = ReferenceModel;
 

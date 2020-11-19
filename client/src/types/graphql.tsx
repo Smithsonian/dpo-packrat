@@ -415,19 +415,16 @@ export type IngestUvMap = {
     mapType: Scalars['Int'];
 };
 
-export type SourceObject = {
-    __typename?: 'SourceObject';
+export enum RelatedObjectType {
+    Source = 'Source',
+    Derived = 'Derived'
+}
+
+export type RelatedObject = {
+    __typename?: 'RelatedObject';
     idSystemObject: Scalars['Int'];
     name: Scalars['String'];
     identifier?: Maybe<Scalars['String']>;
-    objectType: Scalars['Int'];
-};
-
-export type DerivedObject = {
-    __typename?: 'DerivedObject';
-    idSystemObject: Scalars['Int'];
-    name: Scalars['String'];
-    variantType: Scalars['Int'];
     objectType: Scalars['Int'];
 };
 
@@ -446,7 +443,7 @@ export type IngestModel = {
     directory: Scalars['String'];
     identifiers: Array<IngestIdentifier>;
     uvMaps: Array<IngestUvMap>;
-    sourceObjects: Array<SourceObject>;
+    sourceObjects: Array<RelatedObject>;
     roughness?: Maybe<Scalars['Int']>;
     metalness?: Maybe<Scalars['Int']>;
     pointCount?: Maybe<Scalars['Int']>;
@@ -736,7 +733,7 @@ export type IngestUvMapInput = {
     mapType: Scalars['Int'];
 };
 
-export type SourceObjectInput = {
+export type RelatedObjectInput = {
     idSystemObject: Scalars['Int'];
     name: Scalars['String'];
     identifier?: Maybe<Scalars['String']>;
@@ -757,7 +754,7 @@ export type IngestModelInput = {
     directory: Scalars['String'];
     identifiers: Array<IngestIdentifierInput>;
     uvMaps: Array<IngestUvMapInput>;
-    sourceObjects: Array<SourceObjectInput>;
+    sourceObjects: Array<RelatedObjectInput>;
     roughness?: Maybe<Scalars['Int']>;
     metalness?: Maybe<Scalars['Int']>;
     pointCount?: Maybe<Scalars['Int']>;
@@ -1099,8 +1096,8 @@ export type GetSystemObjectDetailsResult = {
     thumbnail?: Maybe<Scalars['String']>;
     identifiers: Array<IngestIdentifier>;
     objectAncestors: Array<Array<RepositoryPath>>;
-    sourceObjects: Array<SourceObject>;
-    derivedObjects: Array<DerivedObject>;
+    sourceObjects: Array<RelatedObject>;
+    derivedObjects: Array<RelatedObject>;
 };
 
 export type GetSourceObjectIdentiferInput = {
@@ -2243,11 +2240,11 @@ export type GetSystemObjectDetailsQuery = (
                     { __typename?: 'RepositoryPath' }
                     & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
                 )>>, sourceObjects: Array<(
-                    { __typename?: 'SourceObject' }
-                    & Pick<SourceObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
+                    { __typename?: 'RelatedObject' }
+                    & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
                 )>, derivedObjects: Array<(
-                    { __typename?: 'DerivedObject' }
-                    & Pick<DerivedObject, 'idSystemObject' | 'name' | 'variantType' | 'objectType'>
+                    { __typename?: 'RelatedObject' }
+                    & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
                 )>
             }
         )
@@ -3685,7 +3682,7 @@ export const GetSystemObjectDetailsDocument = gql`
     derivedObjects {
       idSystemObject
       name
-      variantType
+      identifier
       objectType
     }
   }

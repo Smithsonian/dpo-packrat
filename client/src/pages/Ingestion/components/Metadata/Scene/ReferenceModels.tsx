@@ -51,7 +51,7 @@ const useStyles = makeStyles(({ palette }) => ({
 const mockReferenceModels: StateReferenceModel[] = [
     {
         idSystemObject: 1,
-        name: 'Armstrong1.obj',
+        name: 'Armstrong1.obj (mock)',
         fileSize: 1.27e+7,
         resolution: 2000,
         boundingBoxP1X: 1.0,
@@ -64,7 +64,7 @@ const mockReferenceModels: StateReferenceModel[] = [
     },
     {
         idSystemObject: 1,
-        name: 'Armstrong2.obj',
+        name: 'Armstrong2.obj (mock)',
         fileSize: 1.27e+7,
         resolution: 2000,
         boundingBoxP1X: 1.0,
