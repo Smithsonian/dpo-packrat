@@ -9,10 +9,10 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router';
 import IdentifierList from '../../../../components/shared/IdentifierList';
 import { parseIdentifiersToState, useVocabularyStore } from '../../../../store';
+import { RelatedObjectType } from '../../../../types/graphql';
 import { eVocabularySetID } from '../../../../types/server';
-import DerivedObjectsList from '../../../Ingestion/components/Metadata/Model/DerivedObjectsList';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
-import SourceObjectsList from '../../../Ingestion/components/Metadata/Model/SourceObjectsList';
+import RelatedObjectsList from '../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
 import { useObjectDetails } from '../../hooks/useDetailsView';
 import DetailsHeader from './DetailsHeader';
 import DetailsThumbnail from './DetailsThumbnail';
@@ -105,16 +105,18 @@ function DetailsView(): React.ReactElement {
                         onRemove={removeIdentifier}
                         onUpdate={updateIdentifierFields}
                     />
-                    <SourceObjectsList
+                    <RelatedObjectsList
                         viewMode
                         disabled={disabled}
-                        sourceObjects={sourceObjects}
+                        type={RelatedObjectType.Source}
+                        relatedObjects={sourceObjects}
                         onAdd={onAddSourceObject}
                     />
-                    <DerivedObjectsList
+                    <RelatedObjectsList
                         viewMode
                         disabled={disabled}
-                        derivedObjects={derivedObjects}
+                        type={RelatedObjectType.Derived}
+                        relatedObjects={derivedObjects}
                         onAdd={onAddDerivedObject}
                     />
                 </Box>
