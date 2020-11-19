@@ -168,17 +168,15 @@ type IngestUVMap {
   mapType: Int!
 }
 
-type SourceObject {
+enum RelatedObjectType {
+  Source
+  Derived
+}
+
+type RelatedObject {
   idSystemObject: Int!
   name: String!
   identifier: String
-  objectType: Int!
-}
-
-type DerivedObject {
-  idSystemObject: Int!
-  name: String!
-  variantType: Int!
   objectType: Int!
 }
 
@@ -196,7 +194,7 @@ type IngestModel {
   directory: String!
   identifiers: [IngestIdentifier!]!
   uvMaps: [IngestUVMap!]!
-  sourceObjects: [SourceObject!]!
+  sourceObjects: [RelatedObject!]!
   roughness: Int
   metalness: Int
   pointCount: Int
@@ -467,7 +465,7 @@ input IngestUVMapInput {
   mapType: Int!
 }
 
-input SourceObjectInput {
+input RelatedObjectInput {
   idSystemObject: Int!
   name: String!
   identifier: String
@@ -488,7 +486,7 @@ input IngestModelInput {
   directory: String!
   identifiers: [IngestIdentifierInput!]!
   uvMaps: [IngestUVMapInput!]!
-  sourceObjects: [SourceObjectInput!]!
+  sourceObjects: [RelatedObjectInput!]!
   roughness: Int
   metalness: Int
   pointCount: Int
@@ -806,8 +804,8 @@ type GetSystemObjectDetailsResult {
   thumbnail: String
   identifiers: [IngestIdentifier!]!
   objectAncestors: [[RepositoryPath!]!]!
-  sourceObjects: [SourceObject!]!
-  derivedObjects: [DerivedObject!]!
+  sourceObjects: [RelatedObject!]!
+  derivedObjects: [RelatedObject!]!
 }
 
 input GetSourceObjectIdentiferInput {
