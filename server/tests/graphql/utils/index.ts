@@ -68,16 +68,17 @@ class TestSuiteUtils {
 
     createUnitInput = (): CreateUnitInput => {
         return {
-            Name: 'Test Name',
+            Name: 'Test Unit Name',
             Abbreviation: 'Test Abbreviation',
             ARKPrefix: 'Test ARKPrefix'
         };
     };
 
-    createSubjectInput = (idUnit: number): CreateSubjectInput => {
+    createSubjectInput = (idUnit: number, idIdentifierPreferred?: number): CreateSubjectInput => {
         return {
             idUnit,
-            Name: 'Test Subject'
+            Name: 'Test Subject',
+            idIdentifierPreferred: idIdentifierPreferred || null
         };
     };
 
