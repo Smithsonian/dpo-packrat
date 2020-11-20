@@ -6,10 +6,11 @@
 import { Box, Checkbox, FormControlLabel, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
+import { Helmet } from 'react-helmet';
 import { BreadcrumbsView } from '../../../../components';
 import Colors from '../../../../theme/colors';
-import { eSystemObjectType } from '../../../../types/server';
 import { RepositoryPath } from '../../../../types/graphql';
+import { eSystemObjectType } from '../../../../types/server';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -43,8 +44,13 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
     const { objectType, path, name, retired, disabled } = props;
     const classes = useStyles();
 
+    const title = `${name} ${getTermForSystemObjectType(objectType)} | Packrat`;
+
     return (
         <Box display='flex' flexDirection='column' justifyContent='center' mb={1}>
+            <Helmet>
+                <title>{title}</title>
+            </Helmet>
             <Box display='flex'>
                 <Box display='flex' flex={1}>
                     <Typography className={classes.header} variant='h5'>{getTermForSystemObjectType(objectType)}</Typography>

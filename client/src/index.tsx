@@ -9,6 +9,7 @@ import { ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AliveScope } from 'react-activation';
 import ReactDOM from 'react-dom';
+import { Helmet } from 'react-helmet';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
 import { Slide, toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -64,6 +65,9 @@ function App(): React.ReactElement {
     return (
         <ApolloProvider client={apolloClient}>
             <ThemeProvider theme={theme}>
+                <Helmet>
+                    <title>Packrat</title>
+                </Helmet>
                 <AppRouter />
                 <ToastContainer
                     transition={Slide}
