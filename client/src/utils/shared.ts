@@ -60,3 +60,8 @@ export const sharedLabelProps: CSSProperties = {
     fontSize: '0.8em',
     color: palette.primary.dark
 };
+
+export function getHeaderTitle(title?: string): string {
+    if (title) return `${title} - Packrat`;
+    return 'Packrat';
+}
