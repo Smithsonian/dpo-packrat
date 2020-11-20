@@ -12,6 +12,7 @@ import Colors from '../../../../theme/colors';
 import { RepositoryPath } from '../../../../types/graphql';
 import { eSystemObjectType } from '../../../../types/server';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
+import { getHeaderTitle } from '../../../../utils/shared';
 
 const useStyles = makeStyles(({ palette }) => ({
     header: {
@@ -44,7 +45,7 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
     const { objectType, path, name, retired, disabled } = props;
     const classes = useStyles();
 
-    const title = `${name} ${getTermForSystemObjectType(objectType)} | Packrat`;
+    const title = getHeaderTitle(`${name} ${getTermForSystemObjectType(objectType)}`);
 
     return (
         <Box display='flex' flexDirection='column' justifyContent='center' mb={1}>
