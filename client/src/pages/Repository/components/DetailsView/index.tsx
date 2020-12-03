@@ -17,6 +17,7 @@ import { useObjectDetails } from '../../hooks/useDetailsView';
 import DetailsHeader from './DetailsHeader';
 import DetailsThumbnail from './DetailsThumbnail';
 import ObjectNotFoundView from './ObjectNotFoundView';
+import ObjectDetails from './ObjectDetails';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -53,7 +54,7 @@ function DetailsView(): React.ReactElement {
         return <ObjectNotFoundView loading={loading} />;
     }
 
-    const { name, objectType, retired, identifiers, allowed, thumbnail, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
+    const { name, objectType, identifiers, retired, allowed, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
 
@@ -91,11 +92,20 @@ function DetailsView(): React.ReactElement {
                 name={name}
                 objectType={objectType}
                 path={objectAncestors}
-                retired={retired}
-                disabled={disabled}
             />
-            <Box display='flex' flex={1}>
-                <Box display='flex' flex={1} flexDirection='column'>
+
+            <Box display='flex' mt={2}>
+                <ObjectDetails
+                    name={name}
+                    unit={unit}
+                    project={project}
+                    subject={subject}
+                    item={item}
+                    published // TODO: KARAN: update the resolver
+                    retired={retired}
+                    disabled={disabled}
+                />
+                <Box display='flex' flex={2} flexDirection='column' ml={1}>
                     <IdentifierList
                         viewMode
                         disabled={disabled}
@@ -105,6 +115,12 @@ function DetailsView(): React.ReactElement {
                         onRemove={removeIdentifier}
                         onUpdate={updateIdentifierFields}
                     />
+                </Box>
+            </Box>
+
+            <Box display='flex' flex={1}>
+                <Box display='flex' flex={1} flexDirection='column'>
+
                     <RelatedObjectsList
                         viewMode
                         disabled={disabled}
