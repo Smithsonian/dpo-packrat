@@ -1049,6 +1049,10 @@ export type GetSystemObjectDetailsResult = {
     objectAncestors: Array<Array<RepositoryPath>>;
     sourceObjects: Array<RelatedObject>;
     derivedObjects: Array<RelatedObject>;
+    unit?: Maybe<RepositoryPath>;
+    project?: Maybe<RepositoryPath>;
+    subject?: Maybe<RepositoryPath>;
+    item?: Maybe<RepositoryPath>;
 };
 
 export type GetSourceObjectIdentiferInput = {

@@ -1098,6 +1098,10 @@ export type GetSystemObjectDetailsResult = {
     objectAncestors: Array<Array<RepositoryPath>>;
     sourceObjects: Array<RelatedObject>;
     derivedObjects: Array<RelatedObject>;
+    unit?: Maybe<RepositoryPath>;
+    project?: Maybe<RepositoryPath>;
+    subject?: Maybe<RepositoryPath>;
+    item?: Maybe<RepositoryPath>;
 };
 
 export type GetSourceObjectIdentiferInput = {
@@ -2236,6 +2240,18 @@ export type GetSystemObjectDetailsQuery = (
                 identifiers: Array<(
                     { __typename?: 'IngestIdentifier' }
                     & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+                )>, unit?: Maybe<(
+                    { __typename?: 'RepositoryPath' }
+                    & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
+                )>, project?: Maybe<(
+                    { __typename?: 'RepositoryPath' }
+                    & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
+                )>, subject?: Maybe<(
+                    { __typename?: 'RepositoryPath' }
+                    & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
+                )>, item?: Maybe<(
+                    { __typename?: 'RepositoryPath' }
+                    & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
                 )>, objectAncestors: Array<Array<(
                     { __typename?: 'RepositoryPath' }
                     & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
@@ -3667,6 +3683,26 @@ export const GetSystemObjectDetailsDocument = gql`
     identifiers {
       identifier
       identifierType
+    }
+    unit {
+      idSystemObject
+      name
+      objectType
+    }
+    project {
+      idSystemObject
+      name
+      objectType
+    }
+    subject {
+      idSystemObject
+      name
+      objectType
+    }
+    item {
+      idSystemObject
+      name
+      objectType
     }
     objectAncestors {
       idSystemObject
