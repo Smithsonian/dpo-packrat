@@ -12,6 +12,26 @@ const getSystemObjectDetails = gql`
                 identifier
                 identifierType
             }
+            unit {
+                idSystemObject
+                name
+                objectType
+            }
+            project {
+                idSystemObject
+                name
+                objectType
+            }
+            subject {
+                idSystemObject
+                name
+                objectType
+            }
+            item {
+                idSystemObject
+                name
+                objectType
+            }
             objectAncestors {
                 idSystemObject
                 name
