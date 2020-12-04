@@ -1,4 +1,4 @@
-FROM node:12-alpine AS base
+FROM node:14-alpine AS base
 # Add a work directory
 WORKDIR /app
 # Copy package.json for caching
