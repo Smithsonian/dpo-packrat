@@ -105,7 +105,7 @@ function DetailsView(): React.ReactElement {
                     retired={retired}
                     disabled={disabled}
                 />
-                <Box display='flex' flex={2} flexDirection='column' ml={1}>
+                <Box display='flex' flex={3} flexDirection='column'>
                     <IdentifierList
                         viewMode
                         disabled={disabled}
