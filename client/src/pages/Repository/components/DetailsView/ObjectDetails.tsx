@@ -15,7 +15,7 @@ import { getDetailsUrlForObject } from '../../../../utils/repository';
 const useStyles = makeStyles(({ palette, typography }) => ({
     detail: {
         display: 'flex',
-        height: 20,
+        minHeight: 20,
         width: '100%',
         marginBottom: 8
     },
@@ -55,7 +55,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     );
 
     return (
-        <Box display='flex' flex={1} flexDirection='column'>
+        <Box display='flex' flex={2} flexDirection='column'>
             <Detail label='Name' value={name} clickable={false} />
             <Detail idSystemObject={unit?.idSystemObject} label='Unit' value={unit?.name} />
             <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />
