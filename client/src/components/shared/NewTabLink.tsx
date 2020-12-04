@@ -21,15 +21,19 @@ interface NewTabLinkProps {
 function NewTabLink(props: NewTabLinkProps & LinkProps): React.ReactElement {
     const classes = useStyles(props);
 
+    const customProps = {
+        onClick: event => event.stopPropagation()
+    };
+
     if (props.children) {
         return (
-            <Link target='_blank' className={classes.link} {...props}>
+            <Link target='_blank' className={classes.link} {...customProps} {...props}>
                 {props.children}
             </Link>
         );
     }
 
-    return <Link target='_blank' className={classes.link} {...props} />;
+    return <Link target='_blank' className={classes.link} {...customProps} {...props} />;
 }
 
 export default NewTabLink;

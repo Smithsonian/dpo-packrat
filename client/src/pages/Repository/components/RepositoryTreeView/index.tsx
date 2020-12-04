@@ -123,6 +123,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
             const label: React.ReactNode = (
                 <TreeLabel
+                    idSystemObject={idSystemObject}
                     label={name}
                     renderSelected={isModal}
                     selected={isSelected}
