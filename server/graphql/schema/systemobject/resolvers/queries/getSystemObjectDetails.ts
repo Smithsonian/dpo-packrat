@@ -23,6 +23,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const systemObject: SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
     const derivedObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Derived);
+    const publishedState: string = await getPublishedState(idSystemObject);
 
     const identifiers = await getIngestIdentifiers(idSystemObject);
 
@@ -45,6 +46,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         retired: systemObject.Retired,
         objectType: oID.eObjectType,
         allowed: true, // TODO: True until Access control is implemented (Post MVP)
+        publishedState,
         thumbnail: null,
         unit,
         project,
@@ -55,6 +57,22 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         sourceObjects,
         derivedObjects
     };
+}
+
+enum ePublishedState {
+    eNotPublished = 'Not Published',
+    eViewOnly = 'View Only',
+    eViewDownloadRestriction = 'View and Download with usage restrictions',
+    eViewDownloadCC0 = 'View and Download CC0'
+}
+
+// TODO: define system object version cache
+async function getPublishedState(idSystemObject: number): Promise<ePublishedState> {
+    const systemObjectVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
+
+    if (!systemObjectVersions || !systemObjectVersions?.length) return ePublishedState.eNotPublished;
+
+    return ePublishedState.eViewOnly;
 }
 
 async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {

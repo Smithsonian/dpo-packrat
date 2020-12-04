@@ -1093,6 +1093,7 @@ export type GetSystemObjectDetailsResult = {
     retired: Scalars['Boolean'];
     objectType: Scalars['Int'];
     allowed: Scalars['Boolean'];
+    publishedState: Scalars['String'];
     thumbnail?: Maybe<Scalars['String']>;
     identifiers: Array<IngestIdentifier>;
     objectAncestors: Array<Array<RepositoryPath>>;
@@ -2235,7 +2236,7 @@ export type GetSystemObjectDetailsQuery = (
     & {
         getSystemObjectDetails: (
             { __typename?: 'GetSystemObjectDetailsResult' }
-            & Pick<GetSystemObjectDetailsResult, 'name' | 'retired' | 'objectType' | 'allowed' | 'thumbnail'>
+            & Pick<GetSystemObjectDetailsResult, 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'>
             & {
                 identifiers: Array<(
                     { __typename?: 'IngestIdentifier' }
@@ -3679,6 +3680,7 @@ export const GetSystemObjectDetailsDocument = gql`
     retired
     objectType
     allowed
+    publishedState
     thumbnail
     identifiers {
       identifier

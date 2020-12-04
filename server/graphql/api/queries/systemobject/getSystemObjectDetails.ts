@@ -7,6 +7,7 @@ const getSystemObjectDetails = gql`
             retired
             objectType
             allowed
+            publishedState
             thumbnail
             identifiers {
                 identifier

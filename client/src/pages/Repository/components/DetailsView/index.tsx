@@ -54,7 +54,7 @@ function DetailsView(): React.ReactElement {
         return <ObjectNotFoundView loading={loading} />;
     }
 
-    const { name, objectType, identifiers, retired, allowed, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
+    const { name, objectType, identifiers, retired, allowed, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
 
@@ -101,7 +101,7 @@ function DetailsView(): React.ReactElement {
                     project={project}
                     subject={subject}
                     item={item}
-                    published // TODO: KARAN: update the resolver
+                    publishedState={publishedState}
                     retired={retired}
                     disabled={disabled}
                 />
