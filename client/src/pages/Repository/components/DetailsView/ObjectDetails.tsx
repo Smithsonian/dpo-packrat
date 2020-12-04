@@ -35,14 +35,12 @@ interface ObjectDetailsProps {
     subject?: RepositoryPath | null;
     item?: RepositoryPath | null;
     disabled: boolean;
-    published: boolean;
+    publishedState: string;
     retired: boolean;
 }
 
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
-    const { name, unit, project, subject, item, published, retired, disabled } = props;
-
-    const publishedLabel = published ? 'Published' : 'Unpublished';
+    const { name, unit, project, subject, item, publishedState, retired, disabled } = props;
 
     const updateRetired = () => {
         if (disabled) return;
@@ -61,7 +59,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />
             <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />
             <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />
-            <Detail label='Publication Status' value={publishedLabel} clickable={false} />
+            <Detail label='Publication Status' value={publishedState} clickable={false} />
             <Detail label='Retired' valueComponent={retiredValueComponent} />
         </Box>
     );

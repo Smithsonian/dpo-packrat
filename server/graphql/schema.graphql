@@ -801,6 +801,7 @@ type GetSystemObjectDetailsResult {
   retired: Boolean!
   objectType: Int!
   allowed: Boolean!
+  publishedState: String!
   thumbnail: String
   identifiers: [IngestIdentifier!]!
   objectAncestors: [[RepositoryPath!]!]!
