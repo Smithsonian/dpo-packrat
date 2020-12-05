@@ -1,3 +1,5 @@
+scalar DateTime
+
 type Query {
     getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
     getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
@@ -13,6 +15,15 @@ type RepositoryPath {
     objectType: Int!
 }
 
+type AssetDetail {
+    name: String!
+    path: String!
+    assetType: Int!
+    version: Int!
+    dateCreated: DateTime!
+    size: Int!
+}
+
 type GetSystemObjectDetailsResult {
     name: String!
     retired: Boolean!
@@ -20,6 +31,7 @@ type GetSystemObjectDetailsResult {
     allowed: Boolean!
     publishedState: String!
     thumbnail: String
+    assetDetails: [AssetDetail!]!
     identifiers: [IngestIdentifier!]!
     objectAncestors: [[RepositoryPath!]!]!
     sourceObjects: [RelatedObject!]!
