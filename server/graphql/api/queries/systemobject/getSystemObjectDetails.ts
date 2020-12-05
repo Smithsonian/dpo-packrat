@@ -9,6 +9,14 @@ const getSystemObjectDetails = gql`
             allowed
             publishedState
             thumbnail
+            assetDetails {
+                name
+                path
+                assetType
+                version
+                dateCreated
+                size
+            }
             identifiers {
                 identifier
                 identifierType

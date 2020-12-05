@@ -1087,6 +1087,16 @@ export type RepositoryPath = {
     objectType: Scalars['Int'];
 };
 
+export type AssetDetail = {
+    __typename?: 'AssetDetail';
+    name: Scalars['String'];
+    path: Scalars['String'];
+    assetType: Scalars['Int'];
+    version: Scalars['Int'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
 export type GetSystemObjectDetailsResult = {
     __typename?: 'GetSystemObjectDetailsResult';
     name: Scalars['String'];
@@ -1095,6 +1105,7 @@ export type GetSystemObjectDetailsResult = {
     allowed: Scalars['Boolean'];
     publishedState: Scalars['String'];
     thumbnail?: Maybe<Scalars['String']>;
+    assetDetails: Array<AssetDetail>;
     identifiers: Array<IngestIdentifier>;
     objectAncestors: Array<Array<RepositoryPath>>;
     sourceObjects: Array<RelatedObject>;
@@ -2238,7 +2249,10 @@ export type GetSystemObjectDetailsQuery = (
             { __typename?: 'GetSystemObjectDetailsResult' }
             & Pick<GetSystemObjectDetailsResult, 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'>
             & {
-                identifiers: Array<(
+                assetDetails: Array<(
+                    { __typename?: 'AssetDetail' }
+                    & Pick<AssetDetail, 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
+                )>, identifiers: Array<(
                     { __typename?: 'IngestIdentifier' }
                     & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
                 )>, unit?: Maybe<(
@@ -3682,6 +3696,14 @@ export const GetSystemObjectDetailsDocument = gql`
     allowed
     publishedState
     thumbnail
+    assetDetails {
+      name
+      path
+      assetType
+      version
+      dateCreated
+      size
+    }
     identifiers {
       identifier
       identifierType

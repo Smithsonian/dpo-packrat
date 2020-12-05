@@ -1083,6 +1083,16 @@ export type RepositoryPath = {
     objectType: Scalars['Int'];
 };
 
+export type AssetDetail = {
+    __typename?: 'AssetDetail';
+    name: Scalars['String'];
+    path: Scalars['String'];
+    assetType: Scalars['Int'];
+    version: Scalars['Int'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
 export type GetSystemObjectDetailsResult = {
     __typename?: 'GetSystemObjectDetailsResult';
     name: Scalars['String'];
@@ -1091,6 +1101,7 @@ export type GetSystemObjectDetailsResult = {
     allowed: Scalars['Boolean'];
     publishedState: Scalars['String'];
     thumbnail?: Maybe<Scalars['String']>;
+    assetDetails: Array<AssetDetail>;
     identifiers: Array<IngestIdentifier>;
     objectAncestors: Array<Array<RepositoryPath>>;
     sourceObjects: Array<RelatedObject>;

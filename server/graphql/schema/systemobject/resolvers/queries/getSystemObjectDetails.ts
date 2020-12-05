@@ -2,6 +2,7 @@ import * as CACHE from '../../../../../cache';
 import * as DBAPI from '../../../../../db';
 import { eObjectGraphMode, eSystemObjectType } from '../../../../../db';
 import {
+    AssetDetail,
     GetSystemObjectDetailsResult,
     IngestIdentifier,
     QueryGetSystemObjectDetailsArgs,
@@ -24,7 +25,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
     const derivedObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Derived);
     const publishedState: string = await getPublishedState(idSystemObject);
-
+    const assetDetails: AssetDetail[] = await getAssetDetails(idSystemObject);
     const identifiers = await getIngestIdentifiers(idSystemObject);
 
     if (!oID) {
@@ -47,6 +48,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         objectType: oID.eObjectType,
         allowed: true, // TODO: True until Access control is implemented (Post MVP)
         publishedState,
+        assetDetails,
         thumbnail: null,
         unit,
         project,
@@ -57,6 +59,32 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         sourceObjects,
         derivedObjects
     };
+}
+
+async function getAssetDetails(idSystemObject: number): Promise<AssetDetail[]> {
+    const assetDetails: AssetDetail[] = [];
+    const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(idSystemObject);
+    if (assets) {
+        for (const asset of assets) {
+            const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromAsset(asset.idAsset);
+            if (assetVersions) {
+                for (const assetVersion of assetVersions) {
+                    const assetDetail: AssetDetail = {
+                        name: assetVersion.FileName,
+                        path: asset.FilePath,
+                        assetType: asset.idVAssetType,
+                        version: assetVersion.Version,
+                        dateCreated: assetVersion.DateCreated,
+                        size: assetVersion.StorageSize
+                    };
+
+                    assetDetails.push(assetDetail);
+                }
+            }
+        }
+    }
+
+    return assetDetails;
 }
 
 enum ePublishedState {
