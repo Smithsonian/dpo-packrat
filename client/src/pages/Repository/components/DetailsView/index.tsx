@@ -9,15 +9,14 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router';
 import IdentifierList from '../../../../components/shared/IdentifierList';
 import { parseIdentifiersToState, useVocabularyStore } from '../../../../store';
-import { RelatedObjectType } from '../../../../types/graphql';
 import { eVocabularySetID } from '../../../../types/server';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
-import RelatedObjectsList from '../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
 import { useObjectDetails } from '../../hooks/useDetailsView';
 import DetailsHeader from './DetailsHeader';
+import DetailsTab from './DetailsTab';
 import DetailsThumbnail from './DetailsThumbnail';
-import ObjectNotFoundView from './ObjectNotFoundView';
 import ObjectDetails from './ObjectDetails';
+import ObjectNotFoundView from './ObjectNotFoundView';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -54,7 +53,7 @@ function DetailsView(): React.ReactElement {
         return <ObjectNotFoundView loading={loading} />;
     }
 
-    const { name, objectType, identifiers, retired, allowed, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
+    const { name, objectType, identifiers, retired, allowed, assetDetails, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
 
@@ -119,23 +118,14 @@ function DetailsView(): React.ReactElement {
             </Box>
 
             <Box display='flex' flex={1}>
-                <Box display='flex' flex={1} flexDirection='column'>
-
-                    <RelatedObjectsList
-                        viewMode
-                        disabled={disabled}
-                        type={RelatedObjectType.Source}
-                        relatedObjects={sourceObjects}
-                        onAdd={onAddSourceObject}
-                    />
-                    <RelatedObjectsList
-                        viewMode
-                        disabled={disabled}
-                        type={RelatedObjectType.Derived}
-                        relatedObjects={derivedObjects}
-                        onAdd={onAddDerivedObject}
-                    />
-                </Box>
+                <DetailsTab
+                    disabled={disabled}
+                    assetDetails={assetDetails}
+                    sourceObjects={sourceObjects}
+                    derivedObjects={derivedObjects}
+                    onAddSourceObject={onAddSourceObject}
+                    onAddDerivedObject={onAddDerivedObject}
+                />
                 <Box display='flex' flex={1} padding={2}>
                     <DetailsThumbnail thumbnail={thumbnail} />
                 </Box>
