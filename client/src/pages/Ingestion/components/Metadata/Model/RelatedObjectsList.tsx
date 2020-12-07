@@ -17,7 +17,7 @@ import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared
 const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
-        width: '52vw',
+        width: (viewMode: boolean) => viewMode ? undefined : '52vw',
         flexDirection: 'column',
         borderRadius: 5,
         padding: 10,
