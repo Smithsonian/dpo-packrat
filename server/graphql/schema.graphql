@@ -2,6 +2,7 @@ type Query {
   areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
   getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
+  getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
   getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
@@ -26,6 +27,7 @@ type Query {
   getUnit(input: GetUnitInput!): GetUnitResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
+  getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
   getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
@@ -796,15 +798,6 @@ type RepositoryPath {
   objectType: Int!
 }
 
-type AssetDetail {
-  name: String!
-  path: String!
-  assetType: Int!
-  version: Int!
-  dateCreated: DateTime!
-  size: Int!
-}
-
 type GetSystemObjectDetailsResult {
   name: String!
   retired: Boolean!
@@ -812,7 +805,6 @@ type GetSystemObjectDetailsResult {
   allowed: Boolean!
   publishedState: String!
   thumbnail: String
-  assetDetails: [AssetDetail!]!
   identifiers: [IngestIdentifier!]!
   objectAncestors: [[RepositoryPath!]!]!
   sourceObjects: [RelatedObject!]!
@@ -834,6 +826,41 @@ type SourceObjectIdentifier {
 
 type GetSourceObjectIdentiferResult {
   sourceObjectIdentifiers: [SourceObjectIdentifier!]!
+}
+
+type AssetDetail {
+  idSystemObject: Int!
+  name: String!
+  path: String!
+  assetType: Int!
+  version: Int!
+  dateCreated: DateTime!
+  size: Int!
+}
+
+input GetAssetDetailsForSystemObjectInput {
+  idSystemObject: Int!
+}
+
+type GetAssetDetailsForSystemObjectResult {
+  assetDetails: [AssetDetail!]!
+}
+
+type DetailVersion {
+  idSystemObject: Int!
+  version: Int!
+  name: String!
+  creator: String!
+  dateCreated: DateTime!
+  size: Int!
+}
+
+input GetVersionsForSystemObjectInput {
+  idSystemObject: Int!
+}
+
+type GetVersionsForSystemObjectResult {
+  versions: [DetailVersion!]!
 }
 
 type SystemObject {

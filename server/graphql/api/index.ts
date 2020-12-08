@@ -94,7 +94,11 @@ import {
     GetSourceObjectIdentiferInput,
     GetSourceObjectIdentiferResult,
     GetSystemObjectDetailsInput,
-    GetSystemObjectDetailsResult
+    GetSystemObjectDetailsResult,
+    GetAssetDetailsForSystemObjectInput,
+    GetAssetDetailsForSystemObjectResult,
+    GetVersionsForSystemObjectInput,
+    GetVersionsForSystemObjectResult,
 } from '../../types/graphql';
 
 // Queries
@@ -129,6 +133,8 @@ import getIntermediaryFile from './queries/scene/getIntermediaryFile';
 import getObjectChildren from './queries/repository/getObjectChildren';
 import getSourceObjectIdentifer from './queries/systemobject/getSourceObjectIdentifer';
 import getSystemObjectDetails from './queries/systemobject/getSystemObjectDetails';
+import getAssetDetailsForSystemObject from './queries/systemobject/getAssetDetailsForSystemObject';
+import getVersionsForSystemObject from './queries/systemobject/getVersionsForSystemObject';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -193,7 +199,9 @@ const allQueries = {
     discardUploadedAssetVersions,
     getObjectChildren,
     getSourceObjectIdentifer,
-    getSystemObjectDetails
+    getSystemObjectDetails,
+    getAssetDetailsForSystemObject,
+    getVersionsForSystemObject
 };
 
 type GraphQLRequest = {
@@ -536,6 +544,26 @@ class GraphQLApi {
 
     async getSystemObjectDetails(input: GetSystemObjectDetailsInput, context?: Context): Promise<GetSystemObjectDetailsResult> {
         const operationName = 'getSystemObjectDetails';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput, context?: Context): Promise<GetAssetDetailsForSystemObjectResult> {
+        const operationName = 'getAssetDetailsForSystemObject';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getVersionsForSystemObject(input: GetVersionsForSystemObjectInput, context?: Context): Promise<GetVersionsForSystemObjectResult> {
+        const operationName = 'getVersionsForSystemObject';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

@@ -3,6 +3,8 @@ scalar DateTime
 type Query {
     getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
     getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
+    getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
+    getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
 }
 
 input GetSystemObjectDetailsInput {
@@ -15,15 +17,6 @@ type RepositoryPath {
     objectType: Int!
 }
 
-type AssetDetail {
-    name: String!
-    path: String!
-    assetType: Int!
-    version: Int!
-    dateCreated: DateTime!
-    size: Int!
-}
-
 type GetSystemObjectDetailsResult {
     name: String!
     retired: Boolean!
@@ -31,7 +24,6 @@ type GetSystemObjectDetailsResult {
     allowed: Boolean!
     publishedState: String!
     thumbnail: String
-    assetDetails: [AssetDetail!]!
     identifiers: [IngestIdentifier!]!
     objectAncestors: [[RepositoryPath!]!]!
     sourceObjects: [RelatedObject!]!
@@ -53,4 +45,39 @@ type SourceObjectIdentifier {
 
 type GetSourceObjectIdentiferResult {
     sourceObjectIdentifiers: [SourceObjectIdentifier!]!
+}
+
+type AssetDetail {
+    idSystemObject: Int!
+    name: String!
+    path: String!
+    assetType: Int!
+    version: Int!
+    dateCreated: DateTime!
+    size: Int!
+}
+
+input GetAssetDetailsForSystemObjectInput {
+    idSystemObject: Int!
+}
+
+type GetAssetDetailsForSystemObjectResult {
+    assetDetails: [AssetDetail!]!
+}
+
+type DetailVersion {
+    idSystemObject: Int!
+    version: Int!
+    name: String!
+    creator: String!
+    dateCreated: DateTime!
+    size: Int!
+}
+
+input GetVersionsForSystemObjectInput {
+    idSystemObject: Int!
+}
+
+type GetVersionsForSystemObjectResult {
+    versions: [DetailVersion!]!
 }

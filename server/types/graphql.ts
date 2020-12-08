@@ -17,6 +17,7 @@ export type Query = {
     areCameraSettingsUniform: AreCameraSettingsUniformResult;
     getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
+    getAssetDetailsForSystemObject: GetAssetDetailsForSystemObjectResult;
     getAssetVersionsDetails: GetAssetVersionsDetailsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
@@ -41,6 +42,7 @@ export type Query = {
     getUnit: GetUnitResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getUser: GetUserResult;
+    getVersionsForSystemObject: GetVersionsForSystemObjectResult;
     getVocabulary: GetVocabularyResult;
     getVocabularyEntries: GetVocabularyEntriesResult;
     getWorkflow: GetWorkflowResult;
@@ -60,6 +62,11 @@ export type QueryGetAccessPolicyArgs = {
 
 export type QueryGetAssetArgs = {
     input: GetAssetInput;
+};
+
+
+export type QueryGetAssetDetailsForSystemObjectArgs = {
+    input: GetAssetDetailsForSystemObjectInput;
 };
 
 
@@ -170,6 +177,11 @@ export type QueryGetUnitArgs = {
 
 export type QueryGetUserArgs = {
     input: GetUserInput;
+};
+
+
+export type QueryGetVersionsForSystemObjectArgs = {
+    input: GetVersionsForSystemObjectInput;
 };
 
 
@@ -1083,16 +1095,6 @@ export type RepositoryPath = {
     objectType: Scalars['Int'];
 };
 
-export type AssetDetail = {
-    __typename?: 'AssetDetail';
-    name: Scalars['String'];
-    path: Scalars['String'];
-    assetType: Scalars['Int'];
-    version: Scalars['Int'];
-    dateCreated: Scalars['DateTime'];
-    size: Scalars['Int'];
-};
-
 export type GetSystemObjectDetailsResult = {
     __typename?: 'GetSystemObjectDetailsResult';
     name: Scalars['String'];
@@ -1101,7 +1103,6 @@ export type GetSystemObjectDetailsResult = {
     allowed: Scalars['Boolean'];
     publishedState: Scalars['String'];
     thumbnail?: Maybe<Scalars['String']>;
-    assetDetails: Array<AssetDetail>;
     identifiers: Array<IngestIdentifier>;
     objectAncestors: Array<Array<RepositoryPath>>;
     sourceObjects: Array<RelatedObject>;
@@ -1125,6 +1126,45 @@ export type SourceObjectIdentifier = {
 export type GetSourceObjectIdentiferResult = {
     __typename?: 'GetSourceObjectIdentiferResult';
     sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
+};
+
+export type AssetDetail = {
+    __typename?: 'AssetDetail';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    path: Scalars['String'];
+    assetType: Scalars['Int'];
+    version: Scalars['Int'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
+export type GetAssetDetailsForSystemObjectInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type GetAssetDetailsForSystemObjectResult = {
+    __typename?: 'GetAssetDetailsForSystemObjectResult';
+    assetDetails: Array<AssetDetail>;
+};
+
+export type DetailVersion = {
+    __typename?: 'DetailVersion';
+    idSystemObject: Scalars['Int'];
+    version: Scalars['Int'];
+    name: Scalars['String'];
+    creator: Scalars['String'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
+export type GetVersionsForSystemObjectInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type GetVersionsForSystemObjectResult = {
+    __typename?: 'GetVersionsForSystemObjectResult';
+    versions: Array<DetailVersion>;
 };
 
 export type SystemObject = {

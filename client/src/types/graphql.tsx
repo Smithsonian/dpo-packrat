@@ -21,6 +21,7 @@ export type Query = {
     areCameraSettingsUniform: AreCameraSettingsUniformResult;
     getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
+    getAssetDetailsForSystemObject: GetAssetDetailsForSystemObjectResult;
     getAssetVersionsDetails: GetAssetVersionsDetailsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
@@ -45,6 +46,7 @@ export type Query = {
     getUnit: GetUnitResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getUser: GetUserResult;
+    getVersionsForSystemObject: GetVersionsForSystemObjectResult;
     getVocabulary: GetVocabularyResult;
     getVocabularyEntries: GetVocabularyEntriesResult;
     getWorkflow: GetWorkflowResult;
@@ -64,6 +66,11 @@ export type QueryGetAccessPolicyArgs = {
 
 export type QueryGetAssetArgs = {
     input: GetAssetInput;
+};
+
+
+export type QueryGetAssetDetailsForSystemObjectArgs = {
+    input: GetAssetDetailsForSystemObjectInput;
 };
 
 
@@ -174,6 +181,11 @@ export type QueryGetUnitArgs = {
 
 export type QueryGetUserArgs = {
     input: GetUserInput;
+};
+
+
+export type QueryGetVersionsForSystemObjectArgs = {
+    input: GetVersionsForSystemObjectInput;
 };
 
 
@@ -1087,16 +1099,6 @@ export type RepositoryPath = {
     objectType: Scalars['Int'];
 };
 
-export type AssetDetail = {
-    __typename?: 'AssetDetail';
-    name: Scalars['String'];
-    path: Scalars['String'];
-    assetType: Scalars['Int'];
-    version: Scalars['Int'];
-    dateCreated: Scalars['DateTime'];
-    size: Scalars['Int'];
-};
-
 export type GetSystemObjectDetailsResult = {
     __typename?: 'GetSystemObjectDetailsResult';
     name: Scalars['String'];
@@ -1105,7 +1107,6 @@ export type GetSystemObjectDetailsResult = {
     allowed: Scalars['Boolean'];
     publishedState: Scalars['String'];
     thumbnail?: Maybe<Scalars['String']>;
-    assetDetails: Array<AssetDetail>;
     identifiers: Array<IngestIdentifier>;
     objectAncestors: Array<Array<RepositoryPath>>;
     sourceObjects: Array<RelatedObject>;
@@ -1129,6 +1130,45 @@ export type SourceObjectIdentifier = {
 export type GetSourceObjectIdentiferResult = {
     __typename?: 'GetSourceObjectIdentiferResult';
     sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
+};
+
+export type AssetDetail = {
+    __typename?: 'AssetDetail';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    path: Scalars['String'];
+    assetType: Scalars['Int'];
+    version: Scalars['Int'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
+export type GetAssetDetailsForSystemObjectInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type GetAssetDetailsForSystemObjectResult = {
+    __typename?: 'GetAssetDetailsForSystemObjectResult';
+    assetDetails: Array<AssetDetail>;
+};
+
+export type DetailVersion = {
+    __typename?: 'DetailVersion';
+    idSystemObject: Scalars['Int'];
+    version: Scalars['Int'];
+    name: Scalars['String'];
+    creator: Scalars['String'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
+export type GetVersionsForSystemObjectInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type GetVersionsForSystemObjectResult = {
+    __typename?: 'GetVersionsForSystemObjectResult';
+    versions: Array<DetailVersion>;
 };
 
 export type SystemObject = {
@@ -2217,6 +2257,26 @@ export type GetSceneQuery = (
     }
 );
 
+export type GetAssetDetailsForSystemObjectQueryVariables = Exact<{
+    input: GetAssetDetailsForSystemObjectInput;
+}>;
+
+
+export type GetAssetDetailsForSystemObjectQuery = (
+    { __typename?: 'Query' }
+    & {
+        getAssetDetailsForSystemObject: (
+            { __typename?: 'GetAssetDetailsForSystemObjectResult' }
+            & {
+                assetDetails: Array<(
+                    { __typename?: 'AssetDetail' }
+                    & Pick<AssetDetail, 'idSystemObject' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
+                )>
+            }
+        )
+    }
+);
+
 export type GetSourceObjectIdentiferQueryVariables = Exact<{
     input: GetSourceObjectIdentiferInput;
 }>;
@@ -2249,10 +2309,7 @@ export type GetSystemObjectDetailsQuery = (
             { __typename?: 'GetSystemObjectDetailsResult' }
             & Pick<GetSystemObjectDetailsResult, 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'>
             & {
-                assetDetails: Array<(
-                    { __typename?: 'AssetDetail' }
-                    & Pick<AssetDetail, 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
-                )>, identifiers: Array<(
+                identifiers: Array<(
                     { __typename?: 'IngestIdentifier' }
                     & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
                 )>, unit?: Maybe<(
@@ -2276,6 +2333,26 @@ export type GetSystemObjectDetailsQuery = (
                 )>, derivedObjects: Array<(
                     { __typename?: 'RelatedObject' }
                     & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetVersionsForSystemObjectQueryVariables = Exact<{
+    input: GetVersionsForSystemObjectInput;
+}>;
+
+
+export type GetVersionsForSystemObjectQuery = (
+    { __typename?: 'Query' }
+    & {
+        getVersionsForSystemObject: (
+            { __typename?: 'GetVersionsForSystemObjectResult' }
+            & {
+                versions: Array<(
+                    { __typename?: 'DetailVersion' }
+                    & Pick<DetailVersion, 'idSystemObject' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size'>
                 )>
             }
         )
@@ -3651,6 +3728,47 @@ export function useGetSceneLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetSceneQueryHookResult = ReturnType<typeof useGetSceneQuery>;
 export type GetSceneLazyQueryHookResult = ReturnType<typeof useGetSceneLazyQuery>;
 export type GetSceneQueryResult = Apollo.QueryResult<GetSceneQuery, GetSceneQueryVariables>;
+export const GetAssetDetailsForSystemObjectDocument = gql`
+    query getAssetDetailsForSystemObject($input: GetAssetDetailsForSystemObjectInput!) {
+  getAssetDetailsForSystemObject(input: $input) {
+    assetDetails {
+      idSystemObject
+      name
+      path
+      assetType
+      version
+      dateCreated
+      size
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetAssetDetailsForSystemObjectQuery__
+ *
+ * To run a query within a React component, call `useGetAssetDetailsForSystemObjectQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAssetDetailsForSystemObjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAssetDetailsForSystemObjectQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetAssetDetailsForSystemObjectQuery(baseOptions?: Apollo.QueryHookOptions<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>) {
+    return Apollo.useQuery<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>(GetAssetDetailsForSystemObjectDocument, baseOptions);
+}
+export function useGetAssetDetailsForSystemObjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>) {
+    return Apollo.useLazyQuery<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>(GetAssetDetailsForSystemObjectDocument, baseOptions);
+}
+export type GetAssetDetailsForSystemObjectQueryHookResult = ReturnType<typeof useGetAssetDetailsForSystemObjectQuery>;
+export type GetAssetDetailsForSystemObjectLazyQueryHookResult = ReturnType<typeof useGetAssetDetailsForSystemObjectLazyQuery>;
+export type GetAssetDetailsForSystemObjectQueryResult = Apollo.QueryResult<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>;
 export const GetSourceObjectIdentiferDocument = gql`
     query getSourceObjectIdentifer($input: GetSourceObjectIdentiferInput!) {
   getSourceObjectIdentifer(input: $input) {
@@ -3696,14 +3814,6 @@ export const GetSystemObjectDetailsDocument = gql`
     allowed
     publishedState
     thumbnail
-    assetDetails {
-      name
-      path
-      assetType
-      version
-      dateCreated
-      size
-    }
     identifiers {
       identifier
       identifierType
@@ -3774,6 +3884,46 @@ export function useGetSystemObjectDetailsLazyQuery(baseOptions?: Apollo.LazyQuer
 export type GetSystemObjectDetailsQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsQuery>;
 export type GetSystemObjectDetailsLazyQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsLazyQuery>;
 export type GetSystemObjectDetailsQueryResult = Apollo.QueryResult<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>;
+export const GetVersionsForSystemObjectDocument = gql`
+    query getVersionsForSystemObject($input: GetVersionsForSystemObjectInput!) {
+  getVersionsForSystemObject(input: $input) {
+    versions {
+      idSystemObject
+      version
+      name
+      creator
+      dateCreated
+      size
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetVersionsForSystemObjectQuery__
+ *
+ * To run a query within a React component, call `useGetVersionsForSystemObjectQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetVersionsForSystemObjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetVersionsForSystemObjectQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetVersionsForSystemObjectQuery(baseOptions?: Apollo.QueryHookOptions<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>) {
+    return Apollo.useQuery<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>(GetVersionsForSystemObjectDocument, baseOptions);
+}
+export function useGetVersionsForSystemObjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>) {
+    return Apollo.useLazyQuery<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>(GetVersionsForSystemObjectDocument, baseOptions);
+}
+export type GetVersionsForSystemObjectQueryHookResult = ReturnType<typeof useGetVersionsForSystemObjectQuery>;
+export type GetVersionsForSystemObjectLazyQueryHookResult = ReturnType<typeof useGetVersionsForSystemObjectLazyQuery>;
+export type GetVersionsForSystemObjectQueryResult = Apollo.QueryResult<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>;
 export const GetIngestionItemsForSubjectsDocument = gql`
     query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
   getIngestionItemsForSubjects(input: $input) {
