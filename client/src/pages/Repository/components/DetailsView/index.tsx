@@ -45,7 +45,8 @@ function DetailsView(): React.ReactElement {
     const params = useParams<DetailsParams>();
     const [modalOpen, setModalOpen] = useState(false);
 
-    const { data, loading } = useObjectDetails(Number.parseInt(params.idSystemObject, 10));
+    const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
+    const { data, loading } = useObjectDetails(idSystemObject);
 
     const getEntries = useVocabularyStore(state => state.getEntries);
 
@@ -53,7 +54,7 @@ function DetailsView(): React.ReactElement {
         return <ObjectNotFoundView loading={loading} />;
     }
 
-    const { name, objectType, identifiers, retired, allowed, assetDetails, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
+    const { name, objectType, identifiers, retired, allowed, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
 
@@ -120,7 +121,8 @@ function DetailsView(): React.ReactElement {
             <Box display='flex' flex={1}>
                 <DetailsTab
                     disabled={disabled}
-                    assetDetails={assetDetails}
+                    idSystemObject={idSystemObject}
+                    objectType={objectType}
                     sourceObjects={sourceObjects}
                     derivedObjects={derivedObjects}
                     onAddSourceObject={onAddSourceObject}
