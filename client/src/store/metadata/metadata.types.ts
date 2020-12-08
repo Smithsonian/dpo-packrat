@@ -3,7 +3,7 @@
  *
  * Type definitions for the metadata store.
  */
-import { RelatedObject, ReferenceModel, ReferenceModelAction, AssetDetail } from '../../types/graphql';
+import { AssetDetail, DetailVersion, ReferenceModel, ReferenceModelAction, RelatedObject } from '../../types/graphql';
 import { IngestionFile } from '../upload';
 
 export type StateMetadata = {
@@ -135,6 +135,8 @@ export type StateRelatedObject = RelatedObject;
 export type StateReferenceModel = ReferenceModel;
 
 export type StateAssetDetail = AssetDetail;
+
+export type StateDetailVersion = DetailVersion;
 
 export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields;
 
