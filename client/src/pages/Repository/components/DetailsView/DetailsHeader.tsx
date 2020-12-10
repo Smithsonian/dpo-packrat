@@ -51,6 +51,9 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
             <Box display='flex' mr={4}>
                 <Typography className={classes.header} variant='h5'>{getTermForSystemObjectType(objectType)}</Typography>
             </Box>
+            <Box className={classes.name} mr={4}>
+                <Typography>{name}</Typography>
+            </Box>
             <Box display='flex' flex={1} justifyContent='flex-end'>
                 {!!path.length && <BreadcrumbsView highlighted items={path} />}
             </Box>

@@ -96,7 +96,6 @@ function DetailsView(): React.ReactElement {
 
             <Box display='flex' mt={2}>
                 <ObjectDetails
-                    name={name}
                     unit={unit}
                     project={project}
                     subject={subject}
