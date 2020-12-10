@@ -29,7 +29,6 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 }));
 
 interface ObjectDetailsProps {
-    name: string,
     unit?: RepositoryPath | null;
     project?: RepositoryPath | null;
     subject?: RepositoryPath | null;
@@ -40,7 +39,7 @@ interface ObjectDetailsProps {
 }
 
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
-    const { name, unit, project, subject, item, publishedState, retired, disabled } = props;
+    const { unit, project, subject, item, publishedState, retired, disabled } = props;
 
     const updateRetired = () => {
         if (disabled) return;
@@ -54,7 +53,6 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
 
     return (
         <Box display='flex' flex={2} flexDirection='column'>
-            <Detail label='Name' value={name} clickable={false} />
             <Detail idSystemObject={unit?.idSystemObject} label='Unit' value={unit?.name} />
             <Detail idSystemObject={project?.idSystemObject} label='Project' value={project?.name} />
             <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />
