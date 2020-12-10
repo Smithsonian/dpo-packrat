@@ -5,6 +5,28 @@ type Query {
     getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
     getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
     getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
+    getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
+}
+
+input GetDetailsTabDataForObjectInput {
+    idSystemObject: Int!
+    objectType: Int!
+}
+
+type GetDetailsTabDataForObjectResult {
+    Unit: Unit
+    Project: Project
+    Subject: Subject
+    Item: Item
+    CaptureData: IngestPhotogrammetry
+    Model: IngestModel
+    Scene: Scene
+    IntermediaryFile: IntermediaryFile
+    ProjectDocumentation: ProjectDocumentation
+    Asset: Asset
+    AssetVersion: AssetVersion
+    Actor: Actor
+    Stakeholder: Stakeholder
 }
 
 input GetSystemObjectDetailsInput {

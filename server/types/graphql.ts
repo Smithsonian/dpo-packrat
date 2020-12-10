@@ -23,6 +23,7 @@ export type Query = {
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getCurrentUser: GetCurrentUserResult;
+    getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getIntermediaryFile: GetIntermediaryFileResult;
@@ -87,6 +88,11 @@ export type QueryGetCaptureDataPhotoArgs = {
 
 export type QueryGetContentsForAssetVersionsArgs = {
     input: GetContentsForAssetVersionsInput;
+};
+
+
+export type QueryGetDetailsTabDataForObjectArgs = {
+    input: GetDetailsTabDataForObjectInput;
 };
 
 
@@ -1082,6 +1088,28 @@ export type IntermediaryFile = {
     idAsset: Scalars['Int'];
     Asset?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type GetDetailsTabDataForObjectInput = {
+    idSystemObject: Scalars['Int'];
+    objectType: Scalars['Int'];
+};
+
+export type GetDetailsTabDataForObjectResult = {
+    __typename?: 'GetDetailsTabDataForObjectResult';
+    Unit?: Maybe<Unit>;
+    Project?: Maybe<Project>;
+    Subject?: Maybe<Subject>;
+    Item?: Maybe<Item>;
+    CaptureData?: Maybe<IngestPhotogrammetry>;
+    Model?: Maybe<IngestModel>;
+    Scene?: Maybe<Scene>;
+    IntermediaryFile?: Maybe<IntermediaryFile>;
+    ProjectDocumentation?: Maybe<ProjectDocumentation>;
+    Asset?: Maybe<Asset>;
+    AssetVersion?: Maybe<AssetVersion>;
+    Actor?: Maybe<Actor>;
+    Stakeholder?: Maybe<Stakeholder>;
 };
 
 export type GetSystemObjectDetailsInput = {
