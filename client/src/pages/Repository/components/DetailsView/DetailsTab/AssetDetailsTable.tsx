@@ -70,44 +70,52 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
 
     return (
         <table className={classes.container}>
-            <tr>
-                {headers.map((header, index: number) => (
-                    <th key={index} align='left'>
-                        <Typography className={classes.header}>{header}</Typography>
-                    </th>
-                ))}
-            </tr>
-            {assetDetails.map((assetDetail: StateAssetDetail, index: number) => (
-                <tr key={index}>
-                    <td>
-                        <NewTabLink to={getDetailsUrlForObject(assetDetail.idSystemObject)}>
-                            <Typography className={clsx(classes.value, classes.link)}>{assetDetail.name}</Typography>
-                        </NewTabLink>
-                    </td>
-                    <td>
-                        <Typography className={classes.value}>{assetDetail.path}</Typography>
-                    </td>
-                    <td>
-                        <Typography className={classes.value}>{getVocabularyTerm(eVocabularySetID.eAssetAssetType, assetDetail.assetType)}</Typography>
-                    </td>
-                    <td align='left'>
-                        <Typography className={classes.value}>{assetDetail.version}</Typography>
-                    </td>
-                    <td>
-                        <Typography className={classes.value}>{assetDetail.dateCreated}</Typography>
-                    </td>
-                    <td>
-                        <Typography className={classes.value}>{formatBytes(assetDetail.size)}</Typography>
-                    </td>
+            <thead>
+                <tr>
+                    {headers.map((header, index: number) => (
+                        <th key={index} align='left'>
+                            <Typography className={classes.header}>{header}</Typography>
+                        </th>
+                    ))}
                 </tr>
-            ))}
-            <td colSpan={6}>
-                {!assetDetails.length && (
-                    <Box my={2}>
-                        <Typography align='center' className={classes.value}>No assets found</Typography>
-                    </Box>
-                )}
-            </td>
+            </thead>
+
+            <tbody>
+                {assetDetails.map((assetDetail: StateAssetDetail, index: number) => (
+                    <tr key={index}>
+                        <td>
+                            <NewTabLink to={getDetailsUrlForObject(assetDetail.idSystemObject)}>
+                                <Typography className={clsx(classes.value, classes.link)}>{assetDetail.name}</Typography>
+                            </NewTabLink>
+                        </td>
+                        <td>
+                            <Typography className={classes.value}>{assetDetail.path}</Typography>
+                        </td>
+                        <td>
+                            <Typography className={classes.value}>{getVocabularyTerm(eVocabularySetID.eAssetAssetType, assetDetail.assetType)}</Typography>
+                        </td>
+                        <td align='left'>
+                            <Typography className={classes.value}>{assetDetail.version}</Typography>
+                        </td>
+                        <td>
+                            <Typography className={classes.value}>{assetDetail.dateCreated}</Typography>
+                        </td>
+                        <td>
+                            <Typography className={classes.value}>{formatBytes(assetDetail.size)}</Typography>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+
+            <tfoot>
+                <td colSpan={6}>
+                    {!assetDetails.length && (
+                        <Box my={2}>
+                            <Typography align='center' className={classes.value}>No assets found</Typography>
+                        </Box>
+                    )}
+                </td>
+            </tfoot>
         </table>
     );
 }
