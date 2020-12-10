@@ -99,6 +99,8 @@ import {
     GetAssetDetailsForSystemObjectResult,
     GetVersionsForSystemObjectInput,
     GetVersionsForSystemObjectResult,
+    GetDetailsTabDataForObjectInput,
+    GetDetailsTabDataForObjectResult
 } from '../../types/graphql';
 
 // Queries
@@ -135,6 +137,7 @@ import getSourceObjectIdentifer from './queries/systemobject/getSourceObjectIden
 import getSystemObjectDetails from './queries/systemobject/getSystemObjectDetails';
 import getAssetDetailsForSystemObject from './queries/systemobject/getAssetDetailsForSystemObject';
 import getVersionsForSystemObject from './queries/systemobject/getVersionsForSystemObject';
+import getDetailsTabDataForObject from './queries/systemobject/getDetailsTabDataForObject';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -201,7 +204,8 @@ const allQueries = {
     getSourceObjectIdentifer,
     getSystemObjectDetails,
     getAssetDetailsForSystemObject,
-    getVersionsForSystemObject
+    getVersionsForSystemObject,
+    getDetailsTabDataForObject
 };
 
 type GraphQLRequest = {
@@ -564,6 +568,16 @@ class GraphQLApi {
 
     async getVersionsForSystemObject(input: GetVersionsForSystemObjectInput, context?: Context): Promise<GetVersionsForSystemObjectResult> {
         const operationName = 'getVersionsForSystemObject';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput, context?: Context): Promise<GetDetailsTabDataForObjectResult> {
+        const operationName = 'getDetailsTabDataForObject';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

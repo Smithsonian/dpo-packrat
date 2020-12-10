@@ -27,6 +27,7 @@ export type Query = {
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getCurrentUser: GetCurrentUserResult;
+    getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getIntermediaryFile: GetIntermediaryFileResult;
@@ -91,6 +92,11 @@ export type QueryGetCaptureDataPhotoArgs = {
 
 export type QueryGetContentsForAssetVersionsArgs = {
     input: GetContentsForAssetVersionsInput;
+};
+
+
+export type QueryGetDetailsTabDataForObjectArgs = {
+    input: GetDetailsTabDataForObjectInput;
 };
 
 
@@ -1086,6 +1092,28 @@ export type IntermediaryFile = {
     idAsset: Scalars['Int'];
     Asset?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type GetDetailsTabDataForObjectInput = {
+    idSystemObject: Scalars['Int'];
+    objectType: Scalars['Int'];
+};
+
+export type GetDetailsTabDataForObjectResult = {
+    __typename?: 'GetDetailsTabDataForObjectResult';
+    Unit?: Maybe<Unit>;
+    Project?: Maybe<Project>;
+    Subject?: Maybe<Subject>;
+    Item?: Maybe<Item>;
+    CaptureData?: Maybe<IngestPhotogrammetry>;
+    Model?: Maybe<IngestModel>;
+    Scene?: Maybe<Scene>;
+    IntermediaryFile?: Maybe<IntermediaryFile>;
+    ProjectDocumentation?: Maybe<ProjectDocumentation>;
+    Asset?: Maybe<Asset>;
+    AssetVersion?: Maybe<AssetVersion>;
+    Actor?: Maybe<Actor>;
+    Stakeholder?: Maybe<Stakeholder>;
 };
 
 export type GetSystemObjectDetailsInput = {
@@ -2271,6 +2299,98 @@ export type GetAssetDetailsForSystemObjectQuery = (
                 assetDetails: Array<(
                     { __typename?: 'AssetDetail' }
                     & Pick<AssetDetail, 'idSystemObject' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetDetailsTabDataForObjectQueryVariables = Exact<{
+    input: GetDetailsTabDataForObjectInput;
+}>;
+
+
+export type GetDetailsTabDataForObjectQuery = (
+    { __typename?: 'Query' }
+    & {
+        getDetailsTabDataForObject: (
+            { __typename?: 'GetDetailsTabDataForObjectResult' }
+            & {
+                Unit?: Maybe<(
+                    { __typename?: 'Unit' }
+                    & Pick<Unit, 'idUnit' | 'Abbreviation' | 'ARKPrefix'>
+                )>, Project?: Maybe<(
+                    { __typename?: 'Project' }
+                    & Pick<Project, 'idProject' | 'Description'>
+                )>, Subject?: Maybe<(
+                    { __typename?: 'Subject' }
+                    & Pick<Subject, 'idSubject'>
+                    & {
+                        GeoLocation?: Maybe<(
+                            { __typename?: 'GeoLocation' }
+                            & Pick<GeoLocation, 'idGeoLocation' | 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
+                        )>
+                    }
+                )>, Item?: Maybe<(
+                    { __typename?: 'Item' }
+                    & Pick<Item, 'idItem' | 'EntireSubject'>
+                    & {
+                        GeoLocation?: Maybe<(
+                            { __typename?: 'GeoLocation' }
+                            & Pick<GeoLocation, 'idGeoLocation' | 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
+                        )>
+                    }
+                )>, CaptureData?: Maybe<(
+                    { __typename?: 'IngestPhotogrammetry' }
+                    & Pick<IngestPhotogrammetry, 'idAssetVersion' | 'dateCaptured' | 'datasetType' | 'systemCreated' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId'>
+                    & {
+                        folders: Array<(
+                            { __typename?: 'IngestFolder' }
+                            & Pick<IngestFolder, 'name' | 'variantType'>
+                        )>
+                    }
+                )>, Model?: Maybe<(
+                    { __typename?: 'IngestModel' }
+                    & Pick<IngestModel, 'systemCreated' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'roughness' | 'metalness' | 'pointCount' | 'faceCount' | 'isWatertight' | 'hasNormals' | 'hasVertexColor' | 'hasUVSpace' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z'>
+                    & {
+                        uvMaps: Array<(
+                            { __typename?: 'IngestUVMap' }
+                            & Pick<IngestUvMap, 'name' | 'mapType'>
+                        )>
+                    }
+                )>, Scene?: Maybe<(
+                    { __typename?: 'Scene' }
+                    & Pick<Scene, 'idScene'>
+                )>, IntermediaryFile?: Maybe<(
+                    { __typename?: 'IntermediaryFile' }
+                    & Pick<IntermediaryFile, 'idIntermediaryFile'>
+                )>, ProjectDocumentation?: Maybe<(
+                    { __typename?: 'ProjectDocumentation' }
+                    & Pick<ProjectDocumentation, 'idProjectDocumentation' | 'Description'>
+                )>, Asset?: Maybe<(
+                    { __typename?: 'Asset' }
+                    & Pick<Asset, 'idAsset' | 'FilePath'>
+                    & {
+                        VAssetType?: Maybe<(
+                            { __typename?: 'Vocabulary' }
+                            & Pick<Vocabulary, 'idVocabulary' | 'Term'>
+                        )>
+                    }
+                )>, AssetVersion?: Maybe<(
+                    { __typename?: 'AssetVersion' }
+                    & Pick<AssetVersion, 'idAssetVersion' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version'>
+                    & {
+                        User?: Maybe<(
+                            { __typename?: 'User' }
+                            & Pick<User, 'idUser' | 'Name'>
+                        )>
+                    }
+                )>, Actor?: Maybe<(
+                    { __typename?: 'Actor' }
+                    & Pick<Actor, 'idActor' | 'OrganizationName'>
+                )>, Stakeholder?: Maybe<(
+                    { __typename?: 'Stakeholder' }
+                    & Pick<Stakeholder, 'idStakeholder' | 'OrganizationName' | 'EmailAddress' | 'PhoneNumberMobile' | 'PhoneNumberOffice' | 'MailingAddress'>
                 )>
             }
         )
@@ -3769,6 +3889,171 @@ export function useGetAssetDetailsForSystemObjectLazyQuery(baseOptions?: Apollo.
 export type GetAssetDetailsForSystemObjectQueryHookResult = ReturnType<typeof useGetAssetDetailsForSystemObjectQuery>;
 export type GetAssetDetailsForSystemObjectLazyQueryHookResult = ReturnType<typeof useGetAssetDetailsForSystemObjectLazyQuery>;
 export type GetAssetDetailsForSystemObjectQueryResult = Apollo.QueryResult<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>;
+export const GetDetailsTabDataForObjectDocument = gql`
+    query getDetailsTabDataForObject($input: GetDetailsTabDataForObjectInput!) {
+  getDetailsTabDataForObject(input: $input) {
+    Unit {
+      idUnit
+      Abbreviation
+      ARKPrefix
+    }
+    Project {
+      idProject
+      Description
+    }
+    Subject {
+      idSubject
+      GeoLocation {
+        idGeoLocation
+        Altitude
+        Latitude
+        Longitude
+        R0
+        R1
+        R2
+        R3
+        TS0
+        TS1
+        TS2
+      }
+    }
+    Item {
+      idItem
+      EntireSubject
+      GeoLocation {
+        idGeoLocation
+        Altitude
+        Latitude
+        Longitude
+        R0
+        R1
+        R2
+        R3
+        TS0
+        TS1
+        TS2
+      }
+    }
+    CaptureData {
+      idAssetVersion
+      dateCaptured
+      datasetType
+      systemCreated
+      description
+      cameraSettingUniform
+      datasetFieldId
+      itemPositionType
+      itemPositionFieldId
+      itemArrangementFieldId
+      focusType
+      lightsourceType
+      backgroundRemovalMethod
+      clusterType
+      clusterGeometryFieldId
+      folders {
+        name
+        variantType
+      }
+    }
+    Model {
+      systemCreated
+      master
+      authoritative
+      creationMethod
+      modality
+      purpose
+      units
+      dateCaptured
+      modelFileType
+      uvMaps {
+        name
+        mapType
+      }
+      roughness
+      metalness
+      pointCount
+      faceCount
+      isWatertight
+      hasNormals
+      hasVertexColor
+      hasUVSpace
+      boundingBoxP1X
+      boundingBoxP1Y
+      boundingBoxP1Z
+      boundingBoxP2X
+      boundingBoxP2Y
+      boundingBoxP2Z
+    }
+    Scene {
+      idScene
+    }
+    IntermediaryFile {
+      idIntermediaryFile
+    }
+    ProjectDocumentation {
+      idProjectDocumentation
+      Description
+    }
+    Asset {
+      idAsset
+      FilePath
+      VAssetType {
+        idVocabulary
+        Term
+      }
+    }
+    AssetVersion {
+      idAssetVersion
+      DateCreated
+      StorageSize
+      Ingested
+      Version
+      User {
+        idUser
+        Name
+      }
+    }
+    Actor {
+      idActor
+      OrganizationName
+    }
+    Stakeholder {
+      idStakeholder
+      OrganizationName
+      EmailAddress
+      PhoneNumberMobile
+      PhoneNumberOffice
+      MailingAddress
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetDetailsTabDataForObjectQuery__
+ *
+ * To run a query within a React component, call `useGetDetailsTabDataForObjectQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetDetailsTabDataForObjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetDetailsTabDataForObjectQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetDetailsTabDataForObjectQuery(baseOptions?: Apollo.QueryHookOptions<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>) {
+    return Apollo.useQuery<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>(GetDetailsTabDataForObjectDocument, baseOptions);
+}
+export function useGetDetailsTabDataForObjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>) {
+    return Apollo.useLazyQuery<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>(GetDetailsTabDataForObjectDocument, baseOptions);
+}
+export type GetDetailsTabDataForObjectQueryHookResult = ReturnType<typeof useGetDetailsTabDataForObjectQuery>;
+export type GetDetailsTabDataForObjectLazyQueryHookResult = ReturnType<typeof useGetDetailsTabDataForObjectLazyQuery>;
+export type GetDetailsTabDataForObjectQueryResult = Apollo.QueryResult<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>;
 export const GetSourceObjectIdentiferDocument = gql`
     query getSourceObjectIdentifer($input: GetSourceObjectIdentiferInput!) {
   getSourceObjectIdentifer(input: $input) {

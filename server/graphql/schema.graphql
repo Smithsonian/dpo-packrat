@@ -8,6 +8,7 @@ type Query {
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
   getCurrentUser: GetCurrentUserResult!
+  getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
   getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
@@ -786,6 +787,27 @@ type IntermediaryFile {
   idAsset: Int!
   Asset: Asset
   SystemObject: SystemObject
+}
+
+input GetDetailsTabDataForObjectInput {
+  idSystemObject: Int!
+  objectType: Int!
+}
+
+type GetDetailsTabDataForObjectResult {
+  Unit: Unit
+  Project: Project
+  Subject: Subject
+  Item: Item
+  CaptureData: IngestPhotogrammetry
+  Model: IngestModel
+  Scene: Scene
+  IntermediaryFile: IntermediaryFile
+  ProjectDocumentation: ProjectDocumentation
+  Asset: Asset
+  AssetVersion: AssetVersion
+  Actor: Actor
+  Stakeholder: Stakeholder
 }
 
 input GetSystemObjectDetailsInput {
