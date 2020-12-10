@@ -6,13 +6,12 @@
 import { Box, Typography } from '@material-ui/core';
 import clsx from 'clsx';
 import React from 'react';
-import { NewTabLink } from '../../../../../components';
+import { EmptyTable, NewTabLink } from '../../../../../components';
 import { StateDetailVersion } from '../../../../../store';
 import { getDetailsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectVersions } from '../../../hooks/useDetailsView';
-import { EmptyTable, useStyles } from './AssetDetailsTable';
-
+import { useStyles } from './AssetDetailsTable';
 
 interface AssetVersionsTableProps {
     idSystemObject: number;

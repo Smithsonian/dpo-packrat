@@ -7,7 +7,7 @@ import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
-import { NewTabLink, Progress } from '../../../../../components';
+import { EmptyTable, NewTabLink } from '../../../../../components';
 import { StateAssetDetail, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
 import { getDetailsUrlForObject } from '../../../../../utils/repository';
@@ -109,16 +109,6 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                 )}
             </td>
         </table>
-    );
-}
-
-export function EmptyTable(): React.ReactElement {
-    const classes = useStyles();
-
-    return (
-        <Box className={classes.empty}>
-            <Progress size={20} />
-        </Box>
     );
 }
 

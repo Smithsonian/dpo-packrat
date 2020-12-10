@@ -6,13 +6,15 @@ import getSystemObjectDetails from './queries/getSystemObjectDetails';
 import getSourceObjectIdentifer from './queries/getSourceObjectIdentifer';
 import getAssetDetailsForSystemObject from './queries/getAssetDetailsForSystemObject';
 import getVersionsForSystemObject from './queries/getVersionsForSystemObject';
+import getDetailsTabDataForObject from './queries/getDetailsTabDataForObject';
 
 const resolvers = {
     Query: {
         getSystemObjectDetails,
         getSourceObjectIdentifer,
         getAssetDetailsForSystemObject,
-        getVersionsForSystemObject
+        getVersionsForSystemObject,
+        getDetailsTabDataForObject
     },
     SystemObject,
     SystemObjectVersion,

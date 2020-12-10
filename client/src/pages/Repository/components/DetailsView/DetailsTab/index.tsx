@@ -11,8 +11,22 @@ import { StateRelatedObject } from '../../../../../store';
 import { RelatedObjectType } from '../../../../../types/graphql';
 import { eSystemObjectType } from '../../../../../types/server';
 import RelatedObjectsList from '../../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
+import { useDetailsTabData } from '../../../hooks/useDetailsView';
+import ActorDetails from './ActorDetails';
+import AssetDetails from './AssetDetails';
 import AssetDetailsTable from './AssetDetailsTable';
+import AssetVersionDetails from './AssetVersionDetails';
 import AssetVersionsTable from './AssetVersionsTable';
+import CaptureDataDetails from './CaptureDataDetails';
+import IntermediaryFileDetails from './IntermediaryFileDetails';
+import ItemDetails from './ItemDetails';
+import ModelDetails from './ModelDetails';
+import ProjectDetails from './ProjectDetails';
+import ProjectDocumentationDetails from './ProjectDocumentationDetails';
+import SceneDetails from './SceneDetails';
+import StakeholderDetails from './StakeholderDetails';
+import SubjectDetails from './SubjectDetails';
+import UnitDetails from './UnitDetails';
 
 const useStyles = makeStyles(({ palette }) => ({
     tab: {
@@ -37,9 +51,12 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     const { disabled, idSystemObject, objectType, sourceObjects, derivedObjects, onAddSourceObject, onAddDerivedObject } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
+
     const handleTabChange = (_, nextTab: number) => {
         setTab(nextTab);
     };
+
+    const detailsQueryResult = useDetailsTabData(idSystemObject, objectType);
 
     let tabs: string[] = [];
 
@@ -70,7 +87,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        Unit Details
+                        <UnitDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(1)}
                 </React.Fragment>
@@ -81,7 +98,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        Project Details
+                        <ProjectDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(1)}
                 </React.Fragment>
@@ -95,7 +112,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        Subject Details
+                        <SubjectDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -109,7 +126,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        Item Details
+                        <ItemDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -123,7 +140,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        CaptureData Details
+                        <CaptureDataDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -137,7 +154,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        Model Details
+                        <ModelDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -151,7 +168,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        Scene Details
+                        <SceneDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -165,7 +182,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        IntermediaryFile Details
+                        <IntermediaryFileDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -179,7 +196,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        ProjectDocumentation Details
+                        <ProjectDocumentationDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -193,7 +210,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetVersionsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        Asset Details
+                        <AssetDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -204,7 +221,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        AssetVersion Details
+                        <AssetVersionDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(1)}
                 </React.Fragment>
@@ -215,7 +232,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        Actor Details
+                        <ActorDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(1)}
                 </React.Fragment>
@@ -226,7 +243,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        Stakeholder Details
+                        <StakeholderDetails {...detailsQueryResult} disabled={disabled} />
                     </TabPanel>
                     {RelatedTab(1)}
                 </React.Fragment>
