@@ -6,7 +6,7 @@
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, IdInputField, SelectField } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { RelatedObjectType } from '../../../../../types/graphql';
@@ -219,10 +219,34 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                     <Box className={classes.notRequiredFields}>
                         <FieldType required={false} label='(These values may be updated by Cook during ingestion)' labelProps={noteLabelProps} containerProps={noteFieldProps} />
-                        <IdInputField label='Roughness' value={model.roughness} name='roughness' onChange={setIdField} />
-                        <IdInputField label='Metalness' value={model.metalness} name='metalness' onChange={setIdField} />
-                        <IdInputField label='Point Count' value={model.pointCount} name='pointCount' onChange={setIdField} />
-                        <IdInputField label='Face Count' value={model.faceCount} name='faceCount' onChange={setIdField} />
+                        <InputField
+                            type='number'
+                            label='Roughness'
+                            value={model.roughness}
+                            name='roughness'
+                            onChange={setIdField}
+                        />
+                        <InputField
+                            type='number'
+                            label='Metalness'
+                            value={model.metalness}
+                            name='metalness'
+                            onChange={setIdField}
+                        />
+                        <InputField
+                            type='number'
+                            label='Point Count'
+                            value={model.pointCount}
+                            name='pointCount'
+                            onChange={setIdField}
+                        />
+                        <InputField
+                            type='number'
+                            label='Face Count'
+                            value={model.faceCount}
+                            name='faceCount'
+                            onChange={setIdField}
+                        />
 
                         <FieldType required={false} label='Is Watertight?' direction='row' containerProps={rowFieldProps}>
                             <Checkbox

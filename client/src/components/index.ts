@@ -14,7 +14,7 @@ import RepositoryIcon from './controls/RepositoryIcon';
 import ErrorBoundary from './shared/ErrorBoundary';
 import AssetIdentifiers from './shared/AssetIdentifiers';
 import SelectField from './controls/SelectField';
-import IdInputField from './controls/IdInputField';
+import InputField from './controls/InputField';
 import DateInputField from './controls/DateInputField';
 import BreadcrumbsView from './shared/BreadcrumbsView';
 import NewTabLink from './shared/NewTabLink';
@@ -33,7 +33,7 @@ export {
     ErrorBoundary,
     AssetIdentifiers,
     SelectField,
-    IdInputField,
+    InputField,
     DateInputField,
     BreadcrumbsView,
     NewTabLink,

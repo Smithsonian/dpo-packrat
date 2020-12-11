@@ -7,7 +7,7 @@
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import React from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, IdInputField, SelectField } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField } from '../../../../../components';
 import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
@@ -124,7 +124,13 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     />
                 </Box>
                 <Box display='flex' flex={1} flexDirection='column' ml='30px'>
-                    <IdInputField label='Dataset Field ID' value={photogrammetry.datasetFieldId} name='datasetFieldId' onChange={setIdField} />
+                    <InputField
+                        type='number'
+                        label='Dataset Field ID'
+                        value={photogrammetry.datasetFieldId}
+                        name='datasetFieldId'
+                        onChange={setIdField}
+                    />
                     <SelectField
                         label='Item Position Type'
                         value={withDefaultValueNumber(photogrammetry.itemPositionType, getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType))}
@@ -132,8 +138,20 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                         onChange={setIdField}
                         options={getEntries(eVocabularySetID.eCaptureDataItemPositionType)}
                     />
-                    <IdInputField label='Item Position Field ID' value={photogrammetry.itemPositionFieldId} name='itemPositionFieldId' onChange={setIdField} />
-                    <IdInputField label='Item Arrangement Field ID' value={photogrammetry.itemArrangementFieldId} name='itemArrangementFieldId' onChange={setIdField} />
+                    <InputField
+                        type='number'
+                        label='Item Position Field ID'
+                        value={photogrammetry.itemPositionFieldId}
+                        name='itemPositionFieldId'
+                        onChange={setIdField}
+                    />
+                    <InputField
+                        type='number'
+                        label='Item Arrangement Field ID'
+                        value={photogrammetry.itemArrangementFieldId}
+                        name='itemArrangementFieldId'
+                        onChange={setIdField}
+                    />
                     <SelectField
                         label='Focus Type'
                         value={withDefaultValueNumber(photogrammetry.focusType, getInitialEntry(eVocabularySetID.eCaptureDataFocusType))}
@@ -166,7 +184,13 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                         options={getEntries(eVocabularySetID.eCaptureDataClusterType)}
                     />
 
-                    <IdInputField label='Cluster Geometry Field ID' value={photogrammetry.clusterGeometryFieldId} name='clusterGeometryFieldId' onChange={setIdField} />
+                    <InputField
+                        type='number'
+                        label='Cluster Geometry Field ID'
+                        value={photogrammetry.clusterGeometryFieldId}
+                        name='clusterGeometryFieldId'
+                        onChange={setIdField}
+                    />
                     <FieldType required={false} label='Camera Settings Uniform?' direction='row' containerProps={rowFieldProps}>
                         <CustomCheckbox
                             disabled
