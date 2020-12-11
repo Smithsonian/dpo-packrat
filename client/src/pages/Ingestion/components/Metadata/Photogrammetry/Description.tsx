@@ -25,16 +25,23 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 interface DescriptionProps {
     value: string;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    viewMode?: boolean;
 }
 
 function Description(props: DescriptionProps): React.ReactElement {
-    const { value, onChange } = props;
+    const { value, onChange, viewMode = false } = props;
     const classes = useStyles();
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
-        <FieldType required label='Description' direction='row' containerProps={rowFieldProps}>
+        <FieldType
+            required
+            label='Description'
+            direction='row'
+            containerProps={rowFieldProps}
+            width={viewMode ? 'auto' : undefined}
+        >
             <DebounceInput
                 element='textarea'
                 className={classes.description}

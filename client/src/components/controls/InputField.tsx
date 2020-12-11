@@ -26,27 +26,38 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     }
 }));
 
-interface IdInputFieldProps {
+interface InputFieldProps {
     label: string;
-    value: number | null;
+    value?: number | string | null;
     name: string;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    type?: string;
+    required?: boolean;
+    viewMode?: boolean;
+    disabled?: boolean;
 }
 
-function IdInputField(props: IdInputFieldProps): React.ReactElement {
-    const { label, name, value, onChange } = props;
+function InputField(props: InputFieldProps): React.ReactElement {
+    const { label, name, value, onChange, type, required = false, viewMode = false, disabled = false } = props;
     const classes = useStyles();
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
-        <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps}>
+        <FieldType
+            required={required}
+            label={label}
+            direction='row'
+            containerProps={rowFieldProps}
+            width={viewMode ? 'auto' : undefined}
+        >
             <DebounceInput
                 element='input'
+                disabled={disabled}
                 // @ts-ignore
                 value={value || ''}
                 className={classes.input}
-                type='number'
+                type={type}
                 name={name}
                 onChange={onChange}
                 debounceTimeout={400}
@@ -55,4 +66,4 @@ function IdInputField(props: IdInputFieldProps): React.ReactElement {
     );
 }
 
-export default IdInputField;
+export default InputField;
