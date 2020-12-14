@@ -1,6 +1,32 @@
+scalar DateTime
+
 type Query {
     getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
     getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
+    getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
+    getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
+    getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
+}
+
+input GetDetailsTabDataForObjectInput {
+    idSystemObject: Int!
+    objectType: Int!
+}
+
+type GetDetailsTabDataForObjectResult {
+    Unit: Unit
+    Project: Project
+    Subject: Subject
+    Item: Item
+    CaptureData: IngestPhotogrammetry
+    Model: IngestModel
+    Scene: Scene
+    IntermediaryFile: IntermediaryFile
+    ProjectDocumentation: ProjectDocumentation
+    Asset: Asset
+    AssetVersion: AssetVersion
+    Actor: Actor
+    Stakeholder: Stakeholder
 }
 
 input GetSystemObjectDetailsInput {
@@ -18,11 +44,16 @@ type GetSystemObjectDetailsResult {
     retired: Boolean!
     objectType: Int!
     allowed: Boolean!
+    publishedState: String!
     thumbnail: String
     identifiers: [IngestIdentifier!]!
     objectAncestors: [[RepositoryPath!]!]!
-    sourceObjects: [SourceObject!]!
-    derivedObjects: [DerivedObject!]!
+    sourceObjects: [RelatedObject!]!
+    derivedObjects: [RelatedObject!]!
+    unit: RepositoryPath
+    project: RepositoryPath
+    subject: RepositoryPath
+    item: RepositoryPath
 }
 
 input GetSourceObjectIdentiferInput {
@@ -36,4 +67,39 @@ type SourceObjectIdentifier {
 
 type GetSourceObjectIdentiferResult {
     sourceObjectIdentifiers: [SourceObjectIdentifier!]!
+}
+
+type AssetDetail {
+    idSystemObject: Int!
+    name: String!
+    path: String!
+    assetType: Int!
+    version: Int!
+    dateCreated: DateTime!
+    size: Int!
+}
+
+input GetAssetDetailsForSystemObjectInput {
+    idSystemObject: Int!
+}
+
+type GetAssetDetailsForSystemObjectResult {
+    assetDetails: [AssetDetail!]!
+}
+
+type DetailVersion {
+    idSystemObject: Int!
+    version: Int!
+    name: String!
+    creator: String!
+    dateCreated: DateTime!
+    size: Int!
+}
+
+input GetVersionsForSystemObjectInput {
+    idSystemObject: Int!
+}
+
+type GetVersionsForSystemObjectResult {
+    versions: [DetailVersion!]!
 }

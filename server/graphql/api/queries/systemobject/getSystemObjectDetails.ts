@@ -7,10 +7,31 @@ const getSystemObjectDetails = gql`
             retired
             objectType
             allowed
+            publishedState
             thumbnail
             identifiers {
                 identifier
                 identifierType
+            }
+            unit {
+                idSystemObject
+                name
+                objectType
+            }
+            project {
+                idSystemObject
+                name
+                objectType
+            }
+            subject {
+                idSystemObject
+                name
+                objectType
+            }
+            item {
+                idSystemObject
+                name
+                objectType
             }
             objectAncestors {
                 idSystemObject
@@ -26,7 +47,7 @@ const getSystemObjectDetails = gql`
             derivedObjects {
                 idSystemObject
                 name
-                variantType
+                identifier
                 objectType
             }
         }

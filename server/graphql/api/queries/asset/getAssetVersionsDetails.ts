@@ -66,6 +66,7 @@ const getAssetVersionsDetails = gql`
                     }
                     uvMaps {
                         name
+                        edgeLength
                         mapType
                     }
                     roughness
