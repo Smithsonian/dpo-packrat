@@ -12,7 +12,7 @@ import { FieldType } from '../../../../../components';
 import { StateFolder, VocabularyOption } from '../../../../../store';
 import { palette } from '../../../../../theme';
 
-const useStyles = makeStyles(({ palette, typography, breakpoints, spacing }) => ({
+export const useStyles = makeStyles(({ palette, typography, breakpoints, spacing }) => ({
     header: {
         display: 'flex',
         flex: 1,
@@ -137,7 +137,7 @@ interface ContentProps {
     }>) => void;
 }
 
-export function Content(props: ContentProps): React.ReactElement {
+function Content(props: ContentProps): React.ReactElement {
     const { fieldName, value, name, icon, initialEntry, update, options } = props;
     const classes = useStyles();
 

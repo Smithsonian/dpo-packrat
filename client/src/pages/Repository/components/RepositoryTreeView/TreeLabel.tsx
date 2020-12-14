@@ -10,10 +10,11 @@ import clsx from 'clsx';
 import lodash from 'lodash';
 import React, { useMemo } from 'react';
 import { FaCheckCircle, FaRegCircle } from 'react-icons/fa';
-import { Progress } from '../../../../components';
+import { NewTabLink, Progress } from '../../../../components';
 import { palette } from '../../../../theme';
-import { getTermForSystemObjectType } from '../../../../utils/repository';
+import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
 import MetadataView, { TreeViewColumn } from './MetadataView';
+import { RiExternalLinkFill } from 'react-icons/ri';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
@@ -30,6 +31,9 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         }
     },
     labelText: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         width: '60%',
         fontSize: '0.8em',
         background: ({ color }: TreeLabelProps) => color,
@@ -37,10 +41,14 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         [breakpoints.down('lg')]: {
             fontSize: '0.9em',
         }
+    },
+    options: {
+        display: 'flex'
     }
 }));
 
 interface TreeLabelProps {
+    idSystemObject: number;
     label?: React.ReactNode;
     objectType: number;
     color: string;
@@ -52,7 +60,7 @@ interface TreeLabelProps {
 }
 
 function TreeLabel(props: TreeLabelProps): React.ReactElement {
-    const { label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType } = props;
+    const { idSystemObject, label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType } = props;
     const classes = useStyles(props);
     const objectTitle = useMemo(() => `${getTermForSystemObjectType(objectType)} ${label}`, [objectType, label]);
 
@@ -67,6 +75,9 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
                 )}
                 <div className={classes.labelText}>
                     <span title={objectTitle}>{label}</span>
+                    <NewTabLink className={classes.options} to={getDetailsUrlForObject(idSystemObject)}>
+                        <RiExternalLinkFill size={16} color={palette.primary.main} />
+                    </NewTabLink>
                 </div>
             </div>
             <MetadataView header={false} treeColumns={treeColumns} />

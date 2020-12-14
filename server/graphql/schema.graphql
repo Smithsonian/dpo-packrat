@@ -2,11 +2,13 @@ type Query {
   areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
   getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
+  getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
   getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
   getCurrentUser: GetCurrentUserResult!
+  getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
   getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
@@ -26,6 +28,7 @@ type Query {
   getUnit(input: GetUnitInput!): GetUnitResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
+  getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
   getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
@@ -165,20 +168,19 @@ type IngestPhotogrammetry {
 
 type IngestUVMap {
   name: String!
+  edgeLength: Int!
   mapType: Int!
 }
 
-type SourceObject {
+enum RelatedObjectType {
+  Source
+  Derived
+}
+
+type RelatedObject {
   idSystemObject: Int!
   name: String!
   identifier: String
-  objectType: Int!
-}
-
-type DerivedObject {
-  idSystemObject: Int!
-  name: String!
-  variantType: Int!
   objectType: Int!
 }
 
@@ -196,7 +198,7 @@ type IngestModel {
   directory: String!
   identifiers: [IngestIdentifier!]!
   uvMaps: [IngestUVMap!]!
-  sourceObjects: [SourceObject!]!
+  sourceObjects: [RelatedObject!]!
   roughness: Int
   metalness: Int
   pointCount: Int
@@ -464,10 +466,11 @@ input IngestPhotogrammetryInput {
 
 input IngestUVMapInput {
   name: String!
+  edgeLength: Int!
   mapType: Int!
 }
 
-input SourceObjectInput {
+input RelatedObjectInput {
   idSystemObject: Int!
   name: String!
   identifier: String
@@ -488,7 +491,7 @@ input IngestModelInput {
   directory: String!
   identifiers: [IngestIdentifierInput!]!
   uvMaps: [IngestUVMapInput!]!
-  sourceObjects: [SourceObjectInput!]!
+  sourceObjects: [RelatedObjectInput!]!
   roughness: Int
   metalness: Int
   pointCount: Int
@@ -788,6 +791,27 @@ type IntermediaryFile {
   SystemObject: SystemObject
 }
 
+input GetDetailsTabDataForObjectInput {
+  idSystemObject: Int!
+  objectType: Int!
+}
+
+type GetDetailsTabDataForObjectResult {
+  Unit: Unit
+  Project: Project
+  Subject: Subject
+  Item: Item
+  CaptureData: IngestPhotogrammetry
+  Model: IngestModel
+  Scene: Scene
+  IntermediaryFile: IntermediaryFile
+  ProjectDocumentation: ProjectDocumentation
+  Asset: Asset
+  AssetVersion: AssetVersion
+  Actor: Actor
+  Stakeholder: Stakeholder
+}
+
 input GetSystemObjectDetailsInput {
   idSystemObject: Int!
 }
@@ -803,11 +827,16 @@ type GetSystemObjectDetailsResult {
   retired: Boolean!
   objectType: Int!
   allowed: Boolean!
+  publishedState: String!
   thumbnail: String
   identifiers: [IngestIdentifier!]!
   objectAncestors: [[RepositoryPath!]!]!
-  sourceObjects: [SourceObject!]!
-  derivedObjects: [DerivedObject!]!
+  sourceObjects: [RelatedObject!]!
+  derivedObjects: [RelatedObject!]!
+  unit: RepositoryPath
+  project: RepositoryPath
+  subject: RepositoryPath
+  item: RepositoryPath
 }
 
 input GetSourceObjectIdentiferInput {
@@ -821,6 +850,41 @@ type SourceObjectIdentifier {
 
 type GetSourceObjectIdentiferResult {
   sourceObjectIdentifiers: [SourceObjectIdentifier!]!
+}
+
+type AssetDetail {
+  idSystemObject: Int!
+  name: String!
+  path: String!
+  assetType: Int!
+  version: Int!
+  dateCreated: DateTime!
+  size: Int!
+}
+
+input GetAssetDetailsForSystemObjectInput {
+  idSystemObject: Int!
+}
+
+type GetAssetDetailsForSystemObjectResult {
+  assetDetails: [AssetDetail!]!
+}
+
+type DetailVersion {
+  idSystemObject: Int!
+  version: Int!
+  name: String!
+  creator: String!
+  dateCreated: DateTime!
+  size: Int!
+}
+
+input GetVersionsForSystemObjectInput {
+  idSystemObject: Int!
+}
+
+type GetVersionsForSystemObjectResult {
+  versions: [DetailVersion!]!
 }
 
 type SystemObject {

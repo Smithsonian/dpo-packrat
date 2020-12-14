@@ -331,10 +331,11 @@ function useIngest(): UseIngest {
     const getIngestUVMaps = (uvMaps: StateUVMap[]): IngestUvMapInput[] => {
         const ingestUVMaps: IngestUvMapInput[] = [];
         lodash.forEach(uvMaps, (uvMap: StateUVMap) => {
-            const { name, mapType } = uvMap;
+            const { name, edgeLength, mapType } = uvMap;
 
             const uvMapData: IngestUvMapInput = {
                 name,
+                edgeLength,
                 mapType: nonNullValue<number>('mapType', mapType)
             };
 

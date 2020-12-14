@@ -10,12 +10,12 @@ import { useParams } from 'react-router';
 import IdentifierList from '../../../../components/shared/IdentifierList';
 import { parseIdentifiersToState, useVocabularyStore } from '../../../../store';
 import { eVocabularySetID } from '../../../../types/server';
-import DerivedObjectsList from '../../../Ingestion/components/Metadata/Model/DerivedObjectsList';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
-import SourceObjectsList from '../../../Ingestion/components/Metadata/Model/SourceObjectsList';
 import { useObjectDetails } from '../../hooks/useDetailsView';
 import DetailsHeader from './DetailsHeader';
+import DetailsTab from './DetailsTab';
 import DetailsThumbnail from './DetailsThumbnail';
+import ObjectDetails from './ObjectDetails';
 import ObjectNotFoundView from './ObjectNotFoundView';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
@@ -45,7 +45,8 @@ function DetailsView(): React.ReactElement {
     const params = useParams<DetailsParams>();
     const [modalOpen, setModalOpen] = useState(false);
 
-    const { data, loading } = useObjectDetails(Number.parseInt(params.idSystemObject, 10));
+    const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
+    const { data, loading } = useObjectDetails(idSystemObject);
 
     const getEntries = useVocabularyStore(state => state.getEntries);
 
@@ -53,7 +54,7 @@ function DetailsView(): React.ReactElement {
         return <ObjectNotFoundView loading={loading} />;
     }
 
-    const { name, objectType, retired, identifiers, allowed, thumbnail, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
+    const { name, objectType, identifiers, retired, allowed, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
 
@@ -91,11 +92,19 @@ function DetailsView(): React.ReactElement {
                 name={name}
                 objectType={objectType}
                 path={objectAncestors}
-                retired={retired}
-                disabled={disabled}
             />
-            <Box display='flex' flex={1}>
-                <Box display='flex' flex={1} flexDirection='column'>
+
+            <Box display='flex' mt={2}>
+                <ObjectDetails
+                    unit={unit}
+                    project={project}
+                    subject={subject}
+                    item={item}
+                    publishedState={publishedState}
+                    retired={retired}
+                    disabled={disabled}
+                />
+                <Box display='flex' flex={3} flexDirection='column'>
                     <IdentifierList
                         viewMode
                         disabled={disabled}
@@ -105,19 +114,19 @@ function DetailsView(): React.ReactElement {
                         onRemove={removeIdentifier}
                         onUpdate={updateIdentifierFields}
                     />
-                    <SourceObjectsList
-                        viewMode
-                        disabled={disabled}
-                        sourceObjects={sourceObjects}
-                        onAdd={onAddSourceObject}
-                    />
-                    <DerivedObjectsList
-                        viewMode
-                        disabled={disabled}
-                        derivedObjects={derivedObjects}
-                        onAdd={onAddDerivedObject}
-                    />
                 </Box>
+            </Box>
+
+            <Box display='flex' flex={1}>
+                <DetailsTab
+                    disabled={disabled}
+                    idSystemObject={idSystemObject}
+                    objectType={objectType}
+                    sourceObjects={sourceObjects}
+                    derivedObjects={derivedObjects}
+                    onAddSourceObject={onAddSourceObject}
+                    onAddDerivedObject={onAddDerivedObject}
+                />
                 <Box display='flex' flex={1} padding={2}>
                     <DetailsThumbnail thumbnail={thumbnail} />
                 </Box>
