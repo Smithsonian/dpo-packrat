@@ -149,7 +149,7 @@ function RotationOriginInput(props: RotationOriginInputProps): React.ReactElemen
     return (
         <FieldType
             required
-            label='RotationOrigin'
+            label='Rotation Origin'
             direction='row'
             containerProps={rowFieldProps}
             width='auto'
@@ -181,7 +181,7 @@ function RotationQuaternionInput(props: RotationQuaternionInputProps): React.Rea
     return (
         <FieldType
             required
-            label='RotationOrigin'
+            label='Rotation Quaternion'
             direction='row'
             containerProps={rowFieldProps}
             width='auto'
