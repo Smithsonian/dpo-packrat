@@ -14,10 +14,13 @@ import RepositoryIcon from './controls/RepositoryIcon';
 import ErrorBoundary from './shared/ErrorBoundary';
 import AssetIdentifiers from './shared/AssetIdentifiers';
 import SelectField from './controls/SelectField';
-import IdInputField from './controls/IdInputField';
+import InputField from './controls/InputField';
 import DateInputField from './controls/DateInputField';
 import BreadcrumbsView from './shared/BreadcrumbsView';
 import NewTabLink from './shared/NewTabLink';
+import EmptyTable from './shared/EmptyTable';
+import DebounceNumberInput from './controls/DebounceNumberInput';
+import CheckboxField from './controls/CheckboxField';
 
 export {
     Header,
@@ -32,8 +35,11 @@ export {
     ErrorBoundary,
     AssetIdentifiers,
     SelectField,
-    IdInputField,
+    InputField,
     DateInputField,
     BreadcrumbsView,
-    NewTabLink
+    NewTabLink,
+    EmptyTable,
+    DebounceNumberInput,
+    CheckboxField
 };

@@ -10,7 +10,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
 import React, { useCallback, useEffect } from 'react';
 import { Loader } from '../../../../components';
-import { StateSourceObject, treeRootKey, useControlStore, useRepositoryStore } from '../../../../store';
+import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore } from '../../../../store';
 import { NavigationResultEntry } from '../../../../types/graphql';
 import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeViewStyleHeight, getTreeViewStyleWidth, getTreeWidth, isRepositoryItemSelected } from '../../../../utils/repository';
 import RepositoryTreeHeader from './RepositoryTreeHeader';
@@ -49,8 +49,8 @@ type StyleProps = {
 
 interface RepositoryTreeViewProps {
     isModal?: boolean;
-    selectedItems?: StateSourceObject[];
-    onSelect?: (item: StateSourceObject) => void;
+    selectedItems?: StateRelatedObject[];
+    onSelect?: (item: StateRelatedObject) => void;
     onUnSelect?: (id: number) => void;
 }
 
@@ -104,7 +104,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             const select = (event: React.MouseEvent<SVGElement, MouseEvent>) => {
                 if (onSelect) {
                     event.stopPropagation();
-                    const repositoryItem: StateSourceObject = {
+                    const repositoryItem: StateRelatedObject = {
                         idSystemObject,
                         name,
                         objectType,
@@ -123,6 +123,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
             const label: React.ReactNode = (
                 <TreeLabel
+                    idSystemObject={idSystemObject}
                     label={name}
                     renderSelected={isModal}
                     selected={isSelected}

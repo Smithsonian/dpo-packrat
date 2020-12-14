@@ -9,14 +9,15 @@ import clsx from 'clsx';
 import React from 'react';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { NewTabLink } from '../../../../../components';
-import { StateSourceObject } from '../../../../../store';
+import { StateRelatedObject } from '../../../../../store';
+import { RelatedObjectType } from '../../../../../types/graphql';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
 import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared';
 
-export const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
-        width: '52vw',
+        width: (viewMode: boolean) => viewMode ? undefined : '52vw',
         flexDirection: 'column',
         borderRadius: 5,
         padding: 10,
@@ -47,29 +48,30 @@ export const useStyles = makeStyles(({ palette }) => ({
     }
 }));
 
-interface SourceObjectsListProps {
-    sourceObjects: StateSourceObject[];
+interface RelatedObjectsListProps {
+    relatedObjects: StateRelatedObject[];
+    type: RelatedObjectType;
     onAdd: () => void;
     onRemove?: (id: number) => void;
     viewMode?: boolean;
     disabled?: boolean;
 }
 
-function SourceObjectsList(props: SourceObjectsListProps): React.ReactElement {
-    const { sourceObjects, onAdd, onRemove, viewMode = false, disabled = false } = props;
+function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement {
+    const { relatedObjects, type, onAdd, onRemove, viewMode = false, disabled = false } = props;
     const classes = useStyles(viewMode);
 
-    const titles = ['Source Object(s)', 'Identifiers', 'Object Type'];
-    const hasSourceObjects = !!sourceObjects.length;
+    const titles = [`${type.toString()} Object(s)`, 'Identifier', 'Object Type'];
+    const hasRelatedObjects = !!relatedObjects.length;
 
     const buttonLabel: string = viewMode ? 'Connect' : 'Add';
 
     return (
         <Box className={classes.container}>
             <Header titles={titles} />
-            {hasSourceObjects && (
+            {hasRelatedObjects && (
                 <Box className={classes.list}>
-                    {sourceObjects.map((sourceObject: StateSourceObject, index: number) => (
+                    {relatedObjects.map((sourceObject: StateRelatedObject, index: number) => (
                         <Item
                             key={index}
                             viewMode={viewMode}
@@ -124,7 +126,7 @@ export function Header(props: ObjectHeader): React.ReactElement {
 }
 
 interface ItemProps {
-    sourceObject: StateSourceObject;
+    sourceObject: StateRelatedObject;
     onRemove?: (id: number) => void;
     viewMode?: boolean;
 }
@@ -162,4 +164,4 @@ function Item(props: ItemProps): React.ReactElement {
     );
 }
 
-export default SourceObjectsList;
+export default RelatedObjectsList;

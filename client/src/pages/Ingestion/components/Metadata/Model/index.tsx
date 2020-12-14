@@ -6,14 +6,15 @@
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, IdInputField, SelectField } from '../../../../../components';
-import { StateIdentifier, StateSourceObject, useMetadataStore, useVocabularyStore } from '../../../../../store';
+import { AssetIdentifiers, CheckboxField, DateInputField, FieldType, InputField, SelectField } from '../../../../../components';
+import { StateIdentifier, StateRelatedObject, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
+import { RelatedObjectType } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
-import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../../utils/shared';
+import { withDefaultValueNumber } from '../../../../../utils/shared';
 import BoundingBoxInput from './BoundingBoxInput';
 import ObjectSelectModal from './ObjectSelectModal';
-import SourceObjectsList from './SourceObjectsList';
+import RelatedObjectsList from './RelatedObjectsList';
 import UVContents from './UVContents';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -109,7 +110,7 @@ function Model(props: ModelProps): React.ReactElement {
         setModalOpen(false);
     };
 
-    const onSelectedObjects = (newSourceObjects: StateSourceObject[]) => {
+    const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
         updateMetadataField(metadataIndex, 'sourceObjects', newSourceObjects, MetadataType.model);
         onModalClose();
     };
@@ -129,7 +130,7 @@ function Model(props: ModelProps): React.ReactElement {
                     onUpdateIdentifer={onIdentifersChange}
                     onRemoveIdentifer={onIdentifersChange}
                 />
-                <SourceObjectsList sourceObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
                 <Box display='flex' flexDirection='row' mt={1}>
                     <Box display='flex' flex={1} flexDirection='column'>
                         <FieldType
@@ -218,48 +219,38 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                     <Box className={classes.notRequiredFields}>
                         <FieldType required={false} label='(These values may be updated by Cook during ingestion)' labelProps={noteLabelProps} containerProps={noteFieldProps} />
-                        <IdInputField label='Roughness' value={model.roughness} name='roughness' onChange={setIdField} />
-                        <IdInputField label='Metalness' value={model.metalness} name='metalness' onChange={setIdField} />
-                        <IdInputField label='Point Count' value={model.pointCount} name='pointCount' onChange={setIdField} />
-                        <IdInputField label='Face Count' value={model.faceCount} name='faceCount' onChange={setIdField} />
-
-                        <FieldType required={false} label='Is Watertight?' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='isWatertight'
-                                checked={withDefaultValueBoolean(model.isWatertight, false)}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
-                        <FieldType required={false} label='Has Normals?' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='hasNormals'
-                                checked={withDefaultValueBoolean(model.hasNormals, false)}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
-
-                        <FieldType required={false} label='Has Vertex Color?' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='hasVertexColor'
-                                checked={withDefaultValueBoolean(model.hasVertexColor, false)}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
-                        <FieldType required={false} label='Has UV Space?' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='hasUVSpace'
-                                checked={withDefaultValueBoolean(model.hasUVSpace, false)}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
+                        <InputField
+                            type='number'
+                            label='Roughness'
+                            value={model.roughness}
+                            name='roughness'
+                            onChange={setIdField}
+                        />
+                        <InputField
+                            type='number'
+                            label='Metalness'
+                            value={model.metalness}
+                            name='metalness'
+                            onChange={setIdField}
+                        />
+                        <InputField
+                            type='number'
+                            label='Point Count'
+                            value={model.pointCount}
+                            name='pointCount'
+                            onChange={setIdField}
+                        />
+                        <InputField
+                            type='number'
+                            label='Face Count'
+                            value={model.faceCount}
+                            name='faceCount'
+                            onChange={setIdField}
+                        />
+                        <CheckboxField name='isWatertight' label='Is Watertight?' value={model.isWatertight} onChange={setCheckboxField} />
+                        <CheckboxField name='hasNormals' label='Has Normals?' value={model.hasNormals} onChange={setCheckboxField} />
+                        <CheckboxField name='hasVertexColor' label='Has Vertex Color?' value={model.hasVertexColor} onChange={setCheckboxField} />
+                        <CheckboxField name='hasUVSpace' label='Has UV Space?' value={model.hasUVSpace} onChange={setCheckboxField} />
                         <BoundingBoxInput model={model} onChange={setIdField} />
                     </Box>
                 </Box>

@@ -17,11 +17,13 @@ export type Query = {
     areCameraSettingsUniform: AreCameraSettingsUniformResult;
     getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
+    getAssetDetailsForSystemObject: GetAssetDetailsForSystemObjectResult;
     getAssetVersionsDetails: GetAssetVersionsDetailsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getCurrentUser: GetCurrentUserResult;
+    getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getIntermediaryFile: GetIntermediaryFileResult;
@@ -41,123 +43,168 @@ export type Query = {
     getUnit: GetUnitResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getUser: GetUserResult;
+    getVersionsForSystemObject: GetVersionsForSystemObjectResult;
     getVocabulary: GetVocabularyResult;
     getVocabularyEntries: GetVocabularyEntriesResult;
     getWorkflow: GetWorkflowResult;
     searchIngestionSubjects: SearchIngestionSubjectsResult;
 };
 
+
 export type QueryAreCameraSettingsUniformArgs = {
     input: AreCameraSettingsUniformInput;
 };
+
 
 export type QueryGetAccessPolicyArgs = {
     input: GetAccessPolicyInput;
 };
 
+
 export type QueryGetAssetArgs = {
     input: GetAssetInput;
 };
+
+
+export type QueryGetAssetDetailsForSystemObjectArgs = {
+    input: GetAssetDetailsForSystemObjectInput;
+};
+
 
 export type QueryGetAssetVersionsDetailsArgs = {
     input: GetAssetVersionsDetailsInput;
 };
 
+
 export type QueryGetCaptureDataArgs = {
     input: GetCaptureDataInput;
 };
+
 
 export type QueryGetCaptureDataPhotoArgs = {
     input: GetCaptureDataPhotoInput;
 };
 
+
 export type QueryGetContentsForAssetVersionsArgs = {
     input: GetContentsForAssetVersionsInput;
 };
+
+
+export type QueryGetDetailsTabDataForObjectArgs = {
+    input: GetDetailsTabDataForObjectInput;
+};
+
 
 export type QueryGetIngestionItemsForSubjectsArgs = {
     input: GetIngestionItemsForSubjectsInput;
 };
 
+
 export type QueryGetIngestionProjectsForSubjectsArgs = {
     input: GetIngestionProjectsForSubjectsInput;
 };
+
 
 export type QueryGetIntermediaryFileArgs = {
     input: GetIntermediaryFileInput;
 };
 
+
 export type QueryGetItemArgs = {
     input: GetItemInput;
 };
+
 
 export type QueryGetItemsForSubjectArgs = {
     input: GetItemsForSubjectInput;
 };
 
+
 export type QueryGetLicenseArgs = {
     input: GetLicenseInput;
 };
+
 
 export type QueryGetModelArgs = {
     input: GetModelInput;
 };
 
+
 export type QueryGetObjectChildrenArgs = {
     input: GetObjectChildrenInput;
 };
+
 
 export type QueryGetObjectsForItemArgs = {
     input: GetObjectsForItemInput;
 };
 
+
 export type QueryGetProjectArgs = {
     input: GetProjectInput;
 };
+
 
 export type QueryGetProjectDocumentationArgs = {
     input: GetProjectDocumentationInput;
 };
 
+
 export type QueryGetSceneArgs = {
     input: GetSceneInput;
 };
+
 
 export type QueryGetSourceObjectIdentiferArgs = {
     input: GetSourceObjectIdentiferInput;
 };
 
+
 export type QueryGetSubjectArgs = {
     input: GetSubjectInput;
 };
+
 
 export type QueryGetSubjectsForUnitArgs = {
     input: GetSubjectsForUnitInput;
 };
 
+
 export type QueryGetSystemObjectDetailsArgs = {
     input: GetSystemObjectDetailsInput;
 };
+
 
 export type QueryGetUnitArgs = {
     input: GetUnitInput;
 };
 
+
 export type QueryGetUserArgs = {
     input: GetUserInput;
 };
+
+
+export type QueryGetVersionsForSystemObjectArgs = {
+    input: GetVersionsForSystemObjectInput;
+};
+
 
 export type QueryGetVocabularyArgs = {
     input: GetVocabularyInput;
 };
 
+
 export type QueryGetVocabularyEntriesArgs = {
     input: GetVocabularyEntriesInput;
 };
 
+
 export type QueryGetWorkflowArgs = {
     input: GetWorkflowInput;
 };
+
 
 export type QuerySearchIngestionSubjectsArgs = {
     input: SearchIngestionSubjectsInput;
@@ -171,6 +218,7 @@ export type GetAccessPolicyResult = {
     __typename?: 'GetAccessPolicyResult';
     AccessPolicy?: Maybe<AccessPolicy>;
 };
+
 
 export type AccessAction = {
     __typename?: 'AccessAction';
@@ -220,6 +268,7 @@ export type AccessRole = {
     AccessAction?: Maybe<Array<Maybe<AccessAction>>>;
 };
 
+
 export type Mutation = {
     __typename?: 'Mutation';
     createCaptureData: CreateCaptureDataResult;
@@ -238,57 +287,71 @@ export type Mutation = {
     uploadAsset: UploadAssetResult;
 };
 
+
 export type MutationCreateCaptureDataArgs = {
     input: CreateCaptureDataInput;
 };
+
 
 export type MutationCreateCaptureDataPhotoArgs = {
     input: CreateCaptureDataPhotoInput;
 };
 
+
 export type MutationCreateItemArgs = {
     input: CreateItemInput;
 };
+
 
 export type MutationCreateModelArgs = {
     input: CreateModelInput;
 };
 
+
 export type MutationCreateProjectArgs = {
     input: CreateProjectInput;
 };
+
 
 export type MutationCreateSceneArgs = {
     input: CreateSceneInput;
 };
 
+
 export type MutationCreateSubjectArgs = {
     input: CreateSubjectInput;
 };
+
 
 export type MutationCreateUnitArgs = {
     input: CreateUnitInput;
 };
 
+
 export type MutationCreateUserArgs = {
     input: CreateUserInput;
 };
+
 
 export type MutationCreateVocabularyArgs = {
     input: CreateVocabularyInput;
 };
 
+
 export type MutationCreateVocabularySetArgs = {
     input: CreateVocabularySetInput;
 };
+
 
 export type MutationDiscardUploadedAssetVersionsArgs = {
     input: DiscardUploadedAssetVersionsInput;
 };
 
+
 export type MutationIngestDataArgs = {
     input: IngestDataInput;
 };
+
 
 export type MutationUploadAssetArgs = {
     file: Scalars['Upload'];
@@ -363,22 +426,20 @@ export type IngestPhotogrammetry = {
 export type IngestUvMap = {
     __typename?: 'IngestUVMap';
     name: Scalars['String'];
+    edgeLength: Scalars['Int'];
     mapType: Scalars['Int'];
 };
 
-export type SourceObject = {
-    __typename?: 'SourceObject';
+export enum RelatedObjectType {
+    Source = 'Source',
+    Derived = 'Derived'
+}
+
+export type RelatedObject = {
+    __typename?: 'RelatedObject';
     idSystemObject: Scalars['Int'];
     name: Scalars['String'];
     identifier?: Maybe<Scalars['String']>;
-    objectType: Scalars['Int'];
-};
-
-export type DerivedObject = {
-    __typename?: 'DerivedObject';
-    idSystemObject: Scalars['Int'];
-    name: Scalars['String'];
-    variantType: Scalars['Int'];
     objectType: Scalars['Int'];
 };
 
@@ -397,7 +458,7 @@ export type IngestModel = {
     directory: Scalars['String'];
     identifiers: Array<IngestIdentifier>;
     uvMaps: Array<IngestUvMap>;
-    sourceObjects: Array<SourceObject>;
+    sourceObjects: Array<RelatedObject>;
     roughness?: Maybe<Scalars['Int']>;
     metalness?: Maybe<Scalars['Int']>;
     pointCount?: Maybe<Scalars['Int']>;
@@ -684,10 +745,11 @@ export type IngestPhotogrammetryInput = {
 
 export type IngestUvMapInput = {
     name: Scalars['String'];
+    edgeLength: Scalars['Int'];
     mapType: Scalars['Int'];
 };
 
-export type SourceObjectInput = {
+export type RelatedObjectInput = {
     idSystemObject: Scalars['Int'];
     name: Scalars['String'];
     identifier?: Maybe<Scalars['String']>;
@@ -708,7 +770,7 @@ export type IngestModelInput = {
     directory: Scalars['String'];
     identifiers: Array<IngestIdentifierInput>;
     uvMaps: Array<IngestUvMapInput>;
-    sourceObjects: Array<SourceObjectInput>;
+    sourceObjects: Array<RelatedObjectInput>;
     roughness?: Maybe<Scalars['Int']>;
     metalness?: Maybe<Scalars['Int']>;
     pointCount?: Maybe<Scalars['Int']>;
@@ -1030,6 +1092,28 @@ export type IntermediaryFile = {
     SystemObject?: Maybe<SystemObject>;
 };
 
+export type GetDetailsTabDataForObjectInput = {
+    idSystemObject: Scalars['Int'];
+    objectType: Scalars['Int'];
+};
+
+export type GetDetailsTabDataForObjectResult = {
+    __typename?: 'GetDetailsTabDataForObjectResult';
+    Unit?: Maybe<Unit>;
+    Project?: Maybe<Project>;
+    Subject?: Maybe<Subject>;
+    Item?: Maybe<Item>;
+    CaptureData?: Maybe<IngestPhotogrammetry>;
+    Model?: Maybe<IngestModel>;
+    Scene?: Maybe<Scene>;
+    IntermediaryFile?: Maybe<IntermediaryFile>;
+    ProjectDocumentation?: Maybe<ProjectDocumentation>;
+    Asset?: Maybe<Asset>;
+    AssetVersion?: Maybe<AssetVersion>;
+    Actor?: Maybe<Actor>;
+    Stakeholder?: Maybe<Stakeholder>;
+};
+
 export type GetSystemObjectDetailsInput = {
     idSystemObject: Scalars['Int'];
 };
@@ -1047,11 +1131,16 @@ export type GetSystemObjectDetailsResult = {
     retired: Scalars['Boolean'];
     objectType: Scalars['Int'];
     allowed: Scalars['Boolean'];
+    publishedState: Scalars['String'];
     thumbnail?: Maybe<Scalars['String']>;
     identifiers: Array<IngestIdentifier>;
     objectAncestors: Array<Array<RepositoryPath>>;
-    sourceObjects: Array<SourceObject>;
-    derivedObjects: Array<DerivedObject>;
+    sourceObjects: Array<RelatedObject>;
+    derivedObjects: Array<RelatedObject>;
+    unit?: Maybe<RepositoryPath>;
+    project?: Maybe<RepositoryPath>;
+    subject?: Maybe<RepositoryPath>;
+    item?: Maybe<RepositoryPath>;
 };
 
 export type GetSourceObjectIdentiferInput = {
@@ -1067,6 +1156,45 @@ export type SourceObjectIdentifier = {
 export type GetSourceObjectIdentiferResult = {
     __typename?: 'GetSourceObjectIdentiferResult';
     sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
+};
+
+export type AssetDetail = {
+    __typename?: 'AssetDetail';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    path: Scalars['String'];
+    assetType: Scalars['Int'];
+    version: Scalars['Int'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
+export type GetAssetDetailsForSystemObjectInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type GetAssetDetailsForSystemObjectResult = {
+    __typename?: 'GetAssetDetailsForSystemObjectResult';
+    assetDetails: Array<AssetDetail>;
+};
+
+export type DetailVersion = {
+    __typename?: 'DetailVersion';
+    idSystemObject: Scalars['Int'];
+    version: Scalars['Int'];
+    name: Scalars['String'];
+    creator: Scalars['String'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
+export type GetVersionsForSystemObjectInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type GetVersionsForSystemObjectResult = {
+    __typename?: 'GetVersionsForSystemObjectResult';
+    versions: Array<DetailVersion>;
 };
 
 export type SystemObject = {

@@ -12,7 +12,7 @@ import { AiOutlineFileText } from 'react-icons/ai';
 import { RepositoryIcon } from '../components';
 import { RepositoryFilter } from '../pages/Repository';
 import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/MetadataView';
-import { StateSourceObject } from '../store';
+import { StateRelatedObject } from '../store';
 import Colors, { RepositoryColorVariant } from '../theme/colors';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
@@ -217,7 +217,7 @@ export function sortEntriesAlphabetically(entries: NavigationResultEntry[]): Nav
     return lodash.orderBy(entries, [entry => entry.name.toLowerCase().trim()], ['asc']);
 }
 
-export function isRepositoryItemSelected(nodeId: string, sourceObjects: StateSourceObject[]): boolean {
+export function isRepositoryItemSelected(nodeId: string, sourceObjects: StateRelatedObject[]): boolean {
     const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
     const idSystemObjects: number[] = sourceObjects.map(({ idSystemObject }) => idSystemObject);
 

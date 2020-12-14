@@ -10,7 +10,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { apolloClient } from '../../../../../graphql';
-import { StateSourceObject } from '../../../../../store';
+import { StateRelatedObject } from '../../../../../store';
 import { GetSourceObjectIdentiferDocument, GetSourceObjectIdentiferInput, GetSourceObjectIdentiferQuery } from '../../../../../types/graphql';
 import RepositoryFilterView from '../../../../Repository/components/RepositoryFilterView';
 import RepositoryTreeView from '../../../../Repository/components/RepositoryTreeView';
@@ -41,15 +41,15 @@ const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
 
 interface ObjectSelectModalProps {
     open: boolean;
-    selectedObjects: StateSourceObject[];
-    onSelectedObjects: (newSourceObjects: StateSourceObject[]) => void;
+    selectedObjects: StateRelatedObject[];
+    onSelectedObjects: (newSourceObjects: StateRelatedObject[]) => void;
     onModalClose: () => void;
 }
 
 function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
     const { open, onSelectedObjects, selectedObjects, onModalClose } = props;
     const classes = useStyles();
-    const [selected, setSelected] = useState<StateSourceObject[]>([]);
+    const [selected, setSelected] = useState<StateRelatedObject[]>([]);
     const [isSaving, setIsSaving] = useState<boolean>(false);
 
     useEffect(() => {
@@ -76,7 +76,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                 const { getSourceObjectIdentifer } = data;
                 const { sourceObjectIdentifiers } = getSourceObjectIdentifer;
 
-                const selectedSourceObjects: StateSourceObject[] = selected.map((selected: StateSourceObject, index: number) => ({
+                const selectedSourceObjects: StateRelatedObject[] = selected.map((selected: StateRelatedObject, index: number) => ({
                     ...selected,
                     identifier: sourceObjectIdentifiers[index]?.identifier
                 }));
@@ -88,7 +88,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
         setIsSaving(false);
     };
 
-    const onSelect = (sourceObject: StateSourceObject): void => {
+    const onSelect = (sourceObject: StateRelatedObject): void => {
         setSelected([...selected, sourceObject]);
     };
 

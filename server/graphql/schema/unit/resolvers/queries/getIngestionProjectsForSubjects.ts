@@ -16,7 +16,6 @@ export default async function getIngestionProjectsForSubjects(_: Parent, args: Q
         }
     }
 
-    // TODO: KARAN: if projects are empty after fetchMasterFromSubjects, send all projects
     const AllProjects = await DBAPI.Project.fetchAll();
 
     if (AllProjects) {

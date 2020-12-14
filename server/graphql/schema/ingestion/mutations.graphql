@@ -53,10 +53,11 @@ input IngestPhotogrammetryInput {
 
 input IngestUVMapInput {
     name: String!
+    edgeLength: Int!
     mapType: Int!
 }
 
-input SourceObjectInput {
+input RelatedObjectInput {
     idSystemObject: Int!
     name: String!
     identifier: String
@@ -77,7 +78,7 @@ input IngestModelInput {
     directory: String!
     identifiers: [IngestIdentifierInput!]!
     uvMaps: [IngestUVMapInput!]!
-    sourceObjects: [SourceObjectInput!]!
+    sourceObjects: [RelatedObjectInput!]!
     roughness: Int
     metalness: Int
     pointCount: Int
