@@ -35,3 +35,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 CMD ["nginx", "-g", "daemon off;"]
 
 FROM mariadb:10.5 as db
+
+FROM solr:8 as solr
+COPY --chown=solr:solr ./server/config/solr/data/packrat/ /var/solr/data/packrat/
