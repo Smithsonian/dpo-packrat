@@ -42,6 +42,7 @@ type IngestPhotogrammetry {
 
 type IngestUVMap {
     name: String!
+    edgeLength: Int!
     mapType: Int!
 }
 

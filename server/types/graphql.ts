@@ -426,6 +426,7 @@ export type IngestPhotogrammetry = {
 export type IngestUvMap = {
     __typename?: 'IngestUVMap';
     name: Scalars['String'];
+    edgeLength: Scalars['Int'];
     mapType: Scalars['Int'];
 };
 
@@ -744,6 +745,7 @@ export type IngestPhotogrammetryInput = {
 
 export type IngestUvMapInput = {
     name: Scalars['String'];
+    edgeLength: Scalars['Int'];
     mapType: Scalars['Int'];
 };
 

@@ -168,6 +168,7 @@ type IngestPhotogrammetry {
 
 type IngestUVMap {
   name: String!
+  edgeLength: Int!
   mapType: Int!
 }
 
@@ -465,6 +466,7 @@ input IngestPhotogrammetryInput {
 
 input IngestUVMapInput {
   name: String!
+  edgeLength: Int!
   mapType: Int!
 }
 
