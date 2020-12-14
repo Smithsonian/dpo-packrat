@@ -42,20 +42,19 @@ type IngestPhotogrammetry {
 
 type IngestUVMap {
     name: String!
+    edgeLength: Int!
     mapType: Int!
 }
 
-type SourceObject {
+enum RelatedObjectType {
+    Source
+    Derived
+}
+
+type RelatedObject {
     idSystemObject: Int!
     name: String!
     identifier: String
-    objectType: Int!
-}
-
-type DerivedObject {
-    idSystemObject: Int!
-    name: String!
-    variantType: Int!
     objectType: Int!
 }
 
@@ -73,7 +72,7 @@ type IngestModel {
     directory: String!
     identifiers: [IngestIdentifier!]!
     uvMaps: [IngestUVMap!]!
-    sourceObjects: [SourceObject!]!
+    sourceObjects: [RelatedObject!]!
     roughness: Int
     metalness: Int
     pointCount: Int

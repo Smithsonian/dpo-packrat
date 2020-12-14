@@ -9,6 +9,7 @@ import { ThemeProvider } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AliveScope } from 'react-activation';
 import ReactDOM from 'react-dom';
+import { Helmet } from 'react-helmet';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
 import { Slide, toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -20,6 +21,7 @@ import { Home, Login } from './pages';
 import * as serviceWorker from './serviceWorker';
 import { useUserStore, useVocabularyStore } from './store';
 import theme from './theme';
+import { getHeaderTitle } from './utils/shared';
 
 function AppRouter(): React.ReactElement {
     const [loading, setLoading] = useState(true);
@@ -64,6 +66,9 @@ function App(): React.ReactElement {
     return (
         <ApolloProvider client={apolloClient}>
             <ThemeProvider theme={theme}>
+                <Helmet>
+                    <title>{getHeaderTitle()}</title>
+                </Helmet>
                 <AppRouter />
                 <ToastContainer
                     transition={Slide}

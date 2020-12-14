@@ -3,7 +3,7 @@
  *
  * Type definitions for the metadata store.
  */
-import { DerivedObject, ReferenceModel, ReferenceModelAction, SourceObject } from '../../types/graphql';
+import { AssetDetail, DetailVersion, ReferenceModel, ReferenceModelAction, RelatedObject } from '../../types/graphql';
 import { IngestionFile } from '../upload';
 
 export type StateMetadata = {
@@ -42,7 +42,7 @@ export type FieldErrors = {
     };
 };
 
-export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateUVMap[] | SourceObject[];
+export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateUVMap[] | StateRelatedObject[];
 
 export type MetadataUpdate = {
     valid: boolean;
@@ -86,6 +86,7 @@ export type PhotogrammetryFields = {
 export type StateUVMap = {
     id: number;
     name: string;
+    edgeLength: number;
     mapType: number | null;
 };
 
@@ -93,7 +94,7 @@ export type ModelFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     uvMaps: StateUVMap[];
-    sourceObjects: StateSourceObject[];
+    sourceObjects: StateRelatedObject[];
     dateCaptured: Date;
     creationMethod: number | null;
     master: boolean;
@@ -130,11 +131,13 @@ export type OtherFields = {
     identifiers: StateIdentifier[];
 };
 
-export type StateSourceObject = SourceObject;
-
-export type StateDerivedObject = DerivedObject;
+export type StateRelatedObject = RelatedObject;
 
 export type StateReferenceModel = ReferenceModel;
+
+export type StateAssetDetail = AssetDetail;
+
+export type StateDetailVersion = DetailVersion;
 
 export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields;
 
