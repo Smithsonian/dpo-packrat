@@ -5,7 +5,7 @@
  */
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
-import { Loader, InputField } from '../../../../../components';
+import { InputField, Loader } from '../../../../../components';
 import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
 
 interface UnitDetailsProps extends GetDetailsTabDataForObjectQueryResult {
