@@ -6,12 +6,12 @@
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField } from '../../../../../components';
+import { AssetIdentifiers, CheckboxField, DateInputField, FieldType, InputField, SelectField } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useMetadataStore, useVocabularyStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { RelatedObjectType } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
-import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../../utils/shared';
+import { withDefaultValueNumber } from '../../../../../utils/shared';
 import BoundingBoxInput from './BoundingBoxInput';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
@@ -247,44 +247,10 @@ function Model(props: ModelProps): React.ReactElement {
                             name='faceCount'
                             onChange={setIdField}
                         />
-
-                        <FieldType required={false} label='Is Watertight?' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='isWatertight'
-                                checked={withDefaultValueBoolean(model.isWatertight, false)}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
-                        <FieldType required={false} label='Has Normals?' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='hasNormals'
-                                checked={withDefaultValueBoolean(model.hasNormals, false)}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
-
-                        <FieldType required={false} label='Has Vertex Color?' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='hasVertexColor'
-                                checked={withDefaultValueBoolean(model.hasVertexColor, false)}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
-                        <FieldType required={false} label='Has UV Space?' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='hasUVSpace'
-                                checked={withDefaultValueBoolean(model.hasUVSpace, false)}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
+                        <CheckboxField name='isWatertight' label='Is Watertight?' value={model.isWatertight} onChange={setCheckboxField} />
+                        <CheckboxField name='hasNormals' label='Has Normals?' value={model.hasNormals} onChange={setCheckboxField} />
+                        <CheckboxField name='hasVertexColor' label='Has Vertex Color?' value={model.hasVertexColor} onChange={setCheckboxField} />
+                        <CheckboxField name='hasUVSpace' label='Has UV Space?' value={model.hasUVSpace} onChange={setCheckboxField} />
                         <BoundingBoxInput model={model} onChange={setIdField} />
                     </Box>
                 </Box>

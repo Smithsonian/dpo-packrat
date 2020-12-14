@@ -41,7 +41,7 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
 
     const classes = useStyles();
 
-    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
+    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
     return (
         <FieldType
