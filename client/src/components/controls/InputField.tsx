@@ -41,7 +41,7 @@ function InputField(props: InputFieldProps): React.ReactElement {
     const { label, name, value, onChange, type, required = false, viewMode = false, disabled = false } = props;
     const classes = useStyles();
 
-    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
+    const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
     return (
         <FieldType
