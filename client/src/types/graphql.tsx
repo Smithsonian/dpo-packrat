@@ -430,6 +430,7 @@ export type IngestPhotogrammetry = {
 export type IngestUvMap = {
     __typename?: 'IngestUVMap';
     name: Scalars['String'];
+    edgeLength: Scalars['Int'];
     mapType: Scalars['Int'];
 };
 
@@ -748,6 +749,7 @@ export type IngestPhotogrammetryInput = {
 
 export type IngestUvMapInput = {
     name: Scalars['String'];
+    edgeLength: Scalars['Int'];
     mapType: Scalars['Int'];
 };
 
@@ -2059,7 +2061,7 @@ export type GetAssetVersionsDetailsQuery = (
                                     & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
                                 )>, uvMaps: Array<(
                                     { __typename?: 'IngestUVMap' }
-                                    & Pick<IngestUvMap, 'name' | 'mapType'>
+                                    & Pick<IngestUvMap, 'name' | 'edgeLength' | 'mapType'>
                                 )>
                             }
                         )>, Scene?: Maybe<(
@@ -3428,6 +3430,7 @@ export const GetAssetVersionsDetailsDocument = gql`
         }
         uvMaps {
           name
+          edgeLength
           mapType
         }
         roughness

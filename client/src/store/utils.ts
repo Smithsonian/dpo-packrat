@@ -96,11 +96,12 @@ export function parseFoldersToState(folders: IngestFolder[]): StateFolder[] {
 }
 
 export function parseUVMapsToState(folders: IngestUvMap[]): StateUVMap[] {
-    const stateFolders: StateUVMap[] = folders.map(({ name, mapType }: IngestUvMap, index: number) => ({
+    const uvMaps: StateUVMap[] = folders.map(({ name, edgeLength, mapType }: IngestUvMap, index: number) => ({
         id: index,
         name,
+        edgeLength,
         mapType
     }));
 
-    return stateFolders;
+    return uvMaps;
 }

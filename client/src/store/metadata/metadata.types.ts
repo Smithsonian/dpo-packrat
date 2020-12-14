@@ -86,6 +86,7 @@ export type PhotogrammetryFields = {
 export type StateUVMap = {
     id: number;
     name: string;
+    edgeLength: number;
     mapType: number | null;
 };
 
