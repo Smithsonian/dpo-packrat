@@ -64,6 +64,7 @@
     "node-stream-zip": "1.11.3",
     "passport": "0.4.1",
     "passport-local": "1.0.0",
+    "solr-client": "0.7.1",
     "supertest": "4.0.2",
     "uuid": "8.3.0",
     "winston": "3.3.3"
