@@ -10,11 +10,11 @@ import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { FiLink2 } from 'react-icons/fi';
 import { IoIosRemoveCircle } from 'react-icons/io';
 import { toast } from 'react-toastify';
-import { useRepositoryStore } from '../../../../store';
+import { useRepositoryStore, useVocabularyStore } from '../../../../store';
 import { Colors, palette } from '../../../../theme';
-import { eSystemObjectType } from '../../../../types/server';
 import FilterDate from './FilterDate';
 import FilterSelect from './FilterSelect';
+import { getRepositoryFilterOptions } from './RepositoryFilterOptions';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -98,26 +98,29 @@ const StyledChip = withStyles(({ palette }) => ({
     }
 }))(Chip);
 
-const mockOptions: number[] = [0, 1, 2, 3];
-const repositoryRootTypes: eSystemObjectType[] = [eSystemObjectType.eUnit, eSystemObjectType.eProject];
-
 function RepositoryFilterView(): React.ReactElement {
     const [isExpanded, toggleFilter] = useRepositoryStore(state => [state.isExpanded, state.toggleFilter]);
+    const getEntries = useVocabularyStore(state => state.getEntries);
+
+    const {
+        mockOptions,
+        repositoryRootTypesOptions,
+        objectToDisplayOptions,
+        metadataToDisplayOptions,
+        captureMethodOptions,
+        variantTypeOptions,
+        modelPurposeOptions,
+        fileTypeOptions,
+        hasOptions,
+        missingOptions
+    } = getRepositoryFilterOptions({ getEntries });
+
     const classes = useStyles(isExpanded);
-    const [chips] = useState([
-        {
-            type: 'Unit',
-            name: 'NMNH'
-        },
-        {
-            type: 'Project',
-            name: 'Seashell'
-        }
-    ]);
+    const [chips] = useState([]);
 
     const onCopyLink = (): void => {
         if ('clipboard' in navigator) {
-            navigator.clipboard.writeText('');
+            navigator.clipboard.writeText(window.location.href);
             toast.success('Link has been copied to your clipboard');
         }
     };
@@ -163,24 +166,24 @@ function RepositoryFilterView(): React.ReactElement {
                 {content}
                 <Box display='flex' flex={1} mt={2}>
                     <Box className={classes.selectContainer} width={300}>
-                        <FilterSelect multiple label='Repository Root Type' name='repositoryRootType' options={repositoryRootTypes} />
-                        <FilterSelect multiple label='Objects To Display' name='objectsToDisplay' options={mockOptions} />
-                        <FilterSelect multiple label='Metadata To Display' name='metadataToDisplay' options={mockOptions} />
+                        <FilterSelect multiple label='Repository Root Type' name='repositoryRootType' options={repositoryRootTypesOptions} />
+                        <FilterSelect multiple label='Objects To Display' name='objectsToDisplay' options={objectToDisplayOptions} />
+                        <FilterSelect multiple label='Metadata To Display' name='metadataToDisplay' options={metadataToDisplayOptions} />
                     </Box>
 
                     <Box className={classes.selectContainer} width={225}>
                         <FilterSelect multiple label='Units' name='units' options={mockOptions} />
                         <FilterSelect multiple label='Projects' name='projects' options={mockOptions} />
-                        <FilterSelect label='Has' name='has' options={mockOptions} />
-                        <FilterSelect label='Missing' name='missing' options={mockOptions} />
+                        <FilterSelect label='Has' name='has' options={hasOptions} />
+                        <FilterSelect label='Missing' name='missing' options={missingOptions} />
                     </Box>
 
                     <Box>
                         <Box className={classes.selectContainer} width={280}>
-                            <FilterSelect label='Capture Method' name='captureMethod' options={mockOptions} />
-                            <FilterSelect label='Variant Type' name='variantType' options={mockOptions} />
-                            <FilterSelect label='Model Purpose' name='modelPurpose' options={mockOptions} />
-                            <FilterSelect label='Model File Type' name='modelFileType' options={mockOptions} />
+                            <FilterSelect label='Capture Method' name='captureMethod' options={captureMethodOptions} />
+                            <FilterSelect label='Variant Type' name='variantType' options={variantTypeOptions} />
+                            <FilterSelect label='Model Purpose' name='modelPurpose' options={modelPurposeOptions} />
+                            <FilterSelect label='Model File Type' name='modelFileType' options={fileTypeOptions} />
                         </Box>
                         <FilterDate label='Date Created' name='dateCreated' />
                     </Box>

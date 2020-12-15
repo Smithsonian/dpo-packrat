@@ -44,12 +44,12 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     metadataToDisplay: [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName],
     units: [0],
     projects: [0],
-    has: 0,
-    missing: 0,
-    captureMethod: 0,
-    variantType: 0,
-    modelPurpose: 0,
-    modelFileType: 0,
+    has: 4,
+    missing: 8,
+    captureMethod: 1,
+    variantType: 29,
+    modelPurpose: 46,
+    modelFileType: 50,
     updateFilterValue: (name: string, value: number | number[]): void => {
         const { initializeTree } = get();
         set({ [name]: value, loading: true });
