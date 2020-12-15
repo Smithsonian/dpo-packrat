@@ -7,6 +7,7 @@ import { Box, MenuItem, Select, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { useRepositoryStore } from '../../../../store';
+import { FilterOption } from './RepositoryFilterOptions';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     label: {
@@ -34,7 +35,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
 interface FilterSelectProps {
     label: string;
     name: string;
-    options: number[];
+    options: FilterOption[];
     multiple?: boolean;
 }
 
@@ -72,7 +73,7 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
                 disableUnderline
                 inputProps={inputProps}
             >
-                {options.map((v, index) => <MenuItem key={index} value={v}>{v}</MenuItem>)}
+                {options.map(({ label, value }: FilterOption, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
             </Select>
         </Box>
     );

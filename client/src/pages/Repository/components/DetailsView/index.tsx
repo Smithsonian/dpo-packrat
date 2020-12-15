@@ -83,7 +83,7 @@ function DetailsView(): React.ReactElement {
     };
 
     const onAddDerivedObject = () => {
-        alert('TODO: KARAN: on add derived object');
+        setModalOpen(true);
     };
 
     return (
