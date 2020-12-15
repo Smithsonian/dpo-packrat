@@ -103,12 +103,12 @@ export class ObjectGraphTestSetup {
         this.assetVersion1a = await UTIL.createAssetVersionTest({ idAsset: this.asset1.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
         this.assetVersion1b = await UTIL.createAssetVersionTest({ idAsset: this.asset1.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
         this.assetVersion1c = await UTIL.createAssetVersionTest({ idAsset: this.asset1.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
-        this.captureData1 = await UTIL.createCaptureDataTest({ idVCaptureMethod: this.v1.idVocabulary, DateCaptured: UTIL.nowCleansed(), Description: 'OA Test', idAssetThumbnail: null, idCaptureData: 0 });
+        this.captureData1 = await UTIL.createCaptureDataTest({ Name: 'OA Test', idVCaptureMethod: this.v1.idVocabulary, DateCaptured: UTIL.nowCleansed(), Description: 'OA Test', idAssetThumbnail: null, idCaptureData: 0 });
         assigned = await this.asset1.assignOwner(this.captureData1); expect(assigned).toBeTruthy();
 
         this.assetT3 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersionT3 = await UTIL.createAssetVersionTest({ idAsset: this.assetT3.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
-        this.captureData2 = await UTIL.createCaptureDataTest({ idVCaptureMethod: this.v1.idVocabulary, DateCaptured: UTIL.nowCleansed(), Description: 'OA Test', idAssetThumbnail: this.assetT3.idAsset, idCaptureData: 0 });
+        this.captureData2 = await UTIL.createCaptureDataTest({ Name: 'OA Test', idVCaptureMethod: this.v1.idVocabulary, DateCaptured: UTIL.nowCleansed(), Description: 'OA Test', idAssetThumbnail: this.assetT3.idAsset, idCaptureData: 0 });
         assigned = await this.assetT3.assignOwner(this.captureData2); expect(assigned).toBeTruthy();
 
         this.assetT4 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });

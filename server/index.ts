@@ -11,6 +11,7 @@ import { serverOptions } from './graphql';
 import * as LOG from './utils/logger';
 import bodyParser from 'body-parser';
 import { passport, authCorsConfig, authSession, AuthRouter } from './auth';
+import { ReindexSolr } from './navigation/impl/NavigationSolr/ReindexSolr';
 
 import cookieParser from 'cookie-parser';
 
@@ -44,6 +45,12 @@ app.get('/logtest', (_: Request, response: Response) => {
     log.info('Logger Info Test');
     log.error('Logger Error Test', new Error());
     response.send('Got Here');
+});
+
+app.get('/solrindex', async (_: Request, response: Response) => {
+    const reindexer: ReindexSolr = new ReindexSolr();
+    const success: boolean = await reindexer.FullIndex();
+    response.send(`Solr Reindexing Completed: ${success ? 'Success' : 'Failure'}`);
 });
 
 export { app };

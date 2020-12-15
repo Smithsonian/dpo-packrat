@@ -5,9 +5,9 @@
 -->
 
 <schema name="packrat-config" version="1.6">
-	  <!-- SystemObject fields -->
+    <!-- SystemObject fields -->
     <field name="idSystemObject" type="string" indexed="true" stored="true" required="true" multiValued="false" />
-	  <!-- Describes the object represented by this system object, e.g. "Unit", "Project", "CaptureData", "Model", etc. -->
+    <!-- Describes the object represented by this system object, e.g. "Unit", "Project", "CaptureData", "Model", etc. -->
   	<field name="ObjectType" type="string" indexed="true" stored="true" required="true" multiValued="false" />
     <field name="idObject" type="pint" indexed="true" stored="true" required="true" multiValued="false" />
     <field name="Retired" type="boolean" indexed="true" stored="true" />
@@ -92,7 +92,7 @@
     <field name="Ingested" type="boolean" indexed="true" stored="true" multiValued="false" />
     <field name="BulkIngest" type="boolean" indexed="true" stored="true" multiValued="false" />
 
-	  <!-- Stakeholder fields -->
+    <!-- Stakeholder fields -->
     <field name="EmailAddress" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="PhoneNumberMobile" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="PhoneNumberOffice" type="string" indexed="true" stored="true" multiValued="false" />
@@ -101,16 +101,21 @@
     <!-- Only have "common" fields -->
     <!-- Project fields -->
     <!-- IntermediaryFile fields -->
-	  <!-- ProjectDocumentation fields -->
-	  <!-- Actor fields -->
+    <!-- ProjectDocumentation fields -->
+    <!-- Actor fields -->
 
-	  <!-- Hierarchy fields -->
-    <field name="Unit" type="string" multiValued="true" />
-    <field name="Project" type="string" multiValued="true" />
-    <field name="Subject" type="string" multiValued="true" />
-    <field name="Item" type="string" multiValued="true" />
+    <!-- Hierarchy fields -->
+    <field name="Unit" type="strings" indexed="true" stored="true" />
+    <field name="Project" type="strings" indexed="true" stored="true" />
+    <field name="Subject" type="strings" indexed="true" stored="true" />
+    <field name="Item" type="strings" indexed="true" stored="true" />
+    <field name="UnitID" type="pints" indexed="true" stored="true" />
+    <field name="ProjectID" type="pints" indexed="true" stored="true" />
+    <field name="SubjectID" type="pints" indexed="true" stored="true" />
+    <field name="ItemID" type="pints" indexed="true" stored="true" />
+    <field name="ParentID" type="pints" indexed="true" stored="true" />
 
-	  <!-- "Plumbling" fields: needed by the system -->
+    <!-- "Plumbling" fields: needed by the system -->
     <!-- docValues are enabled by default for long type so we don't need to index the version field  -->
     <field name="_version_" type="plong" indexed="false" stored="false"/>
     <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>

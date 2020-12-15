@@ -144,6 +144,7 @@ model AssetVersion {
 
 model CaptureData {
   idCaptureData                   Int                               @default(autoincrement()) @id
+  Name                            String
   idVCaptureMethod                Int
   DateCaptured                    DateTime
   Description                     String
