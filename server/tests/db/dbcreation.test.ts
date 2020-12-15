@@ -554,6 +554,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: CaptureData', async () => {
         if (vocabulary && assetThumbnail)
             captureData = await UTIL.createCaptureDataTest({
+                Name: 'Test Capture Data',
                 idVCaptureMethod: vocabulary.idVocabulary,
                 DateCaptured: UTIL.nowCleansed(),
                 Description: 'Test Capture Data',
@@ -566,6 +567,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: CaptureData With Nulls', async () => {
         if (vocabulary)
             captureDataNulls = await UTIL.createCaptureDataTest({
+                Name: 'Test Capture Data Nulls',
                 idVCaptureMethod: vocabulary.idVocabulary,
                 DateCaptured: UTIL.nowCleansed(),
                 Description: 'Test Capture Data Nulls',
@@ -3478,7 +3480,7 @@ describe('DB Fetch Xref Test Suite', () => {
 // DB Fetch Special Test Suite
 // *******************************************************************
 describe('DB Fetch Special Test Suite', () => {
-    test('DB FetchSpecial: Asset.assetType undefined', async() => {
+    test('DB Fetch Special: Asset.assetType undefined', async() => {
         let eVocabID: eVocabularyID | undefined = undefined;
         if (assetThumbnail)
             eVocabID = await assetThumbnail.assetType();
@@ -3486,7 +3488,7 @@ describe('DB Fetch Special Test Suite', () => {
         expect(eVocabID).toBeFalsy();
     });
 
-    test('DB FetchSpecial: Asset.assetType defined', async() => {
+    test('DB Fetch Special: Asset.assetType defined', async() => {
         let eVocabID: eVocabularyID | undefined = undefined;
         if (assetBulkIngest)
             eVocabID = await assetBulkIngest.assetType();
@@ -3495,7 +3497,7 @@ describe('DB Fetch Special Test Suite', () => {
         expect(eVocabID).toEqual(eVocabularyID.eAssetAssetTypeBulkIngestion);
     });
 
-    test('DB FetchSpecial: Asset.setAssetType', async() => {
+    test('DB Fetch Special: Asset.setAssetType', async() => {
         expect(assetThumbnail).toBeTruthy();
         if (assetThumbnail) {
             expect(await assetThumbnail.setAssetType(eVocabularyID.eNone)).toBeFalsy();
@@ -3512,14 +3514,14 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
 
-    test('DB FetchSpecial: Asset.fetchSourceSystemObject 1', async() => {
+    test('DB Fetch Special: Asset.fetchSourceSystemObject 1', async() => {
         let SOAsset: DBAPI.SystemObject | null = null;
         if (assetBulkIngest)
             SOAsset = await assetBulkIngest.fetchSourceSystemObject();
         expect(SOAsset).toBeFalsy();
     });
 
-    test('DB FetchSpecial: Asset.fetchSourceSystemObject 2', async() => {
+    test('DB Fetch Special: Asset.fetchSourceSystemObject 2', async() => {
         let SOAssetSource: DBAPI.SystemObject | null = null;
         if (assetWithoutAG)
             SOAssetSource = await assetWithoutAG.fetchSourceSystemObject();
@@ -3551,6 +3553,26 @@ describe('DB Fetch Special Test Suite', () => {
         expect(captureDataFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: CaptureData.fetchAll', async () => {
+        let captureDataFetch: DBAPI.CaptureData[] | null = null;
+        if (captureData && captureDataNulls) {
+            captureDataFetch = await DBAPI.CaptureData.fetchAll();
+            if (captureDataFetch)
+                expect(captureDataFetch).toEqual(expect.arrayContaining([captureData, captureDataNulls]));
+        }
+        expect(captureDataFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: CaptureDataPhoto.fetchAll', async () => {
+        let captureDataPhotoFetch: DBAPI.CaptureDataPhoto[] | null = null;
+        if (captureDataPhoto && captureDataPhotoNulls) {
+            captureDataPhotoFetch = await DBAPI.CaptureDataPhoto.fetchAll();
+            if (captureDataPhotoFetch)
+                expect(captureDataPhotoFetch).toEqual(expect.arrayContaining([captureDataPhoto, captureDataPhotoNulls]));
+        }
+        expect(captureDataPhotoFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: Identifier.fetchFromIdentifierValue', async () => {
         const identifierFetch: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(identifierValue);
         expect(identifierFetch).toBeTruthy();
@@ -3580,6 +3602,16 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(intermediaryFileFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Item.fetchAll', async () => {
+        let itemFetch: DBAPI.Item[] | null = null;
+        if (item && itemNulls) {
+            itemFetch = await DBAPI.Item.fetchAll();
+            if (itemFetch)
+                expect(itemFetch).toEqual(expect.arrayContaining([item, itemNulls]));
+        }
+        expect(itemFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: Item.fetchDerivedFromSubject', async () => {
@@ -3747,6 +3779,16 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(stakeholderFetch).toEqual(expect.arrayContaining([stakeholder]));
         }
         expect(stakeholderFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Subject.fetchAll', async () => {
+        let subjectFetch: DBAPI.Subject[] | null = null;
+        if (subject && subjectNulls) {
+            subjectFetch = await DBAPI.Subject.fetchAll();
+            if (subjectFetch)
+                expect(subjectFetch).toEqual(expect.arrayContaining([subject, subjectNulls]));
+        }
+        expect(subjectFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: SystemObject.fetchAll', async () => {

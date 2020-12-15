@@ -589,6 +589,7 @@ export type AssetGroup = {
 };
 
 export type CreateCaptureDataInput = {
+    Name: Scalars['String'];
     idVCaptureMethod: Scalars['Int'];
     DateCaptured: Scalars['DateTime'];
     Description: Scalars['String'];

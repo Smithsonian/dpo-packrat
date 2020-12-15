@@ -318,6 +318,7 @@ type AssetGroup {
 }
 
 input CreateCaptureDataInput {
+  Name: String!
   idVCaptureMethod: Int!
   DateCaptured: DateTime!
   Description: String!

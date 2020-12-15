@@ -5,6 +5,7 @@ import * as DBAPI from '../../../../../db';
 export default async function CreateCaptureData(_: Parent, args: MutationCreateCaptureDataArgs): Promise<CreateCaptureDataResult> {
     const { input } = args;
     const {
+        Name,
         idVCaptureMethod,
         DateCaptured,
         Description,
@@ -13,6 +14,7 @@ export default async function CreateCaptureData(_: Parent, args: MutationCreateC
 
     const captureDataArgs = {
         idCaptureData: 0,
+        Name,
         idVCaptureMethod,
         DateCaptured,
         Description,
