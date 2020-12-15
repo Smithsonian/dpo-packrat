@@ -27,7 +27,7 @@
   "scripts": {
     "start": "yarn build && concurrently 'yarn build:watch' 'yarn server:start'",
     "start:prod": "node build/index.js",
-    "server:start": "nodemon build/index.js",
+    "server:start": "nodemon build/index.js --ignore var/ --ignore build/",
     "build": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
     "build:watch": "tsc --watch",
     "clean": "rm -rf node_modules/ build/",
