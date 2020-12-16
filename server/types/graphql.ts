@@ -24,6 +24,7 @@ export type Query = {
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getCurrentUser: GetCurrentUserResult;
     getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
+    getFilterViewData: GetFilterViewDataResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getIntermediaryFile: GetIntermediaryFileResult;
@@ -1029,6 +1030,12 @@ export type GetObjectChildrenResult = {
     error: Scalars['String'];
     entries: Array<NavigationResultEntry>;
     metadataColumns: Array<Scalars['Int']>;
+};
+
+export type GetFilterViewDataResult = {
+    __typename?: 'GetFilterViewDataResult';
+    units: Array<Unit>;
+    projects: Array<Project>;
 };
 
 export type CreateSceneInput = {

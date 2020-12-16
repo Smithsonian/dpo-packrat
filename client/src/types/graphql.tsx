@@ -28,6 +28,7 @@ export type Query = {
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getCurrentUser: GetCurrentUserResult;
     getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
+    getFilterViewData: GetFilterViewDataResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getIntermediaryFile: GetIntermediaryFileResult;
@@ -1033,6 +1034,12 @@ export type GetObjectChildrenResult = {
     error: Scalars['String'];
     entries: Array<NavigationResultEntry>;
     metadataColumns: Array<Scalars['Int']>;
+};
+
+export type GetFilterViewDataResult = {
+    __typename?: 'GetFilterViewDataResult';
+    units: Array<Unit>;
+    projects: Array<Project>;
 };
 
 export type CreateSceneInput = {
@@ -2220,6 +2227,39 @@ export type GetModelQuery = (
                 Model?: Maybe<(
                     { __typename?: 'Model' }
                     & Pick<Model, 'idModel'>
+                )>
+            }
+        )
+    }
+);
+
+export type GetFilterViewDataQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetFilterViewDataQuery = (
+    { __typename?: 'Query' }
+    & {
+        getFilterViewData: (
+            { __typename?: 'GetFilterViewDataResult' }
+            & {
+                units: Array<(
+                    { __typename?: 'Unit' }
+                    & Pick<Unit, 'idUnit' | 'Name'>
+                    & {
+                        SystemObject?: Maybe<(
+                            { __typename?: 'SystemObject' }
+                            & Pick<SystemObject, 'idSystemObject'>
+                        )>
+                    }
+                )>, projects: Array<(
+                    { __typename?: 'Project' }
+                    & Pick<Project, 'idProject' | 'Name'>
+                    & {
+                        SystemObject?: Maybe<(
+                            { __typename?: 'SystemObject' }
+                            & Pick<SystemObject, 'idSystemObject'>
+                        )>
+                    }
                 )>
             }
         )
@@ -3739,6 +3779,51 @@ export function useGetModelLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetModelQueryHookResult = ReturnType<typeof useGetModelQuery>;
 export type GetModelLazyQueryHookResult = ReturnType<typeof useGetModelLazyQuery>;
 export type GetModelQueryResult = Apollo.QueryResult<GetModelQuery, GetModelQueryVariables>;
+export const GetFilterViewDataDocument = gql`
+    query getFilterViewData {
+  getFilterViewData {
+    units {
+      idUnit
+      Name
+      SystemObject {
+        idSystemObject
+      }
+    }
+    projects {
+      idProject
+      Name
+      SystemObject {
+        idSystemObject
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetFilterViewDataQuery__
+ *
+ * To run a query within a React component, call `useGetFilterViewDataQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFilterViewDataQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFilterViewDataQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetFilterViewDataQuery(baseOptions?: Apollo.QueryHookOptions<GetFilterViewDataQuery, GetFilterViewDataQueryVariables>) {
+    return Apollo.useQuery<GetFilterViewDataQuery, GetFilterViewDataQueryVariables>(GetFilterViewDataDocument, baseOptions);
+}
+export function useGetFilterViewDataLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetFilterViewDataQuery, GetFilterViewDataQueryVariables>) {
+    return Apollo.useLazyQuery<GetFilterViewDataQuery, GetFilterViewDataQueryVariables>(GetFilterViewDataDocument, baseOptions);
+}
+export type GetFilterViewDataQueryHookResult = ReturnType<typeof useGetFilterViewDataQuery>;
+export type GetFilterViewDataLazyQueryHookResult = ReturnType<typeof useGetFilterViewDataLazyQuery>;
+export type GetFilterViewDataQueryResult = Apollo.QueryResult<GetFilterViewDataQuery, GetFilterViewDataQueryVariables>;
 export const GetObjectChildrenDocument = gql`
     query getObjectChildren($input: GetObjectChildrenInput!) {
   getObjectChildren(input: $input) {

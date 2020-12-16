@@ -1,5 +1,6 @@
 type Query {
     getObjectChildren(input: GetObjectChildrenInput!): GetObjectChildrenResult!
+    getFilterViewData: GetFilterViewDataResult!
 }
 
 input GetObjectChildrenInput {
@@ -21,4 +22,9 @@ type GetObjectChildrenResult {
     error: String!
     entries: [NavigationResultEntry!]!
     metadataColumns: [Int!]!
+}
+
+type GetFilterViewDataResult {
+    units: [Unit!]!
+    projects: [Project!]!
 }
