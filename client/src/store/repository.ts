@@ -27,6 +27,7 @@ type RepositoryStore = {
     variantType: number;
     modelPurpose: number;
     modelFileType: number;
+    removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
     updateFilterValue: (name: string, value: number | number[]) => void;
     initializeTree: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
@@ -42,8 +43,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     repositoryRootType: [eSystemObjectType.eUnit],
     objectsToDisplay: [0],
     metadataToDisplay: [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName],
-    units: [0],
-    projects: [0],
+    units: [],
+    projects: [],
     has: 4,
     missing: 8,
     captureMethod: 1,
@@ -88,5 +89,25 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             updatedTree.set(nodeId, sortedEntries);
             set({ tree: updatedTree });
         }
+    },
+    removeUnitsOrProjects: (id: number, type: eSystemObjectType): void => {
+        const { units, projects } = get();
+        let updatedUnits: number[] = units.slice();
+        let updatedProjects: number[] = projects.slice();
+
+        switch (type) {
+            case eSystemObjectType.eUnit: {
+                if (updatedUnits.length === 1) updatedUnits = [];
+                else updatedUnits = updatedUnits.filter(unit => unit === id);
+                break;
+            }
+            case eSystemObjectType.eProject: {
+                if (updatedProjects.length === 1) updatedProjects = [];
+                else updatedProjects = updatedProjects.filter(project => project === id);
+                break;
+            }
+        }
+
+        set({ units: updatedUnits, projects: updatedProjects });
     }
 }));
