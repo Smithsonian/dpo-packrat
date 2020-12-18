@@ -65,7 +65,7 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
         <Box display='flex' alignItems='center' justifyContent='space-between' mb={1}>
             <Typography className={classes.label}>{label}</Typography>
             <Select
-                value={value}
+                value={value || []}
                 multiple={multiple || false}
                 className={classes.select}
                 name={name}

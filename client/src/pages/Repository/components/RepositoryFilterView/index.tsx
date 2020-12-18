@@ -136,7 +136,13 @@ function RepositoryFilterView(): React.ReactElement {
                 <Typography variant='body1'>Unit: All</Typography>
             </Box>
 
-            <Box display='flex' height='40px' width='64vw' overflow='scroll'>
+            <Box
+                display='flex'
+                alignItems='center'
+                height='40px'
+                width='64vw'
+                overflow='scroll'
+            >
                 {chipsOptions.map((chip: ChipOption, index: number) => {
                     const { id, type, name } = chip;
                     const label: string = `${getTermForSystemObjectType(type)}: ${name}`;

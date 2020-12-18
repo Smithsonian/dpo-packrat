@@ -4,10 +4,11 @@
  * This store manages state for Repository filter and tree view.
  */
 import create, { GetState, SetState } from 'zustand';
+import { RepositoryFilter } from '../pages/Repository';
 import { getObjectChildren, getObjectChildrenForRoot } from '../pages/Repository/hooks/useRepository';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
-import { parseRepositoryTreeNodeId, sortEntriesAlphabetically } from '../utils/repository';
+import { parseRepositoryTreeNodeId, sortEntriesAlphabetically, validateArray } from '../utils/repository';
 
 type RepositoryStore = {
     isExpanded: boolean;
@@ -31,6 +32,7 @@ type RepositoryStore = {
     updateFilterValue: (name: string, value: number | number[]) => void;
     initializeTree: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
+    updateRepositoryFilter: (filter: RepositoryFilter) => void;
 };
 
 export const treeRootKey: string = 'root';
@@ -41,7 +43,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
     loading: true,
     repositoryRootType: [eSystemObjectType.eUnit],
-    objectsToDisplay: [0],
+    objectsToDisplay: [eSystemObjectType.eUnit],
     metadataToDisplay: [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName],
     units: [],
     projects: [],
@@ -109,5 +111,19 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         }
 
         set({ units: updatedUnits, projects: updatedProjects });
+    },
+    updateRepositoryFilter: (filter: RepositoryFilter): void => {
+        const { repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects } = get();
+
+        const stateValues: RepositoryFilter = {
+            ...filter,
+            repositoryRootType: validateArray<eSystemObjectType>(filter.repositoryRootType, repositoryRootType),
+            objectsToDisplay: validateArray<eSystemObjectType>(filter.objectsToDisplay, objectsToDisplay),
+            metadataToDisplay: validateArray<eMetadata>(filter.metadataToDisplay, metadataToDisplay),
+            units: validateArray<number>(filter.units, units),
+            projects: validateArray<number>(filter.projects, projects),
+        };
+
+        set(stateValues);
     }
 }));
