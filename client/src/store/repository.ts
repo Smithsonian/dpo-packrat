@@ -28,8 +28,10 @@ type RepositoryStore = {
     variantType: number;
     modelPurpose: number;
     modelFileType: number;
+    fromDate: Date;
+    toDate: Date;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
-    updateFilterValue: (name: string, value: number | number[]) => void;
+    updateFilterValue: (name: string, value: number | number[] | Date) => void;
     initializeTree: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
     updateRepositoryFilter: (filter: RepositoryFilter) => void;
@@ -53,7 +55,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     variantType: 29,
     modelPurpose: 46,
     modelFileType: 50,
-    updateFilterValue: (name: string, value: number | number[]): void => {
+    fromDate: new Date(),
+    toDate: new Date(),
+    updateFilterValue: (name: string, value: number | number[] | Date): void => {
         const { initializeTree } = get();
         set({ [name]: value, loading: true });
         initializeTree();

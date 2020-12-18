@@ -35,13 +35,14 @@ const useStyles = makeStyles(({ breakpoints }) => ({
 }));
 
 export type RepositoryFilter = {
+    search: string;
     repositoryRootType: eSystemObjectType[];
     objectsToDisplay: eSystemObjectType[];
     metadataToDisplay: eMetadata[];
     units: number[];
     projects: number[];
-    has: number;
-    missing: number;
+    has: eSystemObjectType;
+    missing: eSystemObjectType;
     captureMethod: number;
     variantType: number;
     modelPurpose: number;
@@ -75,8 +76,9 @@ function Repository(): React.ReactElement {
 
 function TreeViewPage(): React.ReactElement {
     const history = useHistory();
-    const { search } = useLocation();
+    const location = useLocation();
     const {
+        search,
         repositoryRootType,
         objectsToDisplay,
         metadataToDisplay,
@@ -91,9 +93,10 @@ function TreeViewPage(): React.ReactElement {
         updateRepositoryFilter
     } = useRepositoryStore();
 
-    const queries: RepositoryFilter = parseRepositoryUrl(search);
+    const queries: RepositoryFilter = parseRepositoryUrl(location.search);
 
     const filterState: RepositoryFilter = React.useMemo(() => ({
+        search,
         repositoryRootType,
         objectsToDisplay,
         metadataToDisplay,
@@ -106,6 +109,7 @@ function TreeViewPage(): React.ReactElement {
         modelPurpose,
         modelFileType,
     }), [
+        search,
         repositoryRootType,
         objectsToDisplay,
         metadataToDisplay,
