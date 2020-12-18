@@ -106,16 +106,7 @@ export function parseRepositoryUrl(search: string): any {
 }
 
 export function generateRepositoryUrl(filter: RepositoryFilter): string {
-    const validate = (value: unknown) => {
-        if (lodash.isBoolean(value)) {
-            return value === true;
-        }
-
-        return true;
-    };
-
-    const queryResult = lodash.pickBy(filter, validate);
-    return `?${qs.stringify(queryResult)}`;
+    return `?${qs.stringify(filter, { arrayFormat: 'comma' })}`;
 }
 
 export function getTreeWidth(columnSize: number, sideBarExpanded: boolean, fullWidth: boolean): string {
@@ -245,4 +236,18 @@ export function getTreeViewStyleWidth(sideBarExpanded: boolean, breakpoint: Brea
 
     if (sideBarExpanded) return isSmallScreen ? '81.5vw' : '85vw';
     else return isSmallScreen ? '92vw' : '93vw';
+}
+
+export function validateArray<T>(value: T[], defaultValue: T[]): T[] {
+    const result: T[] = [];
+
+    if (!value) {
+        result.push(...defaultValue);
+    } else if (Array.isArray(value)) {
+        result.push(...value);
+    } else {
+        result.push(value);
+    }
+
+    return result;
 }
