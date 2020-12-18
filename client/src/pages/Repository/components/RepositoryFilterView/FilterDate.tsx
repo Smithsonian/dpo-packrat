@@ -9,6 +9,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
 import React from 'react';
 import { AiOutlineCalendar } from 'react-icons/ai';
+import { useRepositoryStore } from '../../../../store';
 import { palette } from '../../../../theme';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
@@ -41,15 +42,14 @@ interface FilterDateProps {
 
 function FilterDate(props: FilterDateProps): React.ReactElement {
     const { label, name } = props;
-
     const classes = useStyles();
 
-    const onFromDate = (fromDate: string | null | undefined) => {
-        console.log(fromDate);
-    };
+    const [fromDate, toDate, updateFilterValue] = useRepositoryStore(state => [state.fromDate, state.toDate, state.updateFilterValue]);
 
-    const onToDate = (toDate: string | null | undefined) => {
-        console.log(toDate);
+    const onDate = (name: string, date: string | null | undefined) => {
+        if (date) {
+            updateFilterValue(name, new Date(date));
+        }
     };
 
     const InputProps = {
@@ -82,8 +82,8 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
                 <KeyboardDatePicker
                     {...datePickerProps}
                     style={fromDateStyle}
-                    value={new Date()}
-                    onChange={(_, value) => onFromDate(value)}
+                    value={fromDate}
+                    onChange={(_, value) => onDate('fromDate', value)}
                     variant='inline'
                     margin='normal'
 
@@ -91,8 +91,8 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
                 <Typography className={classes.toText}>to</Typography>
                 <KeyboardDatePicker
                     {...datePickerProps}
-                    value={new Date()}
-                    onChange={(_, value) => onToDate(value)}
+                    value={toDate}
+                    onChange={(_, value) => onDate('toDate', value)}
                     variant='inline'
                     margin='normal'
                 />
