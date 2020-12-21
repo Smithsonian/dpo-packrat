@@ -22,12 +22,12 @@ type RepositoryStore = {
     metadataToDisplay: eMetadata[];
     units: number[];
     projects: number[];
-    has: number;
-    missing: number;
-    captureMethod: number;
-    variantType: number;
-    modelPurpose: number;
-    modelFileType: number;
+    has: eSystemObjectType[];
+    missing: eSystemObjectType[];
+    captureMethod: number[];
+    variantType: number[];
+    modelPurpose: number[];
+    modelFileType: number[];
     fromDate: Date;
     toDate: Date;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
@@ -49,12 +49,12 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     metadataToDisplay: [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName],
     units: [],
     projects: [],
-    has: 4,
-    missing: 8,
-    captureMethod: 1,
-    variantType: 29,
-    modelPurpose: 46,
-    modelFileType: 50,
+    has: [4],
+    missing: [8],
+    captureMethod: [1],
+    variantType: [29],
+    modelPurpose: [46],
+    modelFileType: [50],
     fromDate: new Date(),
     toDate: new Date(),
     updateFilterValue: (name: string, value: number | number[] | Date): void => {
@@ -117,7 +117,19 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ units: updatedUnits, projects: updatedProjects });
     },
     updateRepositoryFilter: (filter: RepositoryFilter): void => {
-        const { repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects } = get();
+        const {
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        } = get();
 
         const stateValues: RepositoryFilter = {
             ...filter,
@@ -126,6 +138,12 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             metadataToDisplay: validateArray<eMetadata>(filter.metadataToDisplay, metadataToDisplay),
             units: validateArray<number>(filter.units, units),
             projects: validateArray<number>(filter.projects, projects),
+            has: validateArray<eSystemObjectType>(filter.has, has),
+            missing: validateArray<eSystemObjectType>(filter.missing, missing),
+            captureMethod: validateArray<number>(filter.captureMethod, captureMethod),
+            variantType: validateArray<number>(filter.variantType, variantType),
+            modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
+            modelFileType: validateArray<number>(filter.modelFileType, modelFileType),
         };
 
         set(stateValues);

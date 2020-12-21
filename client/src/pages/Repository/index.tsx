@@ -41,12 +41,12 @@ export type RepositoryFilter = {
     metadataToDisplay: eMetadata[];
     units: number[];
     projects: number[];
-    has: eSystemObjectType;
-    missing: eSystemObjectType;
-    captureMethod: number;
-    variantType: number;
-    modelPurpose: number;
-    modelFileType: number;
+    has: eSystemObjectType[];
+    missing: eSystemObjectType[];
+    captureMethod: number[];
+    variantType: number[];
+    modelPurpose: number[];
+    modelFileType: number[];
 };
 
 function Repository(): React.ReactElement {

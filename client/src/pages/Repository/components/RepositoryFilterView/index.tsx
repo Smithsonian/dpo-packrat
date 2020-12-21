@@ -191,16 +191,16 @@ function RepositoryFilterView(): React.ReactElement {
                     <Box className={classes.selectContainer} width={225}>
                         <FilterSelect multiple label='Units' name='units' options={unitsOptions} />
                         <FilterSelect multiple label='Projects' name='projects' options={projectsOptions} />
-                        <FilterSelect label='Has' name='has' options={hasOptions} />
-                        <FilterSelect label='Missing' name='missing' options={missingOptions} />
+                        <FilterSelect multiple label='Has' name='has' options={hasOptions} />
+                        <FilterSelect multiple label='Missing' name='missing' options={missingOptions} />
                     </Box>
 
                     <Box>
                         <Box className={classes.selectContainer} width={280}>
-                            <FilterSelect label='Capture Method' name='captureMethod' options={captureMethodOptions} />
-                            <FilterSelect label='Variant Type' name='variantType' options={variantTypeOptions} />
-                            <FilterSelect label='Model Purpose' name='modelPurpose' options={modelPurposeOptions} />
-                            <FilterSelect label='Model File Type' name='modelFileType' options={fileTypeOptions} />
+                            <FilterSelect multiple label='Capture Method' name='captureMethod' options={captureMethodOptions} />
+                            <FilterSelect multiple label='Variant Type' name='variantType' options={variantTypeOptions} />
+                            <FilterSelect multiple label='Model Purpose' name='modelPurpose' options={modelPurposeOptions} />
+                            <FilterSelect multiple label='Model File Type' name='modelFileType' options={fileTypeOptions} />
                         </Box>
                         <FilterDate label='Date Created' name='dateCreated' />
                     </Box>
