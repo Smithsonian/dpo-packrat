@@ -719,7 +719,17 @@ input PaginationInput {
 input GetObjectChildrenInput {
   idRoot: Int!
   objectTypes: [Int!]!
+  objectsToDisplay: [Int!]!
   metadataColumns: [Int!]!
+  search: String!
+  units: [Int!]!
+  projects: [Int!]!
+  has: [Int!]!
+  missing: [Int!]!
+  captureMethod: [Int!]!
+  variantType: [Int!]!
+  modelPurpose: [Int!]!
+  modelFileType: [Int!]!
 }
 
 type NavigationResultEntry {

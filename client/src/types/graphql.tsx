@@ -1016,7 +1016,17 @@ export type PaginationInput = {
 export type GetObjectChildrenInput = {
     idRoot: Scalars['Int'];
     objectTypes: Array<Scalars['Int']>;
+    objectsToDisplay: Array<Scalars['Int']>;
     metadataColumns: Array<Scalars['Int']>;
+    search: Scalars['String'];
+    units: Array<Scalars['Int']>;
+    projects: Array<Scalars['Int']>;
+    has: Array<Scalars['Int']>;
+    missing: Array<Scalars['Int']>;
+    captureMethod: Array<Scalars['Int']>;
+    variantType: Array<Scalars['Int']>;
+    modelPurpose: Array<Scalars['Int']>;
+    modelFileType: Array<Scalars['Int']>;
 };
 
 export type NavigationResultEntry = {
