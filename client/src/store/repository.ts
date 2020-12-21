@@ -30,6 +30,7 @@ type RepositoryStore = {
     modelFileType: number[];
     fromDate: Date;
     toDate: Date;
+    getFilterState: () => RepositoryFilter;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
     updateFilterValue: (name: string, value: number | number[] | Date) => void;
     initializeTree: () => Promise<void>;
@@ -70,8 +71,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ isExpanded: !isExpanded });
     },
     initializeTree: async (): Promise<void> => {
-        const { repositoryRootType, metadataToDisplay } = get();
-        const { data, error } = await getObjectChildrenForRoot(repositoryRootType, metadataToDisplay);
+        const { getFilterState } = get();
+        const filter = getFilterState();
+        const { data, error } = await getObjectChildrenForRoot(filter);
 
         if (data && !error) {
             const { getObjectChildren } = data;
@@ -83,9 +85,10 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         }
     },
     getChildren: async (nodeId: string): Promise<void> => {
-        const { tree, metadataToDisplay } = get();
+        const { tree, getFilterState } = get();
+        const filter = getFilterState();
         const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
-        const { data, error } = await getObjectChildren(idSystemObject, metadataToDisplay);
+        const { data, error } = await getObjectChildren(idSystemObject, filter);
 
         if (data && !error) {
             const { getObjectChildren } = data;
@@ -147,5 +150,36 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         };
 
         set(stateValues);
+    },
+    getFilterState: (): RepositoryFilter => {
+        const {
+            search,
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        } = get();
+
+        return {
+            search,
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        };
     }
 }));
