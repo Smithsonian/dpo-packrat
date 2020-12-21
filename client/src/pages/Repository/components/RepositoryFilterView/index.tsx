@@ -14,7 +14,7 @@ import { Loader } from '../../../../components';
 import { useRepositoryStore, useVocabularyStore } from '../../../../store';
 import { Colors, palette } from '../../../../theme';
 import { useGetFilterViewDataQuery } from '../../../../types/graphql';
-import { getTermForSystemObjectType } from '../../../../utils/repository';
+import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
 import FilterDate from './FilterDate';
 import FilterSelect from './FilterSelect';
 import { ChipOption, getRepositoryFilterOptions } from './RepositoryFilterOptions';
@@ -147,6 +147,10 @@ function RepositoryFilterView(): React.ReactElement {
                     const { id, type, name } = chip;
                     const label: string = `${getTermForSystemObjectType(type)}: ${name}`;
 
+                    const onClick = () => {
+                        window.open(getDetailsUrlForObject(id), '_blank');
+                    };
+
                     return (
                         <StyledChip
                             key={index}
@@ -154,6 +158,7 @@ function RepositoryFilterView(): React.ReactElement {
                             size='small'
                             deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
                             className={classes.chip}
+                            onClick={onClick}
                             onDelete={() => removeUnitsOrProjects(id, type)}
                             variant='outlined'
                         />
