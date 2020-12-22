@@ -6,6 +6,7 @@
 import { GetFilterViewDataQuery, Vocabulary } from '../../../../types/graphql';
 import { eMetadata, eSystemObjectType, eVocabularySetID } from '../../../../types/server';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
+import lodash from 'lodash';
 
 export type FilterOption = {
     label: string;
@@ -65,12 +66,12 @@ export function getRepositoryFilterOptions({ units, projects, data, getEntries }
     const getFilterViewData = data?.getFilterViewData;
 
     if (getFilterViewData?.units && getFilterViewData.units.length) {
-        unitsOptions = getFilterViewData?.units.map(({ Name, SystemObject }) => ({ label: Name, value: SystemObject?.idSystemObject ?? 0 }));
+        unitsOptions = sortOptionsAlphabetically(getFilterViewData?.units.map(({ Name, SystemObject }) => ({ label: Name, value: SystemObject?.idSystemObject ?? 0 })));
         chipsOptions.push(...filterOptionToChipOption(units, unitsOptions, eSystemObjectType.eUnit));
     }
 
     if (getFilterViewData?.projects && getFilterViewData.projects.length) {
-        projectsOptions = getFilterViewData?.projects.map(({ Name, SystemObject }) => ({ label: Name, value: SystemObject?.idSystemObject ?? 0 }));
+        projectsOptions = sortOptionsAlphabetically(getFilterViewData?.projects.map(({ Name, SystemObject }) => ({ label: Name, value: SystemObject?.idSystemObject ?? 0 })));
         chipsOptions.push(...filterOptionToChipOption(projects, projectsOptions, eSystemObjectType.eProject));
     }
 
@@ -114,4 +115,8 @@ function vocabulariesToFilterOption(vocabularies: Pick<Vocabulary, 'idVocabulary
 function filterOptionToChipOption(selectedIds: number[], options: FilterOption[], type: eSystemObjectType): ChipOption[] {
     const selectedOptions: FilterOption[] = options.filter(({ value }) => selectedIds.includes(value));
     return selectedOptions.map(({ label: name, value: id }: FilterOption) => ({ id, name, type }));
+}
+
+function sortOptionsAlphabetically(options: FilterOption[]): FilterOption[] {
+    return lodash.orderBy(options, [({ label }: FilterOption) => label.toLowerCase().trim()], ['asc']);
 }
