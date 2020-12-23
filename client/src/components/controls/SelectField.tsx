@@ -34,10 +34,12 @@ interface SelectFieldProps {
     error?: boolean;
     width?: string;
     onChange: (event: React.ChangeEvent<unknown>) => void;
+    viewMode?: boolean;
+    disabled?: boolean;
 }
 
 function SelectField(props: SelectFieldProps): React.ReactElement {
-    const { label, value, name, width, required, error, options, onChange } = props;
+    const { label, value, name, width, required, error, options, onChange, viewMode = false, disabled = false } = props;
 
     const classes = useStyles();
 
@@ -50,13 +52,14 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
             label={label}
             direction='row'
             containerProps={rowFieldProps}
-            width={width || undefined}
+            width={width || viewMode ? 'auto' : undefined}
         >
             <Select
                 value={value}
                 className={classes.select}
                 name={name}
                 onChange={onChange}
+                disabled={disabled}
                 disableUnderline
             >
                 {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}

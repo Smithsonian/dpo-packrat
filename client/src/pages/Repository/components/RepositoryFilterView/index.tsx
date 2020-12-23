@@ -5,16 +5,19 @@
  */
 import { Box, Chip, Typography } from '@material-ui/core';
 import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
-import React, { useState } from 'react';
+import React, { memo } from 'react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { FiLink2 } from 'react-icons/fi';
 import { IoIosRemoveCircle } from 'react-icons/io';
 import { toast } from 'react-toastify';
+import { Loader } from '../../../../components';
 import { useRepositoryStore, useVocabularyStore } from '../../../../store';
 import { Colors, palette } from '../../../../theme';
+import { useGetFilterViewDataQuery } from '../../../../types/graphql';
+import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
 import FilterDate from './FilterDate';
 import FilterSelect from './FilterSelect';
-import { getRepositoryFilterOptions } from './RepositoryFilterOptions';
+import { ChipOption, getRepositoryFilterOptions } from './RepositoryFilterOptions';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
@@ -99,11 +102,16 @@ const StyledChip = withStyles(({ palette }) => ({
 }))(Chip);
 
 function RepositoryFilterView(): React.ReactElement {
-    const [isExpanded, toggleFilter] = useRepositoryStore(state => [state.isExpanded, state.toggleFilter]);
+    const { data, loading } = useGetFilterViewDataQuery();
+    const [units, projects, isExpanded] = useRepositoryStore(state => [state.units, state.projects, state.isExpanded]);
+    const [toggleFilter, removeUnitsOrProjects] = useRepositoryStore(state => [state.toggleFilter, state.removeUnitsOrProjects]);
     const getEntries = useVocabularyStore(state => state.getEntries);
+    const classes = useStyles(isExpanded);
 
     const {
-        mockOptions,
+        chipsOptions,
+        unitsOptions,
+        projectsOptions,
         repositoryRootTypesOptions,
         objectToDisplayOptions,
         metadataToDisplayOptions,
@@ -113,10 +121,7 @@ function RepositoryFilterView(): React.ReactElement {
         fileTypeOptions,
         hasOptions,
         missingOptions
-    } = getRepositoryFilterOptions({ getEntries });
-
-    const classes = useStyles(isExpanded);
-    const [chips] = useState([]);
+    } = getRepositoryFilterOptions({ data, units, projects, getEntries });
 
     const onCopyLink = (): void => {
         if ('clipboard' in navigator) {
@@ -131,23 +136,35 @@ function RepositoryFilterView(): React.ReactElement {
                 <Typography variant='body1'>Unit: All</Typography>
             </Box>
 
-            {chips.map((chip, index: number) => {
-                const { type, name } = chip;
-                const handleDelete = () => null;
-                const label = `${type}: ${name}`;
+            <Box
+                display='flex'
+                alignItems='center'
+                height='40px'
+                width='64vw'
+                overflow='scroll'
+            >
+                {chipsOptions.map((chip: ChipOption, index: number) => {
+                    const { id, type, name } = chip;
+                    const label: string = `${getTermForSystemObjectType(type)}: ${name}`;
 
-                return (
-                    <StyledChip
-                        key={index}
-                        label={label}
-                        size='small'
-                        deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
-                        className={classes.chip}
-                        onDelete={handleDelete}
-                        variant='outlined'
-                    />
-                );
-            })}
+                    const onClick = () => {
+                        window.open(getDetailsUrlForObject(id), '_blank');
+                    };
+
+                    return (
+                        <StyledChip
+                            key={index}
+                            label={label}
+                            size='small'
+                            deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
+                            className={classes.chip}
+                            onClick={onClick}
+                            onDelete={() => removeUnitsOrProjects(id, type)}
+                            variant='outlined'
+                        />
+                    );
+                })}
+            </Box>
         </Box>
     );
 
@@ -172,18 +189,18 @@ function RepositoryFilterView(): React.ReactElement {
                     </Box>
 
                     <Box className={classes.selectContainer} width={225}>
-                        <FilterSelect multiple label='Units' name='units' options={mockOptions} />
-                        <FilterSelect multiple label='Projects' name='projects' options={mockOptions} />
-                        <FilterSelect label='Has' name='has' options={hasOptions} />
-                        <FilterSelect label='Missing' name='missing' options={missingOptions} />
+                        <FilterSelect multiple label='Units' name='units' options={unitsOptions} />
+                        <FilterSelect multiple label='Projects' name='projects' options={projectsOptions} />
+                        <FilterSelect multiple label='Has' name='has' options={hasOptions} />
+                        <FilterSelect multiple label='Missing' name='missing' options={missingOptions} />
                     </Box>
 
                     <Box>
                         <Box className={classes.selectContainer} width={280}>
-                            <FilterSelect label='Capture Method' name='captureMethod' options={captureMethodOptions} />
-                            <FilterSelect label='Variant Type' name='variantType' options={variantTypeOptions} />
-                            <FilterSelect label='Model Purpose' name='modelPurpose' options={modelPurposeOptions} />
-                            <FilterSelect label='Model File Type' name='modelFileType' options={fileTypeOptions} />
+                            <FilterSelect multiple label='Capture Method' name='captureMethod' options={captureMethodOptions} />
+                            <FilterSelect multiple label='Variant Type' name='variantType' options={variantTypeOptions} />
+                            <FilterSelect multiple label='Model Purpose' name='modelPurpose' options={modelPurposeOptions} />
+                            <FilterSelect multiple label='Model File Type' name='modelFileType' options={fileTypeOptions} />
                         </Box>
                         <FilterDate label='Date Created' name='dateCreated' />
                     </Box>
@@ -201,6 +218,10 @@ function RepositoryFilterView(): React.ReactElement {
         );
     }
 
+    if (!data || loading) {
+        content = <Loader maxWidth='100%' size={20} />;
+    }
+
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
@@ -216,4 +237,4 @@ function RepositoryFilterView(): React.ReactElement {
     );
 }
 
-export default RepositoryFilterView;
+export default memo(RepositoryFilterView);

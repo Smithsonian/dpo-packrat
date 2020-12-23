@@ -1,11 +1,22 @@
 type Query {
     getObjectChildren(input: GetObjectChildrenInput!): GetObjectChildrenResult!
+    getFilterViewData: GetFilterViewDataResult!
 }
 
 input GetObjectChildrenInput {
     idRoot: Int!
     objectTypes: [Int!]!
+    objectsToDisplay: [Int!]!
     metadataColumns: [Int!]!
+    search: String!
+    units: [Int!]!
+    projects: [Int!]!
+    has: [Int!]!
+    missing: [Int!]!
+    captureMethod: [Int!]!
+    variantType: [Int!]!
+    modelPurpose: [Int!]!
+    modelFileType: [Int!]!
 }
 
 type NavigationResultEntry {
@@ -21,4 +32,9 @@ type GetObjectChildrenResult {
     error: String!
     entries: [NavigationResultEntry!]!
     metadataColumns: [Int!]!
+}
+
+type GetFilterViewDataResult {
+    units: [Unit!]!
+    projects: [Project!]!
 }

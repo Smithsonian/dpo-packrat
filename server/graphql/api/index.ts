@@ -100,7 +100,8 @@ import {
     GetVersionsForSystemObjectInput,
     GetVersionsForSystemObjectResult,
     GetDetailsTabDataForObjectInput,
-    GetDetailsTabDataForObjectResult
+    GetDetailsTabDataForObjectResult,
+    GetFilterViewDataResult
 } from '../../types/graphql';
 
 // Queries
@@ -138,6 +139,7 @@ import getSystemObjectDetails from './queries/systemobject/getSystemObjectDetail
 import getAssetDetailsForSystemObject from './queries/systemobject/getAssetDetailsForSystemObject';
 import getVersionsForSystemObject from './queries/systemobject/getVersionsForSystemObject';
 import getDetailsTabDataForObject from './queries/systemobject/getDetailsTabDataForObject';
+import getFilterViewData from './queries/repository/getFilterViewData';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -205,7 +207,8 @@ const allQueries = {
     getSystemObjectDetails,
     getAssetDetailsForSystemObject,
     getVersionsForSystemObject,
-    getDetailsTabDataForObject
+    getDetailsTabDataForObject,
+    getFilterViewData
 };
 
 type GraphQLRequest = {
@@ -579,6 +582,16 @@ class GraphQLApi {
     async getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput, context?: Context): Promise<GetDetailsTabDataForObjectResult> {
         const operationName = 'getDetailsTabDataForObject';
         const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getFilterViewData(context?: Context): Promise<GetFilterViewDataResult> {
+        const operationName = 'getFilterViewData';
+        const variables = {};
         return this.graphqlRequest({
             operationName,
             variables,
