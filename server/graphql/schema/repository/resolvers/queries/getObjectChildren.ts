@@ -4,7 +4,21 @@ import { NavigationFactory, INavigation, NavigationFilter, NavigationResult } fr
 import * as LOG from '../../../../../utils/logger';
 
 export default async function getObjectChildren(_: Parent, args: QueryGetObjectChildrenArgs): Promise<GetObjectChildrenResult> {
-    const { idRoot, objectTypes, metadataColumns } = args.input;
+    const {
+        idRoot,
+        objectTypes,
+        metadataColumns,
+        search,
+        objectsToDisplay,
+        units,
+        projects,
+        has,
+        missing,
+        captureMethod,
+        variantType,
+        modelPurpose,
+        modelFileType,
+    } = args.input;
     const navigation: INavigation | null = await NavigationFactory.getInstance();
 
     if (!navigation) {
@@ -22,7 +36,17 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
     const filter: NavigationFilter = {
         idRoot,
         objectTypes,
-        metadataColumns
+        metadataColumns,
+        search,
+        objectsToDisplay,
+        units,
+        projects,
+        has,
+        missing,
+        captureMethod,
+        variantType,
+        modelPurpose,
+        modelFileType,
     };
 
     const result: NavigationResult = await navigation.getObjectChildren(filter);
