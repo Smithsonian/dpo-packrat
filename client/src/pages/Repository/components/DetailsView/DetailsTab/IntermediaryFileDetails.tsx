@@ -18,7 +18,7 @@ function IntermediaryFileDetails(props: IntermediaryFileDetailsProps): React.Rea
         return <Loader minHeight='15vh' />;
     }
 
-    return <span>IntermediaryFile Details</span>;
+    return <div />;
 }
 
 export default IntermediaryFileDetails;
