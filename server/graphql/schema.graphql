@@ -9,6 +9,7 @@ type Query {
   getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
   getCurrentUser: GetCurrentUserResult!
   getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
+  getFilterViewData: GetFilterViewDataResult!
   getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
@@ -719,7 +720,17 @@ input PaginationInput {
 input GetObjectChildrenInput {
   idRoot: Int!
   objectTypes: [Int!]!
+  objectsToDisplay: [Int!]!
   metadataColumns: [Int!]!
+  search: String!
+  units: [Int!]!
+  projects: [Int!]!
+  has: [Int!]!
+  missing: [Int!]!
+  captureMethod: [Int!]!
+  variantType: [Int!]!
+  modelPurpose: [Int!]!
+  modelFileType: [Int!]!
 }
 
 type NavigationResultEntry {
@@ -735,6 +746,11 @@ type GetObjectChildrenResult {
   error: String!
   entries: [NavigationResultEntry!]!
   metadataColumns: [Int!]!
+}
+
+type GetFilterViewDataResult {
+  units: [Unit!]!
+  projects: [Project!]!
 }
 
 input CreateSceneInput {

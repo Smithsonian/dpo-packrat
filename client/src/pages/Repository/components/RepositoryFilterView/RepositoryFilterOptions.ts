@@ -3,21 +3,33 @@
  *
  * Default options for repository filter view.
  */
-import { Vocabulary } from '../../../../types/graphql';
+import { GetFilterViewDataQuery, Vocabulary } from '../../../../types/graphql';
 import { eMetadata, eSystemObjectType, eVocabularySetID } from '../../../../types/server';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
+import lodash from 'lodash';
 
 export type FilterOption = {
     label: string;
     value: number;
 };
 
+export type ChipOption = {
+    id: number;
+    type: eSystemObjectType;
+    name: string;
+};
+
 type RepositoryFilterOptionsInput = {
+    units: number[];
+    projects: number[];
+    data: GetFilterViewDataQuery | undefined;
     getEntries: (eVocabularySetID: eVocabularySetID) => Pick<Vocabulary, 'idVocabulary' | 'Term'>[]
 };
 
 type RepositoryFilterOptionsResult = {
-    mockOptions: FilterOption[];
+    chipsOptions: ChipOption[];
+    unitsOptions: FilterOption[];
+    projectsOptions: FilterOption[];
     repositoryRootTypesOptions: FilterOption[];
     objectToDisplayOptions: FilterOption[];
     metadataToDisplayOptions: FilterOption[];
@@ -29,7 +41,7 @@ type RepositoryFilterOptionsResult = {
     missingOptions: FilterOption[];
 };
 
-export function getRepositoryFilterOptions({ getEntries }: RepositoryFilterOptionsInput): RepositoryFilterOptionsResult {
+export function getRepositoryFilterOptions({ units, projects, data, getEntries }: RepositoryFilterOptionsInput): RepositoryFilterOptionsResult {
     const systemObjectTypes: FilterOption[] = [
         { label: getTermForSystemObjectType(eSystemObjectType.eUnit), value: eSystemObjectType.eUnit },
         { label: getTermForSystemObjectType(eSystemObjectType.eProject), value: eSystemObjectType.eProject },
@@ -47,10 +59,21 @@ export function getRepositoryFilterOptions({ getEntries }: RepositoryFilterOptio
         { label: getTermForSystemObjectType(eSystemObjectType.eUnknown), value: eSystemObjectType.eUnknown },
     ];
 
-    const mockOptions: FilterOption[] = [
-        { label: '-', value: 0 },
-        { label: '-', value: 1 }
-    ];
+    const chipsOptions: ChipOption[] = [];
+    let unitsOptions: FilterOption[] = [];
+    let projectsOptions: FilterOption[] = [];
+
+    const getFilterViewData = data?.getFilterViewData;
+
+    if (getFilterViewData?.units && getFilterViewData.units.length) {
+        unitsOptions = sortOptionsAlphabetically(getFilterViewData?.units.map(({ Name, SystemObject }) => ({ label: Name, value: SystemObject?.idSystemObject ?? 0 })));
+        chipsOptions.push(...filterOptionToChipOption(units, unitsOptions, eSystemObjectType.eUnit));
+    }
+
+    if (getFilterViewData?.projects && getFilterViewData.projects.length) {
+        projectsOptions = sortOptionsAlphabetically(getFilterViewData?.projects.map(({ Name, SystemObject }) => ({ label: Name, value: SystemObject?.idSystemObject ?? 0 })));
+        chipsOptions.push(...filterOptionToChipOption(projects, projectsOptions, eSystemObjectType.eProject));
+    }
 
     const repositoryRootTypesOptions: FilterOption[] = systemObjectTypes.slice(0, 2);
 
@@ -70,7 +93,9 @@ export function getRepositoryFilterOptions({ getEntries }: RepositoryFilterOptio
     const missingOptions: FilterOption[] = systemObjectTypes;
 
     return {
-        mockOptions,
+        chipsOptions,
+        unitsOptions,
+        projectsOptions,
         repositoryRootTypesOptions,
         objectToDisplayOptions,
         metadataToDisplayOptions,
@@ -85,4 +110,13 @@ export function getRepositoryFilterOptions({ getEntries }: RepositoryFilterOptio
 
 function vocabulariesToFilterOption(vocabularies: Pick<Vocabulary, 'idVocabulary' | 'Term'>[]): FilterOption[] {
     return vocabularies.map(({ idVocabulary, Term }) => ({ label: Term, value: idVocabulary }));
+}
+
+function filterOptionToChipOption(selectedIds: number[], options: FilterOption[], type: eSystemObjectType): ChipOption[] {
+    const selectedOptions: FilterOption[] = options.filter(({ value }) => selectedIds.includes(value));
+    return selectedOptions.map(({ label: name, value: id }: FilterOption) => ({ id, name, type }));
+}
+
+function sortOptionsAlphabetically(options: FilterOption[]): FilterOption[] {
+    return lodash.orderBy(options, [({ label }: FilterOption) => label.toLowerCase().trim()], ['asc']);
 }

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * Repository
  *
@@ -6,11 +7,12 @@
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Redirect, useHistory, useLocation } from 'react-router';
 import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, REPOSITORY_ROUTE, resolveRoute, resolveSubRoute } from '../../constants';
-import { useControlStore } from '../../store';
+import { useControlStore, useRepositoryStore } from '../../store';
+import { eMetadata, eSystemObjectType } from '../../types/server';
 import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repository';
 import DetailsView from './components/DetailsView';
 import RepositoryFilterView from './components/RepositoryFilterView';
@@ -33,8 +35,18 @@ const useStyles = makeStyles(({ breakpoints }) => ({
 }));
 
 export type RepositoryFilter = {
-    units: boolean;
-    projects: boolean;
+    search: string;
+    repositoryRootType: eSystemObjectType[];
+    objectsToDisplay: eSystemObjectType[];
+    metadataToDisplay: eMetadata[];
+    units: number[];
+    projects: number[];
+    has: eSystemObjectType[];
+    missing: eSystemObjectType[];
+    captureMethod: number[];
+    variantType: number[];
+    modelPurpose: number[];
+    modelFileType: number[];
 };
 
 function Repository(): React.ReactElement {
@@ -64,23 +76,63 @@ function Repository(): React.ReactElement {
 
 function TreeViewPage(): React.ReactElement {
     const history = useHistory();
-    const { search } = useLocation();
+    const location = useLocation();
+    const {
+        search,
+        repositoryRootType,
+        objectsToDisplay,
+        metadataToDisplay,
+        units,
+        projects,
+        has,
+        missing,
+        captureMethod,
+        variantType,
+        modelPurpose,
+        modelFileType,
+        updateRepositoryFilter
+    } = useRepositoryStore();
 
-    const queries = parseRepositoryUrl(search);
+    const queries: RepositoryFilter = parseRepositoryUrl(location.search);
 
-    const initialFilterState: RepositoryFilter = {
-        units: true,
-        projects: false
-    };
+    const filterState: RepositoryFilter = React.useMemo(() => ({
+        search,
+        repositoryRootType,
+        objectsToDisplay,
+        metadataToDisplay,
+        units,
+        projects,
+        has,
+        missing,
+        captureMethod,
+        variantType,
+        modelPurpose,
+        modelFileType,
+    }), [
+        search,
+        repositoryRootType,
+        objectsToDisplay,
+        metadataToDisplay,
+        units,
+        projects,
+        has,
+        missing,
+        captureMethod,
+        variantType,
+        modelPurpose,
+        modelFileType,
+    ]);
 
-    const defaultFilterState = Object.keys(queries).length ? queries : initialFilterState;
-
-    const [filter] = useState<RepositoryFilter>(defaultFilterState);
+    const initialFilterState = Object.keys(queries).length ? queries : filterState;
 
     useEffect(() => {
-        const route = generateRepositoryUrl(filter);
+        updateRepositoryFilter(initialFilterState);
+    }, [updateRepositoryFilter]);
+
+    useEffect(() => {
+        const route = generateRepositoryUrl(filterState);
         history.push(route);
-    }, [filter, history]);
+    }, [filterState, history]);
 
     return (
         <React.Fragment>

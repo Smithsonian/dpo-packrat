@@ -4,10 +4,11 @@
  * This store manages state for Repository filter and tree view.
  */
 import create, { GetState, SetState } from 'zustand';
+import { RepositoryFilter } from '../pages/Repository';
 import { getObjectChildren, getObjectChildrenForRoot } from '../pages/Repository/hooks/useRepository';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
-import { parseRepositoryTreeNodeId, sortEntriesAlphabetically } from '../utils/repository';
+import { parseRepositoryTreeNodeId, sortEntriesAlphabetically, validateArray } from '../utils/repository';
 
 type RepositoryStore = {
     isExpanded: boolean;
@@ -21,15 +22,20 @@ type RepositoryStore = {
     metadataToDisplay: eMetadata[];
     units: number[];
     projects: number[];
-    has: number;
-    missing: number;
-    captureMethod: number;
-    variantType: number;
-    modelPurpose: number;
-    modelFileType: number;
-    updateFilterValue: (name: string, value: number | number[]) => void;
+    has: eSystemObjectType[];
+    missing: eSystemObjectType[];
+    captureMethod: number[];
+    variantType: number[];
+    modelPurpose: number[];
+    modelFileType: number[];
+    fromDate: Date;
+    toDate: Date;
+    getFilterState: () => RepositoryFilter;
+    removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
+    updateFilterValue: (name: string, value: number | number[] | Date) => void;
     initializeTree: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
+    updateRepositoryFilter: (filter: RepositoryFilter) => void;
 };
 
 export const treeRootKey: string = 'root';
@@ -40,17 +46,19 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
     loading: true,
     repositoryRootType: [eSystemObjectType.eUnit],
-    objectsToDisplay: [0],
+    objectsToDisplay: [eSystemObjectType.eUnit],
     metadataToDisplay: [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName],
-    units: [0],
-    projects: [0],
-    has: 4,
-    missing: 8,
-    captureMethod: 1,
-    variantType: 29,
-    modelPurpose: 46,
-    modelFileType: 50,
-    updateFilterValue: (name: string, value: number | number[]): void => {
+    units: [],
+    projects: [],
+    has: [4],
+    missing: [8],
+    captureMethod: [1],
+    variantType: [29],
+    modelPurpose: [46],
+    modelFileType: [50],
+    fromDate: new Date(),
+    toDate: new Date(),
+    updateFilterValue: (name: string, value: number | number[] | Date): void => {
         const { initializeTree } = get();
         set({ [name]: value, loading: true });
         initializeTree();
@@ -63,8 +71,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ isExpanded: !isExpanded });
     },
     initializeTree: async (): Promise<void> => {
-        const { repositoryRootType, metadataToDisplay } = get();
-        const { data, error } = await getObjectChildrenForRoot(repositoryRootType, metadataToDisplay);
+        const { getFilterState } = get();
+        const filter = getFilterState();
+        const { data, error } = await getObjectChildrenForRoot(filter);
 
         if (data && !error) {
             const { getObjectChildren } = data;
@@ -76,9 +85,10 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         }
     },
     getChildren: async (nodeId: string): Promise<void> => {
-        const { tree, metadataToDisplay } = get();
+        const { tree, getFilterState } = get();
+        const filter = getFilterState();
         const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
-        const { data, error } = await getObjectChildren(idSystemObject, metadataToDisplay);
+        const { data, error } = await getObjectChildren(idSystemObject, filter);
 
         if (data && !error) {
             const { getObjectChildren } = data;
@@ -88,5 +98,88 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             updatedTree.set(nodeId, sortedEntries);
             set({ tree: updatedTree });
         }
+    },
+    removeUnitsOrProjects: (id: number, type: eSystemObjectType): void => {
+        const { units, projects } = get();
+        let updatedUnits: number[] = units.slice();
+        let updatedProjects: number[] = projects.slice();
+
+        switch (type) {
+            case eSystemObjectType.eUnit: {
+                if (updatedUnits.length === 1) updatedUnits = [];
+                else updatedUnits = updatedUnits.filter(unit => unit === id);
+                break;
+            }
+            case eSystemObjectType.eProject: {
+                if (updatedProjects.length === 1) updatedProjects = [];
+                else updatedProjects = updatedProjects.filter(project => project === id);
+                break;
+            }
+        }
+
+        set({ units: updatedUnits, projects: updatedProjects });
+    },
+    updateRepositoryFilter: (filter: RepositoryFilter): void => {
+        const {
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        } = get();
+
+        const stateValues: RepositoryFilter = {
+            ...filter,
+            repositoryRootType: validateArray<eSystemObjectType>(filter.repositoryRootType, repositoryRootType),
+            objectsToDisplay: validateArray<eSystemObjectType>(filter.objectsToDisplay, objectsToDisplay),
+            metadataToDisplay: validateArray<eMetadata>(filter.metadataToDisplay, metadataToDisplay),
+            units: validateArray<number>(filter.units, units),
+            projects: validateArray<number>(filter.projects, projects),
+            has: validateArray<eSystemObjectType>(filter.has, has),
+            missing: validateArray<eSystemObjectType>(filter.missing, missing),
+            captureMethod: validateArray<number>(filter.captureMethod, captureMethod),
+            variantType: validateArray<number>(filter.variantType, variantType),
+            modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
+            modelFileType: validateArray<number>(filter.modelFileType, modelFileType),
+        };
+
+        set(stateValues);
+    },
+    getFilterState: (): RepositoryFilter => {
+        const {
+            search,
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        } = get();
+
+        return {
+            search,
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        };
     }
 }));
