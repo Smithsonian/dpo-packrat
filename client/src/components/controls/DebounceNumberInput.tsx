@@ -28,11 +28,12 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 interface DebounceNumberInputProps {
     value?: number | null;
     name: string;
+    disabled?: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 function DebounceNumberInput(props: DebounceNumberInputProps): React.ReactElement {
-    const { value, name, onChange } = props;
+    const { value, name, onChange, disabled = false } = props;
     const classes = useStyles();
 
     return (
@@ -42,6 +43,7 @@ function DebounceNumberInput(props: DebounceNumberInputProps): React.ReactElemen
             className={classes.input}
             type='number'
             name={name}
+            disabled={disabled}
             onChange={onChange}
             debounceTimeout={400}
         />
