@@ -17,13 +17,15 @@ interface UVContentsProps {
     uvMaps: StateUVMap[];
     options: VocabularyOption[];
     onUpdate: (id: number, mapType: number) => void;
+    viewMode?: boolean;
+    disabled?: boolean;
 }
 
 function UVContents(props: UVContentsProps): React.ReactElement {
-    const { uvMaps, options, initialEntry, onUpdate } = props;
+    const { uvMaps, options, initialEntry, onUpdate, viewMode = false, disabled = false } = props;
 
     return (
-        <FieldType required renderLabel={false} marginTop={1.5}>
+        <FieldType required renderLabel={false} marginTop={1.5} width={viewMode ? 'auto' : undefined}>
             <ContentHeader titles={['UV Map Name', 'Edge Length', 'UV Map Type']} />
             <Box display='flex' flex={1} flexDirection='column' mt={1}>
                 <EmptyContent label='uv maps' isEmpty={!uvMaps.length} />
@@ -34,6 +36,7 @@ function UVContents(props: UVContentsProps): React.ReactElement {
                         <Content
                             key={index}
                             name={name}
+                            disabled={disabled}
                             fieldName='uvMaps'
                             edgeLength={edgeLength}
                             value={mapType}
@@ -59,10 +62,11 @@ interface ContentProps {
         name?: string | undefined;
         value: unknown;
     }>) => void;
+    disabled: boolean;
 }
 
 export function Content(props: ContentProps): React.ReactElement {
-    const { fieldName, value, name, edgeLength, initialEntry, update, options } = props;
+    const { fieldName, value, name, edgeLength, initialEntry, update, options, disabled } = props;
     const classes = useStyles();
 
     return (
@@ -78,6 +82,7 @@ export function Content(props: ContentProps): React.ReactElement {
             </Box>
             <Box display='flex' alignItems='center' justifyContent='center'>
                 <Select
+                    disabled={disabled}
                     value={value || initialEntry}
                     className={classes.select}
                     name={fieldName}
