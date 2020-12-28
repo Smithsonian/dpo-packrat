@@ -78,6 +78,7 @@ const getDetailsTabDataForObject = gql`
                 modelFileType
                 uvMaps {
                     name
+                    edgeLength
                     mapType
                 }
                 roughness

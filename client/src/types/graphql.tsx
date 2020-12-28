@@ -2407,7 +2407,7 @@ export type GetDetailsTabDataForObjectQuery = (
                     & {
                         uvMaps: Array<(
                             { __typename?: 'IngestUVMap' }
-                            & Pick<IngestUvMap, 'name' | 'mapType'>
+                            & Pick<IngestUvMap, 'name' | 'edgeLength' | 'mapType'>
                         )>
                     }
                 )>, Scene?: Maybe<(
@@ -4065,6 +4065,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       modelFileType
       uvMaps {
         name
+        edgeLength
         mapType
       }
       roughness
