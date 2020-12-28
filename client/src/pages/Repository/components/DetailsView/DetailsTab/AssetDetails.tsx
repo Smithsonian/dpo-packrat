@@ -52,7 +52,7 @@ function AssetDetails(props: AssetDetailsProps): React.ReactElement {
         if (value) {
             idFieldValue = Number.parseInt(value, 10);
         }
-        console.log({ [name]: idFieldValue });
+
         setDetails(details => ({ ...details, [name]: idFieldValue }));
     };
 

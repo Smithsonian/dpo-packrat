@@ -18,7 +18,6 @@ export const useStyles = makeStyles(({ palette }) => ({
 
 interface AssetVersionDetailsProps extends GetDetailsTabDataForObjectQueryResult {
     disabled: boolean;
-
 }
 
 interface AssetVersionDetailsFields {
@@ -105,7 +104,6 @@ function AssetVersionDetails(props: AssetVersionDetailsProps): React.ReactElemen
                 value={details.Ingested ?? false}
                 onChange={setCheckboxField}
             />
-
         </Box>
     );
 }
