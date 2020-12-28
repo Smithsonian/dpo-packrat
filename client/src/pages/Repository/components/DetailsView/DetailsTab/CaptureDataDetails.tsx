@@ -125,7 +125,7 @@ function CaptureDataDetails(props: CaptureDataDetailsProps): React.ReactElement 
                             containerProps={rowFieldProps}
                             width='auto'
                         >
-                            <DateInputField value={new Date(details?.dateCaptured ?? Date.now())} disabled={disabled} onChange={(_, value) => setDateField('DateCaptured', value)} />
+                            <DateInputField value={new Date(details?.dateCaptured ?? Date.now())} disabled={disabled} onChange={(_, value) => setDateField('dateCaptured', value)} />
                         </FieldType>
 
                         <SelectField
