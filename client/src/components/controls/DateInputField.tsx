@@ -33,15 +33,17 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 interface DateInputFieldProps {
     value: Date;
     onChange: (date: MaterialUiPickersDate, value?: string | null | undefined) => void;
+    disabled?: boolean;
 }
 
 function DateInputField(props: DateInputFieldProps): React.ReactElement {
-    const { value, onChange } = props;
+    const { value, onChange, disabled = false } = props;
     const classes = useStyles();
 
     return (
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
             <KeyboardDatePicker
+                disabled={disabled}
                 disableToolbar
                 variant='inline'
                 format='MM/dd/yyyy'
