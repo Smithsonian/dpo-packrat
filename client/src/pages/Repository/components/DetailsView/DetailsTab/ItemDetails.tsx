@@ -60,6 +60,7 @@ function ItemDetails(props: ItemDetailsProps): React.ReactElement {
             <CheckboxField
                 viewMode
                 required
+                disabled={disabled}
                 name='EntireSubject'
                 label='Entire Subject'
                 value={details?.EntireSubject ?? false}
