@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * StakeholderDetails
  *
@@ -6,16 +7,17 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader } from '../../../../../components';
-import { StakeholderDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { StakeholderDetailFields } from '../../../../../types/graphql';
+import { DetailComponentProps } from './index';
 
-interface StakeholderDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
-
-function StakeholderDetails(props: StakeholderDetailsProps): React.ReactElement {
-    const { data, loading, disabled, } = props;
+function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
 
     const [details, setDetails] = useState<StakeholderDetailFields>({});
+
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {

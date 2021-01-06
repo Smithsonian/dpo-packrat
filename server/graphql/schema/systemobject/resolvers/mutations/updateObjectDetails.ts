@@ -8,7 +8,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { objectType, data } = input;
 
     // TODO: KARAN: update {data} for {idSystemObject}
-    LOG.logger.info(data);
+    LOG.logger.info(JSON.stringify(data, null, 2));
 
     switch (objectType) {
         case eSystemObjectType.eUnit:

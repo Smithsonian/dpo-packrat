@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * ProjectDocumentationDetails
  *
@@ -5,16 +6,17 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Loader } from '../../../../../components';
-import { ProjectDocumentationDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { ProjectDocumentationDetailFields } from '../../../../../types/graphql';
 import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
+import { DetailComponentProps } from './index';
 
-interface ProjectDocumentationDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
-
-function ProjectDocumentationDetails(props: ProjectDocumentationDetailsProps): React.ReactElement {
-    const { data, loading } = props;
+function ProjectDocumentationDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
     const [details, setDetails] = useState<ProjectDocumentationDetailFields>({});
+
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {
@@ -34,7 +36,7 @@ function ProjectDocumentationDetails(props: ProjectDocumentationDetailsProps): R
         setDetails(details => ({ ...details, Description: value }));
     };
 
-    return <Description viewMode value={details.Description ?? ''} onChange={onSetField} />;
+    return <Description disabled={disabled} viewMode value={details.Description ?? ''} onChange={onSetField} />;
 }
 
 export default ProjectDocumentationDetails;

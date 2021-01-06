@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * ItemDetails
  *
@@ -6,21 +7,22 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { CheckboxField, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult, SubjectDetailFields } from '../../../../../types/graphql';
+import { SubjectDetailFields } from '../../../../../types/graphql';
+import { DetailComponentProps } from './index';
 import { SubjectFields } from './SubjectDetails';
-
-interface ItemDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
 
 interface ItemDetailFields extends SubjectDetailFields {
     EntireSubject?: boolean | null | undefined;
 }
 
-function ItemDetails(props: ItemDetailsProps): React.ReactElement {
-    const { data, loading, disabled, } = props;
+function ItemDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
 
     const [details, setDetails] = useState<ItemDetailFields>({});
+
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {

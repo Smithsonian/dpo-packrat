@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * AssetVersionDetails
  *
@@ -6,8 +7,9 @@
 import { Box, makeStyles, Typography } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { CheckboxField, FieldType, Loader } from '../../../../../components';
-import { AssetVersionDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { AssetVersionDetailFields } from '../../../../../types/graphql';
 import { formatBytes } from '../../../../../utils/upload';
+import { DetailComponentProps } from './index';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {
@@ -16,13 +18,10 @@ export const useStyles = makeStyles(({ palette }) => ({
     }
 }));
 
-interface AssetVersionDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
-
-function AssetVersionDetails(props: AssetVersionDetailsProps): React.ReactElement {
+function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
-    const { data, loading } = props;
+    const { data, loading, onUpdateDetail, objectType } = props;
+
     const [details, setDetails] = useState<AssetVersionDetailFields>({});
 
     useEffect(() => {
@@ -37,6 +36,10 @@ function AssetVersionDetails(props: AssetVersionDetailsProps): React.ReactElemen
             });
         }
     }, [data, loading]);
+
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;

@@ -5,13 +5,10 @@
  */
 import React from 'react';
 import { Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { DetailComponentProps } from './index';
 
-interface SceneDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
 // TODO: KARAN: implement SceneDetails
-function SceneDetails(props: SceneDetailsProps): React.ReactElement {
+function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading } = props;
 
     if (!data || loading) {
