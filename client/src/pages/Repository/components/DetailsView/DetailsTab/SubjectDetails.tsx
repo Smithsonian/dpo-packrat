@@ -6,44 +6,31 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { DebounceNumberInput, FieldType, InputField, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { GetDetailsTabDataForObjectQueryResult, SubjectDetailFields } from '../../../../../types/graphql';
 
 interface SubjectDetailsProps extends GetDetailsTabDataForObjectQueryResult {
     disabled: boolean;
 }
 
-export interface SubjectDetailsFields {
-    Latitude?: number | null;
-    Longitude?: number | null;
-    Altitude?: number | null;
-    TS0?: number | null;
-    TS1?: number | null;
-    TS2?: number | null;
-    R0?: number | null;
-    R1?: number | null;
-    R2?: number | null;
-    R3?: number | null;
-}
-
 function SubjectDetails(props: SubjectDetailsProps): React.ReactElement {
     const { data, loading, disabled, } = props;
 
-    const [details, setDetails] = useState<SubjectDetailsFields>({});
+    const [details, setDetails] = useState<SubjectDetailFields>({});
 
     useEffect(() => {
         if (data && !loading) {
             const { Subject } = data.getDetailsTabDataForObject;
             setDetails({
-                Latitude: Subject?.GeoLocation?.Latitude,
-                Longitude: Subject?.GeoLocation?.Longitude,
-                Altitude: Subject?.GeoLocation?.Altitude,
-                TS0: Subject?.GeoLocation?.TS0,
-                TS1: Subject?.GeoLocation?.TS1,
-                TS2: Subject?.GeoLocation?.TS2,
-                R0: Subject?.GeoLocation?.R0,
-                R1: Subject?.GeoLocation?.R1,
-                R2: Subject?.GeoLocation?.R2,
-                R3: Subject?.GeoLocation?.R3
+                Latitude: Subject?.Latitude,
+                Longitude: Subject?.Longitude,
+                Altitude: Subject?.Altitude,
+                TS0: Subject?.TS0,
+                TS1: Subject?.TS1,
+                TS2: Subject?.TS2,
+                R0: Subject?.R0,
+                R1: Subject?.R1,
+                R2: Subject?.R2,
+                R3: Subject?.R3
             });
         }
     }, [data, loading]);
@@ -64,7 +51,7 @@ function SubjectDetails(props: SubjectDetailsProps): React.ReactElement {
     );
 }
 
-interface SubjectFieldsProps extends SubjectDetailsFields {
+interface SubjectFieldsProps extends SubjectDetailFields {
     disabled: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
