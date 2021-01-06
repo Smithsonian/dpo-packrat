@@ -8,9 +8,10 @@ import { Box } from '@material-ui/core';
 import React from 'react';
 import { DebounceNumberInput, FieldType } from '../../../../../components';
 import { ModelDetailFields } from '../../../../../types/graphql';
+import { ViewableProps } from '../../../../../types/repository';
 import { isFieldUpdated } from '../../../../../utils/repository';
 
-interface BoundingBoxInputProps {
+interface BoundingBoxInputProps extends ViewableProps {
     modelFields?: ModelDetailFields | null;
     boundingBoxP1X?: number | null;
     boundingBoxP1Y?: number | null;
@@ -18,8 +19,6 @@ interface BoundingBoxInputProps {
     boundingBoxP2X?: number | null;
     boundingBoxP2Y?: number | null;
     boundingBoxP2Z?: number | null;
-    viewMode?: boolean;
-    disabled?: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 

@@ -10,15 +10,14 @@ import { AiFillFileImage } from 'react-icons/ai';
 import { FieldType } from '../../../../../components';
 import { StateUVMap, VocabularyOption } from '../../../../../store';
 import { palette } from '../../../../../theme';
+import { ViewableProps } from '../../../../../types/repository';
 import { ContentHeader, EmptyContent, useStyles } from '../Photogrammetry/AssetContents';
 
-interface UVContentsProps {
+interface UVContentsProps extends ViewableProps {
     initialEntry: number | null;
     uvMaps: StateUVMap[];
     options: VocabularyOption[];
     onUpdate: (id: number, mapType: number) => void;
-    viewMode?: boolean;
-    disabled?: boolean;
 }
 
 function UVContents(props: UVContentsProps): React.ReactElement {

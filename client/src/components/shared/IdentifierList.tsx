@@ -9,6 +9,7 @@ import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { MdRemoveCircleOutline } from 'react-icons/md';
 import { StateIdentifier, VocabularyOption } from '../../store';
+import { ViewableProps } from '../../types/repository';
 import { sharedButtonProps, sharedLabelProps } from '../../utils/shared';
 import FieldType from './FieldType';
 
@@ -59,14 +60,12 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     addIdentifierButton: sharedButtonProps
 }));
 
-interface IdentifierListProps {
+interface IdentifierListProps extends ViewableProps {
     identifiers: StateIdentifier[]
     onAdd: (initialEntry: number | null) => void;
     onUpdate: (id: number, fieldName: string, fieldValue: number | string | boolean) => void;
     onRemove: (id: number) => void;
     identifierTypes: VocabularyOption[];
-    disabled?: boolean;
-    viewMode?: boolean;
 }
 
 function IdentifierList(props: IdentifierListProps): React.ReactElement {

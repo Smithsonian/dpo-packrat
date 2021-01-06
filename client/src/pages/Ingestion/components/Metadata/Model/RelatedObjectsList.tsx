@@ -11,6 +11,7 @@ import { MdRemoveCircleOutline } from 'react-icons/md';
 import { NewTabLink } from '../../../../../components';
 import { StateRelatedObject } from '../../../../../store';
 import { RelatedObjectType } from '../../../../../types/graphql';
+import { ViewableProps } from '../../../../../types/repository';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
 import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared';
 
@@ -48,13 +49,11 @@ const useStyles = makeStyles(({ palette }) => ({
     }
 }));
 
-interface RelatedObjectsListProps {
+interface RelatedObjectsListProps extends ViewableProps {
     relatedObjects: StateRelatedObject[];
     type: RelatedObjectType;
     onAdd: () => void;
     onRemove?: (id: number) => void;
-    viewMode?: boolean;
-    disabled?: boolean;
 }
 
 function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement {

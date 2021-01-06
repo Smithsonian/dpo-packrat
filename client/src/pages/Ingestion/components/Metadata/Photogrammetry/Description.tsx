@@ -7,6 +7,7 @@ import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { FieldType } from '../../../../../components';
+import { ViewableProps } from '../../../../../types/repository';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     description: {
@@ -23,12 +24,9 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     }
 }));
 
-interface DescriptionProps {
+interface DescriptionProps extends ViewableProps {
     value: string;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-    viewMode?: boolean;
-    disabled?: boolean;
-    updated?: boolean;
 }
 
 function Description(props: DescriptionProps): React.ReactElement {

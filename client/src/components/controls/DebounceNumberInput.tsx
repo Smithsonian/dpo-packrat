@@ -6,6 +6,7 @@
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
+import { ViewableProps } from '../../types/repository';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     input: {
@@ -26,11 +27,9 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     }
 }));
 
-interface DebounceNumberInputProps {
+interface DebounceNumberInputProps extends ViewableProps {
     value?: number | null;
     name: string;
-    disabled?: boolean;
-    updated?: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 

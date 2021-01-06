@@ -5,18 +5,16 @@
  */
 import { Checkbox } from '@material-ui/core';
 import React from 'react';
+import { ViewableProps } from '../../types/repository';
 import { withDefaultValueBoolean } from '../../utils/shared';
 import FieldType from '../shared/FieldType';
 
-interface CheckboxFieldProps {
+interface CheckboxFieldProps extends ViewableProps {
     label: string;
     name: string;
     value: boolean | null;
     onChange: ((event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void) | undefined;
     required?: boolean;
-    viewMode?: boolean;
-    disabled?: boolean;
-    updated?: boolean;
 }
 
 function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
