@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useMutation, useQuery, MutationTuple } from '@apollo/client';
 import {
     GetAssetDetailsForSystemObjectDocument,
     GetAssetDetailsForSystemObjectQueryResult,
@@ -7,7 +7,11 @@ import {
     GetVersionsForSystemObjectDocument,
     GetVersionsForSystemObjectQueryResult,
     GetDetailsTabDataForObjectDocument,
-    GetDetailsTabDataForObjectQueryResult
+    GetDetailsTabDataForObjectQueryResult,
+    UpdateObjectDetailsDocument,
+    UpdateObjectDetailsMutationVariables,
+    UpdateObjectDetailsDataInput,
+    UpdateObjectDetailsMutation
 } from '../../../types/graphql';
 import { eSystemObjectType } from '../../../types/server';
 
@@ -52,3 +56,14 @@ export function useDetailsTabData(idSystemObject: number, objectType: eSystemObj
     });
 }
 
+export function useDetailsTabDataUpdate(idSystemObject: number, objectType: eSystemObjectType, data: UpdateObjectDetailsDataInput): MutationTuple<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables> {
+    return useMutation(UpdateObjectDetailsDocument, {
+        variables: {
+            input: {
+                idSystemObject,
+                objectType,
+                data
+            }
+        }
+    });
+}

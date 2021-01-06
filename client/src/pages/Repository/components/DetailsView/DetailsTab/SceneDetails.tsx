@@ -10,7 +10,7 @@ import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/grap
 interface SceneDetailsProps extends GetDetailsTabDataForObjectQueryResult {
     disabled: boolean;
 }
-
+// TODO: KARAN: implement SceneDetails
 function SceneDetails(props: SceneDetailsProps): React.ReactElement {
     const { data, loading } = props;
 

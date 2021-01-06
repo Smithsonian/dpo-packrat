@@ -6,20 +6,16 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { ActorDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
 
 interface ActorDetailsProps extends GetDetailsTabDataForObjectQueryResult {
     disabled: boolean;
 }
 
-interface ActorDetailsFields {
-    OrganizationName?: string | null;
-}
-
 function ActorDetails(props: ActorDetailsProps): React.ReactElement {
     const { data, loading, disabled, } = props;
 
-    const [details, setDetails] = useState<ActorDetailsFields>({});
+    const [details, setDetails] = useState<ActorDetailFields>({});
 
     useEffect(() => {
         if (data && !loading) {

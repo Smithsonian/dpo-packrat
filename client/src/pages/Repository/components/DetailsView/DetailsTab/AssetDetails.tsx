@@ -7,7 +7,7 @@ import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader, SelectField } from '../../../../../components';
 import { useVocabularyStore } from '../../../../../store';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { AssetDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 
@@ -15,15 +15,10 @@ interface AssetDetailsProps extends GetDetailsTabDataForObjectQueryResult {
     disabled: boolean;
 }
 
-interface AssetDetailsFields {
-    FilePath?: string | null;
-    AssetType?: number | null;
-}
-
 function AssetDetails(props: AssetDetailsProps): React.ReactElement {
     const { data, loading, disabled, } = props;
 
-    const [details, setDetails] = useState<AssetDetailsFields>({});
+    const [details, setDetails] = useState<AssetDetailFields>({});
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
 
     useEffect(() => {
@@ -31,7 +26,7 @@ function AssetDetails(props: AssetDetailsProps): React.ReactElement {
             const { Asset } = data.getDetailsTabDataForObject;
             setDetails({
                 FilePath: Asset?.FilePath,
-                AssetType: Asset?.VAssetType?.idVocabulary
+                AssetType: Asset?.AssetType
             });
         }
     }, [data, loading]);

@@ -4,70 +4,59 @@ const getDetailsTabDataForObject = gql`
     query getDetailsTabDataForObject($input: GetDetailsTabDataForObjectInput!) {
         getDetailsTabDataForObject(input: $input) {
             Unit {
-                idUnit
                 Abbreviation
                 ARKPrefix
             }
             Project {
-                idProject
                 Description
             }
             Subject {
-                idSubject
-                GeoLocation {
-                    idGeoLocation
-                    Altitude
-                    Latitude
-                    Longitude
-                    R0
-                    R1
-                    R2
-                    R3
-                    TS0
-                    TS1
-                    TS2
-                }
+                Altitude
+                Latitude
+                Longitude
+                R0
+                R1
+                R2
+                R3
+                TS0
+                TS1
+                TS2
             }
             Item {
-                idItem
                 EntireSubject
-                GeoLocation {
-                    idGeoLocation
-                    Altitude
-                    Latitude
-                    Longitude
-                    R0
-                    R1
-                    R2
-                    R3
-                    TS0
-                    TS1
-                    TS2
-                }
+                Altitude
+                Latitude
+                Longitude
+                R0
+                R1
+                R2
+                R3
+                TS0
+                TS1
+                TS2
             }
             CaptureData {
-                    idAssetVersion
-                    dateCaptured
-                    datasetType
-                    systemCreated
-                    description
-                    cameraSettingUniform
-                    datasetFieldId
-                    itemPositionType
-                    itemPositionFieldId
-                    itemArrangementFieldId
-                    focusType
-                    lightsourceType
-                    backgroundRemovalMethod
-                    clusterType
-                    clusterGeometryFieldId
-                    folders {
-                        name
-                        variantType
-                    }
+                captureMethod
+                dateCaptured
+                datasetType
+                description
+                cameraSettingUniform
+                datasetFieldId
+                itemPositionType
+                itemPositionFieldId
+                itemArrangementFieldId
+                focusType
+                lightsourceType
+                backgroundRemovalMethod
+                clusterType
+                clusterGeometryFieldId
+                folders {
+                    name
+                    variantType
+                }
             }
             Model {
-                systemCreated
+                size
                 master
                 authoritative
                 creationMethod
@@ -97,40 +86,32 @@ const getDetailsTabDataForObject = gql`
                 boundingBoxP2Z
             }
             Scene {
-                idScene
+                Links
+                AssetType
+                Tours
+                Annotation
             }
             IntermediaryFile {
                 idIntermediaryFile
             }
             ProjectDocumentation {
-                idProjectDocumentation
                 Description
             }
             Asset {
-                idAsset
                 FilePath
-                VAssetType {
-                    idVocabulary
-                    Term
-                }
+                AssetType
             }
             AssetVersion {
-                idAssetVersion
+                Creator
                 DateCreated
                 StorageSize
                 Ingested
                 Version
-                User {
-                    idUser
-                    Name
-                }
             }
             Actor {
-                idActor
                 OrganizationName
             }
             Stakeholder {
-                idStakeholder
                 OrganizationName
                 EmailAddress
                 PhoneNumberMobile

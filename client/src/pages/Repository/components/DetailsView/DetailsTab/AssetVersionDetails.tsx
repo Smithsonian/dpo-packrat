@@ -6,7 +6,7 @@
 import { Box, makeStyles, Typography } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { CheckboxField, FieldType, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { AssetVersionDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
 import { formatBytes } from '../../../../../utils/upload';
 
 export const useStyles = makeStyles(({ palette }) => ({
@@ -20,25 +20,17 @@ interface AssetVersionDetailsProps extends GetDetailsTabDataForObjectQueryResult
     disabled: boolean;
 }
 
-interface AssetVersionDetailsFields {
-    Version?: number;
-    Creator?: string;
-    DateCreated?: Date;
-    StorageSize?: number;
-    Ingested?: boolean;
-}
-
 function AssetVersionDetails(props: AssetVersionDetailsProps): React.ReactElement {
     const classes = useStyles();
     const { data, loading } = props;
-    const [details, setDetails] = useState<AssetVersionDetailsFields>({});
+    const [details, setDetails] = useState<AssetVersionDetailFields>({});
 
     useEffect(() => {
         if (data && !loading) {
             const { AssetVersion } = data.getDetailsTabDataForObject;
             setDetails({
                 Version: AssetVersion?.Version,
-                Creator: AssetVersion?.User?.Name,
+                Creator: AssetVersion?.Creator,
                 DateCreated: AssetVersion?.DateCreated,
                 StorageSize: AssetVersion?.StorageSize,
                 Ingested: AssetVersion?.Ingested,

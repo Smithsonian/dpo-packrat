@@ -6,24 +6,16 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { StakeholderDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
 
 interface StakeholderDetailsProps extends GetDetailsTabDataForObjectQueryResult {
     disabled: boolean;
 }
 
-interface StakeholderDetailsFields {
-    OrganizationName?: string | null;
-    EmailAddress?: string | null;
-    PhoneNumberMobile?: string | null;
-    PhoneNumberOffice?: string | null;
-    MailingAddress?: string | null;
-}
-
 function StakeholderDetails(props: StakeholderDetailsProps): React.ReactElement {
     const { data, loading, disabled, } = props;
 
-    const [details, setDetails] = useState<StakeholderDetailsFields>({});
+    const [details, setDetails] = useState<StakeholderDetailFields>({});
 
     useEffect(() => {
         if (data && !loading) {

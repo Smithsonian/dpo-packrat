@@ -6,8 +6,8 @@
 import { Box, makeStyles, Typography } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { CheckboxField, DateInputField, FieldType, InputField, Loader, SelectField } from '../../../../../components';
-import { parseUVMapsToState, StateUVMap, useVocabularyStore } from '../../../../../store';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { parseUVMapsToState, useVocabularyStore } from '../../../../../store';
+import { GetDetailsTabDataForObjectQueryResult, ModelDetailFields } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import { formatBytes } from '../../../../../utils/upload';
@@ -25,44 +25,20 @@ interface ModelDetailsProps extends GetDetailsTabDataForObjectQueryResult {
     disabled: boolean;
 }
 
-interface ModelDetailsFields {
-    size?: number;
-    master?: boolean | null;
-    authoritative?: boolean | null;
-    creationMethod?: number | null;
-    modality?: number | null;
-    purpose?: number | null;
-    units?: number | null;
-    dateCaptured?: string | null;
-    modelFileType?: number | null;
-    uvMaps?: StateUVMap[];
-    roughness?: number | null;
-    metalness?: number | null;
-    pointCount?: number | null;
-    faceCount?: number | null;
-    isWatertight?: boolean | null;
-    hasNormals?: boolean | null;
-    hasVertexColor?: boolean | null;
-    hasUVSpace?: boolean | null;
-    boundingBoxP1X?: number | null;
-    boundingBoxP1Y?: number | null;
-    boundingBoxP1Z?: number | null;
-    boundingBoxP2X?: number | null;
-    boundingBoxP2Y?: number | null;
-    boundingBoxP2Z?: number | null;
-}
-
 function ModelDetails(props: ModelDetailsProps): React.ReactElement {
     const classes = useStyles();
     const { data, loading, disabled } = props;
-    const [details, setDetails] = useState<ModelDetailsFields>({});
+    const [details, setDetails] = useState<ModelDetailFields>({
+        uvMaps: []
+    });
+
     const [getInitialEntry, getEntries] = useVocabularyStore(state => [state.getInitialEntry, state.getEntries]);
 
     useEffect(() => {
         if (data && !loading) {
             const { Model } = data.getDetailsTabDataForObject;
             setDetails({
-                size: 0, // TODO: KARAN: add size field
+                size: Model?.size,
                 master: Model?.master,
                 authoritative: Model?.authoritative,
                 creationMethod: Model?.creationMethod,
@@ -71,7 +47,7 @@ function ModelDetails(props: ModelDetailsProps): React.ReactElement {
                 units: Model?.units,
                 dateCaptured: Model?.dateCaptured,
                 modelFileType: Model?.modelFileType,
-                uvMaps: parseUVMapsToState(Model?.uvMaps ?? []),
+                uvMaps: Model?.uvMaps || [],
                 roughness: Model?.roughness,
                 metalness: Model?.metalness,
                 pointCount: Model?.pointCount,
@@ -226,7 +202,7 @@ function ModelDetails(props: ModelDetailsProps): React.ReactElement {
                     viewMode
                     disabled={disabled}
                     initialEntry={getInitialEntry(eVocabularySetID.eModelUVMapChannelUVMapType)}
-                    uvMaps={details.uvMaps || []}
+                    uvMaps={parseUVMapsToState(details?.uvMaps ?? [])}
                     options={getEntries(eVocabularySetID.eModelUVMapChannelUVMapType)}
                     onUpdate={updateUVMapsVariant}
                 />

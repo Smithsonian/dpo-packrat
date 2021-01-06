@@ -5,20 +5,16 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { ProjectDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
 import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
 
 interface ProjectDetailsProps extends GetDetailsTabDataForObjectQueryResult {
     disabled: boolean;
 }
 
-interface ProjectDetailsFields {
-    Description?: string | null;
-}
-
 function ProjectDetails(props: ProjectDetailsProps): React.ReactElement {
     const { data, loading } = props;
-    const [details, setDetails] = useState<ProjectDetailsFields>({});
+    const [details, setDetails] = useState<ProjectDetailFields>({});
 
     useEffect(() => {
         if (data && !loading) {

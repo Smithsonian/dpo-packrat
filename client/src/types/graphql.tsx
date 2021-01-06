@@ -289,6 +289,7 @@ export type Mutation = {
     createVocabularySet: CreateVocabularySetResult;
     discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
     ingestData: IngestDataResult;
+    updateObjectDetails: UpdateObjectDetailsResult;
     uploadAsset: UploadAssetResult;
 };
 
@@ -355,6 +356,11 @@ export type MutationDiscardUploadedAssetVersionsArgs = {
 
 export type MutationIngestDataArgs = {
     input: IngestDataInput;
+};
+
+
+export type MutationUpdateObjectDetailsArgs = {
+    input: UpdateObjectDetailsInput;
 };
 
 
@@ -1113,26 +1119,305 @@ export type IntermediaryFile = {
     SystemObject?: Maybe<SystemObject>;
 };
 
+export type UpdateObjectDetailsInput = {
+    idSystemObject: Scalars['Int'];
+    objectType: Scalars['Int'];
+    data: UpdateObjectDetailsDataInput;
+};
+
+export type UnitDetailFieldsInput = {
+    Abbreviation?: Maybe<Scalars['String']>;
+    ARKPrefix?: Maybe<Scalars['String']>;
+};
+
+export type ProjectDetailFieldsInput = {
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type SubjectDetailFieldsInput = {
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type ItemDetailFieldsInput = {
+    EntireSubject?: Maybe<Scalars['Boolean']>;
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type CaptureDataDetailFieldsInput = {
+    captureMethod?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['String']>;
+    datasetType?: Maybe<Scalars['Int']>;
+    systemCreated?: Maybe<Scalars['Boolean']>;
+    description?: Maybe<Scalars['String']>;
+    cameraSettingUniform?: Maybe<Scalars['Boolean']>;
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    folders: Array<IngestFolderInput>;
+};
+
+export type ModelDetailFieldsInput = {
+    size?: Maybe<Scalars['Int']>;
+    master?: Maybe<Scalars['Boolean']>;
+    authoritative?: Maybe<Scalars['Boolean']>;
+    creationMethod?: Maybe<Scalars['Int']>;
+    modality?: Maybe<Scalars['Int']>;
+    purpose?: Maybe<Scalars['Int']>;
+    units?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['String']>;
+    modelFileType?: Maybe<Scalars['Int']>;
+    uvMaps: Array<IngestUvMapInput>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export type SceneDetailFieldsInput = {
+    Links: Array<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+    Tours?: Maybe<Scalars['Int']>;
+    Annotation?: Maybe<Scalars['Int']>;
+};
+
+export type ProjectDocumentationDetailFieldsInput = {
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type AssetDetailFieldsInput = {
+    FilePath?: Maybe<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+};
+
+export type AssetVersionDetailFieldsInput = {
+    Creator?: Maybe<Scalars['String']>;
+    DateCreated?: Maybe<Scalars['DateTime']>;
+    Ingested?: Maybe<Scalars['Boolean']>;
+    Version?: Maybe<Scalars['Int']>;
+    StorageSize?: Maybe<Scalars['Int']>;
+};
+
+export type ActorDetailFieldsInput = {
+    OrganizationName?: Maybe<Scalars['String']>;
+};
+
+export type StakeholderDetailFieldsInput = {
+    OrganizationName?: Maybe<Scalars['String']>;
+    MailingAddress?: Maybe<Scalars['String']>;
+    EmailAddress?: Maybe<Scalars['String']>;
+    PhoneNumberMobile?: Maybe<Scalars['String']>;
+    PhoneNumberOffice?: Maybe<Scalars['String']>;
+};
+
+export type UpdateObjectDetailsDataInput = {
+    Unit?: Maybe<UnitDetailFieldsInput>;
+    Project?: Maybe<ProjectDetailFieldsInput>;
+    Subject?: Maybe<SubjectDetailFieldsInput>;
+    Item?: Maybe<ItemDetailFieldsInput>;
+    CaptureData?: Maybe<CaptureDataDetailFieldsInput>;
+    Model?: Maybe<ModelDetailFieldsInput>;
+    Scene?: Maybe<SceneDetailFieldsInput>;
+    ProjectDocumentation?: Maybe<ProjectDocumentationDetailFieldsInput>;
+    Asset?: Maybe<AssetDetailFieldsInput>;
+    AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
+    Actor?: Maybe<ActorDetailFieldsInput>;
+    Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+};
+
+export type UpdateObjectDetailsResult = {
+    __typename?: 'UpdateObjectDetailsResult';
+    success: Scalars['Boolean'];
+};
+
 export type GetDetailsTabDataForObjectInput = {
     idSystemObject: Scalars['Int'];
     objectType: Scalars['Int'];
 };
 
+export type UnitDetailFields = {
+    __typename?: 'UnitDetailFields';
+    Abbreviation?: Maybe<Scalars['String']>;
+    ARKPrefix?: Maybe<Scalars['String']>;
+};
+
+export type ProjectDetailFields = {
+    __typename?: 'ProjectDetailFields';
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type SubjectDetailFields = {
+    __typename?: 'SubjectDetailFields';
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type ItemDetailFields = {
+    __typename?: 'ItemDetailFields';
+    EntireSubject?: Maybe<Scalars['Boolean']>;
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type CaptureDataDetailFields = {
+    __typename?: 'CaptureDataDetailFields';
+    captureMethod?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['String']>;
+    datasetType?: Maybe<Scalars['Int']>;
+    systemCreated?: Maybe<Scalars['Boolean']>;
+    description?: Maybe<Scalars['String']>;
+    cameraSettingUniform?: Maybe<Scalars['Boolean']>;
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    folders: Array<IngestFolder>;
+};
+
+export type ModelDetailFields = {
+    __typename?: 'ModelDetailFields';
+    size?: Maybe<Scalars['Int']>;
+    master?: Maybe<Scalars['Boolean']>;
+    authoritative?: Maybe<Scalars['Boolean']>;
+    creationMethod?: Maybe<Scalars['Int']>;
+    modality?: Maybe<Scalars['Int']>;
+    purpose?: Maybe<Scalars['Int']>;
+    units?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['String']>;
+    modelFileType?: Maybe<Scalars['Int']>;
+    uvMaps: Array<IngestUvMap>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export type SceneDetailFields = {
+    __typename?: 'SceneDetailFields';
+    Links: Array<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+    Tours?: Maybe<Scalars['Int']>;
+    Annotation?: Maybe<Scalars['Int']>;
+};
+
+export type IntermediaryFileDetailFields = {
+    __typename?: 'IntermediaryFileDetailFields';
+    idIntermediaryFile: Scalars['Int'];
+};
+
+export type ProjectDocumentationDetailFields = {
+    __typename?: 'ProjectDocumentationDetailFields';
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type AssetDetailFields = {
+    __typename?: 'AssetDetailFields';
+    FilePath?: Maybe<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+};
+
+export type AssetVersionDetailFields = {
+    __typename?: 'AssetVersionDetailFields';
+    Creator?: Maybe<Scalars['String']>;
+    DateCreated?: Maybe<Scalars['DateTime']>;
+    Ingested?: Maybe<Scalars['Boolean']>;
+    Version?: Maybe<Scalars['Int']>;
+    StorageSize?: Maybe<Scalars['Int']>;
+};
+
+export type ActorDetailFields = {
+    __typename?: 'ActorDetailFields';
+    OrganizationName?: Maybe<Scalars['String']>;
+};
+
+export type StakeholderDetailFields = {
+    __typename?: 'StakeholderDetailFields';
+    OrganizationName?: Maybe<Scalars['String']>;
+    MailingAddress?: Maybe<Scalars['String']>;
+    EmailAddress?: Maybe<Scalars['String']>;
+    PhoneNumberMobile?: Maybe<Scalars['String']>;
+    PhoneNumberOffice?: Maybe<Scalars['String']>;
+};
+
 export type GetDetailsTabDataForObjectResult = {
     __typename?: 'GetDetailsTabDataForObjectResult';
-    Unit?: Maybe<Unit>;
-    Project?: Maybe<Project>;
-    Subject?: Maybe<Subject>;
-    Item?: Maybe<Item>;
-    CaptureData?: Maybe<IngestPhotogrammetry>;
-    Model?: Maybe<IngestModel>;
-    Scene?: Maybe<Scene>;
-    IntermediaryFile?: Maybe<IntermediaryFile>;
-    ProjectDocumentation?: Maybe<ProjectDocumentation>;
-    Asset?: Maybe<Asset>;
-    AssetVersion?: Maybe<AssetVersion>;
-    Actor?: Maybe<Actor>;
-    Stakeholder?: Maybe<Stakeholder>;
+    Unit?: Maybe<UnitDetailFields>;
+    Project?: Maybe<ProjectDetailFields>;
+    Subject?: Maybe<SubjectDetailFields>;
+    Item?: Maybe<ItemDetailFields>;
+    CaptureData?: Maybe<CaptureDataDetailFields>;
+    Model?: Maybe<ModelDetailFields>;
+    Scene?: Maybe<SceneDetailFields>;
+    IntermediaryFile?: Maybe<IntermediaryFileDetailFields>;
+    ProjectDocumentation?: Maybe<ProjectDocumentationDetailFields>;
+    Asset?: Maybe<AssetDetailFields>;
+    AssetVersion?: Maybe<AssetVersionDetailFields>;
+    Actor?: Maybe<ActorDetailFields>;
+    Stakeholder?: Maybe<StakeholderDetailFields>;
 };
 
 export type GetSystemObjectDetailsInput = {
@@ -1852,6 +2137,21 @@ export type CreateSceneMutation = (
     }
 );
 
+export type UpdateObjectDetailsMutationVariables = Exact<{
+    input: UpdateObjectDetailsInput;
+}>;
+
+
+export type UpdateObjectDetailsMutation = (
+    { __typename?: 'Mutation' }
+    & {
+        updateObjectDetails: (
+            { __typename?: 'UpdateObjectDetailsResult' }
+            & Pick<UpdateObjectDetailsResult, 'success'>
+        )
+    }
+);
+
 export type CreateItemMutationVariables = Exact<{
     input: CreateItemInput;
 }>;
@@ -2369,32 +2669,20 @@ export type GetDetailsTabDataForObjectQuery = (
             { __typename?: 'GetDetailsTabDataForObjectResult' }
             & {
                 Unit?: Maybe<(
-                    { __typename?: 'Unit' }
-                    & Pick<Unit, 'idUnit' | 'Abbreviation' | 'ARKPrefix'>
+                    { __typename?: 'UnitDetailFields' }
+                    & Pick<UnitDetailFields, 'Abbreviation' | 'ARKPrefix'>
                 )>, Project?: Maybe<(
-                    { __typename?: 'Project' }
-                    & Pick<Project, 'idProject' | 'Description'>
+                    { __typename?: 'ProjectDetailFields' }
+                    & Pick<ProjectDetailFields, 'Description'>
                 )>, Subject?: Maybe<(
-                    { __typename?: 'Subject' }
-                    & Pick<Subject, 'idSubject'>
-                    & {
-                        GeoLocation?: Maybe<(
-                            { __typename?: 'GeoLocation' }
-                            & Pick<GeoLocation, 'idGeoLocation' | 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
-                        )>
-                    }
+                    { __typename?: 'SubjectDetailFields' }
+                    & Pick<SubjectDetailFields, 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
                 )>, Item?: Maybe<(
-                    { __typename?: 'Item' }
-                    & Pick<Item, 'idItem' | 'EntireSubject'>
-                    & {
-                        GeoLocation?: Maybe<(
-                            { __typename?: 'GeoLocation' }
-                            & Pick<GeoLocation, 'idGeoLocation' | 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
-                        )>
-                    }
+                    { __typename?: 'ItemDetailFields' }
+                    & Pick<ItemDetailFields, 'EntireSubject' | 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
                 )>, CaptureData?: Maybe<(
-                    { __typename?: 'IngestPhotogrammetry' }
-                    & Pick<IngestPhotogrammetry, 'idAssetVersion' | 'dateCaptured' | 'datasetType' | 'systemCreated' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId'>
+                    { __typename?: 'CaptureDataDetailFields' }
+                    & Pick<CaptureDataDetailFields, 'captureMethod' | 'dateCaptured' | 'datasetType' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId'>
                     & {
                         folders: Array<(
                             { __typename?: 'IngestFolder' }
@@ -2402,8 +2690,8 @@ export type GetDetailsTabDataForObjectQuery = (
                         )>
                     }
                 )>, Model?: Maybe<(
-                    { __typename?: 'IngestModel' }
-                    & Pick<IngestModel, 'systemCreated' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'roughness' | 'metalness' | 'pointCount' | 'faceCount' | 'isWatertight' | 'hasNormals' | 'hasVertexColor' | 'hasUVSpace' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z'>
+                    { __typename?: 'ModelDetailFields' }
+                    & Pick<ModelDetailFields, 'size' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'roughness' | 'metalness' | 'pointCount' | 'faceCount' | 'isWatertight' | 'hasNormals' | 'hasVertexColor' | 'hasUVSpace' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z'>
                     & {
                         uvMaps: Array<(
                             { __typename?: 'IngestUVMap' }
@@ -2411,38 +2699,26 @@ export type GetDetailsTabDataForObjectQuery = (
                         )>
                     }
                 )>, Scene?: Maybe<(
-                    { __typename?: 'Scene' }
-                    & Pick<Scene, 'idScene'>
+                    { __typename?: 'SceneDetailFields' }
+                    & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation'>
                 )>, IntermediaryFile?: Maybe<(
-                    { __typename?: 'IntermediaryFile' }
-                    & Pick<IntermediaryFile, 'idIntermediaryFile'>
+                    { __typename?: 'IntermediaryFileDetailFields' }
+                    & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>
                 )>, ProjectDocumentation?: Maybe<(
-                    { __typename?: 'ProjectDocumentation' }
-                    & Pick<ProjectDocumentation, 'idProjectDocumentation' | 'Description'>
+                    { __typename?: 'ProjectDocumentationDetailFields' }
+                    & Pick<ProjectDocumentationDetailFields, 'Description'>
                 )>, Asset?: Maybe<(
-                    { __typename?: 'Asset' }
-                    & Pick<Asset, 'idAsset' | 'FilePath'>
-                    & {
-                        VAssetType?: Maybe<(
-                            { __typename?: 'Vocabulary' }
-                            & Pick<Vocabulary, 'idVocabulary' | 'Term'>
-                        )>
-                    }
+                    { __typename?: 'AssetDetailFields' }
+                    & Pick<AssetDetailFields, 'FilePath' | 'AssetType'>
                 )>, AssetVersion?: Maybe<(
-                    { __typename?: 'AssetVersion' }
-                    & Pick<AssetVersion, 'idAssetVersion' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version'>
-                    & {
-                        User?: Maybe<(
-                            { __typename?: 'User' }
-                            & Pick<User, 'idUser' | 'Name'>
-                        )>
-                    }
+                    { __typename?: 'AssetVersionDetailFields' }
+                    & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version'>
                 )>, Actor?: Maybe<(
-                    { __typename?: 'Actor' }
-                    & Pick<Actor, 'idActor' | 'OrganizationName'>
+                    { __typename?: 'ActorDetailFields' }
+                    & Pick<ActorDetailFields, 'OrganizationName'>
                 )>, Stakeholder?: Maybe<(
-                    { __typename?: 'Stakeholder' }
-                    & Pick<Stakeholder, 'idStakeholder' | 'OrganizationName' | 'EmailAddress' | 'PhoneNumberMobile' | 'PhoneNumberOffice' | 'MailingAddress'>
+                    { __typename?: 'StakeholderDetailFields' }
+                    & Pick<StakeholderDetailFields, 'OrganizationName' | 'EmailAddress' | 'PhoneNumberMobile' | 'PhoneNumberOffice' | 'MailingAddress'>
                 )>
             }
         )
@@ -3103,6 +3379,38 @@ export function useCreateSceneMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateSceneMutationHookResult = ReturnType<typeof useCreateSceneMutation>;
 export type CreateSceneMutationResult = Apollo.MutationResult<CreateSceneMutation>;
 export type CreateSceneMutationOptions = Apollo.BaseMutationOptions<CreateSceneMutation, CreateSceneMutationVariables>;
+export const UpdateObjectDetailsDocument = gql`
+    mutation updateObjectDetails($input: UpdateObjectDetailsInput!) {
+  updateObjectDetails(input: $input) {
+    success
+  }
+}
+    `;
+export type UpdateObjectDetailsMutationFn = Apollo.MutationFunction<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables>;
+
+/**
+ * __useUpdateObjectDetailsMutation__
+ *
+ * To run a mutation, you first call `useUpdateObjectDetailsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateObjectDetailsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateObjectDetailsMutation, { data, loading, error }] = useUpdateObjectDetailsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateObjectDetailsMutation(baseOptions?: Apollo.MutationHookOptions<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables>) {
+    return Apollo.useMutation<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables>(UpdateObjectDetailsDocument, baseOptions);
+}
+export type UpdateObjectDetailsMutationHookResult = ReturnType<typeof useUpdateObjectDetailsMutation>;
+export type UpdateObjectDetailsMutationResult = Apollo.MutationResult<UpdateObjectDetailsMutation>;
+export type UpdateObjectDetailsMutationOptions = Apollo.BaseMutationOptions<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables>;
 export const CreateItemDocument = gql`
     mutation createItem($input: CreateItemInput!) {
   createItem(input: $input) {
@@ -3991,52 +4299,41 @@ export const GetDetailsTabDataForObjectDocument = gql`
     query getDetailsTabDataForObject($input: GetDetailsTabDataForObjectInput!) {
   getDetailsTabDataForObject(input: $input) {
     Unit {
-      idUnit
       Abbreviation
       ARKPrefix
     }
     Project {
-      idProject
       Description
     }
     Subject {
-      idSubject
-      GeoLocation {
-        idGeoLocation
-        Altitude
-        Latitude
-        Longitude
-        R0
-        R1
-        R2
-        R3
-        TS0
-        TS1
-        TS2
-      }
+      Altitude
+      Latitude
+      Longitude
+      R0
+      R1
+      R2
+      R3
+      TS0
+      TS1
+      TS2
     }
     Item {
-      idItem
       EntireSubject
-      GeoLocation {
-        idGeoLocation
-        Altitude
-        Latitude
-        Longitude
-        R0
-        R1
-        R2
-        R3
-        TS0
-        TS1
-        TS2
-      }
+      Altitude
+      Latitude
+      Longitude
+      R0
+      R1
+      R2
+      R3
+      TS0
+      TS1
+      TS2
     }
     CaptureData {
-      idAssetVersion
+      captureMethod
       dateCaptured
       datasetType
-      systemCreated
       description
       cameraSettingUniform
       datasetFieldId
@@ -4054,7 +4351,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       }
     }
     Model {
-      systemCreated
+      size
       master
       authoritative
       creationMethod
@@ -4084,40 +4381,32 @@ export const GetDetailsTabDataForObjectDocument = gql`
       boundingBoxP2Z
     }
     Scene {
-      idScene
+      Links
+      AssetType
+      Tours
+      Annotation
     }
     IntermediaryFile {
       idIntermediaryFile
     }
     ProjectDocumentation {
-      idProjectDocumentation
       Description
     }
     Asset {
-      idAsset
       FilePath
-      VAssetType {
-        idVocabulary
-        Term
-      }
+      AssetType
     }
     AssetVersion {
-      idAssetVersion
+      Creator
       DateCreated
       StorageSize
       Ingested
       Version
-      User {
-        idUser
-        Name
-      }
     }
     Actor {
-      idActor
       OrganizationName
     }
     Stakeholder {
-      idStakeholder
       OrganizationName
       EmailAddress
       PhoneNumberMobile

@@ -6,20 +6,15 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { GetDetailsTabDataForObjectQueryResult, UnitDetailFields } from '../../../../../types/graphql';
 
 interface UnitDetailsProps extends GetDetailsTabDataForObjectQueryResult {
     disabled: boolean;
 }
 
-interface UnitDetailsFields {
-    Abbreviation?: string | null;
-    ARKPrefix?: string | null;
-}
-
 function UnitDetails(props: UnitDetailsProps): React.ReactElement {
     const { data, loading, disabled } = props;
-    const [details, setDetails] = useState<UnitDetailsFields>({});
+    const [details, setDetails] = useState<UnitDetailFields>({});
 
     useEffect(() => {
         if (data && !loading) {

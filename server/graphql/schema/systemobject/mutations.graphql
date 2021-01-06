@@ -1,0 +1,147 @@
+scalar DateTime
+
+type Mutation {
+    updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
+}
+
+input UpdateObjectDetailsInput {
+    idSystemObject: Int!
+    objectType: Int!
+    data: UpdateObjectDetailsDataInput!
+}
+
+input UnitDetailFieldsInput {
+    Abbreviation: String
+    ARKPrefix: String
+}
+
+input ProjectDetailFieldsInput {
+    Description: String
+}
+
+input SubjectDetailFieldsInput {
+    Altitude: Float
+    Latitude: Float
+    Longitude: Float
+    R0: Float
+    R1: Float
+    R2: Float
+    R3: Float
+    TS0: Float
+    TS1: Float
+    TS2: Float
+}
+
+input ItemDetailFieldsInput {
+    EntireSubject: Boolean
+    Altitude: Float
+    Latitude: Float
+    Longitude: Float
+    R0: Float
+    R1: Float
+    R2: Float
+    R3: Float
+    TS0: Float
+    TS1: Float
+    TS2: Float
+}
+
+input CaptureDataDetailFieldsInput {
+    captureMethod: Int
+    dateCaptured: String
+    datasetType: Int
+    systemCreated: Boolean
+    description: String
+    cameraSettingUniform: Boolean
+    datasetFieldId: Int
+    itemPositionType: Int
+    itemPositionFieldId: Int
+    itemArrangementFieldId: Int
+    focusType: Int
+    lightsourceType: Int
+    backgroundRemovalMethod: Int
+    clusterType: Int
+    clusterGeometryFieldId: Int
+    folders: [IngestFolderInput!]!
+}
+
+input ModelDetailFieldsInput {
+    size: Int
+    master: Boolean
+    authoritative: Boolean
+    creationMethod: Int
+    modality: Int
+    purpose: Int
+    units: Int
+    dateCaptured: String
+    modelFileType: Int
+    uvMaps: [IngestUVMapInput!]!
+    roughness: Int
+    metalness: Int
+    pointCount: Int
+    faceCount: Int
+    isWatertight: Boolean
+    hasNormals: Boolean
+    hasVertexColor: Boolean
+    hasUVSpace: Boolean
+    boundingBoxP1X: Float
+    boundingBoxP1Y: Float
+    boundingBoxP1Z: Float
+    boundingBoxP2X: Float
+    boundingBoxP2Y: Float
+    boundingBoxP2Z: Float
+}
+
+input SceneDetailFieldsInput {
+    Links: [String!]!
+    AssetType: Int
+    Tours: Int
+    Annotation: Int
+}
+
+input ProjectDocumentationDetailFieldsInput {
+    Description: String
+}
+input AssetDetailFieldsInput {
+    FilePath: String
+    AssetType: Int
+}
+
+input AssetVersionDetailFieldsInput {
+    Creator: String
+    DateCreated: DateTime
+    Ingested: Boolean
+    Version: Int
+    StorageSize: Int
+}
+
+input ActorDetailFieldsInput {
+    OrganizationName: String
+}
+
+input StakeholderDetailFieldsInput {
+    OrganizationName: String
+    MailingAddress: String
+    EmailAddress: String
+    PhoneNumberMobile: String
+    PhoneNumberOffice: String
+}
+
+input UpdateObjectDetailsDataInput {
+    Unit: UnitDetailFieldsInput
+    Project: ProjectDetailFieldsInput
+    Subject: SubjectDetailFieldsInput
+    Item: ItemDetailFieldsInput
+    CaptureData: CaptureDataDetailFieldsInput
+    Model: ModelDetailFieldsInput
+    Scene: SceneDetailFieldsInput 
+    ProjectDocumentation: ProjectDocumentationDetailFieldsInput
+    Asset: AssetDetailFieldsInput
+    AssetVersion: AssetVersionDetailFieldsInput
+    Actor: ActorDetailFieldsInput
+    Stakeholder: StakeholderDetailFieldsInput
+}
+
+type UpdateObjectDetailsResult {
+    success: Boolean!
+}

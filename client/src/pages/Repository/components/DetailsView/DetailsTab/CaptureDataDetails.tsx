@@ -6,8 +6,8 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { CheckboxField, DateInputField, FieldType, InputField, Loader, SelectField } from '../../../../../components';
-import { parseFoldersToState, StateFolder, useVocabularyStore } from '../../../../../store';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { parseFoldersToState, useVocabularyStore } from '../../../../../store';
+import { CaptureDataDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from '../../../../Ingestion/components/Metadata/Photogrammetry/AssetContents';
@@ -17,38 +17,22 @@ interface CaptureDataDetailsProps extends GetDetailsTabDataForObjectQueryResult 
     disabled: boolean;
 }
 
-interface CaptureDataDetailsFields {
-    captureMethod?: number;
-    folders?: StateFolder[];
-    description?: string;
-    dateCaptured?: string;
-    datasetType?: number;
-    datasetFieldId?: number | null;
-    itemPositionType?: number | null;
-    itemPositionFieldId?: number | null;
-    itemArrangementFieldId?: number | null;
-    focusType?: number | null;
-    lightsourceType?: number | null;
-    backgroundRemovalMethod?: number | null;
-    clusterType?: number | null;
-    clusterGeometryFieldId?: number | null;
-    cameraSettingUniform?: boolean;
-}
-
 function CaptureDataDetails(props: CaptureDataDetailsProps): React.ReactElement {
     const { data, loading, disabled } = props;
-    const [details, setDetails] = useState<CaptureDataDetailsFields>({});
+    const [details, setDetails] = useState<CaptureDataDetailFields>({
+        folders: []
+    });
     const [getInitialEntry, getEntries] = useVocabularyStore(state => [state.getInitialEntry, state.getEntries]);
 
     useEffect(() => {
         if (data && !loading) {
             const { CaptureData } = data.getDetailsTabDataForObject;
             setDetails({
-                captureMethod: 0, // TODO: KARAN
-                description: CaptureData?.description ?? '',
+                captureMethod: CaptureData?.captureMethod,
+                description: CaptureData?.description,
                 dateCaptured: CaptureData?.dateCaptured,
                 datasetType: CaptureData?.datasetType,
-                folders: parseFoldersToState(CaptureData?.folders ?? []),
+                folders: CaptureData?.folders || [],
                 datasetFieldId: CaptureData?.datasetFieldId,
                 itemPositionType: CaptureData?.itemPositionType,
                 itemPositionFieldId: CaptureData?.itemPositionFieldId,
@@ -143,7 +127,7 @@ function CaptureDataDetails(props: CaptureDataDetailsProps): React.ReactElement 
                         viewMode
                         disabled={disabled}
                         initialEntry={getInitialEntry(eVocabularySetID.eCaptureDataFileVariantType)}
-                        folders={details?.folders ?? []}
+                        folders={parseFoldersToState(details?.folders ?? [])}
                         options={getEntries(eVocabularySetID.eCaptureDataFileVariantType)}
                         onUpdate={updateFolderVariant}
                     />

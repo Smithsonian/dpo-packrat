@@ -24,7 +24,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
     };
 
     const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
-
+    // TODO: KARAN: complete all object types
     switch (objectType) {
         case eSystemObjectType.eUnit:
             if (systemObject?.idUnit) result.Unit = await DBAPI.Unit.fetch(systemObject.idUnit);
@@ -33,19 +33,15 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
             if (systemObject?.idProject) result.Project = await DBAPI.Project.fetch(systemObject.idProject);
             break;
         case eSystemObjectType.eSubject:
-            if (systemObject?.idSubject) result.Subject = await DBAPI.Subject.fetch(systemObject.idSubject);
             break;
         case eSystemObjectType.eItem:
             if (systemObject?.idItem) result.Item = await DBAPI.Item.fetch(systemObject.idItem);
             break;
         case eSystemObjectType.eCaptureData:
-            // TODO: KARAN: fetch IngestPhotogrammetry
             break;
         case eSystemObjectType.eModel:
-            // TODO: KARAN: fetch IngestModel
             break;
         case eSystemObjectType.eScene:
-            if (systemObject?.idScene) result.Scene = await DBAPI.Scene.fetch(systemObject.idScene);
             break;
         case eSystemObjectType.eIntermediaryFile:
             if (systemObject?.idIntermediaryFile) result.IntermediaryFile = await DBAPI.IntermediaryFile.fetch(systemObject.idIntermediaryFile);
