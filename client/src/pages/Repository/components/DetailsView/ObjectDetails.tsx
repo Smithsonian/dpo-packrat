@@ -3,14 +3,13 @@
  *
  * This component renders object details for the Repository Details UI.
  */
-import { Box, Typography } from '@material-ui/core';
+import { Box, Checkbox, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
-import { MdCheckBox, MdCheckBoxOutlineBlank } from 'react-icons/md';
 import { NewTabLink } from '../../../../components';
-import { palette } from '../../../../theme';
-import { RepositoryPath } from '../../../../types/graphql';
-import { getDetailsUrlForObject } from '../../../../utils/repository';
+import { GetSystemObjectDetailsResult, RepositoryPath } from '../../../../types/graphql';
+import { getDetailsUrlForObject, isFieldUpdated } from '../../../../utils/repository';
+import { withDefaultValueBoolean } from '../../../../utils/shared';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
     detail: {
@@ -36,20 +35,12 @@ interface ObjectDetailsProps {
     disabled: boolean;
     publishedState: string;
     retired: boolean;
+    originalFields: GetSystemObjectDetailsResult;
+    onRetiredUpdate: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
 }
 
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
-    const { unit, project, subject, item, publishedState, retired, disabled } = props;
-
-    const updateRetired = () => {
-        if (disabled) return;
-    };
-
-    const retiredValueComponent = (
-        <Box style={{ cursor: 'pointer' }}>
-            {retired ? <MdCheckBox size={20} color={palette.primary.main} onClick={updateRetired} /> : <MdCheckBoxOutlineBlank size={20} color={palette.primary.dark} onClick={updateRetired} />}
-        </Box>
-    );
+    const { unit, project, subject, item, publishedState, retired, disabled, originalFields, onRetiredUpdate } = props;
 
     return (
         <Box display='flex' flex={2} flexDirection='column'>
@@ -58,7 +49,17 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />
             <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />
             <Detail label='Publication Status' value={publishedState} clickable={false} />
-            <Detail label='Retired' valueComponent={retiredValueComponent} />
+            <Detail label='Retired' value={publishedState} clickable={false} />
+            <Detail label='Retired' valueComponent={
+                <Checkbox
+                    name='retired'
+                    disabled={disabled}
+                    checked={withDefaultValueBoolean(retired, false)}
+                    color={isFieldUpdated({ retired }, originalFields, 'retired') ? 'secondary' : 'primary'}
+                    onChange={onRetiredUpdate}
+                />}
+            />
+
         </Box>
     );
 }

@@ -5,7 +5,7 @@
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
@@ -27,6 +27,7 @@ import {
     UpdateObjectDetailsDataInput
 } from '../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
+import { withDefaultValueBoolean } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
 import { updateDetailsTabData, useObjectDetails } from '../../hooks/useDetailsView';
 import DetailsHeader from './DetailsHeader';
@@ -66,10 +67,16 @@ type DetailsParams = {
     idSystemObject: string;
 };
 
+type DetailsFields = {
+    name?: string;
+    retired?: boolean;
+};
+
 function DetailsView(): React.ReactElement {
     const classes = useStyles();
     const params = useParams<DetailsParams>();
     const [modalOpen, setModalOpen] = useState(false);
+    const [details, setDetails] = useState<DetailsFields>({});
     const [isUpdatingData, setIsUpdatingData] = useState(false);
 
     const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
@@ -78,11 +85,18 @@ function DetailsView(): React.ReactElement {
 
     const getEntries = useVocabularyStore(state => state.getEntries);
 
+    useEffect(() => {
+        if (data && !loading) {
+            const { name, retired } = data.getSystemObjectDetails;
+            setDetails({ name, retired });
+        }
+    }, [data, loading]);
+
     if (!data || !params.idSystemObject) {
         return <ObjectNotFoundView loading={loading} />;
     }
 
-    const { name, objectType, identifiers, retired, allowed, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
+    const { objectType, identifiers, allowed, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
 
@@ -112,6 +126,13 @@ function DetailsView(): React.ReactElement {
 
     const onAddDerivedObject = () => {
         setModalOpen(true);
+    };
+
+    const onNameUpdate = ({ target }): void => {
+        const updatedDataFields: UpdateObjectDetailsDataInput = { ...updatedData };
+        setDetails(details => ({ ...details, name: target.value }));
+        updatedDataFields.Name = target.value;
+        setUpdatedData(updatedDataFields);
     };
 
     const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
@@ -169,28 +190,35 @@ function DetailsView(): React.ReactElement {
 
         setIsUpdatingData(true);
         try {
-            const { data, errors } = await updateDetailsTabData(idSystemObject, objectType, updatedData);
-
-            if (errors?.length) {
-                throw new Error();
-            }
+            const { data } = await updateDetailsTabData(idSystemObject, objectType, updatedData);
 
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
             }
-        } catch {
+        } catch (e) {
+            console.log(JSON.stringify(e));
             toast.error('Failed to save updated data');
         } finally {
             setIsUpdatingData(false);
         }
     };
 
+    const onRetiredUpdate = ({ target }): void => {
+        const updatedDataFields: UpdateObjectDetailsDataInput = { ...updatedData };
+        setDetails(details => ({ ...details, retired: target.checked }));
+        updatedDataFields.Retired = target.checked;
+        setUpdatedData(updatedDataFields);
+    };
+
     return (
         <Box className={classes.container}>
             <DetailsHeader
-                name={name}
+                originalFields={data.getSystemObjectDetails}
+                name={details.name}
+                disabled={disabled}
                 objectType={objectType}
                 path={objectAncestors}
+                onNameUpdate={onNameUpdate}
             />
 
             <Box display='flex' mt={2}>
@@ -199,8 +227,10 @@ function DetailsView(): React.ReactElement {
                     project={project}
                     subject={subject}
                     item={item}
+                    onRetiredUpdate={onRetiredUpdate}
                     publishedState={publishedState}
-                    retired={retired}
+                    originalFields={data.getSystemObjectDetails}
+                    retired={withDefaultValueBoolean(details.retired, false)}
                     disabled={disabled}
                 />
                 <Box display='flex' flex={3} flexDirection='column'>

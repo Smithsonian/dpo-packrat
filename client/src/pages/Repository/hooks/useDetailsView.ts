@@ -65,6 +65,7 @@ export function updateDetailsTabData(idSystemObject: number, objectType: eSystem
                 objectType,
                 data
             }
-        }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
     });
 }

@@ -1240,6 +1240,8 @@ export type StakeholderDetailFieldsInput = {
 };
 
 export type UpdateObjectDetailsDataInput = {
+    Name?: Maybe<Scalars['String']>;
+    Retired?: Maybe<Scalars['Boolean']>;
     Unit?: Maybe<UnitDetailFieldsInput>;
     Project?: Maybe<ProjectDetailFieldsInput>;
     Subject?: Maybe<SubjectDetailFieldsInput>;

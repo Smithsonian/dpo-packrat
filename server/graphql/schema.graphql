@@ -933,6 +933,8 @@ input StakeholderDetailFieldsInput {
 }
 
 input UpdateObjectDetailsDataInput {
+  Name: String
+  Retired: Boolean
   Unit: UnitDetailFieldsInput
   Project: ProjectDetailFieldsInput
   Subject: SubjectDetailFieldsInput
