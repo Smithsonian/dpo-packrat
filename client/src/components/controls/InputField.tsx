@@ -56,7 +56,6 @@ function InputField(props: InputFieldProps): React.ReactElement {
             <DebounceInput
                 element='input'
                 disabled={disabled}
-                // @ts-ignore
                 value={value || ''}
                 className={classes.input}
                 type={type}
