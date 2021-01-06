@@ -8,10 +8,11 @@ import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { CheckboxField, Loader } from '../../../../../components';
 import { SubjectDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 import { SubjectFields } from './SubjectDetails';
 
-interface ItemDetailFields extends SubjectDetailFields {
+export interface ItemDetailFields extends SubjectDetailFields {
     EntireSubject?: boolean | null | undefined;
 }
 
@@ -57,18 +58,21 @@ function ItemDetails(props: DetailComponentProps): React.ReactElement {
         setDetails(details => ({ ...details, [name]: checked }));
     };
 
+    const itemData = data.getDetailsTabDataForObject?.Item;
+
     return (
         <Box>
             <CheckboxField
                 viewMode
                 required
+                updated={isFieldUpdated(details, itemData, 'EntireSubject')}
                 disabled={disabled}
                 name='EntireSubject'
                 label='Entire Subject'
                 value={details?.EntireSubject ?? false}
                 onChange={setCheckboxField}
             />
-            <SubjectFields {...details} disabled={disabled} onChange={onSetField} />
+            <SubjectFields {...details} originalFields={itemData} disabled={disabled} onChange={onSetField} />
         </Box>
     );
 }

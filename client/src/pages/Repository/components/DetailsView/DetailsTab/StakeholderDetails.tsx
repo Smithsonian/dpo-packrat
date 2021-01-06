@@ -8,6 +8,7 @@ import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader } from '../../../../../components';
 import { StakeholderDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 
 function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
@@ -41,11 +42,14 @@ function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
         setDetails(details => ({ ...details, [name]: value }));
     };
 
+    const stakeholderData = data.getDetailsTabDataForObject?.Stakeholder;
+
     return (
         <Box>
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, stakeholderData, 'OrganizationName')}
                 disabled={disabled}
                 label='OrganizationName'
                 value={details?.OrganizationName}
@@ -55,6 +59,7 @@ function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, stakeholderData, 'EmailAddress')}
                 disabled={disabled}
                 label='EmailAddress'
                 value={details?.EmailAddress}
@@ -64,6 +69,7 @@ function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, stakeholderData, 'PhoneNumberMobile')}
                 disabled={disabled}
                 label='PhoneNumberMobile'
                 value={details?.PhoneNumberMobile}
@@ -73,6 +79,7 @@ function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, stakeholderData, 'PhoneNumberOffice')}
                 disabled={disabled}
                 label='PhoneNumberOffice'
                 value={details?.PhoneNumberOffice}
@@ -82,6 +89,7 @@ function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, stakeholderData, 'MailingAddress')}
                 disabled={disabled}
                 label='MailingAddress'
                 value={details?.MailingAddress}

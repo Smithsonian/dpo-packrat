@@ -10,6 +10,7 @@ import { InputField, Loader, SelectField } from '../../../../../components';
 import { useVocabularyStore } from '../../../../../store';
 import { AssetDetailFields } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import { DetailComponentProps } from './index';
 
@@ -53,11 +54,14 @@ function AssetDetails(props: DetailComponentProps): React.ReactElement {
         setDetails(details => ({ ...details, [name]: idFieldValue }));
     };
 
+    const assetData = data.getDetailsTabDataForObject?.Asset;
+
     return (
         <Box>
             <SelectField
                 required
                 viewMode
+                updated={isFieldUpdated(details, assetData, 'AssetType')}
                 disabled={disabled}
                 label='Asset Type'
                 value={withDefaultValueNumber(details?.AssetType as never, getInitialEntry(eVocabularySetID.eAssetAssetType))}
@@ -68,6 +72,7 @@ function AssetDetails(props: DetailComponentProps): React.ReactElement {
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, assetData, 'FilePath')}
                 disabled={disabled}
                 label='FilePath'
                 value={details?.FilePath}

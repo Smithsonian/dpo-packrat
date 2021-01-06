@@ -8,6 +8,7 @@ import { Box, makeStyles, Typography } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { CheckboxField, FieldType, Loader } from '../../../../../components';
 import { AssetVersionDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { DetailComponentProps } from './index';
 
@@ -20,7 +21,7 @@ export const useStyles = makeStyles(({ palette }) => ({
 
 function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
-    const { data, loading, onUpdateDetail, objectType } = props;
+    const { data, loading, onUpdateDetail, objectType, disabled } = props;
 
     const [details, setDetails] = useState<AssetVersionDetailFields>({});
 
@@ -51,6 +52,8 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
     };
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
+
+    const assetVersionData = data.getDetailsTabDataForObject?.AssetVersion;
 
     return (
         <Box>
@@ -94,8 +97,10 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
             <CheckboxField
                 viewMode
                 required
+                updated={isFieldUpdated(details, assetVersionData, 'Ingested')}
+                disabled={disabled}
                 name='Ingested'
-                label='Entire Subject'
+                label='Ingested'
                 value={details.Ingested ?? false}
                 onChange={setCheckboxField}
             />

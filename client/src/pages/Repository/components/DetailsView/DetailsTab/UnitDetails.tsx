@@ -8,6 +8,7 @@ import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader } from '../../../../../components';
 import { UnitDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 
 function UnitDetails(props: DetailComponentProps): React.ReactElement {
@@ -37,11 +38,14 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
         setDetails(details => ({ ...details, [name]: value }));
     };
 
+    const unitData = data.getDetailsTabDataForObject?.Unit;
+
     return (
         <Box>
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, unitData, 'Abbreviation')}
                 disabled={disabled}
                 label='Abbreviation'
                 value={details?.Abbreviation}
@@ -51,6 +55,7 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, unitData, 'ARKPrefix')}
                 disabled={disabled}
                 label='ARKPrefix'
                 value={details?.ARKPrefix}

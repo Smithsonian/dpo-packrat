@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Repository utilities
@@ -250,4 +251,8 @@ export function validateArray<T>(value: T[], defaultValue: T[]): T[] {
     }
 
     return result;
+}
+
+export function isFieldUpdated(updatedData: any, originalData: any, fieldName: string): boolean {
+    return originalData?.[fieldName] !== updatedData?.[fieldName];
 }

@@ -15,7 +15,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     date: {
         width: '50%',
         background: palette.background.paper,
-        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
+        border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
+        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         padding: '1px 8px',
         color: Colors.defaults.white,
         marginTop: 0,
@@ -34,11 +35,12 @@ interface DateInputFieldProps {
     value: Date;
     onChange: (date: MaterialUiPickersDate, value?: string | null | undefined) => void;
     disabled?: boolean;
+    updated?: boolean;
 }
 
 function DateInputField(props: DateInputFieldProps): React.ReactElement {
-    const { value, onChange, disabled = false } = props;
-    const classes = useStyles();
+    const { value, onChange, disabled = false, updated = false } = props;
+    const classes = useStyles(updated);
 
     return (
         <MuiPickersUtilsProvider utils={DateFnsUtils}>

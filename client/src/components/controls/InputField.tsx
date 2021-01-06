@@ -13,7 +13,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     input: {
         width: '50%',
         outline: 'none',
-        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
+        border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
+        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         padding: 8,
         borderRadius: 5,
         fontWeight: typography.fontWeightRegular,
@@ -35,11 +36,12 @@ interface InputFieldProps {
     required?: boolean;
     viewMode?: boolean;
     disabled?: boolean;
+    updated?: boolean;
 }
 
 function InputField(props: InputFieldProps): React.ReactElement {
-    const { label, name, value, onChange, type, required = false, viewMode = false, disabled = false } = props;
-    const classes = useStyles();
+    const { label, name, value, onChange, type, required = false, viewMode = false, disabled = false, updated = false } = props;
+    const classes = useStyles(updated);
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 

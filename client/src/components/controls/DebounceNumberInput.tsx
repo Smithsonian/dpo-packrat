@@ -11,7 +11,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     input: {
         width: '16%',
         outline: 'none',
-        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
+        border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
+        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         padding: 8,
         borderRadius: 5,
         marginLeft: 5,
@@ -29,12 +30,13 @@ interface DebounceNumberInputProps {
     value?: number | null;
     name: string;
     disabled?: boolean;
+    updated?: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 function DebounceNumberInput(props: DebounceNumberInputProps): React.ReactElement {
-    const { value, name, onChange, disabled = false } = props;
-    const classes = useStyles();
+    const { value, name, onChange, disabled = false, updated = false } = props;
+    const classes = useStyles(updated);
 
     return (
         <DebounceInput

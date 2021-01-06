@@ -8,6 +8,7 @@ import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader } from '../../../../../components';
 import { ActorDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 
 function ActorDetails(props: DetailComponentProps): React.ReactElement {
@@ -37,11 +38,14 @@ function ActorDetails(props: DetailComponentProps): React.ReactElement {
         setDetails(details => ({ ...details, [name]: value }));
     };
 
+    const actorData = data.getDetailsTabDataForObject?.Actor;
+
     return (
         <Box>
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, actorData, 'OrganizationName')}
                 disabled={disabled}
                 label='OrganizationName'
                 value={details?.OrganizationName}
