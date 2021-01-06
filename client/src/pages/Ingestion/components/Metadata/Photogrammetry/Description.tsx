@@ -26,10 +26,11 @@ interface DescriptionProps {
     value: string;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     viewMode?: boolean;
+    disabled?: boolean;
 }
 
 function Description(props: DescriptionProps): React.ReactElement {
-    const { value, onChange, viewMode = false } = props;
+    const { value, onChange, viewMode = false, disabled = false } = props;
     const classes = useStyles();
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
@@ -46,6 +47,7 @@ function Description(props: DescriptionProps): React.ReactElement {
                 element='textarea'
                 className={classes.description}
                 name='description'
+                disabled={disabled}
                 value={value}
                 onChange={onChange}
                 forceNotifyByEnter={false}

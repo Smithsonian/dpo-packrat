@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * UnitDetails
  *
@@ -6,15 +7,16 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult, UnitDetailFields } from '../../../../../types/graphql';
+import { UnitDetailFields } from '../../../../../types/graphql';
+import { DetailComponentProps } from './index';
 
-interface UnitDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
-
-function UnitDetails(props: UnitDetailsProps): React.ReactElement {
-    const { data, loading, disabled } = props;
+function UnitDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
     const [details, setDetails] = useState<UnitDetailFields>({});
+
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {

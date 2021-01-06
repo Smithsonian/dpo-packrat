@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * SubjectDetails
  *
@@ -6,16 +7,17 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { DebounceNumberInput, FieldType, InputField, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult, SubjectDetailFields } from '../../../../../types/graphql';
+import { SubjectDetailFields } from '../../../../../types/graphql';
+import { DetailComponentProps } from './index';
 
-interface SubjectDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
-
-function SubjectDetails(props: SubjectDetailsProps): React.ReactElement {
-    const { data, loading, disabled, } = props;
+function SubjectDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
 
     const [details, setDetails] = useState<SubjectDetailFields>({});
+
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * CaptureDataDetails
  *
@@ -7,22 +8,25 @@ import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { CheckboxField, DateInputField, FieldType, InputField, Loader, SelectField } from '../../../../../components';
 import { parseFoldersToState, useVocabularyStore } from '../../../../../store';
-import { CaptureDataDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { CaptureDataDetailFields } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from '../../../../Ingestion/components/Metadata/Photogrammetry/AssetContents';
 import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
+import { DetailComponentProps } from './index';
 
-interface CaptureDataDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
+function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
 
-function CaptureDataDetails(props: CaptureDataDetailsProps): React.ReactElement {
-    const { data, loading, disabled } = props;
     const [details, setDetails] = useState<CaptureDataDetailFields>({
         folders: []
     });
+
     const [getInitialEntry, getEntries] = useVocabularyStore(state => [state.getInitialEntry, state.getEntries]);
+
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {

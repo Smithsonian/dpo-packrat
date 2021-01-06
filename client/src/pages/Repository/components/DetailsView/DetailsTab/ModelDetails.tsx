@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * ModelDetails
  *
@@ -7,12 +8,13 @@ import { Box, makeStyles, Typography } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { CheckboxField, DateInputField, FieldType, InputField, Loader, SelectField } from '../../../../../components';
 import { parseUVMapsToState, useVocabularyStore } from '../../../../../store';
-import { GetDetailsTabDataForObjectQueryResult, ModelDetailFields } from '../../../../../types/graphql';
+import { ModelDetailFields } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import { formatBytes } from '../../../../../utils/upload';
 import BoundingBoxInput from '../../../../Ingestion/components/Metadata/Model/BoundingBoxInput';
 import UVContents from '../../../../Ingestion/components/Metadata/Model/UVContents';
+import { DetailComponentProps } from './index';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {
@@ -21,18 +23,18 @@ export const useStyles = makeStyles(({ palette }) => ({
     }
 }));
 
-interface ModelDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
-
-function ModelDetails(props: ModelDetailsProps): React.ReactElement {
+function ModelDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
-    const { data, loading, disabled } = props;
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
     const [details, setDetails] = useState<ModelDetailFields>({
         uvMaps: []
     });
 
     const [getInitialEntry, getEntries] = useVocabularyStore(state => [state.getInitialEntry, state.getEntries]);
+
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {
@@ -65,8 +67,6 @@ function ModelDetails(props: ModelDetailsProps): React.ReactElement {
             });
         }
     }, [data, loading]);
-
-    console.log(details);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * AssetDetails
  *
@@ -7,16 +8,13 @@ import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader, SelectField } from '../../../../../components';
 import { useVocabularyStore } from '../../../../../store';
-import { AssetDetailFields, GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { AssetDetailFields } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
+import { DetailComponentProps } from './index';
 
-interface AssetDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
-
-function AssetDetails(props: AssetDetailsProps): React.ReactElement {
-    const { data, loading, disabled, } = props;
+function AssetDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
 
     const [details, setDetails] = useState<AssetDetailFields>({});
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
@@ -30,6 +28,10 @@ function AssetDetails(props: AssetDetailsProps): React.ReactElement {
             });
         }
     }, [data, loading]);
+
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
