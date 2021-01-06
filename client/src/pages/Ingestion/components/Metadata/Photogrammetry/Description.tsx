@@ -15,7 +15,8 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         padding: 10,
         resize: 'none',
         overflow: 'scroll',
-        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
+        border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
+        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         borderRadius: 5,
         fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily
@@ -27,11 +28,12 @@ interface DescriptionProps {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     viewMode?: boolean;
     disabled?: boolean;
+    updated?: boolean;
 }
 
 function Description(props: DescriptionProps): React.ReactElement {
-    const { value, onChange, viewMode = false, disabled = false } = props;
-    const classes = useStyles();
+    const { value, onChange, viewMode = false, disabled = false, updated = false } = props;
+    const classes = useStyles(updated);
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 

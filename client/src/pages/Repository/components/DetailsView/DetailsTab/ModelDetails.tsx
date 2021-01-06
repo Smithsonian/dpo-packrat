@@ -10,6 +10,7 @@ import { CheckboxField, DateInputField, FieldType, InputField, Loader, SelectFie
 import { parseUVMapsToState, useVocabularyStore } from '../../../../../store';
 import { ModelDetailFields } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import { formatBytes } from '../../../../../utils/upload';
 import BoundingBoxInput from '../../../../Ingestion/components/Metadata/Model/BoundingBoxInput';
@@ -73,7 +74,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
     }
 
     const updateUVMapsVariant = () => {
-        alert('TODO: Karan Update UV Maps');
+        alert('TODO: KARAN: Update UV Maps');
     };
 
     const setDateField = (name: string, value?: string | null): void => {
@@ -102,6 +103,8 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
+    const modelData = data.getDetailsTabDataForObject?.Model;
+
     return (
         <Box display='flex'>
             <Box display='flex' flex={1} flexDirection='column'>
@@ -121,12 +124,18 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                     width='auto'
                     containerProps={rowFieldProps}
                 >
-                    <DateInputField value={new Date(details?.dateCaptured ?? Date.now())} disabled={disabled} onChange={(_, value) => setDateField('dateCaptured', value)} />
+                    <DateInputField
+                        value={new Date(details?.dateCaptured ?? Date.now())}
+                        updated={isFieldUpdated(details, modelData, 'dateCaptured')}
+                        disabled={disabled}
+                        onChange={(_, value) => setDateField('dateCaptured', value)}
+                    />
                 </FieldType>
 
                 <SelectField
                     viewMode
                     required
+                    updated={isFieldUpdated(details, modelData, 'creationMethod')}
                     disabled={disabled}
                     label='Creation Method'
                     value={withDefaultValueNumber(details.creationMethod, getInitialEntry(eVocabularySetID.eModelCreationMethod))}
@@ -138,8 +147,9 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 <CheckboxField
                     viewMode
                     required
+                    updated={isFieldUpdated(details, modelData, 'master')}
                     disabled={disabled}
-                    name='Master'
+                    name='master'
                     label='Master Model'
                     value={details.master ?? false}
                     onChange={setCheckboxField}
@@ -148,8 +158,9 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 <CheckboxField
                     viewMode
                     required
+                    updated={isFieldUpdated(details, modelData, 'authoritative')}
                     disabled={disabled}
-                    name='Master'
+                    name='authoritative'
                     label='Authoritative Model'
                     value={details.authoritative ?? false}
                     onChange={setCheckboxField}
@@ -158,6 +169,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 <SelectField
                     viewMode
                     required
+                    updated={isFieldUpdated(details, modelData, 'modality')}
                     disabled={disabled}
                     label='Modality'
                     value={withDefaultValueNumber(details.modality, getInitialEntry(eVocabularySetID.eModelModality))}
@@ -169,6 +181,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 <SelectField
                     viewMode
                     required
+                    updated={isFieldUpdated(details, modelData, 'units')}
                     disabled={disabled}
                     label='Units'
                     value={withDefaultValueNumber(details.units, getInitialEntry(eVocabularySetID.eModelUnits))}
@@ -180,6 +193,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 <SelectField
                     viewMode
                     required
+                    updated={isFieldUpdated(details, modelData, 'purpose')}
                     disabled={disabled}
                     label='Purpose'
                     value={withDefaultValueNumber(details.purpose, getInitialEntry(eVocabularySetID.eModelPurpose))}
@@ -191,6 +205,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 <SelectField
                     viewMode
                     required
+                    updated={isFieldUpdated(details, modelData, 'modelFileType')}
                     disabled={disabled}
                     label='Model File Type'
                     value={withDefaultValueNumber(details.modelFileType, getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType))}
@@ -210,6 +225,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
             <Box display='flex' flex={1} flexDirection='column' ml={1}>
                 <InputField
                     viewMode
+                    updated={isFieldUpdated(details, modelData, 'roughness')}
                     disabled={disabled}
                     type='number'
                     label='Roughness'
@@ -219,6 +235,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <InputField
                     viewMode
+                    updated={isFieldUpdated(details, modelData, 'metalness')}
                     disabled={disabled}
                     type='number'
                     label='Metalness'
@@ -228,6 +245,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <InputField
                     viewMode
+                    updated={isFieldUpdated(details, modelData, 'pointCount')}
                     disabled={disabled}
                     type='number'
                     label='Point Count'
@@ -237,6 +255,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <InputField
                     viewMode
+                    updated={isFieldUpdated(details, modelData, 'faceCount')}
                     disabled={disabled}
                     type='number'
                     label='Face Count'
@@ -246,6 +265,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <CheckboxField
                     viewMode
+                    updated={isFieldUpdated(details, modelData, 'isWatertight')}
                     disabled={disabled}
                     name='isWatertight'
                     label='Is Watertight?'
@@ -254,6 +274,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <CheckboxField
                     viewMode
+                    updated={isFieldUpdated(details, modelData, 'hasNormals')}
                     disabled={disabled}
                     name='hasNormals'
                     label='Has Normals?'
@@ -262,6 +283,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <CheckboxField
                     viewMode
+                    updated={isFieldUpdated(details, modelData, 'hasVertexColor')}
                     disabled={disabled}
                     name='hasVertexColor'
                     label='Has Vertex Color?'
@@ -270,6 +292,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <CheckboxField
                     viewMode
+                    updated={isFieldUpdated(details, modelData, 'hasUVSpace')}
                     disabled={disabled}
                     name='hasUVSpace'
                     label='Has UV Space?'
@@ -278,6 +301,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <BoundingBoxInput
                     viewMode
+                    modelFields={modelData}
                     disabled={disabled}
                     boundingBoxP1X={details?.boundingBoxP1X}
                     boundingBoxP1Y={details?.boundingBoxP1Y}

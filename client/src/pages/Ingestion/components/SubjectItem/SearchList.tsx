@@ -34,7 +34,6 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         [breakpoints.down('lg')]: {
             height: 30
         }
-
     }
 }));
 

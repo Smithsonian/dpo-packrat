@@ -10,6 +10,7 @@ import { CheckboxField, DateInputField, FieldType, InputField, Loader, SelectFie
 import { parseFoldersToState, useVocabularyStore } from '../../../../../store';
 import { CaptureDataDetailFields } from '../../../../../types/graphql';
 import { eVocabularySetID } from '../../../../../types/server';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from '../../../../Ingestion/components/Metadata/Photogrammetry/AssetContents';
 import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
@@ -56,7 +57,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     }
 
     const updateFolderVariant = () => {
-        alert('TODO: Karan Update Folder Variant');
+        alert('TODO: KARAN: Update Folder Variant');
     };
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,12 +90,14 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     };
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
+    const captureDataData = data.getDetailsTabDataForObject?.CaptureData;
 
     return (
         <Box>
             <SelectField
                 required
                 viewMode
+                updated={isFieldUpdated(details, captureDataData, 'captureMethod')}
                 disabled={disabled}
                 label='Capture Method'
                 value={withDefaultValueNumber(details?.captureMethod, getInitialEntry(eVocabularySetID.eCaptureDataCaptureMethod))}
@@ -102,7 +105,13 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                 onChange={setIdField}
                 options={getEntries(eVocabularySetID.eCaptureDataCaptureMethod)}
             />
-            <Description viewMode value={details.description ?? ''} onChange={onSetField} />
+            <Description
+                viewMode
+                value={details.description ?? ''}
+                onChange={onSetField}
+                updated={isFieldUpdated(details, captureDataData, 'description')}
+                disabled={disabled}
+            />
             <Box display='flex' mt={1}>
                 <Box display='flex' flex={1} flexDirection='column'>
                     <Box display='flex' flexDirection='column'>
@@ -113,12 +122,18 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                             containerProps={rowFieldProps}
                             width='auto'
                         >
-                            <DateInputField value={new Date(details?.dateCaptured ?? Date.now())} disabled={disabled} onChange={(_, value) => setDateField('dateCaptured', value)} />
+                            <DateInputField
+                                updated={isFieldUpdated(details, captureDataData, 'dateCaptured')}
+                                value={new Date(details?.dateCaptured ?? Date.now())}
+                                disabled={disabled}
+                                onChange={(_, value) => setDateField('dateCaptured', value)}
+                            />
                         </FieldType>
 
                         <SelectField
                             required
                             viewMode
+                            updated={isFieldUpdated(details, captureDataData, 'datasetType')}
                             disabled={disabled}
                             label='Dataset Type'
                             value={withDefaultValueNumber(details?.datasetType, getInitialEntry(eVocabularySetID.eCaptureDataDatasetType))}
@@ -140,6 +155,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                     <InputField
                         viewMode
                         disabled={disabled}
+                        updated={isFieldUpdated(details, captureDataData, 'datasetFieldId')}
                         type='number'
                         label='Dataset Field ID'
                         value={details.datasetFieldId}
@@ -148,6 +164,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                     />
                     <SelectField
                         viewMode
+                        updated={isFieldUpdated(details, captureDataData, 'itemPositionType')}
                         disabled={disabled}
                         label='Item Position Type'
                         value={withDefaultValueNumber(details.itemPositionType, getInitialEntry(eVocabularySetID.eCaptureDataItemPositionType))}
@@ -157,6 +174,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                     />
                     <InputField
                         viewMode
+                        updated={isFieldUpdated(details, captureDataData, 'itemPositionFieldId')}
                         disabled={disabled}
                         type='number'
                         label='Item Position Field ID'
@@ -166,6 +184,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                     />
                     <InputField
                         viewMode
+                        updated={isFieldUpdated(details, captureDataData, 'itemArrangementFieldId')}
                         disabled={disabled}
                         type='number'
                         label='Item Arrangement Field ID'
@@ -175,6 +194,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                     />
                     <SelectField
                         viewMode
+                        updated={isFieldUpdated(details, captureDataData, 'focusType')}
                         disabled={disabled}
                         label='Focus Type'
                         value={withDefaultValueNumber(details.focusType, getInitialEntry(eVocabularySetID.eCaptureDataFocusType))}
@@ -185,6 +205,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
                     <SelectField
                         viewMode
+                        updated={isFieldUpdated(details, captureDataData, 'lightsourceType')}
                         disabled={disabled}
                         label='Light Source Type'
                         value={withDefaultValueNumber(details.lightsourceType, getInitialEntry(eVocabularySetID.eCaptureDataLightSourceType))}
@@ -195,6 +216,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
                     <SelectField
                         viewMode
+                        updated={isFieldUpdated(details, captureDataData, 'backgroundRemovalMethod')}
                         disabled={disabled}
                         label='Background Removal Method'
                         value={withDefaultValueNumber(details.backgroundRemovalMethod, getInitialEntry(eVocabularySetID.eCaptureDataBackgroundRemovalMethod))}
@@ -205,6 +227,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
                     <SelectField
                         viewMode
+                        updated={isFieldUpdated(details, captureDataData, 'clusterType')}
                         disabled={disabled}
                         label='Cluster Type'
                         value={withDefaultValueNumber(details.clusterType, getInitialEntry(eVocabularySetID.eCaptureDataClusterType))}
@@ -215,6 +238,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
                     <InputField
                         viewMode
+                        updated={isFieldUpdated(details, captureDataData, 'clusterGeometryFieldId')}
                         disabled={disabled}
                         type='number'
                         label='Cluster Geometry Field ID'
@@ -224,9 +248,10 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                     />
                     <CheckboxField
                         viewMode
+                        updated={isFieldUpdated(details, captureDataData, 'cameraSettingUniform')}
                         disabled={disabled}
                         required={false}
-                        name='Ingested'
+                        name='cameraSettingUniform'
                         label='Camera Settings Uniform'
                         value={details.cameraSettingUniform ?? false}
                         onChange={setCheckboxField}

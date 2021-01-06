@@ -7,6 +7,7 @@
 import React, { useEffect, useState } from 'react';
 import { Loader } from '../../../../../components';
 import { ProjectDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
 import { DetailComponentProps } from './index';
 
@@ -37,7 +38,17 @@ function ProjectDetails(props: DetailComponentProps): React.ReactElement {
         setDetails(details => ({ ...details, Description: value }));
     };
 
-    return <Description disabled={disabled} viewMode value={details.Description ?? ''} onChange={onSetField} />;
+    const projectData = data.getDetailsTabDataForObject?.Project;
+
+    return (
+        <Description
+            updated={isFieldUpdated(details, projectData, 'description')}
+            disabled={disabled}
+            viewMode
+            value={details.Description ?? ''}
+            onChange={onSetField}
+        />
+    );
 }
 
 export default ProjectDetails;

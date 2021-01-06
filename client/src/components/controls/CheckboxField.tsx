@@ -16,10 +16,11 @@ interface CheckboxFieldProps {
     required?: boolean;
     viewMode?: boolean;
     disabled?: boolean;
+    updated?: boolean;
 }
 
 function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
-    const { label, name, value, onChange, required = false, viewMode = false, disabled = false } = props;
+    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, updated } = props;
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
     return (
@@ -34,7 +35,7 @@ function CheckboxField(props: CheckboxFieldProps): React.ReactElement {
                 name={name}
                 disabled={disabled}
                 checked={withDefaultValueBoolean(value, false)}
-                color='primary'
+                color={updated ? 'secondary' : 'primary'}
                 onChange={onChange}
             />
         </FieldType>

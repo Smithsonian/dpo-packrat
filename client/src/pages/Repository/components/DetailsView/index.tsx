@@ -7,13 +7,30 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
 import { useParams } from 'react-router';
+import { toast } from 'react-toastify';
+import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
 import { parseIdentifiersToState, useVocabularyStore } from '../../../../store';
-import { eVocabularySetID } from '../../../../types/server';
+import {
+    ActorDetailFieldsInput,
+    AssetDetailFieldsInput,
+    AssetVersionDetailFieldsInput,
+    CaptureDataDetailFieldsInput,
+    ItemDetailFieldsInput,
+    ModelDetailFieldsInput,
+    ProjectDetailFieldsInput,
+    ProjectDocumentationDetailFieldsInput,
+    SceneDetailFieldsInput,
+    StakeholderDetailFieldsInput,
+    SubjectDetailFieldsInput,
+    UnitDetailFieldsInput,
+    UpdateObjectDetailsDataInput
+} from '../../../../types/graphql';
+import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
-import { useObjectDetails } from '../../hooks/useDetailsView';
+import { updateDetailsTabData, useObjectDetails } from '../../hooks/useDetailsView';
 import DetailsHeader from './DetailsHeader';
-import DetailsTab from './DetailsTab';
+import DetailsTab, { UpdateDataFields } from './DetailsTab';
 import DetailsThumbnail from './DetailsThumbnail';
 import ObjectDetails from './ObjectDetails';
 import ObjectNotFoundView from './ObjectNotFoundView';
@@ -33,6 +50,15 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
             maxHeight: 'calc(100vh - 120px)',
             padding: 10
         }
+    },
+    updateButton: {
+        height: 35,
+        width: 100,
+        marginTop: 10,
+        color: palette.background.paper,
+        [breakpoints.down('lg')]: {
+            height: 30
+        }
     }
 }));
 
@@ -44,9 +70,11 @@ function DetailsView(): React.ReactElement {
     const classes = useStyles();
     const params = useParams<DetailsParams>();
     const [modalOpen, setModalOpen] = useState(false);
+    const [isUpdatingData, setIsUpdatingData] = useState(false);
 
     const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
     const { data, loading } = useObjectDetails(idSystemObject);
+    const [updatedData, setUpdatedData] = useState({});
 
     const getEntries = useVocabularyStore(state => state.getEntries);
 
@@ -86,6 +114,77 @@ function DetailsView(): React.ReactElement {
         setModalOpen(true);
     };
 
+    const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
+        const updatedDataFields: UpdateObjectDetailsDataInput = { ...updatedData };
+
+        switch (objectType) {
+            case eSystemObjectType.eUnit:
+                updatedDataFields.Unit = data as UnitDetailFieldsInput;
+                break;
+            case eSystemObjectType.eProject:
+                updatedDataFields.Project = data as ProjectDetailFieldsInput;
+                break;
+            case eSystemObjectType.eSubject:
+                updatedDataFields.Subject = data as SubjectDetailFieldsInput;
+                break;
+            case eSystemObjectType.eItem:
+                updatedDataFields.Item = data as ItemDetailFieldsInput;
+                break;
+            case eSystemObjectType.eCaptureData:
+                updatedDataFields.CaptureData = data as CaptureDataDetailFieldsInput;
+                break;
+            case eSystemObjectType.eModel:
+                updatedDataFields.Model = data as ModelDetailFieldsInput;
+                break;
+            case eSystemObjectType.eScene:
+                updatedDataFields.Scene = data as SceneDetailFieldsInput;
+                break;
+            case eSystemObjectType.eIntermediaryFile:
+                break;
+            case eSystemObjectType.eProjectDocumentation:
+                updatedDataFields.ProjectDocumentation = data as ProjectDocumentationDetailFieldsInput;
+                break;
+            case eSystemObjectType.eAsset:
+                updatedDataFields.Asset = data as AssetDetailFieldsInput;
+                break;
+            case eSystemObjectType.eAssetVersion:
+                updatedDataFields.AssetVersion = data as AssetVersionDetailFieldsInput;
+                break;
+            case eSystemObjectType.eActor:
+                updatedDataFields.Actor = data as ActorDetailFieldsInput;
+                break;
+            case eSystemObjectType.eStakeholder:
+                updatedDataFields.Stakeholder = data as StakeholderDetailFieldsInput;
+                break;
+            default:
+                break;
+        }
+
+        setUpdatedData(updatedDataFields);
+    };
+
+    const updateData = async (): Promise<void> => {
+        const confirmed: boolean = global.confirm('Are you sure you want to update data');
+        if (!confirmed) return;
+
+        setIsUpdatingData(true);
+        try {
+            const { data, errors } = await updateDetailsTabData(idSystemObject, objectType, updatedData);
+
+            if (errors?.length) {
+                throw new Error();
+            }
+
+            if (data?.updateObjectDetails?.success) {
+                toast.success('Data saved successfully');
+            }
+        } catch {
+            toast.error('Failed to save updated data');
+        } finally {
+            setIsUpdatingData(false);
+        }
+    };
+
     return (
         <Box className={classes.container}>
             <DetailsHeader
@@ -117,7 +216,7 @@ function DetailsView(): React.ReactElement {
                 </Box>
             </Box>
 
-            <Box display='flex' flex={1}>
+            <Box display='flex'>
                 <DetailsTab
                     disabled={disabled}
                     idSystemObject={idSystemObject}
@@ -126,11 +225,21 @@ function DetailsView(): React.ReactElement {
                     derivedObjects={derivedObjects}
                     onAddSourceObject={onAddSourceObject}
                     onAddDerivedObject={onAddDerivedObject}
+                    onUpdateDetail={onUpdateDetail}
                 />
                 <Box display='flex' flex={1} padding={2}>
                     <DetailsThumbnail thumbnail={thumbnail} />
                 </Box>
             </Box>
+
+            <LoadingButton
+                className={classes.updateButton}
+                onClick={updateData}
+                disableElevation
+                loading={isUpdatingData}
+            >
+                Update
+            </LoadingButton>
 
             <ObjectSelectModal
                 open={modalOpen}
