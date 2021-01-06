@@ -7,6 +7,7 @@ import { MenuItem, Select } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { VocabularyOption } from '../../store';
+import { ViewableProps } from '../../types/repository';
 import FieldType from '../shared/FieldType';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
@@ -26,18 +27,14 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
 }));
 
-interface SelectFieldProps {
+interface SelectFieldProps extends ViewableProps {
     label: string;
     value: number | null;
     name: string;
     options: VocabularyOption[];
-    required?: boolean;
     error?: boolean;
     width?: string;
     onChange: (event: React.ChangeEvent<unknown>) => void;
-    viewMode?: boolean;
-    disabled?: boolean;
-    updated?: boolean;
 }
 
 function SelectField(props: SelectFieldProps): React.ReactElement {

@@ -11,6 +11,7 @@ import { AiFillFolder } from 'react-icons/ai';
 import { FieldType } from '../../../../../components';
 import { StateFolder, VocabularyOption } from '../../../../../store';
 import { palette } from '../../../../../theme';
+import { ViewableProps } from '../../../../../types/repository';
 
 export const useStyles = makeStyles(({ palette, typography, breakpoints, spacing }) => ({
     header: {
@@ -53,13 +54,11 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints, spacing
     },
 }));
 
-interface AssetContentsProps {
+interface AssetContentsProps extends ViewableProps {
     initialEntry: number | null;
     folders: StateFolder[];
     options: VocabularyOption[];
     onUpdate: (id: number, variantType: number) => void;
-    viewMode?: boolean;
-    disabled?: boolean;
 }
 
 function AssetContents(props: AssetContentsProps): React.ReactElement {

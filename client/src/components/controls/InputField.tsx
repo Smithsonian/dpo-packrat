@@ -7,6 +7,7 @@
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
+import { ViewableProps } from '../../types/repository';
 import FieldType from '../shared/FieldType';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
@@ -27,16 +28,12 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     }
 }));
 
-interface InputFieldProps {
+interface InputFieldProps extends ViewableProps {
     label: string;
     value?: number | string | null;
     name: string;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     type?: string;
-    required?: boolean;
-    viewMode?: boolean;
-    disabled?: boolean;
-    updated?: boolean;
 }
 
 function InputField(props: InputFieldProps): React.ReactElement {

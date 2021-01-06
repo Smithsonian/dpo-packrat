@@ -10,6 +10,7 @@ import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/picker
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 import React from 'react';
 import { Colors } from '../../theme';
+import { ViewableProps } from '../../types/repository';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     date: {
@@ -31,11 +32,9 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     }
 }));
 
-interface DateInputFieldProps {
+interface DateInputFieldProps extends ViewableProps {
     value: Date;
     onChange: (date: MaterialUiPickersDate, value?: string | null | undefined) => void;
-    disabled?: boolean;
-    updated?: boolean;
 }
 
 function DateInputField(props: DateInputFieldProps): React.ReactElement {
