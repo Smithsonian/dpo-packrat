@@ -49,7 +49,6 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />
             <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />
             <Detail label='Publication Status' value={publishedState} clickable={false} />
-            <Detail label='Retired' value={publishedState} clickable={false} />
             <Detail label='Retired' valueComponent={
                 <Checkbox
                     name='retired'
