@@ -8,7 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { NewTabLink } from '../../../../components';
 import { GetSystemObjectDetailsResult, RepositoryPath } from '../../../../types/graphql';
-import { getDetailsUrlForObject, isFieldUpdated } from '../../../../utils/repository';
+import { getDetailsUrlForObject, getUpdatedCheckboxProps, isFieldUpdated } from '../../../../utils/repository';
 import { withDefaultValueBoolean } from '../../../../utils/shared';
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -42,6 +42,8 @@ interface ObjectDetailsProps {
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     const { unit, project, subject, item, publishedState, retired, disabled, originalFields, onRetiredUpdate } = props;
 
+    const isRetiredUpdated: boolean = isFieldUpdated({ retired }, originalFields, 'retired');
+
     return (
         <Box display='flex' flex={2} flexDirection='column'>
             <Detail idSystemObject={unit?.idSystemObject} label='Unit' value={unit?.name} />
@@ -54,8 +56,8 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     name='retired'
                     disabled={disabled}
                     checked={withDefaultValueBoolean(retired, false)}
-                    color={isFieldUpdated({ retired }, originalFields, 'retired') ? 'secondary' : 'primary'}
                     onChange={onRetiredUpdate}
+                    {...getUpdatedCheckboxProps(isRetiredUpdated)}
                 />}
             />
 
