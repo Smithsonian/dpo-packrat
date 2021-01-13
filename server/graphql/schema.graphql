@@ -289,6 +289,7 @@ type Asset {
   FileName: String!
   FilePath: String!
   idAssetGroup: Int
+  idVAssetType: Int
   idSystemObject: Int
   StorageKey: String
   AssetGroup: AssetGroup
