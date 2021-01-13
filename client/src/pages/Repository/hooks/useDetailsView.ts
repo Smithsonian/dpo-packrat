@@ -56,12 +56,13 @@ export function useDetailsTabData(idSystemObject: number, objectType: eSystemObj
     });
 }
 
-export function updateDetailsTabData(idSystemObject: number, objectType: eSystemObjectType, data: UpdateObjectDetailsDataInput): Promise<FetchResult<UpdateObjectDetailsMutation>> {
+export function updateDetailsTabData(idSystemObject: number, idObject: number, objectType: eSystemObjectType, data: UpdateObjectDetailsDataInput): Promise<FetchResult<UpdateObjectDetailsMutation>> {
     return apolloClient.mutate({
         mutation: UpdateObjectDetailsDocument,
         variables: {
             input: {
                 idSystemObject,
+                idObject,
                 objectType,
                 data
             }

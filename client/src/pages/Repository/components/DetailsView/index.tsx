@@ -96,7 +96,21 @@ function DetailsView(): React.ReactElement {
         return <ObjectNotFoundView loading={loading} />;
     }
 
-    const { objectType, identifiers, allowed, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
+    const {
+        idObject,
+        objectType,
+        identifiers,
+        allowed,
+        publishedState,
+        thumbnail,
+        unit,
+        project,
+        subject,
+        item,
+        objectAncestors,
+        sourceObjects,
+        derivedObjects
+    } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
 
@@ -136,7 +150,11 @@ function DetailsView(): React.ReactElement {
     };
 
     const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
-        const updatedDataFields: UpdateObjectDetailsDataInput = { ...updatedData };
+        const updatedDataFields: UpdateObjectDetailsDataInput = {
+            ...updatedData,
+            Name: details.name,
+            Retired: details.retired
+        };
 
         switch (objectType) {
             case eSystemObjectType.eUnit:
@@ -190,13 +208,15 @@ function DetailsView(): React.ReactElement {
 
         setIsUpdatingData(true);
         try {
-            const { data } = await updateDetailsTabData(idSystemObject, objectType, updatedData);
+            const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
 
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
+            } else {
+                throw new Error('Update request returned success: false');
             }
-        } catch (e) {
-            console.log(JSON.stringify(e));
+        } catch (error) {
+            console.log(JSON.stringify(error));
             toast.error('Failed to save updated data');
         } finally {
             setIsUpdatingData(false);
@@ -262,21 +282,11 @@ function DetailsView(): React.ReactElement {
                 </Box>
             </Box>
 
-            <LoadingButton
-                className={classes.updateButton}
-                onClick={updateData}
-                disableElevation
-                loading={isUpdatingData}
-            >
+            <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
                 Update
             </LoadingButton>
 
-            <ObjectSelectModal
-                open={modalOpen}
-                onSelectedObjects={onSelectedObjects}
-                onModalClose={onModalClose}
-                selectedObjects={sourceObjects}
-            />
+            <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={sourceObjects} />
         </Box>
     );
 }

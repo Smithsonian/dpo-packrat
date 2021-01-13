@@ -161,6 +161,7 @@ type RepositoryPath {
 }
 
 type GetSystemObjectDetailsResult {
+    idObject: Int!
     name: String!
     retired: Boolean!
     objectType: Int!

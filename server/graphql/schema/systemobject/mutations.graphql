@@ -6,6 +6,7 @@ type Mutation {
 
 input UpdateObjectDetailsInput {
     idSystemObject: Int!
+    idObject: Int!
     objectType: Int!
     data: UpdateObjectDetailsDataInput!
 }

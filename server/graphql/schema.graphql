@@ -810,6 +810,7 @@ type IntermediaryFile {
 
 input UpdateObjectDetailsInput {
   idSystemObject: Int!
+  idObject: Int!
   objectType: Int!
   data: UpdateObjectDetailsDataInput!
 }
@@ -1107,6 +1108,7 @@ type RepositoryPath {
 }
 
 type GetSystemObjectDetailsResult {
+  idObject: Int!
   name: String!
   retired: Boolean!
   objectType: Int!
