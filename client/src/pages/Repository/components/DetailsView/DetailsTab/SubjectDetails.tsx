@@ -44,7 +44,13 @@ function SubjectDetails(props: DetailComponentProps): React.ReactElement {
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
-        setDetails(details => ({ ...details, [name]: value }));
+        let numberValue: number | null = null;
+
+        if (value) {
+            numberValue = Number.parseInt(value, 10);
+        }
+
+        setDetails(details => ({ ...details, [name]: numberValue }));
     };
 
     const subjectData = data.getDetailsTabDataForObject?.Subject;
