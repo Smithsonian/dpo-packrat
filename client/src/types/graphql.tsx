@@ -661,6 +661,7 @@ export type CaptureData = {
     VCaptureMethod?: Maybe<Vocabulary>;
     CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
     CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
+    CaptureDataPhoto?: Maybe<Array<Maybe<CaptureDataPhoto>>>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -1165,7 +1166,7 @@ export type ItemDetailFieldsInput = {
 
 export type CaptureDataDetailFieldsInput = {
     captureMethod?: Maybe<Scalars['Int']>;
-    dateCaptured?: Maybe<Scalars['String']>;
+    dateCaptured?: Maybe<Scalars['DateTime']>;
     datasetType?: Maybe<Scalars['Int']>;
     systemCreated?: Maybe<Scalars['Boolean']>;
     description?: Maybe<Scalars['String']>;
@@ -1190,7 +1191,7 @@ export type ModelDetailFieldsInput = {
     modality?: Maybe<Scalars['Int']>;
     purpose?: Maybe<Scalars['Int']>;
     units?: Maybe<Scalars['Int']>;
-    dateCaptured?: Maybe<Scalars['String']>;
+    dateCaptured?: Maybe<Scalars['DateTime']>;
     modelFileType?: Maybe<Scalars['Int']>;
     uvMaps: Array<IngestUvMapInput>;
     roughness?: Maybe<Scalars['Int']>;
@@ -1214,6 +1215,8 @@ export type SceneDetailFieldsInput = {
     AssetType?: Maybe<Scalars['Int']>;
     Tours?: Maybe<Scalars['Int']>;
     Annotation?: Maybe<Scalars['Int']>;
+    HasBeenQCd?: Maybe<Scalars['Boolean']>;
+    IsOriented?: Maybe<Scalars['Boolean']>;
 };
 
 export type ProjectDocumentationDetailFieldsInput = {
@@ -1366,6 +1369,8 @@ export type SceneDetailFields = {
     AssetType?: Maybe<Scalars['Int']>;
     Tours?: Maybe<Scalars['Int']>;
     Annotation?: Maybe<Scalars['Int']>;
+    HasBeenQCd?: Maybe<Scalars['Boolean']>;
+    IsOriented?: Maybe<Scalars['Boolean']>;
 };
 
 export type IntermediaryFileDetailFields = {
