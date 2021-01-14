@@ -376,6 +376,7 @@ type CaptureData {
   VCaptureMethod: Vocabulary
   CaptureDataFile: [CaptureDataFile]
   CaptureDataGroup: [CaptureDataGroup]
+  CaptureDataPhoto: [CaptureDataPhoto]
   SystemObject: SystemObject
 }
 
@@ -854,7 +855,7 @@ input ItemDetailFieldsInput {
 
 input CaptureDataDetailFieldsInput {
   captureMethod: Int
-  dateCaptured: String
+  dateCaptured: DateTime
   datasetType: Int
   systemCreated: Boolean
   description: String
@@ -879,7 +880,7 @@ input ModelDetailFieldsInput {
   modality: Int
   purpose: Int
   units: Int
-  dateCaptured: String
+  dateCaptured: DateTime
   modelFileType: Int
   uvMaps: [IngestUVMapInput!]!
   roughness: Int
@@ -903,6 +904,8 @@ input SceneDetailFieldsInput {
   AssetType: Int
   Tours: Int
   Annotation: Int
+  HasBeenQCd: Boolean
+  IsOriented: Boolean
 }
 
 input ProjectDocumentationDetailFieldsInput {
@@ -1047,6 +1050,8 @@ type SceneDetailFields {
   AssetType: Int
   Tours: Int
   Annotation: Int
+  HasBeenQCd: Boolean
+  IsOriented: Boolean
 }
 
 type IntermediaryFileDetailFields {

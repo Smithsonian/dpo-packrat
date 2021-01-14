@@ -51,129 +51,161 @@ export type Query = {
     searchIngestionSubjects: SearchIngestionSubjectsResult;
 };
 
+
 export type QueryAreCameraSettingsUniformArgs = {
     input: AreCameraSettingsUniformInput;
 };
+
 
 export type QueryGetAccessPolicyArgs = {
     input: GetAccessPolicyInput;
 };
 
+
 export type QueryGetAssetArgs = {
     input: GetAssetInput;
 };
+
 
 export type QueryGetAssetDetailsForSystemObjectArgs = {
     input: GetAssetDetailsForSystemObjectInput;
 };
 
+
 export type QueryGetAssetVersionsDetailsArgs = {
     input: GetAssetVersionsDetailsInput;
 };
+
 
 export type QueryGetCaptureDataArgs = {
     input: GetCaptureDataInput;
 };
 
+
 export type QueryGetCaptureDataPhotoArgs = {
     input: GetCaptureDataPhotoInput;
 };
+
 
 export type QueryGetContentsForAssetVersionsArgs = {
     input: GetContentsForAssetVersionsInput;
 };
 
+
 export type QueryGetDetailsTabDataForObjectArgs = {
     input: GetDetailsTabDataForObjectInput;
 };
+
 
 export type QueryGetIngestionItemsForSubjectsArgs = {
     input: GetIngestionItemsForSubjectsInput;
 };
 
+
 export type QueryGetIngestionProjectsForSubjectsArgs = {
     input: GetIngestionProjectsForSubjectsInput;
 };
+
 
 export type QueryGetIntermediaryFileArgs = {
     input: GetIntermediaryFileInput;
 };
 
+
 export type QueryGetItemArgs = {
     input: GetItemInput;
 };
+
 
 export type QueryGetItemsForSubjectArgs = {
     input: GetItemsForSubjectInput;
 };
 
+
 export type QueryGetLicenseArgs = {
     input: GetLicenseInput;
 };
+
 
 export type QueryGetModelArgs = {
     input: GetModelInput;
 };
 
+
 export type QueryGetObjectChildrenArgs = {
     input: GetObjectChildrenInput;
 };
+
 
 export type QueryGetObjectsForItemArgs = {
     input: GetObjectsForItemInput;
 };
 
+
 export type QueryGetProjectArgs = {
     input: GetProjectInput;
 };
+
 
 export type QueryGetProjectDocumentationArgs = {
     input: GetProjectDocumentationInput;
 };
 
+
 export type QueryGetSceneArgs = {
     input: GetSceneInput;
 };
+
 
 export type QueryGetSourceObjectIdentiferArgs = {
     input: GetSourceObjectIdentiferInput;
 };
 
+
 export type QueryGetSubjectArgs = {
     input: GetSubjectInput;
 };
+
 
 export type QueryGetSubjectsForUnitArgs = {
     input: GetSubjectsForUnitInput;
 };
 
+
 export type QueryGetSystemObjectDetailsArgs = {
     input: GetSystemObjectDetailsInput;
 };
+
 
 export type QueryGetUnitArgs = {
     input: GetUnitInput;
 };
 
+
 export type QueryGetUserArgs = {
     input: GetUserInput;
 };
+
 
 export type QueryGetVersionsForSystemObjectArgs = {
     input: GetVersionsForSystemObjectInput;
 };
 
+
 export type QueryGetVocabularyArgs = {
     input: GetVocabularyInput;
 };
+
 
 export type QueryGetVocabularyEntriesArgs = {
     input: GetVocabularyEntriesInput;
 };
 
+
 export type QueryGetWorkflowArgs = {
     input: GetWorkflowInput;
 };
+
 
 export type QuerySearchIngestionSubjectsArgs = {
     input: SearchIngestionSubjectsInput;
@@ -187,6 +219,7 @@ export type GetAccessPolicyResult = {
     __typename?: 'GetAccessPolicyResult';
     AccessPolicy?: Maybe<AccessPolicy>;
 };
+
 
 export type AccessAction = {
     __typename?: 'AccessAction';
@@ -236,6 +269,7 @@ export type AccessRole = {
     AccessAction?: Maybe<Array<Maybe<AccessAction>>>;
 };
 
+
 export type Mutation = {
     __typename?: 'Mutation';
     createCaptureData: CreateCaptureDataResult;
@@ -255,61 +289,76 @@ export type Mutation = {
     uploadAsset: UploadAssetResult;
 };
 
+
 export type MutationCreateCaptureDataArgs = {
     input: CreateCaptureDataInput;
 };
+
 
 export type MutationCreateCaptureDataPhotoArgs = {
     input: CreateCaptureDataPhotoInput;
 };
 
+
 export type MutationCreateItemArgs = {
     input: CreateItemInput;
 };
+
 
 export type MutationCreateModelArgs = {
     input: CreateModelInput;
 };
 
+
 export type MutationCreateProjectArgs = {
     input: CreateProjectInput;
 };
+
 
 export type MutationCreateSceneArgs = {
     input: CreateSceneInput;
 };
 
+
 export type MutationCreateSubjectArgs = {
     input: CreateSubjectInput;
 };
+
 
 export type MutationCreateUnitArgs = {
     input: CreateUnitInput;
 };
 
+
 export type MutationCreateUserArgs = {
     input: CreateUserInput;
 };
+
 
 export type MutationCreateVocabularyArgs = {
     input: CreateVocabularyInput;
 };
 
+
 export type MutationCreateVocabularySetArgs = {
     input: CreateVocabularySetInput;
 };
+
 
 export type MutationDiscardUploadedAssetVersionsArgs = {
     input: DiscardUploadedAssetVersionsInput;
 };
 
+
 export type MutationIngestDataArgs = {
     input: IngestDataInput;
 };
 
+
 export type MutationUpdateObjectDetailsArgs = {
     input: UpdateObjectDetailsInput;
 };
+
 
 export type MutationUploadAssetArgs = {
     file: Scalars['Upload'];
@@ -608,6 +657,7 @@ export type CaptureData = {
     VCaptureMethod?: Maybe<Vocabulary>;
     CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
     CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
+    CaptureDataPhoto?: Maybe<Array<Maybe<CaptureDataPhoto>>>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -1112,7 +1162,7 @@ export type ItemDetailFieldsInput = {
 
 export type CaptureDataDetailFieldsInput = {
     captureMethod?: Maybe<Scalars['Int']>;
-    dateCaptured?: Maybe<Scalars['String']>;
+    dateCaptured?: Maybe<Scalars['DateTime']>;
     datasetType?: Maybe<Scalars['Int']>;
     systemCreated?: Maybe<Scalars['Boolean']>;
     description?: Maybe<Scalars['String']>;
@@ -1137,7 +1187,7 @@ export type ModelDetailFieldsInput = {
     modality?: Maybe<Scalars['Int']>;
     purpose?: Maybe<Scalars['Int']>;
     units?: Maybe<Scalars['Int']>;
-    dateCaptured?: Maybe<Scalars['String']>;
+    dateCaptured?: Maybe<Scalars['DateTime']>;
     modelFileType?: Maybe<Scalars['Int']>;
     uvMaps: Array<IngestUvMapInput>;
     roughness?: Maybe<Scalars['Int']>;
@@ -1161,6 +1211,8 @@ export type SceneDetailFieldsInput = {
     AssetType?: Maybe<Scalars['Int']>;
     Tours?: Maybe<Scalars['Int']>;
     Annotation?: Maybe<Scalars['Int']>;
+    HasBeenQCd?: Maybe<Scalars['Boolean']>;
+    IsOriented?: Maybe<Scalars['Boolean']>;
 };
 
 export type ProjectDocumentationDetailFieldsInput = {
@@ -1313,6 +1365,8 @@ export type SceneDetailFields = {
     AssetType?: Maybe<Scalars['Int']>;
     Tours?: Maybe<Scalars['Int']>;
     Annotation?: Maybe<Scalars['Int']>;
+    HasBeenQCd?: Maybe<Scalars['Boolean']>;
+    IsOriented?: Maybe<Scalars['Boolean']>;
 };
 
 export type IntermediaryFileDetailFields = {
