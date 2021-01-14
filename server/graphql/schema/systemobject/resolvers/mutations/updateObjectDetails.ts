@@ -17,37 +17,44 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     }
 
     const SO = await DBAPI.SystemObject.fetch(idSystemObject);
-
+    /**
+     * TODO: KARAN: add an error property and handle errors
+     */
     if (SO) {
-        SO.Retired = data.Retired;
-        // TODO: KARAN: how to update SO? SO.update()?
+        if (data.Retired) {
+            await SO.retireObject();
+        } else {
+            await SO.reinstateObject();
+        }
     }
 
     switch (objectType) {
         case eSystemObjectType.eUnit: {
-            if (data.Unit) {
-                const { Abbreviation, ARKPrefix } = data.Unit;
-                const Unit = await DBAPI.Unit.fetch(idObject);
+            const Unit = await DBAPI.Unit.fetch(idObject);
 
-                if (Unit) {
-                    Unit.Name = data.Name;
+            if (Unit) {
+                Unit.Name = data.Name;
+                if (data.Unit) {
+                    const { Abbreviation, ARKPrefix } = data.Unit;
                     Unit.Abbreviation = maybe<string>(Abbreviation);
                     Unit.ARKPrefix = maybe<string>(ARKPrefix);
-                    await Unit.update();
                 }
+
+                await Unit.update();
             }
             break;
         }
         case eSystemObjectType.eProject: {
-            if (data.Project) {
-                const { Description } = data.Project;
-                const Project = await DBAPI.Project.fetch(idObject);
+            const Project = await DBAPI.Project.fetch(idObject);
 
-                if (Project) {
-                    Project.Name = data.Name;
+            if (Project) {
+                Project.Name = data.Name;
+                if (data.Project) {
+                    const { Description } = data.Project;
                     Project.Description = maybe<string>(Description);
-                    await Project.update();
                 }
+
+                await Project.update();
             }
             break;
         }
@@ -154,83 +161,229 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
             break;
         }
-        case eSystemObjectType.eCaptureData:
-            // TODO: KARAN: How to update capture data?
-            break;
-        case eSystemObjectType.eModel:
-            // TODO: KARAN: How to update model?
-            break;
-        case eSystemObjectType.eScene:
-            // TODO: KARAN: How to update scene?
-            break;
-        case eSystemObjectType.eIntermediaryFile:
-            break;
-        case eSystemObjectType.eProjectDocumentation: {
-            if (data.ProjectDocumentation) {
-                const { Description } = data.ProjectDocumentation;
-                const ProjectDocumentation = await DBAPI.ProjectDocumentation.fetch(idObject);
+        case eSystemObjectType.eCaptureData: {
+            // TODO: KARAN update/create folders, systemCreated
+            if (data.CaptureData) {
+                const CaptureData = await DBAPI.CaptureData.fetch(idObject);
 
-                if (ProjectDocumentation) {
-                    ProjectDocumentation.Name = data.Name;
-                    if (Description) ProjectDocumentation.Description = Description;
-                    await ProjectDocumentation.update();
+                if (CaptureData) {
+                    const {
+                        description,
+                        captureMethod,
+                        dateCaptured,
+                        cameraSettingUniform,
+                        datasetType,
+                        datasetFieldId,
+                        itemPositionType,
+                        itemPositionFieldId,
+                        itemArrangementFieldId,
+                        focusType,
+                        lightsourceType,
+                        backgroundRemovalMethod,
+                        clusterType,
+                        clusterGeometryFieldId,
+                    } = data.CaptureData;
+
+                    CaptureData.DateCaptured = new Date(dateCaptured);
+                    if (description) CaptureData.Description = description;
+                    if (captureMethod) CaptureData.idVCaptureMethod = captureMethod;
+
+                    const CaptureDataPhoto = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(CaptureData.idCaptureData);
+
+                    if (CaptureDataPhoto && CaptureDataPhoto[0]) {
+                        const [CD] = CaptureDataPhoto;
+
+                        CD.CameraSettingsUniform = maybe<boolean>(cameraSettingUniform);
+                        if (datasetType) CD.idVCaptureDatasetType = datasetType;
+                        CD.CaptureDatasetFieldID = maybe<number>(datasetFieldId);
+                        CD.idVItemPositionType = maybe<number>(itemPositionType);
+                        CD.idVItemPositionType = maybe<number>(itemPositionFieldId);
+                        CD.ItemArrangementFieldID = maybe<number>(itemArrangementFieldId);
+                        CD.idVFocusType = maybe<number>(focusType);
+                        CD.idVLightSourceType = maybe<number>(lightsourceType);
+                        CD.idVBackgroundRemovalMethod = maybe<number>(backgroundRemovalMethod);
+                        CD.idVClusterType = maybe<number>(clusterType);
+                        CD.ClusterGeometryFieldID = maybe<number>(clusterGeometryFieldId);
+                        await CD.update();
+                    }
+                    await CaptureData.update();
                 }
             }
             break;
-        }
-        case eSystemObjectType.eAsset: {
-            if (data.Asset) {
-                const { FilePath, AssetType } = data.Asset;
-                const Asset = await DBAPI.Asset.fetch(idObject);
+        } case eSystemObjectType.eModel: {
+            // TODO: KARAN:  update/create UV Map
+            if (data.Model) {
+                const Model = await DBAPI.Model.fetch(idObject);
 
+                if (Model) {
+                    const {
+                        master,
+                        authoritative,
+                        creationMethod,
+                        modality,
+                        purpose,
+                        units,
+                        dateCaptured,
+                        size,
+                        modelFileType,
+                        roughness,
+                        metalness,
+                        pointCount,
+                        faceCount,
+                        isWatertight,
+                        hasNormals,
+                        hasVertexColor,
+                        hasUVSpace,
+                        boundingBoxP1X,
+                        boundingBoxP1Y,
+                        boundingBoxP1Z,
+                        boundingBoxP2X,
+                        boundingBoxP2Y,
+                        boundingBoxP2Z
+                    } = data.Model;
+
+                    if (master) Model.Master = master;
+                    if (authoritative) Model.Authoritative = authoritative;
+                    if (creationMethod) Model.idVCreationMethod = creationMethod;
+                    if (modality) Model.idVModality = modality;
+                    if (purpose) Model.idVPurpose = purpose;
+                    if (units) Model.idVUnits = units;
+                    Model.DateCreated = new Date(dateCaptured);
+
+                    if (Model.idAssetThumbnail) {
+                        const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(Model.idAssetThumbnail);
+                        if (AssetVersion && AssetVersion[0]) {
+                            const [AV] = AssetVersion;
+                            if (size) AV.StorageSize = size;
+                        }
+                    }
+
+                    const ModelGeometryFile = await DBAPI.ModelGeometryFile.fetchFromModel(Model.idModel);
+                    if (ModelGeometryFile && ModelGeometryFile[0]) {
+                        const [MGF] = ModelGeometryFile;
+
+                        const Asset = await DBAPI.Asset.fetch(MGF.idAsset);
+                        if (Asset) {
+                            Asset.FileName = data.Name;
+                            await Asset.update();
+                        }
+
+                        if (modelFileType) MGF.idVModelFileType = modelFileType;
+                        MGF.Roughness = maybe<number>(roughness);
+                        MGF.Metalness = maybe<number>(metalness);
+                        MGF.PointCount = maybe<number>(pointCount);
+                        MGF.FaceCount = maybe<number>(faceCount);
+                        MGF.IsWatertight = maybe<boolean>(isWatertight);
+                        MGF.HasNormals = maybe<boolean>(hasNormals);
+                        MGF.HasVertexColor = maybe<boolean>(hasVertexColor);
+                        MGF.HasUVSpace = maybe<boolean>(hasUVSpace);
+                        MGF.BoundingBoxP1X = maybe<number>(boundingBoxP1X);
+                        MGF.BoundingBoxP1Y = maybe<number>(boundingBoxP1Y);
+                        MGF.BoundingBoxP1Z = maybe<number>(boundingBoxP1Z);
+                        MGF.BoundingBoxP2X = maybe<number>(boundingBoxP2X);
+                        MGF.BoundingBoxP2Y = maybe<number>(boundingBoxP2Y);
+                        MGF.BoundingBoxP2Z = maybe<number>(boundingBoxP2Z);
+
+                        await MGF.update();
+                    }
+                    await Model.update();
+                }
+            }
+            break;
+        } case eSystemObjectType.eScene: {
+            const Scene = await DBAPI.Scene.fetch(idObject);
+            if (Scene) {
+                Scene.Name = data.Name;
+                if (data.Scene) {
+                    // Update values here
+                }
+
+                await Scene.update();
+            }
+            break;
+        } case eSystemObjectType.eIntermediaryFile: {
+            const IntermediaryFile = await DBAPI.IntermediaryFile.fetch(idObject);
+            if (IntermediaryFile) {
+                const Asset = await DBAPI.Asset.fetch(IntermediaryFile.idAsset);
                 if (Asset) {
                     Asset.FileName = data.Name;
-                    if (FilePath) Asset.FilePath = FilePath;
-                    if (AssetType) Asset.idVAssetType = AssetType;
-
                     await Asset.update();
                 }
             }
             break;
+        } case eSystemObjectType.eProjectDocumentation: {
+            const ProjectDocumentation = await DBAPI.ProjectDocumentation.fetch(idObject);
+
+            if (ProjectDocumentation) {
+                ProjectDocumentation.Name = data.Name;
+
+                if (data.ProjectDocumentation) {
+                    const { Description } = data.ProjectDocumentation;
+                    if (Description) ProjectDocumentation.Description = Description;
+                }
+
+                await ProjectDocumentation.update();
+            }
+            break;
+        }
+        case eSystemObjectType.eAsset: {
+            const Asset = await DBAPI.Asset.fetch(idObject);
+
+            if (Asset) {
+                Asset.FileName = data.Name;
+
+                if (data.Asset) {
+                    const { FilePath, AssetType } = data.Asset;
+                    if (FilePath) Asset.FilePath = FilePath;
+                    if (AssetType) Asset.idVAssetType = AssetType;
+                }
+
+                await Asset.update();
+            }
+            break;
         }
         case eSystemObjectType.eAssetVersion: {
-            if (data.AssetVersion) {
-                const { Ingested } = data.AssetVersion;
-                const AssetVersion = await DBAPI.AssetVersion.fetch(idObject);
+            const AssetVersion = await DBAPI.AssetVersion.fetch(idObject);
 
-                if (AssetVersion) {
-                    AssetVersion.FileName = data.Name;
-                    if (Ingested) AssetVersion.Ingested = Ingested;
-                    await AssetVersion.update();
+            if (AssetVersion) {
+                AssetVersion.FileName = data.Name;
+
+                if (data.AssetVersion) {
+                    const { Ingested } = data.AssetVersion;
+                    if (!isNull(Ingested) && !isUndefined(Ingested)) AssetVersion.Ingested = Ingested;
                 }
+
+                await AssetVersion.update();
             }
             break;
         }
         case eSystemObjectType.eActor: {
-            if (data.Actor) {
-                const { OrganizationName } = data.Actor;
-                const Actor = await DBAPI.Actor.fetch(idObject);
-
-                if (Actor) {
+            const Actor = await DBAPI.Actor.fetch(idObject);
+            if (Actor) {
+                Actor.IndividualName = data.Name;
+                if (data.Actor) {
+                    const { OrganizationName } = data.Actor;
                     Actor.OrganizationName = maybe<string>(OrganizationName);
-                    await Actor.update();
+
                 }
+                await Actor.update();
             }
             break;
         }
         case eSystemObjectType.eStakeholder: {
-            if (data.Stakeholder) {
-                const { OrganizationName, MailingAddress, EmailAddress, PhoneNumberMobile, PhoneNumberOffice } = data.Stakeholder;
-                const Stakeholder = await DBAPI.Stakeholder.fetch(idObject);
+            const Stakeholder = await DBAPI.Stakeholder.fetch(idObject);
 
-                if (Stakeholder) {
+            if (Stakeholder) {
+                Stakeholder.IndividualName = data.Name;
+                if (data.Stakeholder) {
+                    const { OrganizationName, MailingAddress, EmailAddress, PhoneNumberMobile, PhoneNumberOffice } = data.Stakeholder;
                     if (OrganizationName) Stakeholder.OrganizationName = OrganizationName;
                     Stakeholder.MailingAddress = maybe<string>(MailingAddress);
                     Stakeholder.EmailAddress = maybe<string>(EmailAddress);
                     Stakeholder.PhoneNumberMobile = maybe<string>(PhoneNumberMobile);
                     Stakeholder.PhoneNumberOffice = maybe<string>(PhoneNumberOffice);
-                    await Stakeholder.update();
                 }
+                await Stakeholder.update();
             }
             break;
         }

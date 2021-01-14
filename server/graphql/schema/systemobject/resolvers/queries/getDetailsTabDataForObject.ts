@@ -6,7 +6,10 @@ import {
     SubjectDetailFields,
     ItemDetailFields,
     GetDetailsTabDataForObjectResult,
-    QueryGetDetailsTabDataForObjectArgs
+    QueryGetDetailsTabDataForObjectArgs,
+    CaptureDataDetailFields,
+    ModelDetailFields,
+    SceneDetailFields
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 
@@ -31,7 +34,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
     };
 
     const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
-    // TODO: KARAN: complete all object types
+
     switch (objectType) {
         case eSystemObjectType.eUnit:
             if (systemObject?.idUnit) result.Unit = await DBAPI.Unit.fetch(systemObject.idUnit);
@@ -71,13 +74,29 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
             break;
         }
         case eSystemObjectType.eCaptureData:
-            // TODO: KARAN: How to retrieve capture data?
+            if (systemObject?.idCaptureData) {
+                result.CaptureData = await getCaptureDataDetailFields(systemObject.idCaptureData);
+            }
             break;
         case eSystemObjectType.eModel:
-            // TODO: KARAN: How to retrieve model?
+            if (systemObject?.idModel) {
+                result.Model = await getModelDetailFields(systemObject.idModel);
+            }
             break;
         case eSystemObjectType.eScene:
-            // TODO: KARAN: How to retrieve scene?
+            if (systemObject?.idScene) {
+                // TODO: KARAN: resolve Links, AssetType, Tours, Annotation when SceneDetailFields is finalized?
+                let fields: SceneDetailFields = {
+                    Links: []
+                };
+                const Scene = await DBAPI.Scene.fetch(systemObject.idScene);
+                fields = {
+                    ...fields,
+                    HasBeenQCd: Scene?.HasBeenQCd,
+                    IsOriented: Scene?.IsOriented
+                };
+                result.Scene = fields;
+            }
             break;
         case eSystemObjectType.eIntermediaryFile:
             if (systemObject?.idIntermediaryFile) result.IntermediaryFile = await DBAPI.IntermediaryFile.fetch(systemObject.idIntermediaryFile);
@@ -127,4 +146,102 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
     }
 
     return result;
+}
+
+async function getCaptureDataDetailFields(idCaptureData: number): Promise<CaptureDataDetailFields> {
+    let fields: CaptureDataDetailFields = {
+        folders: []
+    };
+
+    // TODO: KARAN resolve folders, systemCreated from where?
+    const CaptureData = await DBAPI.CaptureData.fetch(idCaptureData);
+    fields = {
+        ...fields,
+        systemCreated: true,
+        dateCaptured: CaptureData?.DateCaptured.toISOString(),
+        description: CaptureData?.Description,
+        captureMethod: CaptureData?.idVCaptureMethod
+    };
+
+    const CaptureDataPhoto = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(idCaptureData);
+
+    if (CaptureDataPhoto && CaptureDataPhoto[0]) {
+        const [CD] = CaptureDataPhoto;
+
+        fields = {
+            ...fields,
+            cameraSettingUniform: CD.CameraSettingsUniform,
+            datasetType: CD.idVCaptureDatasetType,
+            datasetFieldId: CD.CaptureDatasetFieldID,
+            itemPositionType: CD.idVItemPositionType,
+            itemPositionFieldId: CD.idVItemPositionType,
+            itemArrangementFieldId: CD.ItemArrangementFieldID,
+            focusType: CD.idVFocusType,
+            lightsourceType: CD.idVLightSourceType,
+            backgroundRemovalMethod: CD.idVBackgroundRemovalMethod,
+            clusterType: CD.idVClusterType,
+            clusterGeometryFieldId: CD.ClusterGeometryFieldID,
+        };
+    }
+
+
+    return fields;
+}
+
+async function getModelDetailFields(idModel: number): Promise<ModelDetailFields> {
+    let fields: ModelDetailFields = {
+        uvMaps: []
+    };
+
+    // TODO: KARAN resolve uvMaps, systemCreated?
+    const Model = await DBAPI.Model.fetch(idModel);
+    fields = {
+        ...fields,
+        master: Model?.Master,
+        authoritative: Model?.Authoritative,
+        creationMethod: Model?.idVCreationMethod,
+        modality: Model?.idVModality,
+        purpose: Model?.idVPurpose,
+        units: Model?.idVUnits,
+        dateCaptured: Model?.DateCreated.toISOString(),
+    };
+
+
+    if (Model?.idAssetThumbnail) {
+        const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(Model.idAssetThumbnail);
+        if (AssetVersion && AssetVersion[0]) {
+            const [AV] = AssetVersion;
+            fields = {
+                ...fields,
+                size: AV.StorageSize
+            };
+        }
+    }
+
+    const ModelGeometryFile = await DBAPI.ModelGeometryFile.fetchFromModel(idModel);
+
+    if (ModelGeometryFile && ModelGeometryFile[0]) {
+        const [MGF] = ModelGeometryFile;
+
+        fields = {
+            ...fields,
+            modelFileType: MGF.idVModelFileType,
+            roughness: MGF.Roughness,
+            metalness: MGF.Metalness,
+            pointCount: MGF.PointCount,
+            faceCount: MGF.FaceCount,
+            isWatertight: MGF.IsWatertight,
+            hasNormals: MGF.HasNormals,
+            hasVertexColor: MGF.HasVertexColor,
+            hasUVSpace: MGF.HasUVSpace,
+            boundingBoxP1X: MGF.BoundingBoxP1X,
+            boundingBoxP1Y: MGF.BoundingBoxP1Y,
+            boundingBoxP1Z: MGF.BoundingBoxP1Z,
+            boundingBoxP2X: MGF.BoundingBoxP2X,
+            boundingBoxP2Y: MGF.BoundingBoxP2Y,
+            boundingBoxP2Z: MGF.BoundingBoxP2Z
+        };
+    }
+
+    return fields;
 }
