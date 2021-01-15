@@ -45,6 +45,10 @@ services:
             - DATABASE_URL=$DATABASE_URL
             - SESSION_SECRET=$SESSION_SECRET
             - EDAN_AUTH_KEY=$EDAN_AUTH_KEY
+            - EDAN_SERVER=$EDAN_SERVER
+            - EDAN_APPID=$EDAN_APPID
+            - OCFL_STORAGE_ROOT=$OCFL_STORAGE_ROOT
+            - OCFL_STAGING_ROOT=$OCFL_STAGING_ROOT
         depends_on:
             - db
 
