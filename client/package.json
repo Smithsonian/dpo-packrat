@@ -44,6 +44,7 @@
     "clsx": "1.1.1",
     "customize-cra": "1.0.0",
     "customize-cra-react-refresh": "1.1.0",
+    "env-cmd": "10.1.0",
     "formik": "2.1.5",
     "formik-material-ui": "3.0.0",
     "framer-motion": "2.6.13",
