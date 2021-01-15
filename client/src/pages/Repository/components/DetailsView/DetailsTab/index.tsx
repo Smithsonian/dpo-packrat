@@ -111,13 +111,18 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         disabled
     };
 
+    const detailsProps = {
+        ...detailsQueryResult,
+        ...sharedProps
+    };
+
     switch (objectType) {
         case eSystemObjectType.eUnit:
             tabs = ['Details', 'Related'];
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        <UnitDetails {...detailsQueryResult} {...sharedProps} />
+                        <UnitDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
                 </React.Fragment>
@@ -128,7 +133,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        <ProjectDetails {...detailsQueryResult} {...sharedProps} />
+                        <ProjectDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
                 </React.Fragment>
@@ -142,7 +147,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        <SubjectDetails {...detailsQueryResult} {...sharedProps} />
+                        <SubjectDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -156,7 +161,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        <ItemDetails {...detailsQueryResult} {...sharedProps} />
+                        <ItemDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -170,7 +175,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        <CaptureDataDetails {...detailsQueryResult} {...sharedProps} />
+                        <CaptureDataDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -184,7 +189,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        <ModelDetails {...detailsQueryResult} {...sharedProps} />
+                        <ModelDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -198,7 +203,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        <SceneDetails {...detailsQueryResult} {...sharedProps} />
+                        <SceneDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -212,7 +217,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        <IntermediaryFileDetails {...detailsQueryResult} {...sharedProps} />
+                        <IntermediaryFileDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -226,7 +231,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetDetailsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        <ProjectDocumentationDetails {...detailsQueryResult} {...sharedProps} />
+                        <ProjectDocumentationDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -240,7 +245,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                         <AssetVersionsTable idSystemObject={idSystemObject} />
                     </TabPanel>
                     <TabPanel value={tab} index={1}>
-                        <AssetDetails {...detailsQueryResult} {...sharedProps} />
+                        <AssetDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(2)}
                 </React.Fragment>
@@ -251,7 +256,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        <AssetVersionDetails {...detailsQueryResult} {...sharedProps} />
+                        <AssetVersionDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
                 </React.Fragment>
@@ -262,7 +267,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        <ActorDetails {...detailsQueryResult} {...sharedProps} />
+                        <ActorDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
                 </React.Fragment>
@@ -273,7 +278,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0}>
-                        <StakeholderDetails {...detailsQueryResult} {...sharedProps} />
+                        <StakeholderDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}
                 </React.Fragment>
