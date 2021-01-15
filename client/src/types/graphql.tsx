@@ -2710,7 +2710,7 @@ export type GetDetailsTabDataForObjectQuery = (
                     }
                 )>, Scene?: Maybe<(
                     { __typename?: 'SceneDetailFields' }
-                    & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation'>
+                    & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented'>
                 )>, IntermediaryFile?: Maybe<(
                     { __typename?: 'IntermediaryFileDetailFields' }
                     & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>
@@ -4395,6 +4395,8 @@ export const GetDetailsTabDataForObjectDocument = gql`
       AssetType
       Tours
       Annotation
+      HasBeenQCd
+      IsOriented
     }
     IntermediaryFile {
       idIntermediaryFile
