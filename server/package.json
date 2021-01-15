@@ -25,10 +25,11 @@
   "main": "build/index.js",
   "typings": "build/index.d.ts",
   "scripts": {
-    "start": "yarn build && concurrently 'yarn build:watch' 'yarn server:start'",
+    "start": "yarn build:dev && concurrently 'yarn build:watch' 'yarn server:start'",
     "start:prod": "node build/index.js",
     "server:start": "nodemon build/index.js --ignore var/",
-    "build": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
+    "build:dev": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
+    "build:prod": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
     "build:watch": "tsc --watch",
     "clean": "rm -rf node_modules/ build/",
     "generate": "graphql-codegen --config ./graphql/codegen.yml",

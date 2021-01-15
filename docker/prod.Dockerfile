@@ -10,13 +10,13 @@ FROM base AS client-builder
 # Remove server from client build
 RUN rm -rf server
 # Install dependencies (production mode) and build
-RUN yarn install --frozen-lockfile && yarn build
+RUN yarn install --frozen-lockfile && yarn build:prod
 
 FROM base AS server-builder
 # Remove client from server build
 RUN rm -rf client
 # Install dependencies (production mode) and build
-RUN yarn install --frozen-lockfile && yarn build
+RUN yarn install --frozen-lockfile && yarn build:prod
 
 # Client's production image
 FROM node:12.18.4-alpine AS client
