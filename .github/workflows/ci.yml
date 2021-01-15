@@ -104,14 +104,14 @@ jobs:
       # Runs commands pre-build
       # Ideally .env will be created from secrets ${{ secrets.DEV/PROD_ENV }} > .env
       - name: Prepare build
-        run: touch .env
+        run: touch .env.dev && touch env.prod
 
       - name: Build Dev images
-        run: docker-compose -f docker-compose.dev.yml build
+        run: docker-compose --env-file .env.dev -f docker-compose.dev.yml build
         if: contains(github.ref, 'develop')
 
       - name: Build Prod images
-        run: docker-compose -f docker-compose.prod.yml build
+        run: docker-compose --env-file .env.prod -f docker-compose.prod.yml build
         if: contains(github.ref, 'master')
 
       # Prepares tag for docker images
