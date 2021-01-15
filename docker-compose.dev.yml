@@ -52,6 +52,10 @@ services:
             - DATABASE_URL=$DATABASE_URL
             - SESSION_SECRET=$SESSION_SECRET
             - EDAN_AUTH_KEY=$EDAN_AUTH_KEY
+            - EDAN_SERVER=$EDAN_SERVER
+            - EDAN_APPID=$EDAN_APPID
+            - OCFL_STORAGE_ROOT=$OCFL_STORAGE_ROOT
+            - OCFL_STAGING_ROOT=$OCFL_STAGING_ROOT
         volumes:
             - ./node_modules:/app/node_modules
             - ./package.json:/app/package.json
