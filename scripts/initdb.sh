@@ -1,5 +1,7 @@
 # This script helps with deployment of Packrat system's DB
-# usage: ./initdb.sh <environment> (environment: dev | prod)
+# usage: ./scripts/initdb.sh <environment> (environment: dev | prod)
+#
+# example: MYSQL_ROOT_PASSWORD=<your_password> ./scripts/initdb.sh dev
 
 # Check if the variable MYSQL_ROOT_PASSWORD is set or not
 if [[ -z "${MYSQL_ROOT_PASSWORD}" ]]
