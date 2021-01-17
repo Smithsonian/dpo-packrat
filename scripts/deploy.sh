@@ -1,5 +1,5 @@
 # This script helps with deployment of Packrat system
-# usage: ./deploy.sh <environment> (environment: dev | prod)
+# usage: ./scripts/deploy.sh <environment> (environment: dev | prod)
 
 DEV="dev"
 PROD="prod"
