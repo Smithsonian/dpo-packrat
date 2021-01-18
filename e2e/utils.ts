@@ -40,8 +40,8 @@ class E2ETestUtils {
             throw new Error('E2E tests: page was not initialized');
         }
 
-        const TEST_USER_EMAIL: string = 'karan.pratapsingh686@gmail.com';
-        const TEST_USER_PASSWORD: string = 'karan.pratapsingh686@gmail.com';
+        const TEST_USER_EMAIL: string = 'user@test.com';
+        const TEST_USER_PASSWORD: string = 'user@test.com';
 
         await this.page.type(ID(Selectors.AUTH.EMAIL_FIELD), TEST_USER_EMAIL);
         await this.page.type(ID(Selectors.AUTH.PASSWORD_FIELD), TEST_USER_PASSWORD);
