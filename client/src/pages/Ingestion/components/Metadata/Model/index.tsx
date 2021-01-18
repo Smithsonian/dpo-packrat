@@ -251,7 +251,15 @@ function Model(props: ModelProps): React.ReactElement {
                         <CheckboxField name='hasNormals' label='Has Normals?' value={model.hasNormals} onChange={setCheckboxField} />
                         <CheckboxField name='hasVertexColor' label='Has Vertex Color?' value={model.hasVertexColor} onChange={setCheckboxField} />
                         <CheckboxField name='hasUVSpace' label='Has UV Space?' value={model.hasUVSpace} onChange={setCheckboxField} />
-                        <BoundingBoxInput model={model} onChange={setIdField} />
+                        <BoundingBoxInput
+                            boundingBoxP1X={model.boundingBoxP1X}
+                            boundingBoxP1Y={model.boundingBoxP1Y}
+                            boundingBoxP1Z={model.boundingBoxP1Z}
+                            boundingBoxP2X={model.boundingBoxP2X}
+                            boundingBoxP2Y={model.boundingBoxP2Y}
+                            boundingBoxP2Z={model.boundingBoxP2Z}
+                            onChange={setIdField}
+                        />
                     </Box>
                 </Box>
             </Box>

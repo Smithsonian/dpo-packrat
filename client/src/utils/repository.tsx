@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Repository utilities
  *
  * Utilities for components associated with Repository UI.
  */
+import { CheckboxProps } from '@material-ui/core';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import lodash from 'lodash';
 import * as qs from 'query-string';
@@ -13,6 +15,7 @@ import { RepositoryIcon } from '../components';
 import { RepositoryFilter } from '../pages/Repository';
 import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/MetadataView';
 import { StateRelatedObject } from '../store';
+import { palette } from '../theme';
 import Colors, { RepositoryColorVariant } from '../theme/colors';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
@@ -250,4 +253,15 @@ export function validateArray<T>(value: T[], defaultValue: T[]): T[] {
     }
 
     return result;
+}
+
+export function isFieldUpdated(updatedData: any, originalData: any, fieldName: string): boolean {
+    return originalData?.[fieldName] !== updatedData?.[fieldName];
+}
+
+export function getUpdatedCheckboxProps(updated: boolean): CheckboxProps {
+    return {
+        style: { border: `1px solid ${updated ? palette.secondary.main : 'transparent'}` },
+        color: updated ? 'secondary' : 'primary'
+    };
 }

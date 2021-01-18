@@ -4,14 +4,14 @@
  * This component renders repository details header for the DetailsView component.
  */
 import { Box, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
+import { DebounceInput } from 'react-debounce-input';
 import { Helmet } from 'react-helmet';
 import { BreadcrumbsView } from '../../../../components';
-import Colors from '../../../../theme/colors';
-import { RepositoryPath } from '../../../../types/graphql';
+import { GetSystemObjectDetailsResult, RepositoryPath } from '../../../../types/graphql';
 import { eSystemObjectType } from '../../../../types/server';
-import { getTermForSystemObjectType } from '../../../../utils/repository';
+import { getTermForSystemObjectType, isFieldUpdated } from '../../../../utils/repository';
 import { getHeaderTitle } from '../../../../utils/shared';
 
 const useStyles = makeStyles(({ palette }) => ({
@@ -25,21 +25,26 @@ const useStyles = makeStyles(({ palette }) => ({
         borderRadius: 5,
         marginRight: 20,
         color: palette.primary.dark,
-        backgroundColor: Colors.defaults.white,
-        border: `0.5px solid ${palette.primary.contrastText}`,
+        border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
+        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         fontSize: '0.8em'
     }
 }));
 
 interface DetailsHeaderProps {
+    originalFields: GetSystemObjectDetailsResult;
     objectType: eSystemObjectType;
     path: RepositoryPath[][];
-    name: string;
+    name?: string | null;
+    disabled: boolean;
+    onNameUpdate: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
-    const { objectType, path, name } = props;
-    const classes = useStyles();
+    const { objectType, path, name, onNameUpdate, disabled, originalFields } = props;
+    const updated: boolean = isFieldUpdated({ name }, originalFields, 'name');
+
+    const classes = useStyles(updated);
 
     const title = getHeaderTitle(`${name} ${getTermForSystemObjectType(objectType)}`);
 
@@ -51,8 +56,16 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
             <Box display='flex' mr={4}>
                 <Typography className={classes.header} variant='h5'>{getTermForSystemObjectType(objectType)}</Typography>
             </Box>
-            <Box className={classes.name} mr={4}>
-                <Typography>{name}</Typography>
+            <Box mr={4}>
+                <DebounceInput
+                    element='input'
+                    disabled={disabled}
+                    value={name || ''}
+                    className={classes.name}
+                    name='name'
+                    onChange={onNameUpdate}
+                    debounceTimeout={400}
+                />
             </Box>
             <Box display='flex' flex={1} justifyContent='flex-end'>
                 {!!path.length && <BreadcrumbsView highlighted items={path} />}

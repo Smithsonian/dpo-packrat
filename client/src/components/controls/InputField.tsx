@@ -7,13 +7,15 @@
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
+import { ViewableProps } from '../../types/repository';
 import FieldType from '../shared/FieldType';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     input: {
         width: '50%',
         outline: 'none',
-        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
+        border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
+        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         padding: 8,
         borderRadius: 5,
         fontWeight: typography.fontWeightRegular,
@@ -26,20 +28,17 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     }
 }));
 
-interface InputFieldProps {
+interface InputFieldProps extends ViewableProps {
     label: string;
     value?: number | string | null;
     name: string;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     type?: string;
-    required?: boolean;
-    viewMode?: boolean;
-    disabled?: boolean;
 }
 
 function InputField(props: InputFieldProps): React.ReactElement {
-    const { label, name, value, onChange, type, required = false, viewMode = false, disabled = false } = props;
-    const classes = useStyles();
+    const { label, name, value, onChange, type, required = false, viewMode = false, disabled = false, updated = false } = props;
+    const classes = useStyles(updated);
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
@@ -54,7 +53,6 @@ function InputField(props: InputFieldProps): React.ReactElement {
             <DebounceInput
                 element='input'
                 disabled={disabled}
-                // @ts-ignore
                 value={value || ''}
                 className={classes.input}
                 type={type}

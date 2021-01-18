@@ -5,13 +5,9 @@
  */
 import React from 'react';
 import { Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { DetailComponentProps } from './index';
 
-interface IntermediaryFileDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
-
-function IntermediaryFileDetails(props: IntermediaryFileDetailsProps): React.ReactElement {
+function IntermediaryFileDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading } = props;
 
     if (!data || loading) {

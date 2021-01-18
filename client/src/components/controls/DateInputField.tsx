@@ -10,12 +10,14 @@ import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/picker
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 import React from 'react';
 import { Colors } from '../../theme';
+import { ViewableProps } from '../../types/repository';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     date: {
         width: '50%',
         background: palette.background.paper,
-        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
+        border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
+        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         padding: '1px 8px',
         color: Colors.defaults.white,
         marginTop: 0,
@@ -30,18 +32,19 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     }
 }));
 
-interface DateInputFieldProps {
+interface DateInputFieldProps extends ViewableProps {
     value: Date;
     onChange: (date: MaterialUiPickersDate, value?: string | null | undefined) => void;
 }
 
 function DateInputField(props: DateInputFieldProps): React.ReactElement {
-    const { value, onChange } = props;
-    const classes = useStyles();
+    const { value, onChange, disabled = false, updated = false } = props;
+    const classes = useStyles(updated);
 
     return (
         <MuiPickersUtilsProvider utils={DateFnsUtils}>
             <KeyboardDatePicker
+                disabled={disabled}
                 disableToolbar
                 variant='inline'
                 format='MM/dd/yyyy'
