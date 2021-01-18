@@ -34,7 +34,7 @@ function AppRouter(): React.ReactElement {
             await updateVocabularyEntries();
             setLoading(false);
         } catch {
-            toast.error('Error occurred while initializing');
+            toast.error('Cannot connect to the server, please try again later');
         }
     }, [initialize, updateVocabularyEntries]);
 

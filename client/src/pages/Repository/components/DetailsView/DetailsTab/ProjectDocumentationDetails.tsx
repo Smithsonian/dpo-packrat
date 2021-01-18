@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * ProjectDocumentationDetails
  *
@@ -5,20 +6,18 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { ProjectDocumentationDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
+import { DetailComponentProps } from './index';
 
-interface ProjectDocumentationDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
+function ProjectDocumentationDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
+    const [details, setDetails] = useState<ProjectDocumentationDetailFields>({});
 
-interface ProjectDocumentationDetailsFields {
-    Description?: string | null;
-}
-
-function ProjectDocumentationDetails(props: ProjectDocumentationDetailsProps): React.ReactElement {
-    const { data, loading } = props;
-    const [details, setDetails] = useState<ProjectDocumentationDetailsFields>({});
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {
@@ -38,7 +37,17 @@ function ProjectDocumentationDetails(props: ProjectDocumentationDetailsProps): R
         setDetails(details => ({ ...details, Description: value }));
     };
 
-    return <Description viewMode value={details.Description ?? ''} onChange={onSetField} />;
+    const projectDocumentationData = data.getDetailsTabDataForObject?.ProjectDocumentation;
+
+    return (
+        <Description
+            updated={isFieldUpdated(details, projectDocumentationData, 'description')}
+            disabled={disabled}
+            viewMode
+            value={details.Description ?? ''}
+            onChange={onSetField}
+        />
+    );
 }
 
 export default ProjectDocumentationDetails;

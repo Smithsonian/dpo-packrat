@@ -10,6 +10,7 @@ type CaptureData {
     VCaptureMethod: Vocabulary
     CaptureDataFile: [CaptureDataFile]
     CaptureDataGroup: [CaptureDataGroup]
+    CaptureDataPhoto: [CaptureDataPhoto]
     SystemObject: SystemObject
 }
 

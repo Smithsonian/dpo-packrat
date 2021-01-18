@@ -10,9 +10,10 @@ import { AiFillFileImage } from 'react-icons/ai';
 import { FieldType } from '../../../../../components';
 import { StateUVMap, VocabularyOption } from '../../../../../store';
 import { palette } from '../../../../../theme';
+import { ViewableProps } from '../../../../../types/repository';
 import { ContentHeader, EmptyContent, useStyles } from '../Photogrammetry/AssetContents';
 
-interface UVContentsProps {
+interface UVContentsProps extends ViewableProps {
     initialEntry: number | null;
     uvMaps: StateUVMap[];
     options: VocabularyOption[];
@@ -20,10 +21,10 @@ interface UVContentsProps {
 }
 
 function UVContents(props: UVContentsProps): React.ReactElement {
-    const { uvMaps, options, initialEntry, onUpdate } = props;
+    const { uvMaps, options, initialEntry, onUpdate, viewMode = false, disabled = false } = props;
 
     return (
-        <FieldType required renderLabel={false} marginTop={1.5}>
+        <FieldType required renderLabel={false} marginTop={1.5} width={viewMode ? 'auto' : undefined}>
             <ContentHeader titles={['UV Map Name', 'Edge Length', 'UV Map Type']} />
             <Box display='flex' flex={1} flexDirection='column' mt={1}>
                 <EmptyContent label='uv maps' isEmpty={!uvMaps.length} />
@@ -34,6 +35,7 @@ function UVContents(props: UVContentsProps): React.ReactElement {
                         <Content
                             key={index}
                             name={name}
+                            disabled={disabled}
                             fieldName='uvMaps'
                             edgeLength={edgeLength}
                             value={mapType}
@@ -59,10 +61,11 @@ interface ContentProps {
         name?: string | undefined;
         value: unknown;
     }>) => void;
+    disabled: boolean;
 }
 
 export function Content(props: ContentProps): React.ReactElement {
-    const { fieldName, value, name, edgeLength, initialEntry, update, options } = props;
+    const { fieldName, value, name, edgeLength, initialEntry, update, options, disabled } = props;
     const classes = useStyles();
 
     return (
@@ -78,6 +81,7 @@ export function Content(props: ContentProps): React.ReactElement {
             </Box>
             <Box display='flex' alignItems='center' justifyContent='center'>
                 <Select
+                    disabled={disabled}
                     value={value || initialEntry}
                     className={classes.select}
                     name={fieldName}

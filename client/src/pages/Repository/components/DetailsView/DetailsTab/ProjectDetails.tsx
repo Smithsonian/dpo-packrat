@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * ProjectDetails
  *
@@ -5,20 +6,19 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { ProjectDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
 import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
+import { DetailComponentProps } from './index';
 
-interface ProjectDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
+function ProjectDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
 
-interface ProjectDetailsFields {
-    Description?: string | null;
-}
+    const [details, setDetails] = useState<ProjectDetailFields>({});
 
-function ProjectDetails(props: ProjectDetailsProps): React.ReactElement {
-    const { data, loading } = props;
-    const [details, setDetails] = useState<ProjectDetailsFields>({});
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {
@@ -38,7 +38,17 @@ function ProjectDetails(props: ProjectDetailsProps): React.ReactElement {
         setDetails(details => ({ ...details, Description: value }));
     };
 
-    return <Description viewMode value={details.Description ?? ''} onChange={onSetField} />;
+    const projectData = data.getDetailsTabDataForObject?.Project;
+
+    return (
+        <Description
+            updated={isFieldUpdated(details, projectData, 'description')}
+            disabled={disabled}
+            viewMode
+            value={details.Description ?? ''}
+            onChange={onSetField}
+        />
+    );
 }
 
 export default ProjectDetails;

@@ -25,9 +25,10 @@
   "main": "build/index.js",
   "typings": "build/index.d.ts",
   "scripts": {
-    "start": "yarn build && concurrently 'yarn build:watch' 'yarn server:start'",
+    "start": "yarn build:dev && concurrently 'yarn build:watch' 'yarn server:start'",
     "server:start": "nodemon -e '*.ts' --watch build 'node build/index.js'",
-    "build": "tsc --build",
+    "build:dev": "tsc --build",
+    "build:prod": "tsc --build",
     "build:watch": "tsc --watch",
     "clean": "rm -rf node_modules/ build/",
     "postinstall": "echo \"postinstall common\"",

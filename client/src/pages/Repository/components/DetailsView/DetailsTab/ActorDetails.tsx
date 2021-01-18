@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * ActorDetails
  *
@@ -6,20 +7,14 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { ActorDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
+import { DetailComponentProps } from './index';
 
-interface ActorDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
+function ActorDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
 
-interface ActorDetailsFields {
-    OrganizationName?: string | null;
-}
-
-function ActorDetails(props: ActorDetailsProps): React.ReactElement {
-    const { data, loading, disabled, } = props;
-
-    const [details, setDetails] = useState<ActorDetailsFields>({});
+    const [details, setDetails] = useState<ActorDetailFields>({});
 
     useEffect(() => {
         if (data && !loading) {
@@ -30,6 +25,10 @@ function ActorDetails(props: ActorDetailsProps): React.ReactElement {
         }
     }, [data, loading]);
 
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
+
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
     }
@@ -39,11 +38,14 @@ function ActorDetails(props: ActorDetailsProps): React.ReactElement {
         setDetails(details => ({ ...details, [name]: value }));
     };
 
+    const actorData = data.getDetailsTabDataForObject?.Actor;
+
     return (
         <Box>
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, actorData, 'OrganizationName')}
                 disabled={disabled}
                 label='OrganizationName'
                 value={details?.OrganizationName}
