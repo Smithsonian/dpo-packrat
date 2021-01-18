@@ -7,6 +7,18 @@ Data Repository and Workflow Management for 3D data captures, models, and scenes
 
 ### Development:
 
+#### Prerequisites:
+It is recommended to install [Volta](https://volta.sh/) which keeps node version in check. The versions can be specified in `package.json` and when switched to the directory of the project, volta automatically switches to the correct node version.
+
+```
+cd ~
+curl https://get.volta.sh | bash
+volta install node
+volta install yarn
+```
+Now when you switch to the `dpo-packrat` repo, your node version would automatically pinned to the correct version by volta.
+
+
 1. Install the dependencies:
 
 ``` 

@@ -33,5 +33,9 @@
     "clean": "rm -rf node_modules/ build/",
     "postinstall": "echo \"postinstall common\"",
     "test": "jest --passWithNoTests"
+  },
+  "volta": {
+    "node": "12.18.4",
+    "yarn": "1.22.5"
   }
 }
