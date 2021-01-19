@@ -32,6 +32,8 @@
     "start:server:prod": "yarn workspace @dpo-packrat/server start:prod",
     "dev": "docker-compose --env-file .env.dev -f docker-compose.dev.yml up -d",
     "prod": "docker-compose --env-file .env.prod -f docker-compose.prod.yml up -d",
+    "deploy:dev": "sh ./scripts/deploy.sh dev",
+    "deploy:prod": "sh ./scripts/deploy.sh prod",
     "build:dev": "lerna run build:dev",
     "build:prod": "lerna run build:prod",
     "clean": "lerna run clean && rm -rf node_modules/",
@@ -77,5 +79,9 @@
       "server",
       "common"
     ]
+  },
+  "volta": {
+    "node": "12.18.4",
+    "yarn": "1.22.5"
   }
 }
