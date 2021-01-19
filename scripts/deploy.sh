@@ -16,7 +16,7 @@ function branch_check() {
   DESIRED_BRANCH=$2
   ENV=$3
 
-  if [ $CURRENT_BRANCH != DESIRED_BRANCH ]
+  if [ $CURRENT_BRANCH != $DESIRED_BRANCH ]
     then
       echo "Cannot deploy branch $CURRENT_BRANCH to $3 environment. Make sure you're on $DESIRED_BRANCH branch"
       exit 1
