@@ -19,6 +19,7 @@ import DateInputField from './controls/DateInputField';
 import BreadcrumbsView from './shared/BreadcrumbsView';
 import NewTabLink from './shared/NewTabLink';
 import EmptyTable from './shared/EmptyTable';
+import EnvBanner from './shared/EnvBanner';
 import DebounceNumberInput from './controls/DebounceNumberInput';
 import CheckboxField from './controls/CheckboxField';
 
@@ -40,6 +41,7 @@ export {
     BreadcrumbsView,
     NewTabLink,
     EmptyTable,
+    EnvBanner,
     DebounceNumberInput,
-    CheckboxField
+    CheckboxField,
 };
