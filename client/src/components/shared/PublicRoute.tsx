@@ -8,12 +8,12 @@ import { Redirect, Route, RouteProps } from 'react-router-dom';
 import { ROUTES } from '../../constants';
 import { useUserStore } from '../../store';
 
-interface PublicRouteProps {
+interface PublicRouteProps extends RouteProps {
     restricted?: boolean;
     component: React.ComponentType<unknown>;
 }
 
-function PublicRoute({ component: Component, restricted = false, ...rest }: PublicRouteProps & RouteProps): React.ReactElement {
+function PublicRoute({ component: Component, restricted = false, ...rest }: PublicRouteProps): React.ReactElement {
     const user = useUserStore(state => state.user);
 
     const render = props => (
