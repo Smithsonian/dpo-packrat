@@ -22,7 +22,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     },
     label: {
         display: 'flex',
-        flex: 1,
+        flex: 0.9,
         alignItems: 'center',
         position: 'sticky',
         left: 45,
@@ -36,14 +36,22 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         justifyContent: 'space-between',
         width: '60%',
         fontSize: '0.8em',
-        background: ({ color }: TreeLabelProps) => color,
+        backgroundColor: ({ color }: TreeLabelProps) => color,
         zIndex: 10,
         [breakpoints.down('lg')]: {
             fontSize: '0.9em',
         }
     },
     options: {
-        display: 'flex'
+        display: 'flex',
+        alignItems: 'center',
+        position: 'sticky',
+        left: 0,
+        width: 120
+    },
+    option: {
+        display: 'flex',
+        alignItems: 'center'
     }
 }));
 
@@ -75,12 +83,16 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
                 )}
                 <div className={classes.labelText}>
                     <span title={objectTitle}>{label}</span>
-                    <NewTabLink className={classes.options} to={getDetailsUrlForObject(idSystemObject)}>
-                        <RiExternalLinkFill size={16} color={palette.primary.main} />
-                    </NewTabLink>
                 </div>
             </div>
-            <MetadataView header={false} treeColumns={treeColumns} />
+            <MetadataView header={false} treeColumns={treeColumns} options={
+                <div className={classes.options}>
+                    <NewTabLink className={classes.option} to={getDetailsUrlForObject(idSystemObject)}>
+                        <RiExternalLinkFill size={18} color={palette.primary.main} />
+                    </NewTabLink>
+                </div>
+            }
+            />
         </div>
     );
 }
