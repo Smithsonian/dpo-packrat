@@ -30,6 +30,11 @@
     "log:server": "docker logs -f packrat-server",
     "start:client:prod": "yarn workspace @dpo-packrat/client start:prod",
     "start:server:prod": "yarn workspace @dpo-packrat/server start:prod",
+    "devbox:up": "./scripts/devbox/up.sh",
+    "devbox:db": "./scripts/devbox/db.sh",
+    "devbox:network": "./scripts/devbox/network.sh",
+    "devbox:start": "docker exec -it packrat-devbox bash",
+    "devbox:down": "docker container rm packrat-devbox --force",
     "dev": "docker-compose --env-file .env.dev -f docker-compose.dev.yml up -d",
     "prod": "docker-compose --env-file .env.prod -f docker-compose.prod.yml up -d",
     "deploy:dev": "sh ./scripts/deploy.sh dev",
@@ -82,6 +87,6 @@
   },
   "volta": {
     "node": "12.18.4",
-    "yarn": "1.22.5"
+    "yarn": "1.22.4"
   }
 }

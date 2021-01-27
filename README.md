@@ -57,6 +57,24 @@ yarn start:server
 yarn start:common
 ``` 
 
+# Alternative docker workflow:
+
+```
+# Creates Devbox for packrat
+yarn devbox:up
+# Creates DB for devbox
+yarn devbox:db
+# Create and Connects db and devbox to the same network
+yarn devbox:network
+# Drops you into shell inside the image
+yarn devbox:start
+```
+
+*Note: if you get permission denied during the execution make sure to give it permission using:*
+```
+chmod 777 ./scripts/devbox/*.sh
+```
+
 # Deployment instructions:
 *Note: Make sure before you execute any script, you're root of the repository `dpo-packrat` and if you get permission denied for any script, make sure to do `chmod 777 path/to/script`. If you encounter any error then make sure to checkout Packrat server setup instruction on confluence*
 
