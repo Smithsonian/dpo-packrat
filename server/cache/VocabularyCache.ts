@@ -2,7 +2,11 @@ import * as LOG from '../utils/logger';
 import { CacheControl } from './CacheControl';
 import { Vocabulary, VocabularySet } from '../db';
 
-/** enum used to provide declarative, programmatic access to sorted vocabulary for system-generated vocabulary sets */
+/**
+ * enum used to provide declarative, programmatic access to sorted vocabulary for system-generated vocabulary sets
+ *
+ * Note: these types are also used at client/src/types/server.ts, make sure to update the enum's there as well
+ * */
 export enum eVocabularySetID {
     eCaptureDataCaptureMethod,
     eCaptureDataDatasetType,
