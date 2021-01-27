@@ -6,7 +6,7 @@
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import KeepAlive from 'react-activation';
 import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
@@ -14,6 +14,7 @@ import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { useMetadataStore, useUploadStore } from '../../../../store';
 import { Colors } from '../../../../theme';
+import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
 import UploadCompleteList from './UploadCompleteList';
 import UploadFilesPicker from './UploadFilesPicker';
 import UploadList from './UploadList';
@@ -65,7 +66,7 @@ function Uploads(): React.ReactElement {
     const history = useHistory();
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
-    const [completed, discardFiles] = useUploadStore(state => [state.completed,state.discardFiles]);
+    const [completed, discardFiles] = useUploadStore(state => [state.completed, state.discardFiles]);
     const updateMetadataSteps = useMetadataStore(state => state.updateMetadataSteps);
 
     const onIngest = async (): Promise<void> => {
@@ -110,11 +111,7 @@ function Uploads(): React.ReactElement {
         <Box className={classes.container}>
             <Box className={classes.content}>
                 <KeepAlive>
-                    <React.Fragment>
-                        <UploadFilesPicker />
-                        <UploadCompleteList />
-                        <UploadList />
-                    </React.Fragment>
+                    <AliveUploadComponents />
                 </KeepAlive>
             </Box>
             <SidebarBottomNavigator
@@ -126,6 +123,52 @@ function Uploads(): React.ReactElement {
                 onClickRight={onIngest}
             />
         </Box>
+    );
+}
+
+function AliveUploadComponents(): React.ReactElement {
+    const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [state.onProgressEvent, state.onSetCancelledEvent, state.onFailedEvent, state.onCompleteEvent]);
+
+    useEffect(() => {
+        const onProgress = data => {
+            const eventData: UploadProgressEvent = data.detail;
+            onProgressEvent(eventData);
+        };
+
+        UploadEvents.subscribe(UploadEventType.PROGRESS, onProgress);
+
+        const onSetCancelled = data => {
+            const eventData: UploadSetCancelEvent = data.detail;
+            onSetCancelledEvent(eventData);
+        };
+
+        UploadEvents.subscribe(UploadEventType.SET_CANCELLED, onSetCancelled);
+
+        const onFailed = data => {
+            const eventData: UploadFailedEvent = data.detail;
+            onFailedEvent(eventData);
+        };
+
+        UploadEvents.subscribe(UploadEventType.FAILED, onFailed);
+
+        const onComplete = data => {
+            const eventData: UploadCompleteEvent = data.detail;
+            onCompleteEvent(eventData);
+        };
+
+        UploadEvents.subscribe(UploadEventType.COMPLETE, onComplete);
+
+        return () => {
+            console.log('Thread closed');
+        };
+    }, []);
+
+    return (
+        <React.Fragment>
+            <UploadFilesPicker />
+            <UploadCompleteList />
+            <UploadList />
+        </React.Fragment>
     );
 }
 
