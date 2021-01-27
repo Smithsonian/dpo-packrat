@@ -75,7 +75,7 @@ export const photogrammetryFieldsSchema = yup.object().shape({
     clusterType: yup.number().nullable(true),
     clusterGeometryFieldId: yup.number().nullable(true),
     cameraSettingUniform: yup.boolean().required(),
-    directory: yup.string().required()
+    directory: yup.string()
 });
 
 const uvMapSchema = yup.object().shape({
