@@ -47,21 +47,21 @@ function BoundingBoxInput(props: BoundingBoxInputProps): React.ReactElement {
             <Box display='flex' flex={1} flexDirection='column'>
                 <Box display='flex' justifyContent='flex-end'>
                     <DebounceNumberInput
-                        updated={isFieldUpdated(details, modelFields, 'boundingBoxP1X')}
+                        updated={viewMode ? isFieldUpdated(details, modelFields, 'boundingBoxP1X') : false}
                         disabled={disabled}
                         value={details.boundingBoxP1X}
                         name='boundingBoxP1X'
                         onChange={onChange}
                     />
                     <DebounceNumberInput
-                        updated={isFieldUpdated(details, modelFields, 'boundingBoxP1Y')}
+                        updated={viewMode ? isFieldUpdated(details, modelFields, 'boundingBoxP1Y') : false}
                         disabled={disabled}
                         value={details.boundingBoxP1Y}
                         name='boundingBoxP1Y'
                         onChange={onChange}
                     />
                     <DebounceNumberInput
-                        updated={isFieldUpdated(details, modelFields, 'boundingBoxP1Z')}
+                        updated={viewMode ? isFieldUpdated(details, modelFields, 'boundingBoxP1Z') : false}
                         disabled={disabled}
                         value={details.boundingBoxP1Z}
                         name='boundingBoxP1Z'
@@ -70,21 +70,21 @@ function BoundingBoxInput(props: BoundingBoxInputProps): React.ReactElement {
                 </Box>
                 <Box display='flex' mt='5px' justifyContent='flex-end'>
                     <DebounceNumberInput
-                        updated={isFieldUpdated(details, modelFields, 'boundingBoxP2X')}
+                        updated={viewMode ? isFieldUpdated(details, modelFields, 'boundingBoxP2X') : false}
                         disabled={disabled}
                         value={details.boundingBoxP2X}
                         name='boundingBoxP2X'
                         onChange={onChange}
                     />
                     <DebounceNumberInput
-                        updated={isFieldUpdated(details, modelFields, 'boundingBoxP2Y')}
+                        updated={viewMode ? isFieldUpdated(details, modelFields, 'boundingBoxP2Y') : false}
                         disabled={disabled}
                         value={details.boundingBoxP2Y}
                         name='boundingBoxP2Y'
                         onChange={onChange}
                     />
                     <DebounceNumberInput
-                        updated={isFieldUpdated(details, modelFields, 'boundingBoxP2Z')}
+                        updated={viewMode ? isFieldUpdated(details, modelFields, 'boundingBoxP2Z') : false}
                         disabled={disabled}
                         value={details.boundingBoxP2Z}
                         name='boundingBoxP2Z'

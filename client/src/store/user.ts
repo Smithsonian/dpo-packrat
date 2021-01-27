@@ -39,7 +39,14 @@ export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: Ge
             };
         }
 
-        const user = await getAuthenticatedUser();
+        const user: User | null = await getAuthenticatedUser();
+
+        if (!user) {
+            return {
+                success: false,
+                message: 'Failed to fetch user info'
+            };
+        }
         set({ user });
 
         return authResponse;

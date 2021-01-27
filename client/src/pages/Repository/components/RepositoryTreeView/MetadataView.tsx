@@ -43,10 +43,11 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 interface MetadataViewProps {
     header: boolean;
     treeColumns: TreeViewColumn[];
+    options?: React.ReactNode;
 }
 
 function MetadataView(props: MetadataViewProps): React.ReactElement {
-    const { header, treeColumns } = props;
+    const { header, treeColumns, options = null } = props;
     const classes = useStyles(props);
 
     const width = computeMetadataViewWidth(treeColumns);
@@ -67,6 +68,7 @@ function MetadataView(props: MetadataViewProps): React.ReactElement {
 
     return (
         <div className={classes.metadata} style={{ width }}>
+            {options}
             {renderTreeColumns(treeColumns)}
         </div>
     );
