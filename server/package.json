@@ -25,12 +25,10 @@
   "main": "build/index.js",
   "typings": "build/index.d.ts",
   "scripts": {
-    "start": "yarn build:dev && concurrently 'yarn build:watch' 'yarn server:start'",
+    "start": "nodemon --ignore var/ --exec yarn ts-node index.ts -e ts,js,json,graphql",
     "start:prod": "node build/index.js",
-    "server:start": "nodemon build/index.js --ignore var/",
     "build:dev": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
     "build:prod": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
-    "build:watch": "tsc --watch",
     "clean": "rm -rf node_modules/ build/",
     "generate": "graphql-codegen --config ./graphql/codegen.yml",
     "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
@@ -65,6 +63,7 @@
     "passport": "0.4.1",
     "passport-local": "1.0.0",
     "supertest": "4.0.2",
+    "ts-node": "9.1.1",
     "uuid": "8.3.0",
     "winston": "3.3.3"
   },
