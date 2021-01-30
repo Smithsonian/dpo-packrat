@@ -6,4 +6,4 @@ docker network create $NETWORK_NAME
 docker network connect $NETWORK_NAME packrat-devbox
 docker network connect $NETWORK_NAME packrat-db
 
-echo "Successful"
+echo "Done"
