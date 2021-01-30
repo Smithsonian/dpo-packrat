@@ -25,7 +25,6 @@
   "scripts": {
     "start:client": "yarn workspace @dpo-packrat/client start",
     "start:server": "yarn workspace @dpo-packrat/server start",
-    "start:common": "yarn workspace @dpo-packrat/common start",
     "log:client": "docker logs -f packrat-client",
     "log:server": "docker logs -f packrat-server",
     "start:client:prod": "yarn workspace @dpo-packrat/client start:prod",
@@ -44,7 +43,8 @@
     "clean": "lerna run clean && rm -rf node_modules/",
     "clean:docker": "docker-compose -f docker-compose.dev.yml down && docker system prune -f",
     "generate:server:prisma": "yarn workspace @dpo-packrat/server generate:prisma",
-    "postinstall": "lerna run postinstall",
+    "postinstall": "lerna run postinstall && yarn install:e2e",
+    "install:e2e": "cd e2e && yarn && cd ..",
     "lint": "yarn eslint --ext .js,.jsx,.ts,.tsx .",
     "lint:fix": "yarn prettier --write . && yarn lint --fix",
     "test": "yarn workspaces run test",
@@ -81,8 +81,7 @@
     ],
     "packages": [
       "client",
-      "server",
-      "common"
+      "server"
     ]
   },
   "volta": {

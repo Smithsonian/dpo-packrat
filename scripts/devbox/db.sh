@@ -11,4 +11,4 @@ docker exec -i packrat-db sh -c "mysql -u root -p$SQL_PASSWORD < /app/scripts/Pa
 docker exec -i packrat-db sh -c "mysql -u root -p$SQL_PASSWORD < /app/scripts/Packrat.PROC.sql"
 docker exec -i packrat-db sh -c "mysql -u root -p$SQL_PASSWORD < /app/scripts/Packrat.DATA.sql"
 
-echo "Successful"
+echo "Done"

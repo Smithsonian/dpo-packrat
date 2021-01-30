@@ -25,12 +25,10 @@
   "main": "build/index.js",
   "typings": "build/index.d.ts",
   "scripts": {
-    "start": "yarn build:dev && concurrently 'yarn build:watch' 'yarn server:start'",
+    "start": "nodemon --ignore var/ --exec yarn ts-node index.ts -e ts,js,json,graphql",
     "start:prod": "node build/index.js",
-    "server:start": "nodemon build/index.js --ignore var/",
     "build:dev": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
     "build:prod": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
-    "build:watch": "tsc --watch",
     "clean": "rm -rf node_modules/ build/",
     "generate": "graphql-codegen --config ./graphql/codegen.yml",
     "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
@@ -42,7 +40,6 @@
     "dropdb": "sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD -e 'DROP DATABASE IF EXISTS `Packrat`'\""
   },
   "dependencies": {
-    "@dpo-packrat/common": "0.4.0",
     "@prisma/client": "2.4.1",
     "@types/express": "4.17.8",
     "@types/lodash": "4.14.161",
@@ -66,6 +63,7 @@
     "passport": "0.4.1",
     "passport-local": "1.0.0",
     "supertest": "4.0.2",
+    "ts-node": "9.1.1",
     "uuid": "8.3.0",
     "winston": "3.3.3"
   },
