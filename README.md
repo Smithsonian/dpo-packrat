@@ -35,9 +35,7 @@ yarn dev
 
 4. If you want to follow debug logs for `client` or `server` container then just run `yarn log:client` or `yarn log:server`
 
-7. If you're developing `common` package then make sure to use `yarn start:common` so that it's actively watched/compiled and made available to other packages it's imported at. The other packages should auto reload when changes are made to them.
-
-6. If not using docker run each command in a separate terminal for the package you're developing:
+5. If not using docker run each command in a separate terminal for the package you're developing:
 
 **For client:**
 
@@ -49,12 +47,6 @@ yarn start:client
 
 ```
 yarn start:server
-``` 
-
-**For common:**
-
-```
-yarn start:common
 ``` 
 
 # Alternative docker workflow:
