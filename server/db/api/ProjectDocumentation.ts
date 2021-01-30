@@ -76,6 +76,16 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
         }
     }
 
+    static async fetchAll(): Promise<ProjectDocumentation[] | null> {
+        try {
+            return DBC.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(
+                await DBC.DBConnection.prisma.projectDocumentation.findMany(), ProjectDocumentation);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.ProjectDocumentation.fetchAll', error);
+            return null;
+        }
+    }
+
     static async fetchFromProject(idProject: number): Promise<ProjectDocumentation[] | null> {
         if (!idProject)
             return null;

@@ -3480,6 +3480,16 @@ describe('DB Fetch Xref Test Suite', () => {
 // DB Fetch Special Test Suite
 // *******************************************************************
 describe('DB Fetch Special Test Suite', () => {
+    test('DB Fetch Special: Actor.fetchAll', async () => {
+        let actorFetch: DBAPI.Actor[] | null = null;
+        if (actorWithUnit && actorWithOutUnit) {
+            actorFetch = await DBAPI.Actor.fetchAll();
+            if (actorFetch)
+                expect(actorFetch).toEqual(expect.arrayContaining([actorWithUnit, actorWithOutUnit]));
+        }
+        expect(actorFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: Asset.assetType undefined', async() => {
         let eVocabID: eVocabularyID | undefined = undefined;
         if (assetThumbnail)
@@ -3513,6 +3523,15 @@ describe('DB Fetch Special Test Suite', () => {
         }
     });
 
+    test('DB Fetch Special: Asset.fetchAll', async () => {
+        let assetFetch: DBAPI.Asset[] | null = null;
+        if (assetThumbnail && assetWithoutAG && assetBulkIngest) {
+            assetFetch = await DBAPI.Asset.fetchAll();
+            if (assetFetch)
+                expect(assetFetch).toEqual(expect.arrayContaining([assetThumbnail, assetWithoutAG, assetBulkIngest]));
+        }
+        expect(assetFetch).toBeTruthy();
+    });
 
     test('DB Fetch Special: Asset.fetchSourceSystemObject 1', async() => {
         let SOAsset: DBAPI.SystemObject | null = null;
@@ -3527,6 +3546,16 @@ describe('DB Fetch Special Test Suite', () => {
             SOAssetSource = await assetWithoutAG.fetchSourceSystemObject();
         expect(SOAssetSource).toBeTruthy();
         expect(SOAssetSource).toEqual(systemObjectSubject);
+    });
+
+    test('DB Fetch Special: AssetVersion.fetchAll', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (assetVersion && assetVersion2 && assetVersionNotIngested) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchAll();
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersion2, assetVersionNotIngested]));
+        }
+        expect(assetVersionFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: CaptureData.fetchFromCaptureDataPhoto', async () => {
@@ -3588,6 +3617,16 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(identifierFetch).toMatchObject(identifierSubjectHookup);
         }
         expect(identifierFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: IntermediaryFile.fetchAll', async () => {
+        let ifFetch: DBAPI.IntermediaryFile[] | null = null;
+        if (intermediaryFile) {
+            ifFetch = await DBAPI.IntermediaryFile.fetchAll();
+            if (ifFetch)
+                expect(ifFetch).toEqual(expect.arrayContaining([intermediaryFile]));
+        }
+        expect(ifFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: IntermediaryFile.fetchDerivedFromItems', async () => {
@@ -3683,6 +3722,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(itemFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Model.fetchAll', async () => {
+        let modelFetch: DBAPI.Model[] | null = null;
+        if (model && modelNulls) {
+            modelFetch = await DBAPI.Model.fetchAll();
+            if (modelFetch)
+                expect(modelFetch).toEqual(expect.arrayContaining([model, modelNulls]));
+        }
+        expect(modelFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: Model.fetchDerivedFromItems', async () => {
         let modelFetch: DBAPI.Model[] | null = null;
         if (item && itemNulls) {
@@ -3747,6 +3796,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(projectFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: ProjectDocumentation.fetchAll', async () => {
+        let pdFetch: DBAPI.ProjectDocumentation[] | null = null;
+        if (projectDocumentation) {
+            pdFetch = await DBAPI.ProjectDocumentation.fetchAll();
+            if (pdFetch)
+                expect(pdFetch).toEqual(expect.arrayContaining([projectDocumentation]));
+        }
+        expect(pdFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: ProjectDocumentation.fetchDerivedFromProjects', async () => {
         let projectDocumentationFetch: DBAPI.ProjectDocumentation[] | null = null;
         if (project && project2) {
@@ -3755,6 +3814,16 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(projectDocumentationFetch).toEqual(expect.arrayContaining([projectDocumentation]));
         }
         expect(projectDocumentationFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Scene.fetchAll', async () => {
+        let sceneFetch: DBAPI.Scene[] | null = null;
+        if (scene && sceneNulls) {
+            sceneFetch = await DBAPI.Scene.fetchAll();
+            if (sceneFetch)
+                expect(sceneFetch).toEqual(expect.arrayContaining([scene, sceneNulls]));
+        }
+        expect(sceneFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: Scene.fetchDerivedFromItems', async () => {
@@ -3769,6 +3838,16 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(sceneFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Stakeholder.fetchAll', async () => {
+        let stakeholderFetch: DBAPI.Stakeholder[] | null = null;
+        if (stakeholder) {
+            stakeholderFetch = await DBAPI.Stakeholder.fetchAll();
+            if (stakeholderFetch)
+                expect(stakeholderFetch).toEqual(expect.arrayContaining([stakeholder]));
+        }
+        expect(stakeholderFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: Stakeholder.fetchDerivedFromProjects', async () => {

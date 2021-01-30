@@ -94,6 +94,16 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
         }
     }
 
+    static async fetchAll(): Promise<Asset[] | null> {
+        try {
+            return DBC.CopyArray<AssetBase, Asset>(
+                await DBC.DBConnection.prisma.asset.findMany(), Asset);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Asset.fetchAll', error);
+            return null;
+        }
+    }
+
     static async fetchByStorageKey(StorageKey: string): Promise<Asset | null> {
         if (!StorageKey)
             return null;

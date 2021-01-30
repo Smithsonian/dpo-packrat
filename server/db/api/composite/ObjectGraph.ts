@@ -3,8 +3,9 @@ import { Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model,
     SystemObjectPairs, Unit, eSystemObjectType } from '../..';
 import * as LOG from '../../../utils/logger';
 import * as L from 'lodash';
+import { ObjectGraphDatabase } from './ObjectGraphDatabase';
 
-type SystemObjectIDType = {
+export type SystemObjectIDType = {
     idSystemObject: number,
     idObject: number,
     eType: eSystemObjectType
@@ -40,14 +41,17 @@ export class ObjectGraph {
     pushCount: number = 0;
     maxPushCount: number = 500;
     depth: number = 32;
+
     systemObjectList: number[] = []; // array of idSystemObjects to be processed
     systemObjectProcessed: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map from idSystemObject -> { idSystemObject, id of database object, type of database object}
     systemObjectAdded: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map from idSystemObject -> { idSystemObject, id of database object, type of database object}
+    objectGraphDatabase: ObjectGraphDatabase | null = null; // non-null means we'll record relationship and hierarchy data in this object
 
-    constructor(idSystemObject: number, eMode: eObjectGraphMode, depth: number = 32) {
+    constructor(idSystemObject: number, eMode: eObjectGraphMode, depth: number = 32, objectGraphDatabase: ObjectGraphDatabase | null = null) {
         this.idSystemObject = idSystemObject;
         this.eMode = eMode;
         this.depth = depth;
+        this.objectGraphDatabase = objectGraphDatabase;
     }
 
     async fetch(): Promise<boolean> {
@@ -155,6 +159,16 @@ export class ObjectGraph {
             */
             this.systemObjectProcessed.set(idSystemObject, sourceType);
             this.systemObjectAdded.set(idSystemObject, sourceType);
+
+            // record relationship
+            if (this.objectGraphDatabase) {
+                if (relatedType) {
+                    if (eMode == eObjectGraphMode.eAncestors)
+                        this.objectGraphDatabase.recordRelationship(sourceType, relatedType);
+                    else
+                        this.objectGraphDatabase.recordRelationship(relatedType, sourceType);
+                }
+            }
 
             // gather using master/derived systemobjectxref's
             const SORelated: SystemObject[] | null = (eMode == eObjectGraphMode.eAncestors)

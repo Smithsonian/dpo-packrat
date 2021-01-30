@@ -7,10 +7,10 @@
 <schema name="packrat-config" version="1.6">
     <!-- SystemObject fields -->
     <field name="idSystemObject" type="string" indexed="true" stored="true" required="true" multiValued="false" />
+    <field name="Retired" type="boolean" indexed="true" stored="true" />
     <!-- Describes the object represented by this system object, e.g. "Unit", "Project", "CaptureData", "Model", etc. -->
   	<field name="ObjectType" type="string" indexed="true" stored="true" required="true" multiValued="false" />
     <field name="idObject" type="pint" indexed="true" stored="true" required="true" multiValued="false" />
-    <field name="Retired" type="boolean" indexed="true" stored="true" />
 
     <!-- Common fields -->
     <field name="Name" type="string" indexed="true" stored="true" multiValued="false" />
@@ -114,6 +114,12 @@
     <field name="SubjectID" type="pints" indexed="true" stored="true" />
     <field name="ItemID" type="pints" indexed="true" stored="true" />
     <field name="ParentID" type="pints" indexed="true" stored="true" />
+
+    <field name="ChildrenObjectTypes" type="strings" indexed="true" stored="true" />
+    <field name="ChildrenCaptureMethods" type="strings" indexed="true" stored="true" />
+    <field name="ChildrenVariantTypes" type="strings" indexed="true" stored="true" />
+    <field name="ChildrenModelPurposes" type="strings" indexed="true" stored="true" />
+    <field name="ChildrenModelFileTypes" type="strings" indexed="true" stored="true" />
 
     <!-- "Plumbling" fields: needed by the system -->
     <!-- docValues are enabled by default for long type so we don't need to index the version field  -->
