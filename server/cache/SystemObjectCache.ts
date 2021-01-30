@@ -1,5 +1,5 @@
 import * as LOG from '../utils/logger';
-// import * as DBAPI from '../db';
+import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
 import { SystemObject, eSystemObjectType } from '../db';
 
@@ -127,6 +127,58 @@ export class SystemObjectCache {
      */
     static async getSystemFromObjectID(oID: ObjectIDAndType): Promise<SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal(oID);
+    }
+
+    static async getSystemFromUnit(unit: DBAPI.Unit): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: unit.idUnit, eObjectType: DBAPI.eSystemObjectType.eUnit });
+    }
+
+    static async getSystemFromProject(project: DBAPI.Project): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: project.idProject, eObjectType: DBAPI.eSystemObjectType.eProject });
+    }
+
+    static async getSystemFromSubject(subject: DBAPI.Subject): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: subject.idSubject, eObjectType: DBAPI.eSystemObjectType.eSubject });
+    }
+
+    static async getSystemFromItem(item: DBAPI.Item): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: item.idItem, eObjectType: DBAPI.eSystemObjectType.eItem });
+    }
+
+    static async getSystemFromCaptureData(captureData: DBAPI.CaptureData): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: captureData.idCaptureData, eObjectType: DBAPI.eSystemObjectType.eCaptureData });
+    }
+
+    static async getSystemFromModel(model: DBAPI.Model): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: model.idModel, eObjectType: DBAPI.eSystemObjectType.eModel });
+    }
+
+    static async getSystemFromScene(scene: DBAPI.Scene): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: scene.idScene, eObjectType: DBAPI.eSystemObjectType.eScene });
+    }
+
+    static async getSystemFromIntermediaryFile(intermediaryFile: DBAPI.IntermediaryFile): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: intermediaryFile.idIntermediaryFile, eObjectType: DBAPI.eSystemObjectType.eIntermediaryFile });
+    }
+
+    static async getSystemFromProjectDocumentation(projectDocumentation: DBAPI.ProjectDocumentation): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: projectDocumentation.idProjectDocumentation, eObjectType: DBAPI.eSystemObjectType.eProjectDocumentation });
+    }
+
+    static async getSystemFromAsset(asset: DBAPI.Asset): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: asset.idAsset, eObjectType: DBAPI.eSystemObjectType.eAsset });
+    }
+
+    static async getSystemFromAssetVersion(assetVersion: DBAPI.AssetVersion): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion });
+    }
+
+    static async getSystemFromActor(actor: DBAPI.Actor): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: actor.idActor, eObjectType: DBAPI.eSystemObjectType.eActor });
+    }
+
+    static async getSystemFromStakeholder(stakeholder: DBAPI.Stakeholder): Promise<SystemObjectInfo | undefined> {
+        return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: stakeholder.idStakeholder, eObjectType: DBAPI.eSystemObjectType.eStakeholder });
     }
 
     /**

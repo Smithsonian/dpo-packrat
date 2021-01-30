@@ -98,6 +98,16 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         }
     }
 
+    static async fetchAll(): Promise<Model[] | null> {
+        try {
+            return DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.model.findMany(), Model);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Model.fetchAll', error);
+            return null;
+        }
+    }
+
     static async fetchFromXref(idScene: number): Promise<Model[] | null> {
         if (!idScene)
             return null;

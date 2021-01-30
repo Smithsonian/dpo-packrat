@@ -24,6 +24,7 @@ module.exports = {
         // '**/tests/collections/EdanCollection.test.ts',
         // '**/tests/db/dbcreation.test.ts',
         // '**/tests/db/composite/ObjectGraph.test.ts',
+        // '**/tests/db/composite/SubjectUnitIdentifier.test.ts',
         // '**/tests/navigation/impl/NavigationDB.test.ts',
         // '**/tests/storage/interface/AssetStorageAdapter.test.ts',
         // '**/tests/storage/impl/LocalStorage/OCFL.test.ts',

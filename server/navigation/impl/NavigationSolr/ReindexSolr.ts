@@ -29,6 +29,8 @@ export class ReindexSolr {
         const solrClient: SolrClient = new SolrClient(null, null, null);
         solrClient._client.autoCommit = true;
 
+        // await this.computeGraphDataFromUnits();
+
         solrClient._client.add(await this.computeUnits(), function(err, obj) { if (err) LOG.logger.error('ReindexSolr.FullIndex -> computeUnits()', err); else obj; });
         solrClient._client.add(await this.computeProjects(), function(err, obj) { if (err) LOG.logger.error('ReindexSolr.FullIndex -> computeProjects()', err); else obj; });
         solrClient._client.add(await this.computeSubjects(), function(err, obj) { if (err) LOG.logger.error('ReindexSolr.FullIndex -> computeSubjects()', err); else obj; });
@@ -53,7 +55,7 @@ export class ReindexSolr {
             const oID: CACHE.ObjectIDAndType = { idObject: unit.idUnit, eObjectType: eSystemObjectType.eUnit };
             const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
             if (!sID) {
-                LOG.logger.error(`NavigationDB.getRoot unable to compute idSystemObject for ${JSON.stringify(oID)}`);
+                LOG.logger.error(`ReindexSolr.computeUnits unable to compute idSystemObject for ${JSON.stringify(oID)}`);
                 continue;
             }
 

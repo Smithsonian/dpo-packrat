@@ -84,6 +84,16 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
         }
     }
 
+    static async fetchAll(): Promise<Scene[] | null> {
+        try {
+            return DBC.CopyArray<SceneBase, Scene>(
+                await DBC.DBConnection.prisma.scene.findMany(), Scene);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Scene.fetchAll', error);
+            return null;
+        }
+    }
+
     static async fetchFromXref(idModel: number): Promise<Scene[] | null> {
         if (!idModel)
             return null;
