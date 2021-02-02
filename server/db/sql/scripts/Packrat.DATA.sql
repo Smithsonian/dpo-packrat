@@ -1113,7 +1113,8 @@ INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES 
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jon Blundell', 'blundellj@si.edu', 'TBD', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Vince Rossi', 'rossiv@si.edu', 'TBD', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jamie Cope', 'copeg@si.edu', 'TBD', 1, NOW());
-INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Karan Pratap Singh', 'karan.pratapsingh686@gmail.com', 'TBD', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Karan Pratap Singh', 'singhk@si.edu', 'TBD', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Test User', 'user@test.com', 'TBD', 1, NOW());
 
 INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (1, '3D_YT');
 INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (4, 'AAA');

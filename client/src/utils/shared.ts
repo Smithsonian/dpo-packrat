@@ -6,9 +6,9 @@
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 import { Colors, palette } from '../theme';
 
-export const withDefaultValueBoolean = (value: boolean | null, defaultValue: boolean): boolean => value || defaultValue;
+export const withDefaultValueBoolean = (value: boolean | undefined | null, defaultValue: boolean): boolean => value || defaultValue;
 
-export const withDefaultValueNumber = (value: number | null, defaultValue: number | null): number => {
+export const withDefaultValueNumber = (value: number | undefined | null, defaultValue: number | null): number => {
     if (value) {
         return value;
     }

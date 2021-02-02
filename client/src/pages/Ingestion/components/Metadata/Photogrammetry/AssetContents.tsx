@@ -11,6 +11,7 @@ import { AiFillFolder } from 'react-icons/ai';
 import { FieldType } from '../../../../../components';
 import { StateFolder, VocabularyOption } from '../../../../../store';
 import { palette } from '../../../../../theme';
+import { ViewableProps } from '../../../../../types/repository';
 
 export const useStyles = makeStyles(({ palette, typography, breakpoints, spacing }) => ({
     header: {
@@ -53,7 +54,7 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints, spacing
     },
 }));
 
-interface AssetContentsProps {
+interface AssetContentsProps extends ViewableProps {
     initialEntry: number | null;
     folders: StateFolder[];
     options: VocabularyOption[];
@@ -61,10 +62,10 @@ interface AssetContentsProps {
 }
 
 function AssetContents(props: AssetContentsProps): React.ReactElement {
-    const { folders, options, initialEntry, onUpdate } = props;
+    const { folders, options, initialEntry, onUpdate, viewMode = false, disabled = false } = props;
 
     return (
-        <FieldType required renderLabel={false} marginTop={1.5}>
+        <FieldType required renderLabel={false} marginTop={1.5} width={viewMode ? 'auto' : undefined}>
             <ContentHeader titles={['Folder Name', 'Variant Type']} />
             <Box display='flex' flex={1} flexDirection='column' mt={1}>
                 <EmptyContent label='folders' isEmpty={!folders.length} />
@@ -75,6 +76,7 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
                         <Content
                             key={index}
                             name={name}
+                            disabled={disabled}
                             fieldName='folders'
                             value={variantType}
                             icon={<AiFillFolder color={palette.primary.contrastText} size={24} />}
@@ -135,10 +137,11 @@ interface ContentProps {
         name?: string | undefined;
         value: unknown;
     }>) => void;
+    disabled: boolean;
 }
 
 function Content(props: ContentProps): React.ReactElement {
-    const { fieldName, value, name, icon, initialEntry, update, options } = props;
+    const { fieldName, value, name, icon, initialEntry, update, options, disabled } = props;
     const classes = useStyles();
 
     return (
@@ -151,6 +154,7 @@ function Content(props: ContentProps): React.ReactElement {
             </Box>
             <Box display='flex' alignItems='center' justifyContent='center'>
                 <Select
+                    disabled={disabled}
                     value={value || initialEntry}
                     className={classes.select}
                     name={fieldName}

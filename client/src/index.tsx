@@ -13,7 +13,7 @@ import { Helmet } from 'react-helmet';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
 import { Slide, toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { ErrorBoundary, Loader, PrivateRoute, PublicRoute } from './components';
+import { EnvBanner, ErrorBoundary, Loader, PrivateRoute, PublicRoute } from './components';
 import { ROUTES } from './constants';
 import './global/root.css';
 import { apolloClient } from './graphql';
@@ -34,7 +34,7 @@ function AppRouter(): React.ReactElement {
             await updateVocabularyEntries();
             setLoading(false);
         } catch {
-            toast.error('Error occurred while initializing');
+            toast.error('Cannot connect to the server, please try again later');
         }
     }, [initialize, updateVocabularyEntries]);
 
@@ -79,6 +79,7 @@ function App(): React.ReactElement {
                     draggable
                     pauseOnHover
                 />
+                <EnvBanner renderFor={['development']} />
             </ThemeProvider>
         </ApolloProvider>
     );

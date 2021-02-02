@@ -101,7 +101,9 @@ import {
     GetVersionsForSystemObjectResult,
     GetDetailsTabDataForObjectInput,
     GetDetailsTabDataForObjectResult,
-    GetFilterViewDataResult
+    GetFilterViewDataResult,
+    UpdateObjectDetailsInput,
+    UpdateObjectDetailsResult
 } from '../../types/graphql';
 
 // Queries
@@ -156,6 +158,7 @@ import createVocabularySet from './mutations/vocabulary/createVocabularySet';
 import uploadAsset from './mutations/asset/uploadAsset';
 import ingestData from './mutations/ingestion/ingestData';
 import discardUploadedAssetVersions from './mutations/asset/discardUploadedAssetVersions';
+import updateObjectDetails from './mutations/systemobject/updateObjectDetails';
 
 import { Context } from '../../types/resolvers';
 
@@ -208,7 +211,8 @@ const allQueries = {
     getAssetDetailsForSystemObject,
     getVersionsForSystemObject,
     getDetailsTabDataForObject,
-    getFilterViewData
+    getFilterViewData,
+    updateObjectDetails
 };
 
 type GraphQLRequest = {
@@ -592,6 +596,16 @@ class GraphQLApi {
     async getFilterViewData(context?: Context): Promise<GetFilterViewDataResult> {
         const operationName = 'getFilterViewData';
         const variables = {};
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async updateObjectDetails(input: UpdateObjectDetailsInput, context?: Context): Promise<UpdateObjectDetailsResult> {
+        const operationName = 'updateObjectDetails';
+        const variables = { input };
         return this.graphqlRequest({
             operationName,
             variables,

@@ -13,7 +13,7 @@ RUN rm -rf server
 # Expose port(s)
 EXPOSE 3000
 # Install dependencies and build
-RUN yarn && yarn build
+RUN yarn && yarn build:dev
 # Start on excecution
 CMD [ "yarn", "start:client" ]
 
@@ -24,7 +24,7 @@ RUN rm -rf client
 # Expose port(s)
 EXPOSE 4000
 # Install dependencies and build
-RUN yarn && yarn build
+RUN yarn && yarn build:dev
 # Start on excecution
 CMD [ "yarn", "start:server" ]
 
