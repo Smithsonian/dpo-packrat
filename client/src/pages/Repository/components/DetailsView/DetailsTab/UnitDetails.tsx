@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * UnitDetails
  *
@@ -6,20 +7,17 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { InputField, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
+import { UnitDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
+import { DetailComponentProps } from './index';
 
-interface UnitDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
-}
+function UnitDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
+    const [details, setDetails] = useState<UnitDetailFields>({});
 
-interface UnitDetailsFields {
-    Abbreviation?: string | null;
-    ARKPrefix?: string | null;
-}
-
-function UnitDetails(props: UnitDetailsProps): React.ReactElement {
-    const { data, loading, disabled } = props;
-    const [details, setDetails] = useState<UnitDetailsFields>({});
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {
@@ -40,11 +38,14 @@ function UnitDetails(props: UnitDetailsProps): React.ReactElement {
         setDetails(details => ({ ...details, [name]: value }));
     };
 
+    const unitData = data.getDetailsTabDataForObject?.Unit;
+
     return (
         <Box>
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, unitData, 'Abbreviation')}
                 disabled={disabled}
                 label='Abbreviation'
                 value={details?.Abbreviation}
@@ -54,6 +55,7 @@ function UnitDetails(props: UnitDetailsProps): React.ReactElement {
             <InputField
                 viewMode
                 required
+                updated={isFieldUpdated(details, unitData, 'ARKPrefix')}
                 disabled={disabled}
                 label='ARKPrefix'
                 value={details?.ARKPrefix}

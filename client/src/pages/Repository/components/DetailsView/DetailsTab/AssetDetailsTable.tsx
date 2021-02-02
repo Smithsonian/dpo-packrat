@@ -105,17 +105,16 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                         </td>
                     </tr>
                 ))}
+                <tr>
+                    <td colSpan={6}>
+                        {!assetDetails.length && (
+                            <Box my={2}>
+                                <Typography align='center' className={classes.value}>No assets found</Typography>
+                            </Box>
+                        )}
+                    </td>
+                </tr>
             </tbody>
-
-            <tfoot>
-                <td colSpan={6}>
-                    {!assetDetails.length && (
-                        <Box my={2}>
-                            <Typography align='center' className={classes.value}>No assets found</Typography>
-                        </Box>
-                    )}
-                </td>
-            </tfoot>
         </table>
     );
 }

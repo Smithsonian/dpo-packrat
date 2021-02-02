@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * ItemDetails
  *
@@ -6,37 +7,39 @@
 import { Box } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { CheckboxField, Loader } from '../../../../../components';
-import { GetDetailsTabDataForObjectQueryResult } from '../../../../../types/graphql';
-import { SubjectDetailsFields, SubjectFields } from './SubjectDetails';
+import { SubjectDetailFields } from '../../../../../types/graphql';
+import { isFieldUpdated } from '../../../../../utils/repository';
+import { DetailComponentProps } from './index';
+import { SubjectFields } from './SubjectDetails';
 
-interface ItemDetailsProps extends GetDetailsTabDataForObjectQueryResult {
-    disabled: boolean;
+export interface ItemDetailFields extends SubjectDetailFields {
+    EntireSubject?: boolean | null | undefined;
 }
 
-interface ItemDetailsFields extends SubjectDetailsFields {
-    EntireSubject?: boolean;
-}
+function ItemDetails(props: DetailComponentProps): React.ReactElement {
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
 
-function ItemDetails(props: ItemDetailsProps): React.ReactElement {
-    const { data, loading, disabled, } = props;
+    const [details, setDetails] = useState<ItemDetailFields>({});
 
-    const [details, setDetails] = useState<ItemDetailsFields>({});
+    useEffect(() => {
+        onUpdateDetail(objectType, details);
+    }, [details]);
 
     useEffect(() => {
         if (data && !loading) {
             const { Item } = data.getDetailsTabDataForObject;
             setDetails({
                 EntireSubject: Item?.EntireSubject,
-                Latitude: Item?.GeoLocation?.Latitude,
-                Longitude: Item?.GeoLocation?.Longitude,
-                Altitude: Item?.GeoLocation?.Altitude,
-                TS0: Item?.GeoLocation?.TS0,
-                TS1: Item?.GeoLocation?.TS1,
-                TS2: Item?.GeoLocation?.TS2,
-                R0: Item?.GeoLocation?.R0,
-                R1: Item?.GeoLocation?.R1,
-                R2: Item?.GeoLocation?.R2,
-                R3: Item?.GeoLocation?.R3
+                Latitude: Item?.Latitude,
+                Longitude: Item?.Longitude,
+                Altitude: Item?.Altitude,
+                TS0: Item?.TS0,
+                TS1: Item?.TS1,
+                TS2: Item?.TS2,
+                R0: Item?.R0,
+                R1: Item?.R1,
+                R2: Item?.R2,
+                R3: Item?.R3
             });
         }
     }, [data, loading]);
@@ -47,7 +50,13 @@ function ItemDetails(props: ItemDetailsProps): React.ReactElement {
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
-        setDetails(details => ({ ...details, [name]: value }));
+        let numberValue: number | null = null;
+
+        if (value) {
+            numberValue = Number.parseInt(value, 10);
+        }
+
+        setDetails(details => ({ ...details, [name]: numberValue }));
     };
 
     const setCheckboxField = ({ target }): void => {
@@ -55,17 +64,21 @@ function ItemDetails(props: ItemDetailsProps): React.ReactElement {
         setDetails(details => ({ ...details, [name]: checked }));
     };
 
+    const itemData = data.getDetailsTabDataForObject?.Item;
+
     return (
         <Box>
             <CheckboxField
                 viewMode
                 required
+                updated={isFieldUpdated(details, itemData, 'EntireSubject')}
+                disabled={disabled}
                 name='EntireSubject'
                 label='Entire Subject'
                 value={details?.EntireSubject ?? false}
                 onChange={setCheckboxField}
             />
-            <SubjectFields {...details} disabled={disabled} onChange={onSetField} />
+            <SubjectFields {...details} originalFields={itemData} disabled={disabled} onChange={onSetField} />
         </Box>
     );
 }

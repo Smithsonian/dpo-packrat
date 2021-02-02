@@ -7,6 +7,7 @@ import { MenuItem, Select } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { VocabularyOption } from '../../store';
+import { ViewableProps } from '../../types/repository';
 import FieldType from '../shared/FieldType';
 
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
@@ -14,7 +15,8 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         width: '54%',
         padding: '0px 10px',
         background: palette.background.paper,
-        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
+        border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
+        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
         borderRadius: 5,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
@@ -25,23 +27,20 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
 }));
 
-interface SelectFieldProps {
+interface SelectFieldProps extends ViewableProps {
     label: string;
     value: number | null;
     name: string;
     options: VocabularyOption[];
-    required?: boolean;
     error?: boolean;
     width?: string;
     onChange: (event: React.ChangeEvent<unknown>) => void;
-    viewMode?: boolean;
-    disabled?: boolean;
 }
 
 function SelectField(props: SelectFieldProps): React.ReactElement {
-    const { label, value, name, width, required, error, options, onChange, viewMode = false, disabled = false } = props;
+    const { label, value, name, width, required, error, options, onChange, viewMode = false, disabled = false, updated = false } = props;
 
-    const classes = useStyles();
+    const classes = useStyles(updated);
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 

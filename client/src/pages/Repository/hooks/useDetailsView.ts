@@ -1,4 +1,5 @@
-import { useQuery } from '@apollo/client';
+import { useQuery, FetchResult } from '@apollo/client';
+import { apolloClient } from '../../../graphql';
 import {
     GetAssetDetailsForSystemObjectDocument,
     GetAssetDetailsForSystemObjectQueryResult,
@@ -7,7 +8,10 @@ import {
     GetVersionsForSystemObjectDocument,
     GetVersionsForSystemObjectQueryResult,
     GetDetailsTabDataForObjectDocument,
-    GetDetailsTabDataForObjectQueryResult
+    GetDetailsTabDataForObjectQueryResult,
+    UpdateObjectDetailsDocument,
+    UpdateObjectDetailsDataInput,
+    UpdateObjectDetailsMutation
 } from '../../../types/graphql';
 import { eSystemObjectType } from '../../../types/server';
 
@@ -52,3 +56,17 @@ export function useDetailsTabData(idSystemObject: number, objectType: eSystemObj
     });
 }
 
+export function updateDetailsTabData(idSystemObject: number, idObject: number, objectType: eSystemObjectType, data: UpdateObjectDetailsDataInput): Promise<FetchResult<UpdateObjectDetailsMutation>> {
+    return apolloClient.mutate({
+        mutation: UpdateObjectDetailsDocument,
+        variables: {
+            input: {
+                idSystemObject,
+                idObject,
+                objectType,
+                data
+            }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+    });
+}
