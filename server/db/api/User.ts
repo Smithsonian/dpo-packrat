@@ -3,6 +3,12 @@ import { User as UserBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
+export enum eUserStatus {
+    eAll,
+    eActive,
+    eInactive
+}
+
 export class User extends DBC.DBObject<UserBase> implements UserBase {
     idUser!: number;
     Active!: boolean;
@@ -14,15 +20,23 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
     SecurityID!: string;
     WorkflowNotificationTime!: Date | null;
 
+    private ActiveOrig!: boolean;
+
     constructor(input: UserBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    protected updateCachedValues(): void {
+        this.ActiveOrig = this.Active;
+    }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, EmailAddress, SecurityID, Active, DateActivated, DateDisabled, WorkflowNotificationTime, EmailSettings } = this;
+            let { DateActivated, DateDisabled } = this;
+            const { Name, EmailAddress, SecurityID, Active, WorkflowNotificationTime, EmailSettings } = this;
+            DateActivated = new Date();
+            DateDisabled = (!Active) ? DateActivated : null;
+
             ({ idUser: this.idUser, Name: this.Name, EmailAddress: this.EmailAddress, SecurityID: this.SecurityID,
                 Active: this.Active, DateActivated: this.DateActivated, DateDisabled: this.DateDisabled,
                 WorkflowNotificationTime: this.WorkflowNotificationTime, EmailSettings: this.EmailSettings } =
@@ -47,7 +61,19 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idUser, Name, EmailAddress, SecurityID, Active, DateActivated, DateDisabled, WorkflowNotificationTime, EmailSettings } = this;
+            let { DateActivated, DateDisabled } = this;
+            const { idUser, Name, EmailAddress, SecurityID, Active, WorkflowNotificationTime, EmailSettings, ActiveOrig } = this;
+
+            // handle disabling and activating by detecting a change in the Active state:
+            if (Active != ActiveOrig) {
+                if (ActiveOrig) // we are disabling
+                    DateDisabled = new Date();
+                else {          // we are activating
+                    DateActivated = new Date();
+                    DateDisabled = null;
+                }
+            }
+
             return await DBC.DBConnection.prisma.user.update({
                 where: { idUser, },
                 data: {
@@ -84,6 +110,36 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
             return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({ where: { EmailAddress, }, }), User);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.User.fetchByEmail', error);
+            return null;
+        }
+    }
+
+    static async fetchUserList(search: string, eStatus: eUserStatus): Promise<User[] | null> {
+        try {
+            const Active: boolean = (eStatus == eUserStatus.eActive);
+
+            switch (eStatus) {
+                case eUserStatus.eAll:
+                    return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({ where: {
+                        OR: [
+                            { EmailAddress: { contains: search }, },
+                            { Name: { contains: search }, },
+                        ],
+                    }, }), User);
+
+                default:
+                    return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({ where: {
+                        AND: [
+                            { OR: [
+                                { EmailAddress: { contains: search }, },
+                                { Name: { contains: search }, },
+                            ] },
+                            { Active },
+                        ],
+                    }, }), User);
+            }
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.User.fetchUserList', error);
             return null;
         }
     }
