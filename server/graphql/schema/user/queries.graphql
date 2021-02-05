@@ -1,6 +1,7 @@
 type Query {
     getCurrentUser: GetCurrentUserResult!
     getUser(input: GetUserInput!): GetUserResult!
+    getAllUsers(input: GetAllUsersInput!): GetAllUsersResult!
 }
 
 type GetCurrentUserResult {
@@ -13,4 +14,17 @@ input GetUserInput {
 
 type GetUserResult {
     User: User
+}
+
+enum USER_STATUS {
+    All
+}
+
+input GetAllUsersInput {
+    search: String!
+    active: USER_STATUS!
+}
+
+type GetAllUsersResult {
+    User: [User!]!
 }
