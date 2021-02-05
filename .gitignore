@@ -109,3 +109,6 @@ dist
 
 ### Builds ###
 build
+
+### Custom ###
+server/var

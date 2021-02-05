@@ -103,7 +103,9 @@ import {
     GetDetailsTabDataForObjectResult,
     GetFilterViewDataResult,
     UpdateObjectDetailsInput,
-    UpdateObjectDetailsResult
+    UpdateObjectDetailsResult,
+    GetAllUsersInput,
+    GetAllUsersResult
 } from '../../types/graphql';
 
 // Queries
@@ -142,6 +144,7 @@ import getAssetDetailsForSystemObject from './queries/systemobject/getAssetDetai
 import getVersionsForSystemObject from './queries/systemobject/getVersionsForSystemObject';
 import getDetailsTabDataForObject from './queries/systemobject/getDetailsTabDataForObject';
 import getFilterViewData from './queries/repository/getFilterViewData';
+import getAllUsers from './queries/user/getAllUsers';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -212,7 +215,8 @@ const allQueries = {
     getVersionsForSystemObject,
     getDetailsTabDataForObject,
     getFilterViewData,
-    updateObjectDetails
+    updateObjectDetails,
+    getAllUsers
 };
 
 type GraphQLRequest = {
@@ -715,6 +719,16 @@ class GraphQLApi {
 
     async getWorkflow(input: GetWorkflowInput, context?: Context): Promise<GetWorkflowResult> {
         const operationName = 'getWorkflow';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getAllUsers(input: GetAllUsersInput, context?: Context): Promise<GetAllUsersResult> {
+        const operationName = 'getAllUsers';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
