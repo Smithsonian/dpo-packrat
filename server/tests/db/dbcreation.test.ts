@@ -831,6 +831,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Model', async () => {
         if (vocabulary && assetThumbnail)
             model = await UTIL.createModelTest({
+                Name: 'Test Model',
                 DateCreated: UTIL.nowCleansed(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 Master: true,
@@ -847,6 +848,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: Model With Nulls', async () => {
         if (vocabulary)
             modelNulls = await UTIL.createModelTest({
+                Name: 'Test Model with Nulls',
                 DateCreated: UTIL.nowCleansed(),
                 idVCreationMethod: vocabulary.idVocabulary,
                 Master: true,

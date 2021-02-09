@@ -356,6 +356,7 @@ model Metadata {
 
 model Model {
   idModel                                        Int                     @default(autoincrement()) @id
+  Name                                           String
   DateCreated                                    DateTime
   idVCreationMethod                              Int
   Master                                         Boolean

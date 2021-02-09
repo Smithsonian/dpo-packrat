@@ -106,6 +106,7 @@ class TestSuiteUtils {
 
     createModelInput = (idVocabulary: number): CreateModelInput => {
         return {
+            Name: 'Test Name',
             Authoritative: true,
             idVCreationMethod: idVocabulary,
             idVModality: idVocabulary,

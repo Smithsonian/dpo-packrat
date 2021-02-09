@@ -344,6 +344,26 @@ export enum eSystemObjectType {
     eUnknown
 }
 
+export function SystemObjectTypeToName(eObjectType: eSystemObjectType | null): string {
+    switch (eObjectType) {
+        case eSystemObjectType.eUnit:                   return 'Unit';
+        case eSystemObjectType.eProject:                return 'Project';
+        case eSystemObjectType.eSubject:                return 'Subject';
+        case eSystemObjectType.eItem:                   return 'Item';
+        case eSystemObjectType.eCaptureData:            return 'Capture Data';
+        case eSystemObjectType.eModel:                  return 'Model';
+        case eSystemObjectType.eScene:                  return 'Scene';
+        case eSystemObjectType.eIntermediaryFile:       return 'Intermediary File';
+        case eSystemObjectType.eProjectDocumentation:   return 'Project Documentation';
+        case eSystemObjectType.eAsset:                  return 'Asset';
+        case eSystemObjectType.eAssetVersion:           return 'Asset Version';
+        case eSystemObjectType.eActor:                  return 'Actor';
+        case eSystemObjectType.eStakeholder:            return 'Stakeholder';
+        case eSystemObjectType.eUnknown:                return 'Unknown';
+        default:                                        return 'Unknown';
+    }
+}
+
 export class SystemObjectPairs extends SystemObject implements SystemObjectPairsBase {
     Actor: Actor | null = null;
     Asset_AssetToSystemObject_idAsset: Asset | null = null;

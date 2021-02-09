@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
-import { ModelUVMapChannel as ModelUVMapChannelBase } from '@prisma/client';
+import { ModelUVMapChannel as ModelUVMapChannelBase, join } from '@prisma/client';
+import { ModelUVMapFile } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -72,6 +73,24 @@ export class ModelUVMapChannel extends DBC.DBObject<ModelUVMapChannelBase> imple
                 await DBC.DBConnection.prisma.modelUVMapChannel.findMany({ where: { idModelUVMapFile } }), ModelUVMapChannel);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapChannel.fetchFromModelUVMapFile', error);
+            return null;
+        }
+    }
+
+    static async fetchFromModelUVMapFiles(modelUVMapFiles: ModelUVMapFile[]): Promise<ModelUVMapChannel[] | null> {
+        try {
+            const idModelUVMapFiles: number[] = [];
+            for (const modelUVMapFile of modelUVMapFiles) idModelUVMapFiles.push(modelUVMapFile.idModelUVMapFile);
+
+            return DBC.CopyArray<ModelUVMapChannelBase, ModelUVMapChannel>(
+                await DBC.DBConnection.prisma.$queryRaw<ModelUVMapChannel[]>`
+                SELECT DISTINCT *
+                FROM ModelUVMapChannel
+                WHERE idModelUVMapFile IN (${join(idModelUVMapFiles)})`,
+                ModelUVMapChannel
+            );
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.ModelUVMapChannel.fetchFromModelUVMapFiles', error);
             return null;
         }
     }

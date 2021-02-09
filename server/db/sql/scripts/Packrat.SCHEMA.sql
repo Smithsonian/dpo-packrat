@@ -259,6 +259,7 @@ CREATE TABLE IF NOT EXISTS `Metadata` (
 
 CREATE TABLE IF NOT EXISTS `Model` (
   `idModel` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
   `DateCreated` datetime NOT NULL,
   `idVCreationMethod` int(11) NOT NULL,
   `Master` boolean NOT NULL,
