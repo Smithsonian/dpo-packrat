@@ -1,11 +1,54 @@
 /* eslint-disable camelcase */
 import { Model as ModelBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject, SystemObjectBased } from '..';
+import { ModelGeometryFile, ModelUVMapFile, ModelUVMapChannel, SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
+export class ModelConstellation {
+    model: Model;
+    modelGeometryFiles: ModelGeometryFile[];
+    modelUVMapFiles: ModelUVMapFile[];
+    modelUVMapChannels: ModelUVMapChannel[];
+
+    constructor(model: Model, modelGeometryFiles: ModelGeometryFile[], modelUVMapFiles: ModelUVMapFile[], modelUVMapChannels: ModelUVMapChannel[]) {
+        this.model = model;
+        this.modelGeometryFiles = modelGeometryFiles;
+        this.modelUVMapFiles = modelUVMapFiles;
+        this.modelUVMapChannels = modelUVMapChannels;
+    }
+
+    static async fetch(idModel: number): Promise<ModelConstellation | null> {
+        const model: Model | null = await Model.fetch(idModel);
+        if (!model) {
+            LOG.logger.error(`ModelConstellation.fetch() unable to compute model from ${idModel}`);
+            return null;
+        }
+
+        const modelGeometryFiles: ModelGeometryFile[] | null = await ModelGeometryFile.fetchFromModel(idModel);
+        if (!modelGeometryFiles) {
+            LOG.logger.error(`ModelConstellation.fetch() unable to compute model geometry files from ${idModel}`);
+            return null;
+        }
+
+        const modelUVMapFiles: ModelUVMapFile[] | null = await ModelUVMapFile.fetchFromModelGeometryFiles(modelGeometryFiles);
+        if (!modelUVMapFiles) {
+            LOG.logger.error(`ModelConstellation.fetch() unable to compute model uv map files from ${idModel}`);
+            return null;
+        }
+
+        const modelUVMapChannels: ModelUVMapChannel[] | null = await ModelUVMapChannel.fetchFromModelUVMapFiles(modelUVMapFiles);
+        if (!modelUVMapChannels) {
+            LOG.logger.error(`ModelConstellation.fetch() unable to compute model uv map files from ${idModel}`);
+            return null;
+        }
+
+        return new ModelConstellation(model, modelGeometryFiles, modelUVMapFiles, modelUVMapChannels);
+    }
+}
+
 export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemObjectBased {
     idModel!: number;
+    Name!: string;
     Authoritative!: boolean;
     DateCreated!: Date;
     idAssetThumbnail!: number | null;
@@ -27,12 +70,13 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits, idVPurpose, idAssetThumbnail } = this;
-            ({ idModel: this.idModel, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
+            const { Name, DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits, idVPurpose, idAssetThumbnail } = this;
+            ({ idModel: this.idModel, Name: this.Name, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
                 Master: this.Master, Authoritative: this.Authoritative, idVModality: this.idVModality,
                 idVUnits: this.idVUnits, idVPurpose: this.idVPurpose, idAssetThumbnail: this.idAssetThumbnail } =
                 await DBC.DBConnection.prisma.model.create({
                     data: {
+                        Name,
                         DateCreated,
                         Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
                         Master,
@@ -53,11 +97,12 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idModel, DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits,
+            const { idModel, Name, DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits,
                 idVPurpose, idAssetThumbnail, idAssetThumbnailOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
                 where: { idModel, },
                 data: {
+                    Name,
                     DateCreated,
                     Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
                     Master,

@@ -879,6 +879,7 @@ export type LicenseAssignment = {
 };
 
 export type CreateModelInput = {
+    Name: Scalars['String'];
     Authoritative: Scalars['Boolean'];
     idVCreationMethod: Scalars['Int'];
     idVModality: Scalars['Int'];
@@ -905,6 +906,7 @@ export type GetModelResult = {
 export type Model = {
     __typename?: 'Model';
     idModel: Scalars['Int'];
+    Name: Scalars['String'];
     Authoritative: Scalars['Boolean'];
     DateCreated: Scalars['DateTime'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;

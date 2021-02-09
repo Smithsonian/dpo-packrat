@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
-import { ModelUVMapFile as ModelUVMapFileBase } from '@prisma/client';
+import { ModelUVMapFile as ModelUVMapFileBase, join } from '@prisma/client';
+import { ModelGeometryFile } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -69,6 +70,24 @@ export class ModelUVMapFile extends DBC.DBObject<ModelUVMapFileBase> implements 
         try {
             return DBC.CopyArray<ModelUVMapFileBase, ModelUVMapFile>(
                 await DBC.DBConnection.prisma.modelUVMapFile.findMany({ where: { idModelGeometryFile } }), ModelUVMapFile);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.ModelUVMapFile.fetchFromModelGeometryFile', error);
+            return null;
+        }
+    }
+
+    static async fetchFromModelGeometryFiles(modelGeometryFiles: ModelGeometryFile[]): Promise<ModelUVMapFile[] | null> {
+        try {
+            const idModelGeometryFiles: number[] = [];
+            for (const modelGeometryFile of modelGeometryFiles) idModelGeometryFiles.push(modelGeometryFile.idModelGeometryFile);
+
+            return DBC.CopyArray<ModelUVMapFileBase, ModelUVMapFile>(
+                await DBC.DBConnection.prisma.$queryRaw<ModelUVMapFile[]>`
+                SELECT DISTINCT *
+                FROM ModelUVMapFile
+                WHERE idModelGeometryFile IN (${join(idModelGeometryFiles)})`,
+                ModelUVMapFile
+            );
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelUVMapFile.fetchFromModelGeometryFile', error);
             return null;

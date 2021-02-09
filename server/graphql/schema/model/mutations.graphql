@@ -5,6 +5,7 @@ type Mutation {
 }
 
 input CreateModelInput {
+    Name: String!
     Authoritative: Boolean!
     idVCreationMethod: Int!
     idVModality: Int!

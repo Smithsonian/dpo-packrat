@@ -1,19 +1,157 @@
-// import { Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Model, ProjectDocumentation, Scene, Stakeholder, SystemObject } from '../..';
-import { Unit, Project, Subject, Item, SystemObjectIDType, eSystemObjectType } from '../..';
+// import {  Unit, Project, Subject, Item, Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Model, ProjectDocumentation, Scene, Stakeholder, SystemObject } from '../..';
+import { SystemObjectIDType, eSystemObjectType } from '../..';
 // import * as LOG from '../../../utils/logger';
 // import * as CACHE from '../../../cache';
 
+export enum eApplyGraphStateDirection {
+    eSelf,
+    eChild,
+    eParent
+}
+
+export class ObjectGraphState {
+    eType: eSystemObjectType | null = null;
+    ancestorObject: SystemObjectIDType | null = null;
+    captureMethod: number | null = null;
+    variantTypes: Map<number, boolean> | null = null;
+    modelPurpose: number | null = null;
+    modelFileTypes: Map<number, boolean> | null = null;
+}
+
+export class ObjectGraphDataEntryHierarchy {
+    idSystemObject: number = 0;
+    retired: boolean = false;
+    eObjectType: eSystemObjectType | null = null;
+    idObject: number = 0;
+
+    parents: SystemObjectIDType[] = [];
+    children: SystemObjectIDType[] = [];
+
+    units: SystemObjectIDType[] = [];
+    projects: SystemObjectIDType[] = [];
+    subjects: SystemObjectIDType[] = [];
+    items: SystemObjectIDType[] = [];
+
+    childrenObjectTypes: eSystemObjectType[] = [];
+    childrenCaptureMethods: number[] = [];
+    childrenVariantTypes: number[] = [];
+    childrenModelPurposes: number[] = [];
+    childrenModelFileTypes: number[] = [];
+}
+
 export class ObjectGraphDataEntry {
     // The object whom this graph data entry describes
-    objectIDAndType: SystemObjectIDType = { idSystemObject: 0, idObject: 0, eType: eSystemObjectType.eUnknown };
+    systemObjectIDType: SystemObjectIDType;
+    retired: boolean = false;
 
     // Derived data
     childMap: Map<SystemObjectIDType, boolean> = new Map<SystemObjectIDType, boolean>(); // map of child objects
     parentMap: Map<SystemObjectIDType, boolean> = new Map<SystemObjectIDType, boolean>(); // map of parent objects
+    ancestorObjectMap: Map<SystemObjectIDType, boolean> = new Map<SystemObjectIDType, boolean>(); // map of ancestor objects of significance (unit, project, subject, item)
 
-    unitMap: Map<Unit, boolean> = new Map<Unit, boolean>(); // map of Units associted with this object
-    projectMap: Map<Project, boolean> = new Map<Project, boolean>(); // map of Projects associted with this object
-    subjectMap: Map<Subject, boolean> = new Map<Subject, boolean>(); // map of Subjects associted with this object
-    itemMap: Map<Item, boolean> = new Map<Item, boolean>(); // map of Items associted with this object
+    // Child data types
+    childrenObjectTypes: Map<eSystemObjectType, boolean> = new Map<eSystemObjectType, boolean>();
+    childrenCaptureMethods: Map<number, boolean> = new Map<number, boolean>(); // map of idVocabulary of Capture Methods associated with this object
+    childrenVariantTypes: Map<number, boolean> = new Map<number, boolean>(); // map of idVocabulary of Capture Variant Types associated with this object
+    childrenModelPurposes: Map<number, boolean> = new Map<number, boolean>(); // map of idVocabulary of Model Purposes associated with this object
+    childrenModelFileTypes: Map<number, boolean> = new Map<number, boolean>(); // map of idVocabulary of Model File Types associated with this object
 
+    constructor(sID: SystemObjectIDType, retired: boolean) {
+        this.systemObjectIDType = sID;
+        this.retired = retired;
+    }
+
+    recordChild(child: SystemObjectIDType): void {
+        this.childMap.set(child, true);
+    }
+
+    recordParent(parent: SystemObjectIDType): void {
+        this.parentMap.set(parent, true);
+    }
+
+    // Returns true if applying objectGraphState updated the state of this ObjectGraphDataEntry
+    applyGraphState(objectGraphState: ObjectGraphState, eDirection: eApplyGraphStateDirection): boolean {
+        let retValue: boolean = false;
+        switch (eDirection) {
+            case eApplyGraphStateDirection.eSelf:
+            case eApplyGraphStateDirection.eChild:
+                if (objectGraphState.ancestorObject) {
+                    if (!this.ancestorObjectMap.has(objectGraphState.ancestorObject)) {
+                        this.ancestorObjectMap.set(objectGraphState.ancestorObject, true);
+                        retValue = true;
+                    }
+                }
+                break;
+
+            case eApplyGraphStateDirection.eParent:
+                if (objectGraphState.eType) {
+                    if (!this.childrenObjectTypes.has(objectGraphState.eType)) {
+                        this.childrenObjectTypes.set(objectGraphState.eType, true);
+                        retValue = true;
+                    }
+                }
+
+                if (objectGraphState.captureMethod) {
+                    if (!this.childrenCaptureMethods.has(objectGraphState.captureMethod)) {
+                        this.childrenCaptureMethods.set(objectGraphState.captureMethod, true);
+                        retValue = true;
+                    }
+                }
+
+                if (objectGraphState.variantTypes) {
+                    for (const variantType of objectGraphState.variantTypes.keys()) {
+                        if (!this.childrenVariantTypes.has(variantType)) {
+                            this.childrenVariantTypes.set(variantType, true);
+                            retValue = true;
+                        }
+                    }
+                }
+
+                if (objectGraphState.modelPurpose) {
+                    if (!this.childrenModelPurposes.has(objectGraphState.modelPurpose)) {
+                        this.childrenModelPurposes.set(objectGraphState.modelPurpose, true);
+                        retValue = true;
+                    }
+                }
+
+                if (objectGraphState.modelFileTypes) {
+                    for (const modelFileType of objectGraphState.modelFileTypes.keys()) {
+                        if (!this.childrenModelFileTypes.has(modelFileType)) {
+                            this.childrenModelFileTypes.set(modelFileType, true);
+                            retValue = true;
+                        }
+                    }
+                }
+                break;
+        }
+        return retValue;
+    }
+
+    extractHierarchy(): ObjectGraphDataEntryHierarchy {
+        const objectGraphDataEntryHierarchy: ObjectGraphDataEntryHierarchy = new ObjectGraphDataEntryHierarchy();
+
+        objectGraphDataEntryHierarchy.idSystemObject = this.systemObjectIDType.idSystemObject;
+        objectGraphDataEntryHierarchy.retired = this.retired;
+        objectGraphDataEntryHierarchy.eObjectType = this.systemObjectIDType.eObjectType;
+        objectGraphDataEntryHierarchy.idObject = this.systemObjectIDType.idObject;
+
+        objectGraphDataEntryHierarchy.parents = [...this.parentMap.keys()];
+        objectGraphDataEntryHierarchy.children = [...this.childMap.keys()];
+        for (const systemObjectIDType of this.ancestorObjectMap.keys()) {
+            switch (systemObjectIDType.eObjectType) {
+                case eSystemObjectType.eUnit:       objectGraphDataEntryHierarchy.units.push(systemObjectIDType); break;
+                case eSystemObjectType.eProject:    objectGraphDataEntryHierarchy.projects.push(systemObjectIDType); break;
+                case eSystemObjectType.eSubject:    objectGraphDataEntryHierarchy.subjects.push(systemObjectIDType); break;
+                case eSystemObjectType.eItem:       objectGraphDataEntryHierarchy.items.push(systemObjectIDType); break;
+            }
+        }
+
+        objectGraphDataEntryHierarchy.childrenObjectTypes = [...this.childrenObjectTypes.keys()];
+        objectGraphDataEntryHierarchy.childrenCaptureMethods = [...this.childrenCaptureMethods.keys()];
+        objectGraphDataEntryHierarchy.childrenVariantTypes = [...this.childrenVariantTypes.keys()];
+        objectGraphDataEntryHierarchy.childrenModelPurposes = [...this.childrenModelPurposes.keys()];
+        objectGraphDataEntryHierarchy.childrenModelFileTypes = [...this.childrenModelFileTypes.keys()];
+
+        return objectGraphDataEntryHierarchy;
+    }
 }

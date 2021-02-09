@@ -4,13 +4,13 @@ import { CacheControl } from './CacheControl';
 import { SystemObject, eSystemObjectType } from '../db';
 
 export type ObjectIDAndType = {
-    idObject: number,
-    eObjectType: eSystemObjectType,
+    idObject: number;
+    eObjectType: eSystemObjectType;
 };
 
 export type SystemObjectInfo = {
-    idSystemObject: number,
-    Retired: boolean,
+    idSystemObject: number;
+    Retired: boolean;
 };
 
 export class SystemObjectCache {

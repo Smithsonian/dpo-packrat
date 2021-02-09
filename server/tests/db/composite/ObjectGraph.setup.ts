@@ -119,7 +119,7 @@ export class ObjectGraphTestSetup {
         this.assetVersion3 = await UTIL.createAssetVersionTest({ idAsset: this.asset3.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
         this.asset4 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersion4 = await UTIL.createAssetVersionTest({ idAsset: this.asset4.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
-        this.model1 = await UTIL.createModelTest({ DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, Master: true, Authoritative: true, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idAssetThumbnail: this.assetT4.idAsset, idModel: 0 });
+        this.model1 = await UTIL.createModelTest({ Name: 'OA Test', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, Master: true, Authoritative: true, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idAssetThumbnail: this.assetT4.idAsset, idModel: 0 });
         assigned = await this.asset2.assignOwner(this.model1); expect(assigned).toBeTruthy();
         assigned = await this.asset3.assignOwner(this.model1); expect(assigned).toBeTruthy();
         assigned = await this.asset4.assignOwner(this.model1); expect(assigned).toBeTruthy();
@@ -127,17 +127,17 @@ export class ObjectGraphTestSetup {
 
         this.asset5 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersion5 = await UTIL.createAssetVersionTest({ idAsset: this.asset5.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
-        this.model2 = await UTIL.createModelTest({ DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, Master: true, Authoritative: true, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idAssetThumbnail: null, idModel: 0 });
+        this.model2 = await UTIL.createModelTest({ Name: 'OA Test', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, Master: true, Authoritative: true, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idAssetThumbnail: null, idModel: 0 });
         assigned = await this.asset5.assignOwner(this.model2); expect(assigned).toBeTruthy();
 
         this.asset6 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersion6 = await UTIL.createAssetVersionTest({ idAsset: this.asset6.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
-        this.model3 = await UTIL.createModelTest({ DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, Master: true, Authoritative: true, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idAssetThumbnail: null, idModel: 0 });
+        this.model3 = await UTIL.createModelTest({ Name: 'OA Test', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, Master: true, Authoritative: true, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idAssetThumbnail: null, idModel: 0 });
         assigned = await this.asset6.assignOwner(this.model3); expect(assigned).toBeTruthy();
 
         this.asset7 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersion7 = await UTIL.createAssetVersionTest({ idAsset: this.asset7.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: 500, idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: '', StorageKeyStaging: '', Version: 0 });
-        this.model4 = await UTIL.createModelTest({ DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, Master: true, Authoritative: true, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idAssetThumbnail: null, idModel: 0 });
+        this.model4 = await UTIL.createModelTest({ Name: 'OA Test', DateCreated: UTIL.nowCleansed(), idVCreationMethod: this.v1.idVocabulary, Master: true, Authoritative: true, idVModality: this.v1.idVocabulary,  idVUnits: this.v1.idVocabulary, idVPurpose: this.v1.idVocabulary, idAssetThumbnail: null, idModel: 0 });
         assigned = await this.asset7.assignOwner(this.model4); expect(assigned).toBeTruthy();
 
         this.assetT5 = await UTIL.createAssetTest({ FileName: 'OA Test', FilePath: '/OA Test', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });

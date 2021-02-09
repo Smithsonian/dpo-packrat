@@ -49,7 +49,7 @@ app.get('/logtest', (_: Request, response: Response) => {
 
 app.get('/solrindex', async (_: Request, response: Response) => {
     const reindexer: ReindexSolr = new ReindexSolr();
-    const success: boolean = await reindexer.FullIndex();
+    const success: boolean = await reindexer.fullIndex();
     response.send(`Solr Reindexing Completed: ${success ? 'Success' : 'Failure'}`);
 });
 

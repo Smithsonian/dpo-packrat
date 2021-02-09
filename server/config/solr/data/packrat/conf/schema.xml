@@ -56,21 +56,21 @@
     <field name="Units" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="Purpose" type="string" indexed="true" stored="true" multiValued="false" />
 
-    <field name="ModelFileType" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="Roughness" type="pdouble" indexed="true" stored="true" multiValued="false" />
-    <field name="Metalness" type="pdouble" indexed="true" stored="true" multiValued="false" />
-    <field name="PointCount" type="pdouble" indexed="true" stored="true" multiValued="false" />
-    <field name="FaceCount" type="pdouble" indexed="true" stored="true" multiValued="false" />
-    <field name="IsWatertight" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="HasNormals" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="HasVertexColor" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="HasUVSpace" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="BoundingBoxP1X" type="pdouble" indexed="true" stored="true" multiValued="false" />
-    <field name="BoundingBoxP1Y" type="pdouble" indexed="true" stored="true" multiValued="false" />
-    <field name="BoundingBoxP1Z" type="pdouble" indexed="true" stored="true" multiValued="false" />
-    <field name="BoundingBoxP2X" type="pdouble" indexed="true" stored="true" multiValued="false" />
-    <field name="BoundingBoxP2Y" type="pdouble" indexed="true" stored="true" multiValued="false" />
-    <field name="BoundingBoxP2Z" type="pdouble" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelFileType" type="string" indexed="true" stored="true" multiValued="true" />
+    <field name="Roughness" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="Metalness" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="PointCount" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="FaceCount" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="IsWatertight" type="boolean" indexed="true" stored="true" multiValued="true" />
+    <field name="HasNormals" type="boolean" indexed="true" stored="true" multiValued="true" />
+    <field name="HasVertexColor" type="boolean" indexed="true" stored="true" multiValued="true" />
+    <field name="HasUVSpace" type="boolean" indexed="true" stored="true" multiValued="true" />
+    <field name="BoundingBoxP1X" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="BoundingBoxP1Y" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="BoundingBoxP1Z" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="BoundingBoxP2X" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="BoundingBoxP2Y" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="BoundingBoxP2Z" type="pdouble" indexed="true" stored="true" multiValued="true" />
 
     <field name="UVMapEdgeLength" type="pint" indexed="true" stored="true" multiValued="true" />
     <field name="ChannelPosition" type="pint" indexed="true" stored="true" multiValued="true" />
@@ -105,6 +105,9 @@
     <!-- Actor fields -->
 
     <!-- Hierarchy fields -->
+    <field name="ParentID" type="pints" indexed="true" stored="true" />
+    <field name="ChildrenID" type="pints" indexed="true" stored="true" />
+
     <field name="Unit" type="strings" indexed="true" stored="true" />
     <field name="Project" type="strings" indexed="true" stored="true" />
     <field name="Subject" type="strings" indexed="true" stored="true" />
@@ -113,7 +116,6 @@
     <field name="ProjectID" type="pints" indexed="true" stored="true" />
     <field name="SubjectID" type="pints" indexed="true" stored="true" />
     <field name="ItemID" type="pints" indexed="true" stored="true" />
-    <field name="ParentID" type="pints" indexed="true" stored="true" />
 
     <field name="ChildrenObjectTypes" type="strings" indexed="true" stored="true" />
     <field name="ChildrenCaptureMethods" type="strings" indexed="true" stored="true" />

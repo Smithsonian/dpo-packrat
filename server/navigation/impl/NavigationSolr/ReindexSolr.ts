@@ -5,383 +5,496 @@ import * as DBAPI from '../../../db';
 import { eSystemObjectType } from '../../../db';
 import { SolrClient } from './SolrClient';
 
-type SubjectInfo = {
-    Unit: string | null;
-    UnitID: number | null;
-    Project: string[];
-    ProjectID: number[];
-};
-
-type ItemInfo = {
-    Unit: string[];
-    UnitID: number[];
-    Project: string[];
-    ProjectID: number[];
-    Subject: string[];
-    SubjectID: number[];
-};
-
 export class ReindexSolr {
-    private SubjectInfoMap: Map<number, SubjectInfo> = new Map<number, SubjectInfo>(); // map of Subject.idSubject -> Unit/Project info
-    private ItemInfoMap: Map<number, ItemInfo> = new Map<number, ItemInfo>(); // map of Item.idItem -> Unit/Project/Subject
+    private objectGraphDatabase: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
+    private hierarchyNameMap: Map<number, string> = new Map<number, string>(); // map of idSystemObject -> object name
 
-    async FullIndex(): Promise<boolean> {
+    async fullIndex(): Promise<boolean> {
         const solrClient: SolrClient = new SolrClient(null, null, null);
         solrClient._client.autoCommit = true;
 
-        // await this.computeGraphDataFromUnits();
+        if (!(await this.objectGraphDatabase.fetch())) {
+            LOG.logger.error('ReindexSolr.fullIndex failed on ObjectGraphDatabase.fetch()');
+            return false;
+        }
 
-        solrClient._client.add(await this.computeUnits(), function(err, obj) { if (err) LOG.logger.error('ReindexSolr.FullIndex -> computeUnits()', err); else obj; });
-        solrClient._client.add(await this.computeProjects(), function(err, obj) { if (err) LOG.logger.error('ReindexSolr.FullIndex -> computeProjects()', err); else obj; });
-        solrClient._client.add(await this.computeSubjects(), function(err, obj) { if (err) LOG.logger.error('ReindexSolr.FullIndex -> computeSubjects()', err); else obj; });
-        solrClient._client.add(await this.computeItems(), function(err, obj) { if (err) LOG.logger.error('ReindexSolr.FullIndex -> computeItems()', err); else obj; });
-        solrClient._client.add(await this.computeCaptureData(), function(err, obj) { if (err) LOG.logger.error('ReindexSolr.FullIndex -> computeCaptureData()', err); else obj; });
-        solrClient._client.commit(function(err, obj) { if (err) LOG.logger.error('ReindexSolr.FullIndex -> commit()', err); else obj; });
+        let docs: any[] = [];
+        for (const [systemObjectIDType, objectGraphDataEntry] of this.objectGraphDatabase.objectMap) {
+            let doc: any = null;
+
+            await this.extractCommonFields(doc, objectGraphDataEntry);
+
+            switch (systemObjectIDType.eObjectType) {
+                case eSystemObjectType.eUnit:                   doc = await this.handleUnit(doc, objectGraphDataEntry);                 break;
+                case eSystemObjectType.eProject:                doc = await this.handleProject(doc, objectGraphDataEntry);              break;
+                case eSystemObjectType.eSubject:                doc = await this.handleSubject(doc, objectGraphDataEntry);              break;
+                case eSystemObjectType.eItem:                   doc = await this.handleItem(doc, objectGraphDataEntry);                 break;
+                case eSystemObjectType.eCaptureData:            doc = await this.handleCaptureData(doc, objectGraphDataEntry);          break;
+                case eSystemObjectType.eModel:                  doc = await this.handleModel(doc, objectGraphDataEntry);                break;
+                case eSystemObjectType.eScene:                  doc = await this.handleScene(doc, objectGraphDataEntry);                break;
+                case eSystemObjectType.eIntermediaryFile:       doc = await this.handleIntermediaryFile(doc, objectGraphDataEntry);     break;
+                case eSystemObjectType.eProjectDocumentation:   doc = await this.handleProjectDocumentation(doc, objectGraphDataEntry); break;
+                case eSystemObjectType.eAsset:                  doc = await this.handleAsset(doc, objectGraphDataEntry);                break;
+                case eSystemObjectType.eAssetVersion:           doc = await this.handleAssetVersion(doc, objectGraphDataEntry);         break;
+                case eSystemObjectType.eActor:                  doc = await this.handleActor(doc, objectGraphDataEntry);                break;
+                case eSystemObjectType.eStakeholder:            doc = await this.handleStakeholder(doc, objectGraphDataEntry);          break;
+
+                default:
+                case eSystemObjectType.eUnknown:                doc = await this.handleUnknown(doc, objectGraphDataEntry);              break;
+            }
+
+            docs.push(doc);
+            if (docs.length >= 1000) {
+                solrClient._client.add(docs, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
+                solrClient._client.commit(function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
+                docs = [];
+            }
+        }
+
+        if (docs.length > 0) {
+            solrClient._client.add(docs, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
+            solrClient._client.commit(function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
+        }
         return true;
     }
 
-    /* #region Units */
-    private async computeUnits(): Promise<any[]> {
-        LOG.logger.info('ReindexSolr.computeUnits starting');
-        const docs: any[] = [];
+    private async extractCommonFields(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<void> {
+        const OGDEH: DBAPI.ObjectGraphDataEntryHierarchy = objectGraphDataEntry.extractHierarchy();
 
-        const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchAll(); /* istanbul ignore if */
-        if (!units) {
-            LOG.logger.error('ReindexSolr.computeUnits unable to retrieve units');
-            return [];
-        }
+        doc.idSystemObject = OGDEH.idSystemObject;
+        doc.Retired = OGDEH.retired;
+        doc.ObjectType = DBAPI.SystemObjectTypeToName(OGDEH.eObjectType);
+        doc.idObject = OGDEH.idObject;
 
-        for (const unit of units) {
-            const oID: CACHE.ObjectIDAndType = { idObject: unit.idUnit, eObjectType: eSystemObjectType.eUnit };
-            const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
-            if (!sID) {
-                LOG.logger.error(`ReindexSolr.computeUnits unable to compute idSystemObject for ${JSON.stringify(oID)}`);
-                continue;
-            }
+        doc.ParentID = OGDEH.parents.length == 1 ? OGDEH.parents[0] : OGDEH.parents;
+        doc.ChildrenID = OGDEH.children.length == 1 ? OGDEH.children[0] : OGDEH.children;
+        doc.Identifier = this.computeIdentifiers(objectGraphDataEntry.systemObjectIDType.idSystemObject);
 
-            const doc: any = {
-                idSystemObject: sID.idSystemObject,
-                ObjectType: 'Unit',
-                idObject: unit.idUnit,
-                Retired: sID.Retired,
-                Name: unit.Name,
-                Abbreviation: unit.Abbreviation,
-                ARKPrefix: unit.ARKPrefix,
-                Unit: unit.Abbreviation,
-                UnitID: sID.idSystemObject,
-                ParentID: 0,
-                Identifier: this.computeIdentifiers(sID.idSystemObject)
-            };
-            docs.push(doc);
-        }
-        LOG.logger.info(`ReindexSolr.computeUnits computed ${docs.length} documents`);
-        return docs;
-    }
-    /* #endregion */
+        let nameArray: string[] = [];
+        let idArray: number[] = [];
 
-    /* #region Projects */
-    private async computeProjects(): Promise<any[]> {
-        LOG.logger.info('ReindexSolr.computeProjects starting');
-        const docs: any[] = [];
-
-        const projects: DBAPI.Project[] | null = await DBAPI.Project.fetchAll(); /* istanbul ignore if */
-        if (!projects) {
-            LOG.logger.error('ReindexSolr.computeProjects unable to retrieve projects');
-            return [];
-        }
-
-        for (const project of projects) {
-            const oID: CACHE.ObjectIDAndType = { idObject: project.idProject, eObjectType: eSystemObjectType.eProject };
-            const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
-            if (!sID) {
-                LOG.logger.error(`ReindexSolr.computeProjects unable to compute idSystemObject for ${JSON.stringify(oID)}`);
-                continue;
-            }
-
-            const Unit: string[] = [];
-            const UnitID: number[] = [];
-
-            const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchMasterFromProjects([project.idProject]); // TODO: consider placing this in a cache
-            if (units) {
-                for (const unit of units) {
-                    Unit.push(unit.Abbreviation || '');
-                    const SO: DBAPI.SystemObject | null = await unit.fetchSystemObject();
-                    UnitID.push(SO ? SO.idSystemObject : 0);
+        for (const objInfo of OGDEH.units) {
+            let name: string | undefined = this.hierarchyNameMap.get(objInfo.idSystemObject);
+            if (!name) {
+                const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(objInfo.idObject);
+                if (unit) {
+                    name = unit.Abbreviation || 'Unknown';
+                    this.hierarchyNameMap.set(objInfo.idSystemObject, name);
+                } else {
+                    name = 'Unknown';
+                    LOG.logger.error(`Unable to compute Unit for ${JSON.stringify(objInfo)}`);
                 }
             }
-
-            const doc: any = {
-                idSystemObject: sID.idSystemObject,
-                ObjectType: 'Project',
-                idObject: project.idProject,
-                Retired: sID.Retired,
-                Name: project.Name,
-                Description: project.Description,
-                Unit: Unit.length == 1 ? Unit[0] : Unit,
-                UnitID: UnitID.length == 1 ? UnitID[0] : UnitID,
-                Project: project.Name,
-                ProjectID: sID.idSystemObject,
-                ParentID: 0,
-                Identifier: this.computeIdentifiers(sID.idSystemObject)
-            };
-            docs.push(doc);
+            nameArray.push(name);
+            idArray.push(objInfo.idSystemObject);
         }
-        LOG.logger.info(`ReindexSolr.computeProjects computed ${docs.length} documents`);
-        return docs;
-    }
-    /* #endregion */
-
-    /* #region Subjects */
-    private async computeSubjects(): Promise<any[]> {
-        LOG.logger.info('ReindexSolr.computeSubjects starting');
-        const docs: any[] = [];
-
-        const subjects: DBAPI.Subject[] | null = await DBAPI.Subject.fetchAll(); /* istanbul ignore if */
-        if (!subjects) {
-            LOG.logger.error('ReindexSolr.computeSubjects unable to retrieve subjects');
-            return [];
+        if (nameArray.length > 0) {
+            doc.Unit = nameArray.length == 1 ? nameArray[0] : nameArray;
+            doc.UnitID = idArray.length == 1 ? idArray[0] : idArray;
+            nameArray = [];
+            idArray = [];
         }
 
-        for (const subject of subjects) {
-            const oID: CACHE.ObjectIDAndType = { idObject: subject.idSubject, eObjectType: eSystemObjectType.eSubject };
-            const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
-            if (!sID) {
-                LOG.logger.error(`ReindexSolr.computeSubjects unable to compute idSystemObject for ${JSON.stringify(oID)}`);
-                continue;
-            }
-
-            let Unit: string | null = null;
-            let UnitID: number | null = null;
-            const Project: string[] = [];
-            const ProjectID: number[] = [];
-            let IdentifierPreferred: string | null = null;
-
-            const unit: DBAPI.Unit | null = (subject.idUnit != 0) ? await DBAPI.Unit.fetch(subject.idUnit) : null;
-            if (unit) {
-                Unit = unit.Abbreviation;
-                const SO: DBAPI.SystemObject | null = await unit.fetchSystemObject();
-                UnitID = SO ? SO.idSystemObject : 0;
-            }
-
-            const projects: DBAPI.Project[] | null = await DBAPI.Project.fetchMasterFromSubjects([subject.idSubject]);
-            if (projects) {
-                for (const project of projects) {
-                    Project.push(project.Name);
-                    const SO: DBAPI.SystemObject | null = await project.fetchSystemObject();
-                    ProjectID.push(SO ? SO.idSystemObject : 0);
+        for (const objInfo of OGDEH.projects) {
+            let name: string | undefined = this.hierarchyNameMap.get(objInfo.idSystemObject);
+            if (!name) {
+                const project: DBAPI.Project | null = await DBAPI.Project.fetch(objInfo.idObject);
+                if (project) {
+                    name = project.Name;
+                    this.hierarchyNameMap.set(objInfo.idSystemObject, name);
+                } else {
+                    name = 'Unknown';
+                    LOG.logger.error(`Unable to compute Project for ${JSON.stringify(objInfo)}`);
                 }
             }
-
-            if (subject.idIdentifierPreferred) {
-                const ID: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(subject.idIdentifierPreferred);
-                if (ID)
-                    IdentifierPreferred = ID.IdentifierValue;
-            }
-
-            const doc: any = {
-                idSystemObject: sID.idSystemObject,
-                ObjectType: 'Subject',
-                idObject: subject.idSubject,
-                Retired: sID.Retired,
-                Name: subject.Name,
-                IdentifierPreferred,
-                Unit,
-                UnitID,
-                Project: Project.length == 1 ? Project[0] : Project,
-                ProjectID: ProjectID.length == 1 ? ProjectID[0] : ProjectID,
-                Subject: subject.Name,
-                SubjectID: sID.idSystemObject,
-                ParentID: UnitID,
-                Identifier: this.computeIdentifiers(sID.idSystemObject)
-            };
-            docs.push(doc);
-            this.SubjectInfoMap.set(subject.idSubject, { Unit, UnitID, Project, ProjectID });
+            nameArray.push(name);
+            idArray.push(objInfo.idSystemObject);
         }
-        LOG.logger.info(`ReindexSolr.computeSubjects computed ${docs.length} documents`);
-        return docs;
-    }
-    /* #endregion */
-
-    /* #region Items */
-    private async computeItems(): Promise<any[]> {
-        LOG.logger.info('ReindexSolr.computeItems starting');
-        const docs: any[] = [];
-
-        const items: DBAPI.Item[] | null = await DBAPI.Item.fetchAll(); /* istanbul ignore if */
-        if (!items) {
-            LOG.logger.error('ReindexSolr.computeItems unable to retrieve items');
-            return [];
+        if (nameArray.length > 0) {
+            doc.Project = nameArray.length == 1 ? nameArray[0] : nameArray;
+            doc.ProjectID = idArray.length == 1 ? idArray[0] : idArray;
+            nameArray = [];
+            idArray = [];
         }
 
-        for (const item of items) {
-            const oID: CACHE.ObjectIDAndType = { idObject: item.idItem, eObjectType: eSystemObjectType.eItem };
-            const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
-            if (!sID) {
-                LOG.logger.error(`ReindexSolr.computeItems unable to compute idSystemObject for ${JSON.stringify(oID)}`);
-                continue;
-            }
-
-            const Unit: string[] = [];
-            const UnitID: number[] = [];
-            let Project: string[] = [];
-            let ProjectID: number[] = [];
-            const Subject: string[] = [];
-            const SubjectID: number[] = [];
-
-            const subjects: DBAPI.Subject[] | null = await DBAPI.Subject.fetchMasterFromItems([item.idItem]);
-            if (subjects) {
-                for (const subject of subjects) {
-                    Subject.push(subject.Name);
-                    const SO: DBAPI.SystemObject | null = await subject.fetchSystemObject();
-                    SubjectID.push(SO ? SO.idSystemObject : 0);
-
-                    const subjectInfo: SubjectInfo | undefined = this.SubjectInfoMap.get(subject.idSubject);
-                    if (subjectInfo) {
-                        if (subjectInfo.Unit)
-                            Unit.push(subjectInfo.Unit);
-                        if (subjectInfo.UnitID)
-                            UnitID.push(subjectInfo.UnitID);
-                        Project = Project.concat(subjectInfo.Project);
-                        ProjectID = ProjectID.concat(subjectInfo.ProjectID);
-                    }
-
+        for (const objInfo of OGDEH.subjects) {
+            let name: string | undefined = this.hierarchyNameMap.get(objInfo.idSystemObject);
+            if (!name) {
+                const subject: DBAPI.Subject | null = await DBAPI.Subject.fetch(objInfo.idObject);
+                if (subject) {
+                    name = subject.Name;
+                    this.hierarchyNameMap.set(objInfo.idSystemObject, name);
+                } else {
+                    name = 'Unknown';
+                    LOG.logger.error(`Unable to compute Subject for ${JSON.stringify(objInfo)}`);
                 }
             }
-
-            const doc: any = {
-                idSystemObject: sID.idSystemObject,
-                ObjectType: 'Item',
-                idObject: item.idItem,
-                Retired: sID.Retired,
-                Name: item.Name,
-                EntireSubject: item.EntireSubject,
-                Unit: Unit.length == 1 ? Unit[0] : Unit,
-                UnitID: UnitID.length == 1 ? UnitID[0] : UnitID,
-                Project: Project.length == 1 ? Project[0] : Project,
-                ProjectID: ProjectID.length == 1 ? ProjectID[0] : ProjectID,
-                Subject: Subject.length == 1 ? Subject[0] : Subject,
-                SubjectID: SubjectID.length == 1 ? SubjectID[0] : SubjectID,
-                Item: item.Name,
-                ItemID: sID.idSystemObject,
-                ParentID: SubjectID.length == 1 ? SubjectID[0] : SubjectID,
-                Identifier: this.computeIdentifiers(sID.idSystemObject)
-            };
-            docs.push(doc);
-            this.ItemInfoMap.set(item.idItem, { Unit, UnitID, Project, ProjectID, Subject, SubjectID });
+            nameArray.push(name);
+            idArray.push(objInfo.idSystemObject);
         }
-        LOG.logger.info(`ReindexSolr.computeItems computed ${docs.length} documents`);
-        return docs;
-    }
-    /* #endregion */
-
-    /* #region CaptureData */
-    private async computeCaptureData(): Promise<any[]> {
-        LOG.logger.info('ReindexSolr.computeCaptureData starting');
-        const docs: any[] = [];
-
-        const captureDataPhotos: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchAll(); /* istanbul ignore if */
-        if (!captureDataPhotos) {
-            LOG.logger.error('ReindexSolr.computeCaptureData unable to retrieve CaptureDataPhoto');
-            return [];
+        if (nameArray.length > 0) {
+            doc.Subject = nameArray.length == 1 ? nameArray[0] : nameArray;
+            doc.SubjectID = idArray.length == 1 ? idArray[0] : idArray;
+            nameArray = [];
+            idArray = [];
         }
 
-        for (const captureDataPhoto of captureDataPhotos) {
-            const captureData:  DBAPI.CaptureData | null = await DBAPI.CaptureData.fetchFromCaptureDataPhoto(captureDataPhoto.idCaptureDataPhoto);
-            if (!captureData) {
-                LOG.logger.error(`ReindexSolr.computeCaptureData unable to compute CaptureData from CaptureDataPhoto ${JSON.stringify(captureDataPhoto)}`);
-                continue;
-            }
-
-            const oID: CACHE.ObjectIDAndType = { idObject: captureData.idCaptureData, eObjectType: eSystemObjectType.eCaptureData };
-            const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
-            if (!sID) {
-                LOG.logger.error(`ReindexSolr.computeCaptureData unable to compute idSystemObject for ${JSON.stringify(oID)}`);
-                continue;
-            }
-
-            let Unit: string[] = [];
-            let UnitID: number[] = [];
-            let Project: string[] = [];
-            let ProjectID: number[] = [];
-            let Subject: string[] = [];
-            let SubjectID: number[] = [];
-            const Item: string[] = [];
-            const ItemID: number[] = [];
-
-            const items: DBAPI.Item[] | null = await DBAPI.Item.fetchMasterFromCaptureDatas([captureData.idCaptureData]);
-            if (items) {
-                for (const item of items) {
-                    Item.push(item.Name);
-                    const SO: DBAPI.SystemObject | null = await item.fetchSystemObject();
-                    ItemID.push(SO ? SO.idSystemObject : 0);
-
-                    const itemInfo: ItemInfo | undefined = this.ItemInfoMap.get(item.idItem);
-                    if (itemInfo) {
-                        Unit = Unit.concat(itemInfo.Unit);
-                        UnitID = UnitID.concat(itemInfo.UnitID);
-                        Project = Project.concat(itemInfo.Project);
-                        ProjectID = ProjectID.concat(itemInfo.ProjectID);
-                        Subject = Subject.concat(itemInfo.Subject);
-                        SubjectID = SubjectID.concat(itemInfo.SubjectID);
-                    }
+        for (const objInfo of OGDEH.items) {
+            let name: string | undefined = this.hierarchyNameMap.get(objInfo.idSystemObject);
+            if (!name) {
+                const item: DBAPI.Item | null = await DBAPI.Item.fetch(objInfo.idObject);
+                if (item) {
+                    name = item.Name;
+                    this.hierarchyNameMap.set(objInfo.idSystemObject, name);
+                } else {
+                    name = 'Unknown';
+                    LOG.logger.error(`Unable to compute Item for ${JSON.stringify(objInfo)}`);
                 }
             }
-
-            const vCaptureMethod: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(captureData.idVCaptureMethod);
-            const vCaptureDatasetType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(captureDataPhoto.idVCaptureDatasetType);
-            const vItemPositionType: DBAPI.Vocabulary | undefined = captureDataPhoto.idVItemPositionType ? await CACHE.VocabularyCache.vocabulary(captureDataPhoto.idVItemPositionType) : undefined;
-            const vFocusType: DBAPI.Vocabulary | undefined = captureDataPhoto.idVFocusType ? await CACHE.VocabularyCache.vocabulary(captureDataPhoto.idVFocusType) : undefined;
-            const vLightSourceType: DBAPI.Vocabulary | undefined = captureDataPhoto.idVLightSourceType ? await CACHE.VocabularyCache.vocabulary(captureDataPhoto.idVLightSourceType) : undefined;
-            const vBackgroundRemovalMethod: DBAPI.Vocabulary | undefined = captureDataPhoto.idVBackgroundRemovalMethod ? await CACHE.VocabularyCache.vocabulary(captureDataPhoto.idVBackgroundRemovalMethod) : undefined;
-            const vClusterType: DBAPI.Vocabulary | undefined = captureDataPhoto.idVClusterType ? await CACHE.VocabularyCache.vocabulary(captureDataPhoto.idVClusterType) : undefined;
-
-            const doc: any = {
-                idSystemObject: sID.idSystemObject,
-                ObjectType: 'CaptureData',
-                idObject: captureData.idCaptureData,
-                Retired: sID.Retired,
-
-                Name: captureData.Name,
-                Description: captureData.Description,
-                DateCreated: captureData.DateCaptured,
-                CaptureMethod: vCaptureMethod ? vCaptureMethod.Term : '',
-                CaptureDatasetType: vCaptureDatasetType ? vCaptureDatasetType.Term : '',
-                CaptureDatasetFieldID: captureDataPhoto.CaptureDatasetFieldID,
-                ItemPositionType: vItemPositionType ? vItemPositionType.Term : '',
-                ItemPositionFieldID: captureDataPhoto.ItemPositionFieldID,
-                ItemArrangementFieldID: captureDataPhoto.ItemArrangementFieldID,
-                FocusType: vFocusType ? vFocusType.Term : '',
-                LightSourceType: vLightSourceType ? vLightSourceType.Term : '',
-                BackgroundRemovalMethod: vBackgroundRemovalMethod ? vBackgroundRemovalMethod.Term : '',
-                ClusterType: vClusterType ? vClusterType.Term : '',
-                ClusterGeometryFieldID: captureDataPhoto.ClusterGeometryFieldID,
-                CameraSettingsUniform: captureDataPhoto.CameraSettingsUniform,
-
-                Unit: Unit.length == 1 ? Unit[0] : Unit,
-                UnitID: UnitID.length == 1 ? UnitID[0] : UnitID,
-                Project: Project.length == 1 ? Project[0] : Project,
-                ProjectID: ProjectID.length == 1 ? ProjectID[0] : ProjectID,
-                Subject: Subject.length == 1 ? Subject[0] : Subject,
-                SubjectID: SubjectID.length == 1 ? SubjectID[0] : SubjectID,
-                Item: Item.length == 1 ? Item[0] : Item,
-                ItemID: ItemID.length == 1 ? ItemID[0] : ItemID,
-                ParentID: ItemID.length == 1 ? ItemID[0] : ItemID,
-                Identifier: this.computeIdentifiers(sID.idSystemObject)
-            };
-            docs.push(doc);
+            nameArray.push(name);
+            idArray.push(objInfo.idSystemObject);
         }
-        LOG.logger.info(`ReindexSolr.computeCaptureData computed ${docs.length} documents`);
-        return docs;
+        if (nameArray.length > 0) {
+            doc.Item = nameArray.length == 1 ? nameArray[0] : nameArray;
+            doc.ItemID = idArray.length == 1 ? idArray[0] : idArray;
+            nameArray = [];
+            idArray = [];
+        }
+
+        const ChildrenObjectTypes: string[] = [];
+        for (const childrenObjectType of OGDEH.childrenObjectTypes) ChildrenObjectTypes.push(DBAPI.SystemObjectTypeToName(childrenObjectType));
+        doc.ChildrenObjectTypes = ChildrenObjectTypes.length == 1 ? ChildrenObjectTypes[0] : ChildrenObjectTypes;
+
+        let VocabList: string[] = [];
+        VocabList = await this.computeVocabularyTerms(OGDEH.childrenCaptureMethods);
+        doc.ChildrenCaptureMethods = VocabList.length == 1 ? VocabList[0] : VocabList;
+        VocabList = [];
+
+        VocabList = await this.computeVocabularyTerms(OGDEH.childrenVariantTypes);
+        doc.ChildrenVariantTypes = VocabList.length == 1 ? VocabList[0] : VocabList;
+        VocabList = [];
+
+        VocabList = await this.computeVocabularyTerms(OGDEH.childrenModelPurposes);
+        doc.ChildrenModelPurposes = VocabList.length == 1 ? VocabList[0] : VocabList;
+        VocabList = [];
+
+        VocabList = await this.computeVocabularyTerms(OGDEH.childrenModelFileTypes);
+        doc.ChildrenModelFileTypes = VocabList.length == 1 ? VocabList[0] : VocabList;
+        VocabList = [];
     }
-    /* #endregion */
+
+    private async computeVocabulary(idVocabulary: number): Promise<string | undefined> {
+        const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabulary);
+        return vocab ? vocab.Term : undefined;
+    }
+
+    private async computeVocabularyTerms(IDs: number[]): Promise<string[]> {
+        const retValue: string[] = [];
+        for (const ID of IDs) {
+            const vocab: string | undefined = await this.computeVocabulary(ID);
+            if (vocab) retValue.push(vocab);
+        }
+        return retValue;
+    }
+
+    private async handleUnit(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!unit) {
+            LOG.logger.error(`ReindexSolr.handleUnit failed to compute unit from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+        doc.Name = unit.Name;
+        doc.Abbreviation = unit.Abbreviation;
+        doc.ARKPrefix = unit.ARKPrefix;
+        return true;
+    }
+
+    private async handleProject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const project: DBAPI.Project | null = await DBAPI.Project.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!project) {
+            LOG.logger.error(`ReindexSolr.handleProject failed to compute project from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+        doc.Name = project.Name;
+        doc.Description = project.Description;
+        return true;
+    }
+
+    private async handleSubject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const subject: DBAPI.Subject | null = await DBAPI.Subject.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!subject) {
+            LOG.logger.error(`ReindexSolr.handleSubject failed to compute subject from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+
+        doc.Name = subject.Name;
+        if (subject.idIdentifierPreferred) {
+            const ID: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(subject.idIdentifierPreferred);
+            if (ID) doc.IdentifierPreferred = ID.IdentifierValue;
+        }
+        return true;
+    }
+
+    private async handleItem(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const item: DBAPI.Item | null = await DBAPI.Item.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!item) {
+            LOG.logger.error(`ReindexSolr.handleItem failed to compute item from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+        doc.Name = item.Name;
+        doc.EntireSubject = item.EntireSubject;
+        return true;
+    }
+
+    private async handleCaptureData(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const captureData: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!captureData) {
+            LOG.logger.error(`ReindexSolr.handleCaptureData failed to compute capture data from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+        const captureDataPhotos: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(captureData.idCaptureData);
+        if (!captureDataPhotos || captureDataPhotos.length != 1) {
+            LOG.logger.error(`ReindexSolr.handleCaptureData failed to find exactly 1 capture data photo for ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+        const captureDataPhoto: DBAPI.CaptureDataPhoto = captureDataPhotos[0];
+
+        doc.Name = captureData.Name;
+        doc.Description = captureData.Description;
+        doc.DateCreated = captureData.DateCaptured;
+        doc.CaptureMethod = await this.lookupVocabulary(captureData.idVCaptureMethod);
+        doc.CaptureDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
+        doc.CaptureDatasetFieldID = captureDataPhoto.CaptureDatasetFieldID;
+        doc.ItemPositionType = await this.lookupVocabulary(captureDataPhoto.idVItemPositionType);
+        doc.ItemPositionFieldID = captureDataPhoto.ItemPositionFieldID;
+        doc.ItemArrangementFieldID = captureDataPhoto.ItemArrangementFieldID;
+        doc.FocusType = await this.lookupVocabulary(captureDataPhoto.idVFocusType);
+        doc.LightSourceType = await this.lookupVocabulary(captureDataPhoto.idVLightSourceType);
+        doc.BackgroundRemovalMethod = await this.lookupVocabulary(captureDataPhoto.idVBackgroundRemovalMethod);
+        doc.ClusterType = await this.lookupVocabulary(captureDataPhoto.idVClusterType);
+        doc.ClusterGeometryFieldID = captureDataPhoto.ClusterGeometryFieldID;
+        doc.CameraSettingsUniform = captureDataPhoto.CameraSettingsUniform;
+        return true;
+    }
+
+    private async handleModel(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const modelConstellation: DBAPI.ModelConstellation | null = await DBAPI.ModelConstellation.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!modelConstellation) {
+            LOG.logger.error(`ReindexSolr.handleModel failed to compute ModelConstellation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+
+        doc.Name = modelConstellation.model.Name;
+        doc.DateCreated = modelConstellation.model.DateCreated;
+
+        doc.CreationMethod = await this.computeVocabulary(modelConstellation.model.idVCreationMethod);
+        doc.Master = modelConstellation.model.Master;
+        doc.Authoritative = modelConstellation.model.Authoritative;
+        doc.Modality = await this.computeVocabulary(modelConstellation.model.idVModality);
+        doc.Units = await this.computeVocabulary(modelConstellation.model.idVUnits);
+        doc.Purpose = await this.computeVocabulary(modelConstellation.model.idVPurpose);
+
+        const modelFileTypeMap: Map<string, boolean> = new Map<string, boolean>();
+        const roughnessMap: Map<number, boolean> = new Map<number, boolean>();
+        const metalnessMap: Map<number, boolean> = new Map<number, boolean>();
+        const pointCountMap: Map<number, boolean> = new Map<number, boolean>();
+        const faceCountMap: Map<number, boolean> = new Map<number, boolean>();
+        const isWatertightMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const hasNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const hasVertexColorMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const hasUVSpaceMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const boundingBoxP1XMap: Map<number, boolean> = new Map<number, boolean>();
+        const boundingBoxP1YMap: Map<number, boolean> = new Map<number, boolean>();
+        const boundingBoxP1ZMap: Map<number, boolean> = new Map<number, boolean>();
+        const boundingBoxP2XMap: Map<number, boolean> = new Map<number, boolean>();
+        const boundingBoxP2YMap: Map<number, boolean> = new Map<number, boolean>();
+        const boundingBoxP2ZMap: Map<number, boolean> = new Map<number, boolean>();
+        const uvMapEdgeLengthMap: Map<number, boolean> = new Map<number, boolean>();
+        const channelPositionMap: Map<number, boolean> = new Map<number, boolean>();
+        const channelWidthMap: Map<number, boolean> = new Map<number, boolean>();
+        const uvMapTypeMap: Map<string, boolean> = new Map<string, boolean>();
+
+        for (const modelGeometryFile of modelConstellation.modelGeometryFiles) {
+            const modelFileTypeWorker: string | undefined = await this.computeVocabulary(modelGeometryFile.idVModelFileType);
+            if (modelFileTypeWorker) modelFileTypeMap.set(modelFileTypeWorker, true);
+            if (modelGeometryFile.Roughness) roughnessMap.set(modelGeometryFile.Roughness, true);
+            if (modelGeometryFile.Metalness) metalnessMap.set(modelGeometryFile.Metalness, true);
+            if (modelGeometryFile.PointCount) pointCountMap.set(modelGeometryFile.PointCount, true);
+            if (modelGeometryFile.IsWatertight != null) isWatertightMap.set(modelGeometryFile.IsWatertight, true);
+            if (modelGeometryFile.HasNormals != null) hasNormalsMap.set(modelGeometryFile.HasNormals, true);
+            if (modelGeometryFile.HasVertexColor != null) hasVertexColorMap.set(modelGeometryFile.HasVertexColor, true);
+            if (modelGeometryFile.HasUVSpace != null) hasUVSpaceMap.set(modelGeometryFile.HasUVSpace, true);
+            if (modelGeometryFile.BoundingBoxP1X) boundingBoxP1XMap.set(modelGeometryFile.BoundingBoxP1X, true);
+            if (modelGeometryFile.BoundingBoxP1Y) boundingBoxP1YMap.set(modelGeometryFile.BoundingBoxP1Y, true);
+            if (modelGeometryFile.BoundingBoxP1Z) boundingBoxP1ZMap.set(modelGeometryFile.BoundingBoxP1Z, true);
+            if (modelGeometryFile.BoundingBoxP2X) boundingBoxP2XMap.set(modelGeometryFile.BoundingBoxP2X, true);
+            if (modelGeometryFile.BoundingBoxP2Y) boundingBoxP2YMap.set(modelGeometryFile.BoundingBoxP2Y, true);
+            if (modelGeometryFile.BoundingBoxP2Z) boundingBoxP2ZMap.set(modelGeometryFile.BoundingBoxP2Z, true);
+        }
+
+        for (const modelUVMapFile of modelConstellation.modelUVMapFiles) {
+            uvMapEdgeLengthMap.set(modelUVMapFile.UVMapEdgeLength, true);
+        }
+
+        for (const modelUVMapChannel of modelConstellation.modelUVMapChannels) {
+            channelPositionMap.set(modelUVMapChannel.ChannelPosition, true);
+            channelWidthMap.set(modelUVMapChannel.ChannelWidth, true);
+            const uvMapTypeWorker: string | undefined = await this.computeVocabulary(modelUVMapChannel.idVUVMapType);
+            if (uvMapTypeWorker) uvMapTypeMap.set(uvMapTypeWorker, true);
+        }
+
+        const modelFileType: string[] = [...modelFileTypeMap.keys()];
+        const roughness: number[] = [...roughnessMap.keys()];
+        const metalness: number[] = [...metalnessMap.keys()];
+        const pointCount: number[] = [...pointCountMap.keys()];
+        const faceCount: number[] = [...faceCountMap.keys()];
+        const isWatertight: boolean[] = [...isWatertightMap.keys()];
+        const hasNormals: boolean[] = [...hasNormalsMap.keys()];
+        const hasVertexColor: boolean[] = [...hasVertexColorMap.keys()];
+        const hasUVSpace: boolean[] = [...hasUVSpaceMap.keys()];
+        const boundingBoxP1X: number[] = [...boundingBoxP1XMap.keys()];
+        const boundingBoxP1Y: number[] = [...boundingBoxP1YMap.keys()];
+        const boundingBoxP1Z: number[] = [...boundingBoxP1ZMap.keys()];
+        const boundingBoxP2X: number[] = [...boundingBoxP2XMap.keys()];
+        const boundingBoxP2Y: number[] = [...boundingBoxP2YMap.keys()];
+        const boundingBoxP2Z: number[] = [...boundingBoxP2ZMap.keys()];
+        const uvMapEdgeLength: number[] = [...uvMapEdgeLengthMap.keys()];
+        const channelPosition: number[] = [...channelPositionMap.keys()];
+        const channelWidth: number[] = [...channelWidthMap.keys()];
+        const uvMapType: string[] = [...uvMapTypeMap.keys()];
+
+        doc.ModelFileType = modelFileType.length == 1 ? modelFileType[0] : modelFileType;
+        doc.Roughness = roughness.length == 1 ? roughness[0] : roughness;
+        doc.Metalness = metalness.length == 1 ? metalness[0] : metalness;
+        doc.PointCount = pointCount.length == 1 ? pointCount[0] : pointCount;
+        doc.FaceCount = faceCount.length == 1 ? faceCount[0] : faceCount;
+        doc.IsWatertight = isWatertight.length == 1 ? isWatertight[0] : isWatertight;
+        doc.HasNormals = hasNormals.length == 1 ? hasNormals[0] : hasNormals;
+        doc.HasVertexColor = hasVertexColor.length == 1 ? hasVertexColor[0] : hasVertexColor;
+        doc.HasUVSpace = hasUVSpace.length == 1 ? hasUVSpace[0] : hasUVSpace;
+        doc.BoundingBoxP1X = boundingBoxP1X.length == 1 ? boundingBoxP1X[0] : boundingBoxP1X;
+        doc.BoundingBoxP1Y = boundingBoxP1Y.length == 1 ? boundingBoxP1Y[0] : boundingBoxP1Y;
+        doc.BoundingBoxP1Z = boundingBoxP1Z.length == 1 ? boundingBoxP1Z[0] : boundingBoxP1Z;
+        doc.BoundingBoxP2X = boundingBoxP2X.length == 1 ? boundingBoxP2X[0] : boundingBoxP2X;
+        doc.BoundingBoxP2Y = boundingBoxP2Y.length == 1 ? boundingBoxP2Y[0] : boundingBoxP2Y;
+        doc.BoundingBoxP2Z = boundingBoxP2Z.length == 1 ? boundingBoxP2Z[0] : boundingBoxP2Z;
+        doc.UVMapEdgeLength = uvMapEdgeLength.length == 1 ? uvMapEdgeLength[0] : uvMapEdgeLength;
+        doc.ChannelPosition = channelPosition.length == 1 ? channelPosition[0] : channelPosition;
+        doc.ChannelWidth = channelWidth.length == 1 ? channelWidth[0] : channelWidth;
+        doc.UVMapType = uvMapType.length == 1 ? uvMapType[0] : uvMapType;
+        return true;
+    }
+
+    private async handleScene(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!scene) {
+            LOG.logger.error(`ReindexSolr.handleScene failed to compute scene from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+        doc.Name = scene.Name;
+        doc.IsOriented = scene.IsOriented;
+        doc.HasBeenQCd = scene.HasBeenQCd;
+        return true;
+    }
+
+    private async handleIntermediaryFile(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const intermediaryFile: DBAPI.IntermediaryFile | null = await DBAPI.IntermediaryFile.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!intermediaryFile) {
+            LOG.logger.error(`ReindexSolr.handleIntermediaryFile failed to compute intermediaryFile from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+        doc.DateCreated = intermediaryFile.DateCreated;
+        return true;
+    }
+
+    private async handleProjectDocumentation(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const projectDocumentation: DBAPI.ProjectDocumentation | null = await DBAPI.ProjectDocumentation.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!projectDocumentation) {
+            LOG.logger.error(`ReindexSolr.handleProjectDocumentation failed to compute projectDocumentation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+        doc.Name = projectDocumentation.Name;
+        doc.Description = projectDocumentation.Description;
+        return true;
+    }
+
+    private async handleAsset(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!asset) {
+            LOG.logger.error(`ReindexSolr.handleAsset failed to compute asset from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+        doc.FileName = asset.FileName;
+        doc.FilePath = asset.FilePath;
+        doc.AssetType = await this.lookupVocabulary(asset.idVAssetType);
+        return true;
+    }
+
+    private async handleAssetVersion(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!assetVersion) {
+            LOG.logger.error(`ReindexSolr.handleAssetVersion failed to compute assetVersion from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+
+        const user: DBAPI.User | null = await DBAPI.User.fetch(assetVersion.idUserCreator);
+        if (!user) {
+            LOG.logger.error(`ReindexSolr.handleAssetVersion failed to compute idUserCreator from ${assetVersion.idUserCreator}`);
+            return false;
+        }
+        doc.UserCreator = user.Name;
+        doc.StorageHash = assetVersion.StorageHash;
+        doc.StorageSize = assetVersion.StorageSize;
+        doc.Ingested = assetVersion.Ingested;
+        doc.BulkIngest = assetVersion.BulkIngest;
+        return true;
+    }
+
+    private async handleActor(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const actor: DBAPI.Actor | null = await DBAPI.Actor.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!actor) {
+            LOG.logger.error(`ReindexSolr.handleActor failed to compute actor from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+        doc.Name = actor.IndividualName;
+        doc.OrganizationName = actor.OrganizationName;
+        return true;
+    }
+
+    private async handleStakeholder(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        const stakeholder: DBAPI.Stakeholder | null = await DBAPI.Stakeholder.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
+        if (!stakeholder) {
+            LOG.logger.error(`ReindexSolr.handleStakeholder failed to compute stakeholder from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            return false;
+        }
+
+        doc.Name = stakeholder.IndividualName;
+        doc.OrganizationName = stakeholder.OrganizationName;
+        doc.EmailAddress = stakeholder.EmailAddress;
+        doc.PhoneNumberMobile = stakeholder.PhoneNumberMobile;
+        doc.PhoneNumberOffice = stakeholder.PhoneNumberOffice;
+        doc.MailingAddress = stakeholder.MailingAddress;
+        return true;
+    }
+
+    private async handleUnknown(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        LOG.logger.error(`ReindexSolr.fullIndex called with unknown object type from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+        doc.Name = `Unknown ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`;
+        return false;
+    }
 
     private async computeIdentifiers(idSystemObject: number): Promise<string[]> {
         const identifiersRet: string[] = [];
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(idSystemObject);
         if (identifiers) {
-            for (const identifier of identifiers)
-                identifiersRet.push(identifier.IdentifierValue);
+            for (const identifier of identifiers) identifiersRet.push(identifier.IdentifierValue);
         }
         return identifiersRet;
+    }
+
+    private async lookupVocabulary(idVocabulary: number | null): Promise<string> {
+        if (!idVocabulary) return '';
+        const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabulary);
+        return vocabulary ? vocabulary.Term : '';
     }
 }
