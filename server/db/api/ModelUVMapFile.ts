@@ -77,6 +77,8 @@ export class ModelUVMapFile extends DBC.DBObject<ModelUVMapFileBase> implements 
     }
 
     static async fetchFromModelGeometryFiles(modelGeometryFiles: ModelGeometryFile[]): Promise<ModelUVMapFile[] | null> {
+        if (modelGeometryFiles.length == 0)
+            return null;
         try {
             const idModelGeometryFiles: number[] = [];
             for (const modelGeometryFile of modelGeometryFiles) idModelGeometryFiles.push(modelGeometryFile.idModelGeometryFile);

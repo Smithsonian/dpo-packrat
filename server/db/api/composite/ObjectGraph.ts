@@ -163,10 +163,17 @@ export class ObjectGraph {
             // record relationship
             if (this.objectGraphDatabase) {
                 if (relatedType) {
-                    if (eMode == eObjectGraphMode.eAncestors)
-                        this.objectGraphDatabase.recordRelationship(sourceType, relatedType);
-                    else
-                        this.objectGraphDatabase.recordRelationship(relatedType, sourceType);
+                    if (eMode == eObjectGraphMode.eAncestors) {
+                        if (!this.objectGraphDatabase.recordRelationship(sourceType, relatedType)) {
+                            LOG.logger.info('ObjectGraph short circuited');
+                            return true;
+                        }
+                    } else {
+                        if (!this.objectGraphDatabase.recordRelationship(relatedType, sourceType)) {
+                            LOG.logger.info('ObjectGraph short circuited');
+                            return true;
+                        }
+                    }
                 }
             }
 

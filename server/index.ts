@@ -53,4 +53,10 @@ app.get('/solrindex', async (_: Request, response: Response) => {
     response.send(`Solr Reindexing Completed: ${success ? 'Success' : 'Failure'}`);
 });
 
+app.get('/solrindexprofiled', async (_: Request, response: Response) => {
+    const reindexer: ReindexSolr = new ReindexSolr();
+    const success: boolean = await reindexer.fullIndexProfiled();
+    response.send(`Solr Reindexing Completed: ${success ? 'Success' : 'Failure'}`);
+});
+
 export { app };

@@ -1,5 +1,6 @@
 import * as DBAPI from '../../db';
-import { SystemObject, eSystemObjectType } from '../../db';
+import { Unit, Project, Subject, Item, CaptureData, Model, Scene, IntermediaryFile, ProjectDocumentation,
+    Asset, AssetVersion, Actor, Stakeholder, SystemObject, eSystemObjectType } from '../../db';
 import { SystemObjectCache, ObjectIDAndType, SystemObjectInfo } from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
@@ -169,21 +170,74 @@ async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean>
 async function testObjectAndID(oID: ObjectIDAndType): Promise<boolean> {
     // LOG.logger.info(`Testing ${JSON.stringify(oID)}`);
     let SO: SystemObject | null = null;
+    let SOI: SystemObjectInfo | undefined = undefined;
     const { idObject, eObjectType } = oID;
     switch (eObjectType) {
-        case eSystemObjectType.eUnit: SO = await SystemObject.fetchFromUnitID(idObject); break;
-        case eSystemObjectType.eProject: SO = await SystemObject.fetchFromProjectID(idObject); break;
-        case eSystemObjectType.eSubject: SO = await SystemObject.fetchFromSubjectID(idObject); break;
-        case eSystemObjectType.eItem: SO = await SystemObject.fetchFromItemID(idObject); break;
-        case eSystemObjectType.eCaptureData: SO = await SystemObject.fetchFromCaptureDataID(idObject); break;
-        case eSystemObjectType.eModel: SO = await SystemObject.fetchFromModelID(idObject); break;
-        case eSystemObjectType.eScene: SO = await SystemObject.fetchFromSceneID(idObject); break;
-        case eSystemObjectType.eIntermediaryFile: SO = await SystemObject.fetchFromIntermediaryFileID(idObject); break;
-        case eSystemObjectType.eProjectDocumentation: SO = await SystemObject.fetchFromProjectDocumentationID(idObject); break;
-        case eSystemObjectType.eAsset: SO = await SystemObject.fetchFromAssetID(idObject); break;
-        case eSystemObjectType.eAssetVersion: SO = await SystemObject.fetchFromAssetVersionID(idObject); break;
-        case eSystemObjectType.eActor: SO = await SystemObject.fetchFromActorID(idObject); break;
-        case eSystemObjectType.eStakeholder: SO = await SystemObject.fetchFromStakeholderID(idObject); break;
+        case eSystemObjectType.eUnit: {
+            SO = await SystemObject.fetchFromUnitID(idObject);
+            const unit: Unit | null = await Unit.fetch(oID.idObject);
+            SOI = (unit) ? await SystemObjectCache.getSystemFromUnit(unit) : undefined;
+        } break;
+        case eSystemObjectType.eProject: {
+            SO = await SystemObject.fetchFromProjectID(idObject);
+            const project: Project | null = await Project.fetch(oID.idObject);
+            SOI = (project) ? await SystemObjectCache.getSystemFromProject(project) : undefined;
+        } break;
+        case eSystemObjectType.eSubject: {
+            SO = await SystemObject.fetchFromSubjectID(idObject);
+            const subject: Subject | null = await Subject.fetch(oID.idObject);
+            SOI = (subject) ? await SystemObjectCache.getSystemFromSubject(subject) : undefined;
+        } break;
+        case eSystemObjectType.eItem: {
+            SO = await SystemObject.fetchFromItemID(idObject);
+            const item: Item | null = await Item.fetch(oID.idObject);
+            SOI = (item) ? await SystemObjectCache.getSystemFromItem(item) : undefined;
+        } break;
+        case eSystemObjectType.eCaptureData: {
+            SO = await SystemObject.fetchFromCaptureDataID(idObject);
+            const captureData: CaptureData | null = await CaptureData.fetch(oID.idObject);
+            SOI = (captureData) ? await SystemObjectCache.getSystemFromCaptureData(captureData) : undefined;
+        } break;
+        case eSystemObjectType.eModel: {
+            SO = await SystemObject.fetchFromModelID(idObject);
+            const model: Model | null = await Model.fetch(oID.idObject);
+            SOI = (model) ? await SystemObjectCache.getSystemFromModel(model) : undefined;
+        } break;
+        case eSystemObjectType.eScene: {
+            SO = await SystemObject.fetchFromSceneID(idObject);
+            const scene: Scene | null = await Scene.fetch(oID.idObject);
+            SOI = (scene) ? await SystemObjectCache.getSystemFromScene(scene) : undefined;
+        } break;
+        case eSystemObjectType.eIntermediaryFile: {
+            SO = await SystemObject.fetchFromIntermediaryFileID(idObject);
+            const intermediaryFile: IntermediaryFile | null = await IntermediaryFile.fetch(oID.idObject);
+            SOI = (intermediaryFile) ? await SystemObjectCache.getSystemFromIntermediaryFile(intermediaryFile) : undefined;
+        } break;
+        case eSystemObjectType.eProjectDocumentation: {
+            SO = await SystemObject.fetchFromProjectDocumentationID(idObject);
+            const projectDocumentation: ProjectDocumentation | null = await ProjectDocumentation.fetch(oID.idObject);
+            SOI = (projectDocumentation) ? await SystemObjectCache.getSystemFromProjectDocumentation(projectDocumentation) : undefined;
+        } break;
+        case eSystemObjectType.eAsset: {
+            SO = await SystemObject.fetchFromAssetID(idObject);
+            const asset: Asset | null = await Asset.fetch(oID.idObject);
+            SOI = (asset) ? await SystemObjectCache.getSystemFromAsset(asset) : undefined;
+        } break;
+        case eSystemObjectType.eAssetVersion: {
+            SO = await SystemObject.fetchFromAssetVersionID(idObject);
+            const assetVersion: AssetVersion | null = await AssetVersion.fetch(oID.idObject);
+            SOI = (assetVersion) ? await SystemObjectCache.getSystemFromAssetVersion(assetVersion) : undefined;
+        } break;
+        case eSystemObjectType.eActor: {
+            SO = await SystemObject.fetchFromActorID(idObject);
+            const actor: Actor | null = await Actor.fetch(oID.idObject);
+            SOI = (actor) ? await SystemObjectCache.getSystemFromActor(actor) : undefined;
+        } break;
+        case eSystemObjectType.eStakeholder: {
+            SO = await SystemObject.fetchFromStakeholderID(idObject);
+            const stakeholder: Stakeholder | null = await Stakeholder.fetch(oID.idObject);
+            SOI = (stakeholder) ? await SystemObjectCache.getSystemFromStakeholder(stakeholder) : undefined;
+        } break;
         case eSystemObjectType.eUnknown:
             LOG.logger.error('Invalid Test Case!');
             expect(eObjectType).not.toEqual(eSystemObjectType.eUnknown);
@@ -194,10 +248,18 @@ async function testObjectAndID(oID: ObjectIDAndType): Promise<boolean> {
     if (!SO)
         return false;
 
+    expect(SOI).toBeTruthy();
+    if (!SOI)
+        return false;
+
+    expect(SOI.idSystemObject).toEqual(SO.idSystemObject);
+    expect(SOI.Retired).toEqual(SO.Retired);
+
     const SOInfo: SystemObjectInfo | undefined = await SystemObjectCache.getSystemFromObjectID(oID);
     expect(SOInfo).toBeTruthy();
     if (!SOInfo)
         return false;
+    expect(SOInfo).toEqual(SOI);
 
     expect(SOInfo.idSystemObject).toEqual(SO.idSystemObject);
     expect(SOInfo.Retired).toEqual(SO.Retired);

@@ -78,6 +78,8 @@ export class ModelUVMapChannel extends DBC.DBObject<ModelUVMapChannelBase> imple
     }
 
     static async fetchFromModelUVMapFiles(modelUVMapFiles: ModelUVMapFile[]): Promise<ModelUVMapChannel[] | null> {
+        if (modelUVMapFiles.length == 0)
+            return null;
         try {
             const idModelUVMapFiles: number[] = [];
             for (const modelUVMapFile of modelUVMapFiles) idModelUVMapFiles.push(modelUVMapFile.idModelUVMapFile);

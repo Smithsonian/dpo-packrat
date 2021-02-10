@@ -24,8 +24,8 @@ export class ObjectGraphDataEntryHierarchy {
     eObjectType: eSystemObjectType | null = null;
     idObject: number = 0;
 
-    parents: SystemObjectIDType[] = [];
-    children: SystemObjectIDType[] = [];
+    parents: number[] = [];     // array of SystemObject.idSystemObject
+    children: number[] = [];    // array of SystemObject.idSystemObject
 
     units: SystemObjectIDType[] = [];
     projects: SystemObjectIDType[] = [];
@@ -45,8 +45,8 @@ export class ObjectGraphDataEntry {
     retired: boolean = false;
 
     // Derived data
-    childMap: Map<SystemObjectIDType, boolean> = new Map<SystemObjectIDType, boolean>(); // map of child objects
-    parentMap: Map<SystemObjectIDType, boolean> = new Map<SystemObjectIDType, boolean>(); // map of parent objects
+    childMap: Map<SystemObjectIDType, number> = new Map<SystemObjectIDType, number>(); // map of child objects -> child idSystemObject
+    parentMap: Map<SystemObjectIDType, number> = new Map<SystemObjectIDType, number>(); // map of parent objects -> parent idSystemObject
     ancestorObjectMap: Map<SystemObjectIDType, boolean> = new Map<SystemObjectIDType, boolean>(); // map of ancestor objects of significance (unit, project, subject, item)
 
     // Child data types
@@ -62,11 +62,11 @@ export class ObjectGraphDataEntry {
     }
 
     recordChild(child: SystemObjectIDType): void {
-        this.childMap.set(child, true);
+        this.childMap.set(child, child.idSystemObject);
     }
 
     recordParent(parent: SystemObjectIDType): void {
-        this.parentMap.set(parent, true);
+        this.parentMap.set(parent, parent.idSystemObject);
     }
 
     // Returns true if applying objectGraphState updated the state of this ObjectGraphDataEntry
@@ -135,8 +135,8 @@ export class ObjectGraphDataEntry {
         objectGraphDataEntryHierarchy.eObjectType = this.systemObjectIDType.eObjectType;
         objectGraphDataEntryHierarchy.idObject = this.systemObjectIDType.idObject;
 
-        objectGraphDataEntryHierarchy.parents = [...this.parentMap.keys()];
-        objectGraphDataEntryHierarchy.children = [...this.childMap.keys()];
+        objectGraphDataEntryHierarchy.parents = [...this.parentMap.values()];
+        objectGraphDataEntryHierarchy.children = [...this.childMap.values()];
         for (const systemObjectIDType of this.ancestorObjectMap.keys()) {
             switch (systemObjectIDType.eObjectType) {
                 case eSystemObjectType.eUnit:       objectGraphDataEntryHierarchy.units.push(systemObjectIDType); break;
