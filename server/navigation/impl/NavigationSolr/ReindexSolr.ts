@@ -8,8 +8,56 @@ import { SolrClient } from './SolrClient';
 export class ReindexSolr {
     private objectGraphDatabase: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
     private hierarchyNameMap: Map<number, string> = new Map<number, string>(); // map of idSystemObject -> object name
+    private static fullIndexUnderway: boolean = false;
+
+    async fullIndexProfiled(): Promise<boolean> {
+        LOG.logger.info('****************************************');
+        LOG.logger.info('ReindexSolr.fullIndexProfiled() starting');
+        return new Promise<boolean>((resolve) => {
+            const inspector = require('inspector');
+            const fs = require('fs');
+            const session = new inspector.Session();
+            session.connect();
+
+            session.post('Profiler.enable', async () => {
+                session.post('Profiler.start', async () => {
+                    LOG.logger.info('ReindexSolr.fullIndexProfiled() fullIndex() starting');
+                    const retValue: boolean = await this.fullIndex();
+                    LOG.logger.info('ReindexSolr.fullIndexProfiled() fullIndex() complete');
+                    resolve(retValue);
+
+                    // some time later...
+                    session.post('Profiler.stop', (err, { profile }) => {
+                        // Write profile to disk, upload, etc.
+                        if (!err) {
+                            LOG.logger.info('ReindexSolr.fullIndexProfiled() writing profile');
+                            fs.writeFileSync('./profile.cpuprofile', JSON.stringify(profile));
+                        }
+                        LOG.logger.info('ReindexSolr.fullIndexProfiled() writing profile ending');
+                    });
+                });
+            });
+        });
+    }
 
     async fullIndex(): Promise<boolean> {
+        if (ReindexSolr.fullIndexUnderway) {
+            LOG.logger.error('ReindexSolr.fullIndex() already underway; exiting this additional request early');
+            return false;
+        }
+
+        let retValue: boolean = false;
+        try {
+            ReindexSolr.fullIndexUnderway = true;
+            retValue = await this.fullIndexWorker();
+        } finally {
+            ReindexSolr.fullIndexUnderway = false;
+        }
+        return retValue;
+    }
+
+    private async fullIndexWorker(): Promise<boolean> {
+
         const solrClient: SolrClient = new SolrClient(null, null, null);
         solrClient._client.autoCommit = true;
 
@@ -20,27 +68,27 @@ export class ReindexSolr {
 
         let docs: any[] = [];
         for (const [systemObjectIDType, objectGraphDataEntry] of this.objectGraphDatabase.objectMap) {
-            let doc: any = null;
+            const doc: any = {};
 
             await this.extractCommonFields(doc, objectGraphDataEntry);
 
             switch (systemObjectIDType.eObjectType) {
-                case eSystemObjectType.eUnit:                   doc = await this.handleUnit(doc, objectGraphDataEntry);                 break;
-                case eSystemObjectType.eProject:                doc = await this.handleProject(doc, objectGraphDataEntry);              break;
-                case eSystemObjectType.eSubject:                doc = await this.handleSubject(doc, objectGraphDataEntry);              break;
-                case eSystemObjectType.eItem:                   doc = await this.handleItem(doc, objectGraphDataEntry);                 break;
-                case eSystemObjectType.eCaptureData:            doc = await this.handleCaptureData(doc, objectGraphDataEntry);          break;
-                case eSystemObjectType.eModel:                  doc = await this.handleModel(doc, objectGraphDataEntry);                break;
-                case eSystemObjectType.eScene:                  doc = await this.handleScene(doc, objectGraphDataEntry);                break;
-                case eSystemObjectType.eIntermediaryFile:       doc = await this.handleIntermediaryFile(doc, objectGraphDataEntry);     break;
-                case eSystemObjectType.eProjectDocumentation:   doc = await this.handleProjectDocumentation(doc, objectGraphDataEntry); break;
-                case eSystemObjectType.eAsset:                  doc = await this.handleAsset(doc, objectGraphDataEntry);                break;
-                case eSystemObjectType.eAssetVersion:           doc = await this.handleAssetVersion(doc, objectGraphDataEntry);         break;
-                case eSystemObjectType.eActor:                  doc = await this.handleActor(doc, objectGraphDataEntry);                break;
-                case eSystemObjectType.eStakeholder:            doc = await this.handleStakeholder(doc, objectGraphDataEntry);          break;
+                case eSystemObjectType.eUnit:                   await this.handleUnit(doc, objectGraphDataEntry);                 break;
+                case eSystemObjectType.eProject:                await this.handleProject(doc, objectGraphDataEntry);              break;
+                case eSystemObjectType.eSubject:                await this.handleSubject(doc, objectGraphDataEntry);              break;
+                case eSystemObjectType.eItem:                   await this.handleItem(doc, objectGraphDataEntry);                 break;
+                case eSystemObjectType.eCaptureData:            await this.handleCaptureData(doc, objectGraphDataEntry);          break;
+                case eSystemObjectType.eModel:                  await this.handleModel(doc, objectGraphDataEntry);                break;
+                case eSystemObjectType.eScene:                  await this.handleScene(doc, objectGraphDataEntry);                break;
+                case eSystemObjectType.eIntermediaryFile:       await this.handleIntermediaryFile(doc, objectGraphDataEntry);     break;
+                case eSystemObjectType.eProjectDocumentation:   await this.handleProjectDocumentation(doc, objectGraphDataEntry); break;
+                case eSystemObjectType.eAsset:                  await this.handleAsset(doc, objectGraphDataEntry);                break;
+                case eSystemObjectType.eAssetVersion:           await this.handleAssetVersion(doc, objectGraphDataEntry);         break;
+                case eSystemObjectType.eActor:                  await this.handleActor(doc, objectGraphDataEntry);                break;
+                case eSystemObjectType.eStakeholder:            await this.handleStakeholder(doc, objectGraphDataEntry);          break;
 
                 default:
-                case eSystemObjectType.eUnknown:                doc = await this.handleUnknown(doc, objectGraphDataEntry);              break;
+                case eSystemObjectType.eUnknown:                await this.handleUnknown(doc, objectGraphDataEntry);              break;
             }
 
             docs.push(doc);
@@ -253,27 +301,25 @@ export class ReindexSolr {
             return false;
         }
         const captureDataPhotos: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(captureData.idCaptureData);
-        if (!captureDataPhotos || captureDataPhotos.length != 1) {
-            LOG.logger.error(`ReindexSolr.handleCaptureData failed to find exactly 1 capture data photo for ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
-            return false;
-        }
-        const captureDataPhoto: DBAPI.CaptureDataPhoto = captureDataPhotos[0];
+        const captureDataPhoto: DBAPI.CaptureDataPhoto | null = (captureDataPhotos && captureDataPhotos.length > 0) ? captureDataPhotos[0] : null;
 
         doc.Name = captureData.Name;
         doc.Description = captureData.Description;
         doc.DateCreated = captureData.DateCaptured;
         doc.CaptureMethod = await this.lookupVocabulary(captureData.idVCaptureMethod);
-        doc.CaptureDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
-        doc.CaptureDatasetFieldID = captureDataPhoto.CaptureDatasetFieldID;
-        doc.ItemPositionType = await this.lookupVocabulary(captureDataPhoto.idVItemPositionType);
-        doc.ItemPositionFieldID = captureDataPhoto.ItemPositionFieldID;
-        doc.ItemArrangementFieldID = captureDataPhoto.ItemArrangementFieldID;
-        doc.FocusType = await this.lookupVocabulary(captureDataPhoto.idVFocusType);
-        doc.LightSourceType = await this.lookupVocabulary(captureDataPhoto.idVLightSourceType);
-        doc.BackgroundRemovalMethod = await this.lookupVocabulary(captureDataPhoto.idVBackgroundRemovalMethod);
-        doc.ClusterType = await this.lookupVocabulary(captureDataPhoto.idVClusterType);
-        doc.ClusterGeometryFieldID = captureDataPhoto.ClusterGeometryFieldID;
-        doc.CameraSettingsUniform = captureDataPhoto.CameraSettingsUniform;
+        if (captureDataPhoto) {
+            doc.CaptureDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
+            doc.CaptureDatasetFieldID = captureDataPhoto.CaptureDatasetFieldID;
+            doc.ItemPositionType = await this.lookupVocabulary(captureDataPhoto.idVItemPositionType);
+            doc.ItemPositionFieldID = captureDataPhoto.ItemPositionFieldID;
+            doc.ItemArrangementFieldID = captureDataPhoto.ItemArrangementFieldID;
+            doc.FocusType = await this.lookupVocabulary(captureDataPhoto.idVFocusType);
+            doc.LightSourceType = await this.lookupVocabulary(captureDataPhoto.idVLightSourceType);
+            doc.BackgroundRemovalMethod = await this.lookupVocabulary(captureDataPhoto.idVBackgroundRemovalMethod);
+            doc.ClusterType = await this.lookupVocabulary(captureDataPhoto.idVClusterType);
+            doc.ClusterGeometryFieldID = captureDataPhoto.ClusterGeometryFieldID;
+            doc.CameraSettingsUniform = captureDataPhoto.CameraSettingsUniform;
+        }
         return true;
     }
 
@@ -314,33 +360,39 @@ export class ReindexSolr {
         const channelWidthMap: Map<number, boolean> = new Map<number, boolean>();
         const uvMapTypeMap: Map<string, boolean> = new Map<string, boolean>();
 
-        for (const modelGeometryFile of modelConstellation.modelGeometryFiles) {
-            const modelFileTypeWorker: string | undefined = await this.computeVocabulary(modelGeometryFile.idVModelFileType);
-            if (modelFileTypeWorker) modelFileTypeMap.set(modelFileTypeWorker, true);
-            if (modelGeometryFile.Roughness) roughnessMap.set(modelGeometryFile.Roughness, true);
-            if (modelGeometryFile.Metalness) metalnessMap.set(modelGeometryFile.Metalness, true);
-            if (modelGeometryFile.PointCount) pointCountMap.set(modelGeometryFile.PointCount, true);
-            if (modelGeometryFile.IsWatertight != null) isWatertightMap.set(modelGeometryFile.IsWatertight, true);
-            if (modelGeometryFile.HasNormals != null) hasNormalsMap.set(modelGeometryFile.HasNormals, true);
-            if (modelGeometryFile.HasVertexColor != null) hasVertexColorMap.set(modelGeometryFile.HasVertexColor, true);
-            if (modelGeometryFile.HasUVSpace != null) hasUVSpaceMap.set(modelGeometryFile.HasUVSpace, true);
-            if (modelGeometryFile.BoundingBoxP1X) boundingBoxP1XMap.set(modelGeometryFile.BoundingBoxP1X, true);
-            if (modelGeometryFile.BoundingBoxP1Y) boundingBoxP1YMap.set(modelGeometryFile.BoundingBoxP1Y, true);
-            if (modelGeometryFile.BoundingBoxP1Z) boundingBoxP1ZMap.set(modelGeometryFile.BoundingBoxP1Z, true);
-            if (modelGeometryFile.BoundingBoxP2X) boundingBoxP2XMap.set(modelGeometryFile.BoundingBoxP2X, true);
-            if (modelGeometryFile.BoundingBoxP2Y) boundingBoxP2YMap.set(modelGeometryFile.BoundingBoxP2Y, true);
-            if (modelGeometryFile.BoundingBoxP2Z) boundingBoxP2ZMap.set(modelGeometryFile.BoundingBoxP2Z, true);
+        if (modelConstellation.modelGeometryFiles) {
+            for (const modelGeometryFile of modelConstellation.modelGeometryFiles) {
+                const modelFileTypeWorker: string | undefined = await this.computeVocabulary(modelGeometryFile.idVModelFileType);
+                if (modelFileTypeWorker) modelFileTypeMap.set(modelFileTypeWorker, true);
+                if (modelGeometryFile.Roughness) roughnessMap.set(modelGeometryFile.Roughness, true);
+                if (modelGeometryFile.Metalness) metalnessMap.set(modelGeometryFile.Metalness, true);
+                if (modelGeometryFile.PointCount) pointCountMap.set(modelGeometryFile.PointCount, true);
+                if (modelGeometryFile.IsWatertight != null) isWatertightMap.set(modelGeometryFile.IsWatertight, true);
+                if (modelGeometryFile.HasNormals != null) hasNormalsMap.set(modelGeometryFile.HasNormals, true);
+                if (modelGeometryFile.HasVertexColor != null) hasVertexColorMap.set(modelGeometryFile.HasVertexColor, true);
+                if (modelGeometryFile.HasUVSpace != null) hasUVSpaceMap.set(modelGeometryFile.HasUVSpace, true);
+                if (modelGeometryFile.BoundingBoxP1X) boundingBoxP1XMap.set(modelGeometryFile.BoundingBoxP1X, true);
+                if (modelGeometryFile.BoundingBoxP1Y) boundingBoxP1YMap.set(modelGeometryFile.BoundingBoxP1Y, true);
+                if (modelGeometryFile.BoundingBoxP1Z) boundingBoxP1ZMap.set(modelGeometryFile.BoundingBoxP1Z, true);
+                if (modelGeometryFile.BoundingBoxP2X) boundingBoxP2XMap.set(modelGeometryFile.BoundingBoxP2X, true);
+                if (modelGeometryFile.BoundingBoxP2Y) boundingBoxP2YMap.set(modelGeometryFile.BoundingBoxP2Y, true);
+                if (modelGeometryFile.BoundingBoxP2Z) boundingBoxP2ZMap.set(modelGeometryFile.BoundingBoxP2Z, true);
+            }
         }
 
-        for (const modelUVMapFile of modelConstellation.modelUVMapFiles) {
-            uvMapEdgeLengthMap.set(modelUVMapFile.UVMapEdgeLength, true);
+        if (modelConstellation.modelUVMapFiles) {
+            for (const modelUVMapFile of modelConstellation.modelUVMapFiles) {
+                uvMapEdgeLengthMap.set(modelUVMapFile.UVMapEdgeLength, true);
+            }
         }
 
-        for (const modelUVMapChannel of modelConstellation.modelUVMapChannels) {
-            channelPositionMap.set(modelUVMapChannel.ChannelPosition, true);
-            channelWidthMap.set(modelUVMapChannel.ChannelWidth, true);
-            const uvMapTypeWorker: string | undefined = await this.computeVocabulary(modelUVMapChannel.idVUVMapType);
-            if (uvMapTypeWorker) uvMapTypeMap.set(uvMapTypeWorker, true);
+        if (modelConstellation.modelUVMapChannels) {
+            for (const modelUVMapChannel of modelConstellation.modelUVMapChannels) {
+                channelPositionMap.set(modelUVMapChannel.ChannelPosition, true);
+                channelWidthMap.set(modelUVMapChannel.ChannelWidth, true);
+                const uvMapTypeWorker: string | undefined = await this.computeVocabulary(modelUVMapChannel.idVUVMapType);
+                if (uvMapTypeWorker) uvMapTypeMap.set(uvMapTypeWorker, true);
+            }
         }
 
         const modelFileType: string[] = [...modelFileTypeMap.keys()];

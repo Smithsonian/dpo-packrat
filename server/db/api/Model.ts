@@ -6,11 +6,12 @@ import * as LOG from '../../utils/logger';
 
 export class ModelConstellation {
     model: Model;
-    modelGeometryFiles: ModelGeometryFile[];
-    modelUVMapFiles: ModelUVMapFile[];
-    modelUVMapChannels: ModelUVMapChannel[];
+    modelGeometryFiles: ModelGeometryFile[] | null;
+    modelUVMapFiles: ModelUVMapFile[] | null;
+    modelUVMapChannels: ModelUVMapChannel[] | null;
 
-    constructor(model: Model, modelGeometryFiles: ModelGeometryFile[], modelUVMapFiles: ModelUVMapFile[], modelUVMapChannels: ModelUVMapChannel[]) {
+    constructor(model: Model, modelGeometryFiles: ModelGeometryFile[] | null,
+        modelUVMapFiles: ModelUVMapFile[] | null, modelUVMapChannels: ModelUVMapChannel[] | null) {
         this.model = model;
         this.modelGeometryFiles = modelGeometryFiles;
         this.modelUVMapFiles = modelUVMapFiles;
@@ -25,23 +26,8 @@ export class ModelConstellation {
         }
 
         const modelGeometryFiles: ModelGeometryFile[] | null = await ModelGeometryFile.fetchFromModel(idModel);
-        if (!modelGeometryFiles) {
-            LOG.logger.error(`ModelConstellation.fetch() unable to compute model geometry files from ${idModel}`);
-            return null;
-        }
-
-        const modelUVMapFiles: ModelUVMapFile[] | null = await ModelUVMapFile.fetchFromModelGeometryFiles(modelGeometryFiles);
-        if (!modelUVMapFiles) {
-            LOG.logger.error(`ModelConstellation.fetch() unable to compute model uv map files from ${idModel}`);
-            return null;
-        }
-
-        const modelUVMapChannels: ModelUVMapChannel[] | null = await ModelUVMapChannel.fetchFromModelUVMapFiles(modelUVMapFiles);
-        if (!modelUVMapChannels) {
-            LOG.logger.error(`ModelConstellation.fetch() unable to compute model uv map files from ${idModel}`);
-            return null;
-        }
-
+        const modelUVMapFiles: ModelUVMapFile[] | null = modelGeometryFiles ? await ModelUVMapFile.fetchFromModelGeometryFiles(modelGeometryFiles) : null;
+        const modelUVMapChannels: ModelUVMapChannel[] | null = modelUVMapFiles ? await ModelUVMapChannel.fetchFromModelUVMapFiles(modelUVMapFiles) : null;
         return new ModelConstellation(model, modelGeometryFiles, modelUVMapFiles, modelUVMapChannels);
     }
 }
