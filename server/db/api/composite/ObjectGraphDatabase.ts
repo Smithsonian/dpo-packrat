@@ -6,14 +6,15 @@ import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
 
 export class ObjectGraphDatabase {
-    objectMap: Map<SystemObjectIDType, ObjectGraphDataEntry> = new Map<SystemObjectIDType, ObjectGraphDataEntry>(); // map from object to graph entry details
+    objectMap: Map<number, ObjectGraphDataEntry> = new Map<number, ObjectGraphDataEntry>(); // map from SystemObject.idSystemObject to graph entry details
 
     // used by ObjectGraph
     // returns true if either parent or child is unknown to the database
     // returns false if both parent and child are known to the database, in which case continued elaboration of this branch is not needed
     async recordRelationship(parent: SystemObjectIDType, child: SystemObjectIDType): Promise<boolean> {
-        let parentData: ObjectGraphDataEntry | undefined = this.objectMap.get(parent);
-        let childData: ObjectGraphDataEntry | undefined = this.objectMap.get(child);
+        // LOG.logger.info(`${JSON.stringify(parent)} -> ${JSON.stringify(child)}`);
+        let parentData: ObjectGraphDataEntry | undefined = this.objectMap.get(parent.idSystemObject);
+        let childData: ObjectGraphDataEntry | undefined = this.objectMap.get(child.idSystemObject);
         const retValue: boolean = !(parentData && childData);
 
         if (!parentData) {
@@ -22,7 +23,7 @@ export class ObjectGraphDatabase {
                 LOG.logger.error(`ObjectGraphDatabase.recordRelationship unable to compute idSystemObject for ${JSON.stringify(parent)}`);
 
             parentData = new ObjectGraphDataEntry(parent, sID ? sID.Retired : false);
-            this.objectMap.set(parent, parentData);
+            this.objectMap.set(parent.idSystemObject, parentData);
         }
         if (!childData) {
             const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(child); /* istanbul ignore if */
@@ -30,7 +31,7 @@ export class ObjectGraphDatabase {
                 LOG.logger.error(`ObjectGraphDatabase.recordRelationship unable to compute idSystemObject for ${JSON.stringify(child)}`);
 
             childData = new ObjectGraphDataEntry(child, sID ? sID.Retired : false);
-            this.objectMap.set(child, childData);
+            this.objectMap.set(child.idSystemObject, childData);
         }
 
         parentData.recordChild(child);
@@ -60,11 +61,6 @@ export class ObjectGraphDatabase {
         return true;
     }
 
-    getObjectGraphDataEntry(oID: CACHE.ObjectIDAndType, sID: CACHE.SystemObjectInfo): ObjectGraphDataEntry | undefined {
-        const systemObjectIDType: SystemObjectIDType = { idSystemObject: sID.idSystemObject, idObject: oID.idObject, eObjectType: oID.eObjectType };
-        return this.objectMap.get(systemObjectIDType);
-    }
-
     /* #region Compute Graph Data */
     private async computeGraphDataFromObject(idObject: number, eObjectType: eSystemObjectType, functionName: string): Promise<boolean> {
         const oID: CACHE.ObjectIDAndType = { idObject, eObjectType };
@@ -81,9 +77,10 @@ export class ObjectGraphDatabase {
             return false;
         }
 
-        const objectIDAndType: SystemObjectIDType = { idSystemObject: sID.idSystemObject, idObject, eObjectType };
-        if (!this.objectMap.has(objectIDAndType))
-            this.objectMap.set(objectIDAndType, new ObjectGraphDataEntry(objectIDAndType, sID.Retired));
+        if (!this.objectMap.has(sID.idSystemObject)) {
+            const objectIDAndType: SystemObjectIDType = { idSystemObject: sID.idSystemObject, idObject, eObjectType };
+            this.objectMap.set(sID.idSystemObject, new ObjectGraphDataEntry(objectIDAndType, sID.Retired));
+        }
         return true;
     }
 
@@ -266,15 +263,15 @@ export class ObjectGraphDatabase {
         //      walk all children
         //          determine if applicable computed values (unit, project, subject, item) have been applied to child; if not:
         //              apply computed value
-        //              descend into children (extract state, apply, descend)
+        //              descend into children (recurse: extract state, apply, descend)
         //      walk all parents
         //          determine if applicable computed values (capture method, variant type, model purpose, and model file type) have been applied to parent; if not:
         //              apply computed value
-        //              ascend into parents (extract state, apply, ascend)
+        //              ascend into parents (recurse: extract state, apply, ascend)
 
         let retValue: boolean = true;
-        for (const [systemObjectIDType, objectGraphDataEntry] of this.objectMap) {
-            const objectGraphState = await this.extractState(systemObjectIDType);
+        for (const objectGraphDataEntry of this.objectMap.values()) {
+            const objectGraphState = await this.extractState(objectGraphDataEntry.systemObjectIDType);
             retValue = this.applyGraphState(objectGraphDataEntry, objectGraphState) && retValue;
         }
         return retValue;
@@ -298,13 +295,13 @@ export class ObjectGraphDatabase {
         if (depth >= 32)
             return false;
 
-        const relationMap: Map<SystemObjectIDType, number> | undefined =
+        const relationMap: Map<number, SystemObjectIDType> | undefined =
             eDirection == eApplyGraphStateDirection.eChild ? objectGraphDataEntry.childMap : objectGraphDataEntry.parentMap;
         if (!relationMap)
             return true;
 
-        for (const systemObjectIDType of relationMap.keys()) {
-            const relationEntry: ObjectGraphDataEntry | undefined = this.objectMap.get(systemObjectIDType);
+        for (const systemObjectIDType of relationMap.values()) {
+            const relationEntry: ObjectGraphDataEntry | undefined = this.objectMap.get(systemObjectIDType.idSystemObject);
             if (relationEntry) {
                 if (relationEntry.applyGraphState(objectGraphState, eDirection))
                     // if applying this state changes things, then recurse:

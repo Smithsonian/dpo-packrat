@@ -67,12 +67,12 @@ export class ReindexSolr {
         }
 
         let docs: any[] = [];
-        for (const [systemObjectIDType, objectGraphDataEntry] of this.objectGraphDatabase.objectMap) {
+        for (const objectGraphDataEntry of this.objectGraphDatabase.objectMap.values()) {
             const doc: any = {};
 
             await this.extractCommonFields(doc, objectGraphDataEntry);
 
-            switch (systemObjectIDType.eObjectType) {
+            switch (objectGraphDataEntry.systemObjectIDType.eObjectType) {
                 case eSystemObjectType.eUnit:                   await this.handleUnit(doc, objectGraphDataEntry);                 break;
                 case eSystemObjectType.eProject:                await this.handleProject(doc, objectGraphDataEntry);              break;
                 case eSystemObjectType.eSubject:                await this.handleSubject(doc, objectGraphDataEntry);              break;
@@ -114,8 +114,8 @@ export class ReindexSolr {
         doc.ObjectType = DBAPI.SystemObjectTypeToName(OGDEH.eObjectType);
         doc.idObject = OGDEH.idObject;
 
-        doc.ParentID = OGDEH.parents.length == 1 ? OGDEH.parents[0] : OGDEH.parents;
-        doc.ChildrenID = OGDEH.children.length == 1 ? OGDEH.children[0] : OGDEH.children;
+        doc.ParentID = OGDEH.parents.length == 0 ? [0] : OGDEH.parents;
+        doc.ChildrenID = OGDEH.children.length == 0 ? [0] : OGDEH.children;
         doc.Identifier = this.computeIdentifiers(objectGraphDataEntry.systemObjectIDType.idSystemObject);
 
         let nameArray: string[] = [];
@@ -137,8 +137,8 @@ export class ReindexSolr {
             idArray.push(objInfo.idSystemObject);
         }
         if (nameArray.length > 0) {
-            doc.Unit = nameArray.length == 1 ? nameArray[0] : nameArray;
-            doc.UnitID = idArray.length == 1 ? idArray[0] : idArray;
+            doc.Unit = nameArray;
+            doc.UnitID = idArray;
             nameArray = [];
             idArray = [];
         }
@@ -159,8 +159,8 @@ export class ReindexSolr {
             idArray.push(objInfo.idSystemObject);
         }
         if (nameArray.length > 0) {
-            doc.Project = nameArray.length == 1 ? nameArray[0] : nameArray;
-            doc.ProjectID = idArray.length == 1 ? idArray[0] : idArray;
+            doc.Project = nameArray;
+            doc.ProjectID = idArray;
             nameArray = [];
             idArray = [];
         }
@@ -181,8 +181,8 @@ export class ReindexSolr {
             idArray.push(objInfo.idSystemObject);
         }
         if (nameArray.length > 0) {
-            doc.Subject = nameArray.length == 1 ? nameArray[0] : nameArray;
-            doc.SubjectID = idArray.length == 1 ? idArray[0] : idArray;
+            doc.Subject = nameArray;
+            doc.SubjectID = idArray;
             nameArray = [];
             idArray = [];
         }
@@ -203,31 +203,32 @@ export class ReindexSolr {
             idArray.push(objInfo.idSystemObject);
         }
         if (nameArray.length > 0) {
-            doc.Item = nameArray.length == 1 ? nameArray[0] : nameArray;
-            doc.ItemID = idArray.length == 1 ? idArray[0] : idArray;
+            doc.Item = nameArray;
+            doc.ItemID = idArray;
             nameArray = [];
             idArray = [];
         }
 
         const ChildrenObjectTypes: string[] = [];
-        for (const childrenObjectType of OGDEH.childrenObjectTypes) ChildrenObjectTypes.push(DBAPI.SystemObjectTypeToName(childrenObjectType));
-        doc.ChildrenObjectTypes = ChildrenObjectTypes.length == 1 ? ChildrenObjectTypes[0] : ChildrenObjectTypes;
+        for (const childrenObjectType of OGDEH.childrenObjectTypes)
+            ChildrenObjectTypes.push(DBAPI.SystemObjectTypeToName(childrenObjectType));
+        doc.ChildrenObjectTypes = ChildrenObjectTypes;
 
         let VocabList: string[] = [];
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenCaptureMethods);
-        doc.ChildrenCaptureMethods = VocabList.length == 1 ? VocabList[0] : VocabList;
+        doc.ChildrenCaptureMethods = VocabList;
         VocabList = [];
 
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenVariantTypes);
-        doc.ChildrenVariantTypes = VocabList.length == 1 ? VocabList[0] : VocabList;
+        doc.ChildrenVariantTypes = VocabList;
         VocabList = [];
 
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenModelPurposes);
-        doc.ChildrenModelPurposes = VocabList.length == 1 ? VocabList[0] : VocabList;
+        doc.ChildrenModelPurposes = VocabList;
         VocabList = [];
 
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenModelFileTypes);
-        doc.ChildrenModelFileTypes = VocabList.length == 1 ? VocabList[0] : VocabList;
+        doc.ChildrenModelFileTypes = VocabList;
         VocabList = [];
     }
 
@@ -539,7 +540,8 @@ export class ReindexSolr {
         const identifiersRet: string[] = [];
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(idSystemObject);
         if (identifiers) {
-            for (const identifier of identifiers) identifiersRet.push(identifier.IdentifierValue);
+            for (const identifier of identifiers)
+                identifiersRet.push(identifier.IdentifierValue);
         }
         return identifiersRet;
     }

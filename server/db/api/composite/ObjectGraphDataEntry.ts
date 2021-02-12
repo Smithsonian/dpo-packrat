@@ -45,9 +45,9 @@ export class ObjectGraphDataEntry {
     retired: boolean = false;
 
     // Derived data
-    childMap: Map<SystemObjectIDType, number> = new Map<SystemObjectIDType, number>(); // map of child objects -> child idSystemObject
-    parentMap: Map<SystemObjectIDType, number> = new Map<SystemObjectIDType, number>(); // map of parent objects -> parent idSystemObject
-    ancestorObjectMap: Map<SystemObjectIDType, boolean> = new Map<SystemObjectIDType, boolean>(); // map of ancestor objects of significance (unit, project, subject, item)
+    childMap: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map of child idSystemObject -> child objects
+    parentMap: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map of parent idSystemObject -> parent objects
+    ancestorObjectMap: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map of ancestor objects of significance (unit, project, subject, item), idSystemObject -> object info
 
     // Child data types
     childrenObjectTypes: Map<eSystemObjectType, boolean> = new Map<eSystemObjectType, boolean>();
@@ -62,67 +62,69 @@ export class ObjectGraphDataEntry {
     }
 
     recordChild(child: SystemObjectIDType): void {
-        this.childMap.set(child, child.idSystemObject);
+        this.childMap.set(child.idSystemObject, child);
+        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} children: ${this.childMap.size}`);
     }
 
     recordParent(parent: SystemObjectIDType): void {
-        this.parentMap.set(parent, parent.idSystemObject);
+        this.parentMap.set(parent.idSystemObject, parent);
+        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} parents: ${this.parentMap.size}`);
     }
 
     // Returns true if applying objectGraphState updated the state of this ObjectGraphDataEntry
     applyGraphState(objectGraphState: ObjectGraphState, eDirection: eApplyGraphStateDirection): boolean {
         let retValue: boolean = false;
-        switch (eDirection) {
-            case eApplyGraphStateDirection.eSelf:
-            case eApplyGraphStateDirection.eChild:
-                if (objectGraphState.ancestorObject) {
-                    if (!this.ancestorObjectMap.has(objectGraphState.ancestorObject)) {
-                        this.ancestorObjectMap.set(objectGraphState.ancestorObject, true);
+
+        if (eDirection == eApplyGraphStateDirection.eSelf ||
+            eDirection == eApplyGraphStateDirection.eChild) {
+            if (objectGraphState.ancestorObject) {
+                if (!this.ancestorObjectMap.has(objectGraphState.ancestorObject.idSystemObject)) {
+                    this.ancestorObjectMap.set(objectGraphState.ancestorObject.idSystemObject, objectGraphState.ancestorObject);
+                    retValue = true;
+                }
+            }
+        }
+
+        if (eDirection == eApplyGraphStateDirection.eSelf ||
+            eDirection == eApplyGraphStateDirection.eParent) {
+            if (objectGraphState.eType) {
+                if (!this.childrenObjectTypes.has(objectGraphState.eType)) {
+                    this.childrenObjectTypes.set(objectGraphState.eType, true);
+                    retValue = true;
+                }
+            }
+
+            if (objectGraphState.captureMethod) {
+                if (!this.childrenCaptureMethods.has(objectGraphState.captureMethod)) {
+                    this.childrenCaptureMethods.set(objectGraphState.captureMethod, true);
+                    retValue = true;
+                }
+            }
+
+            if (objectGraphState.variantTypes) {
+                for (const variantType of objectGraphState.variantTypes.keys()) {
+                    if (!this.childrenVariantTypes.has(variantType)) {
+                        this.childrenVariantTypes.set(variantType, true);
                         retValue = true;
                     }
                 }
-                break;
+            }
 
-            case eApplyGraphStateDirection.eParent:
-                if (objectGraphState.eType) {
-                    if (!this.childrenObjectTypes.has(objectGraphState.eType)) {
-                        this.childrenObjectTypes.set(objectGraphState.eType, true);
+            if (objectGraphState.modelPurpose) {
+                if (!this.childrenModelPurposes.has(objectGraphState.modelPurpose)) {
+                    this.childrenModelPurposes.set(objectGraphState.modelPurpose, true);
+                    retValue = true;
+                }
+            }
+
+            if (objectGraphState.modelFileTypes) {
+                for (const modelFileType of objectGraphState.modelFileTypes.keys()) {
+                    if (!this.childrenModelFileTypes.has(modelFileType)) {
+                        this.childrenModelFileTypes.set(modelFileType, true);
                         retValue = true;
                     }
                 }
-
-                if (objectGraphState.captureMethod) {
-                    if (!this.childrenCaptureMethods.has(objectGraphState.captureMethod)) {
-                        this.childrenCaptureMethods.set(objectGraphState.captureMethod, true);
-                        retValue = true;
-                    }
-                }
-
-                if (objectGraphState.variantTypes) {
-                    for (const variantType of objectGraphState.variantTypes.keys()) {
-                        if (!this.childrenVariantTypes.has(variantType)) {
-                            this.childrenVariantTypes.set(variantType, true);
-                            retValue = true;
-                        }
-                    }
-                }
-
-                if (objectGraphState.modelPurpose) {
-                    if (!this.childrenModelPurposes.has(objectGraphState.modelPurpose)) {
-                        this.childrenModelPurposes.set(objectGraphState.modelPurpose, true);
-                        retValue = true;
-                    }
-                }
-
-                if (objectGraphState.modelFileTypes) {
-                    for (const modelFileType of objectGraphState.modelFileTypes.keys()) {
-                        if (!this.childrenModelFileTypes.has(modelFileType)) {
-                            this.childrenModelFileTypes.set(modelFileType, true);
-                            retValue = true;
-                        }
-                    }
-                }
-                break;
+            }
         }
         return retValue;
     }
@@ -135,9 +137,13 @@ export class ObjectGraphDataEntry {
         objectGraphDataEntryHierarchy.eObjectType = this.systemObjectIDType.eObjectType;
         objectGraphDataEntryHierarchy.idObject = this.systemObjectIDType.idObject;
 
-        objectGraphDataEntryHierarchy.parents = [...this.parentMap.values()];
-        objectGraphDataEntryHierarchy.children = [...this.childMap.values()];
-        for (const systemObjectIDType of this.ancestorObjectMap.keys()) {
+        objectGraphDataEntryHierarchy.parents = [...this.parentMap.keys()];
+        objectGraphDataEntryHierarchy.children = [...this.childMap.keys()];
+
+        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(this.parentMap.keys())} (${JSON.stringify(this.parentMap.size)})`);
+        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(objectGraphDataEntryHierarchy.parents)} -Children-> ${JSON.stringify(objectGraphDataEntryHierarchy.children)}`);
+
+        for (const systemObjectIDType of this.ancestorObjectMap.values()) {
             switch (systemObjectIDType.eObjectType) {
                 case eSystemObjectType.eUnit:       objectGraphDataEntryHierarchy.units.push(systemObjectIDType); break;
                 case eSystemObjectType.eProject:    objectGraphDataEntryHierarchy.projects.push(systemObjectIDType); break;
