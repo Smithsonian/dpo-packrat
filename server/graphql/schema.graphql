@@ -1,6 +1,7 @@
 type Query {
   areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
   getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
+  getAllUsers(input: GetAllUsersInput!): GetAllUsersResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
   getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
   getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
@@ -1498,6 +1499,21 @@ input GetUserInput {
 
 type GetUserResult {
   User: User
+}
+
+enum USER_STATUS {
+  eAll
+  eActive
+  eInactive
+}
+
+input GetAllUsersInput {
+  search: String!
+  active: USER_STATUS!
+}
+
+type GetAllUsersResult {
+  User: [User]!
 }
 
 type User {

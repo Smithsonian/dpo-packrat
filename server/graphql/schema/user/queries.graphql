@@ -17,7 +17,9 @@ type GetUserResult {
 }
 
 enum USER_STATUS {
-    All
+    eAll
+    eActive
+    eInactive
 }
 
 input GetAllUsersInput {
@@ -26,5 +28,5 @@ input GetAllUsersInput {
 }
 
 type GetAllUsersResult {
-    User: [User!]!
+    User: [User]!
 }

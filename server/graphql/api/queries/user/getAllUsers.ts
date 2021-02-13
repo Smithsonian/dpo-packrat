@@ -4,15 +4,15 @@ const getAllUsers = gql`
     query getAllUsers($input: GetAllUsersInput!) {
         getAllUsers(input: $input) {
             User {
-              idUser
-              Active
-              DateActivated
-              EmailAddress
-              Name
-              SecurityID
-              DateDisabled
-              EmailSettings
-              WorkflowNotificationTimeDateTime
+                idUser
+                Active
+                DateActivated
+                EmailAddress
+                Name
+                SecurityID
+                DateDisabled
+                EmailSettings
+                WorkflowNotificationTime
             }
         }
     }

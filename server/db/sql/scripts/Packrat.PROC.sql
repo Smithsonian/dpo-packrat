@@ -1,6 +1,6 @@
 USE `Packrat`;
 DELIMITER //
-CREATE OR REPLACE PROCEDURE AssetVersionCreate (
+CREATE PROCEDURE AssetVersionCreate (
     IN P_idAsset INT,
     IN P_FileName VARCHAR(512),
     IN P_idUserCreator INT,

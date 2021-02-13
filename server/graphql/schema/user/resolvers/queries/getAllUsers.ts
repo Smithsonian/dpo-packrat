@@ -1,11 +1,22 @@
-import { GetAllUsersResult, QueryGetUserArgs } from '../../../../../types/graphql';
+import { GetAllUsersResult, QueryGetAllUsersArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
-export default async function getUser(_: Parent, args: QueryGetUserArgs): Promise<GetAllUsersResult> {
-    const { input } = args;
-    const { search, eStatus } = input;
+export default async function getAllUsers(_: Parent, args: QueryGetAllUsersArgs): Promise<GetAllUsersResult> {
+    const { input: {
+        search,
+        active
+    } } = args;
 
-    const Users = await DBAPI.User.fetchUserList(search, eStatus);
-    return { Users };
+    // Use the active from the QueryGetAllUsersArgs and link that to the DBAPI.eUserStatus enumberable to reference the same status
+
+    const Users = await DBAPI.User.fetchUserList(search, DBAPI.eUserStatus[active]);
+    if (!Users) {
+        return {
+            User: []
+        };
+
+    }
+    return { User: Users };
+    //note: check getCurrentUser for similar pattern
 }
