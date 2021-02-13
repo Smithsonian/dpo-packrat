@@ -57,10 +57,7 @@ export class ReindexSolr {
     }
 
     private async fullIndexWorker(): Promise<boolean> {
-
         const solrClient: SolrClient = new SolrClient(null, null, null);
-        solrClient._client.autoCommit = true;
-
         if (!(await this.objectGraphDatabase.fetch())) {
             LOG.logger.error('ReindexSolr.fullIndex failed on ObjectGraphDatabase.fetch()');
             return false;
@@ -93,15 +90,15 @@ export class ReindexSolr {
 
             docs.push(doc);
             if (docs.length >= 1000) {
-                solrClient._client.add(docs, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
-                solrClient._client.commit(function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
+                solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
+                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
                 docs = [];
             }
         }
 
         if (docs.length > 0) {
-            solrClient._client.add(docs, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
-            solrClient._client.commit(function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
+            solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
+            solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
         }
         return true;
     }
