@@ -50,6 +50,22 @@ export const REPOSITORY_ROUTE = {
     ROUTES: REPOSITORY_ROUTES_TYPE
 };
 
+
+export const ADMIN_EDIT_USER = {
+    CREATE: 'create',
+    USER: 'user/:idUser'
+};
+
+export const ADMIN_ROUTES_TYPE = {
+    USERS: 'users',
+    USER: ADMIN_EDIT_USER
+};
+
+export const ADMIN_ROUTE = {
+    TYPE: 'admin',
+    ROUTES: ADMIN_ROUTES_TYPE
+};
+
 export function resolveRoute(route: string): string {
     return `/${route}`;
 }

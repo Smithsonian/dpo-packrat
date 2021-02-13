@@ -14,6 +14,7 @@ import { useControlStore } from '../../store';
 import Ingestion from '../Ingestion';
 import Repository from '../Repository';
 import SidePanel from './components/SidePanel';
+import Admin from '../Admin';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -45,6 +46,7 @@ function Home(): React.ReactElement {
                     <SidePanel isExpanded={sideBarExpanded} onToggle={onToggle} />
                     <PrivateRoute path={resolveRoute(HOME_ROUTES.REPOSITORY)} component={Repository} />
                     <PrivateRoute path={resolveRoute(HOME_ROUTES.INGESTION)} component={Ingestion} />
+                    <PrivateRoute path={resolveRoute(HOME_ROUTES.ADMIN)} component={Admin} />
                 </Box>
             </PrivateRoute>
         </Box>
