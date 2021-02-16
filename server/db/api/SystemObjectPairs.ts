@@ -364,6 +364,27 @@ export function SystemObjectTypeToName(eObjectType: eSystemObjectType | null): s
     }
 }
 
+export function SystemObjectNameToType(objectTypeName: string | null): eSystemObjectType {
+    switch (objectTypeName) {
+        case 'Unit':                    return eSystemObjectType.eUnit;
+        case 'Project':                 return eSystemObjectType.eProject;
+        case 'Subject':                 return eSystemObjectType.eSubject;
+        case 'Item':                    return eSystemObjectType.eItem;
+        case 'Capture Data':            return eSystemObjectType.eCaptureData;
+        case 'Model':                   return eSystemObjectType.eModel;
+        case 'Scene':                   return eSystemObjectType.eScene;
+        case 'Intermediary File':       return eSystemObjectType.eIntermediaryFile;
+        case 'Project Documentation':   return eSystemObjectType.eProjectDocumentation;
+        case 'Asset':                   return eSystemObjectType.eAsset;
+        case 'Asset Version':           return eSystemObjectType.eAssetVersion;
+        case 'Actor':                   return eSystemObjectType.eActor;
+        case 'Stakeholder':             return eSystemObjectType.eStakeholder;
+
+        default:
+        case 'Unknown':                 return eSystemObjectType.eUnknown;
+    }
+}
+
 export class SystemObjectPairs extends SystemObject implements SystemObjectPairsBase {
     Actor: Actor | null = null;
     Asset_AssetToSystemObject_idAsset: Asset | null = null;
