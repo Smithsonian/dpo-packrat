@@ -3335,6 +3335,24 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eUnknown)).toEqual('Unknown');
         expect(DBAPI.SystemObjectTypeToName(null)).toEqual('Unknown');
     });
+
+    test('DB Fetch SystemObject: SystemObjectNameToType', async () => {
+        expect(DBAPI.SystemObjectNameToType('Unit')).toEqual(DBAPI.eSystemObjectType.eUnit);
+        expect(DBAPI.SystemObjectNameToType('Project')).toEqual(DBAPI.eSystemObjectType.eProject);
+        expect(DBAPI.SystemObjectNameToType('Subject')).toEqual(DBAPI.eSystemObjectType.eSubject);
+        expect(DBAPI.SystemObjectNameToType('Item')).toEqual(DBAPI.eSystemObjectType.eItem);
+        expect(DBAPI.SystemObjectNameToType('Capture Data')).toEqual(DBAPI.eSystemObjectType.eCaptureData);
+        expect(DBAPI.SystemObjectNameToType('Model')).toEqual(DBAPI.eSystemObjectType.eModel);
+        expect(DBAPI.SystemObjectNameToType('Scene')).toEqual(DBAPI.eSystemObjectType.eScene);
+        expect(DBAPI.SystemObjectNameToType('Intermediary File')).toEqual(DBAPI.eSystemObjectType.eIntermediaryFile);
+        expect(DBAPI.SystemObjectNameToType('Project Documentation')).toEqual(DBAPI.eSystemObjectType.eProjectDocumentation);
+        expect(DBAPI.SystemObjectNameToType('Asset')).toEqual(DBAPI.eSystemObjectType.eAsset);
+        expect(DBAPI.SystemObjectNameToType('Asset Version')).toEqual(DBAPI.eSystemObjectType.eAssetVersion);
+        expect(DBAPI.SystemObjectNameToType('Actor')).toEqual(DBAPI.eSystemObjectType.eActor);
+        expect(DBAPI.SystemObjectNameToType('Stakeholder')).toEqual(DBAPI.eSystemObjectType.eStakeholder);
+        expect(DBAPI.SystemObjectNameToType('Unknown')).toEqual(DBAPI.eSystemObjectType.eUnknown);
+        expect(DBAPI.SystemObjectNameToType(null)).toEqual(DBAPI.eSystemObjectType.eUnknown);
+    });
 });
 
 describe('DB Fetch Xref Test Suite', () => {
