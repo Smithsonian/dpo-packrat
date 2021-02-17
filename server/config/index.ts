@@ -17,6 +17,7 @@ enum COLLECTION_TYPE {
 }
 
 enum NAVIGATION_TYPE {
+    DEFAULT,
     DB = 'db',
     SOLR = 'solr'
 }

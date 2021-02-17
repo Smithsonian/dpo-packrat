@@ -129,11 +129,11 @@ export class NavigationDB implements NAV.INavigation {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eUnitAbbreviation: metadata.push(unit.Abbreviation || '<UNKNOWN>'); break; /* istanbul ignore next */
+                case NAV.eMetadata.eHierarchyUnit: metadata.push(unit.Abbreviation || '<UNKNOWN>'); break; /* istanbul ignore next */
 
                 default:
-                case NAV.eMetadata.eItemName:
-                case NAV.eMetadata.eSubjectIdentifier:
+                case NAV.eMetadata.eHierarchyItem:
+                case NAV.eMetadata.eHierarchySubject:
                     metadata.push('');
                     break;
             }
@@ -178,7 +178,7 @@ export class NavigationDB implements NAV.INavigation {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eUnitAbbreviation: {
+                case NAV.eMetadata.eHierarchyUnit: {
                     const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchMasterFromProjects([project.idProject]); // TODO: consider placing this in a cache
                     let unitAbbreviation: string = ''; /* istanbul ignore else */
                     if (units) {
@@ -189,8 +189,8 @@ export class NavigationDB implements NAV.INavigation {
                 } break; /* istanbul ignore next */
 
                 default:
-                case NAV.eMetadata.eItemName:
-                case NAV.eMetadata.eSubjectIdentifier:
+                case NAV.eMetadata.eHierarchyItem:
+                case NAV.eMetadata.eHierarchySubject:
                     metadata.push('');
                     break;
             }
@@ -231,12 +231,12 @@ export class NavigationDB implements NAV.INavigation {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eUnitAbbreviation: {
+                case NAV.eMetadata.eHierarchyUnit: {
                     const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subject.idUnit);
                     metadata.push(unit ? (unit.Abbreviation || /* istanbul ignore next */ '<UNKNOWN>') : /* istanbul ignore next */ '');
                 } break;
 
-                case NAV.eMetadata.eSubjectIdentifier: {
+                case NAV.eMetadata.eHierarchySubject: {
                     const identifier: DBAPI.Identifier | null = (subject.idIdentifierPreferred)
                         ? await DBAPI.Identifier.fetch(subject.idIdentifierPreferred)
                         : null;
@@ -244,7 +244,7 @@ export class NavigationDB implements NAV.INavigation {
                 } break; /* istanbul ignore next */
 
                 default:
-                case NAV.eMetadata.eItemName:
+                case NAV.eMetadata.eHierarchyItem:
                     metadata.push('');
                     break;
             }
@@ -320,19 +320,19 @@ export class NavigationDB implements NAV.INavigation {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eUnitAbbreviation: {
+                case NAV.eMetadata.eHierarchyUnit: {
                     const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subject.idUnit);
                     metadata.push(unit ? (unit.Abbreviation || /* istanbul ignore next */ '<UNKNOWN>') : /* istanbul ignore next */ '');
                 } break;
 
-                case NAV.eMetadata.eSubjectIdentifier: {
+                case NAV.eMetadata.eHierarchySubject: {
                     const identifier: DBAPI.Identifier | null = (subject.idIdentifierPreferred)
                         ? await DBAPI.Identifier.fetch(subject.idIdentifierPreferred)
                         : /* istanbul ignore next */ null;
                     metadata.push(identifier ? identifier.IdentifierValue : /* istanbul ignore next */ '');
                 } break;
 
-                case NAV.eMetadata.eItemName:
+                case NAV.eMetadata.eHierarchyItem:
                     metadata.push(`Item ${item.Name}`);
                     break;
 
@@ -351,7 +351,7 @@ export class NavigationDB implements NAV.INavigation {
         const metadata: string[] = [];
         for (const metadataColumn of metadataColumns) {
             switch (metadataColumn) {
-                case NAV.eMetadata.eUnitAbbreviation: { /* istanbul ignore else */
+                case NAV.eMetadata.eHierarchyUnit: { /* istanbul ignore else */
                     if (subjects && subjects.length > 0) {  // TODO: deal with multiple subjects
                         const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subjects[0].idUnit);
                         metadata.push(unit ? (unit.Abbreviation || /* istanbul ignore next */ '<UNKNOWN>') : /* istanbul ignore next */ '');
@@ -359,7 +359,7 @@ export class NavigationDB implements NAV.INavigation {
                         metadata.push('');
                 } break;
 
-                case NAV.eMetadata.eSubjectIdentifier: { /* istanbul ignore else */
+                case NAV.eMetadata.eHierarchySubject: { /* istanbul ignore else */
                     if (subjects && subjects.length > 0) {  // TODO: deal with multiple subjects
                         const identifier: DBAPI.Identifier | null = (subjects[0].idIdentifierPreferred)
                             ? await DBAPI.Identifier.fetch(subjects[0].idIdentifierPreferred)
@@ -369,7 +369,7 @@ export class NavigationDB implements NAV.INavigation {
                         metadata.push('');
                 } break;
 
-                case NAV.eMetadata.eItemName:
+                case NAV.eMetadata.eHierarchyItem:
                     metadata.push(`Item ${item.Name}`);
                     break;
 
