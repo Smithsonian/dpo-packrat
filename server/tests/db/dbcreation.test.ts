@@ -102,7 +102,8 @@ let unit: DBAPI.Unit | null;
 let unit2: DBAPI.Unit | null;
 let unitEdan: DBAPI.UnitEdan | null;
 let unitEdan2: DBAPI.UnitEdan | null;
-let user: DBAPI.User | null;
+let userActive: DBAPI.User | null;
+let userInactive: DBAPI.User | null;
 let userPersonalizationSystemObject: DBAPI.UserPersonalizationSystemObject | null;
 let userPersonalizationUrl: DBAPI.UserPersonalizationUrl | null;
 let vocabulary: DBAPI.Vocabulary | null;
@@ -262,9 +263,9 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: User', async () => {
-        user = await UTIL.createUserTest({
-            Name: 'Test User',
-            EmailAddress: 'test@si.edu',
+        userActive = await UTIL.createUserTest({
+            Name: 'Test User 1',
+            EmailAddress: UTIL.randomStorageKey('test') + '@si.edu',
             SecurityID: 'SECURITY_ID',
             Active: true,
             DateActivated: UTIL.nowCleansed(),
@@ -273,7 +274,23 @@ describe('DB Creation Test Suite', () => {
             EmailSettings: 0,
             idUser: 0
         });
-        expect(user).toBeTruthy();
+        expect(userActive).toBeTruthy();
+        expect(userActive.DateDisabled).toBeFalsy();
+
+        userInactive = await UTIL.createUserTest({
+            Name: 'Test User 2',
+            EmailAddress: UTIL.randomStorageKey('test') + '@si.edu',
+            SecurityID: 'SECURITY_ID',
+            Active: false,
+            DateActivated: UTIL.nowCleansed(),
+            DateDisabled: null,
+            WorkflowNotificationTime: UTIL.nowCleansed(),
+            EmailSettings: 0,
+            idUser: 0
+        });
+        expect(userInactive).toBeTruthy();
+        expect(userInactive.DateDisabled).toBeTruthy();
+        expect(userInactive.DateDisabled).toEqual(userInactive.DateActivated);
     });
 
     test('DB Creation: Identifier Subject Hookup', async () => {
@@ -424,9 +441,9 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: AccessPolicy', async () => {
-        if (user && accessRole && accessContext) {
+        if (userActive && accessRole && accessContext) {
             accessPolicy = new DBAPI.AccessPolicy({
-                idUser: user.idUser,
+                idUser: userActive.idUser,
                 idAccessRole: accessRole.idAccessRole,
                 idAccessContext: accessContext.idAccessContext,
                 idAccessPolicy: 0
@@ -516,12 +533,12 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: AssetVersion', async () => {
-        if (assetThumbnail && user)
+        if (assetThumbnail && userActive)
             assetVersion = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
                 Version: 0,
                 FileName: assetThumbnail.FilePath,
-                idUserCreator: user.idUser,
+                idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
                 StorageSize: 50,
@@ -534,12 +551,12 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: AssetVersion Not Ingested', async () => {
-        if (assetThumbnail && user)
+        if (assetThumbnail && userActive)
             assetVersionNotIngested = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
                 Version: 0,
                 FileName: assetThumbnail.FilePath,
-                idUserCreator: user.idUser,
+                idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
                 StorageSize: 50,
@@ -792,13 +809,13 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Metadata', async () => {
-        if (assetThumbnail && user && vocabulary && systemObjectScene)
+        if (assetThumbnail && userActive && vocabulary && systemObjectScene)
             metadata = new DBAPI.Metadata({
                 Name: 'Test Metadata',
                 ValueShort: 'Test Value Short',
                 ValueExtended: 'Test Value Ext',
                 idAssetValue: assetThumbnail.idAsset,
-                idUser: user.idUser,
+                idUser: userActive.idUser,
                 idVMetadataSource: vocabulary.idVocabulary,
                 idSystemObject: systemObjectScene.idSystemObject,
                 idMetadata: 0,
@@ -1131,10 +1148,10 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: LicenseAssignment', async () => {
-        if (license && user && systemObjectSubject)
+        if (license && userActive && systemObjectSubject)
             licenseAssignment = new DBAPI.LicenseAssignment({
                 idLicense: license.idLicense,
-                idUserCreator: user.idUser,
+                idUserCreator: userActive.idUser,
                 DateStart: UTIL.nowCleansed(),
                 DateEnd: UTIL.nowCleansed(),
                 idSystemObject: systemObjectSubject.idSystemObject,
@@ -1193,9 +1210,9 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: UserPersonalizationSystemObject', async () => {
-        if (systemObjectSubject && user)
+        if (systemObjectSubject && userActive)
             userPersonalizationSystemObject = new DBAPI.UserPersonalizationSystemObject({
-                idUser: user.idUser,
+                idUser: userActive.idUser,
                 idSystemObject: systemObjectSubject.idSystemObject,
                 Personalization: 'Test Personalization',
                 idUserPersonalizationSystemObject: 0
@@ -1208,9 +1225,9 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: UserPersonalizationUrl', async () => {
-        if (user)
+        if (userActive)
             userPersonalizationUrl = new DBAPI.UserPersonalizationUrl({
-                idUser: user.idUser,
+                idUser: userActive.idUser,
                 URL: '/test/personalization/Url',
                 Personalization: 'Test Personalization',
                 idUserPersonalizationUrl: 0
@@ -1223,11 +1240,11 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Workflow', async () => {
-        if (workflowTemplate && project && user)
+        if (workflowTemplate && project && userActive)
             workflow = await UTIL.createWorkflowTest({
                 idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
                 idProject: project.idProject,
-                idUserInitiator: user.idUser,
+                idUserInitiator: userActive.idUser,
                 DateInitiated: UTIL.nowCleansed(),
                 DateUpdated: UTIL.nowCleansed(),
                 idWorkflow: 0
@@ -1257,10 +1274,10 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: WorkflowStep', async () => {
-        if (workflow && user && vocabulary)
+        if (workflow && userActive && vocabulary)
             workflowStep = await UTIL.createWorkflowStepTest({
                 idWorkflow: workflow.idWorkflow,
-                idUserOwner: user.idUser,
+                idUserOwner: userActive.idUser,
                 idVWorkflowStepType: vocabulary.idVocabulary,
                 State: 0,
                 DateCreated: UTIL.nowCleansed(),
@@ -1448,8 +1465,8 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch By ID: AccessPolicy.fetchFromUser', async () => {
         let accessPolicyFetch: DBAPI.AccessPolicy[] | null = null;
-        if (user) {
-            accessPolicyFetch = await DBAPI.AccessPolicy.fetchFromUser(user.idUser);
+        if (userActive) {
+            accessPolicyFetch = await DBAPI.AccessPolicy.fetchFromUser(userActive.idUser);
             if (accessPolicyFetch) {
                 expect(accessPolicyFetch).toEqual(expect.arrayContaining([accessPolicy]));
             }
@@ -1605,12 +1622,12 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Creation: AssetVersion 2', async () => {
-        if (assetThumbnail && user)
+        if (assetThumbnail && userActive)
             assetVersion2 = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
                 Version: 0,
                 FileName: assetThumbnail.FileName,
-                idUserCreator: user.idUser,
+                idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
                 StorageSize: 50,
@@ -1648,8 +1665,8 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch AssetVersion: AssetVersion.fetchFromUser', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
-        if (user) {
-            assetVersionFetch = await DBAPI.AssetVersion.fetchFromUser(user.idUser);
+        if (userActive) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFromUser(userActive.idUser);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
             }
@@ -1659,8 +1676,8 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch AssetVersion: AssetVersion.fetchFromUserByIngested Ingested', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
-        if (user) {
-            assetVersionFetch = await DBAPI.AssetVersion.fetchFromUserByIngested(user.idUser, true);
+        if (userActive) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFromUserByIngested(userActive.idUser, true);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
             }
@@ -1670,8 +1687,8 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch AssetVersion: AssetVersion.fetchFromUserByIngested Not Ingested', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
-        if (user) {
-            assetVersionFetch = await DBAPI.AssetVersion.fetchFromUserByIngested(user.idUser, false);
+        if (userActive) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFromUserByIngested(userActive.idUser, false);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
             }
@@ -1681,7 +1698,7 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch AssetVersion: AssetVersion.fetchByIngested Ingested', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
-        if (user) {
+        if (userActive) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchByIngested(true);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion]));
@@ -1692,7 +1709,7 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch AssetVersion: AssetVersion.fetchByIngested Not Ingested', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
-        if (user) {
+        if (userActive) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchByIngested(false);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
@@ -1898,8 +1915,8 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch LicenseAssignment: LicenseAssignment.fetchFromUser', async () => {
         let licenseAssignmentFetch: DBAPI.LicenseAssignment[] | null = null;
-        if (user) {
-            licenseAssignmentFetch = await DBAPI.LicenseAssignment.fetchFromUser(user.idUser);
+        if (userActive) {
+            licenseAssignmentFetch = await DBAPI.LicenseAssignment.fetchFromUser(userActive.idUser);
             if (licenseAssignmentFetch) {
                 expect(licenseAssignmentFetch).toEqual(expect.arrayContaining([licenseAssignment]));
             }
@@ -1932,8 +1949,8 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch Metadata: Metadata.fetchFromUser', async () => {
         let metadataFetch: DBAPI.Metadata[] | null = null;
-        if (user) {
-            metadataFetch = await DBAPI.Metadata.fetchFromUser(user.idUser);
+        if (userActive) {
+            metadataFetch = await DBAPI.Metadata.fetchFromUser(userActive.idUser);
             if (metadataFetch) {
                 expect(metadataFetch).toEqual(expect.arrayContaining([metadata]));
             }
@@ -2308,11 +2325,11 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch By ID: User', async () => {
         let userFetch: DBAPI.User | null = null;
-        if (user) {
-            userFetch = await DBAPI.User.fetch(user.idUser);
+        if (userActive) {
+            userFetch = await DBAPI.User.fetch(userActive.idUser);
             if (userFetch) {
-                expect(userFetch).toMatchObject(user);
-                expect(user).toMatchObject(userFetch);
+                expect(userFetch).toMatchObject(userActive);
+                expect(userActive).toMatchObject(userFetch);
             }
         }
         expect(userFetch).toBeTruthy();
@@ -2320,10 +2337,10 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch By EmailAddress: User', async () => {
         let userFetchArray: DBAPI.User[] | null = null;
-        if (user) {
-            userFetchArray = await DBAPI.User.fetchByEmail(user.EmailAddress);
+        if (userActive) {
+            userFetchArray = await DBAPI.User.fetchByEmail(userActive.EmailAddress);
             if (userFetchArray)
-                expect(userFetchArray).toEqual(expect.arrayContaining([user]));
+                expect(userFetchArray).toEqual(expect.arrayContaining([userActive]));
         }
         expect(userFetchArray).toBeTruthy();
     });
@@ -2342,8 +2359,8 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch UserPersonalizationSystemObject: UserPersonalizationSystemObject.fetchFromUser', async () => {
         let userPersonalizationSystemObjectFetch: DBAPI.UserPersonalizationSystemObject[] | null = null;
-        if (user) {
-            userPersonalizationSystemObjectFetch = await DBAPI.UserPersonalizationSystemObject.fetchFromUser(user.idUser);
+        if (userActive) {
+            userPersonalizationSystemObjectFetch = await DBAPI.UserPersonalizationSystemObject.fetchFromUser(userActive.idUser);
             if (userPersonalizationSystemObjectFetch) {
                 expect(userPersonalizationSystemObjectFetch).toEqual(expect.arrayContaining([userPersonalizationSystemObject]));
             }
@@ -2376,8 +2393,8 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch UserPersonalizationUrl: UserPersonalizationUrl.fetchFromUser', async () => {
         let userPersonalizationUrlFetch: DBAPI.UserPersonalizationUrl[] | null = null;
-        if (user) {
-            userPersonalizationUrlFetch = await DBAPI.UserPersonalizationUrl.fetchFromUser(user.idUser);
+        if (userActive) {
+            userPersonalizationUrlFetch = await DBAPI.UserPersonalizationUrl.fetchFromUser(userActive.idUser);
             if (userPersonalizationUrlFetch) {
                 expect(userPersonalizationUrlFetch).toEqual(expect.arrayContaining([userPersonalizationUrl]));
             }
@@ -2466,8 +2483,8 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch Workflow: Workflow.fetchFromUser', async () => {
         let workflowFetch: DBAPI.Workflow[] | null = null;
-        if (user) {
-            workflowFetch = await DBAPI.Workflow.fetchFromUser(user.idUser);
+        if (userActive) {
+            workflowFetch = await DBAPI.Workflow.fetchFromUser(userActive.idUser);
             if (workflowFetch) {
                 expect(workflowFetch).toEqual(expect.arrayContaining([workflow]));
             }
@@ -2502,8 +2519,8 @@ describe('DB Fetch By ID Test Suite', () => {
 
     test('DB Fetch WorkflowStep: WorkflowStep.fetchFromUser', async () => {
         let workflowStepFetch: DBAPI.WorkflowStep[] | null = null;
-        if (user) {
-            workflowStepFetch = await DBAPI.WorkflowStep.fetchFromUser(user.idUser);
+        if (userActive) {
+            workflowStepFetch = await DBAPI.WorkflowStep.fetchFromUser(userActive.idUser);
             if (workflowStepFetch) {
                 expect(workflowStepFetch).toEqual(expect.arrayContaining([workflowStep]));
             }
@@ -4046,6 +4063,31 @@ describe('DB Fetch Special Test Suite', () => {
         }
         expect(unitEdanFetch).toBeTruthy();
     });
+
+    test('DB Fetch Special: User.fetchUserList', async () => {
+        let userFetchArray: DBAPI.User[] | null = null;
+        if (userActive && userInactive) {
+            userFetchArray = await DBAPI.User.fetchUserList('test', DBAPI.eUserStatus.eAll);
+            expect(userFetchArray).toBeTruthy();
+            if (userFetchArray)
+                expect(userFetchArray).toEqual(expect.arrayContaining([userActive, userInactive]));
+
+            userFetchArray = await DBAPI.User.fetchUserList('test', DBAPI.eUserStatus.eActive);
+            expect(userFetchArray).toBeTruthy();
+            if (userFetchArray)
+                expect(userFetchArray).toEqual(expect.arrayContaining([userActive]));
+
+            userFetchArray = await DBAPI.User.fetchUserList('test', DBAPI.eUserStatus.eInactive);
+            expect(userFetchArray).toBeTruthy();
+            if (userFetchArray)
+                expect(userFetchArray).toEqual(expect.arrayContaining([userInactive]));
+
+            userFetchArray = await DBAPI.User.fetchUserList('NOMATCH', DBAPI.eUserStatus.eAll);
+            expect(userFetchArray).toBeTruthy();
+            if (userFetchArray)
+                expect(userFetchArray.length).toEqual(0);
+        }
+    });
 });
 
 // *******************************************************************
@@ -4303,12 +4345,12 @@ describe('DB Update Test Suite', () => {
 
     test('DB Creation: AssetVersion.delete', async () => {
         let assetVersion3: DBAPI.AssetVersion | null = null;
-        if (assetThumbnail && user) {
+        if (assetThumbnail && userActive) {
             assetVersion3 = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
                 Version: 0,
                 FileName: assetThumbnail.FileName,
-                idUserCreator: user.idUser,
+                idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
                 StorageSize: 50,
@@ -4706,14 +4748,14 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: LicenseAssignment.update', async () => {
         let bUpdated: boolean = false;
-        if (licenseAssignmentNull && user) {
-            licenseAssignmentNull.idUserCreator = user.idUser;
+        if (licenseAssignmentNull && userActive) {
+            licenseAssignmentNull.idUserCreator = userActive.idUser;
             bUpdated = await licenseAssignmentNull.update();
 
             const licenseAssignmentFetch: DBAPI.LicenseAssignment | null = await DBAPI.LicenseAssignment.fetch(licenseAssignmentNull.idLicenseAssignment);
             expect(licenseAssignmentFetch).toBeTruthy();
             if (licenseAssignmentFetch)
-                expect(licenseAssignmentFetch.idUserCreator).toBe(user.idUser);
+                expect(licenseAssignmentFetch.idUserCreator).toBe(userActive.idUser);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -4749,16 +4791,16 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: Metadata.update', async () => {
         let bUpdated: boolean = false;
-        if (metadataNull && assetThumbnail && user) {
+        if (metadataNull && assetThumbnail && userActive) {
             metadataNull.idAssetValue = assetThumbnail.idAsset;
-            metadataNull.idUser = user.idUser;
+            metadataNull.idUser = userActive.idUser;
             bUpdated = await metadataNull.update();
 
             const metadataFetch: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(metadataNull.idMetadata);
             expect(metadataFetch).toBeTruthy();
             if (metadataFetch) {
                 expect(metadataFetch.idAssetValue).toBe(assetThumbnail.idAsset);
-                expect(metadataFetch.idUser).toEqual(user.idUser);
+                expect(metadataFetch.idUser).toEqual(userActive.idUser);
             }
         }
         expect(bUpdated).toBeTruthy();
@@ -5308,15 +5350,52 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: User.update', async () => {
         let bUpdated: boolean = false;
-        if (user) {
+        if (userActive) {
             const updatedName: string = 'Updated Test User';
-            user.Name   = updatedName;
-            bUpdated = await user.update();
+            userActive.Name   = updatedName;
+            bUpdated = await userActive.update();
 
-            const userFetch: DBAPI.User | null = await DBAPI.User.fetch(user.idUser);
+            const userFetch: DBAPI.User | null = await DBAPI.User.fetch(userActive.idUser);
             expect(userFetch).toBeTruthy();
             if (userFetch)
                 expect(userFetch.Name).toBe(updatedName);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: User.update make inactive', async () => {
+        let bUpdated: boolean = false;
+        if (userActive) {
+            const now = UTIL.nowCleansed();
+            userActive.Active = false;
+            bUpdated = await userActive.update();
+
+            const userFetch: DBAPI.User | null = await DBAPI.User.fetch(userActive.idUser);
+            expect(userFetch).toBeTruthy();
+            if (userFetch) {
+                expect(userFetch.Active).toBe(false);
+                expect(userFetch.DateDisabled).toBeTruthy();
+                if (userFetch.DateDisabled)
+                    expect(userFetch.DateDisabled.getTime()).toBeGreaterThanOrEqual(now.getTime());
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: User.update make active', async () => {
+        let bUpdated: boolean = false;
+        if (userActive) {
+            const now = UTIL.nowCleansed();
+            userActive.Active = true;
+            bUpdated = await userActive.update();
+
+            const userFetch: DBAPI.User | null = await DBAPI.User.fetch(userActive.idUser);
+            expect(userFetch).toBeTruthy();
+            if (userFetch) {
+                expect(userFetch.Active).toBe(true);
+                expect(userFetch.DateDisabled).toBeNull();
+                expect(userFetch.DateActivated.getTime()).toBeGreaterThanOrEqual(now.getTime());
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
