@@ -107,13 +107,13 @@ export class ReindexSolr {
         const OGDEH: DBAPI.ObjectGraphDataEntryHierarchy = objectGraphDataEntry.extractHierarchy();
 
         doc.idSystemObject = OGDEH.idSystemObject;
-        doc.Retired = OGDEH.retired;
-        doc.ObjectType = DBAPI.SystemObjectTypeToName(OGDEH.eObjectType);
-        doc.idObject = OGDEH.idObject;
+        doc.CommonRetired = OGDEH.retired;
+        doc.CommonObjectType = DBAPI.SystemObjectTypeToName(OGDEH.eObjectType);
+        doc.CommonidObject = OGDEH.idObject;
+        doc.CommonIdentifier = this.computeIdentifiers(objectGraphDataEntry.systemObjectIDType.idSystemObject);
 
-        doc.ParentID = OGDEH.parents.length == 0 ? [0] : OGDEH.parents;
-        doc.ChildrenID = OGDEH.children.length == 0 ? [0] : OGDEH.children;
-        doc.Identifier = this.computeIdentifiers(objectGraphDataEntry.systemObjectIDType.idSystemObject);
+        doc.HierarchyParentID = OGDEH.parents.length == 0 ? [0] : OGDEH.parents;
+        doc.HierarchyChildrenID = OGDEH.children.length == 0 ? [0] : OGDEH.children;
 
         let nameArray: string[] = [];
         let idArray: number[] = [];
@@ -134,8 +134,8 @@ export class ReindexSolr {
             idArray.push(objInfo.idSystemObject);
         }
         if (nameArray.length > 0) {
-            doc.Unit = nameArray;
-            doc.UnitID = idArray;
+            doc.HierarchyUnit = nameArray;
+            doc.HierarchyUnitID = idArray;
             nameArray = [];
             idArray = [];
         }
@@ -156,8 +156,8 @@ export class ReindexSolr {
             idArray.push(objInfo.idSystemObject);
         }
         if (nameArray.length > 0) {
-            doc.Project = nameArray;
-            doc.ProjectID = idArray;
+            doc.HierarchyProject = nameArray;
+            doc.HierarchyProjectID = idArray;
             nameArray = [];
             idArray = [];
         }
@@ -178,8 +178,8 @@ export class ReindexSolr {
             idArray.push(objInfo.idSystemObject);
         }
         if (nameArray.length > 0) {
-            doc.Subject = nameArray;
-            doc.SubjectID = idArray;
+            doc.HierarchySubject = nameArray;
+            doc.HierarchySubjectID = idArray;
             nameArray = [];
             idArray = [];
         }
@@ -200,8 +200,8 @@ export class ReindexSolr {
             idArray.push(objInfo.idSystemObject);
         }
         if (nameArray.length > 0) {
-            doc.Item = nameArray;
-            doc.ItemID = idArray;
+            doc.HierarchyItem = nameArray;
+            doc.HierarchyItemID = idArray;
             nameArray = [];
             idArray = [];
         }
@@ -249,9 +249,9 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleUnit failed to compute unit from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
-        doc.Name = unit.Name;
-        doc.Abbreviation = unit.Abbreviation;
-        doc.ARKPrefix = unit.ARKPrefix;
+        doc.CommonName = unit.Name;
+        doc.UnitAbbreviation = unit.Abbreviation;
+        doc.UnitARKPrefix = unit.ARKPrefix;
         return true;
     }
 
@@ -261,8 +261,8 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleProject failed to compute project from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
-        doc.Name = project.Name;
-        doc.Description = project.Description;
+        doc.CommonName = project.Name;
+        doc.CommonDescription = project.Description;
         return true;
     }
 
@@ -273,10 +273,11 @@ export class ReindexSolr {
             return false;
         }
 
-        doc.Name = subject.Name;
+        doc.CommonName = subject.Name;
         if (subject.idIdentifierPreferred) {
             const ID: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(subject.idIdentifierPreferred);
-            if (ID) doc.IdentifierPreferred = ID.IdentifierValue;
+            if (ID)
+                doc.SubjectIdentifierPreferred = ID.IdentifierValue;
         }
         return true;
     }
@@ -287,8 +288,8 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleItem failed to compute item from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
-        doc.Name = item.Name;
-        doc.EntireSubject = item.EntireSubject;
+        doc.CommonName = item.Name;
+        doc.ItemEntireSubject = item.EntireSubject;
         return true;
     }
 
@@ -301,23 +302,25 @@ export class ReindexSolr {
         const captureDataPhotos: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(captureData.idCaptureData);
         const captureDataPhoto: DBAPI.CaptureDataPhoto | null = (captureDataPhotos && captureDataPhotos.length > 0) ? captureDataPhotos[0] : null;
 
-        doc.Name = captureData.Name;
-        doc.Description = captureData.Description;
-        doc.DateCreated = captureData.DateCaptured;
-        doc.CaptureMethod = await this.lookupVocabulary(captureData.idVCaptureMethod);
+        doc.CommonName = captureData.Name;
+        doc.CommonDescription = captureData.Description;
+        doc.CommonDateCreated = captureData.DateCaptured;
+        doc.CDCaptureMethod = await this.lookupVocabulary(captureData.idVCaptureMethod);
         if (captureDataPhoto) {
-            doc.CaptureDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
-            doc.CaptureDatasetFieldID = captureDataPhoto.CaptureDatasetFieldID;
-            doc.ItemPositionType = await this.lookupVocabulary(captureDataPhoto.idVItemPositionType);
-            doc.ItemPositionFieldID = captureDataPhoto.ItemPositionFieldID;
-            doc.ItemArrangementFieldID = captureDataPhoto.ItemArrangementFieldID;
-            doc.FocusType = await this.lookupVocabulary(captureDataPhoto.idVFocusType);
-            doc.LightSourceType = await this.lookupVocabulary(captureDataPhoto.idVLightSourceType);
-            doc.BackgroundRemovalMethod = await this.lookupVocabulary(captureDataPhoto.idVBackgroundRemovalMethod);
-            doc.ClusterType = await this.lookupVocabulary(captureDataPhoto.idVClusterType);
-            doc.ClusterGeometryFieldID = captureDataPhoto.ClusterGeometryFieldID;
-            doc.CameraSettingsUniform = captureDataPhoto.CameraSettingsUniform;
+            doc.CDCaptureDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
+            doc.CDCaptureDatasetFieldID = captureDataPhoto.CaptureDatasetFieldID;
+            doc.CDItemPositionType = await this.lookupVocabulary(captureDataPhoto.idVItemPositionType);
+            doc.CDItemPositionFieldID = captureDataPhoto.ItemPositionFieldID;
+            doc.CDItemArrangementFieldID = captureDataPhoto.ItemArrangementFieldID;
+            doc.CDFocusType = await this.lookupVocabulary(captureDataPhoto.idVFocusType);
+            doc.CDLightSourceType = await this.lookupVocabulary(captureDataPhoto.idVLightSourceType);
+            doc.CDBackgroundRemovalMethod = await this.lookupVocabulary(captureDataPhoto.idVBackgroundRemovalMethod);
+            doc.CDClusterType = await this.lookupVocabulary(captureDataPhoto.idVClusterType);
+            doc.CDClusterGeometryFieldID = captureDataPhoto.ClusterGeometryFieldID;
+            doc.CDCameraSettingsUniform = captureDataPhoto.CameraSettingsUniform;
         }
+
+        // TODO:  handle CDVariantType ... perhaps this needs to be multivalued?
         return true;
     }
 
@@ -328,15 +331,15 @@ export class ReindexSolr {
             return false;
         }
 
-        doc.Name = modelConstellation.model.Name;
-        doc.DateCreated = modelConstellation.model.DateCreated;
+        doc.CommonName = modelConstellation.model.Name;
+        doc.CommonDateCreated = modelConstellation.model.DateCreated;
 
-        doc.CreationMethod = await this.computeVocabulary(modelConstellation.model.idVCreationMethod);
-        doc.Master = modelConstellation.model.Master;
-        doc.Authoritative = modelConstellation.model.Authoritative;
-        doc.Modality = await this.computeVocabulary(modelConstellation.model.idVModality);
-        doc.Units = await this.computeVocabulary(modelConstellation.model.idVUnits);
-        doc.Purpose = await this.computeVocabulary(modelConstellation.model.idVPurpose);
+        doc.ModelCreationMethod = await this.computeVocabulary(modelConstellation.model.idVCreationMethod);
+        doc.ModelMaster = modelConstellation.model.Master;
+        doc.ModelAuthoritative = modelConstellation.model.Authoritative;
+        doc.ModelModality = await this.computeVocabulary(modelConstellation.model.idVModality);
+        doc.ModelUnits = await this.computeVocabulary(modelConstellation.model.idVUnits);
+        doc.ModelPurpose = await this.computeVocabulary(modelConstellation.model.idVPurpose);
 
         const modelFileTypeMap: Map<string, boolean> = new Map<string, boolean>();
         const roughnessMap: Map<number, boolean> = new Map<number, boolean>();
@@ -393,45 +396,26 @@ export class ReindexSolr {
             }
         }
 
-        const modelFileType: string[] = [...modelFileTypeMap.keys()];
-        const roughness: number[] = [...roughnessMap.keys()];
-        const metalness: number[] = [...metalnessMap.keys()];
-        const pointCount: number[] = [...pointCountMap.keys()];
-        const faceCount: number[] = [...faceCountMap.keys()];
-        const isWatertight: boolean[] = [...isWatertightMap.keys()];
-        const hasNormals: boolean[] = [...hasNormalsMap.keys()];
-        const hasVertexColor: boolean[] = [...hasVertexColorMap.keys()];
-        const hasUVSpace: boolean[] = [...hasUVSpaceMap.keys()];
-        const boundingBoxP1X: number[] = [...boundingBoxP1XMap.keys()];
-        const boundingBoxP1Y: number[] = [...boundingBoxP1YMap.keys()];
-        const boundingBoxP1Z: number[] = [...boundingBoxP1ZMap.keys()];
-        const boundingBoxP2X: number[] = [...boundingBoxP2XMap.keys()];
-        const boundingBoxP2Y: number[] = [...boundingBoxP2YMap.keys()];
-        const boundingBoxP2Z: number[] = [...boundingBoxP2ZMap.keys()];
-        const uvMapEdgeLength: number[] = [...uvMapEdgeLengthMap.keys()];
-        const channelPosition: number[] = [...channelPositionMap.keys()];
-        const channelWidth: number[] = [...channelWidthMap.keys()];
-        const uvMapType: string[] = [...uvMapTypeMap.keys()];
-
-        doc.ModelFileType = modelFileType.length == 1 ? modelFileType[0] : modelFileType;
-        doc.Roughness = roughness.length == 1 ? roughness[0] : roughness;
-        doc.Metalness = metalness.length == 1 ? metalness[0] : metalness;
-        doc.PointCount = pointCount.length == 1 ? pointCount[0] : pointCount;
-        doc.FaceCount = faceCount.length == 1 ? faceCount[0] : faceCount;
-        doc.IsWatertight = isWatertight.length == 1 ? isWatertight[0] : isWatertight;
-        doc.HasNormals = hasNormals.length == 1 ? hasNormals[0] : hasNormals;
-        doc.HasVertexColor = hasVertexColor.length == 1 ? hasVertexColor[0] : hasVertexColor;
-        doc.HasUVSpace = hasUVSpace.length == 1 ? hasUVSpace[0] : hasUVSpace;
-        doc.BoundingBoxP1X = boundingBoxP1X.length == 1 ? boundingBoxP1X[0] : boundingBoxP1X;
-        doc.BoundingBoxP1Y = boundingBoxP1Y.length == 1 ? boundingBoxP1Y[0] : boundingBoxP1Y;
-        doc.BoundingBoxP1Z = boundingBoxP1Z.length == 1 ? boundingBoxP1Z[0] : boundingBoxP1Z;
-        doc.BoundingBoxP2X = boundingBoxP2X.length == 1 ? boundingBoxP2X[0] : boundingBoxP2X;
-        doc.BoundingBoxP2Y = boundingBoxP2Y.length == 1 ? boundingBoxP2Y[0] : boundingBoxP2Y;
-        doc.BoundingBoxP2Z = boundingBoxP2Z.length == 1 ? boundingBoxP2Z[0] : boundingBoxP2Z;
-        doc.UVMapEdgeLength = uvMapEdgeLength.length == 1 ? uvMapEdgeLength[0] : uvMapEdgeLength;
-        doc.ChannelPosition = channelPosition.length == 1 ? channelPosition[0] : channelPosition;
-        doc.ChannelWidth = channelWidth.length == 1 ? channelWidth[0] : channelWidth;
-        doc.UVMapType = uvMapType.length == 1 ? uvMapType[0] : uvMapType;
+        doc.ModelFileType           = [...modelFileTypeMap.keys()];
+        doc.ModelRoughness          = [...roughnessMap.keys()];
+        doc.ModelMetalness          = [...metalnessMap.keys()];
+        doc.ModelPointCount         = [...pointCountMap.keys()];
+        doc.ModelFaceCount          = [...faceCountMap.keys()];
+        doc.ModelIsWatertight       = [...isWatertightMap.keys()];
+        doc.ModelHasNormals         = [...hasNormalsMap.keys()];
+        doc.ModelHasVertexColor     = [...hasVertexColorMap.keys()];
+        doc.ModelHasUVSpace         = [...hasUVSpaceMap.keys()];
+        doc.ModelBoundingBoxP1X     = [...boundingBoxP1XMap.keys()];
+        doc.ModelBoundingBoxP1Y     = [...boundingBoxP1YMap.keys()];
+        doc.ModelBoundingBoxP1Z     = [...boundingBoxP1ZMap.keys()];
+        doc.ModelBoundingBoxP2X     = [...boundingBoxP2XMap.keys()];
+        doc.ModelBoundingBoxP2Y     = [...boundingBoxP2YMap.keys()];
+        doc.ModelBoundingBoxP2Z     = [...boundingBoxP2ZMap.keys()];
+        doc.ModelUVMapEdgeLength    = [...uvMapEdgeLengthMap.keys()];
+        doc.ModelChannelPosition    = [...channelPositionMap.keys()];
+        doc.ModelChannelWidth       = [...channelWidthMap.keys()];
+        doc.ModelUVMapType          = [...uvMapTypeMap.keys()];
+        // TODO: should we turn multivalued metrics and bounding boxes into single valued attributes, and combine the multiple values in a meaningful way (e.g. add point and face counts, combine bounding boxes)
         return true;
     }
 
@@ -441,9 +425,9 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleScene failed to compute scene from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
-        doc.Name = scene.Name;
-        doc.IsOriented = scene.IsOriented;
-        doc.HasBeenQCd = scene.HasBeenQCd;
+        doc.CommonName = scene.Name;
+        doc.SceneIsOriented = scene.IsOriented;
+        doc.SceneHasBeenQCd = scene.HasBeenQCd;
         return true;
     }
 
@@ -453,7 +437,7 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleIntermediaryFile failed to compute intermediaryFile from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
-        doc.DateCreated = intermediaryFile.DateCreated;
+        doc.CommonDateCreated = intermediaryFile.DateCreated;
         return true;
     }
 
@@ -463,8 +447,8 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleProjectDocumentation failed to compute projectDocumentation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
-        doc.Name = projectDocumentation.Name;
-        doc.Description = projectDocumentation.Description;
+        doc.CommonName = projectDocumentation.Name;
+        doc.CommonDescription = projectDocumentation.Description;
         return true;
     }
 
@@ -474,8 +458,8 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleAsset failed to compute asset from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
-        doc.FileName = asset.FileName;
-        doc.FilePath = asset.FilePath;
+        doc.AssetFileName = asset.FileName;
+        doc.AssetFilePath = asset.FilePath;
         doc.AssetType = await this.lookupVocabulary(asset.idVAssetType);
         return true;
     }
@@ -492,11 +476,11 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleAssetVersion failed to compute idUserCreator from ${assetVersion.idUserCreator}`);
             return false;
         }
-        doc.UserCreator = user.Name;
-        doc.StorageHash = assetVersion.StorageHash;
-        doc.StorageSize = assetVersion.StorageSize;
-        doc.Ingested = assetVersion.Ingested;
-        doc.BulkIngest = assetVersion.BulkIngest;
+        doc.AVUserCreator = user.Name;
+        doc.AVStorageHash = assetVersion.StorageHash;
+        doc.AVStorageSize = assetVersion.StorageSize;
+        doc.AVIngested = assetVersion.Ingested;
+        doc.AVBulkIngest = assetVersion.BulkIngest;
         return true;
     }
 
@@ -506,8 +490,8 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleActor failed to compute actor from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
-        doc.Name = actor.IndividualName;
-        doc.OrganizationName = actor.OrganizationName;
+        doc.CommonName = actor.IndividualName;
+        doc.CommonOrganizationName = actor.OrganizationName;
         return true;
     }
 
@@ -518,18 +502,18 @@ export class ReindexSolr {
             return false;
         }
 
-        doc.Name = stakeholder.IndividualName;
-        doc.OrganizationName = stakeholder.OrganizationName;
-        doc.EmailAddress = stakeholder.EmailAddress;
-        doc.PhoneNumberMobile = stakeholder.PhoneNumberMobile;
-        doc.PhoneNumberOffice = stakeholder.PhoneNumberOffice;
-        doc.MailingAddress = stakeholder.MailingAddress;
+        doc.CommonName = stakeholder.IndividualName;
+        doc.CommonOrganizationName = stakeholder.OrganizationName;
+        doc.StakeholderEmailAddress = stakeholder.EmailAddress;
+        doc.StakeholderPhoneNumberMobile = stakeholder.PhoneNumberMobile;
+        doc.StakeholderPhoneNumberOffice = stakeholder.PhoneNumberOffice;
+        doc.StakeholderMailingAddress = stakeholder.MailingAddress;
         return true;
     }
 
     private async handleUnknown(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         LOG.logger.error(`ReindexSolr.fullIndex called with unknown object type from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
-        doc.Name = `Unknown ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`;
+        doc.CommonName = `Unknown ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`;
         return false;
     }
 

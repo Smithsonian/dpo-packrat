@@ -7,96 +7,96 @@
 <schema name="packrat-config" version="1.6">
     <!-- SystemObject fields -->
     <field name="idSystemObject" type="string" indexed="true" stored="true" required="true" multiValued="false" />
-    <field name="Retired" type="boolean" indexed="true" stored="true" />
+    <field name="CommonRetired" type="boolean" indexed="true" stored="true" />
     <!-- Describes the object represented by this system object, e.g. "Unit", "Project", "CaptureData", "Model", etc. -->
-  	<field name="ObjectType" type="string" indexed="true" stored="true" required="true" multiValued="false" />
-    <field name="idObject" type="pint" indexed="true" stored="true" required="true" multiValued="false" />
+  	<field name="CommonObjectType" type="string" indexed="true" stored="true" required="true" multiValued="false" />
+    <field name="CommonidObject" type="pint" indexed="true" stored="true" required="true" multiValued="false" />
 
     <!-- Common fields -->
-    <field name="Name" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="Description" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="Identifier" type="string" indexed="true" stored="true" multiValued="true" />
-    <field name="FileName" type="string" indexed="true" stored="true" multiValued="true" />
-    <field name="DateCreated" type="pdate" indexed="true" stored="true" multiValued="false" />
-    <field name="OrganizationName" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CommonName" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CommonDescription" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CommonIdentifier" type="string" indexed="true" stored="true" multiValued="true" />
+    <field name="CommonDateCreated" type="pdate" indexed="true" stored="true" multiValued="false" />
+    <field name="CommonOrganizationName" type="string" indexed="true" stored="true" multiValued="false" />
     
     <!-- Unit fields -->
-    <field name="Abbreviation" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="ARKPrefix" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="UnitAbbreviation" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="UnitARKPrefix" type="string" indexed="true" stored="true" multiValued="false" />
     
     <!-- Subject fields -->
-    <field name="IdentifierPreferred" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="SubjectIdentifierPreferred" type="string" indexed="true" stored="true" multiValued="false" />
 
     <!-- Item fields -->
-    <field name="EntireSubject" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="ItemEntireSubject" type="boolean" indexed="true" stored="true" multiValued="false" />
 
     <!-- CaptureData fields -->
-    <field name="CaptureMethod" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CDCaptureMethod" type="string" indexed="true" stored="true" multiValued="false" />
 
     <!-- CaptureDataPhoto, CaptureDataFile fields -->
-    <field name="CaptureDatasetType" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="CaptureDatasetFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
-    <field name="ItemPositionType" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="ItemPositionFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
-    <field name="ItemArrangementFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
-    <field name="FocusType" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="LightSourceType" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="BackgroundRemovalMethod" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="ClusterType" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="ClusterGeometryFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
-    <field name="CameraSettingsUniform" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="CDCaptureDatasetType" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CDCaptureDatasetFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="CDItemPositionType" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CDItemPositionFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="CDItemArrangementFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="CDFocusType" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CDLightSourceType" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CDBackgroundRemovalMethod" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CDClusterType" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CDClusterGeometryFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="CDCameraSettingsUniform" type="boolean" indexed="true" stored="true" multiValued="false" />
     
-    <field name="VariantType" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CDVariantType" type="string" indexed="true" stored="true" multiValued="false" />
 
     <!-- Model, ModelGeometryFile, ModelUVMapFile fields -->
-    <field name="CreationMethod" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="Master" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="Authoritative" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="Modality" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="Units" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="Purpose" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelCreationMethod" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelMaster" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelAuthoritative" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelModality" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelUnits" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelPurpose" type="string" indexed="true" stored="true" multiValued="false" />
 
     <field name="ModelFileType" type="string" indexed="true" stored="true" multiValued="true" />
-    <field name="Roughness" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="Metalness" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="PointCount" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="FaceCount" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="IsWatertight" type="boolean" indexed="true" stored="true" multiValued="true" />
-    <field name="HasNormals" type="boolean" indexed="true" stored="true" multiValued="true" />
-    <field name="HasVertexColor" type="boolean" indexed="true" stored="true" multiValued="true" />
-    <field name="HasUVSpace" type="boolean" indexed="true" stored="true" multiValued="true" />
-    <field name="BoundingBoxP1X" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="BoundingBoxP1Y" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="BoundingBoxP1Z" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="BoundingBoxP2X" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="BoundingBoxP2Y" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="BoundingBoxP2Z" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelRoughness" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelMetalness" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelPointCount" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelFaceCount" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelIsWatertight" type="boolean" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelHasNormals" type="boolean" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelHasVertexColor" type="boolean" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelHasUVSpace" type="boolean" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelBoundingBoxP1X" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelBoundingBoxP1Y" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelBoundingBoxP1Z" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelBoundingBoxP2X" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelBoundingBoxP2Y" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelBoundingBoxP2Z" type="pdouble" indexed="true" stored="true" multiValued="true" />
 
-    <field name="UVMapEdgeLength" type="pint" indexed="true" stored="true" multiValued="true" />
-    <field name="ChannelPosition" type="pint" indexed="true" stored="true" multiValued="true" />
-    <field name="ChannelWidth" type="pint" indexed="true" stored="true" multiValued="true" />
-    <field name="UVMapType" type="string" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelUVMapEdgeLength" type="pint" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelChannelPosition" type="pint" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelChannelWidth" type="pint" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelUVMapType" type="string" indexed="true" stored="true" multiValued="true" />
 
     <!-- Scene fields -->
-    <field name="IsOriented" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="HasBeenQCd" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneIsOriented" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneHasBeenQCd" type="boolean" indexed="true" stored="true" multiValued="false" />
 
     <!-- Asset fields -->
-    <field name="FilePath" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="AssetFileName" type="string" indexed="true" stored="true" multiValued="true" />
+    <field name="AssetFilePath" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="AssetType" type="string" indexed="true" stored="true" multiValued="false" />
 
     <!-- AssetVersion fields -->
-    <field name="UserCreator" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="StorageHash" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="StorageSize" type="plong" indexed="true" stored="true" multiValued="false" />
-    <field name="Ingested" type="boolean" indexed="true" stored="true" multiValued="false" />
-    <field name="BulkIngest" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="AVUserCreator" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="AVStorageHash" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="AVStorageSize" type="plong" indexed="true" stored="true" multiValued="false" />
+    <field name="AVIngested" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="AVBulkIngest" type="boolean" indexed="true" stored="true" multiValued="false" />
 
     <!-- Stakeholder fields -->
-    <field name="EmailAddress" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="PhoneNumberMobile" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="PhoneNumberOffice" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="MailingAddress" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="StakeholderEmailAddress" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="StakeholderPhoneNumberMobile" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="StakeholderPhoneNumberOffice" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="StakeholderMailingAddress" type="string" indexed="true" stored="true" multiValued="false" />
 
     <!-- Only have "common" fields -->
     <!-- Project fields -->
@@ -105,17 +105,17 @@
     <!-- Actor fields -->
 
     <!-- Hierarchy fields -->
-    <field name="ParentID" type="pints" indexed="true" stored="true" />
-    <field name="ChildrenID" type="pints" indexed="true" stored="true" />
+    <field name="HierarchyParentID" type="pints" indexed="true" stored="true" />
+    <field name="HierarchyChildrenID" type="pints" indexed="true" stored="true" />
 
-    <field name="Unit" type="strings" indexed="true" stored="true" />
-    <field name="Project" type="strings" indexed="true" stored="true" />
-    <field name="Subject" type="strings" indexed="true" stored="true" />
-    <field name="Item" type="strings" indexed="true" stored="true" />
-    <field name="UnitID" type="pints" indexed="true" stored="true" />
-    <field name="ProjectID" type="pints" indexed="true" stored="true" />
-    <field name="SubjectID" type="pints" indexed="true" stored="true" />
-    <field name="ItemID" type="pints" indexed="true" stored="true" />
+    <field name="HierarchyUnit" type="strings" indexed="true" stored="true" />
+    <field name="HierarchyProject" type="strings" indexed="true" stored="true" />
+    <field name="HierarchySubject" type="strings" indexed="true" stored="true" />
+    <field name="HierarchyItem" type="strings" indexed="true" stored="true" />
+    <field name="HierarchyUnitID" type="pints" indexed="true" stored="true" />
+    <field name="HierarchyProjectID" type="pints" indexed="true" stored="true" />
+    <field name="HierarchySubjectID" type="pints" indexed="true" stored="true" />
+    <field name="HierarchyItemID" type="pints" indexed="true" stored="true" />
 
     <field name="ChildrenObjectTypes" type="strings" indexed="true" stored="true" />
     <field name="ChildrenCaptureMethods" type="strings" indexed="true" stored="true" />
@@ -130,11 +130,11 @@
 	
     <!-- It is very expensive to index everything twice. -->
     <!-- <copyField source="*" dest="_text_"/> -->
-    <copyField source="Name" dest="_text_"/> -->
-    <copyField source="Description" dest="_text_"/> -->
-    <copyField source="Identifier" dest="_text_"/> -->
-    <copyField source="FileName" dest="_text_"/> -->
-    <copyField source="OrganizationName" dest="_text_"/> -->
+    <copyField source="CommonName" dest="_text_"/> -->
+    <copyField source="CommonDescription" dest="_text_"/> -->
+    <copyField source="CommonIdentifier" dest="_text_"/> -->
+    <copyField source="CommonOrganizationName" dest="_text_"/> -->
+    <copyField source="AssetFileName" dest="_text_"/> -->
 
     <!-- Dynamic field definitions allow using convention over configuration
        for fields via the specification of patterns to match field names.
