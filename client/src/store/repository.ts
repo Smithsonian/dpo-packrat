@@ -28,8 +28,8 @@ type RepositoryStore = {
     variantType: number[];
     modelPurpose: number[];
     modelFileType: number[];
-    fromDate: Date;
-    toDate: Date;
+    fromDate: Date | null;
+    toDate: Date | null;
     getFilterState: () => RepositoryFilter;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
     updateFilterValue: (name: string, value: number | number[] | Date) => void;
@@ -46,8 +46,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
     loading: true,
     repositoryRootType: [eSystemObjectType.eUnit],
-    objectsToDisplay: [eSystemObjectType.eUnit],
-    metadataToDisplay: [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName],
+    objectsToDisplay: [],
+    metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
     units: [],
     projects: [],
     has: [],
@@ -56,8 +56,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     variantType: [],
     modelPurpose: [],
     modelFileType: [],
-    fromDate: new Date(),
-    toDate: new Date(),
+    fromDate: null,
+    toDate: null,
     updateFilterValue: (name: string, value: number | number[] | Date): void => {
         const { initializeTree } = get();
         set({ [name]: value, loading: true });

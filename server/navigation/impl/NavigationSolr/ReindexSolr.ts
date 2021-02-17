@@ -110,7 +110,7 @@ export class ReindexSolr {
         doc.CommonRetired = OGDEH.retired;
         doc.CommonObjectType = DBAPI.SystemObjectTypeToName(OGDEH.eObjectType);
         doc.CommonidObject = OGDEH.idObject;
-        doc.CommonIdentifier = this.computeIdentifiers(objectGraphDataEntry.systemObjectIDType.idSystemObject);
+        doc.CommonIdentifier = await this.computeIdentifiers(objectGraphDataEntry.systemObjectIDType.idSystemObject);
 
         doc.HierarchyParentID = OGDEH.parents.length == 0 ? [0] : OGDEH.parents;
         doc.HierarchyChildrenID = OGDEH.children.length == 0 ? [0] : OGDEH.children;

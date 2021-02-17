@@ -14,6 +14,7 @@ import { AiOutlineFileText } from 'react-icons/ai';
 import { RepositoryIcon } from '../components';
 import { RepositoryFilter } from '../pages/Repository';
 import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/MetadataView';
+import { metadataToDisplayOptions } from '../pages/Repository/components/RepositoryFilterView/RepositoryFilterOptions';
 import { StateRelatedObject } from '../store';
 import { palette } from '../theme';
 import Colors, { RepositoryColorVariant } from '../theme/colors';
@@ -36,34 +37,20 @@ export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystem
 
 export function getTermForSystemObjectType(objectType: eSystemObjectType): string {
     switch (objectType) {
-        case eSystemObjectType.eUnit:
-            return 'Unit';
-        case eSystemObjectType.eProject:
-            return 'Project';
-        case eSystemObjectType.eSubject:
-            return 'Subject';
-        case eSystemObjectType.eItem:
-            return 'Item';
-        case eSystemObjectType.eCaptureData:
-            return 'Capture Data';
-        case eSystemObjectType.eModel:
-            return 'Model';
-        case eSystemObjectType.eScene:
-            return 'Scene';
-        case eSystemObjectType.eIntermediaryFile:
-            return 'Intermediary File';
-        case eSystemObjectType.eProjectDocumentation:
-            return 'Project Documentation';
-        case eSystemObjectType.eAsset:
-            return 'Asset';
-        case eSystemObjectType.eAssetVersion:
-            return 'Asset Version';
-        case eSystemObjectType.eActor:
-            return 'Actor';
-        case eSystemObjectType.eStakeholder:
-            return 'Stakeholder';
-        default:
-            return 'Unknown';
+        case eSystemObjectType.eUnit:                   return 'Unit';
+        case eSystemObjectType.eProject:                return 'Project';
+        case eSystemObjectType.eSubject:                return 'Subject';
+        case eSystemObjectType.eItem:                   return 'Item';
+        case eSystemObjectType.eCaptureData:            return 'Capture Data';
+        case eSystemObjectType.eModel:                  return 'Model';
+        case eSystemObjectType.eScene:                  return 'Scene';
+        case eSystemObjectType.eIntermediaryFile:       return 'Intermediary File';
+        case eSystemObjectType.eProjectDocumentation:   return 'Project Documentation';
+        case eSystemObjectType.eAsset:                  return 'Asset';
+        case eSystemObjectType.eAssetVersion:           return 'Asset Version';
+        case eSystemObjectType.eActor:                  return 'Actor';
+        case eSystemObjectType.eStakeholder:            return 'Stakeholder';
+        default:                                        return 'Unknown';
     }
 }
 
@@ -140,9 +127,18 @@ export function getTreeColorVariant(index: number): RepositoryColorVariant {
     return index % 2 ? RepositoryColorVariant.light : RepositoryColorVariant.regular;
 }
 
+// cached data, computed once
+let metadataTitleMap: Map<eMetadata, string> | null = null;
+
 export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boolean, values?: string[]): TreeViewColumn[] {
     const treeColumns: TreeViewColumn[] = [];
     const MIN_SIZE = 5;
+
+    if (!metadataTitleMap) {
+        metadataTitleMap = new Map<eMetadata, string>();
+        for (const filterOption of metadataToDisplayOptions)
+            metadataTitleMap.set(filterOption.value, filterOption.label);
+    }
 
     metadataColumns.forEach((metadataColumn, index: number) => {
         const treeColumn: TreeViewColumn = {
@@ -151,23 +147,13 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
             size: MIN_SIZE
         };
 
+        if (isHeader)
+            treeColumn.label = metadataTitleMap ? (metadataTitleMap.get(metadataColumn) || 'Unknown') : 'Unknown';
+
         switch (metadataColumn) {
-            case eMetadata.eUnitAbbreviation:
-                if (isHeader) treeColumn.label = 'Unit';
-                break;
-
-            case eMetadata.eSubjectIdentifier:
-                if (isHeader) treeColumn.label = 'Subject';
-                treeColumn.size = MIN_SIZE * 3;
-                break;
-
-            case eMetadata.eItemName:
-                if (isHeader) treeColumn.label = 'Item';
-                treeColumn.size = MIN_SIZE * 3;
-                break;
-
-            default:
-                break;
+            case eMetadata.eHierarchySubject:   treeColumn.size = MIN_SIZE * 3; break;
+            case eMetadata.eHierarchyItem:      treeColumn.size = MIN_SIZE * 3; break;
+            default: break;
         }
 
         treeColumns.push(treeColumn);
