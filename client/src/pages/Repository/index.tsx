@@ -22,14 +22,14 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        maxWidth: (sideBarExpanded: boolean) => sideBarExpanded ? '85vw' : '93vw',
+        maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '85vw' : '93vw'),
         flexDirection: 'column',
         padding: 20,
         paddingBottom: 0,
         paddingRight: 0,
         [breakpoints.down('lg')]: {
             paddingRight: 20,
-            maxWidth: (sideBarExpanded: boolean) => sideBarExpanded ? '85vw' : '92vw',
+            maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '85vw' : '92vw')
         }
     }
 }));
@@ -56,16 +56,8 @@ function Repository(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <PrivateRoute path={resolveRoute(HOME_ROUTES.REPOSITORY)}>
-                <PrivateRoute
-                    exact
-                    path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)}
-                    component={TreeViewPage}
-                />
-                <PrivateRoute
-                    exact
-                    path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.DETAILS)}
-                    component={DetailsView}
-                />
+                <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} component={TreeViewPage} />
+                <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.DETAILS)} component={DetailsView} />
                 <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, 'details')}>
                     <Redirect to={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} />
                 </PrivateRoute>
@@ -93,35 +85,27 @@ function TreeViewPage(): React.ReactElement {
         updateRepositoryFilter
     } = useRepositoryStore();
 
+    console.log('location', location);
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
+    console.log('queries', queries);
 
-    const filterState: RepositoryFilter = React.useMemo(() => ({
-        search,
-        repositoryRootType,
-        objectsToDisplay,
-        metadataToDisplay,
-        units,
-        projects,
-        has,
-        missing,
-        captureMethod,
-        variantType,
-        modelPurpose,
-        modelFileType,
-    }), [
-        search,
-        repositoryRootType,
-        objectsToDisplay,
-        metadataToDisplay,
-        units,
-        projects,
-        has,
-        missing,
-        captureMethod,
-        variantType,
-        modelPurpose,
-        modelFileType,
-    ]);
+    const filterState: RepositoryFilter = React.useMemo(
+        () => ({
+            search,
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        }),
+        [search, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
+    );
 
     const initialFilterState = Object.keys(queries).length ? queries : filterState;
 
@@ -131,6 +115,8 @@ function TreeViewPage(): React.ReactElement {
 
     useEffect(() => {
         const route = generateRepositoryUrl(filterState);
+        console.log('filterState', filterState);
+        console.log('route', route);
         history.push(route);
     }, [filterState, history]);
 

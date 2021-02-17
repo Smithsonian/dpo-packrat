@@ -22,15 +22,17 @@ import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
+// import OutlinedInput from '@material-ui/core/OutlinedInput';
 import MenuItem from '@material-ui/core/MenuItem';
 import { BiSort } from 'react-icons/bi';
 // import { GetAllUsers } from '../../types/graphql';
 // import { QueryOptions } from '@apollo/client';
 // import { apolloClient } from '../../graphql';
 import { PrivateRoute } from '../../components';
-import { HOME_ROUTES, ADMIN_ROUTE, resolveRoute, resolveSubRoute } from '../../constants';
+import { HOME_ROUTES, ADMIN_ROUTE, ADMIN_ROUTES_TYPE, resolveRoute, resolveSubRoute, ADMIN_EDIT_USER } from '../../constants';
 import React, { useState, useEffect } from 'react';
-import { Redirect /* useHistory, useLocation */ } from 'react-router';
+import { Redirect, useParams /* useHistory, useLocation */ } from 'react-router';
+import { Link } from 'react-router-dom';
 
 interface UserData {
     idUser: number;
@@ -92,9 +94,14 @@ const sampleUserList = [
     }
 ];
 
-function extractISOMonthDateYear(iso) {
+function extractISOMonthDateYear(iso, mui = false) {
     if (!iso) {
         return null;
+    }
+    if (mui) {
+        const time = String(new Date(iso));
+        console.log(time);
+        return time;
     }
     const time = new Date(iso);
     const result = `${time.getMonth()}/${time.getDate()}/${time.getFullYear()}`;
@@ -109,8 +116,8 @@ const useStyles = makeStyles({
         overflow: 'auto',
         maxHeight: 'calc(100vh - 60px)',
         paddingLeft: '3%',
-        paddingTop: '3%',
-        backgroundColor: 'grey'
+        paddingTop: '3%'
+        // backgroundColor: 'grey'
     },
     //Will include the breadcrumbs have have that stacked on top
     AdminUsersListComponentsContainer: {
@@ -132,16 +139,16 @@ const useStyles = makeStyles({
         display: 'flex',
         justifyContent: 'space-around',
         alignItems: 'center'
+    },
+    AdminUserFormContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        flexWrap: 'nowrap'
+    },
+    AdminUserFormRow: {
+        display: 'flex'
     }
 });
-
-// export type UserFilter = {
-//   search: string;
-//   status: string;
-// };
-
-// AdminUserForm
-// TODO
 
 // AdminUsersFilter
 // Filters out from the users stored in AdminUsersView
@@ -176,19 +183,11 @@ function AdminUsersFilter({
         handleUsersSearchUpdate(searchFilter);
         console.log('searchUsers');
     };
-    //2 buttons
-    //textfield
-    //select
+
     return (
         <Box className={classes.AdminUsersListComponentsContainer}>
             <Box className={classes.AdminUsersSearchFilterContainer}>
-            	<TextField 
-					label='Search Packrat User' 
-					type='search' 
-					value={searchFilter}                  
-					id='searchFilter' 
-					onChange={handleSearchFilterChange} 
-				/>
+                <TextField label='Search Packrat User' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
                 <FormControl variant='outlined' className={classes.formControl}>
                     <InputLabel>Active</InputLabel>
                     <Select value={activeStatusFilter} onChange={handleActiveStatusFilterChange}>
@@ -201,7 +200,9 @@ function AdminUsersFilter({
                     Search
                 </Button>
             </Box>
-            <Button className={classes.searchUsersFilterButton}>Add User</Button>
+            <Button className={classes.searchUsersFilterButton}>
+                <Link to='/admin/user/create'>Create User</Link>
+            </Button>
         </Box>
     );
 }
@@ -213,7 +214,7 @@ function AdminUsersFilter({
 //AdminUsersListRow
 // Checkbox, name, email, date, date, and edit link that guides to AdminUserForm
 function AdminUsersListRow({ userData }: { userData: UserData }): React.ReactElement {
-    const { Name, Active, EmailAddress, DateActivated, DateDisabled } = userData;
+    const { idUser, Name, Active, EmailAddress, DateActivated, DateDisabled } = userData;
 
     return (
         <TableRow hover>
@@ -225,7 +226,7 @@ function AdminUsersListRow({ userData }: { userData: UserData }): React.ReactEle
             <TableCell>{extractISOMonthDateYear(DateActivated)}</TableCell>
             <TableCell>{extractISOMonthDateYear(DateDisabled)}</TableCell>
             <TableCell>
-                <a href='/'>edit</a>
+                <Link to={`/admin/user/${idUser}`}>edit</Link>
             </TableCell>
         </TableRow>
     );
@@ -344,6 +345,120 @@ export type UsersFilter = {
     activeStatus: string;
 };
 
+// AdminUserForm
+// TODO
+function AdminUserForm(): React.ReactElement {
+    const classes = useStyles();
+    const parameters: { idUser: string } = useParams();
+    const { idUser } = parameters;
+    // const [name, setName] = useState('');
+    // const [email, setEmail] = useState('');
+    // const [active, setActive] = useState('');
+    // const [dateActivated, setDateActivated] = useState('');
+    // const [dateDisabled, setDateDisabled] = useState('');
+    // const [workflowNotificationType, setWorkflowNotificationType] = useState('');
+    // const [workflowNotificationTime, setWorkflowNotificationTime] = useState('');
+
+    // Create 2 form variants based on create or edit user
+    // Biggest difference should be the functionality of the button
+    // Create will use graphQL api to create new user
+    // Edit will mutate an exisiting user
+
+    let create = idUser === 'create';
+
+    let fetchedUser = sampleUserList.find(individualUser => individualUser.idUser === Number(idUser));
+
+    // if (fetchedUser) {
+    //     invalidUser = false;
+    // }
+    // Performs graphql query to retrieve user information
+    // if query returns user info,
+    // redirect to adminuserform
+    // else
+    // redirect to users :)
+
+    // Form
+    // Name Text Field
+    // Email Address Text Field
+    // Active Checkbox
+    // Date Activated Text Field Disabled
+    // Date Disabled Text Field Disabled
+    // WorkflowNotificationType Select
+    // WorkflowNotificationTime Time picker
+
+    return (
+        <React.Fragment>
+            {!fetchedUser && !create && <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />}
+            <Box className={classes.AdminUserFormContainer}>
+                <Box className={classes.AdminUserFormRow}>
+                    <p>Name</p>
+                    <FormControl variant='outlined'>
+                        <TextField id='component-outlined' variant='outlined' value={fetchedUser?.Name} placeholder='John Doe' label='First, Last' /* onChange={handleChange} */ />
+                    </FormControl>
+                </Box>
+                <Box className={classes.AdminUserFormRow}>
+                    <p>Email Address</p>
+                    <TextField id='outlined-basic' variant='outlined' value={fetchedUser?.EmailAddress} placeholder='JDoe@example.com' />
+                </Box>
+                <Box className={classes.AdminUserFormRow}>
+                    <p>Active</p>
+                    <Checkbox color='primary' inputProps={{ 'aria-label': 'secondary checkbox' }} checked={fetchedUser?.Active} />
+                </Box>
+                <Box className={classes.AdminUserFormRow}>
+                    <p>Date Activated</p>
+                    <TextField
+                        id='date'
+                        type='date'
+                        disabled
+                        // value={extractISOMonthDateYear(fetchedUser?.DateActivated, true)}
+                        value='2021-01-01'
+                        InputLabelProps={{
+                            shrink: true
+                        }}
+                    />
+                </Box>
+                <Box className={classes.AdminUserFormRow}>
+                    <p>Date Disabled</p>
+                    <TextField
+                        id='date'
+                        type='date'
+                        disabled
+                        // value={extractISOMonthDateYear(fetchedUser?.DateDisabled)}
+                        value='2021-01-01'
+                        InputLabelProps={{
+                            shrink: true
+                        }}
+                    />
+                </Box>
+                <Box className={classes.AdminUserFormRow}>
+                    <p>Workflow Notification Type</p>
+                    <Select value='Daily Digest'>
+                        <MenuItem value={'Daily Digest'}>Daily Digest</MenuItem>
+                        <MenuItem value={'Immediately'}>Immediately</MenuItem>
+                    </Select>
+                </Box>
+                <Box className={classes.AdminUserFormRow}>
+                    <p>Workflow Notification Time</p>
+                    <TextField
+                        id='time'
+                        type='time'
+                        defaultValue='17:00'
+                        InputLabelProps={{
+                            shrink: true
+                        }}
+                        inputProps={{
+                            step: 300 // 5 min
+                        }}
+                    />
+                </Box>
+                <Box>
+                    <Button color='primary'>{create ? 'Create' : 'Update'}</Button>
+                </Box>
+            </Box>
+        </React.Fragment>
+    );
+}
+
 function Admin(): React.ReactElement {
     const classes = useStyles();
     useEffect(() => {
@@ -379,12 +494,13 @@ function Admin(): React.ReactElement {
                     <PrivateRoute exact path={resolveRoute(ADMIN_ROUTE.TYPE)}>
                         <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />
                     </PrivateRoute>
+                    <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.USER)}>
+                        <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />
+                    </PrivateRoute>
                     <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} component={AdminUsersView} />
-                    {/* <PrivateRoute
-                      exact
-                      path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USER)}
-                      component={AdminUserForm}
-                  /> */}
+                    <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.USER)}>
+                        <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_EDIT_USER.USER)} component={AdminUserForm} />
+                    </PrivateRoute>
                 </PrivateRoute>
             </Box>
         </React.Fragment>

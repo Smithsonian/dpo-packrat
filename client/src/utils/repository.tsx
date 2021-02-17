@@ -109,7 +109,7 @@ export function parseRepositoryUrl(search: string): any {
 }
 
 export function generateRepositoryUrl(filter: RepositoryFilter): string {
-    return `?${qs.stringify(filter, { arrayFormat: 'comma' })}`;
+    return `?${qs.stringify(filter, { arrayFormat: 'comma', skipEmptyString: true })}`;
 }
 
 export function getTreeWidth(columnSize: number, sideBarExpanded: boolean, fullWidth: boolean): string {
@@ -176,7 +176,6 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
 export function computeMetadataViewWidth(treeColumns: TreeViewColumn[]): string {
     return `${treeColumns.reduce((prev, current) => prev + current.size, 0)}vw`;
 }
-
 
 type ObjectInterfaceDetails = {
     icon: React.ReactNode;
