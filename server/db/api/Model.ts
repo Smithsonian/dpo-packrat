@@ -26,7 +26,7 @@ export class ModelConstellation {
         }
 
         const modelGeometryFiles: ModelGeometryFile[] | null = await ModelGeometryFile.fetchFromModel(idModel);
-        const modelUVMapFiles: ModelUVMapFile[] | null = modelGeometryFiles ? await ModelUVMapFile.fetchFromModelGeometryFiles(modelGeometryFiles) : null;
+        const modelUVMapFiles: ModelUVMapFile[] | null = modelGeometryFiles ? await ModelUVMapFile.fetchFromModelGeometryFiles(modelGeometryFiles) : /* istanbul ignore next */ null;
         const modelUVMapChannels: ModelUVMapChannel[] | null = modelUVMapFiles ? await ModelUVMapChannel.fetchFromModelUVMapFiles(modelUVMapFiles) : null;
         return new ModelConstellation(model, modelGeometryFiles, modelUVMapFiles, modelUVMapChannels);
     }
