@@ -3817,18 +3817,30 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
     test('DB Fetch Special: ModelConstellation', async () => {
-        let modelConstellation: DBAPI.ModelConstellation | null = null;
+        let modelConstellation1: DBAPI.ModelConstellation | null = null;
+        let modelConstellation2: DBAPI.ModelConstellation | null = null;
 
-        if (model && modelNulls) {
-            modelConstellation = await DBAPI.ModelConstellation.fetch(model.idModel);
-            if (modelConstellation) {
-                expect(modelConstellation.model).toEqual(model);
-                expect(modelConstellation.modelGeometryFiles).toEqual(expect.arrayContaining([modelGeometryFile, modelGeometryFileNulls]));
-                expect(modelConstellation.modelUVMapFiles).toEqual(expect.arrayContaining([modelUVMapFile]));
-                expect(modelConstellation.modelUVMapChannels).toEqual(expect.arrayContaining([modelUVMapChannel]));
+        if (model) {
+            modelConstellation1 = await DBAPI.ModelConstellation.fetch(model.idModel);
+            if (modelConstellation1) {
+                expect(modelConstellation1.model).toEqual(model);
+                expect(modelConstellation1.modelGeometryFiles).toEqual(expect.arrayContaining([modelGeometryFile, modelGeometryFileNulls]));
+                expect(modelConstellation1.modelUVMapFiles).toEqual(expect.arrayContaining([modelUVMapFile]));
+                expect(modelConstellation1.modelUVMapChannels).toEqual(expect.arrayContaining([modelUVMapChannel]));
             }
         }
-        expect(modelConstellation).toBeTruthy();
+        expect(modelConstellation1).toBeTruthy();
+
+        if (modelNulls) {
+            modelConstellation2 = await DBAPI.ModelConstellation.fetch(modelNulls.idModel);
+            if (modelConstellation2) {
+                expect(modelConstellation2.model).toEqual(modelNulls);
+                expect(modelConstellation2.modelGeometryFiles).toEqual([]);
+                expect(modelConstellation2.modelUVMapFiles).toBeFalsy();
+                expect(modelConstellation2.modelUVMapChannels).toBeFalsy();
+            }
+        }
+        expect(modelConstellation2).toBeTruthy();
     });
 
     test('DB Fetch Special: Project.fetchMasterFromSubjects', async () => {
