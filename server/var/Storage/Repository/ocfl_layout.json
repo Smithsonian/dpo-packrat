@@ -1,4 +1,0 @@
-{
-    "extension": "https://birkland.github.io/ocfl-rfc-demo/0003-truncated-ntuple-layout?n=2&depth=3&encoding=sha1",
-    "description": "Packrat-Truncated n-tuple Tree; the unique ID is hashed via sha1; then 3 subdirectories of 2 characters each are used"
-}
