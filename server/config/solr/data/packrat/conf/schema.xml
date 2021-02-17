@@ -15,7 +15,7 @@
     <!-- Common fields -->
     <field name="CommonName" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="CommonDescription" type="string" indexed="true" stored="true" multiValued="false" />
-    <field name="CommonIdentifier" type="string" indexed="true" stored="true" multiValued="true" />
+    <field name="CommonIdentifier" type="strings" indexed="true" stored="true" />
     <field name="CommonDateCreated" type="pdate" indexed="true" stored="true" multiValued="false" />
     <field name="CommonOrganizationName" type="string" indexed="true" stored="true" multiValued="false" />
     
