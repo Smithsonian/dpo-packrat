@@ -123,7 +123,6 @@ export function getRepositoryFilterOptions({ units, projects, data, getEntries }
         { label: getTermForSystemObjectType(eSystemObjectType.eAssetVersion), value: eSystemObjectType.eAssetVersion },
         { label: getTermForSystemObjectType(eSystemObjectType.eActor), value: eSystemObjectType.eActor },
         { label: getTermForSystemObjectType(eSystemObjectType.eStakeholder), value: eSystemObjectType.eStakeholder },
-        { label: getTermForSystemObjectType(eSystemObjectType.eUnknown), value: eSystemObjectType.eUnknown },
     ];
 
     const chipsOptions: ChipOption[] = [];

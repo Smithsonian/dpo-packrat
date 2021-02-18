@@ -45,7 +45,7 @@
     <field name="CDClusterGeometryFieldID" type="pint" indexed="true" stored="true" multiValued="false" />
     <field name="CDCameraSettingsUniform" type="boolean" indexed="true" stored="true" multiValued="false" />
     
-    <field name="CDVariantType" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="CDVariantType" type="strings" indexed="true" stored="true" />
 
     <!-- Model, ModelGeometryFile, ModelUVMapFile fields -->
     <field name="ModelCreationMethod" type="string" indexed="true" stored="true" multiValued="false" />

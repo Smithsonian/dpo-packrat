@@ -107,7 +107,7 @@ export class NavigationSolr implements NAV.INavigation {
         let filterParam: string = '';
         for (const filterValue of filterValueList) {
             if (filterParam)
-                filterParam += ` ${operator} ${filterSchema}:`; // TODO: does this work for && and ||?
+                filterParam += ` ${operator} ${filterSchema}:`;
             filterParam += `${filterValue}`;
         }
         return SQ.matchFilter(filterSchema, filterParam);
@@ -120,7 +120,7 @@ export class NavigationSolr implements NAV.INavigation {
         let filterParam: string = '';
         for (const filterValue of filterValueList) {
             if (filterParam)
-                filterParam += ` ${operator} ${filterSchema}:`; // TODO: does this work for && and ||?
+                filterParam += ` ${operator} ${filterSchema}:`;
             filterParam += `${filterValue}`;
         }
         return SQ.matchFilter(filterSchema, filterParam);
@@ -236,7 +236,7 @@ export class NavigationSolr implements NAV.INavigation {
                 case NAV.eMetadata.eCDClusterType:                      metadata.push(this.computeMetadataFromString(doc.CDClusterType)); break;
                 case NAV.eMetadata.eCDClusterGeometryFieldID:           metadata.push(this.computeMetadataFromNumber(doc.CDClusterGeometryFieldID)); break;
                 case NAV.eMetadata.eCDCameraSettingsUniform:            metadata.push(this.computeMetadataFromBoolean(doc.CDCameraSettingsUniform)); break;
-                case NAV.eMetadata.eCDVariantType:                      metadata.push(this.computeMetadataFromString(doc.CDVariantType)); break;
+                case NAV.eMetadata.eCDVariantType:                      metadata.push(this.computeMetadataFromStringArray(doc.CDVariantType)); break;
                 case NAV.eMetadata.eModelCreationMethod:                metadata.push(this.computeMetadataFromString(doc.ModelCreationMethod)); break;
                 case NAV.eMetadata.eModelMaster:                        metadata.push(this.computeMetadataFromBoolean(doc.ModelMaster)); break;
                 case NAV.eMetadata.eModelAuthoritative:                 metadata.push(this.computeMetadataFromBoolean(doc.ModelAuthoritative)); break;
