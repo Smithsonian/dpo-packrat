@@ -141,10 +141,8 @@ export function getRepositoryFilterOptions({ units, projects, data, getEntries }
         chipsOptions.push(...filterOptionToChipOption(projects, projectsOptions, eSystemObjectType.eProject));
     }
 
-    const repositoryRootTypesOptions: FilterOption[] = systemObjectTypes.slice(0, 2);
-
-    const objectToDisplayOptions: FilterOption[] = systemObjectTypes.slice(0, 2);
-
+    const repositoryRootTypesOptions: FilterOption[] = systemObjectTypes;
+    const objectToDisplayOptions: FilterOption[] = systemObjectTypes;
     const captureMethodOptions: FilterOption[] = vocabulariesToFilterOption(getEntries(eVocabularySetID.eCaptureDataCaptureMethod));
     const variantTypeOptions: FilterOption[] = vocabulariesToFilterOption(getEntries(eVocabularySetID.eCaptureDataFileVariantType));
     const modelPurposeOptions: FilterOption[] = vocabulariesToFilterOption(getEntries(eVocabularySetID.eModelPurpose));
