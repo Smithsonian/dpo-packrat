@@ -320,7 +320,18 @@ export class ReindexSolr {
             doc.CDCameraSettingsUniform = captureDataPhoto.CameraSettingsUniform;
         }
 
-        // TODO:  handle CDVariantType ... perhaps this needs to be multivalued?
+        const captureDataFiles: DBAPI.CaptureDataFile[] | null = await DBAPI.CaptureDataFile.fetchFromCaptureData(captureData.idCaptureData);
+        if (captureDataFiles) {
+            const variantTypeMap: Map<string, boolean> = new Map<string, boolean>();
+            for (const captureDataFile of captureDataFiles) {
+                const variantType: string | null = await this.lookupVocabulary(captureDataFile.idVVariantType);
+                if (variantType)
+                    variantTypeMap.set(variantType, true);
+            }
+            if (variantTypeMap.size > 0)
+                doc.CDVariantType = [...variantTypeMap.keys()];
+        }
+
         return true;
     }
 
