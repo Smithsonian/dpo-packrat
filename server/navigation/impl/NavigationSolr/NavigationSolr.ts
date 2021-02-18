@@ -47,9 +47,13 @@ export class NavigationSolr implements NAV.INavigation {
             SQ = SQ.matchFilter('HierarchyParentID', filter.idRoot);
             // objectsToDisplay: eSystemObjectType[];  // objects to display
             SQ = await this.computeFilterParamFromSystemObjectType(SQ, filter.objectsToDisplay, 'CommonObjectType', '||');
-        } else
+        } else {
             // objectTypes: eSystemObjectType[];       // empty array means give all appropriate children types
-            SQ = await this.computeFilterParamFromSystemObjectType(SQ, filter.objectTypes, 'CommonObjectType', '||');
+            const objectTypes: eSystemObjectType[] = filter.objectTypes;
+            if (objectTypes.length == 0)
+                objectTypes.push(eSystemObjectType.eUnit);
+            SQ = await this.computeFilterParamFromSystemObjectType(SQ, objectTypes, 'CommonObjectType', '||');
+        }
 
         // units: number[];                        // idSystemObject[] for units filter
         SQ = await this.computeFilterParamFromNumbers(SQ, filter.units, 'HierarchyUnitID', '||');
@@ -85,7 +89,7 @@ export class NavigationSolr implements NAV.INavigation {
         if (filterColumns.length > 0)
             SQ = SQ.fl(filterColumns);
 
-        SQ = SQ.rows(1000);
+        SQ = SQ.rows(100);
         LOG.logger.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}: ${SQ.build()}`);
         return SQ;
     }
@@ -108,7 +112,7 @@ export class NavigationSolr implements NAV.INavigation {
         for (const filterValue of filterValueList) {
             if (filterParam)
                 filterParam += ` ${operator} ${filterSchema}:`;
-            filterParam += `${filterValue}`;
+            filterParam += `"${filterValue}"`;
         }
         return SQ.matchFilter(filterSchema, filterParam);
     }
