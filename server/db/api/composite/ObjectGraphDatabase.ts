@@ -9,13 +9,10 @@ export class ObjectGraphDatabase {
     objectMap: Map<number, ObjectGraphDataEntry> = new Map<number, ObjectGraphDataEntry>(); // map from SystemObject.idSystemObject to graph entry details
 
     // used by ObjectGraph
-    // returns true if either parent or child is unknown to the database
-    // returns false if both parent and child are known to the database, in which case continued elaboration of this branch is not needed
-    async recordRelationship(parent: SystemObjectIDType, child: SystemObjectIDType): Promise<boolean> {
+    async recordRelationship(parent: SystemObjectIDType, child: SystemObjectIDType): Promise<void> {
         // LOG.logger.info(`${JSON.stringify(parent)} -> ${JSON.stringify(child)}`);
         let parentData: ObjectGraphDataEntry | undefined = this.objectMap.get(parent.idSystemObject);
         let childData: ObjectGraphDataEntry | undefined = this.objectMap.get(child.idSystemObject);
-        const retValue: boolean = !(parentData && childData);
 
         if (!parentData) {
             const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(parent); /* istanbul ignore if */
@@ -36,7 +33,12 @@ export class ObjectGraphDatabase {
 
         parentData.recordChild(child);
         childData.recordParent(parent);
-        return retValue;
+    }
+
+    alreadyProcssed(idSystemObject: number, relatedType: SystemObjectIDType | null): boolean {
+        const sourceFound: boolean = this.objectMap.has(idSystemObject);
+        const relatedFound: boolean = !relatedType || this.objectMap.has(relatedType.idSystemObject);
+        return sourceFound && relatedFound;
     }
 
     async fetch(): Promise<boolean> {

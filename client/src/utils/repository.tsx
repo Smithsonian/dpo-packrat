@@ -11,7 +11,7 @@ import lodash from 'lodash';
 import * as qs from 'query-string';
 import React from 'react';
 import { AiOutlineFileText } from 'react-icons/ai';
-import { RepositoryIcon } from '../components';
+import { RepositoryIcon, RepositoryIconProps } from '../components';
 import { RepositoryFilter } from '../pages/Repository';
 import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/MetadataView';
 import { metadataToDisplayOptions } from '../pages/Repository/components/RepositoryFilterView/RepositoryFilterOptions';
@@ -176,23 +176,20 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
     const textColor: string = Colors.defaults.white;
     const backgroundColor: string = Colors.repository[objectType][RepositoryColorVariant.dark] || Colors.repository.default[RepositoryColorVariant.dark];
 
-    const iconProps = { objectType, backgroundColor, textColor };
+    const iconProps: RepositoryIconProps = { objectType, backgroundColor, textColor, overrideText: undefined };
 
     switch (objectType) {
-        case eSystemObjectType.eUnit:
-            return { icon: <RepositoryIcon {...iconProps} />, color };
-        case eSystemObjectType.eProject:
-            return { icon: <RepositoryIcon {...iconProps} />, color };
-        case eSystemObjectType.eSubject:
-            return { icon: <RepositoryIcon {...iconProps} />, color };
-        case eSystemObjectType.eItem:
-            return { icon: <RepositoryIcon {...iconProps} />, color };
-        case eSystemObjectType.eCaptureData:
-            return { icon: <AiOutlineFileText />, color };
+        default:                                        break;
+        case eSystemObjectType.eIntermediaryFile:       iconProps.overrideText = 'IF'; break;
+        case eSystemObjectType.eProjectDocumentation:   iconProps.overrideText = 'PD'; break;
+        case eSystemObjectType.eActor:                  iconProps.overrideText = 'AC'; break;
+        case eSystemObjectType.eStakeholder:            iconProps.overrideText = 'ST'; break;
 
-        default:
-            return { icon: <AiOutlineFileText />, color: Colors.repository.default[variant] };
+        case eSystemObjectType.eAsset:
+        case eSystemObjectType.eAssetVersion:
+            return { icon: <AiOutlineFileText />, color };
     }
+    return { icon: <RepositoryIcon {...iconProps} />, color };
 }
 
 export function sortEntriesAlphabetically(entries: NavigationResultEntry[]): NavigationResultEntry[] {

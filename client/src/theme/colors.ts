@@ -59,6 +59,46 @@ const Colors: ColorType = {
             dark: '#a5d6a7',
             regular: '#edf7ed',
             light: '#f6fbf6'
+        },
+        [eSystemObjectType.eModel]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eScene]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eIntermediaryFile]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eProjectDocumentation]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eAsset]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eAssetVersion]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eActor]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eStakeholder]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
         }
     }
 };

@@ -102,6 +102,10 @@ export class ObjectGraph {
             if (this.pushCount++ >= this.maxPushCount)
                 return true;
 
+            // short-circuit if we're building an ObjectGraphDatabase and we've already processed this object
+            if (this.objectGraphDatabase && this.objectGraphDatabase.alreadyProcssed(idSystemObject, relatedType))
+                return true;
+
             const sourceType: SystemObjectIDType = {
                 idSystemObject,
                 idObject: 0,
@@ -146,36 +150,31 @@ export class ObjectGraph {
             /* istanbul ignore if */
             if (sourceType.eObjectType == eSystemObjectType.eUnknown)
                 LOG.logger.error(`DBAPI.ObjectGraph.fetchWorker Unidentified SystemObject type ${JSON.stringify(SOP)}`);
-            /*
-            const valid: string = (this.validHierarchy ? '' : ' INVALID HIERARCHY') + (this.noCycles ? '' : ' CYCLE');
-            const sourceDesc: string = `${eSystemObjectType[sourceType.eType]} ${sourceType.idObject}/${sourceType.idSystemObject}`;
-            const relatedDesc: string = (relatedType) ? `${eSystemObjectType[relatedType.eType]} ${relatedType.idObject}/${relatedType.idSystemObject}` : 'root';
-            const traverseType: string = (eMode == eObjectGraphMode.eAncestors) ? '^^' : 'vv';
-            const prefix: string = `OA [${this.pushCount.toString().padStart(3, '0')} ${traverseType}]: `;
-            if (eMode == eObjectGraphMode.eAncestors)
-                LOG.logger.info(`${prefix}${sourceDesc} -> ${relatedDesc}${valid}`);
-            else
-                LOG.logger.info(`${prefix}${relatedDesc} -> ${sourceDesc}${valid}`);
-            */
+
             this.systemObjectProcessed.set(idSystemObject, sourceType);
             this.systemObjectAdded.set(idSystemObject, sourceType);
 
             // record relationship
             if (this.objectGraphDatabase) {
                 if (relatedType) {
-                    if (eMode == eObjectGraphMode.eAncestors) {
-                        if (!this.objectGraphDatabase.recordRelationship(sourceType, relatedType)) {
-                            LOG.logger.info('ObjectGraph short circuited');
-                            return true;
-                        }
-                    } else {
-                        if (!this.objectGraphDatabase.recordRelationship(relatedType, sourceType)) {
-                            LOG.logger.info('ObjectGraph short circuited');
-                            return true;
-                        }
-                    }
+                    if (eMode == eObjectGraphMode.eAncestors)
+                        await this.objectGraphDatabase.recordRelationship(sourceType, relatedType);
+                    else
+                        await this.objectGraphDatabase.recordRelationship(relatedType, sourceType);
                 }
             }
+
+            /*
+            const valid: string = (this.validHierarchy ? '' : ' INVALID HIERARCHY') + (this.noCycles ? '' : ' CYCLE');
+            const sourceDesc: string = `${eSystemObjectType[sourceType.eObjectType]} ${sourceType.idObject}/${sourceType.idSystemObject}`;
+            const relatedDesc: string = (relatedType) ? `${eSystemObjectType[relatedType.eObjectType]} ${relatedType.idObject}/${relatedType.idSystemObject}` : 'root';
+            const traverseType: string = (eMode == eObjectGraphMode.eAncestors) ? '^^' : 'vv';
+            const prefix: string = `OA [${this.pushCount.toString().padStart(3, '0')} ${traverseType}]: `;
+            if (eMode == eObjectGraphMode.eAncestors)
+                LOG.logger.info(`${prefix}${sourceDesc} -> ${relatedDesc}${valid}$`);
+            else
+                LOG.logger.info(`${prefix}${relatedDesc} -> ${sourceDesc}${valid}$`);
+            */
 
             // gather using master/derived systemobjectxref's
             const SORelated: SystemObject[] | null = (eMode == eObjectGraphMode.eAncestors)
