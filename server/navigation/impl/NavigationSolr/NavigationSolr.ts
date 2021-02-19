@@ -36,10 +36,21 @@ export class NavigationSolr implements NAV.INavigation {
     private async computeSolrQuery(filter: NAV.NavigationFilter): Promise<solr.Query> {
         let SQ: solr.Query = this._solrClient._client.query();
 
-        // search: string;                         // search string from the user
-        if (filter.search)
-            SQ = SQ.q(`_text_:*${filter.search}*`);
-        else
+        // search: string;                         // search string from the user -- for now, only apply to root-level queries, as well as queries of units, projects, and subjects
+        if (filter.search) {                                // if we have a search string,
+            if (!filter.idRoot)                             // apply it to root-level queries (i.e. with no specified filter root ID)
+                SQ = SQ.q(`_text_:*${filter.search}*`);
+            else {
+                const oID = await CACHE.SystemObjectCache.getObjectFromSystem(filter.idRoot);
+                if (oID &&
+                   (oID.eObjectType == eSystemObjectType.eUnit ||
+                    oID.eObjectType == eSystemObjectType.eProject ||
+                    oID.eObjectType == eSystemObjectType.eSubject))
+                    SQ = SQ.q(`_text_:*${filter.search}*`); // if we do have a root ID, apply it to the children of units, projects, and subjects
+                else
+                    SQ = SQ.q('*:*');                       // if we do have a root ID, do not apply it to the children of items, and all the rest
+            }
+        } else
             SQ = SQ.q('*:*');
 
         // idRoot: number;                         // idSystemObject of item for which we should get children; 0 means get everything
@@ -50,8 +61,8 @@ export class NavigationSolr implements NAV.INavigation {
         } else {
             // objectTypes: eSystemObjectType[];       // empty array means give all appropriate children types
             const objectTypes: eSystemObjectType[] = filter.objectTypes;
-            if (objectTypes.length == 0)
-                objectTypes.push(eSystemObjectType.eUnit);
+            if (objectTypes.length == 0 && !filter.search)  // if we have no root specified, and we have no keyword search,
+                objectTypes.push(eSystemObjectType.eUnit);  // then restrict children types to "Units"
             SQ = await this.computeFilterParamFromSystemObjectType(SQ, objectTypes, 'CommonObjectType', '||');
         }
 

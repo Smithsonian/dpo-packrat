@@ -280,13 +280,11 @@ export class ObjectGraphDatabase {
     }
 
     private async applyGraphState(objectGraphDataEntry: ObjectGraphDataEntry, objectGraphState: ObjectGraphState): Promise<boolean> {
-        // First, apply extracted state to the current object.  If this does not result in changes to the state of the current object,
-        // then we're done -- there's no need to walk the children and parent objects, as they already have received this information
-        if (!objectGraphDataEntry.applyGraphState(objectGraphState, eApplyGraphStateDirection.eSelf))
-            return true;
+        // Apply extracted state to the current object.
+        objectGraphDataEntry.applyGraphState(objectGraphState, eApplyGraphStateDirection.eSelf);
         let retValue: boolean = true;
-        retValue = (await this.applyGraphStateRecursive(objectGraphDataEntry, objectGraphState, eApplyGraphStateDirection.eChild, 1)) && retValue;
-        retValue = (await this.applyGraphStateRecursive(objectGraphDataEntry, objectGraphState, eApplyGraphStateDirection.eParent, 1)) && retValue;
+        retValue = (await this.applyGraphStateRecursive(objectGraphDataEntry, objectGraphState, eApplyGraphStateDirection.eChild, 32)) && retValue;
+        retValue = (await this.applyGraphStateRecursive(objectGraphDataEntry, objectGraphState, eApplyGraphStateDirection.eParent, 32)) && retValue;
         return retValue;
     }
 
@@ -294,7 +292,7 @@ export class ObjectGraphDatabase {
         eDirection: eApplyGraphStateDirection, depth: number): Promise<boolean> {
         if (eDirection == eApplyGraphStateDirection.eSelf)
             return false;
-        if (depth >= 32)
+        if (depth <= 0)
             return false;
 
         const relationMap: Map<number, SystemObjectIDType> | undefined =
@@ -307,7 +305,7 @@ export class ObjectGraphDatabase {
             if (relationEntry) {
                 if (relationEntry.applyGraphState(objectGraphState, eDirection))
                     // if applying this state changes things, then recurse:
-                    await this.applyGraphStateRecursive(relationEntry, objectGraphState, eDirection, depth + 1);
+                    await this.applyGraphStateRecursive(relationEntry, objectGraphState, eDirection, depth - 1);
             }
         }
         return true;
