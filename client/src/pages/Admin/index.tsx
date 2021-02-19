@@ -1,12 +1,10 @@
 /**
- * Repository
+ * Admin
  *
- * This component renders Repository UI and all the sub-components like Filter and
- * TreeView.
+ * This component renders Admin UI and all the sub-components
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-// import FormGroup from '@material-ui/core/FormGroup';
 import Checkbox from '@material-ui/core/Checkbox';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -18,92 +16,108 @@ import Paper from '@material-ui/core/Paper';
 import IconButton from '@material-ui/core/IconButton';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-// import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
-// import OutlinedInput from '@material-ui/core/OutlinedInput';
 import MenuItem from '@material-ui/core/MenuItem';
 import { BiSort } from 'react-icons/bi';
-// import { GetAllUsers } from '../../types/graphql';
-// import { QueryOptions } from '@apollo/client';
-// import { apolloClient } from '../../graphql';
 import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, ADMIN_ROUTE, ADMIN_ROUTES_TYPE, resolveRoute, resolveSubRoute, ADMIN_EDIT_USER } from '../../constants';
 import React, { useState, useEffect } from 'react';
 import { Redirect, useParams /* useHistory, useLocation */ } from 'react-router';
 import { Link } from 'react-router-dom';
+import { useGetUserQuery, useGetAllUsersQuery, User_Status /* useUpdateUserMutation, useCreateUserMutation */ } from '../../types/graphql';
+import { GetAllUsersResult, User /* User */ } from '../../types/graphql';
 
-interface UserData {
-    idUser: number;
-    Name: string;
-    Active: boolean;
-    EmailAddress: string;
-    DateActivated: string;
-    DateDisabled: string | null;
-}
+// let sampleUserList: GetAllUsersResult['User'] = [
+//     // let sampleUserList: User[] = [
+//     {
+//         idUser: 1,
+//         Name: 'Jon Tyson',
+//         EmailAddress: 'tysonj@si.edu',
+//         Active: true,
+//         DateActivated: '2021-02-03T22:36:39.000Z',
+//         DateDisabled: null,
+//         WorkflowNotificationTime: null,
+//         EmailSettings: null,
+//         SecurityID: 'TBD'
+//     },
+//     {
+//         idUser: 2,
+//         Name: 'Jon Blundell',
+//         EmailAddress: 'blundellj@si.edu',
+//         Active: true,
+//         DateActivated: '2021-02-03T22:36:39.000Z',
+//         DateDisabled: null,
+//         WorkflowNotificationTime: null,
+//         EmailSettings: null,
+//         SecurityID: 'TBD'
+//     },
+//     {
+//         idUser: 3,
+//         Name: 'Vince Rossi',
+//         EmailAddress: 'rossiv@si.edu',
+//         Active: true,
+//         DateActivated: '2021-02-03T22:36:39.000Z',
+//         DateDisabled: null,
+//         WorkflowNotificationTime: null,
+//         EmailSettings: null,
+//         SecurityID: 'TBD'
+//     },
+//     {
+//         idUser: 4,
+//         Name: 'Jamie Cope',
+//         EmailAddress: 'copeg@si.edu',
+//         Active: false,
+//         DateActivated: '2021-02-03T22:36:39.000Z',
+//         DateDisabled: null,
+//         WorkflowNotificationTime: null,
+//         EmailSettings: null,
+//         SecurityID: 'TBD'
+//     },
+//     {
+//         idUser: 5,
+//         Name: 'Karan Pratap Singh',
+//         EmailAddress: 'singhk@si.edu',
+//         Active: true,
+//         DateActivated: '2021-02-03T22:36:39.000Z',
+//         DateDisabled: null,
+//         WorkflowNotificationTime: null,
+//         EmailSettings: null,
+//         SecurityID: 'TBD'
+//     },
+//     {
+//         idUser: 6,
+//         Name: 'Test User',
+//         EmailAddress: 'user@test.com',
+//         Active: true,
+//         DateActivated: '2021-02-03T22:36:39.000Z',
+//         DateDisabled: null,
+//         WorkflowNotificationTime: null,
+//         EmailSettings: null,
+//         SecurityID: 'TBD'
+//     }
+// ];
 
-const sampleUserList = [
-    {
-        idUser: 1,
-        Name: 'Jon Tyson',
-        EmailAddress: 'tysonj@si.edu',
-        Active: true,
-        DateActivated: '2021-02-03T22:36:39.000Z',
-        DateDisabled: null
-    },
-    {
-        idUser: 2,
-        Name: 'Jon Blundell',
-        EmailAddress: 'blundellj@si.edu',
-        Active: true,
-        DateActivated: '2021-02-03T22:36:39.000Z',
-        DateDisabled: null
-    },
-    {
-        idUser: 3,
-        Name: 'Vince Rossi',
-        EmailAddress: 'rossiv@si.edu',
-        Active: true,
-        DateActivated: '2021-02-03T22:36:39.000Z',
-        DateDisabled: null
-    },
-    {
-        idUser: 4,
-        Name: 'Jamie Cope',
-        EmailAddress: 'copeg@si.edu',
-        Active: true,
-        DateActivated: '2021-02-03T22:36:39.000Z',
-        DateDisabled: null
-    },
-    {
-        idUser: 5,
-        Name: 'Karan Pratap Singh',
-        EmailAddress: 'singhk@si.edu',
-        Active: true,
-        DateActivated: '2021-02-03T22:36:39.000Z',
-        DateDisabled: null
-    },
-    {
-        idUser: 6,
-        Name: 'Test User',
-        EmailAddress: 'user@test.com',
-        Active: true,
-        DateActivated: '2021-02-03T22:36:39.000Z',
-        DateDisabled: null
-    }
-];
-
-function extractISOMonthDateYear(iso, mui = false) {
+function extractISOMonthDateYear(iso, materialUI = false) {
     if (!iso) {
         return null;
     }
-    if (mui) {
-        const time = String(new Date(iso));
-        console.log(time);
-        return time;
-    }
     const time = new Date(iso);
+    if (materialUI) {
+        let year = String(time.getFullYear());
+        let month = String(time.getMonth());
+        let date = String(time.getDate());
+        //year-month-date
+        if (Number(month) < 10) {
+            month = '0' + month;
+        }
+        if (Number(date) < 10) {
+            date = '0' + date;
+        }
+        const result = `${year}-${month}-${date}`;
+        return result;
+    }
     const result = `${time.getMonth()}/${time.getDate()}/${time.getFullYear()}`;
     return result;
 }
@@ -170,18 +184,15 @@ function AdminUsersFilter({
 
     const handleActiveStatusFilterChange = e => {
         setActiveStatusFilter(e.target.value);
-        console.log(e.target.value);
     };
 
     const handleSearchFilterChange = e => {
         setSearchFilter(e.target.value);
-        console.log(e.target.value);
     };
 
     const searchUsers = () => {
         handleActiveUpdate(activeStatusFilter);
         handleUsersSearchUpdate(searchFilter);
-        console.log('searchUsers');
     };
 
     return (
@@ -213,7 +224,7 @@ function AdminUsersFilter({
 // Also has a way of sorting the users based on active, name, email, date activated, date deactivated
 //AdminUsersListRow
 // Checkbox, name, email, date, date, and edit link that guides to AdminUserForm
-function AdminUsersListRow({ userData }: { userData: UserData }): React.ReactElement {
+function AdminUsersListRow({ userData }: { userData: User }): React.ReactElement {
     const { idUser, Name, Active, EmailAddress, DateActivated, DateDisabled } = userData;
 
     return (
@@ -232,7 +243,7 @@ function AdminUsersListRow({ userData }: { userData: UserData }): React.ReactEle
     );
 }
 
-function AdminUsersList({ users }: { users: UserData[] }): React.ReactElement {
+function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.ReactElement {
     const classes = useStyles();
 
     return (
@@ -276,7 +287,7 @@ function AdminUsersList({ users }: { users: UserData[] }): React.ReactElement {
                     </TableHead>
                     <TableBody>
                         {users.map(user => {
-                            return <AdminUsersListRow userData={user} key={user.EmailAddress} />;
+                            return <AdminUsersListRow userData={user} key={user?.EmailAddress} />;
                         })}
                     </TableBody>
                 </Table>
@@ -293,18 +304,38 @@ function AdminUsersList({ users }: { users: UserData[] }): React.ReactElement {
 // Passes both list of users and filter term to UsersList
 function AdminUsersView(): React.ReactElement {
     const classes = useStyles();
-    const users = sampleUserList;
+    // let users: GetAllUsersResult = sampleUserList;
+    // let users: User[];
     const [active, setActive] = useState('All');
     const [userSearchFilter, setUserSearchFilter] = useState('');
 
+    const { data } = useGetAllUsersQuery({
+        variables: {
+            input: {
+                search: '',
+                active: User_Status.EAll
+            }
+        }
+    });
+
+    console.log('useGetAllUsers');
+    // console.log('Usersarray', data?.getAllUsers.User);
+    let users: GetAllUsersResult['User'] = data?.getAllUsers?.User || [];
+    console.log('users', users);
+
+    // useEffect(() => {
+    //     console.log('data', data?.getAllUsers.User);
+    //     if (data) {
+    //         users = data?.getAllUsers.User;
+    //     }
+    // }, [data]);
+
     const handleActiveUpdate = newActive => {
         setActive(newActive);
-        console.log('successfully updated Active!');
     };
 
     const handleUsersSearchUpdate = newUserSearch => {
         setUserSearchFilter(newUserSearch);
-        console.log('successfully updated Search!');
     };
 
     // filter by active and keyword
@@ -312,22 +343,19 @@ function AdminUsersView(): React.ReactElement {
 
     switch (active) {
         case 'Active':
-            filteredUsers = users.filter(user => user.Active);
-            console.log('case: Active');
+            filteredUsers = users.filter(user => user?.Active);
             break;
         case 'Inactive':
-            filteredUsers = users.filter(user => !user.Active);
-            console.log('case: Inactive');
+            filteredUsers = users.filter(user => !user?.Active);
             break;
         default:
             filteredUsers = users;
-            console.log('case: All');
             break;
     }
 
     filteredUsers = filteredUsers.filter(user => {
         const lowerCaseSearch = userSearchFilter.toLowerCase();
-        return user.EmailAddress.toLowerCase().includes(lowerCaseSearch) || user.Name.toLowerCase().includes(lowerCaseSearch);
+        return user?.EmailAddress.toLowerCase().includes(lowerCaseSearch) || user?.Name.toLowerCase().includes(lowerCaseSearch);
     });
 
     return (
@@ -340,51 +368,110 @@ function AdminUsersView(): React.ReactElement {
     );
 }
 
-export type UsersFilter = {
-    search: string;
-    activeStatus: string;
-};
-
 // AdminUserForm
 // TODO
 function AdminUserForm(): React.ReactElement {
     const classes = useStyles();
     const parameters: { idUser: string } = useParams();
     const { idUser } = parameters;
-    // const [name, setName] = useState('');
-    // const [email, setEmail] = useState('');
-    // const [active, setActive] = useState('');
-    // const [dateActivated, setDateActivated] = useState('');
-    // const [dateDisabled, setDateDisabled] = useState('');
+
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [active, setActive] = useState<boolean>(true);
+    const [dateActivated, setDateActivated] = useState('');
+    const [dateDisabled, setDateDisabled] = useState<string | null>('');
     // const [workflowNotificationType, setWorkflowNotificationType] = useState('');
     // const [workflowNotificationTime, setWorkflowNotificationTime] = useState('');
+
+    let create: boolean = idUser === 'create';
+
+    // const useGetUserQueryResponse = useGetUserQuery({
+    //     variables: {
+    //         input: {
+    //             idUser: Number(idUser)
+    //         }
+    //     }
+    // });
+
+    // console.log('useGetUser', useGetUserQueryResponse);
+    // let fetchedUser = useGetUserQueryResponse?.data?.getUser?.User;
+    // console.log('useGetUserQuery', fetchedUser);
+    // let fetchedUser = sampleUserList.find(individualUser => individualUser.idUser === Number(idUser));
+    // console.log('fetchedUser before if', fetchedUser);
+
+    let fetchedUser = useGetUserQuery({
+        variables: {
+            input: {
+                idUser: Number(idUser)
+            }
+        }
+    });
+
+    console.log(fetchedUser);
+    /**
+     * Approach 1
+     * change the return to null
+     * then render until I get the query back
+     */
+
+    // useEffect(() => {
+    //     if (fetchedUser) {
+    //         console.log('fetchedUser before changing state', fetchedUser);
+    //         setName(fetchedUser?.Name);
+    //         setEmail(fetchedUser?.EmailAddress);
+    //         setActive(fetchedUser?.Active);
+    //         setDateActivated(fetchedUser?.DateActivated);
+    //         setDateDisabled(fetchedUser?.DateDisabled);
+    //         // setWorkflowNotificationType(fetchedUser?.EmailSettings);
+    //         // setWorkflowNotificationTime(fetchedUser?.WorkflowNotificationTime || '');
+    //         console.log('fetchedUser after changing state', fetchedUser);
+    //     }
+    // }, [fetchedUser]);
+
+    // const submitCreateUser = async () => {
+    //     const newUser = await useCreateUserMutation({
+    //         variables: {
+    //             input: {
+    //                 EmailAddress: email,
+    //                 Name: name
+    //             }
+    //         }
+    //     });
+
+    //     console.log(newUser);
+    //     return newUser;
+    // };
+
+    // const submitUpdateUser = async () => {
+    //     const updatedUser = await useUpdateUserMutation({
+    //         variables: {
+    //             input: {
+    //                 idUser: Number(idUser),
+    //                 Name: name,
+    //                 EmailAddress: email,
+    //                 Active: active,
+    //                 EmailSettings: Number(workflowNotificationType),
+    //                 WorkflowNotificationTime: workflowNotificationTime
+    //             }
+    //         }
+    //     });
+    //     console.log(updatedUser);
+    //     return updatedUser;
+    // };
 
     // Create 2 form variants based on create or edit user
     // Biggest difference should be the functionality of the button
     // Create will use graphQL api to create new user
     // Edit will mutate an exisiting user
-
-    let create = idUser === 'create';
-
-    let fetchedUser = sampleUserList.find(individualUser => individualUser.idUser === Number(idUser));
-
     // if (fetchedUser) {
     //     invalidUser = false;
     // }
+
     // Performs graphql query to retrieve user information
     // if query returns user info,
     // redirect to adminuserform
     // else
-    // redirect to users :)
-
-    // Form
-    // Name Text Field
-    // Email Address Text Field
-    // Active Checkbox
-    // Date Activated Text Field Disabled
-    // Date Disabled Text Field Disabled
-    // WorkflowNotificationType Select
-    // WorkflowNotificationTime Time picker
+    // redirect to users
 
     return (
         <React.Fragment>
@@ -393,16 +480,43 @@ function AdminUserForm(): React.ReactElement {
                 <Box className={classes.AdminUserFormRow}>
                     <p>Name</p>
                     <FormControl variant='outlined'>
-                        <TextField id='component-outlined' variant='outlined' value={fetchedUser?.Name} placeholder='John Doe' label='First, Last' /* onChange={handleChange} */ />
+                        <TextField
+                            id='component-outlined'
+                            variant='outlined'
+                            value={name}
+                            onChange={e => {
+                                setName(e.target.value);
+                            }}
+                            placeholder='John Doe'
+                            label='First, Last'
+                            InputLabelProps={{
+                                shrink: true
+                            }}
+                        />
                     </FormControl>
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
                     <p>Email Address</p>
-                    <TextField id='outlined-basic' variant='outlined' value={fetchedUser?.EmailAddress} placeholder='JDoe@example.com' />
+                    <TextField
+                        id='outlined-basic'
+                        variant='outlined'
+                        value={email}
+                        onChange={e => {
+                            setEmail(e.target.value);
+                        }}
+                        placeholder='JDoe@example.com'
+                    />
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
                     <p>Active</p>
-                    <Checkbox color='primary' inputProps={{ 'aria-label': 'secondary checkbox' }} checked={fetchedUser?.Active} />
+                    <Checkbox
+                        color='primary'
+                        inputProps={{ 'aria-label': 'secondary checkbox' }}
+                        checked={active}
+                        onChange={() => {
+                            setActive(!active);
+                        }}
+                    />
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
                     <p>Date Activated</p>
@@ -410,8 +524,11 @@ function AdminUserForm(): React.ReactElement {
                         id='date'
                         type='date'
                         disabled
+                        onChange={e => {
+                            setDateActivated(e.target.value);
+                        }}
                         // value={extractISOMonthDateYear(fetchedUser?.DateActivated, true)}
-                        value='2021-01-01'
+                        value={extractISOMonthDateYear(dateActivated, true)}
                         InputLabelProps={{
                             shrink: true
                         }}
@@ -423,8 +540,10 @@ function AdminUserForm(): React.ReactElement {
                         id='date'
                         type='date'
                         disabled
-                        // value={extractISOMonthDateYear(fetchedUser?.DateDisabled)}
-                        value='2021-01-01'
+                        onChange={e => {
+                            setDateDisabled(e.target.value);
+                        }}
+                        value={extractISOMonthDateYear(dateDisabled, true)}
                         InputLabelProps={{
                             shrink: true
                         }}
@@ -435,6 +554,7 @@ function AdminUserForm(): React.ReactElement {
                     <Select value='Daily Digest'>
                         <MenuItem value={'Daily Digest'}>Daily Digest</MenuItem>
                         <MenuItem value={'Immediately'}>Immediately</MenuItem>
+                        <MenuItem value={'Ehh'}>{/* workflowNotificationType */}</MenuItem>
                     </Select>
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
@@ -442,17 +562,29 @@ function AdminUserForm(): React.ReactElement {
                     <TextField
                         id='time'
                         type='time'
-                        defaultValue='17:00'
+                        // defaultValue={workflowNotificationTime}
                         InputLabelProps={{
                             shrink: true
                         }}
                         inputProps={{
                             step: 300 // 5 min
                         }}
+                        // onChange={e => {
+                        //     setWorkflowNotificationTime(e.target.value);
+                        // }}
                     />
                 </Box>
                 <Box>
-                    <Button color='primary'>{create ? 'Create' : 'Update'}</Button>
+                    <Button
+                        color='primary'
+                        onClick={() => {
+                            create ? console.log('create') : console.log('update');
+                        }}>
+                        {create ? 'Create' : 'Update'}
+                    </Button>
+                    <Link to='/admin/users'>
+                        <Button color='primary'>Cancel</Button>
+                    </Link>
                 </Box>
             </Box>
         </React.Fragment>
@@ -481,8 +613,8 @@ function Admin(): React.ReactElement {
         //     return getAllUsers;
         //   }
         // }
-
-        // let allUsers = getAllUsers();
+        // await getAllUser
+        // let allUsers = await getAllUsers();
         // console.log(allUsers);
         // setUsers(allUsers);
     }, []);

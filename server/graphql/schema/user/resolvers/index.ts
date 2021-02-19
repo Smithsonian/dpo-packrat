@@ -5,9 +5,10 @@ import getUser from './queries/getUser';
 import getAllUsers from './queries/getAllUsers';
 import getCurrentUser from './queries/getCurrentUser';
 import createUser from './mutations/createUser';
+import updateUser from './mutations/updateUser'
 
 
-// TODO write mutation for editUser
+// TODO write mutation for updateUser
 const resolvers = {
     Query: {
         getUser,
@@ -15,7 +16,8 @@ const resolvers = {
         getAllUsers,
     },
     Mutation: {
-        createUser
+        createUser,
+        updateUser
     },
     User,
     UserPersonalizationSystemObject,

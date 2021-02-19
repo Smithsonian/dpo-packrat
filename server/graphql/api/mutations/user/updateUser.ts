@@ -1,20 +1,20 @@
 import { gql } from 'apollo-server-express';
 
-const getUser = gql`
-    query getUser($input: GetUserInput!) {
-        getUser(input: $input) {
+const createUser = gql`
+    mutation updateUser($input: UpdateUserInput!) {
+        updateUser(input: $input) {
             User {
                 idUser
+                EmailAddress
                 Name
                 Active
                 DateActivated
                 DateDisabled
                 EmailSettings
-                EmailAddress
                 WorkflowNotificationTime
             }
         }
     }
 `;
 
-export default getUser;
+export default createUser;

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
@@ -295,6 +293,7 @@ export type Mutation = {
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
   updateObjectDetails: UpdateObjectDetailsResult;
+  updateUser: CreateUserResult;
   uploadAsset: UploadAssetResult;
 };
 
@@ -366,6 +365,11 @@ export type MutationIngestDataArgs = {
 
 export type MutationUpdateObjectDetailsArgs = {
   input: UpdateObjectDetailsInput;
+};
+
+
+export type MutationUpdateUserArgs = {
+  input: UpdateUserInput;
 };
 
 
@@ -1847,12 +1851,21 @@ export type Item = {
 export type CreateUserInput = {
   Name: Scalars['String'];
   EmailAddress: Scalars['String'];
-  SecurityID: Scalars['String'];
+  SecurityID?: Maybe<Scalars['String']>;
 };
 
 export type CreateUserResult = {
   __typename?: 'CreateUserResult';
   User?: Maybe<User>;
+};
+
+export type UpdateUserInput = {
+  idUser: Scalars['Int'];
+  Name: Scalars['String'];
+  EmailAddress: Scalars['String'];
+  Active: Scalars['Boolean'];
+  EmailSettings: Scalars['Int'];
+  WorkflowNotificationTime: Scalars['DateTime'];
 };
 
 export type GetCurrentUserResult = {
@@ -1882,7 +1895,7 @@ export type GetAllUsersInput = {
 
 export type GetAllUsersResult = {
   __typename?: 'GetAllUsersResult';
-  User: Array<Maybe<User>>;
+  User: Array<User>;
 };
 
 export type User = {
@@ -2235,6 +2248,22 @@ export type CreateUserMutation = (
     & { User?: Maybe<(
       { __typename?: 'User' }
       & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>
+    )> }
+  ) }
+);
+
+export type UpdateUserMutationVariables = Exact<{
+  input: UpdateUserInput;
+}>;
+
+
+export type UpdateUserMutation = (
+  { __typename?: 'Mutation' }
+  & { updateUser: (
+    { __typename?: 'CreateUserResult' }
+    & { User?: Maybe<(
+      { __typename?: 'User' }
+      & Pick<User, 'idUser' | 'EmailAddress' | 'Name' | 'Active' | 'DateActivated' | 'DateDisabled' | 'EmailSettings' | 'WorkflowNotificationTime'>
     )> }
   ) }
 );
@@ -2889,10 +2918,10 @@ export type GetAllUsersQuery = (
   { __typename?: 'Query' }
   & { getAllUsers: (
     { __typename?: 'GetAllUsersResult' }
-    & { User: Array<Maybe<(
+    & { User: Array<(
       { __typename?: 'User' }
       & Pick<User, 'idUser' | 'Active' | 'DateActivated' | 'EmailAddress' | 'Name' | 'SecurityID' | 'DateDisabled' | 'EmailSettings' | 'WorkflowNotificationTime'>
-    )>> }
+    )> }
   ) }
 );
 
@@ -2921,7 +2950,7 @@ export type GetUserQuery = (
     { __typename?: 'GetUserResult' }
     & { User?: Maybe<(
       { __typename?: 'User' }
-      & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>
+      & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated' | 'DateDisabled' | 'EmailSettings' | 'EmailAddress' | 'WorkflowNotificationTime'>
     )> }
   ) }
 );
@@ -3419,6 +3448,47 @@ export function useCreateUserMutation(baseOptions?: Apollo.MutationHookOptions<C
 export type CreateUserMutationHookResult = ReturnType<typeof useCreateUserMutation>;
 export type CreateUserMutationResult = Apollo.MutationResult<CreateUserMutation>;
 export type CreateUserMutationOptions = Apollo.BaseMutationOptions<CreateUserMutation, CreateUserMutationVariables>;
+export const UpdateUserDocument = gql`
+    mutation updateUser($input: UpdateUserInput!) {
+  updateUser(input: $input) {
+    User {
+      idUser
+      EmailAddress
+      Name
+      Active
+      DateActivated
+      DateDisabled
+      EmailSettings
+      WorkflowNotificationTime
+    }
+  }
+}
+    `;
+export type UpdateUserMutationFn = Apollo.MutationFunction<UpdateUserMutation, UpdateUserMutationVariables>;
+
+/**
+ * __useUpdateUserMutation__
+ *
+ * To run a mutation, you first call `useUpdateUserMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateUserMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateUserMutation, { data, loading, error }] = useUpdateUserMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateUserMutation(baseOptions?: Apollo.MutationHookOptions<UpdateUserMutation, UpdateUserMutationVariables>) {
+        return Apollo.useMutation<UpdateUserMutation, UpdateUserMutationVariables>(UpdateUserDocument, baseOptions);
+      }
+export type UpdateUserMutationHookResult = ReturnType<typeof useUpdateUserMutation>;
+export type UpdateUserMutationResult = Apollo.MutationResult<UpdateUserMutation>;
+export type UpdateUserMutationOptions = Apollo.BaseMutationOptions<UpdateUserMutation, UpdateUserMutationVariables>;
 export const CreateVocabularyDocument = gql`
     mutation createVocabulary($input: CreateVocabularyInput!) {
   createVocabulary(input: $input) {
@@ -4944,6 +5014,10 @@ export const GetUserDocument = gql`
       Name
       Active
       DateActivated
+      DateDisabled
+      EmailSettings
+      EmailAddress
+      WorkflowNotificationTime
     }
   }
 }
