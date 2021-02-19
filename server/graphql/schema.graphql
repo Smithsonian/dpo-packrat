@@ -107,6 +107,7 @@ type Mutation {
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
   updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
+  updateUser(input: UpdateUserInput!): CreateUserResult!
   uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
 }
 
@@ -1482,11 +1483,20 @@ type Item {
 input CreateUserInput {
   Name: String!
   EmailAddress: String!
-  SecurityID: String!
+  SecurityID: String
 }
 
 type CreateUserResult {
   User: User
+}
+
+input UpdateUserInput {
+  idUser: Int!
+  Name: String!
+  EmailAddress: String!
+  Active: Boolean!
+  EmailSettings: Int!
+  WorkflowNotificationTime: DateTime!
 }
 
 type GetCurrentUserResult {
@@ -1513,7 +1523,7 @@ input GetAllUsersInput {
 }
 
 type GetAllUsersResult {
-  User: [User]!
+  User: [User!]!
 }
 
 type User {

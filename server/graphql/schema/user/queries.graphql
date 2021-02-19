@@ -28,5 +28,5 @@ input GetAllUsersInput {
 }
 
 type GetAllUsersResult {
-    User: [User]!
+    User: [User!]!
 }

@@ -105,7 +105,8 @@ import {
     UpdateObjectDetailsInput,
     UpdateObjectDetailsResult,
     GetAllUsersInput,
-    GetAllUsersResult
+    GetAllUsersResult,
+    UpdateUserInput
 } from '../../types/graphql';
 
 // Queries
@@ -162,6 +163,7 @@ import uploadAsset from './mutations/asset/uploadAsset';
 import ingestData from './mutations/ingestion/ingestData';
 import discardUploadedAssetVersions from './mutations/asset/discardUploadedAssetVersions';
 import updateObjectDetails from './mutations/systemobject/updateObjectDetails';
+import updateUser from './mutations/user/updateUser';
 
 import { Context } from '../../types/resolvers';
 
@@ -216,7 +218,8 @@ const allQueries = {
     getDetailsTabDataForObject,
     getFilterViewData,
     updateObjectDetails,
-    getAllUsers
+    getAllUsers,
+    updateUser
 };
 
 type GraphQLRequest = {
@@ -735,6 +738,16 @@ class GraphQLApi {
             variables,
             context
         });
+    }
+
+    async updateUser(input: UpdateUserInput, context?: Context): Promise<GetUserResult> {
+        const operationName = 'updateUser';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        })
     }
 
     private async graphqlRequest({ query, variables, context, operationName }: GraphQLRequest): Promise<any> {

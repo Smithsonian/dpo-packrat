@@ -291,6 +291,7 @@ export type Mutation = {
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
   updateObjectDetails: UpdateObjectDetailsResult;
+  updateUser: CreateUserResult;
   uploadAsset: UploadAssetResult;
 };
 
@@ -362,6 +363,11 @@ export type MutationIngestDataArgs = {
 
 export type MutationUpdateObjectDetailsArgs = {
   input: UpdateObjectDetailsInput;
+};
+
+
+export type MutationUpdateUserArgs = {
+  input: UpdateUserInput;
 };
 
 
@@ -1843,12 +1849,21 @@ export type Item = {
 export type CreateUserInput = {
   Name: Scalars['String'];
   EmailAddress: Scalars['String'];
-  SecurityID: Scalars['String'];
+  SecurityID?: Maybe<Scalars['String']>;
 };
 
 export type CreateUserResult = {
   __typename?: 'CreateUserResult';
   User?: Maybe<User>;
+};
+
+export type UpdateUserInput = {
+  idUser: Scalars['Int'];
+  Name: Scalars['String'];
+  EmailAddress: Scalars['String'];
+  Active: Scalars['Boolean'];
+  EmailSettings: Scalars['Int'];
+  WorkflowNotificationTime: Scalars['DateTime'];
 };
 
 export type GetCurrentUserResult = {
@@ -1878,7 +1893,7 @@ export type GetAllUsersInput = {
 
 export type GetAllUsersResult = {
   __typename?: 'GetAllUsersResult';
-  User: Array<Maybe<User>>;
+  User: Array<User>;
 };
 
 export type User = {

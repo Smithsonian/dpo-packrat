@@ -18,5 +18,4 @@ export default async function getAllUsers(_: Parent, args: QueryGetAllUsersArgs)
 
     }
     return { User: Users };
-    //note: check getCurrentUser for similar pattern
 }
