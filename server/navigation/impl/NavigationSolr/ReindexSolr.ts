@@ -448,6 +448,7 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleIntermediaryFile failed to compute intermediaryFile from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
+        doc.CommonName = `Intermediary File created ${intermediaryFile.DateCreated.toISOString()}`;
         doc.CommonDateCreated = intermediaryFile.DateCreated;
         return true;
     }
@@ -469,6 +470,7 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleAsset failed to compute asset from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
+        doc.CommonName = asset.FileName;
         doc.AssetFileName = asset.FileName;
         doc.AssetFilePath = asset.FilePath;
         doc.AssetType = await this.lookupVocabulary(asset.idVAssetType);
@@ -487,6 +489,7 @@ export class ReindexSolr {
             LOG.logger.error(`ReindexSolr.handleAssetVersion failed to compute idUserCreator from ${assetVersion.idUserCreator}`);
             return false;
         }
+        doc.CommonName = `Version ${assetVersion.Version}`;
         doc.AVUserCreator = user.Name;
         doc.AVStorageHash = assetVersion.StorageHash;
         doc.AVStorageSize = assetVersion.StorageSize;
