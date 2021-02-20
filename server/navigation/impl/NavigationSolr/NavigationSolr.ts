@@ -100,8 +100,10 @@ export class NavigationSolr implements NAV.INavigation {
         if (filterColumns.length > 0)
             SQ = SQ.fl(filterColumns);
 
+        SQ = SQ.sort({ CommonOTNumber: 'asc', CommonName: 'asc', CommonidObject: 'asc' }); // sort by the object type enumeration, then by name, then by object id
+        // cursorMark ... https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
         SQ = SQ.rows(100);
-        LOG.logger.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}: ${SQ.build()}`);
+        LOG.logger.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}:\n${SQ.build()}`);
         return SQ;
     }
 
@@ -172,7 +174,6 @@ export class NavigationSolr implements NAV.INavigation {
 
     // #region Execute Query
     private async executeSolrQuery(filter: NAV.NavigationFilter, SQ: solr.Query): Promise<NAV.NavigationResult> {
-        LOG.logger.info('NavigationSolr.executeSolrQuery');
         let error: string = '';
         const entries: NAV.NavigationResultEntry[] = [];
         const queryResult: SolrQueryResult = await this.executeSolrQueryWorker(SQ);
@@ -188,6 +189,7 @@ export class NavigationSolr implements NAV.INavigation {
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
 
+        LOG.logger.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length}}`);
         for (const doc of queryResult.result.response.docs) {
             if (!doc.idSystemObject || !doc.CommonObjectType || !doc.CommonidObject || !doc.CommonName) {
                 LOG.logger.error(`NavigationSolr.executeSolrQuery: malformed query response document ${JSON.stringify(doc)}`);
