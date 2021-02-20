@@ -10,6 +10,7 @@
     <field name="CommonRetired" type="boolean" indexed="true" stored="true" />
     <!-- Describes the object represented by this system object, e.g. "Unit", "Project", "CaptureData", "Model", etc. -->
   	<field name="CommonObjectType" type="string" indexed="true" stored="true" required="true" multiValued="false" />
+  	<field name="CommonOTNumber" type="pint" indexed="true" stored="true" required="true" multiValued="false" />
     <field name="CommonidObject" type="pint" indexed="true" stored="true" required="true" multiValued="false" />
 
     <!-- Common fields -->
