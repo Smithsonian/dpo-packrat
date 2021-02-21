@@ -103,7 +103,7 @@ export class NavigationSolr implements NAV.INavigation {
         SQ = SQ.sort({ CommonOTNumber: 'asc', CommonName: 'asc', CommonidObject: 'asc' }); // sort by the object type enumeration, then by name, then by object id
         // cursorMark ... https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
         SQ = SQ.rows(100);
-        LOG.logger.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}:\n${SQ.build()}`);
+        LOG.logger.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}:\n${this._solrClient.solrUrl()}/select?${SQ.build()}`);
         return SQ;
     }
 
