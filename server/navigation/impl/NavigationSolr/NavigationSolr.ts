@@ -190,11 +190,13 @@ export class NavigationSolr implements NAV.INavigation {
         }
 
         LOG.logger.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length}}`);
+        // let docNumber: number = 1;
         for (const doc of queryResult.result.response.docs) {
             if (!doc.idSystemObject || !doc.CommonObjectType || !doc.CommonidObject || !doc.CommonName) {
                 LOG.logger.error(`NavigationSolr.executeSolrQuery: malformed query response document ${JSON.stringify(doc)}`);
                 continue;
             }
+            // LOG.logger.info(`NavigationSolr.executeSolrQuery [${docNumber++}]: ${JSON.stringify(doc)}`);
 
             const entry: NAV.NavigationResultEntry = {
                 idSystemObject: parseInt(doc.idSystemObject),
