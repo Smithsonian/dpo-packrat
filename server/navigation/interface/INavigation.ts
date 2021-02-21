@@ -81,6 +81,8 @@ export type NavigationFilter = {
     variantType: number[];                  // idVocabulary[] for variant type filter
     modelPurpose: number[];                 // idVocabulary[] for model purpose filter
     modelFileType: number[];                // idVocabulary[] for model file type filter
+    rows: number;                           // max result row count; a value of 0 means "all"
+    cursorMark: string;                     // a non-empty value indicates a cursor position through a set of result values, used to request the next set of values
 };
 
 export type NavigationResultEntry = {
@@ -96,6 +98,7 @@ export type NavigationResult = {
     error: string;
     entries: NavigationResultEntry[];
     metadataColumns: eMetadata[];
+    cursorMark?: string | null;             // when provided, additional results are available by requesting another navigation, using this returned value for the NavigationFilter.cursorMark
 };
 
 export interface INavigation {

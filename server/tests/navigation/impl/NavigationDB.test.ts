@@ -46,6 +46,8 @@ const mockFilter: NavigationFilter = {
     variantType: [],
     modelPurpose: [],
     modelFileType: [],
+    rows: 100,
+    cursorMark: ''
 };
 
 describe('Navigation Traversal', () => {

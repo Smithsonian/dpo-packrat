@@ -100,9 +100,10 @@ export class NavigationSolr implements NAV.INavigation {
         if (filterColumns.length > 0)
             SQ = SQ.fl(filterColumns);
 
-        SQ = SQ.sort({ CommonOTNumber: 'asc', CommonName: 'asc', CommonidObject: 'asc' }); // sort by the object type enumeration, then by name, then by object id
-        // cursorMark ... https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
-        SQ = SQ.rows(100);
+        SQ = SQ.sort({ CommonOTNumber: 'asc', CommonName: 'asc', idSystemObject: 'asc' }); // sort by the object type enumeration, then by name, then by idSystemObject
+        SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
+        if (filter.rows > 0)
+            SQ = SQ.rows(filter.rows);
         LOG.logger.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}:\n${this._solrClient.solrUrl()}/select?${SQ.build()}`);
         return SQ;
     }
@@ -189,7 +190,7 @@ export class NavigationSolr implements NAV.INavigation {
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
 
-        LOG.logger.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length}}`);
+        LOG.logger.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length}, nextCursorMark: ${queryResult.result.nextCursorMark} }`);
         // let docNumber: number = 1;
         for (const doc of queryResult.result.response.docs) {
             if (!doc.idSystemObject || !doc.CommonObjectType || !doc.CommonidObject || !doc.CommonName) {
@@ -209,8 +210,11 @@ export class NavigationSolr implements NAV.INavigation {
             entries.push(entry);
         }
 
+        let cursorMark: string | null = queryResult.result.nextCursorMark ? queryResult.result.nextCursorMark : null;
+        if (cursorMark == filter.cursorMark)    // solr returns the same cursorMark as the initial query when there are no more results; if so, clear out cursorMark
+            cursorMark = null;
         // LOG.logger.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`);
-        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns };
+        return { success: true, error: '', entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
     private executeSolrQueryWorker(SQ: solr.Query): Promise<SolrQueryResult> {
