@@ -8,7 +8,7 @@ import { RepositoryFilter } from '../pages/Repository';
 import { getObjectChildren, getObjectChildrenForRoot } from '../pages/Repository/hooks/useRepository';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
-import { parseRepositoryTreeNodeId, sortEntriesAlphabetically, validateArray } from '../utils/repository';
+import { parseRepositoryTreeNodeId, validateArray } from '../utils/repository';
 
 type RepositoryStore = {
     isExpanded: boolean;
@@ -78,8 +78,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;
-            const sortedEntries = sortEntriesAlphabetically(entries);
-            const entry: [string, NavigationResultEntry[]] = [treeRootKey, sortedEntries];
+            const entry: [string, NavigationResultEntry[]] = [treeRootKey, entries];
             const updatedTree = new Map([entry]);
             set({ tree: updatedTree, loading: false });
         }
@@ -93,9 +92,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;
-            const sortedEntries = sortEntriesAlphabetically(entries);
             const updatedTree: Map<string, NavigationResultEntry[]> = new Map(tree);
-            updatedTree.set(nodeId, sortedEntries);
+            updatedTree.set(nodeId, entries);
             set({ tree: updatedTree });
         }
     },
