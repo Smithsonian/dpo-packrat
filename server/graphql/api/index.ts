@@ -747,7 +747,7 @@ class GraphQLApi {
             operationName,
             variables,
             context
-        })
+        });
     }
 
     private async graphqlRequest({ query, variables, context, operationName }: GraphQLRequest): Promise<any> {
