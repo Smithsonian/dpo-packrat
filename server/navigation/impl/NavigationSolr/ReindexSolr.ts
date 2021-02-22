@@ -2,7 +2,7 @@
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
-import { eSystemObjectType } from '../../../db';
+import { eSystemObjectType, ObjectGraphDataEntry } from '../../../db';
 import { SolrClient } from './SolrClient';
 
 export class ReindexSolr {
@@ -56,6 +56,31 @@ export class ReindexSolr {
         return retValue;
     }
 
+    // TODO: test! Integrate potentially with TBD audit interface, providing a path for system object creation and updates to flow through to Solr
+    async indexObject(idSystemObject: number): Promise<boolean> {
+        // Compute full object graph for object
+        const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAll, 32, this.objectGraphDatabase);
+        if (!await OG.fetch()) {
+            LOG.logger.error('ReindexSolr.indexObject failed fetching ObjectGraph');
+            return false;
+        }
+        const OGDE: ObjectGraphDataEntry | undefined = this.objectGraphDatabase.objectMap.get(idSystemObject);
+        if (!OGDE) {
+            LOG.logger.error('ReindexSolr.indexObject failed fetching ObjectGraphDataEntry from ObjectGraphDatabase');
+            return false;
+        }
+
+        const doc: any = {};
+        if (await this.handleObject(doc, OGDE)) {
+            const solrClient: SolrClient = new SolrClient(null, null, null);
+            solrClient._client.add([doc], undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.indexObject adding record', err); else obj; });
+            solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.indexObject -> commit()', err); else obj; });
+        } else
+            LOG.logger.error('ReindexSolr.indexObject failed in handleObject');
+
+        return true;
+    }
+
     private async fullIndexWorker(): Promise<boolean> {
         const solrClient: SolrClient = new SolrClient(null, null, null);
         if (!(await this.objectGraphDatabase.fetch())) {
@@ -66,34 +91,16 @@ export class ReindexSolr {
         let docs: any[] = [];
         for (const objectGraphDataEntry of this.objectGraphDatabase.objectMap.values()) {
             const doc: any = {};
+            if (await this.handleObject(doc, objectGraphDataEntry)) {
+                docs.push(doc);
 
-            await this.extractCommonFields(doc, objectGraphDataEntry);
-
-            switch (objectGraphDataEntry.systemObjectIDType.eObjectType) {
-                case eSystemObjectType.eUnit:                   await this.handleUnit(doc, objectGraphDataEntry);                 break;
-                case eSystemObjectType.eProject:                await this.handleProject(doc, objectGraphDataEntry);              break;
-                case eSystemObjectType.eSubject:                await this.handleSubject(doc, objectGraphDataEntry);              break;
-                case eSystemObjectType.eItem:                   await this.handleItem(doc, objectGraphDataEntry);                 break;
-                case eSystemObjectType.eCaptureData:            await this.handleCaptureData(doc, objectGraphDataEntry);          break;
-                case eSystemObjectType.eModel:                  await this.handleModel(doc, objectGraphDataEntry);                break;
-                case eSystemObjectType.eScene:                  await this.handleScene(doc, objectGraphDataEntry);                break;
-                case eSystemObjectType.eIntermediaryFile:       await this.handleIntermediaryFile(doc, objectGraphDataEntry);     break;
-                case eSystemObjectType.eProjectDocumentation:   await this.handleProjectDocumentation(doc, objectGraphDataEntry); break;
-                case eSystemObjectType.eAsset:                  await this.handleAsset(doc, objectGraphDataEntry);                break;
-                case eSystemObjectType.eAssetVersion:           await this.handleAssetVersion(doc, objectGraphDataEntry);         break;
-                case eSystemObjectType.eActor:                  await this.handleActor(doc, objectGraphDataEntry);                break;
-                case eSystemObjectType.eStakeholder:            await this.handleStakeholder(doc, objectGraphDataEntry);          break;
-
-                default:
-                case eSystemObjectType.eUnknown:                await this.handleUnknown(doc, objectGraphDataEntry);              break;
-            }
-
-            docs.push(doc);
-            if (docs.length >= 1000) {
-                solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
-                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
-                docs = [];
-            }
+                if (docs.length >= 1000) {
+                    solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
+                    solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
+                    docs = [];
+                }
+            } else
+                LOG.logger.error('ReindexSolr.fullIndex failed in handleObject');
         }
 
         if (docs.length > 0) {
@@ -101,6 +108,29 @@ export class ReindexSolr {
             solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
         }
         return true;
+    }
+
+    private async handleObject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
+        await this.extractCommonFields(doc, objectGraphDataEntry);
+
+        switch (objectGraphDataEntry.systemObjectIDType.eObjectType) {
+            case eSystemObjectType.eUnit:                   return await this.handleUnit(doc, objectGraphDataEntry);
+            case eSystemObjectType.eProject:                return await this.handleProject(doc, objectGraphDataEntry);
+            case eSystemObjectType.eSubject:                return await this.handleSubject(doc, objectGraphDataEntry);
+            case eSystemObjectType.eItem:                   return await this.handleItem(doc, objectGraphDataEntry);
+            case eSystemObjectType.eCaptureData:            return await this.handleCaptureData(doc, objectGraphDataEntry);
+            case eSystemObjectType.eModel:                  return await this.handleModel(doc, objectGraphDataEntry);
+            case eSystemObjectType.eScene:                  return await this.handleScene(doc, objectGraphDataEntry);
+            case eSystemObjectType.eIntermediaryFile:       return await this.handleIntermediaryFile(doc, objectGraphDataEntry);
+            case eSystemObjectType.eProjectDocumentation:   return await this.handleProjectDocumentation(doc, objectGraphDataEntry);
+            case eSystemObjectType.eAsset:                  return await this.handleAsset(doc, objectGraphDataEntry);
+            case eSystemObjectType.eAssetVersion:           return await this.handleAssetVersion(doc, objectGraphDataEntry);
+            case eSystemObjectType.eActor:                  return await this.handleActor(doc, objectGraphDataEntry);
+            case eSystemObjectType.eStakeholder:            return await this.handleStakeholder(doc, objectGraphDataEntry);
+
+            default:
+            case eSystemObjectType.eUnknown:                return await this.handleUnknown(doc, objectGraphDataEntry);
+        }
     }
 
     private async extractCommonFields(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<void> {
