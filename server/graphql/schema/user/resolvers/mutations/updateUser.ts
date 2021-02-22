@@ -12,7 +12,7 @@ export default async function updateUser(_: Parent, args: MutationUpdateUserArgs
     if (!User) {
         console.log('User not found');
         throw new Error('User not found');
-    };
+    }
 
     User.Name = Name;
     User.EmailAddress = EmailAddress;

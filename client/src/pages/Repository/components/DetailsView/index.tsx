@@ -229,7 +229,7 @@ function DetailsView(): React.ReactElement {
         updatedDataFields.Retired = target.checked;
         setUpdatedData(updatedDataFields);
     };
-
+    console.log(objectAncestors);
     return (
         <Box className={classes.container}>
             <DetailsHeader

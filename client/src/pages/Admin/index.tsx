@@ -20,84 +20,52 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
+import MenuList from '@material-ui/core/MenuList';
+import Typography from '@material-ui/core/Typography';
 import { BiSort } from 'react-icons/bi';
 import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, ADMIN_ROUTE, ADMIN_ROUTES_TYPE, resolveRoute, resolveSubRoute, ADMIN_EDIT_USER } from '../../constants';
 import React, { useState, useEffect } from 'react';
-import { Redirect, useParams /* useHistory, useLocation */ } from 'react-router';
+import { Redirect, useParams, useLocation /* useHistory */ } from 'react-router';
 import { Link } from 'react-router-dom';
-import { useGetUserQuery, useGetAllUsersQuery, User_Status /* useUpdateUserMutation, useCreateUserMutation */ } from '../../types/graphql';
+import { useGetUserQuery, useGetAllUsersQuery, User_Status, CreateUserDocument } from '../../types/graphql';
 import { GetAllUsersResult, User /* User */ } from '../../types/graphql';
+// import GenericBreadcrumbsView from '../../components/shared/GenericBreadcrumbsView';
+import { apolloClient } from '../../graphql/index';
 
-// let sampleUserList: GetAllUsersResult['User'] = [
-//     // let sampleUserList: User[] = [
-//     {
-//         idUser: 1,
-//         Name: 'Jon Tyson',
-//         EmailAddress: 'tysonj@si.edu',
-//         Active: true,
-//         DateActivated: '2021-02-03T22:36:39.000Z',
-//         DateDisabled: null,
-//         WorkflowNotificationTime: null,
-//         EmailSettings: null,
-//         SecurityID: 'TBD'
-//     },
-//     {
-//         idUser: 2,
-//         Name: 'Jon Blundell',
-//         EmailAddress: 'blundellj@si.edu',
-//         Active: true,
-//         DateActivated: '2021-02-03T22:36:39.000Z',
-//         DateDisabled: null,
-//         WorkflowNotificationTime: null,
-//         EmailSettings: null,
-//         SecurityID: 'TBD'
-//     },
-//     {
-//         idUser: 3,
-//         Name: 'Vince Rossi',
-//         EmailAddress: 'rossiv@si.edu',
-//         Active: true,
-//         DateActivated: '2021-02-03T22:36:39.000Z',
-//         DateDisabled: null,
-//         WorkflowNotificationTime: null,
-//         EmailSettings: null,
-//         SecurityID: 'TBD'
-//     },
-//     {
-//         idUser: 4,
-//         Name: 'Jamie Cope',
-//         EmailAddress: 'copeg@si.edu',
-//         Active: false,
-//         DateActivated: '2021-02-03T22:36:39.000Z',
-//         DateDisabled: null,
-//         WorkflowNotificationTime: null,
-//         EmailSettings: null,
-//         SecurityID: 'TBD'
-//     },
-//     {
-//         idUser: 5,
-//         Name: 'Karan Pratap Singh',
-//         EmailAddress: 'singhk@si.edu',
-//         Active: true,
-//         DateActivated: '2021-02-03T22:36:39.000Z',
-//         DateDisabled: null,
-//         WorkflowNotificationTime: null,
-//         EmailSettings: null,
-//         SecurityID: 'TBD'
-//     },
-//     {
-//         idUser: 6,
-//         Name: 'Test User',
-//         EmailAddress: 'user@test.com',
-//         Active: true,
-//         DateActivated: '2021-02-03T22:36:39.000Z',
-//         DateDisabled: null,
-//         WorkflowNotificationTime: null,
-//         EmailSettings: null,
-//         SecurityID: 'TBD'
+/* Utility functions */
+
+// function descendingComparator(a, b, orderBy) {
+//     if (b[orderBy] < a[orderBy]) {
+//         return -1;
 //     }
-// ];
+//     if (b[orderBy] > a[orderBy]) {
+//         return 1;
+//     }
+//         return 0;
+//   }
+
+//   function getComparator(order, orderBy) {
+//     return order === 'desc'
+//         ? (a, b) => descendingComparator(a, b, orderBy)
+//         : (a, b) => -descendingComparator(a, b, orderBy);
+//   }
+
+// function stableSort(array, comparator) {
+//     const stabilizedThis = array.map((el, index) => [el, index]);
+//     stabilizedThis.sort((a, b) => {
+//         const order = comparator(a[0], b[0]);
+//         if (order !== 0) return order;
+//         return a[1] - b[1];
+//     });
+//     return stabilizedThis.map((el) => el[0]);
+// }
+
+function toTitleCase(str) {
+    return str.replace(/\w\S*/g, txt => {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+}
 
 function extractISOMonthDateYear(iso, materialUI = false) {
     if (!iso) {
@@ -105,10 +73,10 @@ function extractISOMonthDateYear(iso, materialUI = false) {
     }
     const time = new Date(iso);
     if (materialUI) {
+        // year-month-date
         let year = String(time.getFullYear());
         let month = String(time.getMonth());
         let date = String(time.getDate());
-        //year-month-date
         if (Number(month) < 10) {
             month = '0' + month;
         }
@@ -123,6 +91,9 @@ function extractISOMonthDateYear(iso, materialUI = false) {
 }
 
 const useStyles = makeStyles({
+    AdminPageContainer: {
+        display: 'flex'
+    },
     AdminUsersViewContainer: {
         display: 'flex',
         flex: 1,
@@ -130,17 +101,26 @@ const useStyles = makeStyles({
         overflow: 'auto',
         maxHeight: 'calc(100vh - 60px)',
         paddingLeft: '3%',
-        paddingTop: '3%'
-        // backgroundColor: 'grey'
+        paddingTop: '3%',
+        backgroundColor: 'pink'
     },
     //Will include the breadcrumbs have have that stacked on top
-    AdminUsersListComponentsContainer: {
+    AdminUsersListContainer: {
         maxWidth: '85%',
         maxHeight: '70%',
         display: 'flex',
         backgroundColor: '#FFFCD1',
         border: '1px solid #B7D2E5CC',
         alignItems: 'center'
+    },
+    AdminSidebarMenuContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'purple'
+    },
+    AdminToolsViewContainer: {
+        display: 'flex',
+        flexDirection: 'column'
     },
     formControl: {
         minWidth: 120
@@ -161,15 +141,40 @@ const useStyles = makeStyles({
     },
     AdminUserFormRow: {
         display: 'flex'
+    },
+    AdminSidebarMenuRow: {
+        backgroundColor: 'green'
     }
 });
 
-// AdminUsersFilter
-// Filters out from the users stored in AdminUsersView
-// Searchbar for key words
-// Dropdown for active status
-// Search button
-// Add User button
+function AdminSidebarMenuRow({ path }: { path: string }) {
+    const classes = useStyles();
+
+    return (
+        <MenuItem className={classes.AdminSidebarMenuRow}>
+            <Link to={`/admin/${path}`}>
+                <Typography variant='inherit' noWrap>
+                    {toTitleCase(path)}
+                </Typography>
+            </Link>
+        </MenuItem>
+    );
+}
+
+function AdminSidebarMenu() {
+    const classes = useStyles();
+    const adminRoutes = ['users'];
+
+    return (
+        <Box className={classes.AdminSidebarMenuContainer}>
+            <MenuList>
+                {adminRoutes.map(route => {
+                    return <AdminSidebarMenuRow path={route} />;
+                })}
+            </MenuList>
+        </Box>
+    );
+}
 
 function AdminUsersFilter({
     handleActiveUpdate,
@@ -195,8 +200,23 @@ function AdminUsersFilter({
         handleUsersSearchUpdate(searchFilter);
     };
 
+    const createNewUser = async () => {
+        let creating = await apolloClient.mutate({
+            mutation: CreateUserDocument,
+            variables: {
+                input: {
+                    EmailAddress: 'test@gmail.com',
+                    Name: 'tester'
+                }
+            }
+        });
+
+        console.log('yayyyyyyy', creating);
+        return;
+    };
+
     return (
-        <Box className={classes.AdminUsersListComponentsContainer}>
+        <Box className={classes.AdminUsersListContainer}>
             <Box className={classes.AdminUsersSearchFilterContainer}>
                 <TextField label='Search Packrat User' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
                 <FormControl variant='outlined' className={classes.formControl}>
@@ -211,8 +231,8 @@ function AdminUsersFilter({
                     Search
                 </Button>
             </Box>
-            <Button className={classes.searchUsersFilterButton}>
-                <Link to='/admin/user/create'>Create User</Link>
+            <Button className={classes.searchUsersFilterButton} onClick={createNewUser}>
+                {/* <Link to='/admin/user/create'>Create User</Link> */}
             </Button>
         </Box>
     );
@@ -247,7 +267,7 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
     const classes = useStyles();
 
     return (
-        <Box className={classes.AdminUsersListComponentsContainer}>
+        <Box className={classes.AdminUsersListContainer}>
             <TableContainer component={Paper}>
                 <Table stickyHeader>
                     <TableHead>
@@ -296,78 +316,6 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
     );
 }
 
-// AdminUsersView - should contain both AdminUsersFilter and AdminUsersList
-// TODO write a hook or state store graphql api to retrieve users
-// TODO will have a state store for both the search filter term
-// TODO refactor using a state store instead
-// Also handles create newUser and update upon that
-// Passes both list of users and filter term to UsersList
-function AdminUsersView(): React.ReactElement {
-    const classes = useStyles();
-    // let users: GetAllUsersResult = sampleUserList;
-    // let users: User[];
-    const [active, setActive] = useState('All');
-    const [userSearchFilter, setUserSearchFilter] = useState('');
-
-    const { data } = useGetAllUsersQuery({
-        variables: {
-            input: {
-                search: '',
-                active: User_Status.EAll
-            }
-        }
-    });
-
-    console.log('useGetAllUsers');
-    // console.log('Usersarray', data?.getAllUsers.User);
-    let users: GetAllUsersResult['User'] = data?.getAllUsers?.User || [];
-    console.log('users', users);
-
-    // useEffect(() => {
-    //     console.log('data', data?.getAllUsers.User);
-    //     if (data) {
-    //         users = data?.getAllUsers.User;
-    //     }
-    // }, [data]);
-
-    const handleActiveUpdate = newActive => {
-        setActive(newActive);
-    };
-
-    const handleUsersSearchUpdate = newUserSearch => {
-        setUserSearchFilter(newUserSearch);
-    };
-
-    // filter by active and keyword
-    let filteredUsers = users;
-
-    switch (active) {
-        case 'Active':
-            filteredUsers = users.filter(user => user?.Active);
-            break;
-        case 'Inactive':
-            filteredUsers = users.filter(user => !user?.Active);
-            break;
-        default:
-            filteredUsers = users;
-            break;
-    }
-
-    filteredUsers = filteredUsers.filter(user => {
-        const lowerCaseSearch = userSearchFilter.toLowerCase();
-        return user?.EmailAddress.toLowerCase().includes(lowerCaseSearch) || user?.Name.toLowerCase().includes(lowerCaseSearch);
-    });
-
-    return (
-        <React.Fragment>
-            <Box className={classes.AdminUsersViewContainer}>
-                <AdminUsersFilter handleActiveUpdate={handleActiveUpdate} handleUsersSearchUpdate={handleUsersSearchUpdate} />
-                <AdminUsersList users={filteredUsers} />
-            </Box>
-        </React.Fragment>
-    );
-}
-
 // AdminUserForm
 // TODO
 function AdminUserForm(): React.ReactElement {
@@ -385,21 +333,7 @@ function AdminUserForm(): React.ReactElement {
 
     let create: boolean = idUser === 'create';
 
-    // const useGetUserQueryResponse = useGetUserQuery({
-    //     variables: {
-    //         input: {
-    //             idUser: Number(idUser)
-    //         }
-    //     }
-    // });
-
-    // console.log('useGetUser', useGetUserQueryResponse);
-    // let fetchedUser = useGetUserQueryResponse?.data?.getUser?.User;
-    // console.log('useGetUserQuery', fetchedUser);
-    // let fetchedUser = sampleUserList.find(individualUser => individualUser.idUser === Number(idUser));
-    // console.log('fetchedUser before if', fetchedUser);
-
-    let fetchedUser = useGetUserQuery({
+    let request = useGetUserQuery({
         variables: {
             input: {
                 idUser: Number(idUser)
@@ -407,75 +341,44 @@ function AdminUserForm(): React.ReactElement {
         }
     });
 
-    console.log(fetchedUser);
+    const fetchedUser = request.data?.getUser.User;
+    console.log('fetchedUser', fetchedUser);
     /**
      * Approach 1
      * change the return to null
      * then render until I get the query back
      */
 
-    // useEffect(() => {
-    //     if (fetchedUser) {
-    //         console.log('fetchedUser before changing state', fetchedUser);
-    //         setName(fetchedUser?.Name);
-    //         setEmail(fetchedUser?.EmailAddress);
-    //         setActive(fetchedUser?.Active);
-    //         setDateActivated(fetchedUser?.DateActivated);
-    //         setDateDisabled(fetchedUser?.DateDisabled);
-    //         // setWorkflowNotificationType(fetchedUser?.EmailSettings);
-    //         // setWorkflowNotificationTime(fetchedUser?.WorkflowNotificationTime || '');
-    //         console.log('fetchedUser after changing state', fetchedUser);
-    //     }
-    // }, [fetchedUser]);
-
-    // const submitCreateUser = async () => {
-    //     const newUser = await useCreateUserMutation({
-    //         variables: {
-    //             input: {
-    //                 EmailAddress: email,
-    //                 Name: name
-    //             }
-    //         }
-    //     });
-
-    //     console.log(newUser);
-    //     return newUser;
-    // };
-
-    // const submitUpdateUser = async () => {
-    //     const updatedUser = await useUpdateUserMutation({
-    //         variables: {
-    //             input: {
-    //                 idUser: Number(idUser),
-    //                 Name: name,
-    //                 EmailAddress: email,
-    //                 Active: active,
-    //                 EmailSettings: Number(workflowNotificationType),
-    //                 WorkflowNotificationTime: workflowNotificationTime
-    //             }
-    //         }
-    //     });
-    //     console.log(updatedUser);
-    //     return updatedUser;
-    // };
-
-    // Create 2 form variants based on create or edit user
-    // Biggest difference should be the functionality of the button
-    // Create will use graphQL api to create new user
-    // Edit will mutate an exisiting user
-    // if (fetchedUser) {
-    //     invalidUser = false;
-    // }
+    useEffect(() => {
+        if (fetchedUser) {
+            console.log('fetchedUser before changing state', fetchedUser);
+            setName(fetchedUser?.Name);
+            setEmail(fetchedUser?.EmailAddress);
+            setActive(fetchedUser?.Active);
+            setDateActivated(fetchedUser?.DateActivated);
+            setDateDisabled(fetchedUser?.DateDisabled);
+            // setWorkflowNotificationType(fetchedUser?.EmailSettings);
+            // setWorkflowNotificationTime(fetchedUser?.WorkflowNotificationTime || '');
+            console.log('fetchedUser after changing state', fetchedUser);
+        }
+    }, [fetchedUser]);
 
     // Performs graphql query to retrieve user information
     // if query returns user info,
     // redirect to adminuserform
     // else
     // redirect to users
+    if (!request) {
+        return <div>Hi</div>;
+    }
+
+    if (!fetchedUser) {
+        return <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />;
+    }
 
     return (
         <React.Fragment>
-            {!fetchedUser && !create && <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />}
+            {/* {!create && <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />} */}
             <Box className={classes.AdminUserFormContainer}>
                 <Box className={classes.AdminUserFormRow}>
                     <p>Name</p>
@@ -578,7 +481,7 @@ function AdminUserForm(): React.ReactElement {
                     <Button
                         color='primary'
                         onClick={() => {
-                            create ? console.log('create') : console.log('update');
+                            console.log('hi');
                         }}>
                         {create ? 'Create' : 'Update'}
                     </Button>
@@ -591,37 +494,80 @@ function AdminUserForm(): React.ReactElement {
     );
 }
 
-function Admin(): React.ReactElement {
+// AdminUsersView - should contain both AdminUsersFilter and AdminUsersList
+// TODO write a hook or state store graphql api to retrieve users
+// TODO will have a state store for both the search filter term
+// TODO refactor using a state store instead
+// Also handles create newUser and update upon that
+// Passes both list of users and filter term to UsersList
+function AdminUsersView(): React.ReactElement {
     const classes = useStyles();
-    useEffect(() => {
-        console.log('hi I am loaded');
-        // async function getAllUsers() {
-        //   const queryOptions = {
-        //     query: getAllUsers,
-        //     variables: {
-        //       input: {
-        //         search: '',
-        //         active: 'eAll'
-        //       }
-        //     }
-        //   };
+    // let users: GetAllUsersResult = sampleUserList;
+    // let users: User[];
+    const [active, setActive] = useState('All');
+    const [userSearchFilter, setUserSearchFilter] = useState('');
 
-        //   const { data, error } = await apolloClient.query(queryOptions);
+    const { data } = useGetAllUsersQuery({
+        variables: {
+            input: {
+                search: '',
+                active: User_Status.EAll
+            }
+        }
+    });
 
-        //   if (data && !error) {
-        //     const { getAllUsers } = data;
-        //     return getAllUsers;
-        //   }
-        // }
-        // await getAllUser
-        // let allUsers = await getAllUsers();
-        // console.log(allUsers);
-        // setUsers(allUsers);
-    }, []);
+    let users: GetAllUsersResult['User'] = data?.getAllUsers?.User || [];
+
+    const handleActiveUpdate = newActive => {
+        setActive(newActive);
+    };
+
+    const handleUsersSearchUpdate = newUserSearch => {
+        setUserSearchFilter(newUserSearch);
+    };
+
+    // filter by active and keyword
+    let filteredUsers = users;
+
+    switch (active) {
+        case 'Active':
+            filteredUsers = users.filter(user => user?.Active);
+            break;
+        case 'Inactive':
+            filteredUsers = users.filter(user => !user?.Active);
+            break;
+        default:
+            filteredUsers = users;
+            break;
+    }
+
+    filteredUsers = filteredUsers.filter(user => {
+        const lowerCaseSearch = userSearchFilter.toLowerCase();
+        return user?.EmailAddress.toLowerCase().includes(lowerCaseSearch) || user?.Name.toLowerCase().includes(lowerCaseSearch);
+    });
 
     return (
         <React.Fragment>
             <Box className={classes.AdminUsersViewContainer}>
+                <AdminUsersFilter handleActiveUpdate={handleActiveUpdate} handleUsersSearchUpdate={handleUsersSearchUpdate} />
+                <AdminUsersList users={filteredUsers} />
+            </Box>
+        </React.Fragment>
+    );
+}
+
+function Admin(): React.ReactElement {
+    // Responsible for handling the routing to various admin components
+    const classes = useStyles();
+    const parameters = useLocation();
+
+    console.log('adminparams', parameters);
+
+    return (
+        <React.Fragment>
+            <Box className={classes.AdminPageContainer}>
+                {/* <GenericBreadcrumbsView items={parameters.pathname} /> */}
+                <AdminSidebarMenu />
                 <PrivateRoute path={resolveRoute(HOME_ROUTES.ADMIN)}>
                     <PrivateRoute exact path={resolveRoute(ADMIN_ROUTE.TYPE)}>
                         <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />
