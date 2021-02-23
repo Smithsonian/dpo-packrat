@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
 
 CREATE TABLE IF NOT EXISTS `CaptureData` (
   `idCaptureData` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
   `idVCaptureMethod` int(11) NOT NULL,
   `DateCaptured` datetime NOT NULL,
   `Description` varchar(8000) NOT NULL,
@@ -258,6 +259,7 @@ CREATE TABLE IF NOT EXISTS `Metadata` (
 
 CREATE TABLE IF NOT EXISTS `Model` (
   `idModel` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
   `DateCreated` datetime NOT NULL,
   `idVCreationMethod` int(11) NOT NULL,
   `Master` boolean NOT NULL,

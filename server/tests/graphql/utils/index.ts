@@ -106,6 +106,7 @@ class TestSuiteUtils {
 
     createModelInput = (idVocabulary: number): CreateModelInput => {
         return {
+            Name: 'Test Name',
             Authoritative: true,
             idVCreationMethod: idVocabulary,
             idVModality: idVocabulary,
@@ -117,6 +118,7 @@ class TestSuiteUtils {
 
     createCaptureDataInput = (idVocabulary: number): CreateCaptureDataInput => {
         return {
+            Name: 'Test Name',
             idVCaptureMethod: idVocabulary,
             DateCaptured: new Date(),
             Description: 'Test Description'

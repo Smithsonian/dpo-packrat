@@ -47,6 +47,8 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         variantType,
         modelPurpose,
         modelFileType,
+        rows: 100,
+        cursorMark: ''
     };
 
     const result: NavigationResult = await navigation.getObjectChildren(filter);
