@@ -47,8 +47,8 @@ function GenericBreadcrumbsView(props: BreadcrumbsViewProps): React.ReactElement
     const { items, highlighted = false } = props;
     const classes = useStyles();
 
-    let splitPathCrumbsArray = items.split('/');
-    let finalPathCrumbsArray = splitPathCrumbsArray.map(subPath => {
+    const splitPathCrumbsArray = items.split('/');
+    const finalPathCrumbsArray = splitPathCrumbsArray.map(subPath => {
         return {
             subPath,
             fullPath: ''

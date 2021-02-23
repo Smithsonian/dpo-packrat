@@ -3,17 +3,18 @@
  *
  * This component renders Admin UI and all the sub-components
  */
+import React, { useState, useEffect } from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+// import Table from '@material-ui/core/Table';
+// import TableBody from '@material-ui/core/TableBody';
+// import TableCell from '@material-ui/core/TableCell';
+// import TableContainer from '@material-ui/core/TableContainer';
+// import TableHead from '@material-ui/core/TableHead';
+// import TableRow from '@material-ui/core/TableRow';
+// import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
-import IconButton from '@material-ui/core/IconButton';
+import { CheckBox, CheckBoxOutlineBlank } from '@material-ui/icons';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
@@ -22,16 +23,15 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
 import Typography from '@material-ui/core/Typography';
-import { BiSort } from 'react-icons/bi';
+import { DataGrid } from '@material-ui/data-grid';
 import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, ADMIN_ROUTE, ADMIN_ROUTES_TYPE, resolveRoute, resolveSubRoute, ADMIN_EDIT_USER } from '../../constants';
-import React, { useState, useEffect } from 'react';
-import { Redirect, useParams, useLocation /* useHistory */ } from 'react-router';
+import { Redirect, useParams, useLocation, useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
-import { useGetUserQuery, useGetAllUsersQuery, User_Status, CreateUserDocument } from '../../types/graphql';
-import { GetAllUsersResult, User /* User */ } from '../../types/graphql';
-// import GenericBreadcrumbsView from '../../components/shared/GenericBreadcrumbsView';
+import { useGetUserQuery, useGetAllUsersQuery, User_Status, CreateUserDocument, UpdateUserDocument } from '../../types/graphql';
+import { GetAllUsersResult /* , User */ } from '../../types/graphql';
 import { apolloClient } from '../../graphql/index';
+// import GenericBreadcrumbsView from '../../components/shared/GenericBreadcrumbsView';
 
 /* Utility functions */
 
@@ -75,7 +75,7 @@ function extractISOMonthDateYear(iso, materialUI = false) {
     if (materialUI) {
         // year-month-date
         let year = String(time.getFullYear());
-        let month = String(time.getMonth());
+        let month = String(time.getMonth() + 1);
         let date = String(time.getDate());
         if (Number(month) < 10) {
             month = '0' + month;
@@ -86,7 +86,7 @@ function extractISOMonthDateYear(iso, materialUI = false) {
         const result = `${year}-${month}-${date}`;
         return result;
     }
-    const result = `${time.getMonth()}/${time.getDate()}/${time.getFullYear()}`;
+    const result = `${time.getMonth() + 1}/${time.getDate()}/${time.getFullYear()}`;
     return result;
 }
 
@@ -102,6 +102,7 @@ const useStyles = makeStyles({
         maxHeight: 'calc(100vh - 60px)',
         paddingLeft: '3%',
         paddingTop: '3%',
+        width: '1000px',
         backgroundColor: 'pink'
     },
     //Will include the breadcrumbs have have that stacked on top
@@ -113,11 +114,7 @@ const useStyles = makeStyles({
         border: '1px solid #B7D2E5CC',
         alignItems: 'center'
     },
-    AdminSidebarMenuContainer: {
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'purple'
-    },
+    //This is for any admin component to the right of the sidebar menu
     AdminToolsViewContainer: {
         display: 'flex',
         flexDirection: 'column'
@@ -132,7 +129,8 @@ const useStyles = makeStyles({
     AdminUsersSearchFilterContainer: {
         display: 'flex',
         justifyContent: 'space-around',
-        alignItems: 'center'
+        alignItems: 'center',
+        height: '100px'
     },
     AdminUserFormContainer: {
         display: 'flex',
@@ -143,7 +141,16 @@ const useStyles = makeStyles({
         display: 'flex'
     },
     AdminSidebarMenuRow: {
-        backgroundColor: 'green'
+        width: '100%',
+        // backgroundColor: 'green',
+        maxHeight: '100%',
+        background: '#ECF5FD 0% 0% no-repeat padding-box'
+    },
+    AdminSidebarMenuContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        width: '15%',
+        border: '2px solid #C5D9E8'
     }
 });
 
@@ -151,13 +158,13 @@ function AdminSidebarMenuRow({ path }: { path: string }) {
     const classes = useStyles();
 
     return (
-        <MenuItem className={classes.AdminSidebarMenuRow}>
-            <Link to={`/admin/${path}`}>
+        <Link style={{ textDecoration: 'none', color: '#0093EE' }} to={`/admin/${path}`}>
+            <MenuItem className={classes.AdminSidebarMenuRow}>
                 <Typography variant='inherit' noWrap>
                     {toTitleCase(path)}
                 </Typography>
-            </Link>
-        </MenuItem>
+            </MenuItem>
+        </Link>
     );
 }
 
@@ -169,7 +176,7 @@ function AdminSidebarMenu() {
         <Box className={classes.AdminSidebarMenuContainer}>
             <MenuList>
                 {adminRoutes.map(route => {
-                    return <AdminSidebarMenuRow path={route} />;
+                    return <AdminSidebarMenuRow path={route} key={route} />;
                 })}
             </MenuList>
         </Box>
@@ -200,21 +207,6 @@ function AdminUsersFilter({
         handleUsersSearchUpdate(searchFilter);
     };
 
-    const createNewUser = async () => {
-        let creating = await apolloClient.mutate({
-            mutation: CreateUserDocument,
-            variables: {
-                input: {
-                    EmailAddress: 'test@gmail.com',
-                    Name: 'tester'
-                }
-            }
-        });
-
-        console.log('yayyyyyyy', creating);
-        return;
-    };
-
     return (
         <Box className={classes.AdminUsersListContainer}>
             <Box className={classes.AdminUsersSearchFilterContainer}>
@@ -231,8 +223,10 @@ function AdminUsersFilter({
                     Search
                 </Button>
             </Box>
-            <Button className={classes.searchUsersFilterButton} onClick={createNewUser}>
-                {/* <Link to='/admin/user/create'>Create User</Link> */}
+            <Button className={classes.searchUsersFilterButton}>
+                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/user/create'>
+                    Create User
+                </Link>
             </Button>
         </Box>
     );
@@ -244,64 +238,87 @@ function AdminUsersFilter({
 // Also has a way of sorting the users based on active, name, email, date activated, date deactivated
 //AdminUsersListRow
 // Checkbox, name, email, date, date, and edit link that guides to AdminUserForm
-function AdminUsersListRow({ userData }: { userData: User }): React.ReactElement {
-    const { idUser, Name, Active, EmailAddress, DateActivated, DateDisabled } = userData;
+// function AdminUsersListRow({ userData }: { userData: User }): React.ReactElement {
+//     const { idUser, Name, Active, EmailAddress, DateActivated, DateDisabled } = userData;
 
-    return (
-        <TableRow hover>
-            <TableCell>
-                <Checkbox checked={Active} disabled color='primary' />
-            </TableCell>
-            <TableCell>{Name}</TableCell>
-            <TableCell>{EmailAddress}</TableCell>
-            <TableCell>{extractISOMonthDateYear(DateActivated)}</TableCell>
-            <TableCell>{extractISOMonthDateYear(DateDisabled)}</TableCell>
-            <TableCell>
-                <Link to={`/admin/user/${idUser}`}>edit</Link>
-            </TableCell>
-        </TableRow>
-    );
-}
+//     return (
+//         <TableRow hover>
+//             <TableCell>
+//                 <Checkbox checked={Active} disabled color='primary' />
+//             </TableCell>
+//             <TableCell>{Name}</TableCell>
+//             <TableCell>{EmailAddress}</TableCell>
+//             <TableCell>{extractISOMonthDateYear(DateActivated)}</TableCell>
+//             <TableCell>{extractISOMonthDateYear(DateDisabled)}</TableCell>
+//             <TableCell>
+//                 <Link to={`/admin/user/${idUser}`}>edit</Link>
+//             </TableCell>
+//         </TableRow>
+//     );
+// }
 
 function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.ReactElement {
     const classes = useStyles();
 
+    const usersWithId: any = users.map(user => {
+        const { idUser, Active, DateActivated, EmailAddress, Name, SecurityID, DateDisabled, EmailSettings, WorkflowNotificationTime } = user;
+
+        return {
+            id: idUser,
+            Active,
+            DateActivated,
+            EmailAddress,
+            Name,
+            SecurityID,
+            DateDisabled,
+            EmailSettings,
+            WorkflowNotificationTime
+        };
+    });
+
+    const columnHeader = [
+        {
+            field: 'Active',
+            headerName: 'ACTIVE',
+            width: 120,
+            // valueGetter: params => (params.getValue('Active') ? 'Active' : 'Inactive'),
+            renderCell: params => (Boolean(params.getValue('Active')) ? <CheckBox /> : <CheckBoxOutlineBlank />)
+        },
+        { field: 'Name', headerName: 'NAME', width: 130 },
+        { field: 'EmailAddress', headerName: 'EMAIL', width: 130 },
+        {
+            field: 'DateActivated',
+            headerName: 'DATE ACTIVATED',
+            type: 'string',
+            width: 180,
+            valueFormatter: params => extractISOMonthDateYear(params.value)
+        },
+        {
+            field: 'DateDisabled',
+            headerName: 'DATE DISABLED',
+            type: 'string',
+            width: 160,
+            valueFormatter: params => extractISOMonthDateYear(params.value)
+        },
+        {
+            field: 'Action',
+            headerName: 'Action',
+            width: 300,
+            renderCell: params => <Link to={`/admin/user/${[params.getValue('id')]}`}>Edit</Link>
+        }
+    ];
+
     return (
         <Box className={classes.AdminUsersListContainer}>
-            <TableContainer component={Paper}>
+            {/* <TableContainer component={Paper}>
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
-                            <TableCell>
-                                Active
-                                <IconButton size='small'>
-                                    <BiSort />
-                                </IconButton>
-                            </TableCell>
-                            <TableCell align='left'>
-                                Name
-                                <IconButton size='small'>
-                                    <BiSort />
-                                </IconButton>
-                            </TableCell>
-                            <TableCell align='left'>
-                                Email
-                                <IconButton size='small'>
-                                    <BiSort />
-                                </IconButton>
-                            </TableCell>
-                            <TableCell align='left'>
-                                DATE ACTIVATED
-                                <IconButton size='small'>
-                                    <BiSort />
-                                </IconButton>
-                            </TableCell>
-                            <TableCell align='left'>
-                                DATE DISABLED
-                                <IconButton size='small'>
-                                    <BiSort />
-                                </IconButton>
-                            </TableCell>
+                            <TableCell>Active</TableCell>
+                            <TableCell align='left'>Name</TableCell>
+                            <TableCell align='left'>Email</TableCell>
+                            <TableCell align='left'>DATE ACTIVATED</TableCell>
+                            <TableCell align='left'>DATE DISABLED</TableCell>
                             <TableCell>Action</TableCell>
                         </TableRow>
                     </TableHead>
@@ -311,7 +328,11 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
                         })}
                     </TableBody>
                 </Table>
-            </TableContainer>
+            </TableContainer> */}
+
+            <div style={{ height: 400, width: '100%' }}>
+                <DataGrid rows={usersWithId} columns={columnHeader} rowHeight={45} scrollbarSize={10} disableSelectionOnClick={true} />
+            </div>
         </Box>
     );
 }
@@ -320,6 +341,7 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
 // TODO
 function AdminUserForm(): React.ReactElement {
     const classes = useStyles();
+    const history = useHistory();
     const parameters: { idUser: string } = useParams();
     const { idUser } = parameters;
 
@@ -328,8 +350,8 @@ function AdminUserForm(): React.ReactElement {
     const [active, setActive] = useState<boolean>(true);
     const [dateActivated, setDateActivated] = useState('');
     const [dateDisabled, setDateDisabled] = useState<string | null>('');
-    // const [workflowNotificationType, setWorkflowNotificationType] = useState('');
-    // const [workflowNotificationTime, setWorkflowNotificationTime] = useState('');
+    // const [workflowNotificationType] = useState('');
+    // const [workflowNotificationTime] = useState('');
 
     let create: boolean = idUser === 'create';
 
@@ -368,16 +390,44 @@ function AdminUserForm(): React.ReactElement {
     // redirect to adminuserform
     // else
     // redirect to users
-    if (!request) {
-        return <div>Hi</div>;
-    }
 
-    if (!fetchedUser) {
-        return <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />;
-    }
+    const updateExistingUser = async () => {
+        let updating = await apolloClient.mutate({
+            mutation: UpdateUserDocument,
+            variables: {
+                input: {
+                    idUser: Number(idUser),
+                    EmailAddress: email,
+                    Name: name,
+                    Active: active,
+                    EmailSettings: 1,
+                    WorkflowNotificationTime: '2017-11-25T23:55:35.116Z'
+                }
+            }
+        });
+        console.log('updated', updating);
+        history.push('/admin/users');
+        window.location.reload();
+    };
+
+    const createNewUser = async () => {
+        let creating = await apolloClient.mutate({
+            mutation: CreateUserDocument,
+            variables: {
+                input: {
+                    EmailAddress: email,
+                    Name: name
+                }
+            }
+        });
+
+        console.log('yayyyyyyy', creating);
+        history.push('/admin/users');
+        window.location.reload();
+    };
 
     return (
-        <React.Fragment>
+        <Box className={classes.AdminUsersViewContainer}>
             {/* {!create && <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />} */}
             <Box className={classes.AdminUserFormContainer}>
                 <Box className={classes.AdminUserFormRow}>
@@ -478,19 +528,21 @@ function AdminUserForm(): React.ReactElement {
                     />
                 </Box>
                 <Box>
-                    <Button
-                        color='primary'
-                        onClick={() => {
-                            console.log('hi');
-                        }}>
-                        {create ? 'Create' : 'Update'}
-                    </Button>
-                    <Link to='/admin/users'>
+                    {create ? (
+                        <Button color='primary' onClick={createNewUser}>
+                            Create
+                        </Button>
+                    ) : (
+                        <Button color='primary' onClick={updateExistingUser}>
+                            Update
+                        </Button>
+                    )}
+                    <Link to='/admin/users' style={{ textDecoration: 'none' }}>
                         <Button color='primary'>Cancel</Button>
                     </Link>
                 </Box>
             </Box>
-        </React.Fragment>
+        </Box>
     );
 }
 
@@ -507,6 +559,8 @@ function AdminUsersView(): React.ReactElement {
     const [active, setActive] = useState('All');
     const [userSearchFilter, setUserSearchFilter] = useState('');
 
+    // handle for redirects as well
+    // might need to refactor using useEffects
     const { data } = useGetAllUsersQuery({
         variables: {
             input: {
