@@ -2,6 +2,7 @@ scalar DateTime
 
 type Model {
     idModel: Int!
+    Name: String!
     Authoritative: Boolean!
     DateCreated: DateTime!
     idAssetThumbnail: Int

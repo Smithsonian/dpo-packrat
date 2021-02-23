@@ -4,10 +4,11 @@ import * as DBAPI from '../../../../../db';
 
 export default async function createModel(_: Parent, args: MutationCreateModelArgs): Promise<CreateModelResult> {
     const { input } = args;
-    const { Authoritative, idVCreationMethod, idVModality, idVPurpose, idVUnits, Master, idAssetThumbnail } = input;
+    const { Name, Authoritative, idVCreationMethod, idVModality, idVPurpose, idVUnits, Master, idAssetThumbnail } = input;
 
     const modelArgs = {
         idModel: 0,
+        Name,
         Authoritative,
         idVCreationMethod,
         idVModality,

@@ -80,6 +80,16 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
         }
     }
 
+    static async fetchAll(): Promise<Actor[] | null> {
+        try {
+            return DBC.CopyArray<ActorBase, Actor>(
+                await DBC.DBConnection.prisma.actor.findMany(), Actor);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Actor.fetchAll', error);
+            return null;
+        }
+    }
+
     static async fetchFromUnit(idUnit: number): Promise<Actor[] | null> {
         if (!idUnit)
             return null;

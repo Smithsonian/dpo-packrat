@@ -10,7 +10,7 @@ import Loader from './shared/Loader';
 import Progress from './shared/Progress';
 import SidebarBottomNavigator from './shared/SidebarBottomNavigator';
 import LoadingButton from './controls/LoadingButton';
-import RepositoryIcon from './controls/RepositoryIcon';
+import { RepositoryIcon, RepositoryIconProps } from './controls/RepositoryIcon';
 import ErrorBoundary from './shared/ErrorBoundary';
 import AssetIdentifiers from './shared/AssetIdentifiers';
 import SelectField from './controls/SelectField';
@@ -45,3 +45,5 @@ export {
     DebounceNumberInput,
     CheckboxField,
 };
+
+export type { RepositoryIconProps };

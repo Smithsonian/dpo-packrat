@@ -76,6 +76,19 @@ services:
             - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
         volumes:
             - ./server/db/sql:/app/
+
+    packrat-solr:
+        container_name: packrat-solr
+        image: packrat-solr
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker/solr.Dockerfile
+            target: solr
+        ports:
+            - $PACKRAT_SOLR_PORT:8983
+        env_file:
+            - .env
 networks:
     default:
         ipam:
