@@ -17,6 +17,7 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
 import Typography from '@material-ui/core/Typography';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import { DataGrid, Columns } from '@material-ui/data-grid';
 import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, ADMIN_ROUTE, ADMIN_ROUTES_TYPE, resolveRoute, resolveSubRoute, ADMIN_EDIT_USER } from '../../constants';
@@ -26,6 +27,8 @@ import { useGetUserQuery, useGetAllUsersQuery, User_Status, CreateUserDocument, 
 import { GetAllUsersResult /* , User */ } from '../../types/graphql';
 import { apolloClient } from '../../graphql/index';
 import GenericBreadcrumbsView from '../../components/shared/GenericBreadcrumbsView';
+import { toast } from 'react-toastify';
+import * as yup from 'yup';
 
 /* Utility functions */
 function toTitleCase(str) {
@@ -69,11 +72,6 @@ function extractISOMonthDateYear(iso, materialUI = false): string | null {
     const result = `${time.getMonth() + 1}/${time.getDate()}/${time.getFullYear()}`;
     return result;
 }
-
-// const EmailSettingsTranslator = {
-//     0: 'Immediately',
-//     1: 'Daily Digest'
-// };
 
 const useStyles = makeStyles({
     AdminPageContainer: {
@@ -295,23 +293,13 @@ function AdminUsersFilter({
                 </Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Button className={classes.searchUsersFilterButton}>
-                    <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/user/create'>
-                        Add User
-                    </Link>
-                </Button>
+                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/user/create'>
+                    <Button className={classes.searchUsersFilterButton}>Add User</Button>
+                </Link>
             </Box>
         </Box>
     );
 }
-
-// AdminUsersList
-// Receives users from AdminUsersView and the filter in place AdminUsersFilter
-// Columns with active, name, email, date activated, date deactivated, and edit
-// Also has a way of sorting the users based on active, name, email, date activated, date deactivated
-//AdminUsersListRow
-// Checkbox, name, email, date, date, and edit link that guides to AdminUserForm
-// function AdminUsersListRow({ userData }: { userData: User }): React.
 
 function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.ReactElement {
     const classes = useStyles();
@@ -415,8 +403,16 @@ function AdminUserForm(): React.ReactElement {
     const [dateDisabled, setDateDisabled] = useState<string | null>('');
     const [workflowNotificationType, setWorkflowNotificationType] = useState<number | null | undefined>(undefined);
     const [workflowNotificationTime, setWorkflowNotificationTime] = useState<string | null | undefined>('17:00');
+    const [validNameInput, setValidNameInput] = useState<boolean | null>(null);
+    const [validEmailInput, setValidEmailInput] = useState<boolean | null>(null);
+
     const location = useLocation();
     let create: boolean = idUser === 'create';
+
+    const schema = yup.object().shape({
+        fullName: yup.string().min(1),
+        email: yup.string().email().min(1)
+    });
 
     let request = useGetUserQuery({
         variables: {
@@ -452,7 +448,25 @@ function AdminUserForm(): React.ReactElement {
     // else
     // redirect to users
 
+    const validateFields = async (): Promise<boolean | void> => {
+        try {
+            let validNameResponse = await schema.isValid({ fullName: name });
+            setValidNameInput(validNameResponse);
+            let validEmailResponse = await schema.isValid({ email });
+            setValidEmailInput(validEmailResponse);
+            return validNameResponse && validEmailResponse;
+        } catch (error) {
+            toast.warn(error);
+            console.log('error', error);
+        }
+    };
+
     const updateExistingUser = async () => {
+        let validUpdate = await validateFields();
+        if (!validUpdate) {
+            toast.warn('Update Failed. Please double-check your form inputs');
+            return;
+        }
         let manipulatedTime = new Date();
         const newHours = workflowNotificationTime?.slice(0, 2);
         const newMinutes = workflowNotificationTime?.slice(3);
@@ -478,6 +492,11 @@ function AdminUserForm(): React.ReactElement {
     };
 
     const createNewUser = async () => {
+        let validCreate = await validateFields();
+        if (!validCreate) {
+            toast.warn('Creation Failed. Please be sure to include a name and email');
+            return;
+        }
         let creating = await apolloClient.mutate({
             mutation: CreateUserDocument,
             variables: {
@@ -503,34 +522,71 @@ function AdminUserForm(): React.ReactElement {
                 <Box className={classes.AdminUserFormRow}>
                     <p className={classes.AdminUserFormRowLabel}>Name</p>
                     <FormControl variant='outlined'>
-                        <TextField
-                            className={classes.formField}
-                            style={{ width: '270px' }}
-                            variant='outlined'
-                            size='small'
-                            value={name}
-                            onChange={e => {
-                                setName(e.target.value);
-                            }}
-                            InputLabelProps={{
-                                shrink: true
-                            }}
-                        />
+                        {validNameInput !== false ? (
+                            <TextField
+                                className={classes.formField}
+                                style={{ width: '270px' }}
+                                variant='outlined'
+                                size='small'
+                                value={name}
+                                onChange={e => {
+                                    setName(e.target.value);
+                                }}
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                            />
+                        ) : (
+                            <React.Fragment>
+                                <TextField
+                                    error
+                                    className={classes.formField}
+                                    style={{ width: '270px' }}
+                                    variant='outlined'
+                                    size='small'
+                                    value={name}
+                                    onChange={e => {
+                                        setName(e.target.value);
+                                    }}
+                                    InputLabelProps={{
+                                        shrink: true
+                                    }}
+                                />
+                                <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>
+                            </React.Fragment>
+                        )}
                     </FormControl>
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
                     <p className={classes.AdminUserFormRowLabel}>Email Address</p>
                     <FormControl variant='outlined'>
-                        <TextField
-                            className={classes.formField}
-                            style={{ width: '270px' }}
-                            variant='outlined'
-                            size='small'
-                            value={email}
-                            onChange={e => {
-                                setEmail(e.target.value);
-                            }}
-                        />
+                        {validEmailInput !== false ? (
+                            <TextField
+                                className={classes.formField}
+                                style={{ width: '270px' }}
+                                variant='outlined'
+                                size='small'
+                                value={email}
+                                onChange={e => {
+                                    setEmail(e.target.value);
+                                }}
+                            />
+                        ) : (
+                            <React.Fragment>
+                                <TextField
+                                    error
+                                    className={classes.formField}
+                                    style={{ width: '270px' }}
+                                    variant='outlined'
+                                    size='small'
+                                    value={email}
+                                    onChange={e => {
+                                        setEmail(e.target.value);
+                                    }}
+                                />
+                                <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>
+                            </React.Fragment>
+                        )}
                     </FormControl>
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
@@ -591,7 +647,7 @@ function AdminUserForm(): React.ReactElement {
                         value={typeof workflowNotificationType === 'number' ? workflowNotificationType : ''}
                         className={classes.formField}
                         variant='outlined'
-                        style={{ width: '155px', height: '40px' }}
+                        style={{ width: '160px', height: '40px' }}
                         onChange={e => {
                             if (typeof e.target.value === 'number') {
                                 setWorkflowNotificationType(e.target.value);
@@ -606,7 +662,7 @@ function AdminUserForm(): React.ReactElement {
                     <FormControl variant='outlined'>
                         <TextField
                             className={classes.formField}
-                            style={{ width: '105px' }}
+                            style={{ width: '160px' }}
                             type='time'
                             size='small'
                             variant='outlined'
