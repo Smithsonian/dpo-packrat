@@ -7,9 +7,15 @@ import { Breadcrumbs } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
-import { MdNavigateNext } from 'react-icons/md';
 import { Colors } from '../../theme';
 import { Link } from 'react-router-dom';
+import ArrowRightIcon from '@material-ui/icons/ArrowRight';
+
+function toTitleCase(str) {
+    return str.replace(/\w\S*/g, txt => {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+}
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -41,10 +47,11 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
 interface BreadcrumbsViewProps {
     items: string;
     highlighted?: boolean;
+    end?: string | null;
 }
 
 function GenericBreadcrumbsView(props: BreadcrumbsViewProps): React.ReactElement {
-    const { items, highlighted = false } = props;
+    const { items, highlighted = false, end = null } = props;
     const classes = useStyles();
 
     const splitPathCrumbsArray = items.split('/');
@@ -61,16 +68,22 @@ function GenericBreadcrumbsView(props: BreadcrumbsViewProps): React.ReactElement
         finalPathCrumbsArray[i].fullPath = currentFullPath;
     }
 
-    console.log(finalPathCrumbsArray);
     return (
-        <Breadcrumbs className={clsx(classes.container, highlighted && classes.highlighted)} separator={<MdNavigateNext color='inherit' size={20} />}>
+        <Breadcrumbs className={clsx(classes.container, highlighted && classes.highlighted)} separator={<ArrowRightIcon />}>
             {finalPathCrumbsArray.map((item, index) => {
+                if (index === finalPathCrumbsArray.length - 1 && end) {
+                    return null;
+                }
+                if (index === finalPathCrumbsArray.length - 1) {
+                    return <div key={index}>{toTitleCase(item.subPath)}</div>;
+                }
                 return (
-                    <Link to={item.fullPath} key={index}>
-                        {item.subPath}
+                    <Link style={{ textDecoration: 'none' }} to={`/${item.fullPath}`} key={index}>
+                        {toTitleCase(item.subPath)}
                     </Link>
                 );
             })}
+            {end && <div>{end}</div>}
         </Breadcrumbs>
     );
 }
@@ -81,5 +94,6 @@ function GenericBreadcrumbsView(props: BreadcrumbsViewProps): React.ReactElement
 // links to different one each time
 // /admin, /admin/user, /admin/user/create
 // creates link for everything but the very last one
+// if an option end is included, that will guaranteed to be the final crumb
 
 export default GenericBreadcrumbsView;

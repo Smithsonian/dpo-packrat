@@ -6,24 +6,18 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-// import Table from '@material-ui/core/Table';
-// import TableBody from '@material-ui/core/TableBody';
-// import TableCell from '@material-ui/core/TableCell';
-// import TableContainer from '@material-ui/core/TableContainer';
-// import TableHead from '@material-ui/core/TableHead';
-// import TableRow from '@material-ui/core/TableRow';
-// import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
-import { CheckBox, CheckBoxOutlineBlank } from '@material-ui/icons';
+import Tooltip from '@material-ui/core/Tooltip';
+import ClearIcon from '@material-ui/icons/Clear';
+import CheckIcon from '@material-ui/icons/Check';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
-import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
 import Typography from '@material-ui/core/Typography';
-import { DataGrid } from '@material-ui/data-grid';
+import { DataGrid, Columns } from '@material-ui/data-grid';
 import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, ADMIN_ROUTE, ADMIN_ROUTES_TYPE, resolveRoute, resolveSubRoute, ADMIN_EDIT_USER } from '../../constants';
 import { Redirect, useParams, useLocation, useHistory } from 'react-router';
@@ -31,43 +25,29 @@ import { Link } from 'react-router-dom';
 import { useGetUserQuery, useGetAllUsersQuery, User_Status, CreateUserDocument, UpdateUserDocument } from '../../types/graphql';
 import { GetAllUsersResult /* , User */ } from '../../types/graphql';
 import { apolloClient } from '../../graphql/index';
-// import GenericBreadcrumbsView from '../../components/shared/GenericBreadcrumbsView';
+import GenericBreadcrumbsView from '../../components/shared/GenericBreadcrumbsView';
 
 /* Utility functions */
-
-// function descendingComparator(a, b, orderBy) {
-//     if (b[orderBy] < a[orderBy]) {
-//         return -1;
-//     }
-//     if (b[orderBy] > a[orderBy]) {
-//         return 1;
-//     }
-//         return 0;
-//   }
-
-//   function getComparator(order, orderBy) {
-//     return order === 'desc'
-//         ? (a, b) => descendingComparator(a, b, orderBy)
-//         : (a, b) => -descendingComparator(a, b, orderBy);
-//   }
-
-// function stableSort(array, comparator) {
-//     const stabilizedThis = array.map((el, index) => [el, index]);
-//     stabilizedThis.sort((a, b) => {
-//         const order = comparator(a[0], b[0]);
-//         if (order !== 0) return order;
-//         return a[1] - b[1];
-//     });
-//     return stabilizedThis.map((el) => el[0]);
-// }
-
 function toTitleCase(str) {
     return str.replace(/\w\S*/g, txt => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
 
-function extractISOMonthDateYear(iso, materialUI = false) {
+function formatISOToHoursMinutes(time): string {
+    const newTime = new Date(time);
+    let hours = String(newTime.getHours());
+    let minutes = String(newTime.getMinutes());
+    if (Number(hours) < 10) {
+        hours = '0' + hours;
+    }
+    if (Number(minutes) < 10) {
+        minutes = '0' + minutes;
+    }
+    return `${hours}:${minutes}`;
+}
+
+function extractISOMonthDateYear(iso, materialUI = false): string | null {
     if (!iso) {
         return null;
     }
@@ -90,6 +70,11 @@ function extractISOMonthDateYear(iso, materialUI = false) {
     return result;
 }
 
+// const EmailSettingsTranslator = {
+//     0: 'Immediately',
+//     1: 'Daily Digest'
+// };
+
 const useStyles = makeStyles({
     AdminPageContainer: {
         display: 'flex'
@@ -100,57 +85,136 @@ const useStyles = makeStyles({
         flexDirection: 'column',
         overflow: 'auto',
         maxHeight: 'calc(100vh - 60px)',
-        paddingLeft: '3%',
-        paddingTop: '3%',
-        width: '1000px',
-        backgroundColor: 'pink'
+        paddingLeft: '1%',
+        width: '1200px',
+        margin: '0 auto'
     },
-    //Will include the breadcrumbs have have that stacked on top
     AdminUsersListContainer: {
-        maxWidth: '85%',
-        maxHeight: '70%',
+        marginTop: '2%',
+        width: '1000px',
+        padding: '20px',
+        height: 'calc(100% - 120px)',
         display: 'flex',
-        backgroundColor: '#FFFCD1',
         border: '1px solid #B7D2E5CC',
-        alignItems: 'center'
-    },
-    //This is for any admin component to the right of the sidebar menu
-    AdminToolsViewContainer: {
-        display: 'flex',
-        flexDirection: 'column'
+        margin: '1px solid #B7D2E5CC',
+        alignItems: 'center',
+        backgroundColor: '#687DDB1A',
+        borderRadius: '4px'
     },
     formControl: {
         minWidth: 120
     },
+    UsersListDataGrid: {
+        letterSpacing: '1.7px',
+        color: '#8DABC4',
+        font: 'var(--unnamed-font-style-normal) normal medium 11px/17px var(--unnamed-font-family-heebo)',
+        border: '1px solid #B7D2E5CC',
+        borderRadius: '2px',
+        backgroundColor: 'white'
+    },
     searchUsersFilterButton: {
         backgroundColor: '#687DDB',
-        color: 'white'
+        color: 'white',
+        width: '90px',
+        height: '30px'
     },
     AdminUsersSearchFilterContainer: {
         display: 'flex',
         justifyContent: 'space-around',
+        height: '70px',
+        width: '900px',
+        backgroundColor: '#FFFCD1',
+        paddingLeft: '20px',
+        paddingRight: '20px'
+    },
+    AdminUsersSearchFilterSettingsContainer: {
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        height: '100px'
+        height: '100%',
+        width: '80%'
+    },
+    AdminUsersSearchFilterSettingsContainer2: {
+        display: 'flex',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        height: '100%',
+        width: '20%'
     },
     AdminUserFormContainer: {
         display: 'flex',
         flexDirection: 'column',
-        flexWrap: 'nowrap'
+        flexWrap: 'nowrap',
+        width: '500px',
+        backgroundColor: '#EFF2FC',
+        borderRadius: '4px',
+        border: '1px solid #B7D2E5CC',
+        boxShadow: '0 0 0 15px #75B3DF',
+        font: 'var(--unnamed-font-style-normal) normal var(--unnamed-font-weight-normal) 13px/19px var(--unnamed-font-family-heebo)',
+        letterSpacing: 'var(--unnamed-character-spacing-0)',
+        textAlign: 'left',
+        padding: '10px 20px',
+        marginTop: '2%',
+        marginLeft: '1%'
+    },
+    AdminUserFormRowLabel: {
+        gridColumnStart: '1'
+    },
+    AdminUserFormRowInput: {
+        gridColumnStart: '2'
     },
     AdminUserFormRow: {
-        display: 'flex'
+        display: 'grid',
+        gridTemplateColumns: '40% 60%',
+        gridGap: '10px',
+        alignItems: 'center',
+        borderBottom: '1px solid #D8E5EE'
+    },
+    AdminUserFormButtonGroup: {
+        marginTop: '30px',
+        '& Button': {
+            marginRight: '30px'
+        }
     },
     AdminSidebarMenuRow: {
-        width: '100%',
-        // backgroundColor: 'green',
         maxHeight: '100%',
-        background: '#ECF5FD 0% 0% no-repeat padding-box'
+        background: '#ECF5FD 0% 0% no-repeat padding-box',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        padding: '0.8rem',
+        width: 160,
+        transition: 'all 250ms ease-in',
+        textDecoration: 'none',
+        overflow: 'hidden',
+        borderRadius: 5,
+        marginTop: 2
     },
     AdminSidebarMenuContainer: {
         display: 'flex',
         flexDirection: 'column',
-        width: '15%',
-        border: '2px solid #C5D9E8'
+        border: '2px solid #C5D9E8',
+        padding: '1em 1em'
+    },
+    searchFilter: {
+        width: '380px'
+    },
+    formField: {
+        backgroundColor: 'white',
+        font: 'var(--unnamed-font-style-normal) normal var(--unnamed-font-weight-normal) 13px/19px var(--unnamed-font-family-heebo);',
+        borderRadius: '4px'
+    },
+    AdminBreadCrumbsContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '46px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        background: '#0079C482',
+        color: '#3F536E',
+        marginBottom: '2%',
+        width: 'fit-content'
     }
 });
 
@@ -208,12 +272,19 @@ function AdminUsersFilter({
     };
 
     return (
-        <Box className={classes.AdminUsersListContainer}>
-            <Box className={classes.AdminUsersSearchFilterContainer}>
-                <TextField label='Search Packrat User' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
-                <FormControl variant='outlined' className={classes.formControl}>
-                    <InputLabel>Active</InputLabel>
-                    <Select value={activeStatusFilter} onChange={handleActiveStatusFilterChange}>
+        <Box className={classes.AdminUsersSearchFilterContainer}>
+            <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
+                <TextField
+                    className={classes.searchFilter}
+                    placeholder='Search Packrat User'
+                    type='search'
+                    value={searchFilter}
+                    id='searchFilter'
+                    onChange={handleSearchFilterChange}
+                />
+                <p>Active</p>
+                <FormControl variant='outlined'>
+                    <Select value={activeStatusFilter} className={classes.formField} style={{ height: '30px', width: '100px' }} onChange={handleActiveStatusFilterChange}>
                         <MenuItem value={'All'}>All</MenuItem>
                         <MenuItem value={'Active'}>Active</MenuItem>
                         <MenuItem value={'Inactive'}>Inactive</MenuItem>
@@ -223,11 +294,13 @@ function AdminUsersFilter({
                     Search
                 </Button>
             </Box>
-            <Button className={classes.searchUsersFilterButton}>
-                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/user/create'>
-                    Create User
-                </Link>
-            </Button>
+            <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
+                <Button className={classes.searchUsersFilterButton}>
+                    <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/user/create'>
+                        Add User
+                    </Link>
+                </Button>
+            </Box>
         </Box>
     );
 }
@@ -238,24 +311,7 @@ function AdminUsersFilter({
 // Also has a way of sorting the users based on active, name, email, date activated, date deactivated
 //AdminUsersListRow
 // Checkbox, name, email, date, date, and edit link that guides to AdminUserForm
-// function AdminUsersListRow({ userData }: { userData: User }): React.ReactElement {
-//     const { idUser, Name, Active, EmailAddress, DateActivated, DateDisabled } = userData;
-
-//     return (
-//         <TableRow hover>
-//             <TableCell>
-//                 <Checkbox checked={Active} disabled color='primary' />
-//             </TableCell>
-//             <TableCell>{Name}</TableCell>
-//             <TableCell>{EmailAddress}</TableCell>
-//             <TableCell>{extractISOMonthDateYear(DateActivated)}</TableCell>
-//             <TableCell>{extractISOMonthDateYear(DateDisabled)}</TableCell>
-//             <TableCell>
-//                 <Link to={`/admin/user/${idUser}`}>edit</Link>
-//             </TableCell>
-//         </TableRow>
-//     );
-// }
+// function AdminUsersListRow({ userData }: { userData: User }): React.
 
 function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.ReactElement {
     const classes = useStyles();
@@ -265,6 +321,7 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
 
         return {
             id: idUser,
+            idUser,
             Active,
             DateActivated,
             EmailAddress,
@@ -276,63 +333,70 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
         };
     });
 
-    const columnHeader = [
+    const columnHeader: Columns = [
         {
             field: 'Active',
-            headerName: 'ACTIVE',
-            width: 120,
-            // valueGetter: params => (params.getValue('Active') ? 'Active' : 'Inactive'),
-            renderCell: params => (Boolean(params.getValue('Active')) ? <CheckBox /> : <CheckBoxOutlineBlank />)
+            headerName: 'Active',
+            flex: 1,
+            headerAlign: 'center',
+            renderCell: params => (Boolean(params.getValue('Active')) ? <CheckIcon color='primary' /> : <ClearIcon color='error' />)
         },
-        { field: 'Name', headerName: 'NAME', width: 130 },
-        { field: 'EmailAddress', headerName: 'EMAIL', width: 130 },
+        {
+            field: 'Name',
+            headerName: 'Name',
+            flex: 1.7,
+            renderCell: params => (
+                <Tooltip placement='left' title={`${params.getValue('Name')}`} arrow>
+                    <div>{`${params.getValue('Name')}`}</div>
+                </Tooltip>
+            )
+        },
+        {
+            field: 'EmailAddress',
+            headerName: 'Email',
+            flex: 1.7,
+            renderCell: params => (
+                <Tooltip placement='left' title={`${params.getValue('EmailAddress')}`} arrow>
+                    <div>{`${params.getValue('EmailAddress')}`}</div>
+                </Tooltip>
+            )
+        },
         {
             field: 'DateActivated',
-            headerName: 'DATE ACTIVATED',
+            headerName: 'Date Activated',
             type: 'string',
-            width: 180,
+            flex: 1.7,
             valueFormatter: params => extractISOMonthDateYear(params.value)
         },
         {
             field: 'DateDisabled',
-            headerName: 'DATE DISABLED',
+            headerName: 'Date Disabled',
             type: 'string',
-            width: 160,
+            flex: 1.6,
             valueFormatter: params => extractISOMonthDateYear(params.value)
         },
         {
             field: 'Action',
             headerName: 'Action',
-            width: 300,
-            renderCell: params => <Link to={`/admin/user/${[params.getValue('id')]}`}>Edit</Link>
+            flex: 1,
+            sortable: false,
+            renderCell: params => <Link to={`/admin/user/${[params.row.idUser]}`}>Edit</Link>
         }
     ];
 
     return (
         <Box className={classes.AdminUsersListContainer}>
-            {/* <TableContainer component={Paper}>
-                <Table stickyHeader>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Active</TableCell>
-                            <TableCell align='left'>Name</TableCell>
-                            <TableCell align='left'>Email</TableCell>
-                            <TableCell align='left'>DATE ACTIVATED</TableCell>
-                            <TableCell align='left'>DATE DISABLED</TableCell>
-                            <TableCell>Action</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {users.map(user => {
-                            return <AdminUsersListRow userData={user} key={user?.EmailAddress} />;
-                        })}
-                    </TableBody>
-                </Table>
-            </TableContainer> */}
-
-            <div style={{ height: 400, width: '100%' }}>
-                <DataGrid rows={usersWithId} columns={columnHeader} rowHeight={45} scrollbarSize={10} disableSelectionOnClick={true} />
-            </div>
+            <DataGrid
+                className={classes.UsersListDataGrid}
+                rows={usersWithId}
+                columns={columnHeader}
+                rowHeight={55}
+                scrollbarSize={5}
+                density='compact'
+                disableSelectionOnClick={true}
+                disableColumnResize={undefined}
+                hideFooter={true}
+            />
         </Box>
     );
 }
@@ -344,15 +408,14 @@ function AdminUserForm(): React.ReactElement {
     const history = useHistory();
     const parameters: { idUser: string } = useParams();
     const { idUser } = parameters;
-
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [active, setActive] = useState<boolean>(true);
     const [dateActivated, setDateActivated] = useState('');
     const [dateDisabled, setDateDisabled] = useState<string | null>('');
-    // const [workflowNotificationType] = useState('');
-    // const [workflowNotificationTime] = useState('');
-
+    const [workflowNotificationType, setWorkflowNotificationType] = useState<number | null | undefined>(undefined);
+    const [workflowNotificationTime, setWorkflowNotificationTime] = useState<string | null | undefined>('17:00');
+    const location = useLocation();
     let create: boolean = idUser === 'create';
 
     let request = useGetUserQuery({
@@ -373,15 +436,13 @@ function AdminUserForm(): React.ReactElement {
 
     useEffect(() => {
         if (fetchedUser) {
-            console.log('fetchedUser before changing state', fetchedUser);
             setName(fetchedUser?.Name);
             setEmail(fetchedUser?.EmailAddress);
             setActive(fetchedUser?.Active);
             setDateActivated(fetchedUser?.DateActivated);
             setDateDisabled(fetchedUser?.DateDisabled);
-            // setWorkflowNotificationType(fetchedUser?.EmailSettings);
-            // setWorkflowNotificationTime(fetchedUser?.WorkflowNotificationTime || '');
-            console.log('fetchedUser after changing state', fetchedUser);
+            setWorkflowNotificationType(fetchedUser?.EmailSettings);
+            setWorkflowNotificationTime(formatISOToHoursMinutes(fetchedUser?.WorkflowNotificationTime));
         }
     }, [fetchedUser]);
 
@@ -392,6 +453,12 @@ function AdminUserForm(): React.ReactElement {
     // redirect to users
 
     const updateExistingUser = async () => {
+        let manipulatedTime = new Date();
+        const newHours = workflowNotificationTime?.slice(0, 2);
+        const newMinutes = workflowNotificationTime?.slice(3);
+        manipulatedTime.setHours(Number(newHours));
+        manipulatedTime.setMinutes(Number(newMinutes));
+
         let updating = await apolloClient.mutate({
             mutation: UpdateUserDocument,
             variables: {
@@ -400,14 +467,14 @@ function AdminUserForm(): React.ReactElement {
                     EmailAddress: email,
                     Name: name,
                     Active: active,
-                    EmailSettings: 1,
-                    WorkflowNotificationTime: '2017-11-25T23:55:35.116Z'
+                    EmailSettings: Number(workflowNotificationType),
+                    WorkflowNotificationTime: manipulatedTime
                 }
             }
         });
-        console.log('updated', updating);
         history.push('/admin/users');
         window.location.reload();
+        return updating;
     };
 
     const createNewUser = async () => {
@@ -421,27 +488,30 @@ function AdminUserForm(): React.ReactElement {
             }
         });
 
-        console.log('yayyyyyyy', creating);
         history.push('/admin/users');
         window.location.reload();
+        return creating;
     };
 
     return (
         <Box className={classes.AdminUsersViewContainer}>
             {/* {!create && <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />} */}
+            <Box className={classes.AdminBreadCrumbsContainer}>
+                <GenericBreadcrumbsView items={location.pathname.slice(1)} end={create ? null : `${fetchedUser?.Name} <${fetchedUser?.EmailAddress}>`} />
+            </Box>
             <Box className={classes.AdminUserFormContainer}>
                 <Box className={classes.AdminUserFormRow}>
-                    <p>Name</p>
+                    <p className={classes.AdminUserFormRowLabel}>Name</p>
                     <FormControl variant='outlined'>
                         <TextField
-                            id='component-outlined'
+                            className={classes.formField}
+                            style={{ width: '270px' }}
                             variant='outlined'
+                            size='small'
                             value={name}
                             onChange={e => {
                                 setName(e.target.value);
                             }}
-                            placeholder='John Doe'
-                            label='First, Last'
                             InputLabelProps={{
                                 shrink: true
                             }}
@@ -449,22 +519,25 @@ function AdminUserForm(): React.ReactElement {
                     </FormControl>
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p>Email Address</p>
-                    <TextField
-                        id='outlined-basic'
-                        variant='outlined'
-                        value={email}
-                        onChange={e => {
-                            setEmail(e.target.value);
-                        }}
-                        placeholder='JDoe@example.com'
-                    />
+                    <p className={classes.AdminUserFormRowLabel}>Email Address</p>
+                    <FormControl variant='outlined'>
+                        <TextField
+                            className={classes.formField}
+                            style={{ width: '270px' }}
+                            variant='outlined'
+                            size='small'
+                            value={email}
+                            onChange={e => {
+                                setEmail(e.target.value);
+                            }}
+                        />
+                    </FormControl>
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p>Active</p>
+                    <p className={classes.AdminUserFormRowLabel}>Active</p>
                     <Checkbox
+                        style={{ width: '10px', height: '10px' }}
                         color='primary'
-                        inputProps={{ 'aria-label': 'secondary checkbox' }}
                         checked={active}
                         onChange={() => {
                             setActive(!active);
@@ -472,95 +545,118 @@ function AdminUserForm(): React.ReactElement {
                     />
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p>Date Activated</p>
-                    <TextField
-                        id='date'
-                        type='date'
-                        disabled
-                        onChange={e => {
-                            setDateActivated(e.target.value);
-                        }}
-                        // value={extractISOMonthDateYear(fetchedUser?.DateActivated, true)}
-                        value={extractISOMonthDateYear(dateActivated, true)}
-                        InputLabelProps={{
-                            shrink: true
-                        }}
-                    />
+                    <p className={classes.AdminUserFormRowLabel}>Date Activated</p>
+                    <FormControl variant='outlined'>
+                        {!dateActivated ? (
+                            <TextField style={{ maxWidth: '180px' }} variant='outlined' size='small' disabled />
+                        ) : (
+                            <TextField
+                                style={{ maxWidth: '180px' }}
+                                variant='outlined'
+                                type='date'
+                                size='small'
+                                disabled
+                                onChange={e => {
+                                    setDateActivated(e.target.value);
+                                }}
+                                value={extractISOMonthDateYear(dateActivated, true)}
+                            />
+                        )}
+                    </FormControl>
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p>Date Disabled</p>
-                    <TextField
-                        id='date'
-                        type='date'
-                        disabled
-                        onChange={e => {
-                            setDateDisabled(e.target.value);
-                        }}
-                        value={extractISOMonthDateYear(dateDisabled, true)}
-                        InputLabelProps={{
-                            shrink: true
-                        }}
-                    />
+                    <p className={classes.AdminUserFormRowLabel}>Date Disabled</p>
+                    <FormControl variant='outlined'>
+                        {!dateDisabled ? (
+                            <TextField style={{ maxWidth: '180px' }} variant='outlined' size='small' disabled />
+                        ) : (
+                            <TextField
+                                style={{ maxWidth: '180px' }}
+                                variant='outlined'
+                                type='date'
+                                size='small'
+                                disabled
+                                onChange={e => {
+                                    setDateDisabled(e.target.value);
+                                }}
+                                value={extractISOMonthDateYear(dateDisabled, true)}
+                            />
+                        )}
+                    </FormControl>
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p>Workflow Notification Type</p>
-                    <Select value='Daily Digest'>
-                        <MenuItem value={'Daily Digest'}>Daily Digest</MenuItem>
-                        <MenuItem value={'Immediately'}>Immediately</MenuItem>
-                        <MenuItem value={'Ehh'}>{/* workflowNotificationType */}</MenuItem>
+                    <p className={classes.AdminUserFormRowLabel}>Workflow Notification Type</p>
+
+                    <Select
+                        value={typeof workflowNotificationType === 'number' ? workflowNotificationType : ''}
+                        className={classes.formField}
+                        variant='outlined'
+                        style={{ width: '155px', height: '40px' }}
+                        onChange={e => {
+                            if (typeof e.target.value === 'number') {
+                                setWorkflowNotificationType(e.target.value);
+                            }
+                        }}>
+                        <MenuItem value={0}>Daily Digest</MenuItem>
+                        <MenuItem value={1}>Immediately</MenuItem>
                     </Select>
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
-                    <p>Workflow Notification Time</p>
-                    <TextField
-                        id='time'
-                        type='time'
-                        // defaultValue={workflowNotificationTime}
-                        InputLabelProps={{
-                            shrink: true
-                        }}
-                        inputProps={{
-                            step: 300 // 5 min
-                        }}
-                        // onChange={e => {
-                        //     setWorkflowNotificationTime(e.target.value);
-                        // }}
-                    />
+                    <p className={classes.AdminUserFormRowLabel}>Workflow Notification Time</p>
+                    <FormControl variant='outlined'>
+                        <TextField
+                            className={classes.formField}
+                            style={{ width: '105px' }}
+                            type='time'
+                            size='small'
+                            variant='outlined'
+                            value={workflowNotificationTime}
+                            inputProps={{
+                                step: 300
+                            }}
+                            InputLabelProps={{
+                                shrink: true
+                            }}
+                            onChange={e => {
+                                console.log('e.target.value', e.target.value);
+                                if (e.target.value) {
+                                    setWorkflowNotificationTime(e.target.value);
+                                }
+                            }}
+                        />
+                    </FormControl>
                 </Box>
-                <Box>
-                    {create ? (
-                        <Button color='primary' onClick={createNewUser}>
-                            Create
-                        </Button>
-                    ) : (
-                        <Button color='primary' onClick={updateExistingUser}>
-                            Update
-                        </Button>
-                    )}
-                    <Link to='/admin/users' style={{ textDecoration: 'none' }}>
-                        <Button color='primary'>Cancel</Button>
-                    </Link>
-                </Box>
+            </Box>
+            <Box className={classes.AdminUserFormButtonGroup}>
+                {create ? (
+                    <Button variant='contained' className={classes.searchUsersFilterButton} onClick={createNewUser}>
+                        Create
+                    </Button>
+                ) : (
+                    <Button variant='contained' className={classes.searchUsersFilterButton} onClick={updateExistingUser}>
+                        Update
+                    </Button>
+                )}
+
+                <Link to='/admin/users' style={{ textDecoration: 'none' }}>
+                    <Button variant='contained' className={classes.searchUsersFilterButton}>
+                        Cancel
+                    </Button>
+                </Link>
             </Box>
         </Box>
     );
 }
 
 // AdminUsersView - should contain both AdminUsersFilter and AdminUsersList
-// TODO write a hook or state store graphql api to retrieve users
-// TODO will have a state store for both the search filter term
-// TODO refactor using a state store instead
 // Also handles create newUser and update upon that
 // Passes both list of users and filter term to UsersList
 function AdminUsersView(): React.ReactElement {
     const classes = useStyles();
-    // let users: GetAllUsersResult = sampleUserList;
-    // let users: User[];
     const [active, setActive] = useState('All');
     const [userSearchFilter, setUserSearchFilter] = useState('');
+    const location = useLocation();
 
-    // handle for redirects as well
-    // might need to refactor using useEffects
     const { data } = useGetAllUsersQuery({
         variables: {
             input: {
@@ -603,6 +699,9 @@ function AdminUsersView(): React.ReactElement {
     return (
         <React.Fragment>
             <Box className={classes.AdminUsersViewContainer}>
+                <Box className={classes.AdminBreadCrumbsContainer}>
+                    <GenericBreadcrumbsView items={location.pathname.slice(1)} />
+                </Box>
                 <AdminUsersFilter handleActiveUpdate={handleActiveUpdate} handleUsersSearchUpdate={handleUsersSearchUpdate} />
                 <AdminUsersList users={filteredUsers} />
             </Box>
@@ -613,14 +712,10 @@ function AdminUsersView(): React.ReactElement {
 function Admin(): React.ReactElement {
     // Responsible for handling the routing to various admin components
     const classes = useStyles();
-    const parameters = useLocation();
-
-    console.log('adminparams', parameters);
 
     return (
         <React.Fragment>
             <Box className={classes.AdminPageContainer}>
-                {/* <GenericBreadcrumbsView items={parameters.pathname} /> */}
                 <AdminSidebarMenu />
                 <PrivateRoute path={resolveRoute(HOME_ROUTES.ADMIN)}>
                     <PrivateRoute exact path={resolveRoute(ADMIN_ROUTE.TYPE)}>
