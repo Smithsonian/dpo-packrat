@@ -112,6 +112,7 @@ class TestSuiteUtils {
             idVModality: idVocabulary,
             idVPurpose: idVocabulary,
             idVUnits: idVocabulary,
+            idVFileType: idVocabulary,
             Master: true
         };
     };
