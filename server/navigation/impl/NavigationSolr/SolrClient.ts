@@ -8,8 +8,10 @@ export class SolrClient {
     private _core: string;
 
     constructor(host: string | null, port: number | null, core: string | null) {
-        if (!host)
-            host = 'packrat-solr';
+        if (!host) {
+            const { PACKRAT_SOLR_HOST } = process.env;
+            host = PACKRAT_SOLR_HOST || 'packrat-solr';
+        }
         if (!port)
             port = 8983;
         if (!core)
