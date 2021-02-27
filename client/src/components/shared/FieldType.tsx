@@ -1,4 +1,9 @@
-import { Box, BoxProps, PropTypes, Typography } from '@material-ui/core';
+/**
+ * FieldType
+ *
+ * This component wraps content and highlights it as required field or not.
+ */
+import { Box, BoxProps, PropTypes, Typography, TypographyProps } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import Progress from './Progress';
@@ -30,18 +35,19 @@ interface FieldTypeProps {
     width?: string;
     direction?: string;
     containerProps?: BoxProps;
+    labelProps?: TypographyProps;
     align?: PropTypes.Alignment;
     marginTop?: number;
     error?: boolean;
     loading?: boolean;
-    children: React.ReactNode
+    children?: React.ReactNode;
 }
 
 function FieldType(props: FieldTypeProps): React.ReactElement {
-    const { label, renderLabel, children, align = 'left', direction, containerProps, loading } = props;
+    const { label, renderLabel, children, align = 'left', direction, containerProps, labelProps, loading } = props;
     const classes = useStyles(props);
 
-    let content: React.ReactNode = <Typography align={align} className={classes.label} variant='caption'>{label}</Typography>;
+    let content: React.ReactNode = <Typography align={align} className={classes.label} variant='caption' {...labelProps}>{label}</Typography>;
 
     if (renderLabel === false) {
         content = null;

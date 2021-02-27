@@ -51,16 +51,75 @@ input IngestPhotogrammetryInput {
     identifiers: [IngestIdentifierInput!]!
 }
 
+input IngestUVMapInput {
+    name: String!
+    edgeLength: Int!
+    mapType: Int!
+}
+
+input RelatedObjectInput {
+    idSystemObject: Int!
+    name: String!
+    identifier: String
+    objectType: Int!
+}
+
 input IngestModelInput {
     idAssetVersion: Int!
+    systemCreated: Boolean!
+    master: Boolean!
     authoritative: Boolean!
-    dateCreated: String!
     creationMethod: Int!
     modality: Int!
     purpose: Int!
     units: Int!
-    master: Boolean!
+    dateCaptured: String!
+    modelFileType: Int!
     directory: String!
+    identifiers: [IngestIdentifierInput!]!
+    uvMaps: [IngestUVMapInput!]!
+    sourceObjects: [RelatedObjectInput!]!
+    roughness: Int
+    metalness: Int
+    pointCount: Int
+    faceCount: Int
+    isWatertight: Boolean
+    hasNormals: Boolean
+    hasVertexColor: Boolean
+    hasUVSpace: Boolean
+    boundingBoxP1X: Float
+    boundingBoxP1Y: Float
+    boundingBoxP1Z: Float
+    boundingBoxP2X: Float
+    boundingBoxP2Y: Float
+    boundingBoxP2Z: Float
+}
+
+input ReferenceModelInput {
+    idSystemObject: Int!
+    name: String!
+    fileSize: Int!
+    resolution: Int
+    boundingBoxP1X: Float
+    boundingBoxP1Y: Float
+    boundingBoxP1Z: Float
+    boundingBoxP2X: Float
+    boundingBoxP2Y: Float
+    boundingBoxP2Z: Float
+    action: ReferenceModelAction!
+}
+
+input IngestSceneInput {
+    idAssetVersion: Int!
+    systemCreated: Boolean!
+    identifiers: [IngestIdentifierInput!]!
+    referenceModels: [ReferenceModelInput!]!
+}
+
+input IngestOtherInput {
+    idAssetVersion: Int!
+    systemCreated: Boolean!
+    identifiers: [IngestIdentifierInput!]!
 }
 
 input IngestDataInput {
@@ -68,6 +127,9 @@ input IngestDataInput {
     project: IngestProjectInput!
     item: IngestItemInput!
     photogrammetry: [IngestPhotogrammetryInput!]!
+    model: [IngestModelInput!]!
+    scene: [IngestSceneInput!]!
+    other: [IngestOtherInput!]!
 }
 
 type IngestDataResult {

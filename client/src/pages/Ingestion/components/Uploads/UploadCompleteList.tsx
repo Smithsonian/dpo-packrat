@@ -1,56 +1,24 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/**
+ * UploadCompleteList
+ *
+ * This component renders upload list for completed files only.
+ */
 import { useQuery } from '@apollo/client';
 import { Box, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
 import { FieldType } from '../../../../components';
-import { parseAssetVersionToState, useUpload } from '../../../../store';
+import { parseAssetVersionToState, useUploadStore } from '../../../../store';
 import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
 import FileList from './FileList';
+import { useUploadListStyles } from './UploadList';
 import UploadListHeader from './UploadListHeader';
-
-const useStyles = makeStyles(({ palette, spacing }) => ({
-    container: {
-        display: 'flex',
-        flex: 1,
-        flexDirection: 'column',
-        marginTop: 20,
-        maxHeight: 'auto',
-        width: '50vw',
-    },
-    list: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        minHeight: 80,
-        maxHeight: '20vh',
-        'overflow-y': 'auto',
-        'overflow-x': 'hidden',
-        width: '100%',
-        '&::-webkit-scrollbar': {
-            '-webkit-appearance': 'none'
-        },
-        '&::-webkit-scrollbar:vertical': {
-            width: 12
-        },
-        '&::-webkit-scrollbar-thumb': {
-            borderRadius: 8,
-            border: '2px solid white',
-            backgroundColor: palette.text.disabled
-        }
-    },
-    listDetail: {
-        textAlign: 'center',
-        color: palette.grey[500],
-        fontStyle: 'italic',
-        marginTop: spacing(4)
-    },
-}));
+import lodash from 'lodash';
 
 function UploadListComplete(): React.ReactElement {
-    const classes = useStyles();
+    const classes = useUploadListStyles();
 
-    const { completed, loadCompleted } = useUpload();
+    const { completed, loadCompleted } = useUploadStore();
     const { data, loading, error } = useQuery(GetUploadedAssetVersionDocument);
 
     useEffect(() => {
@@ -59,13 +27,19 @@ function UploadListComplete(): React.ReactElement {
             const { AssetVersion } = getUploadedAssetVersion;
             const fileIds: string[] = completed.map(({ id }) => id);
 
-            const completedFiles = AssetVersion.map(assetVersion => {
+            const sortedAssetVersion = lodash.orderBy(AssetVersion, ['DateCreated'], ['desc']);
+
+            if (!sortedAssetVersion) {
+                return;
+            }
+
+            const completedFiles = sortedAssetVersion.map(assetVersion => {
                 const { idAssetVersion } = assetVersion;
 
                 const id = String(idAssetVersion);
 
                 if (fileIds.includes(id)) {
-                    return completed.find(file => file.id === id);
+                    return completed.find(file => file.id === id) || assetVersion;
                 }
                 return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType);
             });

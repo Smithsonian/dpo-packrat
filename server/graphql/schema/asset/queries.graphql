@@ -40,16 +40,79 @@ type IngestPhotogrammetry {
     identifiers: [IngestIdentifier!]!
 }
 
+type IngestUVMap {
+    name: String!
+    edgeLength: Int!
+    mapType: Int!
+}
+
+enum RelatedObjectType {
+    Source
+    Derived
+}
+
+type RelatedObject {
+    idSystemObject: Int!
+    name: String!
+    identifier: String
+    objectType: Int!
+}
+
 type IngestModel {
     idAssetVersion: Int!
+    systemCreated: Boolean!
+    master: Boolean!
     authoritative: Boolean!
-    dateCreated: String!
     creationMethod: Int!
     modality: Int!
     purpose: Int!
     units: Int!
-    master: Boolean!
+    dateCaptured: String!
+    modelFileType: Int!
     directory: String!
+    identifiers: [IngestIdentifier!]!
+    uvMaps: [IngestUVMap!]!
+    sourceObjects: [RelatedObject!]!
+    roughness: Int
+    metalness: Int
+    pointCount: Int
+    faceCount: Int
+    isWatertight: Boolean
+    hasNormals: Boolean
+    hasVertexColor: Boolean
+    hasUVSpace: Boolean
+    boundingBoxP1X: Float
+    boundingBoxP1Y: Float
+    boundingBoxP1Z: Float
+    boundingBoxP2X: Float
+    boundingBoxP2Y: Float
+    boundingBoxP2Z: Float
+}
+
+enum ReferenceModelAction {
+    Update
+    Ingest
+}
+
+type ReferenceModel {
+    idSystemObject: Int!
+    name: String!
+    fileSize: Int!
+    resolution: Int
+    boundingBoxP1X: Float
+    boundingBoxP1Y: Float
+    boundingBoxP1Z: Float
+    boundingBoxP2X: Float
+    boundingBoxP2Y: Float
+    boundingBoxP2Z: Float
+    action: ReferenceModelAction!
+}
+
+type IngestScene {
+    idAssetVersion: Int!
+    systemCreated: Boolean!
+    identifiers: [IngestIdentifier!]!
+    referenceModels: [ReferenceModel!]!
 }
 
 type GetAssetVersionDetailResult {
@@ -59,6 +122,7 @@ type GetAssetVersionDetailResult {
     Item: Item
     CaptureDataPhoto: IngestPhotogrammetry
     Model: IngestModel
+    Scene: IngestScene
 }
 
 type GetAssetVersionsDetailsResult {

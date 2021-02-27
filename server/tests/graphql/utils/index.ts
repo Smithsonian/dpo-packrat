@@ -68,16 +68,17 @@ class TestSuiteUtils {
 
     createUnitInput = (): CreateUnitInput => {
         return {
-            Name: 'Test Name',
+            Name: 'Test Unit Name',
             Abbreviation: 'Test Abbreviation',
             ARKPrefix: 'Test ARKPrefix'
         };
     };
 
-    createSubjectInput = (idUnit: number): CreateSubjectInput => {
+    createSubjectInput = (idUnit: number, idIdentifierPreferred?: number): CreateSubjectInput => {
         return {
             idUnit,
-            Name: 'Test Subject'
+            Name: 'Test Subject',
+            idIdentifierPreferred: idIdentifierPreferred || null
         };
     };
 
@@ -105,17 +106,20 @@ class TestSuiteUtils {
 
     createModelInput = (idVocabulary: number): CreateModelInput => {
         return {
+            Name: 'Test Name',
             Authoritative: true,
             idVCreationMethod: idVocabulary,
             idVModality: idVocabulary,
             idVPurpose: idVocabulary,
             idVUnits: idVocabulary,
+            idVFileType: idVocabulary,
             Master: true
         };
     };
 
     createCaptureDataInput = (idVocabulary: number): CreateCaptureDataInput => {
         return {
+            Name: 'Test Name',
             idVCaptureMethod: idVocabulary,
             DateCaptured: new Date(),
             Description: 'Test Description'

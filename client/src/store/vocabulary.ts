@@ -1,15 +1,23 @@
-import create, { SetState, GetState } from 'zustand';
+/**
+ * Vocabulary Store
+ *
+ * This store manages state for vocabularies used in Ingestion flow.
+ */
+import lodash from 'lodash';
+import create, { GetState, SetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
 import { eVocabularySetID } from '../types/server';
-import lodash from 'lodash';
+import { multiIncludes } from '../utils/shared';
 
 export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
 export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
 
 type AssetType = {
     photogrammetry: boolean;
-    bagit: boolean;
+    scene: boolean;
+    model: boolean;
+    other: boolean;
 };
 
 type VocabularyStore = {
@@ -17,10 +25,11 @@ type VocabularyStore = {
     updateVocabularyEntries: () => Promise<StateVocabulary>;
     getEntries: (eVocabularySetID: eVocabularySetID) => VocabularyOption[];
     getInitialEntry: (eVocabularySetID: eVocabularySetID) => number | null;
+    getVocabularyTerm: (eVocabularySetID: eVocabularySetID, idVocabulary: number) => string | null;
     getAssetType: (idVocabulary: number) => AssetType;
 };
 
-export const useVocabulary = create<VocabularyStore>((set: SetState<VocabularyStore>, get: GetState<VocabularyStore>) => ({
+export const useVocabularyStore = create<VocabularyStore>((set: SetState<VocabularyStore>, get: GetState<VocabularyStore>) => ({
     vocabularies: new Map<eVocabularySetID, VocabularyOption[]>(),
     updateVocabularyEntries: async (): Promise<StateVocabulary> => {
         const variables = {
@@ -34,7 +43,14 @@ export const useVocabulary = create<VocabularyStore>((set: SetState<VocabularySt
                     eVocabularySetID.eCaptureDataBackgroundRemovalMethod,
                     eVocabularySetID.eCaptureDataClusterType,
                     eVocabularySetID.eCaptureDataFileVariantType,
-                    eVocabularySetID.eAssetAssetType
+                    eVocabularySetID.eAssetAssetType,
+                    eVocabularySetID.eModelCreationMethod,
+                    eVocabularySetID.eModelModality,
+                    eVocabularySetID.eModelUnits,
+                    eVocabularySetID.eModelPurpose,
+                    eVocabularySetID.eModelFileType,
+                    eVocabularySetID.eModelMaterialChannelMaterialType,
+                    eVocabularySetID.eCaptureDataCaptureMethod
                 ]
             }
         };
@@ -78,21 +94,41 @@ export const useVocabulary = create<VocabularyStore>((set: SetState<VocabularySt
 
         return null;
     },
+    getVocabularyTerm: (eVocabularySetID: eVocabularySetID, idVocabulary: number): string | null => {
+        const { vocabularies } = get();
+        const vocabularyEntry = vocabularies.get(eVocabularySetID);
+
+        if (vocabularyEntry && vocabularyEntry.length) {
+            for (let i = 0; i < vocabularyEntry.length; i++) {
+                const vocabulary = vocabularyEntry[i];
+                if (vocabulary.idVocabulary === idVocabulary) return vocabulary.Term;
+            }
+        }
+
+        return null;
+    },
     getAssetType: (idVocabulary: number): AssetType => {
         const { vocabularies } = get();
         const vocabularyEntry = vocabularies.get(eVocabularySetID.eAssetAssetType);
 
         const assetType: AssetType = {
             photogrammetry: false,
-            bagit: false
+            scene: false,
+            model: false,
+            other: false
         };
 
         if (vocabularyEntry) {
             const foundVocabulary = lodash.find(vocabularyEntry, option => option.idVocabulary === idVocabulary);
 
             if (foundVocabulary) {
-                assetType.photogrammetry = foundVocabulary.Term.toLowerCase().includes('photogrammetry');
-                assetType.bagit = foundVocabulary.Term.toLowerCase().includes('bulk');
+                const { Term } = foundVocabulary;
+                const term = Term.toLowerCase();
+
+                assetType.photogrammetry = term.includes('photogrammetry');
+                assetType.scene = term.includes('scene');
+                assetType.model = term.includes('model');
+                assetType.other = !multiIncludes(term, ['photogrammetry', 'scene', 'model']);
             }
         }
 

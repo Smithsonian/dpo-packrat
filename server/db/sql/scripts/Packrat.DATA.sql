@@ -13,9 +13,9 @@ INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Model.CreationMethod
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Model.Modality', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Model.Units', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Model.Purpose', 1);
-INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelGeometryFile.ModelFileType', 1);
+INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Model.FileType', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelProcessingActionStep.ActionMethod', 1);
-INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelUVMapChannel.UVMapType', 1);
+INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelMaterialChannel.MaterialType', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Identifier.IdentifierType', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Identifier.IdentifierTypeActor', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Metadata.MetadataSource', 1);
@@ -1113,7 +1113,8 @@ INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES 
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jon Blundell', 'blundellj@si.edu', 'TBD', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Vince Rossi', 'rossiv@si.edu', 'TBD', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jamie Cope', 'copeg@si.edu', 'TBD', 1, NOW());
-INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Karan Pratap Singh', 'karan.pratapsingh686@gmail.com', 'TBD', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Karan Pratap Singh', 'singhk@si.edu', 'TBD', 1, NOW());
+INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Test User', 'user@test.com', 'TBD', 1, NOW());
 
 INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (1, '3D_YT');
 INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (4, 'AAA');

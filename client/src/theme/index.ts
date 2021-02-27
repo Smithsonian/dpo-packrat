@@ -1,9 +1,14 @@
+/**
+ * Theme
+ *
+ * Material UI theme palette for packrat client.
+ * https://material-ui.com/customization/palette
+ */
 import { createMuiTheme, Theme } from '@material-ui/core/styles';
 import createBreakpoints from '@material-ui/core/styles/createBreakpoints';
 import Colors from './colors';
 import { createTypographyOverrides } from './typography';
 
-// https://material-ui.com/customization/palette/
 export const palette = {
     primary: {
         light: '#ECF5FD',

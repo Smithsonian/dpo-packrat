@@ -17,11 +17,14 @@ export type Query = {
     areCameraSettingsUniform: AreCameraSettingsUniformResult;
     getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
+    getAssetDetailsForSystemObject: GetAssetDetailsForSystemObjectResult;
     getAssetVersionsDetails: GetAssetVersionsDetailsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getCurrentUser: GetCurrentUserResult;
+    getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
+    getFilterViewData: GetFilterViewDataResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getIntermediaryFile: GetIntermediaryFileResult;
@@ -34,11 +37,14 @@ export type Query = {
     getProject: GetProjectResult;
     getProjectDocumentation: GetProjectDocumentationResult;
     getScene: GetSceneResult;
+    getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
     getSubject: GetSubjectResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
+    getSystemObjectDetails: GetSystemObjectDetailsResult;
     getUnit: GetUnitResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getUser: GetUserResult;
+    getVersionsForSystemObject: GetVersionsForSystemObjectResult;
     getVocabulary: GetVocabularyResult;
     getVocabularyEntries: GetVocabularyEntriesResult;
     getWorkflow: GetWorkflowResult;
@@ -57,6 +63,10 @@ export type QueryGetAssetArgs = {
     input: GetAssetInput;
 };
 
+export type QueryGetAssetDetailsForSystemObjectArgs = {
+    input: GetAssetDetailsForSystemObjectInput;
+};
+
 export type QueryGetAssetVersionsDetailsArgs = {
     input: GetAssetVersionsDetailsInput;
 };
@@ -71,6 +81,10 @@ export type QueryGetCaptureDataPhotoArgs = {
 
 export type QueryGetContentsForAssetVersionsArgs = {
     input: GetContentsForAssetVersionsInput;
+};
+
+export type QueryGetDetailsTabDataForObjectArgs = {
+    input: GetDetailsTabDataForObjectInput;
 };
 
 export type QueryGetIngestionItemsForSubjectsArgs = {
@@ -121,6 +135,10 @@ export type QueryGetSceneArgs = {
     input: GetSceneInput;
 };
 
+export type QueryGetSourceObjectIdentiferArgs = {
+    input: GetSourceObjectIdentiferInput;
+};
+
 export type QueryGetSubjectArgs = {
     input: GetSubjectInput;
 };
@@ -129,12 +147,20 @@ export type QueryGetSubjectsForUnitArgs = {
     input: GetSubjectsForUnitInput;
 };
 
+export type QueryGetSystemObjectDetailsArgs = {
+    input: GetSystemObjectDetailsInput;
+};
+
 export type QueryGetUnitArgs = {
     input: GetUnitInput;
 };
 
 export type QueryGetUserArgs = {
     input: GetUserInput;
+};
+
+export type QueryGetVersionsForSystemObjectArgs = {
+    input: GetVersionsForSystemObjectInput;
 };
 
 export type QueryGetVocabularyArgs = {
@@ -225,6 +251,7 @@ export type Mutation = {
     createVocabularySet: CreateVocabularySetResult;
     discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
     ingestData: IngestDataResult;
+    updateObjectDetails: UpdateObjectDetailsResult;
     uploadAsset: UploadAssetResult;
 };
 
@@ -278,6 +305,10 @@ export type MutationDiscardUploadedAssetVersionsArgs = {
 
 export type MutationIngestDataArgs = {
     input: IngestDataInput;
+};
+
+export type MutationUpdateObjectDetailsArgs = {
+    input: UpdateObjectDetailsInput;
 };
 
 export type MutationUploadAssetArgs = {
@@ -350,17 +381,84 @@ export type IngestPhotogrammetry = {
     identifiers: Array<IngestIdentifier>;
 };
 
+export type IngestUvMap = {
+    __typename?: 'IngestUVMap';
+    name: Scalars['String'];
+    edgeLength: Scalars['Int'];
+    mapType: Scalars['Int'];
+};
+
+export enum RelatedObjectType {
+    Source = 'Source',
+    Derived = 'Derived'
+}
+
+export type RelatedObject = {
+    __typename?: 'RelatedObject';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
+    objectType: Scalars['Int'];
+};
+
 export type IngestModel = {
     __typename?: 'IngestModel';
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    master: Scalars['Boolean'];
     authoritative: Scalars['Boolean'];
-    dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
     modality: Scalars['Int'];
     purpose: Scalars['Int'];
     units: Scalars['Int'];
-    master: Scalars['Boolean'];
+    dateCaptured: Scalars['String'];
+    modelFileType: Scalars['Int'];
     directory: Scalars['String'];
+    identifiers: Array<IngestIdentifier>;
+    uvMaps: Array<IngestUvMap>;
+    sourceObjects: Array<RelatedObject>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export enum ReferenceModelAction {
+    Update = 'Update',
+    Ingest = 'Ingest'
+}
+
+export type ReferenceModel = {
+    __typename?: 'ReferenceModel';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    fileSize: Scalars['Int'];
+    resolution?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    action: ReferenceModelAction;
+};
+
+export type IngestScene = {
+    __typename?: 'IngestScene';
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifier>;
+    referenceModels: Array<ReferenceModel>;
 };
 
 export type GetAssetVersionDetailResult = {
@@ -371,6 +469,7 @@ export type GetAssetVersionDetailResult = {
     Item?: Maybe<Item>;
     CaptureDataPhoto?: Maybe<IngestPhotogrammetry>;
     Model?: Maybe<IngestModel>;
+    Scene?: Maybe<IngestScene>;
 };
 
 export type GetAssetVersionsDetailsResult = {
@@ -415,6 +514,7 @@ export type Asset = {
     FileName: Scalars['String'];
     FilePath: Scalars['String'];
     idAssetGroup?: Maybe<Scalars['Int']>;
+    idVAssetType?: Maybe<Scalars['Int']>;
     idSystemObject?: Maybe<Scalars['Int']>;
     StorageKey?: Maybe<Scalars['String']>;
     AssetGroup?: Maybe<AssetGroup>;
@@ -448,6 +548,7 @@ export type AssetGroup = {
 };
 
 export type CreateCaptureDataInput = {
+    Name: Scalars['String'];
     idVCaptureMethod: Scalars['Int'];
     DateCaptured: Scalars['DateTime'];
     Description: Scalars['String'];
@@ -508,6 +609,7 @@ export type CaptureData = {
     VCaptureMethod?: Maybe<Vocabulary>;
     CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
     CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
+    CaptureDataPhoto?: Maybe<Array<Maybe<CaptureDataPhoto>>>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -602,16 +704,75 @@ export type IngestPhotogrammetryInput = {
     identifiers: Array<IngestIdentifierInput>;
 };
 
+export type IngestUvMapInput = {
+    name: Scalars['String'];
+    edgeLength: Scalars['Int'];
+    mapType: Scalars['Int'];
+};
+
+export type RelatedObjectInput = {
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
+    objectType: Scalars['Int'];
+};
+
 export type IngestModelInput = {
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    master: Scalars['Boolean'];
     authoritative: Scalars['Boolean'];
-    dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
     modality: Scalars['Int'];
     purpose: Scalars['Int'];
     units: Scalars['Int'];
-    master: Scalars['Boolean'];
+    dateCaptured: Scalars['String'];
+    modelFileType: Scalars['Int'];
     directory: Scalars['String'];
+    identifiers: Array<IngestIdentifierInput>;
+    uvMaps: Array<IngestUvMapInput>;
+    sourceObjects: Array<RelatedObjectInput>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export type ReferenceModelInput = {
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    fileSize: Scalars['Int'];
+    resolution?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    action: ReferenceModelAction;
+};
+
+export type IngestSceneInput = {
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifierInput>;
+    referenceModels: Array<ReferenceModelInput>;
+};
+
+export type IngestOtherInput = {
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifierInput>;
 };
 
 export type IngestDataInput = {
@@ -619,6 +780,9 @@ export type IngestDataInput = {
     project: IngestProjectInput;
     item: IngestItemInput;
     photogrammetry: Array<IngestPhotogrammetryInput>;
+    model: Array<IngestModelInput>;
+    scene: Array<IngestSceneInput>;
+    other: Array<IngestOtherInput>;
 };
 
 export type IngestDataResult = {
@@ -666,11 +830,13 @@ export type LicenseAssignment = {
 };
 
 export type CreateModelInput = {
+    Name: Scalars['String'];
     Authoritative: Scalars['Boolean'];
     idVCreationMethod: Scalars['Int'];
     idVModality: Scalars['Int'];
     idVPurpose: Scalars['Int'];
     idVUnits: Scalars['Int'];
+    idVFileType: Scalars['Int'];
     Master: Scalars['Boolean'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
 };
@@ -692,49 +858,97 @@ export type GetModelResult = {
 export type Model = {
     __typename?: 'Model';
     idModel: Scalars['Int'];
-    Authoritative: Scalars['Boolean'];
+    Name: Scalars['String'];
     DateCreated: Scalars['DateTime'];
-    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    Master: Scalars['Boolean'];
+    Authoritative: Scalars['Boolean'];
     idVCreationMethod: Scalars['Int'];
     idVModality: Scalars['Int'];
     idVPurpose: Scalars['Int'];
     idVUnits: Scalars['Int'];
-    Master: Scalars['Boolean'];
-    AssetThumbnail?: Maybe<Asset>;
+    idVFileType: Scalars['Int'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idModelMetrics?: Maybe<Scalars['Int']>;
+    ModelConstellation?: Maybe<ModelConstellation>;
     VCreationMethod?: Maybe<Vocabulary>;
     VModality?: Maybe<Vocabulary>;
     VPurpose?: Maybe<Vocabulary>;
     VUnits?: Maybe<Vocabulary>;
-    ModelGeometryFile?: Maybe<Array<Maybe<ModelGeometryFile>>>;
+    VFileType?: Maybe<Vocabulary>;
+    AssetThumbnail?: Maybe<Asset>;
+    ModelMetrics?: Maybe<ModelMetrics>;
+    ModelObject?: Maybe<Array<Maybe<ModelObject>>>;
     ModelProcessingAction?: Maybe<Array<Maybe<ModelProcessingAction>>>;
     ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
     SystemObject?: Maybe<SystemObject>;
 };
 
-export type ModelGeometryFile = {
-    __typename?: 'ModelGeometryFile';
-    idModelGeometryFile: Scalars['Int'];
-    idAsset: Scalars['Int'];
+export type ModelMaterial = {
+    __typename?: 'ModelMaterial';
+    idModelMaterial: Scalars['Int'];
+    idModelObject: Scalars['Int'];
+    Name?: Maybe<Scalars['String']>;
+    ModelObject: ModelObject;
+};
+
+export type ModelMaterialChannel = {
+    __typename?: 'ModelMaterialChannel';
+    idModelMaterialChannel: Scalars['Int'];
+    idModelMaterial: Scalars['Int'];
+    idVMaterialType?: Maybe<Scalars['Int']>;
+    MaterialTypeOther?: Maybe<Scalars['String']>;
+    idModelMaterialUVMap?: Maybe<Scalars['Int']>;
+    ChannelPosition?: Maybe<Scalars['Int']>;
+    ChannelWidth?: Maybe<Scalars['Int']>;
+    Scalar1?: Maybe<Scalars['Float']>;
+    Scalar2?: Maybe<Scalars['Float']>;
+    Scalar3?: Maybe<Scalars['Float']>;
+    Scalar4?: Maybe<Scalars['Float']>;
+    ModelMaterial: ModelMaterial;
+    VMaterialType?: Maybe<Vocabulary>;
+    ModelMaterialUVMap?: Maybe<ModelMaterialUvMap>;
+};
+
+export type ModelMaterialUvMap = {
+    __typename?: 'ModelMaterialUVMap';
+    idModelMaterialUVMap: Scalars['Int'];
     idModel: Scalars['Int'];
-    idVModelFileType: Scalars['Int'];
+    idAsset: Scalars['Int'];
+    UVMapEdgeLength: Scalars['Int'];
+    Model: Model;
+    Asset: Asset;
+};
+
+export type ModelMetrics = {
+    __typename?: 'ModelMetrics';
+    idModelMetrics: Scalars['Int'];
     BoundingBoxP1X?: Maybe<Scalars['Float']>;
     BoundingBoxP1Y?: Maybe<Scalars['Float']>;
     BoundingBoxP1Z?: Maybe<Scalars['Float']>;
     BoundingBoxP2X?: Maybe<Scalars['Float']>;
     BoundingBoxP2Y?: Maybe<Scalars['Float']>;
     BoundingBoxP2Z?: Maybe<Scalars['Float']>;
-    FaceCount?: Maybe<Scalars['Int']>;
-    HasNormals?: Maybe<Scalars['Boolean']>;
-    HasUVSpace?: Maybe<Scalars['Boolean']>;
+    CountPoint?: Maybe<Scalars['Int']>;
+    CountFace?: Maybe<Scalars['Int']>;
+    CountColorChannel?: Maybe<Scalars['Int']>;
+    CountTextureCoorinateChannel?: Maybe<Scalars['Int']>;
+    HasBones?: Maybe<Scalars['Boolean']>;
+    HasFaceNormals?: Maybe<Scalars['Boolean']>;
+    HasTangents?: Maybe<Scalars['Boolean']>;
+    HasTextureCoordinates?: Maybe<Scalars['Boolean']>;
+    HasVertexNormals?: Maybe<Scalars['Boolean']>;
     HasVertexColor?: Maybe<Scalars['Boolean']>;
+    IsManifold?: Maybe<Scalars['Boolean']>;
     IsWatertight?: Maybe<Scalars['Boolean']>;
-    Metalness?: Maybe<Scalars['Float']>;
-    PointCount?: Maybe<Scalars['Int']>;
-    Roughness?: Maybe<Scalars['Float']>;
-    Asset?: Maybe<Asset>;
-    Model?: Maybe<Model>;
-    VModelFileType?: Maybe<Vocabulary>;
-    ModelUVMapFile?: Maybe<Array<Maybe<ModelUvMapFile>>>;
+};
+
+export type ModelObject = {
+    __typename?: 'ModelObject';
+    idModelObject: Scalars['Int'];
+    idModel: Scalars['Int'];
+    idModelMetrics?: Maybe<Scalars['Int']>;
+    Model: Model;
+    ModelMetrics?: Maybe<ModelMetrics>;
 };
 
 export type ModelProcessingAction = {
@@ -776,26 +990,15 @@ export type ModelSceneXref = {
     Scene?: Maybe<Scene>;
 };
 
-export type ModelUvMapChannel = {
-    __typename?: 'ModelUVMapChannel';
-    idModelUVMapChannel: Scalars['Int'];
-    ChannelPosition: Scalars['Int'];
-    ChannelWidth: Scalars['Int'];
-    idModelUVMapFile: Scalars['Int'];
-    idVUVMapType: Scalars['Int'];
-    ModelUVMapFile?: Maybe<ModelUvMapFile>;
-    VUVMapType?: Maybe<Vocabulary>;
-};
-
-export type ModelUvMapFile = {
-    __typename?: 'ModelUVMapFile';
-    idModelUVMapFile: Scalars['Int'];
-    idAsset: Scalars['Int'];
-    idModelGeometryFile: Scalars['Int'];
-    UVMapEdgeLength: Scalars['Int'];
-    Asset?: Maybe<Asset>;
-    ModelGeometryFile?: Maybe<ModelGeometryFile>;
-    ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
+export type ModelConstellation = {
+    __typename?: 'ModelConstellation';
+    Model: Model;
+    ModelObjects?: Maybe<Array<Maybe<ModelObject>>>;
+    ModelMaterials?: Maybe<Array<Maybe<ModelMaterial>>>;
+    ModelMaterialChannels?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
+    ModelMaterialUVMaps?: Maybe<Array<Maybe<ModelMaterialUvMap>>>;
+    ModelMetric?: Maybe<ModelMetrics>;
+    ModelObjectMetrics?: Maybe<Array<Maybe<ModelMetrics>>>;
 };
 
 export type PaginationInput = {
@@ -808,7 +1011,17 @@ export type PaginationInput = {
 export type GetObjectChildrenInput = {
     idRoot: Scalars['Int'];
     objectTypes: Array<Scalars['Int']>;
+    objectsToDisplay: Array<Scalars['Int']>;
     metadataColumns: Array<Scalars['Int']>;
+    search: Scalars['String'];
+    units: Array<Scalars['Int']>;
+    projects: Array<Scalars['Int']>;
+    has: Array<Scalars['Int']>;
+    missing: Array<Scalars['Int']>;
+    captureMethod: Array<Scalars['Int']>;
+    variantType: Array<Scalars['Int']>;
+    modelPurpose: Array<Scalars['Int']>;
+    modelFileType: Array<Scalars['Int']>;
 };
 
 export type NavigationResultEntry = {
@@ -826,6 +1039,12 @@ export type GetObjectChildrenResult = {
     error: Scalars['String'];
     entries: Array<NavigationResultEntry>;
     metadataColumns: Array<Scalars['Int']>;
+};
+
+export type GetFilterViewDataResult = {
+    __typename?: 'GetFilterViewDataResult';
+    units: Array<Unit>;
+    projects: Array<Project>;
 };
 
 export type CreateSceneInput = {
@@ -887,6 +1106,402 @@ export type IntermediaryFile = {
     idAsset: Scalars['Int'];
     Asset?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type UpdateObjectDetailsInput = {
+    idSystemObject: Scalars['Int'];
+    idObject: Scalars['Int'];
+    objectType: Scalars['Int'];
+    data: UpdateObjectDetailsDataInput;
+};
+
+export type UnitDetailFieldsInput = {
+    Abbreviation?: Maybe<Scalars['String']>;
+    ARKPrefix?: Maybe<Scalars['String']>;
+};
+
+export type ProjectDetailFieldsInput = {
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type SubjectDetailFieldsInput = {
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type ItemDetailFieldsInput = {
+    EntireSubject?: Maybe<Scalars['Boolean']>;
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type CaptureDataDetailFieldsInput = {
+    captureMethod?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['DateTime']>;
+    datasetType?: Maybe<Scalars['Int']>;
+    systemCreated?: Maybe<Scalars['Boolean']>;
+    description?: Maybe<Scalars['String']>;
+    cameraSettingUniform?: Maybe<Scalars['Boolean']>;
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    folders: Array<IngestFolderInput>;
+};
+
+export type ModelDetailFieldsInput = {
+    size?: Maybe<Scalars['Int']>;
+    master?: Maybe<Scalars['Boolean']>;
+    authoritative?: Maybe<Scalars['Boolean']>;
+    creationMethod?: Maybe<Scalars['Int']>;
+    modality?: Maybe<Scalars['Int']>;
+    purpose?: Maybe<Scalars['Int']>;
+    units?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['DateTime']>;
+    modelFileType?: Maybe<Scalars['Int']>;
+    uvMaps: Array<IngestUvMapInput>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export type SceneDetailFieldsInput = {
+    Links: Array<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+    Tours?: Maybe<Scalars['Int']>;
+    Annotation?: Maybe<Scalars['Int']>;
+    HasBeenQCd?: Maybe<Scalars['Boolean']>;
+    IsOriented?: Maybe<Scalars['Boolean']>;
+};
+
+export type ProjectDocumentationDetailFieldsInput = {
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type AssetDetailFieldsInput = {
+    FilePath?: Maybe<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+};
+
+export type AssetVersionDetailFieldsInput = {
+    Creator?: Maybe<Scalars['String']>;
+    DateCreated?: Maybe<Scalars['DateTime']>;
+    Ingested?: Maybe<Scalars['Boolean']>;
+    Version?: Maybe<Scalars['Int']>;
+    StorageSize?: Maybe<Scalars['Int']>;
+};
+
+export type ActorDetailFieldsInput = {
+    OrganizationName?: Maybe<Scalars['String']>;
+};
+
+export type StakeholderDetailFieldsInput = {
+    OrganizationName?: Maybe<Scalars['String']>;
+    MailingAddress?: Maybe<Scalars['String']>;
+    EmailAddress?: Maybe<Scalars['String']>;
+    PhoneNumberMobile?: Maybe<Scalars['String']>;
+    PhoneNumberOffice?: Maybe<Scalars['String']>;
+};
+
+export type UpdateObjectDetailsDataInput = {
+    Name?: Maybe<Scalars['String']>;
+    Retired?: Maybe<Scalars['Boolean']>;
+    Unit?: Maybe<UnitDetailFieldsInput>;
+    Project?: Maybe<ProjectDetailFieldsInput>;
+    Subject?: Maybe<SubjectDetailFieldsInput>;
+    Item?: Maybe<ItemDetailFieldsInput>;
+    CaptureData?: Maybe<CaptureDataDetailFieldsInput>;
+    Model?: Maybe<ModelDetailFieldsInput>;
+    Scene?: Maybe<SceneDetailFieldsInput>;
+    ProjectDocumentation?: Maybe<ProjectDocumentationDetailFieldsInput>;
+    Asset?: Maybe<AssetDetailFieldsInput>;
+    AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
+    Actor?: Maybe<ActorDetailFieldsInput>;
+    Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+};
+
+export type UpdateObjectDetailsResult = {
+    __typename?: 'UpdateObjectDetailsResult';
+    success: Scalars['Boolean'];
+};
+
+export type GetDetailsTabDataForObjectInput = {
+    idSystemObject: Scalars['Int'];
+    objectType: Scalars['Int'];
+};
+
+export type UnitDetailFields = {
+    __typename?: 'UnitDetailFields';
+    Abbreviation?: Maybe<Scalars['String']>;
+    ARKPrefix?: Maybe<Scalars['String']>;
+};
+
+export type ProjectDetailFields = {
+    __typename?: 'ProjectDetailFields';
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type SubjectDetailFields = {
+    __typename?: 'SubjectDetailFields';
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type ItemDetailFields = {
+    __typename?: 'ItemDetailFields';
+    EntireSubject?: Maybe<Scalars['Boolean']>;
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type CaptureDataDetailFields = {
+    __typename?: 'CaptureDataDetailFields';
+    captureMethod?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['String']>;
+    datasetType?: Maybe<Scalars['Int']>;
+    systemCreated?: Maybe<Scalars['Boolean']>;
+    description?: Maybe<Scalars['String']>;
+    cameraSettingUniform?: Maybe<Scalars['Boolean']>;
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    folders: Array<IngestFolder>;
+};
+
+export type ModelDetailFields = {
+    __typename?: 'ModelDetailFields';
+    size?: Maybe<Scalars['Int']>;
+    master?: Maybe<Scalars['Boolean']>;
+    authoritative?: Maybe<Scalars['Boolean']>;
+    creationMethod?: Maybe<Scalars['Int']>;
+    modality?: Maybe<Scalars['Int']>;
+    purpose?: Maybe<Scalars['Int']>;
+    units?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['String']>;
+    modelFileType?: Maybe<Scalars['Int']>;
+    uvMaps: Array<IngestUvMap>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    countPoint?: Maybe<Scalars['Int']>;
+    countFace?: Maybe<Scalars['Int']>;
+    countColorChannel?: Maybe<Scalars['Int']>;
+    countTextureCoorinateChannel?: Maybe<Scalars['Int']>;
+    hasBones?: Maybe<Scalars['Boolean']>;
+    hasFaceNormals?: Maybe<Scalars['Boolean']>;
+    hasTangents?: Maybe<Scalars['Boolean']>;
+    hasTextureCoordinates?: Maybe<Scalars['Boolean']>;
+    hasVertexNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    isManifold?: Maybe<Scalars['Boolean']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+};
+
+export type SceneDetailFields = {
+    __typename?: 'SceneDetailFields';
+    Links: Array<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+    Tours?: Maybe<Scalars['Int']>;
+    Annotation?: Maybe<Scalars['Int']>;
+    HasBeenQCd?: Maybe<Scalars['Boolean']>;
+    IsOriented?: Maybe<Scalars['Boolean']>;
+};
+
+export type IntermediaryFileDetailFields = {
+    __typename?: 'IntermediaryFileDetailFields';
+    idIntermediaryFile: Scalars['Int'];
+};
+
+export type ProjectDocumentationDetailFields = {
+    __typename?: 'ProjectDocumentationDetailFields';
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type AssetDetailFields = {
+    __typename?: 'AssetDetailFields';
+    FilePath?: Maybe<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+};
+
+export type AssetVersionDetailFields = {
+    __typename?: 'AssetVersionDetailFields';
+    Creator?: Maybe<Scalars['String']>;
+    DateCreated?: Maybe<Scalars['DateTime']>;
+    Ingested?: Maybe<Scalars['Boolean']>;
+    Version?: Maybe<Scalars['Int']>;
+    StorageSize?: Maybe<Scalars['Int']>;
+};
+
+export type ActorDetailFields = {
+    __typename?: 'ActorDetailFields';
+    OrganizationName?: Maybe<Scalars['String']>;
+};
+
+export type StakeholderDetailFields = {
+    __typename?: 'StakeholderDetailFields';
+    OrganizationName?: Maybe<Scalars['String']>;
+    MailingAddress?: Maybe<Scalars['String']>;
+    EmailAddress?: Maybe<Scalars['String']>;
+    PhoneNumberMobile?: Maybe<Scalars['String']>;
+    PhoneNumberOffice?: Maybe<Scalars['String']>;
+};
+
+export type GetDetailsTabDataForObjectResult = {
+    __typename?: 'GetDetailsTabDataForObjectResult';
+    Unit?: Maybe<UnitDetailFields>;
+    Project?: Maybe<ProjectDetailFields>;
+    Subject?: Maybe<SubjectDetailFields>;
+    Item?: Maybe<ItemDetailFields>;
+    CaptureData?: Maybe<CaptureDataDetailFields>;
+    Model?: Maybe<ModelDetailFields>;
+    Scene?: Maybe<SceneDetailFields>;
+    IntermediaryFile?: Maybe<IntermediaryFileDetailFields>;
+    ProjectDocumentation?: Maybe<ProjectDocumentationDetailFields>;
+    Asset?: Maybe<AssetDetailFields>;
+    AssetVersion?: Maybe<AssetVersionDetailFields>;
+    Actor?: Maybe<ActorDetailFields>;
+    Stakeholder?: Maybe<StakeholderDetailFields>;
+};
+
+export type GetSystemObjectDetailsInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type RepositoryPath = {
+    __typename?: 'RepositoryPath';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    objectType: Scalars['Int'];
+};
+
+export type GetSystemObjectDetailsResult = {
+    __typename?: 'GetSystemObjectDetailsResult';
+    idObject: Scalars['Int'];
+    name: Scalars['String'];
+    retired: Scalars['Boolean'];
+    objectType: Scalars['Int'];
+    allowed: Scalars['Boolean'];
+    publishedState: Scalars['String'];
+    thumbnail?: Maybe<Scalars['String']>;
+    identifiers: Array<IngestIdentifier>;
+    objectAncestors: Array<Array<RepositoryPath>>;
+    sourceObjects: Array<RelatedObject>;
+    derivedObjects: Array<RelatedObject>;
+    unit?: Maybe<RepositoryPath>;
+    project?: Maybe<RepositoryPath>;
+    subject?: Maybe<RepositoryPath>;
+    item?: Maybe<RepositoryPath>;
+};
+
+export type GetSourceObjectIdentiferInput = {
+    idSystemObjects: Array<Scalars['Int']>;
+};
+
+export type SourceObjectIdentifier = {
+    __typename?: 'SourceObjectIdentifier';
+    idSystemObject: Scalars['Int'];
+    identifier?: Maybe<Scalars['String']>;
+};
+
+export type GetSourceObjectIdentiferResult = {
+    __typename?: 'GetSourceObjectIdentiferResult';
+    sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
+};
+
+export type AssetDetail = {
+    __typename?: 'AssetDetail';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    path: Scalars['String'];
+    assetType: Scalars['Int'];
+    version: Scalars['Int'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
+export type GetAssetDetailsForSystemObjectInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type GetAssetDetailsForSystemObjectResult = {
+    __typename?: 'GetAssetDetailsForSystemObjectResult';
+    assetDetails: Array<AssetDetail>;
+};
+
+export type DetailVersion = {
+    __typename?: 'DetailVersion';
+    idSystemObject: Scalars['Int'];
+    version: Scalars['Int'];
+    name: Scalars['String'];
+    creator: Scalars['String'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
+export type GetVersionsForSystemObjectInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type GetVersionsForSystemObjectResult = {
+    __typename?: 'GetVersionsForSystemObjectResult';
+    versions: Array<DetailVersion>;
 };
 
 export type SystemObject = {

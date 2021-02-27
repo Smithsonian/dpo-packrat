@@ -1,27 +1,34 @@
-import { Box, Typography } from '@material-ui/core';
+/**
+ * RepositoryTreeView
+ *
+ * This component renders repository tree view along with metadata view
+ * for the Repository UI.
+ */
 import { makeStyles } from '@material-ui/core/styles';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
-import lodash from 'lodash';
-import React, { useState } from 'react';
-import { BsChevronDown, BsChevronRight } from 'react-icons/bs';
+import React, { useCallback, useEffect } from 'react';
 import { Loader } from '../../../../components';
-import { getSortedTreeEntries, getSystemObjectTypesForFilter, getTreeWidth } from '../../../../utils/repository';
-import { useGetRootObjects } from '../../hooks/useRepository';
-import { RepositoryFilter } from '../../index';
+import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore } from '../../../../store';
+import { NavigationResultEntry } from '../../../../types/graphql';
+import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeViewStyleHeight, getTreeViewStyleWidth, getTreeWidth, isRepositoryItemSelected } from '../../../../utils/repository';
 import RepositoryTreeHeader from './RepositoryTreeHeader';
-import { ExpandedNodeMap, renderTreeNodes } from './RepositoryTreeNode';
+import StyledTreeItem from './StyledTreeItem';
+import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
 
-const useStyles = makeStyles(({ palette, breakpoints }) => ({
+const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 5,
-        maxHeight: '72vh',
-        maxWidth: '83.5vw',
+        maxHeight: ({ isExpanded, isModal }: StyleProps) => getTreeViewStyleHeight(isExpanded, isModal, 'xl'),
+        maxWidth: ({ sideBarExpanded }: StyleProps) => getTreeViewStyleWidth(sideBarExpanded, 'xl'),
         flexDirection: 'column',
         overflow: 'auto',
+        transition: '250ms height, width ease',
         [breakpoints.down('lg')]: {
-            maxHeight: '71vh',
-            maxWidth: '80.5vw'
+            maxHeight: ({ isExpanded, isModal }: StyleProps) => getTreeViewStyleHeight(isExpanded, isModal, 'lg'),
+            maxWidth: ({ sideBarExpanded }: StyleProps) => getTreeViewStyleWidth(sideBarExpanded, 'lg')
         }
     },
     tree: {
@@ -29,67 +36,147 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         flexDirection: 'column',
         flex: 1
     },
-    fullView: {
-        display: 'flex',
-        flex: 1,
-        maxWidth: '83.5vw',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: palette.primary.dark
+    fullWidth: {
+        maxWidth: '95.5vw'
     }
 }));
 
+type StyleProps = {
+    sideBarExpanded: boolean;
+    isExpanded: boolean;
+    isModal: boolean;
+};
+
 interface RepositoryTreeViewProps {
-    filter: RepositoryFilter;
+    isModal?: boolean;
+    selectedItems?: StateRelatedObject[];
+    onSelect?: (item: StateRelatedObject) => void;
+    onUnSelect?: (id: number) => void;
 }
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
-    const { filter } = props;
-    const classes = useStyles();
-    const [expandedNodes, setExpandedNodes] = useState<ExpandedNodeMap>(new Map() as ExpandedNodeMap);
+    const { isModal = false, selectedItems = [], onSelect, onUnSelect } = props;
 
-    const objectTypes = getSystemObjectTypesForFilter(filter);
-    const { getRootObjectsData, getRootObjectsLoading, getRootObjectsError } = useGetRootObjects(objectTypes, filter);
+    const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
+    const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
 
-    const noFilter = !filter.units && !filter.projects;
+    const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
 
-    const entries = getSortedTreeEntries(getRootObjectsData?.getObjectChildren?.entries ?? []);
-    const metadataColumns = getRootObjectsData?.getObjectChildren?.metadataColumns ?? [];
-    const width = getTreeWidth(metadataColumns.length);
+    const [tree, initializeTree, getChildren] = useRepositoryStore(state => [state.tree, state.initializeTree, state.getChildren]);
+    const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
 
-    let content: React.ReactNode = null;
+    useEffect(() => {
+        initializeTree();
+    }, [initializeTree]);
 
-    if (!getRootObjectsLoading && !getRootObjectsError) {
-        content = renderTreeNodes(expandedNodes, filter, entries, metadataColumns);
-    } else if (!noFilter) {
-        content = <Loader maxWidth='83.5vw' size={30} />;
-    }
+    const onNodeToggle = useCallback(async (_, nodeIds: string[]) => {
+        if (!nodeIds.length) return;
+        const [nodeId] = nodeIds.slice();
+        const alreadyLoaded = tree.has(nodeId);
 
-    const onNodeToggle = (_, nodeIds: string[]) => {
-        const keyValueArray: [string, undefined][] = lodash.map(nodeIds, (id: string) => [id, undefined]);
-        const updatedMap: ExpandedNodeMap = new Map(keyValueArray);
-        setExpandedNodes(updatedMap);
+        if (!alreadyLoaded) {
+            getChildren(nodeId);
+        }
+    }, [tree, getChildren]);
+
+    const renderTree = (children: NavigationResultEntry[] | undefined) => {
+        if (!children) return null;
+        return children.map((child: NavigationResultEntry, index: number) => {
+            const { idSystemObject, objectType, idObject, name, metadata } = child;
+            const nodeId: string = getRepositoryTreeNodeId(idSystemObject, objectType, idObject);
+            const childNodes = tree.get(nodeId);
+
+            let childNodesContent: React.ReactNode = <TreeLabelLoading />;
+
+            if (childNodes) {
+                if (childNodes.length) {
+                    childNodesContent = renderTree(childNodes);
+                } else {
+                    childNodesContent = <TreeLabelEmpty label={name} objectType={objectType} />;
+                }
+            }
+
+            const variant = getTreeColorVariant(index);
+            const { icon, color } = getObjectInterfaceDetails(objectType, variant);
+            const treeColumns = getTreeViewColumns(metadataColumns, false, metadata);
+            const isSelected = isRepositoryItemSelected(nodeId, selectedItems);
+
+            const select = (event: React.MouseEvent<SVGElement, MouseEvent>) => {
+                if (onSelect) {
+                    event.stopPropagation();
+                    const repositoryItem: StateRelatedObject = {
+                        idSystemObject,
+                        name,
+                        objectType,
+                        identifier: ''
+                    };
+                    onSelect(repositoryItem);
+                }
+            };
+
+            const unSelect = (event: React.MouseEvent<SVGElement, MouseEvent>) => {
+                if (onUnSelect) {
+                    event.stopPropagation();
+                    onUnSelect(idSystemObject);
+                }
+            };
+
+            const label: React.ReactNode = (
+                <TreeLabel
+                    idSystemObject={idSystemObject}
+                    label={name}
+                    renderSelected={isModal}
+                    selected={isSelected}
+                    onSelect={select}
+                    onUnSelect={unSelect}
+                    objectType={objectType}
+                    color={color}
+                    treeColumns={treeColumns}
+                />
+            );
+
+            return (
+                <StyledTreeItem
+                    key={idSystemObject}
+                    nodeId={nodeId}
+                    icon={icon}
+                    color={color}
+                    label={label}
+                >
+                    {childNodesContent}
+                </StyledTreeItem>
+            );
+        });
     };
 
-    return (
-        <Box className={classes.container}>
+    let content: React.ReactNode = <Loader maxWidth='85vw' minHeight='40vh' size={20} />;
+
+    if (!loading) {
+        const treeColumns = getTreeViewColumns(metadataColumns, false);
+        const width = getTreeWidth(treeColumns.length, sideBarExpanded, isModal);
+        const children = tree.get(treeRootKey);
+
+        content = (
             <TreeView
-                onNodeToggle={onNodeToggle}
                 className={classes.tree}
+                defaultCollapseIcon={<ExpandMoreIcon />}
+                defaultExpandIcon={<ChevronRightIcon />}
+                onNodeToggle={onNodeToggle}
                 style={{ width }}
-                defaultCollapseIcon={<BsChevronDown />}
-                defaultExpandIcon={<BsChevronRight />}
             >
-                <RepositoryTreeHeader metadataColumns={metadataColumns} />
-                {noFilter && (
-                    <Box className={classes.fullView}>
-                        <Typography variant='caption'>Please select a valid filter</Typography>
-                    </Box>
-                )}
-                {content}
+                <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />
+                {renderTree(children)}
             </TreeView>
-        </Box>
+        );
+    }
+
+    const fullWidthStyles = isModal ? { maxWidth: '98vw' } : {};
+
+    return (
+        <div className={classes.container} style={fullWidthStyles}>
+            {content}
+        </div>
     );
 }
 
-export default RepositoryTreeView;
+export default React.memo(RepositoryTreeView);

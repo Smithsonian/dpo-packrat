@@ -1,13 +1,19 @@
+/**
+ * Upload Store
+ *
+ * This store manages state for file uploads used in Ingestion flow.
+ */
 import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
 import { eVocabularySetID } from '../types/server';
 import { generateFileId } from '../utils/upload';
-import { useVocabulary } from './vocabulary';
+import { useVocabularyStore } from './vocabulary';
 import { apolloClient, apolloUploader } from '../graphql';
 import { DiscardUploadedAssetVersionsDocument, DiscardUploadedAssetVersionsMutation, UploadAssetDocument, UploadAssetMutation, UploadStatus } from '../types/graphql';
 import { FetchResult } from '@apollo/client';
 import { parseFileId } from './utils';
+import { UploadEvents, UploadEventType, UploadCompleteEvent, UploadProgressEvent, UploadSetCancelEvent, UploadFailedEvent } from '../utils/events';
 
 export type FileId = string;
 
@@ -47,10 +53,14 @@ type UploadStore = {
     changeAssetType: (id: FileId, assetType: number) => void;
     discardFiles: () => Promise<void>;
     removeSelectedUploads: () => void;
+    onProgressEvent: (data: UploadProgressEvent) => void;
+    onSetCancelledEvent: (data: UploadSetCancelEvent) => void;
+    onFailedEvent: (data: UploadFailedEvent) => void;
+    onCompleteEvent: (data: UploadCompleteEvent) => void;
     reset: () => void;
 };
 
-export const useUpload = create<UploadStore>((set: SetState<UploadStore>, get: GetState<UploadStore>) => ({
+export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, get: GetState<UploadStore>) => ({
     completed: [],
     pending: [],
     loading: true,
@@ -65,7 +75,7 @@ export const useUpload = create<UploadStore>((set: SetState<UploadStore>, get: G
                 const alreadyContains = !!lodash.find(pending, { id });
 
                 const { name, size } = file;
-                const { getInitialEntry } = useVocabulary.getState();
+                const { getInitialEntry } = useVocabularyStore.getState();
                 const type = getInitialEntry(eVocabularySetID.eAssetAssetType);
 
                 if (!type) {
@@ -175,22 +185,20 @@ export const useUpload = create<UploadStore>((set: SetState<UploadStore>, get: G
                 const updateProgress = !(progress % 5);
 
                 if (updateProgress) {
-                    const updatedPendingProgress = lodash.forEach(pending, file => {
-                        if (file.id === id) {
-                            lodash.set(file, 'progress', progress);
-                        }
-                    });
-                    set({ pending: updatedPendingProgress });
+                    const progressEvent: UploadProgressEvent = {
+                        id,
+                        progress
+                    };
+                    UploadEvents.dispatch(UploadEventType.PROGRESS, progressEvent);
                 }
             };
 
             const onCancel = (cancel: () => void) => {
-                const updatedPendingProgress = lodash.forEach(pending, file => {
-                    if (file.id === id) {
-                        lodash.set(file, 'cancel', cancel);
-                    }
-                });
-                set({ pending: updatedPendingProgress });
+                const setCancelEvent: UploadSetCancelEvent = {
+                    id,
+                    cancel
+                };
+                UploadEvents.dispatch(UploadEventType.SET_CANCELLED, setCancelEvent);
             };
 
             const { data } = await apolloUploader({
@@ -208,18 +216,16 @@ export const useUpload = create<UploadStore>((set: SetState<UploadStore>, get: G
                 const { status, error } = uploadAsset;
 
                 if (status === UploadStatus.Complete) {
-                    const updatedPending = pending.filter(file => file.id !== id);
-                    set({ pending: updatedPending });
+                    const uploadEvent: UploadCompleteEvent = { id };
+                    UploadEvents.dispatch(UploadEventType.COMPLETE, uploadEvent);
+
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (status === UploadStatus.Failed) {
+                    const failedEvent: UploadFailedEvent = { id };
+                    UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
+
                     const errorMessage = error || `Upload failed for ${file.name}`;
                     toast.error(errorMessage);
-                    const updatedPending = lodash.forEach(pending, file => {
-                        if (file.id === id) {
-                            lodash.set(file, 'status', FileUploadStatus.FAILED);
-                        }
-                    });
-                    set({ pending: updatedPending });
                 }
             }
         } catch ({ message }) {
@@ -227,12 +233,8 @@ export const useUpload = create<UploadStore>((set: SetState<UploadStore>, get: G
 
             if (file) {
                 if (file.status !== FileUploadStatus.CANCELLED) {
-                    const updatedPending = lodash.forEach(pending, file => {
-                        if (file.id === id) {
-                            lodash.set(file, 'status', FileUploadStatus.FAILED);
-                        }
-                    });
-                    set({ pending: updatedPending });
+                    const failedEvent: UploadFailedEvent = { id };
+                    UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
                 }
             }
         }
@@ -297,8 +299,56 @@ export const useUpload = create<UploadStore>((set: SetState<UploadStore>, get: G
         const updatedCompleted = completed.filter(({ selected }) => !selected);
         set({ completed: updatedCompleted });
     },
+    onProgressEvent: (eventData: UploadProgressEvent): void => {
+        const { pending } = get();
+        const { id, progress } = eventData;
+
+        const updatedPendingProgress = lodash.forEach(pending, file => {
+            if (file.id === id) {
+                lodash.set(file, 'progress', progress);
+            }
+        });
+        set({ pending: updatedPendingProgress });
+    },
+    onSetCancelledEvent: (eventData: UploadSetCancelEvent): void => {
+        const { pending } = get();
+        const { id, cancel } = eventData;
+
+        const updateSetCancel = lodash.forEach(pending, file => {
+            if (file.id === id) {
+                lodash.set(file, 'cancel', cancel);
+            }
+        });
+        set({ pending: updateSetCancel });
+    },
+    onFailedEvent: (eventData: UploadFailedEvent): void => {
+        const { pending } = get();
+        const { id } = eventData;
+
+        const updatedFailedPending = lodash.forEach(pending, file => {
+            if (file.id === id) {
+                lodash.set(file, 'status', FileUploadStatus.FAILED);
+            }
+        });
+
+        set({ pending: updatedFailedPending });
+    },
+    onCompleteEvent: (eventData: UploadCompleteEvent): void => {
+        const { pending } = get();
+        const { id } = eventData;
+        const updatedComplete = pending.filter(file => file.id !== id);
+
+        set({ pending: updatedComplete });
+    },
     reset: (): void => {
-        set({ completed: [], pending: [], loading: true });
+        const { completed } = get();
+        const unselectFiles = (file: IngestionFile): IngestionFile => ({
+            ...file,
+            selected: false
+        });
+
+        const updatedCompleted: IngestionFile[] = completed.map(unselectFiles);
+        set({ completed: updatedCompleted, loading: false });
     }
 }));
 

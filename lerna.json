@@ -2,8 +2,7 @@
   "lerna": "3.22.0",
   "packages": [
     "client",
-    "server",
-    "common"
+    "server"
   ],
   "version": "0.4.0",
   "npmClient": "yarn",

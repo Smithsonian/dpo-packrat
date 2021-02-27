@@ -1,20 +1,26 @@
+/**
+ * ProjectList
+ *
+ * This component renders project list used in SubjectItem component.
+ */
 import { MenuItem, Select } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import lodash from 'lodash';
 import React from 'react';
-import { useProject } from '../../../../store';
+import { useProjectStore } from '../../../../store';
 
 const useStyles = makeStyles(({ palette }) => ({
     projectSelect: {
         width: '100%',
         padding: '0px 10px',
-        backgroundColor: palette.background.paper
+        backgroundColor: palette.background.paper,
+        fontSize: '0.8em'
     }
 }));
 
 function ProjectList(): React.ReactElement {
     const classes = useStyles();
-    const [projects, getSelectedProject, updateSelectedProject] = useProject(state => [state.projects, state.getSelectedProject, state.updateSelectedProject]);
+    const [projects, getSelectedProject, updateSelectedProject] = useProjectStore(state => [state.projects, state.getSelectedProject, state.updateSelectedProject]);
 
     const noProjects = !projects.length;
     const selectedProject = getSelectedProject();

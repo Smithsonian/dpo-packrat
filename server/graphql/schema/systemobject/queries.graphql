@@ -1,0 +1,233 @@
+scalar DateTime
+
+type Query {
+    getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
+    getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
+    getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
+    getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
+    getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
+}
+
+input GetDetailsTabDataForObjectInput {
+    idSystemObject: Int!
+    objectType: Int!
+}
+
+type UnitDetailFields {
+    Abbreviation: String
+    ARKPrefix: String
+}
+
+type ProjectDetailFields {
+    Description: String
+}
+
+type SubjectDetailFields {
+    Altitude: Float
+    Latitude: Float
+    Longitude: Float
+    R0: Float
+    R1: Float
+    R2: Float
+    R3: Float
+    TS0: Float
+    TS1: Float
+    TS2: Float
+}
+
+type ItemDetailFields {
+    EntireSubject: Boolean
+    Altitude: Float
+    Latitude: Float
+    Longitude: Float
+    R0: Float
+    R1: Float
+    R2: Float
+    R3: Float
+    TS0: Float
+    TS1: Float
+    TS2: Float
+}
+
+type CaptureDataDetailFields {
+    captureMethod: Int
+    dateCaptured: String
+    datasetType: Int
+    systemCreated: Boolean
+    description: String
+    cameraSettingUniform: Boolean
+    datasetFieldId: Int
+    itemPositionType: Int
+    itemPositionFieldId: Int
+    itemArrangementFieldId: Int
+    focusType: Int
+    lightsourceType: Int
+    backgroundRemovalMethod: Int
+    clusterType: Int
+    clusterGeometryFieldId: Int
+    folders: [IngestFolder!]!
+}
+
+type ModelDetailFields {
+    size: Int
+    master: Boolean
+    authoritative: Boolean
+    creationMethod: Int
+    modality: Int
+    purpose: Int
+    units: Int
+    dateCaptured: String
+    modelFileType: Int
+    uvMaps: [IngestUVMap!]!
+    boundingBoxP1X: Float
+    boundingBoxP1Y: Float
+    boundingBoxP1Z: Float
+    boundingBoxP2X: Float
+    boundingBoxP2Y: Float
+    boundingBoxP2Z: Float
+    countPoint: Int
+    countFace: Int
+    countColorChannel: Int
+    countTextureCoorinateChannel: Int
+	hasBones: Boolean
+	hasFaceNormals: Boolean
+	hasTangents: Boolean
+	hasTextureCoordinates: Boolean
+	hasVertexNormals: Boolean
+	hasVertexColor: Boolean
+	isManifold: Boolean
+	isWatertight: Boolean
+}
+
+type SceneDetailFields {
+    Links: [String!]!
+    AssetType: Int
+    Tours: Int
+    Annotation: Int
+    HasBeenQCd: Boolean
+    IsOriented: Boolean
+}
+
+type IntermediaryFileDetailFields {
+    idIntermediaryFile: Int!
+}
+
+type ProjectDocumentationDetailFields {
+    Description: String
+}
+type AssetDetailFields {
+    FilePath: String
+    AssetType: Int
+}
+
+type AssetVersionDetailFields {
+    Creator: String
+    DateCreated: DateTime
+    Ingested: Boolean
+    Version: Int
+    StorageSize: Int
+}
+
+type ActorDetailFields {
+    OrganizationName: String
+}
+
+type StakeholderDetailFields {
+    OrganizationName: String
+    MailingAddress: String
+    EmailAddress: String
+    PhoneNumberMobile: String
+    PhoneNumberOffice: String
+}
+
+type GetDetailsTabDataForObjectResult {
+    Unit: UnitDetailFields
+    Project: ProjectDetailFields
+    Subject: SubjectDetailFields
+    Item: ItemDetailFields
+    CaptureData: CaptureDataDetailFields
+    Model: ModelDetailFields
+    Scene: SceneDetailFields
+    IntermediaryFile: IntermediaryFileDetailFields
+    ProjectDocumentation: ProjectDocumentationDetailFields
+    Asset: AssetDetailFields
+    AssetVersion: AssetVersionDetailFields
+    Actor: ActorDetailFields
+    Stakeholder: StakeholderDetailFields
+}
+
+input GetSystemObjectDetailsInput {
+    idSystemObject: Int!
+}
+
+type RepositoryPath {
+    idSystemObject: Int!
+    name: String!
+    objectType: Int!
+}
+
+type GetSystemObjectDetailsResult {
+    idObject: Int!
+    name: String!
+    retired: Boolean!
+    objectType: Int!
+    allowed: Boolean!
+    publishedState: String!
+    thumbnail: String
+    identifiers: [IngestIdentifier!]!
+    objectAncestors: [[RepositoryPath!]!]!
+    sourceObjects: [RelatedObject!]!
+    derivedObjects: [RelatedObject!]!
+    unit: RepositoryPath
+    project: RepositoryPath
+    subject: RepositoryPath
+    item: RepositoryPath
+}
+
+input GetSourceObjectIdentiferInput {
+    idSystemObjects: [Int!]!
+}
+
+type SourceObjectIdentifier {
+    idSystemObject: Int!
+    identifier: String
+}
+
+type GetSourceObjectIdentiferResult {
+    sourceObjectIdentifiers: [SourceObjectIdentifier!]!
+}
+
+type AssetDetail {
+    idSystemObject: Int!
+    name: String!
+    path: String!
+    assetType: Int!
+    version: Int!
+    dateCreated: DateTime!
+    size: Int!
+}
+
+input GetAssetDetailsForSystemObjectInput {
+    idSystemObject: Int!
+}
+
+type GetAssetDetailsForSystemObjectResult {
+    assetDetails: [AssetDetail!]!
+}
+
+type DetailVersion {
+    idSystemObject: Int!
+    version: Int!
+    name: String!
+    creator: String!
+    dateCreated: DateTime!
+    size: Int!
+}
+
+input GetVersionsForSystemObjectInput {
+    idSystemObject: Int!
+}
+
+type GetVersionsForSystemObjectResult {
+    versions: [DetailVersion!]!
+}

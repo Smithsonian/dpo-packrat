@@ -1,16 +1,22 @@
+/**
+ * Ingestion
+ *
+ * This component renders Ingestion UI and all the sub routes like Uploads, Subject Item
+ * and Metadata.
+ */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { Redirect, useRouteMatch } from 'react-router';
+import { Prompt } from 'react-router-dom';
 import { PrivateRoute } from '../../components';
+import { HOME_ROUTES, INGESTION_PARAMS_TYPE, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
+import { useMetadataStore } from '../../store';
 import { IngestionSidebarMenu, IngestionSidebarOption } from './components/IngestionSidebar';
-import { HOME_ROUTES, INGESTION_ROUTE, INGESTION_ROUTES_TYPE, INGESTION_PARAMS_TYPE, resolveRoute, resolveSubRoute } from '../../constants';
-import Uploads from './components/Uploads';
 import Metadata from './components/Metadata';
 import SubjectItem from './components/SubjectItem';
-import { Prompt } from 'react-router-dom';
+import Uploads from './components/Uploads';
 import useIngest from './hooks/useIngest';
-import { useMetadata } from '../../store';
 
 const useStyles = makeStyles(() => ({
     container: {
@@ -22,7 +28,7 @@ const useStyles = makeStyles(() => ({
 function Ingestion(): React.ReactElement {
     const classes = useStyles();
     const { path } = useRouteMatch();
-    const { metadatas } = useMetadata();
+    const { metadatas } = useMetadataStore();
     const { ingestionReset } = useIngest();
 
     const [options, setOptions] = useState<IngestionSidebarOption[]>([]);
@@ -38,10 +44,11 @@ function Ingestion(): React.ReactElement {
             });
 
             metadatas.forEach(({ file: { id, name, type } }) => {
+                const route = `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`;
                 updatedOptions.push({
                     title: 'Metadata',
                     subtitle: name,
-                    route: `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`,
+                    route,
                     enabled: false
                 });
             });
@@ -59,7 +66,8 @@ function Ingestion(): React.ReactElement {
         }
 
         if (url.includes(INGESTION_ROUTES_TYPE.METADATA)) {
-            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM) || pathname.includes(INGESTION_ROUTES_TYPE.METADATA);
+            if (url.includes('last=true')) return true;
+            allowChange = pathname.includes(INGESTION_ROUTES_TYPE.METADATA) || pathname.includes(INGESTION_ROUTES_TYPE.SUBJECT_ITEM);
         }
 
         if (allowChange) return true;

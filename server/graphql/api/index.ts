@@ -90,7 +90,20 @@ import {
     DiscardUploadedAssetVersionsInput,
     DiscardUploadedAssetVersionsResult,
     GetObjectChildrenInput,
-    GetObjectChildrenResult
+    GetObjectChildrenResult,
+    GetSourceObjectIdentiferInput,
+    GetSourceObjectIdentiferResult,
+    GetSystemObjectDetailsInput,
+    GetSystemObjectDetailsResult,
+    GetAssetDetailsForSystemObjectInput,
+    GetAssetDetailsForSystemObjectResult,
+    GetVersionsForSystemObjectInput,
+    GetVersionsForSystemObjectResult,
+    GetDetailsTabDataForObjectInput,
+    GetDetailsTabDataForObjectResult,
+    GetFilterViewDataResult,
+    UpdateObjectDetailsInput,
+    UpdateObjectDetailsResult
 } from '../../types/graphql';
 
 // Queries
@@ -123,6 +136,12 @@ import getObjectsForItem from './queries/unit/getObjectsForItem';
 import getProjectDocumentation from './queries/unit/getProjectDocumentation';
 import getIntermediaryFile from './queries/scene/getIntermediaryFile';
 import getObjectChildren from './queries/repository/getObjectChildren';
+import getSourceObjectIdentifer from './queries/systemobject/getSourceObjectIdentifer';
+import getSystemObjectDetails from './queries/systemobject/getSystemObjectDetails';
+import getAssetDetailsForSystemObject from './queries/systemobject/getAssetDetailsForSystemObject';
+import getVersionsForSystemObject from './queries/systemobject/getVersionsForSystemObject';
+import getDetailsTabDataForObject from './queries/systemobject/getDetailsTabDataForObject';
+import getFilterViewData from './queries/repository/getFilterViewData';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -139,6 +158,7 @@ import createVocabularySet from './mutations/vocabulary/createVocabularySet';
 import uploadAsset from './mutations/asset/uploadAsset';
 import ingestData from './mutations/ingestion/ingestData';
 import discardUploadedAssetVersions from './mutations/asset/discardUploadedAssetVersions';
+import updateObjectDetails from './mutations/systemobject/updateObjectDetails';
 
 import { Context } from '../../types/resolvers';
 
@@ -185,7 +205,14 @@ const allQueries = {
     getProjectDocumentation,
     getIntermediaryFile,
     discardUploadedAssetVersions,
-    getObjectChildren
+    getObjectChildren,
+    getSourceObjectIdentifer,
+    getSystemObjectDetails,
+    getAssetDetailsForSystemObject,
+    getVersionsForSystemObject,
+    getDetailsTabDataForObject,
+    getFilterViewData,
+    updateObjectDetails
 };
 
 type GraphQLRequest = {
@@ -508,6 +535,76 @@ class GraphQLApi {
 
     async getObjectChildren(input: GetObjectChildrenInput, context?: Context): Promise<GetObjectChildrenResult> {
         const operationName = 'getObjectChildren';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput, context?: Context): Promise<GetSourceObjectIdentiferResult> {
+        const operationName = 'getSourceObjectIdentifer';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getSystemObjectDetails(input: GetSystemObjectDetailsInput, context?: Context): Promise<GetSystemObjectDetailsResult> {
+        const operationName = 'getSystemObjectDetails';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput, context?: Context): Promise<GetAssetDetailsForSystemObjectResult> {
+        const operationName = 'getAssetDetailsForSystemObject';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getVersionsForSystemObject(input: GetVersionsForSystemObjectInput, context?: Context): Promise<GetVersionsForSystemObjectResult> {
+        const operationName = 'getVersionsForSystemObject';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput, context?: Context): Promise<GetDetailsTabDataForObjectResult> {
+        const operationName = 'getDetailsTabDataForObject';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getFilterViewData(context?: Context): Promise<GetFilterViewDataResult> {
+        const operationName = 'getFilterViewData';
+        const variables = {};
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async updateObjectDetails(input: UpdateObjectDetailsInput, context?: Context): Promise<UpdateObjectDetailsResult> {
+        const operationName = 'updateObjectDetails';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

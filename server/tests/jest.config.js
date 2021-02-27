@@ -21,9 +21,12 @@ module.exports = {
         // '**/tests/utils/parser/bulkIngestReader.test.ts',
 
         // Individual tests, left here to aid in quick, focused testing:
+        // '**/tests/auth/local/login.test.ts',
+        // '**/tests/auth/local/logout.test.ts',
         // '**/tests/collections/EdanCollection.test.ts',
         // '**/tests/db/dbcreation.test.ts',
         // '**/tests/db/composite/ObjectGraph.test.ts',
+        // '**/tests/db/composite/SubjectUnitIdentifier.test.ts',
         // '**/tests/navigation/impl/NavigationDB.test.ts',
         // '**/tests/storage/interface/AssetStorageAdapter.test.ts',
         // '**/tests/storage/impl/LocalStorage/OCFL.test.ts',

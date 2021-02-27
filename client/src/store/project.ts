@@ -1,3 +1,8 @@
+/**
+ * Project Store
+ *
+ * This store manages state for project used in Ingestion flow.
+ */
 import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 
@@ -18,10 +23,10 @@ type ProjectStore = {
     reset: () => void;
 };
 
-export const useProject = create<ProjectStore>((set: SetState<ProjectStore>, get: GetState<ProjectStore>) => ({
+export const useProjectStore = create<ProjectStore>((set: SetState<ProjectStore>, get: GetState<ProjectStore>) => ({
     projects: [],
     loading: false,
-    getSelectedProject: () => {
+    getSelectedProject: (): StateProject | undefined => {
         const { projects } = get();
         return lodash.find(projects, { selected: true });
     },

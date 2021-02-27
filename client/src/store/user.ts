@@ -1,3 +1,8 @@
+/**
+ * User Store
+ *
+ * This store manages state for user.
+ */
 import create, { SetState, GetState } from 'zustand';
 import { User, GetCurrentUserDocument } from '../types/graphql';
 import { apolloClient } from '../graphql';
@@ -6,13 +11,17 @@ import API, { AuthResponseType } from '../api';
 
 type UserStore = {
     user: User | null;
+    isAuthenticated: () => Promise<boolean>;
     initialize: () => Promise<void>;
     login: (email: string, password: string) => Promise<AuthResponseType>;
     logout: () => Promise<AuthResponseType>;
 };
 
-export const useUser = create<UserStore>((set: SetState<UserStore>, get: GetState<UserStore>) => ({
+export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: GetState<UserStore>) => ({
     user: null,
+    isAuthenticated: async (): Promise<boolean> => {
+        return !!(await getAuthenticatedUser());
+    },
     initialize: async () => {
         const { user } = get();
         if (!user) {
@@ -30,7 +39,14 @@ export const useUser = create<UserStore>((set: SetState<UserStore>, get: GetStat
             };
         }
 
-        const user = await getAuthenticatedUser();
+        const user: User | null = await getAuthenticatedUser();
+
+        if (!user) {
+            return {
+                success: false,
+                message: 'Failed to fetch user info'
+            };
+        }
         set({ user });
 
         return authResponse;

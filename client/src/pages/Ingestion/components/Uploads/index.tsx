@@ -1,28 +1,38 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/**
+ * Uploads
+ *
+ * This component renders the upload specific components for Ingestion UI.
+ */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import KeepAlive from 'react-activation';
-import { SidebarBottomNavigator, Loader } from '../../../../components';
-import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { Colors } from '../../../../theme';
-import UploadFilesPicker from './UploadFilesPicker';
-import UploadList from './UploadList';
-import UploadCompleteList from './UploadCompleteList';
 import { useHistory } from 'react-router';
 import { toast } from 'react-toastify';
-import { useVocabulary, useUpload, useMetadata } from '../../../../store';
+import { SidebarBottomNavigator } from '../../../../components';
+import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
+import { useMetadataStore, useUploadStore } from '../../../../store';
+import { Colors } from '../../../../theme';
+import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
+import UploadCompleteList from './UploadCompleteList';
+import UploadFilesPicker from './UploadFilesPicker';
+import UploadList from './UploadList';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
         display: 'flex',
-        flexDirection: 'column'
+        flex: 1,
+        flexDirection: 'column',
+        overflow: 'auto',
+        maxHeight: 'calc(100vh - 60px)'
     },
     content: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        padding: '40px 0px 0px 40px'
+        padding: 20,
+        paddingBottom: 0,
     },
     fileDrop: {
         display: 'flex',
@@ -54,30 +64,20 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
 function Uploads(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const [loadingVocabulary, setLoadingVocabulary] = useState(true);
     const [gettingAssetDetails, setGettingAssetDetails] = useState(false);
     const [discardingFiles, setDiscardingFiles] = useState(false);
-    const { completed, discardFiles } = useUpload();
-    const { updateMetadataSteps } = useMetadata();
-    const { updateVocabularyEntries } = useVocabulary();
+    const [completed, discardFiles] = useUploadStore(state => [state.completed, state.discardFiles]);
+    const updateMetadataSteps = useMetadataStore(state => state.updateMetadataSteps);
 
-    const fetchVocabularyEntries = async () => {
-        setLoadingVocabulary(true);
-        await updateVocabularyEntries();
-        setLoadingVocabulary(false);
-    };
-
-    useEffect(() => {
-        fetchVocabularyEntries();
-    }, []);
-
-    const onIngest = async () => {
+    const onIngest = async (): Promise<void> => {
         const nextStep = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.SUBJECT_ITEM);
         try {
             setGettingAssetDetails(true);
-            const { valid, selectedFiles } = await updateMetadataSteps();
+            const { valid, selectedFiles, error } = await updateMetadataSteps();
 
             setGettingAssetDetails(false);
+
+            if (error) return;
 
             if (!selectedFiles) {
                 toast.warn('Please select at least 1 file to ingest');
@@ -88,7 +88,7 @@ function Uploads(): React.ReactElement {
                 toast.warn('Please select valid combination of files');
                 return;
             }
-
+            toast.dismiss();
             history.push(nextStep);
         } catch {
             setGettingAssetDetails(false);
@@ -107,34 +107,68 @@ function Uploads(): React.ReactElement {
         }
     };
 
-    let content: React.ReactNode = <Loader minHeight='60vh' />;
+    return (
+        <Box className={classes.container}>
+            <Box className={classes.content}>
+                <KeepAlive>
+                    <AliveUploadComponents />
+                </KeepAlive>
+            </Box>
+            <SidebarBottomNavigator
+                leftLabel='Discard'
+                rightLabel='Ingest'
+                leftLoading={discardingFiles}
+                rightLoading={gettingAssetDetails}
+                onClickLeft={onDiscard}
+                onClickRight={onIngest}
+            />
+        </Box>
+    );
+}
 
-    if (!loadingVocabulary) {
-        content = (
-            <React.Fragment>
-                <UploadFilesPicker />
-                <UploadCompleteList />
-                <UploadList />
-            </React.Fragment>
-        );
-    }
+function AliveUploadComponents(): React.ReactElement {
+    const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [state.onProgressEvent, state.onSetCancelledEvent, state.onFailedEvent, state.onCompleteEvent]);
+
+    useEffect(() => {
+        const onProgress = data => {
+            const eventData: UploadProgressEvent = data.detail;
+            onProgressEvent(eventData);
+        };
+
+        UploadEvents.subscribe(UploadEventType.PROGRESS, onProgress);
+
+        const onSetCancelled = data => {
+            const eventData: UploadSetCancelEvent = data.detail;
+            onSetCancelledEvent(eventData);
+        };
+
+        UploadEvents.subscribe(UploadEventType.SET_CANCELLED, onSetCancelled);
+
+        const onFailed = data => {
+            const eventData: UploadFailedEvent = data.detail;
+            onFailedEvent(eventData);
+        };
+
+        UploadEvents.subscribe(UploadEventType.FAILED, onFailed);
+
+        const onComplete = data => {
+            const eventData: UploadCompleteEvent = data.detail;
+            onCompleteEvent(eventData);
+        };
+
+        UploadEvents.subscribe(UploadEventType.COMPLETE, onComplete);
+
+        return () => {
+            console.log('Thread closed');
+        };
+    }, []);
 
     return (
-        <KeepAlive>
-            <Box className={classes.container}>
-                <Box className={classes.content}>
-                    {content}
-                </Box>
-                <SidebarBottomNavigator
-                    leftLabel='Discard'
-                    rightLabel='Ingest'
-                    leftLoading={discardingFiles}
-                    rightLoading={gettingAssetDetails}
-                    onClickLeft={onDiscard}
-                    onClickRight={onIngest}
-                />
-            </Box>
-        </KeepAlive >
+        <React.Fragment>
+            <UploadFilesPicker />
+            <UploadCompleteList />
+            <UploadList />
+        </React.Fragment>
     );
 }
 

@@ -1,3 +1,9 @@
+/**
+ * Routes
+ *
+ * This file exports all the route, types associated with
+ * routing.
+ */
 export enum ROUTES {
     HOME = '/',
     LOGIN = '/login',
@@ -32,6 +38,16 @@ export const INGESTION_ROUTE = {
     TYPE: 'ingestion/:step',
     PARAMS: INGESTION_PARAMS_TYPE,
     ROUTES: INGESTION_ROUTES_TYPE
+};
+
+export enum REPOSITORY_ROUTES_TYPE {
+    VIEW = '',
+    DETAILS = 'details/:idSystemObject'
+}
+
+export const REPOSITORY_ROUTE = {
+    TYPE: 'repository',
+    ROUTES: REPOSITORY_ROUTES_TYPE
 };
 
 export function resolveRoute(route: string): string {

@@ -1,4 +1,4 @@
-FROM node:12-alpine AS base
+FROM node:12.18.4-alpine AS base
 # Add a work directory
 WORKDIR /app
 # Copy package.json for caching
@@ -10,16 +10,16 @@ FROM base AS client-builder
 # Remove server from client build
 RUN rm -rf server
 # Install dependencies (production mode) and build
-RUN yarn install --frozen-lockfile && yarn build
+RUN yarn install --frozen-lockfile && yarn build:prod
 
 FROM base AS server-builder
 # Remove client from server build
 RUN rm -rf client
 # Install dependencies (production mode) and build
-RUN yarn install --frozen-lockfile && yarn build
+RUN yarn install --frozen-lockfile && yarn build:prod
 
 # Client's production image
-FROM node:12-alpine AS client
+FROM node:12.18.4-alpine AS client
 # Add a work directory
 WORKDIR /app
 # Copy from client-builder
@@ -32,7 +32,7 @@ RUN npm i -g serve
 CMD serve -s . -l 3000
 
 # Server's production image
-FROM node:12-alpine AS server
+FROM node:12.18.4-alpine AS server
 # Add a work directory
 WORKDIR /app
 # Copy from server-builder
@@ -48,3 +48,6 @@ EXPOSE 80
 RUN rm /usr/share/nginx/html/*
 COPY nginx.conf /etc/nginx/nginx.conf
 CMD ["nginx", "-g", "daemon off;"]
+
+FROM solr:8 as solr
+COPY --chown=solr:solr ./server/config/solr/data/packrat/ /var/solr/data/packrat/

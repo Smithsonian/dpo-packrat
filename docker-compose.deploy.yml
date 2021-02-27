@@ -1,0 +1,128 @@
+version: "3.4"
+
+services:
+    packrat-client-dev:
+        container_name: packrat-client-dev
+        image: "packrat-client-dev:${IMAGE_TAG}"
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker/dev.Dockerfile
+            target: client
+        ports:
+            - $PACKRAT_CLIENT_PORT:3000
+        environment:
+            - NODE_ENV=$NODE_ENV
+            - REACT_APP_SERVER_ENDPOINT=$REACT_APP_SERVER_ENDPOINT
+
+    packrat-client-prod:
+      container_name: packrat-client-prod
+      image: "packrat-client-prod:${IMAGE_TAG}"
+      restart: always
+      build:
+            context: .
+            dockerfile: ./docker/prod.Dockerfile
+            target: client
+      ports:
+          - $PACKRAT_CLIENT_PORT:3000
+      environment:
+          - NODE_ENV=$NODE_ENV
+          - REACT_APP_SERVER_ENDPOINT=$REACT_APP_SERVER_ENDPOINT
+
+    packrat-server-dev:
+        container_name: packrat-server-dev
+        image: "packrat-server-dev:${IMAGE_TAG}"
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker/dev.Dockerfile
+            target: server
+        ports:
+            - $PACKRAT_SERVER_PORT:4000
+        environment:
+            - NODE_ENV=$NODE_ENV
+            - CLIENT_ENDPOINT=$CLIENT_ENDPOINT
+            - DATABASE_URL=$DATABASE_URL
+            - SESSION_SECRET=$SESSION_SECRET
+            - EDAN_AUTH_KEY=$EDAN_AUTH_KEY
+            - EDAN_SERVER=$EDAN_SERVER
+            - EDAN_APPID=$EDAN_APPID
+            - OCFL_STORAGE_ROOT=$OCFL_STORAGE_ROOT
+            - OCFL_STAGING_ROOT=$OCFL_STAGING_ROOT
+            - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
+
+    packrat-server-prod:
+        container_name: packrat-server-prod
+        image: "packrat-server-prod:${IMAGE_TAG}"
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker/prod.Dockerfile
+            target: server
+        ports:
+            - $PACKRAT_SERVER_PORT:4000
+        environment:
+            - NODE_ENV=$NODE_ENV
+            - CLIENT_ENDPOINT=$CLIENT_ENDPOINT
+            - DATABASE_URL=$DATABASE_URL
+            - SESSION_SECRET=$SESSION_SECRET
+            - EDAN_AUTH_KEY=$EDAN_AUTH_KEY
+            - EDAN_SERVER=$EDAN_SERVER
+            - EDAN_APPID=$EDAN_APPID
+            - OCFL_STORAGE_ROOT=$OCFL_STORAGE_ROOT
+            - OCFL_STAGING_ROOT=$OCFL_STAGING_ROOT
+            - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
+
+    packrat-db-dev:
+        container_name: packrat-db-dev
+        image: mariadb:10.5
+        restart: always
+        ports:
+            - $PACKRAT_DB_PORT:3306
+        environment:
+            - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+        volumes:
+            - ./server/db/sql:/app/
+
+    packrat-db-prod:
+        container_name: packrat-db-prod
+        image: mariadb:10.5
+        restart: always
+        ports:
+            - $PACKRAT_DB_PORT:3306
+        environment:
+            - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+        volumes:
+            - ./server/db/sql:/app/
+
+    packrat-solr-dev:
+        container_name: packrat-solr-dev
+        image: "packrat-solr-dev:${IMAGE_TAG}"
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker/solr.Dockerfile
+            target: solr
+        ports:
+            - $PACKRAT_SOLR_PORT:8983
+        environment:
+            - PACKRAT_SOLR_HOST=packrat-solr-dev
+            
+    packrat-solr-prod:
+        container_name: packrat-solr-prod
+        image: "packrat-solr-prod:${IMAGE_TAG}"
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker/solr.Dockerfile
+            target: solr
+        ports:
+            - $PACKRAT_SOLR_PORT:8983
+        environment:
+            - PACKRAT_SOLR_HOST=packrat-solr-prod
+
+networks:
+    default:
+        ipam:
+            config:
+                - subnet: 192.168.4.0/24

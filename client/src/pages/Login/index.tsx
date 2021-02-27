@@ -1,3 +1,8 @@
+/**
+ * Login
+ *
+ * This component renders Login page UI.
+ */
 import { Box, Container, Typography } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import { Field, Formik, FormikHelpers } from 'formik';
@@ -7,9 +12,9 @@ import { useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import LoginBackground from '../../assets/images/login-background.png';
 import { LoadingButton } from '../../components';
-import Config from '../../config';
+import Config, { Selectors } from '../../config';
 import { ROUTES } from '../../constants';
-import { useUser } from '../../store';
+import { useUserStore } from '../../store';
 import { actionOnKeyPress } from '../../utils/shared';
 import useLoginForm, { ILoginForm } from './hooks/useLoginForm';
 
@@ -92,7 +97,7 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
 function Login(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const { login } = useUser();
+    const { login } = useUserStore();
 
     const { initialValues, loginValidationSchema } = useLoginForm();
 
@@ -141,6 +146,7 @@ function Login(): React.ReactElement {
                         {({ handleSubmit, handleChange, values, isSubmitting, submitForm }) => (
                             <form className={classes.loginForm} onSubmit={handleSubmit}>
                                 <Field
+                                    id={Selectors.AUTH.EMAIL_FIELD}
                                     value={values.email}
                                     onChange={handleChange}
                                     className={classes.textFields}
@@ -153,6 +159,7 @@ function Login(): React.ReactElement {
                                     variant='outlined'
                                 />
                                 <Field
+                                    id={Selectors.AUTH.PASSWORD_FIELD}
                                     value={values.password}
                                     onChange={handleChange}
                                     className={classes.textFields}
@@ -165,11 +172,10 @@ function Login(): React.ReactElement {
                                     variant='outlined'
                                 />
                                 <LoadingButton
+                                    id={Selectors.AUTH.LOGIN_BUTTON}
                                     type='submit'
                                     className={classes.loginButton}
                                     disableElevation
-                                    variant='contained'
-                                    color='primary'
                                     onKeyDown={({ key }) => actionOnKeyPress(key, 'Enter', submitForm)}
                                     loading={isSubmitting}
                                 >
