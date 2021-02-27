@@ -15,7 +15,7 @@ export class ObjectGraphState {
     captureMethod: number | null = null;
     variantTypes: Map<number, boolean> | null = null;
     modelPurpose: number | null = null;
-    modelFileTypes: Map<number, boolean> | null = null;
+    modelFileType: number | null = null;
 }
 
 export class ObjectGraphDataEntryHierarchy {
@@ -119,12 +119,10 @@ export class ObjectGraphDataEntry {
                 }
             }
 
-            if (objectGraphState.modelFileTypes) {
-                for (const modelFileType of objectGraphState.modelFileTypes.keys()) {
-                    if (!this.childrenModelFileTypes.has(modelFileType)) {
-                        this.childrenModelFileTypes.set(modelFileType, true);
-                        retValue = true;
-                    }
+            if (objectGraphState.modelFileType) {
+                if (!this.childrenModelFileTypes.has(objectGraphState.modelFileType)) {
+                    this.childrenModelFileTypes.set(objectGraphState.modelFileType, true);
+                    retValue = true;
                 }
             }
         }

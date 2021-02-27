@@ -261,38 +261,81 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `idModel` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `DateCreated` datetime NOT NULL,
-  `idVCreationMethod` int(11) NOT NULL,
   `Master` boolean NOT NULL,
   `Authoritative` boolean NOT NULL,
+  `idVCreationMethod` int(11) NOT NULL,
   `idVModality` int(11) NOT NULL,
   `idVUnits` int(11) NOT NULL,
   `idVPurpose` int(11) NOT NULL,
+  `idVFileType` int(11) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
+  `idModelMetrics` int(11) NULL,
   PRIMARY KEY (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `ModelGeometryFile` (
-  `idModelGeometryFile` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `ModelMaterial` (
+  `idModelMaterial` int(11) NOT NULL AUTO_INCREMENT,
+  `idModelObject` int(11) NOT NULL,
+  `Name` varchar(255) NULL,
+  PRIMARY KEY (`idModelMaterial`),
+  KEY `Model_idModelObject` (`idModelObject`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `ModelMaterialChannel` (
+  `idModelMaterialChannel` int(11) NOT NULL AUTO_INCREMENT,
+  `idModelMaterial` int(11) NOT NULL,
+  `idVMaterialType` int(11) NULL,
+  `MaterialTypeOther` varchar(255) NULL,
+  `idModelMaterialUVMap` int(11) NULL,
+  `ChannelPosition` int(11) NULL,
+  `ChannelWidth` int(11) NULL,
+  `Scalar1` double DEFAULT NULL,
+  `Scalar2` double DEFAULT NULL,
+  `Scalar3` double DEFAULT NULL,
+  `Scalar4` double DEFAULT NULL,
+  PRIMARY KEY (`idModelMaterialChannel`),
+  KEY `ModelMaterialChannel_idModelMaterial` (`idModelMaterial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `ModelMaterialUVMap` (
+  `idModelMaterialUVMap` int(11) NOT NULL AUTO_INCREMENT,
   `idModel` int(11) NOT NULL,
   `idAsset` int(11) NOT NULL,
-  `idVModelFileType` int(11) NOT NULL,
-  `Roughness` double DEFAULT NULL,
-  `Metalness` double DEFAULT NULL,
-  `PointCount` int(11) DEFAULT NULL,
-  `FaceCount` int(11) DEFAULT NULL,
-  `IsWatertight` boolean DEFAULT NULL,
-  `HasNormals` boolean DEFAULT NULL,
-  `HasVertexColor` boolean DEFAULT NULL,
-  `HasUVSpace` boolean DEFAULT NULL,
+  `UVMapEdgeLength` int(11) NOT NULL,
+  PRIMARY KEY (`idModelMaterialUVMap`),
+  KEY `ModelUVMapFile_idModel` (`idModel`),
+  KEY `ModelUVMapFile_idAsset` (`idAsset`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `ModelMetrics` (
+  `idModelMetrics` int(11) NOT NULL AUTO_INCREMENT,
   `BoundingBoxP1X` double DEFAULT NULL,
   `BoundingBoxP1Y` double DEFAULT NULL,
   `BoundingBoxP1Z` double DEFAULT NULL,
   `BoundingBoxP2X` double DEFAULT NULL,
   `BoundingBoxP2Y` double DEFAULT NULL,
   `BoundingBoxP2Z` double DEFAULT NULL,
-  PRIMARY KEY (`idModelGeometryFile`),
-  KEY `ModelGeometryFile_idModel` (`idModel`),
-  KEY `ModelGeometryFile_idAsset` (`idAsset`)
+  `CountPoint` int(11) DEFAULT NULL,
+  `CountFace` int(11) DEFAULT NULL,
+  `CountColorChannel` int(11) DEFAULT NULL,
+  `CountTextureCoorinateChannel` int(11) DEFAULT NULL,
+  `HasBones` boolean DEFAULT NULL,
+  `HasFaceNormals` boolean DEFAULT NULL,
+  `HasTangents` boolean DEFAULT NULL,
+  `HasTextureCoordinates` boolean DEFAULT NULL,
+  `HasVertexNormals` boolean DEFAULT NULL,
+  `HasVertexColor` boolean DEFAULT NULL,
+  `IsManifold` boolean DEFAULT NULL,
+  `IsWatertight` boolean DEFAULT NULL,
+  PRIMARY KEY (`idModelMetrics`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `ModelObject` (
+  `idModelObject` int(11) NOT NULL AUTO_INCREMENT,
+  `idModel` int(11) NOT NULL,
+  `idModelMetrics` int(11) NULL,
+  PRIMARY KEY (`idModelObject`),
+  KEY `ModelObject_idModel` (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ModelProcessingAction` (
@@ -329,26 +372,6 @@ CREATE TABLE IF NOT EXISTS `ModelSceneXref` (
   PRIMARY KEY (`idModelSceneXref`),
   KEY `ModelSceneXref_idModel` (`idModel`),
   KEY `ModelSceneXref_idScene` (`idScene`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `ModelUVMapChannel` (
-  `idModelUVMapChannel` int(11) NOT NULL AUTO_INCREMENT,
-  `idModelUVMapFile` int(11) NOT NULL,
-  `ChannelPosition` int(11) NOT NULL,
-  `ChannelWidth` int(11) NOT NULL,
-  `idVUVMapType` int(11) NOT NULL,
-  PRIMARY KEY (`idModelUVMapChannel`),
-  KEY `ModelUVMapChannel_idModelUVMapFile` (`idModelUVMapFile`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `ModelUVMapFile` (
-  `idModelUVMapFile` int(11) NOT NULL AUTO_INCREMENT,
-  `idModelGeometryFile` int(11) NOT NULL,
-  `idAsset` int(11) NOT NULL,
-  `UVMapEdgeLength` int(11) NOT NULL,
-  PRIMARY KEY (`idModelUVMapFile`),
-  KEY `ModelUVMapFile_idModelGeometryFile` (`idModelGeometryFile`),
-  KEY `ModelUVMapFile_idAsset` (`idAsset`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `Project` (
@@ -819,26 +842,67 @@ ADD CONSTRAINT `fk_model_vocabulary4`
   REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_model_vocabulary5`
+  FOREIGN KEY (`idVFileType`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_model_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
   REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_model_modelmetrics1`
+  FOREIGN KEY (`idModelMetrics`)
+  REFERENCES `Packrat`.`ModelMetrics` (`idModelMetrics`)
+  ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `Packrat`.`ModelGeometryFile` 
-ADD CONSTRAINT `fk_modelgeometryfile_model1`
+ALTER TABLE `Packrat`.`ModelMaterial` 
+ADD CONSTRAINT `fk_modelmaterial_modelobject1`
+  FOREIGN KEY (`idModelObject`)
+  REFERENCES `Packrat`.`ModelObject` (`idModelObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `Packrat`.`ModelMaterialChannel` 
+ADD CONSTRAINT `fk_modelmaterialchannel_modelmaterial1`
+  FOREIGN KEY (`idModelMaterial`)
+  REFERENCES `Packrat`.`ModelMaterial` (`idModelMaterial`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_modelmaterialchannel_modelmaterialuvmap1`
+  FOREIGN KEY (`idModelMaterialUVMap`)
+  REFERENCES `Packrat`.`ModelMaterialUVMap` (`idModelMaterialUVMap`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_modelmaterialchannel_vocabulary1`
+  FOREIGN KEY (`idVMaterialType`)
+  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+  
+ALTER TABLE `Packrat`.`ModelMaterialUVMap` 
+ADD CONSTRAINT `fk_modelmaterialuvmap_model1`
   FOREIGN KEY (`idModel`)
   REFERENCES `Packrat`.`Model` (`idModel`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_modelgeometryfile_asset1`
+ADD CONSTRAINT `fk_modelmaterialuvmap_asset1`
   FOREIGN KEY (`idAsset`)
   REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `Packrat`.`ModelObject` 
+ADD CONSTRAINT `fk_modelobject_model1`
+  FOREIGN KEY (`idModel`)
+  REFERENCES `Packrat`.`Model` (`idModel`)
+  ON DELETE NO ACTION
   ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_modelgeometryfile_vocabulary1`
-  FOREIGN KEY (`idVModelFileType`)
-  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
+ADD CONSTRAINT `fk_modelobject_modelmetrics1`
+  FOREIGN KEY (`idModelMetrics`)
+  REFERENCES `Packrat`.`ModelMetrics` (`idModelMetrics`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
@@ -875,30 +939,6 @@ ADD CONSTRAINT `fk_modelscenexref_model1`
 ADD CONSTRAINT `fk_modelscenexref_scene1`
   FOREIGN KEY (`idScene`)
   REFERENCES `Packrat`.`Scene` (`idScene`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `Packrat`.`ModelUVMapChannel` 
-ADD CONSTRAINT `fk_modeluvmapchannel_modeluvmapfile1`
-  FOREIGN KEY (`idModelUVMapFile`)
-  REFERENCES `Packrat`.`ModelUVMapFile` (`idModelUVMapFile`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_modeluvmapchannel_vocabulary1`
-  FOREIGN KEY (`idVUVMapType`)
-  REFERENCES `Packrat`.`Vocabulary` (`idVocabulary`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-  
-ALTER TABLE `Packrat`.`ModelUVMapFile` 
-ADD CONSTRAINT `fk_modeluvmapfile_modelgeometryfile1`
-  FOREIGN KEY (`idModelGeometryFile`)
-  REFERENCES `Packrat`.`ModelGeometryFile` (`idModelGeometryFile`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_modeluvmapfile_asset1`
-  FOREIGN KEY (`idAsset`)
-  REFERENCES `Packrat`.`Asset` (`idAsset`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

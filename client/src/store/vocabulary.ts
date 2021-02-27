@@ -48,8 +48,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eModelModality,
                     eVocabularySetID.eModelUnits,
                     eVocabularySetID.eModelPurpose,
-                    eVocabularySetID.eModelGeometryFileModelFileType,
-                    eVocabularySetID.eModelUVMapChannelUVMapType,
+                    eVocabularySetID.eModelFileType,
+                    eVocabularySetID.eModelMaterialChannelMaterialType,
                     eVocabularySetID.eCaptureDataCaptureMethod
                 ]
             }

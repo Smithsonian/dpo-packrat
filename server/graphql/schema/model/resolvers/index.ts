@@ -1,9 +1,10 @@
 import Model from './types/Model';
-import ModelGeometryFile from './types/ModelGeometryFile';
+import ModelMaterial from './types/ModelMaterial';
+import ModelMaterialChannel from './types/ModelMaterialChannel';
+import ModelMaterialUVMap from './types/ModelMaterialUVMap';
+import ModelObject from './types/ModelObject';
 import ModelProcessingAction from './types/ModelProcessingAction';
 import ModelProcessingActionStep from './types/ModelProcessingActionStep';
-import ModelUVMapFile from './types/ModelUVMapFile';
-import ModelUVMapChannel from './types/ModelUVMapChannel';
 import getModel from './queries/getModel';
 import createModel from './mutations/createModel';
 
@@ -15,11 +16,12 @@ const resolvers = {
         createModel
     },
     Model,
-    ModelGeometryFile,
+    ModelMaterial,
+    ModelMaterialChannel,
+    ModelMaterialUVMap,
+    ModelObject,
     ModelProcessingAction,
     ModelProcessingActionStep,
-    ModelUVMapFile,
-    ModelUVMapChannel
 };
 
 export default resolvers;

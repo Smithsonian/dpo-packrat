@@ -20,9 +20,9 @@ export enum eVocabularySetID {
     eModelModality,
     eModelUnits,
     eModelPurpose,
-    eModelGeometryFileModelFileType,
+    eModelFileType,
     eModelProcessingActionStepActionMethod,
-    eModelUVMapChannelUVMapType,
+    eModelMaterialChannelMaterialType,
     eIdentifierIdentifierType,
     eIdentifierIdentifierTypeActor,
     eMetadataMetadataSource,
@@ -130,9 +130,9 @@ export class VocabularyCache {
                 case 'Model.Modality':                          eVocabSetEnum = eVocabularySetID.eModelModality; break;
                 case 'Model.Units':                             eVocabSetEnum = eVocabularySetID.eModelUnits; break;
                 case 'Model.Purpose':                           eVocabSetEnum = eVocabularySetID.eModelPurpose; break;
-                case 'ModelGeometryFile.ModelFileType':         eVocabSetEnum = eVocabularySetID.eModelGeometryFileModelFileType; break;
+                case 'Model.FileType':                          eVocabSetEnum = eVocabularySetID.eModelFileType; break;
                 case 'ModelProcessingActionStep.ActionMethod':  eVocabSetEnum = eVocabularySetID.eModelProcessingActionStepActionMethod; break;
-                case 'ModelUVMapChannel.UVMapType':             eVocabSetEnum = eVocabularySetID.eModelUVMapChannelUVMapType; break;
+                case 'ModelMaterialChannel.MaterialType':       eVocabSetEnum = eVocabularySetID.eModelMaterialChannelMaterialType; break;
                 case 'Identifier.IdentifierType':               eVocabSetEnum = eVocabularySetID.eIdentifierIdentifierType; break;
                 case 'Identifier.IdentifierTypeActor':          eVocabSetEnum = eVocabularySetID.eIdentifierIdentifierTypeActor; break;
                 case 'Metadata.MetadataSource':                 eVocabSetEnum = eVocabularySetID.eMetadataMetadataSource; break;
