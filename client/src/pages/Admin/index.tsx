@@ -75,7 +75,8 @@ function extractISOMonthDateYear(iso, materialUI = false): string | null {
 
 const useStyles = makeStyles({
     AdminPageContainer: {
-        display: 'flex'
+        display: 'flex',
+        font: 'var(--unnamed-font-style-normal) normal medium 11px/17px var(--unnamed-font-family-heebo)'
     },
     AdminUsersViewContainer: {
         display: 'flex',
@@ -105,7 +106,6 @@ const useStyles = makeStyles({
     UsersListDataGrid: {
         letterSpacing: '1.7px',
         color: '#8DABC4',
-        font: 'var(--unnamed-font-style-normal) normal medium 11px/17px var(--unnamed-font-family-heebo)',
         border: '1px solid #B7D2E5CC',
         borderRadius: '2px',
         backgroundColor: 'white'
@@ -148,7 +148,6 @@ const useStyles = makeStyles({
         borderRadius: '4px',
         border: '1px solid #B7D2E5CC',
         boxShadow: '0 0 0 15px #75B3DF',
-        font: 'var(--unnamed-font-style-normal) normal var(--unnamed-font-weight-normal) 13px/19px var(--unnamed-font-family-heebo)',
         letterSpacing: 'var(--unnamed-character-spacing-0)',
         textAlign: 'left',
         padding: '10px 20px',
@@ -200,7 +199,6 @@ const useStyles = makeStyles({
     },
     formField: {
         backgroundColor: 'white',
-        font: 'var(--unnamed-font-style-normal) normal var(--unnamed-font-weight-normal) 13px/19px var(--unnamed-font-family-heebo);',
         borderRadius: '4px'
     },
     AdminBreadCrumbsContainer: {
@@ -723,6 +721,7 @@ function AdminUsersView(): React.ReactElement {
     });
 
     let users: GetAllUsersResult['User'] = data?.getAllUsers?.User || [];
+    console.log(users);
 
     const handleActiveUpdate = newActive => {
         setActive(newActive);
