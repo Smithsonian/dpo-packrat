@@ -48,42 +48,50 @@
     
     <field name="CDVariantType" type="strings" indexed="true" stored="true" />
 
-    <!-- Model, ModelGeometryFile, ModelUVMapFile fields -->
+    <!-- Model, ModelObject, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap fields -->
     <field name="ModelCreationMethod" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="ModelMaster" type="boolean" indexed="true" stored="true" multiValued="false" />
     <field name="ModelAuthoritative" type="boolean" indexed="true" stored="true" multiValued="false" />
     <field name="ModelModality" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="ModelUnits" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="ModelPurpose" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelFileType" type="strings" indexed="true" stored="true" />
 
-    <field name="ModelFileType" type="string" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelRoughness" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelMetalness" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelPointCount" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelFaceCount" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelIsWatertight" type="boolean" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelHasNormals" type="boolean" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelHasVertexColor" type="boolean" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelHasUVSpace" type="boolean" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelBoundingBoxP1X" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelBoundingBoxP1Y" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelBoundingBoxP1Z" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelBoundingBoxP2X" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelBoundingBoxP2Y" type="pdouble" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelBoundingBoxP2Z" type="pdouble" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelMaterialName" type="strings" indexed="true" stored="true" />
+    <field name="ModelMaterialChannelType" type="strings" indexed="true" stored="true" />
+    <field name="ModelMaterialChannelTypeOther" type="strings" indexed="true" stored="true" />
+    <field name="ModelMaterialChannelPosition" type="pints" indexed="true" stored="true" />
+    <field name="ModelMaterialChannelWidth" type="pints" indexed="true" stored="true" />
+    <field name="ModelMaterialChannelValues" type="strings" indexed="true" stored="true" />
 
-    <field name="ModelUVMapEdgeLength" type="pint" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelChannelPosition" type="pint" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelChannelWidth" type="pint" indexed="true" stored="true" multiValued="true" />
-    <field name="ModelUVMapType" type="string" indexed="true" stored="true" multiValued="true" />
+    <field name="ModelMaterialUVMapEdgeLength" type="pints" indexed="true" stored="true" />
 
+    <field name="ModelMetricsBoundingBoxP1X" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelMetricsBoundingBoxP1Y" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelMetricsBoundingBoxP1Z" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelMetricsBoundingBoxP2X" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelMetricsBoundingBoxP2Y" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelMetricsBoundingBoxP2Z" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelMetricsCountPoint" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelMetricsCountFace" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelMetricsCountColorChannel" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelMetricsCountTextureCoorinateChannel" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelMetricsHasBones" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelMetricsHasFaceNormals" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelMetricsHasTangents" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelMetricsHasTextureCoordinates" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelMetricsHasVertexNormals" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelMetricsHasVertexColor" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelMetricsIsManifold" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelMetricsIsWatertight" type="booleans" indexed="true" stored="true"/>
+    
     <!-- Scene fields -->
     <field name="SceneIsOriented" type="boolean" indexed="true" stored="true" multiValued="false" />
     <field name="SceneHasBeenQCd" type="boolean" indexed="true" stored="true" multiValued="false" />
 
     <!-- Asset fields -->
-    <field name="AssetFileName" type="string" indexed="true" stored="true" multiValued="true" />
-    <field name="AssetFilePath" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="AssetFileName" type="strings" indexed="true" stored="true" />
+    <field name="AssetFilePath" type="strings" indexed="true" stored="true" />
     <field name="AssetType" type="string" indexed="true" stored="true" multiValued="false" />
 
     <!-- AssetVersion fields -->

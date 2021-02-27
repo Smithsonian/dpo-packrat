@@ -63,27 +63,31 @@ const getDetailsTabDataForObject = gql`
                 modality
                 purpose
                 units
-                dateCaptured
                 modelFileType
+                dateCaptured
                 uvMaps {
                     name
                     edgeLength
                     mapType
                 }
-                roughness
-                metalness
-                pointCount
-                faceCount
-                isWatertight
-                hasNormals
-                hasVertexColor
-                hasUVSpace
                 boundingBoxP1X
                 boundingBoxP1Y
                 boundingBoxP1Z
                 boundingBoxP2X
                 boundingBoxP2Y
                 boundingBoxP2Z
+                countPoint
+                countFace
+                countColorChannel
+                countTextureCoorinateChannel
+                hasBones
+                hasFaceNormals
+                hasTangents
+                hasTextureCoordinates
+                hasVertexNormals
+                hasVertexColor
+                isManifold
+                isWatertight
             }
             Scene {
                 Links

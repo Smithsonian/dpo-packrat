@@ -1,5 +1,5 @@
 import { Unit, Project, Subject, Item, SystemObjectIDType, Actor, Asset, AssetVersion, CaptureData, CaptureDataFile, IntermediaryFile,
-    Model, ModelGeometryFile, ProjectDocumentation, Scene, Stakeholder, eSystemObjectType } from '../..';
+    Model, ProjectDocumentation, Scene, Stakeholder, eSystemObjectType } from '../..';
 import { ObjectGraphDataEntry, eApplyGraphStateDirection, ObjectGraphState } from './ObjectGraphDataEntry';
 import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
 import * as CACHE from '../../../cache';
@@ -341,12 +341,7 @@ export class ObjectGraphDatabase {
                 const model: Model | null = await Model.fetch(systemObjectIDType.idObject);
                 if (model) {
                     objectGraphState.modelPurpose = model.idVPurpose;
-                    const modelGeometryFiles: ModelGeometryFile[] | null = await ModelGeometryFile.fetchFromModel(model.idModel);
-                    if (modelGeometryFiles && modelGeometryFiles.length > 0) {
-                        objectGraphState.modelFileTypes = new Map<number, boolean>();
-                        for (const modelGeometryFile of modelGeometryFiles)
-                            objectGraphState.modelFileTypes.set(modelGeometryFile.idVModelFileType, true);
-                    }
+                    objectGraphState.modelFileType = model.idVFileType;
                 } else
                     LOG.logger.error(`ObjectGraphDatabase.applyGraphData() Unable to load Model from ${systemObjectIDType}`);
             } break;

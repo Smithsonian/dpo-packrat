@@ -382,81 +382,117 @@ export class ReindexSolr {
         doc.ModelModality = await this.computeVocabulary(modelConstellation.model.idVModality);
         doc.ModelUnits = await this.computeVocabulary(modelConstellation.model.idVUnits);
         doc.ModelPurpose = await this.computeVocabulary(modelConstellation.model.idVPurpose);
+        doc.ModelFileType = await this.computeVocabulary(modelConstellation.model.idVFileType);
 
-        const modelFileTypeMap: Map<string, boolean> = new Map<string, boolean>();
-        const roughnessMap: Map<number, boolean> = new Map<number, boolean>();
-        const metalnessMap: Map<number, boolean> = new Map<number, boolean>();
-        const pointCountMap: Map<number, boolean> = new Map<number, boolean>();
-        const faceCountMap: Map<number, boolean> = new Map<number, boolean>();
-        const isWatertightMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const hasNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const hasVertexColorMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const hasUVSpaceMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const boundingBoxP1XMap: Map<number, boolean> = new Map<number, boolean>();
-        const boundingBoxP1YMap: Map<number, boolean> = new Map<number, boolean>();
-        const boundingBoxP1ZMap: Map<number, boolean> = new Map<number, boolean>();
-        const boundingBoxP2XMap: Map<number, boolean> = new Map<number, boolean>();
-        const boundingBoxP2YMap: Map<number, boolean> = new Map<number, boolean>();
-        const boundingBoxP2ZMap: Map<number, boolean> = new Map<number, boolean>();
-        const uvMapEdgeLengthMap: Map<number, boolean> = new Map<number, boolean>();
-        const channelPositionMap: Map<number, boolean> = new Map<number, boolean>();
-        const channelWidthMap: Map<number, boolean> = new Map<number, boolean>();
-        const uvMapTypeMap: Map<string, boolean> = new Map<string, boolean>();
+        const modelMaterialNameMap: Map<string, boolean> = new Map<string, boolean>();
+        const modelMaterialChannelTypeMap: Map<string, boolean> = new Map<string, boolean>();
+        const modelMaterialChannelTypeOtherMap: Map<string, boolean> = new Map<string, boolean>();
+        const modelMaterialChannelPositionMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMaterialChannelWidthMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMaterialChannelValuesMap: Map<string, boolean> = new Map<string, boolean>();
+        const modelMaterialUVMapEdgeLengthMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsBoundingBoxP1XMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsBoundingBoxP1YMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsBoundingBoxP1ZMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsBoundingBoxP2XMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsBoundingBoxP2YMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsBoundingBoxP2ZMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsCountPointMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsCountFaceMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsCountColorChannelMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsCountTextureCoorinateChannelMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelMetricsHasBonesMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMetricsHasFaceNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMetricsHasTangentsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMetricsHasTextureCoordinatesMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMetricsHasVertexNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMetricsHasVertexColorMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMetricsIsManifoldMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMetricsIsWatertightMap: Map<boolean, boolean> = new Map<boolean, boolean>();
 
-        if (modelConstellation.modelGeometryFiles) {
-            for (const modelGeometryFile of modelConstellation.modelGeometryFiles) {
-                const modelFileTypeWorker: string | undefined = await this.computeVocabulary(modelGeometryFile.idVModelFileType);
-                if (modelFileTypeWorker) modelFileTypeMap.set(modelFileTypeWorker, true);
-                if (modelGeometryFile.Roughness) roughnessMap.set(modelGeometryFile.Roughness, true);
-                if (modelGeometryFile.Metalness) metalnessMap.set(modelGeometryFile.Metalness, true);
-                if (modelGeometryFile.PointCount) pointCountMap.set(modelGeometryFile.PointCount, true);
-                if (modelGeometryFile.IsWatertight != null) isWatertightMap.set(modelGeometryFile.IsWatertight, true);
-                if (modelGeometryFile.HasNormals != null) hasNormalsMap.set(modelGeometryFile.HasNormals, true);
-                if (modelGeometryFile.HasVertexColor != null) hasVertexColorMap.set(modelGeometryFile.HasVertexColor, true);
-                if (modelGeometryFile.HasUVSpace != null) hasUVSpaceMap.set(modelGeometryFile.HasUVSpace, true);
-                if (modelGeometryFile.BoundingBoxP1X) boundingBoxP1XMap.set(modelGeometryFile.BoundingBoxP1X, true);
-                if (modelGeometryFile.BoundingBoxP1Y) boundingBoxP1YMap.set(modelGeometryFile.BoundingBoxP1Y, true);
-                if (modelGeometryFile.BoundingBoxP1Z) boundingBoxP1ZMap.set(modelGeometryFile.BoundingBoxP1Z, true);
-                if (modelGeometryFile.BoundingBoxP2X) boundingBoxP2XMap.set(modelGeometryFile.BoundingBoxP2X, true);
-                if (modelGeometryFile.BoundingBoxP2Y) boundingBoxP2YMap.set(modelGeometryFile.BoundingBoxP2Y, true);
-                if (modelGeometryFile.BoundingBoxP2Z) boundingBoxP2ZMap.set(modelGeometryFile.BoundingBoxP2Z, true);
+        if (modelConstellation.modelMaterials) {
+            for (const modelMaterial of modelConstellation.modelMaterials) {
+                if (modelMaterial.Name)
+                    modelMaterialNameMap.set(modelMaterial.Name, true);
             }
         }
 
-        if (modelConstellation.modelUVMapFiles) {
-            for (const modelUVMapFile of modelConstellation.modelUVMapFiles) {
-                uvMapEdgeLengthMap.set(modelUVMapFile.UVMapEdgeLength, true);
+        if (modelConstellation.modelMaterialChannels) {
+            for (const modelMaterialChannel of modelConstellation.modelMaterialChannels) {
+                if (modelMaterialChannel.idVMaterialType) {
+                    const materialType = await this.computeVocabulary(modelMaterialChannel.idVMaterialType);
+                    if (materialType)
+                        modelMaterialChannelTypeMap.set(materialType, true);
+                }
+                if (modelMaterialChannel.MaterialTypeOther) modelMaterialChannelTypeOtherMap.set(modelMaterialChannel.MaterialTypeOther, true);
+                if (modelMaterialChannel.ChannelPosition) modelMaterialChannelPositionMap.set(modelMaterialChannel.ChannelPosition, true);
+                if (modelMaterialChannel.ChannelWidth) modelMaterialChannelWidthMap.set(modelMaterialChannel.ChannelWidth, true);
+
+                let channelValue: string = [modelMaterialChannel.Scalar1, modelMaterialChannel.Scalar2,
+                    modelMaterialChannel.Scalar3, modelMaterialChannel.Scalar4].join(', ');
+                if (channelValue.indexOf(',') >= 0)
+                    channelValue = `(${channelValue})`;
+                if (channelValue) modelMaterialChannelValuesMap.set(channelValue, true);
             }
         }
 
-        if (modelConstellation.modelUVMapChannels) {
-            for (const modelUVMapChannel of modelConstellation.modelUVMapChannels) {
-                channelPositionMap.set(modelUVMapChannel.ChannelPosition, true);
-                channelWidthMap.set(modelUVMapChannel.ChannelWidth, true);
-                const uvMapTypeWorker: string | undefined = await this.computeVocabulary(modelUVMapChannel.idVUVMapType);
-                if (uvMapTypeWorker) uvMapTypeMap.set(uvMapTypeWorker, true);
-            }
+        if (modelConstellation.modelMaterialUVMaps) {
+            for (const modelMaterialUVMap of modelConstellation.modelMaterialUVMaps)
+                modelMaterialUVMapEdgeLengthMap.set(modelMaterialUVMap.UVMapEdgeLength, true);
         }
 
-        doc.ModelFileType           = [...modelFileTypeMap.keys()];
-        doc.ModelRoughness          = [...roughnessMap.keys()];
-        doc.ModelMetalness          = [...metalnessMap.keys()];
-        doc.ModelPointCount         = [...pointCountMap.keys()];
-        doc.ModelFaceCount          = [...faceCountMap.keys()];
-        doc.ModelIsWatertight       = [...isWatertightMap.keys()];
-        doc.ModelHasNormals         = [...hasNormalsMap.keys()];
-        doc.ModelHasVertexColor     = [...hasVertexColorMap.keys()];
-        doc.ModelHasUVSpace         = [...hasUVSpaceMap.keys()];
-        doc.ModelBoundingBoxP1X     = [...boundingBoxP1XMap.keys()];
-        doc.ModelBoundingBoxP1Y     = [...boundingBoxP1YMap.keys()];
-        doc.ModelBoundingBoxP1Z     = [...boundingBoxP1ZMap.keys()];
-        doc.ModelBoundingBoxP2X     = [...boundingBoxP2XMap.keys()];
-        doc.ModelBoundingBoxP2Y     = [...boundingBoxP2YMap.keys()];
-        doc.ModelBoundingBoxP2Z     = [...boundingBoxP2ZMap.keys()];
-        doc.ModelUVMapEdgeLength    = [...uvMapEdgeLengthMap.keys()];
-        doc.ModelChannelPosition    = [...channelPositionMap.keys()];
-        doc.ModelChannelWidth       = [...channelWidthMap.keys()];
-        doc.ModelUVMapType          = [...uvMapTypeMap.keys()];
+        const modelMetricsList: DBAPI.ModelMetrics[] = [];
+        if (modelConstellation.modelMetric)
+            modelMetricsList.push(modelConstellation.modelMetric);
+        if (modelConstellation.modelObjectMetrics)
+            modelMetricsList.push(...modelConstellation.modelObjectMetrics);
+        for (const modelMetrics of modelMetricsList) {
+            if (modelMetrics.BoundingBoxP1X) modelMetricsBoundingBoxP1XMap.set(modelMetrics.BoundingBoxP1X, true);
+            if (modelMetrics.BoundingBoxP1Y) modelMetricsBoundingBoxP1YMap.set(modelMetrics.BoundingBoxP1Y, true);
+            if (modelMetrics.BoundingBoxP1Z) modelMetricsBoundingBoxP1ZMap.set(modelMetrics.BoundingBoxP1Z, true);
+            if (modelMetrics.BoundingBoxP2X) modelMetricsBoundingBoxP2XMap.set(modelMetrics.BoundingBoxP2X, true);
+            if (modelMetrics.BoundingBoxP2Y) modelMetricsBoundingBoxP2YMap.set(modelMetrics.BoundingBoxP2Y, true);
+            if (modelMetrics.BoundingBoxP2Z) modelMetricsBoundingBoxP2ZMap.set(modelMetrics.BoundingBoxP2Z, true);
+            if (modelMetrics.CountPoint) modelMetricsCountPointMap.set(modelMetrics.CountPoint, true);
+            if (modelMetrics.CountFace) modelMetricsCountFaceMap.set(modelMetrics.CountFace, true);
+            if (modelMetrics.CountColorChannel) modelMetricsCountColorChannelMap.set(modelMetrics.CountColorChannel, true);
+            if (modelMetrics.CountTextureCoorinateChannel) modelMetricsCountTextureCoorinateChannelMap.set(modelMetrics.CountTextureCoorinateChannel, true);
+            if (modelMetrics.HasBones) modelMetricsHasBonesMap.set(modelMetrics.HasBones, true);
+            if (modelMetrics.HasFaceNormals) modelMetricsHasFaceNormalsMap.set(modelMetrics.HasFaceNormals, true);
+            if (modelMetrics.HasTangents) modelMetricsHasTangentsMap.set(modelMetrics.HasTangents, true);
+            if (modelMetrics.HasTextureCoordinates) modelMetricsHasTextureCoordinatesMap.set(modelMetrics.HasTextureCoordinates, true);
+            if (modelMetrics.HasVertexNormals) modelMetricsHasVertexNormalsMap.set(modelMetrics.HasVertexNormals, true);
+            if (modelMetrics.HasVertexColor) modelMetricsHasVertexColorMap.set(modelMetrics.HasVertexColor, true);
+            if (modelMetrics.IsManifold) modelMetricsIsManifoldMap.set(modelMetrics.IsManifold, true);
+            if (modelMetrics.IsWatertight) modelMetricsIsWatertightMap.set(modelMetrics.IsWatertight, true);
+
+        }
+        doc.ModelMaterialName = [...modelMaterialNameMap.keys()];
+        doc.modelMaterialChannelType = [...modelMaterialChannelTypeMap.keys()];
+        doc.modelMaterialChannelTypeOther = [...modelMaterialChannelTypeOtherMap.keys()];
+        doc.modelMaterialChannelPosition = [...modelMaterialChannelPositionMap.keys()];
+        doc.modelMaterialChannelWidth = [...modelMaterialChannelWidthMap.keys()];
+        doc.modelMaterialChannelValues = [...modelMaterialChannelValuesMap.keys()];
+        doc.modelMaterialUVMapEdgeLength = [...modelMaterialUVMapEdgeLengthMap.keys()];
+        doc.modelMetricsBoundingBoxP1X = [...modelMetricsBoundingBoxP1XMap.keys()];
+        doc.modelMetricsBoundingBoxP1Y = [...modelMetricsBoundingBoxP1YMap.keys()];
+        doc.modelMetricsBoundingBoxP1Z = [...modelMetricsBoundingBoxP1ZMap.keys()];
+        doc.modelMetricsBoundingBoxP2X = [...modelMetricsBoundingBoxP2XMap.keys()];
+        doc.modelMetricsBoundingBoxP2Y = [...modelMetricsBoundingBoxP2YMap.keys()];
+        doc.modelMetricsBoundingBoxP2Z = [...modelMetricsBoundingBoxP2ZMap.keys()];
+        doc.modelMetricsCountPoint = [...modelMetricsCountPointMap.keys()];
+        doc.modelMetricsCountFace = [...modelMetricsCountFaceMap.keys()];
+        doc.modelMetricsCountColorChannel = [...modelMetricsCountColorChannelMap.keys()];
+        doc.modelMetricsCountTextureCoorinateChannel = [...modelMetricsCountTextureCoorinateChannelMap.keys()];
+        doc.modelMetricsHasBones = [...modelMetricsHasBonesMap.keys()];
+        doc.modelMetricsHasFaceNormals = [...modelMetricsHasFaceNormalsMap.keys()];
+        doc.modelMetricsHasTangents = [...modelMetricsHasTangentsMap.keys()];
+        doc.modelMetricsHasTextureCoordinates = [...modelMetricsHasTextureCoordinatesMap.keys()];
+        doc.modelMetricsHasVertexNormals = [...modelMetricsHasVertexNormalsMap.keys()];
+        doc.modelMetricsHasVertexColor = [...modelMetricsHasVertexColorMap.keys()];
+        doc.modelMetricsIsManifold = [...modelMetricsIsManifoldMap.keys()];
+        doc.modelMetricsIsWatertight = [...modelMetricsIsWatertightMap.keys()];
+
         // TODO: should we turn multivalued metrics and bounding boxes into single valued attributes, and combine the multiple values in a meaningful way (e.g. add point and face counts, combine bounding boxes)
         return true;
     }
