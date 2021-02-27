@@ -72,6 +72,16 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
         }
     }
 
+    static async fetchAll(): Promise<IntermediaryFile[] | null> {
+        try {
+            return DBC.CopyArray<IntermediaryFileBase, IntermediaryFile>(
+                await DBC.DBConnection.prisma.intermediaryFile.findMany(), IntermediaryFile);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.IntermediaryFile.fetchAll', error);
+            return null;
+        }
+    }
+
     /**
      * Computes the array of IntermediaryFiles that are connected to any of the specified items.
      * IntermediaryFiles are connected to system objects; we examine those system objects which are in a *derived* relationship

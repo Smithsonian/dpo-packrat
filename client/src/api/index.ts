@@ -1,4 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * API (REST)
+ *
+ * This class is responsible for performing REST operations such
+ * as login and logout.
+ */
 enum API_ROUTES {
     LOGIN = 'auth/login',
     LOGOUT = 'auth/logout'

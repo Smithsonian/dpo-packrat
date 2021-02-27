@@ -1,21 +1,66 @@
 /* eslint-disable camelcase */
 import { Model as ModelBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
-import { SystemObject, SystemObjectBased } from '..';
+import { ModelObject, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap, ModelMetrics, SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
+export class ModelConstellation {
+    model: Model;
+    modelObjects: ModelObject[] | null;
+    modelMaterials: ModelMaterial[] | null;
+    modelMaterialChannels: ModelMaterialChannel[] | null;
+    modelMaterialUVMaps: ModelMaterialUVMap[] | null;
+    modelMetric: ModelMetrics | null;
+    modelObjectMetrics: ModelMetrics[] | null;
+
+    constructor(model: Model,
+        modelObjects: ModelObject[] | null, modelMaterials: ModelMaterial[] | null,
+        modelMaterialChannels: ModelMaterialChannel[] | null, modelMaterialUVMaps: ModelMaterialUVMap[] | null,
+        modelMetric: ModelMetrics | null, modelObjectMetrics: ModelMetrics[] | null) {
+        this.model = model;
+        this.modelObjects = modelObjects;
+        this.modelMaterials = modelMaterials;
+        this.modelMaterialChannels = modelMaterialChannels;
+        this.modelMaterialUVMaps = modelMaterialUVMaps;
+        this.modelMetric = modelMetric;
+        this.modelObjectMetrics = modelObjectMetrics;
+    }
+
+    static async fetch(idModel: number): Promise<ModelConstellation | null> {
+        const model: Model | null = await Model.fetch(idModel);
+        if (!model) {
+            LOG.logger.error(`ModelConstellation.fetch() unable to compute model from ${idModel}`);
+            return null;
+        }
+
+        const modelObjects: ModelObject[] | null = await ModelObject.fetchFromModel(idModel);
+        const modelMaterials: ModelMaterial[] | null = await ModelMaterial.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
+        const modelMaterialChannels: ModelMaterialChannel[] | null = await ModelMaterialChannel.fetchFromModelMaterials(modelMaterials || []);
+        const modelMaterialUVMaps: ModelMaterialUVMap[] | null = await ModelMaterialUVMap.fetchFromModel(idModel);
+        const modelMetric: ModelMetrics | null = model.idModelMetrics ? await ModelMetrics.fetch(model.idModelMetrics) : null;
+        const modelObjectMetrics: ModelMetrics[] | null = await ModelMetrics.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
+
+        return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels,
+            modelMaterialUVMaps, modelMetric, modelObjectMetrics);
+    }
+}
+
 export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemObjectBased {
     idModel!: number;
-    Authoritative!: boolean;
+    Name!: string;
     DateCreated!: Date;
-    idAssetThumbnail!: number | null;
+    Master!: boolean;
+    Authoritative!: boolean;
     idVCreationMethod!: number;
     idVModality!: number;
     idVPurpose!: number;
     idVUnits!: number;
-    Master!: boolean;
+    idVFileType!: number;
+    idAssetThumbnail!: number | null;
+    idModelMetrics!: number | null;
 
     private idAssetThumbnailOrig!: number | null;
+    private idModelMetricsOrig!: number | null;
 
     constructor(input: ModelBase) {
         super(input);
@@ -23,24 +68,30 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected updateCachedValues(): void {
         this.idAssetThumbnailOrig = this.idAssetThumbnail;
+        this.idModelMetricsOrig = this.idModelMetrics;
     }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits, idVPurpose, idAssetThumbnail } = this;
-            ({ idModel: this.idModel, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
+            const { Name, DateCreated, Master, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
+                idVFileType, idAssetThumbnail, idModelMetrics } = this;
+            ({ idModel: this.idModel, Name: this.Name, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
                 Master: this.Master, Authoritative: this.Authoritative, idVModality: this.idVModality,
-                idVUnits: this.idVUnits, idVPurpose: this.idVPurpose, idAssetThumbnail: this.idAssetThumbnail } =
+                idVUnits: this.idVUnits, idVPurpose: this.idVPurpose, idVFileType: this.idVFileType,
+                idAssetThumbnail: this.idAssetThumbnail, idModelMetrics: this.idModelMetrics } =
                 await DBC.DBConnection.prisma.model.create({
                     data: {
+                        Name,
                         DateCreated,
-                        Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
                         Master,
                         Authoritative,
+                        Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
                         Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality }, },
-                        Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
                         Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
+                        Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
+                        Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
                         Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
+                        ModelMetrics:                                   idModelMetrics ? { connect: { idModelMetrics }, } : undefined,
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
@@ -53,19 +104,22 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idModel, DateCreated, idVCreationMethod, Master, Authoritative, idVModality, idVUnits,
-                idVPurpose, idAssetThumbnail, idAssetThumbnailOrig } = this;
+            const { idModel, Name, DateCreated, Master, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
+                idVFileType, idAssetThumbnail, idModelMetrics, idAssetThumbnailOrig, idModelMetricsOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
                 where: { idModel, },
                 data: {
+                    Name,
                     DateCreated,
-                    Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
                     Master,
                     Authoritative,
+                    Vocabulary_Model_idVCreationMethodToVocabulary: { connect: { idVocabulary: idVCreationMethod }, },
                     Vocabulary_Model_idVModalityToVocabulary:       { connect: { idVocabulary: idVModality }, },
                     Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
                     Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
+                    Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
                     Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
+                    ModelMetrics:                                   idModelMetrics ? { connect: { idModelMetrics }, } : idModelMetricsOrig ? { disconnect: true, } : undefined,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -94,6 +148,16 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 await DBC.DBConnection.prisma.model.findOne({ where: { idModel, }, }), Model);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Model.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchAll(): Promise<Model[] | null> {
+        try {
+            return DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.model.findMany(), Model);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Model.fetchAll', error);
             return null;
         }
     }

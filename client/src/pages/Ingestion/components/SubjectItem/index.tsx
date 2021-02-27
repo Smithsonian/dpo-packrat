@@ -1,3 +1,8 @@
+/**
+ * SubjectItem
+ *
+ * This component renders the subject and item specific components for Ingestion UI.
+ */
 import { Box, Chip, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
@@ -5,8 +10,7 @@ import { Redirect, useHistory } from 'react-router';
 import { toast } from 'react-toastify';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
-import { useItem, useMetadata, useProject, useSubject, useVocabulary } from '../../../../store';
-import useIngest from '../../hooks/useIngest';
+import { useItemStore, useMetadataStore, useProjectStore, useSubjectStore, useVocabularyStore } from '../../../../store';
 import ItemList from './ItemList';
 import ProjectList from './ProjectList';
 import SearchList from './SearchList';
@@ -16,14 +20,17 @@ const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'auto',
+        maxHeight: 'calc(100vh - 60px)'
     },
     content: {
         display: 'flex',
         flex: 1,
-        width: '50vw',
+        width: '52vw',
         flexDirection: 'column',
-        padding: '40px 0px 0px 40px'
+        padding: 20,
+        paddingBottom: 0
     },
     filesLabel: {
         color: palette.primary.dark,
@@ -44,14 +51,13 @@ function SubjectItem(): React.ReactElement {
     const [itemError, setItemError] = useState(false);
     const [metadataStepLoading, setMetadataStepLoading] = useState(false);
 
-    const updateVocabularyEntries = useVocabulary(state => state.updateVocabularyEntries);
-    const subjects = useSubject(state => state.subjects);
-    const [projects, projectsLoading, getSelectedProject] = useProject(state => [state.projects, state.loading, state.getSelectedProject]);
-    const [itemsLoading, getSelectedItem] = useItem(state => [state.loading, state.getSelectedItem]);
-    const [metadatas, updateMetadataFolders] = useMetadata(state => [state.metadatas, state.updateMetadataFolders]);
+    const updateVocabularyEntries = useVocabularyStore(state => state.updateVocabularyEntries);
+    const subjects = useSubjectStore(state => state.subjects);
+    const [projects, projectsLoading, getSelectedProject] = useProjectStore(state => [state.projects, state.loading, state.getSelectedProject]);
+    const [itemsLoading, getSelectedItem] = useItemStore(state => [state.loading, state.getSelectedItem]);
+    const [metadatas, updateMetadataFolders, getMetadataInfo] = useMetadataStore(state => [state.metadatas, state.updateMetadataFolders, state.getMetadataInfo]);
 
     const selectedItem = getSelectedItem();
-    const { ingestionReset } = useIngest();
 
     useEffect(() => {
         if (subjects.length > 0) {
@@ -72,15 +78,6 @@ function SubjectItem(): React.ReactElement {
             }
         }
     }, [selectedItem]);
-
-    const onPrevious = async () => {
-        const isConfirmed = global.confirm('Are you sure you want to go to navigate away? changes might be lost');
-        if (isConfirmed) {
-            ingestionReset();
-            const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS);
-            history.push(nextRoute);
-        }
-    };
 
     const onNext = async (): Promise<void> => {
         let error: boolean = false;
@@ -125,8 +122,9 @@ function SubjectItem(): React.ReactElement {
         }
 
         const { file: { id, type } } = metadatas[0];
-        const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}`);
-
+        const { isLast } = getMetadataInfo(id);
+        const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
+        toast.dismiss();
         history.push(nextRoute);
     };
 
@@ -173,8 +171,8 @@ function SubjectItem(): React.ReactElement {
                 rightLoading={metadataStepLoading}
                 leftLabel='Previous'
                 rightLabel='Next'
+                leftRoute={resolveSubRoute(HOME_ROUTES.INGESTION, INGESTION_ROUTE.ROUTES.UPLOADS)}
                 onClickRight={onNext}
-                onClickLeft={onPrevious}
             />
         </Box>
     );

@@ -17,7 +17,9 @@ enum COLLECTION_TYPE {
 }
 
 enum NAVIGATION_TYPE {
-    DB = 'db'
+    DEFAULT,
+    DB = 'db',
+    SOLR = 'solr'
 }
 
 type ConfigType = {
@@ -78,7 +80,7 @@ const Config: ConfigType = {
         rootStaging: process.env.OCFL_STAGING_ROOT ? process.env.OCFL_STAGING_ROOT : /* istanbul ignore next */ './var/Storage/Staging'
     },
     navigation: {
-        type: NAVIGATION_TYPE.DB,
+        type: NAVIGATION_TYPE.SOLR,
     },
 };
 

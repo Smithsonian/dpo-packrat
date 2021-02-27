@@ -1,6 +1,6 @@
 export abstract class DBObject<T> {
-    protected abstract async createWorker(): Promise<boolean>;
-    protected abstract async updateWorker(): Promise<boolean>;
+    protected abstract createWorker(): Promise<boolean>;
+    protected abstract updateWorker(): Promise<boolean>;
     protected abstract updateCachedValues(): void;
 
     constructor(input: T) {

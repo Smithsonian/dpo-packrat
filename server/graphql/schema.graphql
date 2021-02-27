@@ -2,11 +2,14 @@ type Query {
   areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
   getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
+  getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
   getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
   getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
   getCurrentUser: GetCurrentUserResult!
+  getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
+  getFilterViewData: GetFilterViewDataResult!
   getIngestionItemsForSubjects(input: GetIngestionItemsForSubjectsInput!): GetIngestionItemsForSubjectsResult!
   getIngestionProjectsForSubjects(input: GetIngestionProjectsForSubjectsInput!): GetIngestionProjectsForSubjectsResult!
   getIntermediaryFile(input: GetIntermediaryFileInput!): GetIntermediaryFileResult!
@@ -19,11 +22,14 @@ type Query {
   getProject(input: GetProjectInput!): GetProjectResult!
   getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
   getScene(input: GetSceneInput!): GetSceneResult!
+  getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
+  getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
+  getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
   getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
@@ -99,6 +105,7 @@ type Mutation {
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
+  updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
   uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
 }
 
@@ -161,16 +168,79 @@ type IngestPhotogrammetry {
   identifiers: [IngestIdentifier!]!
 }
 
+type IngestUVMap {
+  name: String!
+  edgeLength: Int!
+  mapType: Int!
+}
+
+enum RelatedObjectType {
+  Source
+  Derived
+}
+
+type RelatedObject {
+  idSystemObject: Int!
+  name: String!
+  identifier: String
+  objectType: Int!
+}
+
 type IngestModel {
   idAssetVersion: Int!
+  systemCreated: Boolean!
+  master: Boolean!
   authoritative: Boolean!
-  dateCreated: String!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
   units: Int!
-  master: Boolean!
+  dateCaptured: String!
+  modelFileType: Int!
   directory: String!
+  identifiers: [IngestIdentifier!]!
+  uvMaps: [IngestUVMap!]!
+  sourceObjects: [RelatedObject!]!
+  roughness: Int
+  metalness: Int
+  pointCount: Int
+  faceCount: Int
+  isWatertight: Boolean
+  hasNormals: Boolean
+  hasVertexColor: Boolean
+  hasUVSpace: Boolean
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+}
+
+enum ReferenceModelAction {
+  Update
+  Ingest
+}
+
+type ReferenceModel {
+  idSystemObject: Int!
+  name: String!
+  fileSize: Int!
+  resolution: Int
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+  action: ReferenceModelAction!
+}
+
+type IngestScene {
+  idAssetVersion: Int!
+  systemCreated: Boolean!
+  identifiers: [IngestIdentifier!]!
+  referenceModels: [ReferenceModel!]!
 }
 
 type GetAssetVersionDetailResult {
@@ -180,6 +250,7 @@ type GetAssetVersionDetailResult {
   Item: Item
   CaptureDataPhoto: IngestPhotogrammetry
   Model: IngestModel
+  Scene: IngestScene
 }
 
 type GetAssetVersionsDetailsResult {
@@ -218,6 +289,7 @@ type Asset {
   FileName: String!
   FilePath: String!
   idAssetGroup: Int
+  idVAssetType: Int
   idSystemObject: Int
   StorageKey: String
   AssetGroup: AssetGroup
@@ -249,6 +321,7 @@ type AssetGroup {
 }
 
 input CreateCaptureDataInput {
+  Name: String!
   idVCaptureMethod: Int!
   DateCaptured: DateTime!
   Description: String!
@@ -304,6 +377,7 @@ type CaptureData {
   VCaptureMethod: Vocabulary
   CaptureDataFile: [CaptureDataFile]
   CaptureDataGroup: [CaptureDataGroup]
+  CaptureDataPhoto: [CaptureDataPhoto]
   SystemObject: SystemObject
 }
 
@@ -395,16 +469,75 @@ input IngestPhotogrammetryInput {
   identifiers: [IngestIdentifierInput!]!
 }
 
+input IngestUVMapInput {
+  name: String!
+  edgeLength: Int!
+  mapType: Int!
+}
+
+input RelatedObjectInput {
+  idSystemObject: Int!
+  name: String!
+  identifier: String
+  objectType: Int!
+}
+
 input IngestModelInput {
   idAssetVersion: Int!
+  systemCreated: Boolean!
+  master: Boolean!
   authoritative: Boolean!
-  dateCreated: String!
   creationMethod: Int!
   modality: Int!
   purpose: Int!
   units: Int!
-  master: Boolean!
+  dateCaptured: String!
+  modelFileType: Int!
   directory: String!
+  identifiers: [IngestIdentifierInput!]!
+  uvMaps: [IngestUVMapInput!]!
+  sourceObjects: [RelatedObjectInput!]!
+  roughness: Int
+  metalness: Int
+  pointCount: Int
+  faceCount: Int
+  isWatertight: Boolean
+  hasNormals: Boolean
+  hasVertexColor: Boolean
+  hasUVSpace: Boolean
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+}
+
+input ReferenceModelInput {
+  idSystemObject: Int!
+  name: String!
+  fileSize: Int!
+  resolution: Int
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+  action: ReferenceModelAction!
+}
+
+input IngestSceneInput {
+  idAssetVersion: Int!
+  systemCreated: Boolean!
+  identifiers: [IngestIdentifierInput!]!
+  referenceModels: [ReferenceModelInput!]!
+}
+
+input IngestOtherInput {
+  idAssetVersion: Int!
+  systemCreated: Boolean!
+  identifiers: [IngestIdentifierInput!]!
 }
 
 input IngestDataInput {
@@ -412,6 +545,9 @@ input IngestDataInput {
   project: IngestProjectInput!
   item: IngestItemInput!
   photogrammetry: [IngestPhotogrammetryInput!]!
+  model: [IngestModelInput!]!
+  scene: [IngestSceneInput!]!
+  other: [IngestOtherInput!]!
 }
 
 type IngestDataResult {
@@ -454,11 +590,13 @@ type LicenseAssignment {
 }
 
 input CreateModelInput {
+  Name: String!
   Authoritative: Boolean!
   idVCreationMethod: Int!
   idVModality: Int!
   idVPurpose: Int!
   idVUnits: Int!
+  idVFileType: Int!
   Master: Boolean!
   idAssetThumbnail: Int
 }
@@ -477,48 +615,92 @@ type GetModelResult {
 
 type Model {
   idModel: Int!
-  Authoritative: Boolean!
+  Name: String!
   DateCreated: DateTime!
-  idAssetThumbnail: Int
+  Master: Boolean!
+  Authoritative: Boolean!
   idVCreationMethod: Int!
   idVModality: Int!
   idVPurpose: Int!
   idVUnits: Int!
-  Master: Boolean!
-  AssetThumbnail: Asset
+  idVFileType: Int!
+  idAssetThumbnail: Int
+  idModelMetrics: Int
+  ModelConstellation: ModelConstellation
   VCreationMethod: Vocabulary
   VModality: Vocabulary
   VPurpose: Vocabulary
   VUnits: Vocabulary
-  ModelGeometryFile: [ModelGeometryFile]
+  VFileType: Vocabulary
+  AssetThumbnail: Asset
+  ModelMetrics: ModelMetrics
+  ModelObject: [ModelObject]
   ModelProcessingAction: [ModelProcessingAction]
   ModelSceneXref: [ModelSceneXref]
   SystemObject: SystemObject
 }
 
-type ModelGeometryFile {
-  idModelGeometryFile: Int!
-  idAsset: Int!
+type ModelMaterial {
+  idModelMaterial: Int!
+  idModelObject: Int!
+  Name: String
+  ModelObject: ModelObject!
+}
+
+type ModelMaterialChannel {
+  idModelMaterialChannel: Int!
+  idModelMaterial: Int!
+  idVMaterialType: Int
+  MaterialTypeOther: String
+  idModelMaterialUVMap: Int
+  ChannelPosition: Int
+  ChannelWidth: Int
+  Scalar1: Float
+  Scalar2: Float
+  Scalar3: Float
+  Scalar4: Float
+  ModelMaterial: ModelMaterial!
+  VMaterialType: Vocabulary
+  ModelMaterialUVMap: ModelMaterialUVMap
+}
+
+type ModelMaterialUVMap {
+  idModelMaterialUVMap: Int!
   idModel: Int!
-  idVModelFileType: Int!
+  idAsset: Int!
+  UVMapEdgeLength: Int!
+  Model: Model!
+  Asset: Asset!
+}
+
+type ModelMetrics {
+  idModelMetrics: Int!
   BoundingBoxP1X: Float
   BoundingBoxP1Y: Float
   BoundingBoxP1Z: Float
   BoundingBoxP2X: Float
   BoundingBoxP2Y: Float
   BoundingBoxP2Z: Float
-  FaceCount: Int
-  HasNormals: Boolean
-  HasUVSpace: Boolean
+  CountPoint: Int
+  CountFace: Int
+  CountColorChannel: Int
+  CountTextureCoorinateChannel: Int
+  HasBones: Boolean
+  HasFaceNormals: Boolean
+  HasTangents: Boolean
+  HasTextureCoordinates: Boolean
+  HasVertexNormals: Boolean
   HasVertexColor: Boolean
+  IsManifold: Boolean
   IsWatertight: Boolean
-  Metalness: Float
-  PointCount: Int
-  Roughness: Float
-  Asset: Asset
-  Model: Model
-  VModelFileType: Vocabulary
-  ModelUVMapFile: [ModelUVMapFile]
+}
+
+type ModelObject {
+  idModelObject: Int!
+  idModel: Int!
+  idModelMetrics: Int
+  Model: Model!
+  ModelMetrics: ModelMetrics
 }
 
 type ModelProcessingAction {
@@ -557,24 +739,14 @@ type ModelSceneXref {
   Scene: Scene
 }
 
-type ModelUVMapChannel {
-  idModelUVMapChannel: Int!
-  ChannelPosition: Int!
-  ChannelWidth: Int!
-  idModelUVMapFile: Int!
-  idVUVMapType: Int!
-  ModelUVMapFile: ModelUVMapFile
-  VUVMapType: Vocabulary
-}
-
-type ModelUVMapFile {
-  idModelUVMapFile: Int!
-  idAsset: Int!
-  idModelGeometryFile: Int!
-  UVMapEdgeLength: Int!
-  Asset: Asset
-  ModelGeometryFile: ModelGeometryFile
-  ModelUVMapChannel: [ModelUVMapChannel]
+type ModelConstellation {
+  Model: Model!
+  ModelObjects: [ModelObject]
+  ModelMaterials: [ModelMaterial]
+  ModelMaterialChannels: [ModelMaterialChannel]
+  ModelMaterialUVMaps: [ModelMaterialUVMap]
+  ModelMetric: ModelMetrics
+  ModelObjectMetrics: [ModelMetrics]
 }
 
 input PaginationInput {
@@ -587,7 +759,17 @@ input PaginationInput {
 input GetObjectChildrenInput {
   idRoot: Int!
   objectTypes: [Int!]!
+  objectsToDisplay: [Int!]!
   metadataColumns: [Int!]!
+  search: String!
+  units: [Int!]!
+  projects: [Int!]!
+  has: [Int!]!
+  missing: [Int!]!
+  captureMethod: [Int!]!
+  variantType: [Int!]!
+  modelPurpose: [Int!]!
+  modelFileType: [Int!]!
 }
 
 type NavigationResultEntry {
@@ -603,6 +785,11 @@ type GetObjectChildrenResult {
   error: String!
   entries: [NavigationResultEntry!]!
   metadataColumns: [Int!]!
+}
+
+type GetFilterViewDataResult {
+  units: [Unit!]!
+  projects: [Project!]!
 }
 
 input CreateSceneInput {
@@ -658,6 +845,379 @@ type IntermediaryFile {
   idAsset: Int!
   Asset: Asset
   SystemObject: SystemObject
+}
+
+input UpdateObjectDetailsInput {
+  idSystemObject: Int!
+  idObject: Int!
+  objectType: Int!
+  data: UpdateObjectDetailsDataInput!
+}
+
+input UnitDetailFieldsInput {
+  Abbreviation: String
+  ARKPrefix: String
+}
+
+input ProjectDetailFieldsInput {
+  Description: String
+}
+
+input SubjectDetailFieldsInput {
+  Altitude: Float
+  Latitude: Float
+  Longitude: Float
+  R0: Float
+  R1: Float
+  R2: Float
+  R3: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
+}
+
+input ItemDetailFieldsInput {
+  EntireSubject: Boolean
+  Altitude: Float
+  Latitude: Float
+  Longitude: Float
+  R0: Float
+  R1: Float
+  R2: Float
+  R3: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
+}
+
+input CaptureDataDetailFieldsInput {
+  captureMethod: Int
+  dateCaptured: DateTime
+  datasetType: Int
+  systemCreated: Boolean
+  description: String
+  cameraSettingUniform: Boolean
+  datasetFieldId: Int
+  itemPositionType: Int
+  itemPositionFieldId: Int
+  itemArrangementFieldId: Int
+  focusType: Int
+  lightsourceType: Int
+  backgroundRemovalMethod: Int
+  clusterType: Int
+  clusterGeometryFieldId: Int
+  folders: [IngestFolderInput!]!
+}
+
+input ModelDetailFieldsInput {
+  size: Int
+  master: Boolean
+  authoritative: Boolean
+  creationMethod: Int
+  modality: Int
+  purpose: Int
+  units: Int
+  dateCaptured: DateTime
+  modelFileType: Int
+  uvMaps: [IngestUVMapInput!]!
+  roughness: Int
+  metalness: Int
+  pointCount: Int
+  faceCount: Int
+  isWatertight: Boolean
+  hasNormals: Boolean
+  hasVertexColor: Boolean
+  hasUVSpace: Boolean
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+}
+
+input SceneDetailFieldsInput {
+  Links: [String!]!
+  AssetType: Int
+  Tours: Int
+  Annotation: Int
+  HasBeenQCd: Boolean
+  IsOriented: Boolean
+}
+
+input ProjectDocumentationDetailFieldsInput {
+  Description: String
+}
+
+input AssetDetailFieldsInput {
+  FilePath: String
+  AssetType: Int
+}
+
+input AssetVersionDetailFieldsInput {
+  Creator: String
+  DateCreated: DateTime
+  Ingested: Boolean
+  Version: Int
+  StorageSize: Int
+}
+
+input ActorDetailFieldsInput {
+  OrganizationName: String
+}
+
+input StakeholderDetailFieldsInput {
+  OrganizationName: String
+  MailingAddress: String
+  EmailAddress: String
+  PhoneNumberMobile: String
+  PhoneNumberOffice: String
+}
+
+input UpdateObjectDetailsDataInput {
+  Name: String
+  Retired: Boolean
+  Unit: UnitDetailFieldsInput
+  Project: ProjectDetailFieldsInput
+  Subject: SubjectDetailFieldsInput
+  Item: ItemDetailFieldsInput
+  CaptureData: CaptureDataDetailFieldsInput
+  Model: ModelDetailFieldsInput
+  Scene: SceneDetailFieldsInput
+  ProjectDocumentation: ProjectDocumentationDetailFieldsInput
+  Asset: AssetDetailFieldsInput
+  AssetVersion: AssetVersionDetailFieldsInput
+  Actor: ActorDetailFieldsInput
+  Stakeholder: StakeholderDetailFieldsInput
+}
+
+type UpdateObjectDetailsResult {
+  success: Boolean!
+}
+
+input GetDetailsTabDataForObjectInput {
+  idSystemObject: Int!
+  objectType: Int!
+}
+
+type UnitDetailFields {
+  Abbreviation: String
+  ARKPrefix: String
+}
+
+type ProjectDetailFields {
+  Description: String
+}
+
+type SubjectDetailFields {
+  Altitude: Float
+  Latitude: Float
+  Longitude: Float
+  R0: Float
+  R1: Float
+  R2: Float
+  R3: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
+}
+
+type ItemDetailFields {
+  EntireSubject: Boolean
+  Altitude: Float
+  Latitude: Float
+  Longitude: Float
+  R0: Float
+  R1: Float
+  R2: Float
+  R3: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
+}
+
+type CaptureDataDetailFields {
+  captureMethod: Int
+  dateCaptured: String
+  datasetType: Int
+  systemCreated: Boolean
+  description: String
+  cameraSettingUniform: Boolean
+  datasetFieldId: Int
+  itemPositionType: Int
+  itemPositionFieldId: Int
+  itemArrangementFieldId: Int
+  focusType: Int
+  lightsourceType: Int
+  backgroundRemovalMethod: Int
+  clusterType: Int
+  clusterGeometryFieldId: Int
+  folders: [IngestFolder!]!
+}
+
+type ModelDetailFields {
+  size: Int
+  master: Boolean
+  authoritative: Boolean
+  creationMethod: Int
+  modality: Int
+  purpose: Int
+  units: Int
+  dateCaptured: String
+  modelFileType: Int
+  uvMaps: [IngestUVMap!]!
+  boundingBoxP1X: Float
+  boundingBoxP1Y: Float
+  boundingBoxP1Z: Float
+  boundingBoxP2X: Float
+  boundingBoxP2Y: Float
+  boundingBoxP2Z: Float
+  countPoint: Int
+  countFace: Int
+  countColorChannel: Int
+  countTextureCoorinateChannel: Int
+  hasBones: Boolean
+  hasFaceNormals: Boolean
+  hasTangents: Boolean
+  hasTextureCoordinates: Boolean
+  hasVertexNormals: Boolean
+  hasVertexColor: Boolean
+  isManifold: Boolean
+  isWatertight: Boolean
+}
+
+type SceneDetailFields {
+  Links: [String!]!
+  AssetType: Int
+  Tours: Int
+  Annotation: Int
+  HasBeenQCd: Boolean
+  IsOriented: Boolean
+}
+
+type IntermediaryFileDetailFields {
+  idIntermediaryFile: Int!
+}
+
+type ProjectDocumentationDetailFields {
+  Description: String
+}
+
+type AssetDetailFields {
+  FilePath: String
+  AssetType: Int
+}
+
+type AssetVersionDetailFields {
+  Creator: String
+  DateCreated: DateTime
+  Ingested: Boolean
+  Version: Int
+  StorageSize: Int
+}
+
+type ActorDetailFields {
+  OrganizationName: String
+}
+
+type StakeholderDetailFields {
+  OrganizationName: String
+  MailingAddress: String
+  EmailAddress: String
+  PhoneNumberMobile: String
+  PhoneNumberOffice: String
+}
+
+type GetDetailsTabDataForObjectResult {
+  Unit: UnitDetailFields
+  Project: ProjectDetailFields
+  Subject: SubjectDetailFields
+  Item: ItemDetailFields
+  CaptureData: CaptureDataDetailFields
+  Model: ModelDetailFields
+  Scene: SceneDetailFields
+  IntermediaryFile: IntermediaryFileDetailFields
+  ProjectDocumentation: ProjectDocumentationDetailFields
+  Asset: AssetDetailFields
+  AssetVersion: AssetVersionDetailFields
+  Actor: ActorDetailFields
+  Stakeholder: StakeholderDetailFields
+}
+
+input GetSystemObjectDetailsInput {
+  idSystemObject: Int!
+}
+
+type RepositoryPath {
+  idSystemObject: Int!
+  name: String!
+  objectType: Int!
+}
+
+type GetSystemObjectDetailsResult {
+  idObject: Int!
+  name: String!
+  retired: Boolean!
+  objectType: Int!
+  allowed: Boolean!
+  publishedState: String!
+  thumbnail: String
+  identifiers: [IngestIdentifier!]!
+  objectAncestors: [[RepositoryPath!]!]!
+  sourceObjects: [RelatedObject!]!
+  derivedObjects: [RelatedObject!]!
+  unit: RepositoryPath
+  project: RepositoryPath
+  subject: RepositoryPath
+  item: RepositoryPath
+}
+
+input GetSourceObjectIdentiferInput {
+  idSystemObjects: [Int!]!
+}
+
+type SourceObjectIdentifier {
+  idSystemObject: Int!
+  identifier: String
+}
+
+type GetSourceObjectIdentiferResult {
+  sourceObjectIdentifiers: [SourceObjectIdentifier!]!
+}
+
+type AssetDetail {
+  idSystemObject: Int!
+  name: String!
+  path: String!
+  assetType: Int!
+  version: Int!
+  dateCreated: DateTime!
+  size: Int!
+}
+
+input GetAssetDetailsForSystemObjectInput {
+  idSystemObject: Int!
+}
+
+type GetAssetDetailsForSystemObjectResult {
+  assetDetails: [AssetDetail!]!
+}
+
+type DetailVersion {
+  idSystemObject: Int!
+  version: Int!
+  name: String!
+  creator: String!
+  dateCreated: DateTime!
+  size: Int!
+}
+
+input GetVersionsForSystemObjectInput {
+  idSystemObject: Int!
+}
+
+type GetVersionsForSystemObjectResult {
+  versions: [DetailVersion!]!
 }
 
 type SystemObject {

@@ -1,12 +1,19 @@
-import React from 'react';
-import { TableContainer, Table, TableCell, TableHead, TableRow, TableBody, Checkbox } from '@material-ui/core';
+/**
+ * ItemList
+ *
+ * This component renders item list used in SubjectItem component.
+ */
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
+import { grey } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
-import { useItem, StateItem, defaultItem } from '../../../../store';
-import { FaRegCircle, FaDotCircle } from 'react-icons/fa';
-import { grey, blue } from '@material-ui/core/colors';
+import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
+import { MdCheckBox, MdCheckBoxOutlineBlank } from 'react-icons/md';
+import { RiCheckboxBlankCircleLine, RiRecordCircleFill } from 'react-icons/ri';
+import { defaultItem, StateItem, useItemStore } from '../../../../store';
+import { palette } from '../../../../theme';
 
-const useStyles = makeStyles(({ palette, spacing, typography }) => ({
+const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => ({
     container: {
         maxHeight: '18vh',
         backgroundColor: palette.background.paper
@@ -14,9 +21,13 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
     headerText: {
         position: 'sticky',
         top: 0,
+        fontSize: '0.8em',
         backgroundColor: palette.background.paper,
         color: palette.primary.contrastText,
-        zIndex: 10
+        zIndex: 10,
+        [breakpoints.down('lg')]: {
+            padding: '5px 16px',
+        }
     },
     body: {
         overflow: 'auto'
@@ -28,14 +39,16 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
         marginTop: spacing(4)
     },
     selected: {
-        cursor: 'pointer'
+        cursor: 'pointer',
+        marginTop: 4
     },
     nameInput: {
         width: '100%',
         border: 'none',
         outline: 'none',
         padding: '0px 2px',
-        fontSize: typography.body1.fontSize,
+        fontSize: '1em',
+        fontWeight: typography.fontWeightRegular,
         fontFamily: typography.fontFamily,
         '&:focus': {
             outline: 'none',
@@ -51,7 +64,7 @@ const useStyles = makeStyles(({ palette, spacing, typography }) => ({
 
 function ItemList(): React.ReactElement {
     const classes = useStyles();
-    const [items, updateItem] = useItem(state => [state.items, state.updateItem]);
+    const [items, updateItem] = useItemStore(state => [state.items, state.updateItem]);
 
     const selectableHeaderStyle = {
         width: 100
@@ -143,23 +156,21 @@ function ItemListItem(props: ItemListItemProps) {
 
     const cellStyle = {
         width: 100,
-        padding: '8px 16px'
     };
 
     return (
         <TableRow>
             <TableCell style={cellStyle} align='center'>
-                {!selected && <FaRegCircle className={classes.selected} onClick={() => onUpdateSelected(true)} size={24} color={grey[500]} />}
-                {selected && <FaDotCircle className={classes.selected} onClick={() => onUpdateSelected(false)} size={24} color={blue[500]} />}
+                {!selected && <RiCheckboxBlankCircleLine className={classes.selected} onClick={() => onUpdateSelected(true)} size={20} color={grey[400]} />}
+                {selected && <RiRecordCircleFill className={classes.selected} onClick={() => onUpdateSelected(false)} size={20} color={palette.primary.main} />}
             </TableCell>
             {children}
             <TableCell style={cellStyle} align='center'>
                 {isDefaultItem ? (
-                    <Checkbox
-                        checked={entireSubject}
-                        onChange={({ target }) => onUpdateEntireSubject(target.checked)}
-                        color='primary'
-                    />
+                    <>
+                        {!entireSubject && <MdCheckBoxOutlineBlank className={classes.selected} onClick={() => onUpdateEntireSubject(true)} size={20} color={grey[500]} />}
+                        {entireSubject && <MdCheckBox className={classes.selected} onClick={() => onUpdateEntireSubject(false)} size={20} color={palette.primary.main} />}
+                    </>
                 ) : entireSubject ? 'Yes' : 'No'}
             </TableCell>
         </TableRow>

@@ -25,11 +25,10 @@
   "main": "build/index.js",
   "typings": "build/index.d.ts",
   "scripts": {
-    "start": "yarn build && concurrently 'yarn build:watch' 'yarn server:start'",
+    "start": "nodemon --ignore var/ --exec yarn ts-node index.ts -e ts,js,json,graphql",
     "start:prod": "node build/index.js",
-    "server:start": "nodemon build/index.js",
-    "build": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
-    "build:watch": "tsc --watch",
+    "build:dev": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
+    "build:prod": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
     "clean": "rm -rf node_modules/ build/",
     "generate": "graphql-codegen --config ./graphql/codegen.yml",
     "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
@@ -41,7 +40,6 @@
     "dropdb": "sh -c \"exec mysql -u root -p$MYSQL_ROOT_PASSWORD -e 'DROP DATABASE IF EXISTS `Packrat`'\""
   },
   "dependencies": {
-    "@dpo-packrat/common": "0.4.0",
     "@prisma/client": "2.4.1",
     "@types/express": "4.17.8",
     "@types/lodash": "4.14.161",
@@ -64,7 +62,9 @@
     "node-stream-zip": "1.11.3",
     "passport": "0.4.1",
     "passport-local": "1.0.0",
+    "solr-client": "0.7.1",
     "supertest": "4.0.2",
+    "ts-node": "9.1.1",
     "uuid": "8.3.0",
     "winston": "3.3.3"
   },
@@ -77,7 +77,12 @@
     "@prisma/cli": "2.4.1",
     "@types/jest": "26.0.13",
     "@types/node-fetch": "2.5.7",
+    "@types/solr-client": "0.7.4",
     "jest": "24.9.0",
     "ts-jest": "24.3.0"
+  },
+  "volta": {
+    "node": "12.18.4",
+    "yarn": "1.22.4"
   }
 }

@@ -1,12 +1,17 @@
+/**
+ * Colors
+ *
+ * Custom colors used in client.
+ */
 import { eSystemObjectType } from '../types/server';
 
-type ColorMap = { [key: string]: string };
+type ColorMap = Record<string, string>;
 
 type ColorType = {
     defaults: ColorMap;
     sidebarOptions: ColorMap;
     upload: ColorMap;
-    repository: { [key in number | string]: ColorMap };
+    repository: Record<string | number, ColorMap>;
 };
 
 const Colors: ColorType = {
@@ -51,6 +56,46 @@ const Colors: ColorType = {
             light: '#ffeee9'
         },
         [eSystemObjectType.eCaptureData]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eModel]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eScene]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eIntermediaryFile]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eProjectDocumentation]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eAsset]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eAssetVersion]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eActor]: {
+            dark: '#a5d6a7',
+            regular: '#edf7ed',
+            light: '#f6fbf6'
+        },
+        [eSystemObjectType.eStakeholder]: {
             dark: '#a5d6a7',
             regular: '#edf7ed',
             light: '#f6fbf6'

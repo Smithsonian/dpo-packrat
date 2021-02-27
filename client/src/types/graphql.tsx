@@ -21,11 +21,14 @@ export type Query = {
     areCameraSettingsUniform: AreCameraSettingsUniformResult;
     getAccessPolicy: GetAccessPolicyResult;
     getAsset: GetAssetResult;
+    getAssetDetailsForSystemObject: GetAssetDetailsForSystemObjectResult;
     getAssetVersionsDetails: GetAssetVersionsDetailsResult;
     getCaptureData: GetCaptureDataResult;
     getCaptureDataPhoto: GetCaptureDataPhotoResult;
     getContentsForAssetVersions: GetContentsForAssetVersionsResult;
     getCurrentUser: GetCurrentUserResult;
+    getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
+    getFilterViewData: GetFilterViewDataResult;
     getIngestionItemsForSubjects: GetIngestionItemsForSubjectsResult;
     getIngestionProjectsForSubjects: GetIngestionProjectsForSubjectsResult;
     getIntermediaryFile: GetIntermediaryFileResult;
@@ -38,147 +41,143 @@ export type Query = {
     getProject: GetProjectResult;
     getProjectDocumentation: GetProjectDocumentationResult;
     getScene: GetSceneResult;
+    getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
     getSubject: GetSubjectResult;
     getSubjectsForUnit: GetSubjectsForUnitResult;
+    getSystemObjectDetails: GetSystemObjectDetailsResult;
     getUnit: GetUnitResult;
     getUploadedAssetVersion: GetUploadedAssetVersionResult;
     getUser: GetUserResult;
+    getVersionsForSystemObject: GetVersionsForSystemObjectResult;
     getVocabulary: GetVocabularyResult;
     getVocabularyEntries: GetVocabularyEntriesResult;
     getWorkflow: GetWorkflowResult;
     searchIngestionSubjects: SearchIngestionSubjectsResult;
 };
 
-
 export type QueryAreCameraSettingsUniformArgs = {
     input: AreCameraSettingsUniformInput;
 };
-
 
 export type QueryGetAccessPolicyArgs = {
     input: GetAccessPolicyInput;
 };
 
-
 export type QueryGetAssetArgs = {
     input: GetAssetInput;
 };
 
+export type QueryGetAssetDetailsForSystemObjectArgs = {
+    input: GetAssetDetailsForSystemObjectInput;
+};
 
 export type QueryGetAssetVersionsDetailsArgs = {
     input: GetAssetVersionsDetailsInput;
 };
 
-
 export type QueryGetCaptureDataArgs = {
     input: GetCaptureDataInput;
 };
-
 
 export type QueryGetCaptureDataPhotoArgs = {
     input: GetCaptureDataPhotoInput;
 };
 
-
 export type QueryGetContentsForAssetVersionsArgs = {
     input: GetContentsForAssetVersionsInput;
 };
 
+export type QueryGetDetailsTabDataForObjectArgs = {
+    input: GetDetailsTabDataForObjectInput;
+};
 
 export type QueryGetIngestionItemsForSubjectsArgs = {
     input: GetIngestionItemsForSubjectsInput;
 };
 
-
 export type QueryGetIngestionProjectsForSubjectsArgs = {
     input: GetIngestionProjectsForSubjectsInput;
 };
-
 
 export type QueryGetIntermediaryFileArgs = {
     input: GetIntermediaryFileInput;
 };
 
-
 export type QueryGetItemArgs = {
     input: GetItemInput;
 };
-
 
 export type QueryGetItemsForSubjectArgs = {
     input: GetItemsForSubjectInput;
 };
 
-
 export type QueryGetLicenseArgs = {
     input: GetLicenseInput;
 };
-
 
 export type QueryGetModelArgs = {
     input: GetModelInput;
 };
 
-
 export type QueryGetObjectChildrenArgs = {
     input: GetObjectChildrenInput;
 };
-
 
 export type QueryGetObjectsForItemArgs = {
     input: GetObjectsForItemInput;
 };
 
-
 export type QueryGetProjectArgs = {
     input: GetProjectInput;
 };
-
 
 export type QueryGetProjectDocumentationArgs = {
     input: GetProjectDocumentationInput;
 };
 
-
 export type QueryGetSceneArgs = {
     input: GetSceneInput;
 };
 
+export type QueryGetSourceObjectIdentiferArgs = {
+    input: GetSourceObjectIdentiferInput;
+};
 
 export type QueryGetSubjectArgs = {
     input: GetSubjectInput;
 };
 
-
 export type QueryGetSubjectsForUnitArgs = {
     input: GetSubjectsForUnitInput;
 };
 
+export type QueryGetSystemObjectDetailsArgs = {
+    input: GetSystemObjectDetailsInput;
+};
 
 export type QueryGetUnitArgs = {
     input: GetUnitInput;
 };
 
-
 export type QueryGetUserArgs = {
     input: GetUserInput;
 };
 
+export type QueryGetVersionsForSystemObjectArgs = {
+    input: GetVersionsForSystemObjectInput;
+};
 
 export type QueryGetVocabularyArgs = {
     input: GetVocabularyInput;
 };
 
-
 export type QueryGetVocabularyEntriesArgs = {
     input: GetVocabularyEntriesInput;
 };
 
-
 export type QueryGetWorkflowArgs = {
     input: GetWorkflowInput;
 };
-
 
 export type QuerySearchIngestionSubjectsArgs = {
     input: SearchIngestionSubjectsInput;
@@ -192,7 +191,6 @@ export type GetAccessPolicyResult = {
     __typename?: 'GetAccessPolicyResult';
     AccessPolicy?: Maybe<AccessPolicy>;
 };
-
 
 export type AccessAction = {
     __typename?: 'AccessAction';
@@ -242,7 +240,6 @@ export type AccessRole = {
     AccessAction?: Maybe<Array<Maybe<AccessAction>>>;
 };
 
-
 export type Mutation = {
     __typename?: 'Mutation';
     createCaptureData: CreateCaptureDataResult;
@@ -258,74 +255,65 @@ export type Mutation = {
     createVocabularySet: CreateVocabularySetResult;
     discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
     ingestData: IngestDataResult;
+    updateObjectDetails: UpdateObjectDetailsResult;
     uploadAsset: UploadAssetResult;
 };
-
 
 export type MutationCreateCaptureDataArgs = {
     input: CreateCaptureDataInput;
 };
 
-
 export type MutationCreateCaptureDataPhotoArgs = {
     input: CreateCaptureDataPhotoInput;
 };
-
 
 export type MutationCreateItemArgs = {
     input: CreateItemInput;
 };
 
-
 export type MutationCreateModelArgs = {
     input: CreateModelInput;
 };
-
 
 export type MutationCreateProjectArgs = {
     input: CreateProjectInput;
 };
 
-
 export type MutationCreateSceneArgs = {
     input: CreateSceneInput;
 };
-
 
 export type MutationCreateSubjectArgs = {
     input: CreateSubjectInput;
 };
 
-
 export type MutationCreateUnitArgs = {
     input: CreateUnitInput;
 };
-
 
 export type MutationCreateUserArgs = {
     input: CreateUserInput;
 };
 
-
 export type MutationCreateVocabularyArgs = {
     input: CreateVocabularyInput;
 };
-
 
 export type MutationCreateVocabularySetArgs = {
     input: CreateVocabularySetInput;
 };
 
-
 export type MutationDiscardUploadedAssetVersionsArgs = {
     input: DiscardUploadedAssetVersionsInput;
 };
-
 
 export type MutationIngestDataArgs = {
     input: IngestDataInput;
 };
 
+export type MutationUpdateObjectDetailsArgs = {
+    input: UpdateObjectDetailsInput;
+};
 
 export type MutationUploadAssetArgs = {
     file: Scalars['Upload'];
@@ -397,17 +385,84 @@ export type IngestPhotogrammetry = {
     identifiers: Array<IngestIdentifier>;
 };
 
+export type IngestUvMap = {
+    __typename?: 'IngestUVMap';
+    name: Scalars['String'];
+    edgeLength: Scalars['Int'];
+    mapType: Scalars['Int'];
+};
+
+export enum RelatedObjectType {
+    Source = 'Source',
+    Derived = 'Derived'
+}
+
+export type RelatedObject = {
+    __typename?: 'RelatedObject';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
+    objectType: Scalars['Int'];
+};
+
 export type IngestModel = {
     __typename?: 'IngestModel';
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    master: Scalars['Boolean'];
     authoritative: Scalars['Boolean'];
-    dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
     modality: Scalars['Int'];
     purpose: Scalars['Int'];
     units: Scalars['Int'];
-    master: Scalars['Boolean'];
+    dateCaptured: Scalars['String'];
+    modelFileType: Scalars['Int'];
     directory: Scalars['String'];
+    identifiers: Array<IngestIdentifier>;
+    uvMaps: Array<IngestUvMap>;
+    sourceObjects: Array<RelatedObject>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export enum ReferenceModelAction {
+    Update = 'Update',
+    Ingest = 'Ingest'
+}
+
+export type ReferenceModel = {
+    __typename?: 'ReferenceModel';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    fileSize: Scalars['Int'];
+    resolution?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    action: ReferenceModelAction;
+};
+
+export type IngestScene = {
+    __typename?: 'IngestScene';
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifier>;
+    referenceModels: Array<ReferenceModel>;
 };
 
 export type GetAssetVersionDetailResult = {
@@ -418,6 +473,7 @@ export type GetAssetVersionDetailResult = {
     Item?: Maybe<Item>;
     CaptureDataPhoto?: Maybe<IngestPhotogrammetry>;
     Model?: Maybe<IngestModel>;
+    Scene?: Maybe<IngestScene>;
 };
 
 export type GetAssetVersionsDetailsResult = {
@@ -462,6 +518,7 @@ export type Asset = {
     FileName: Scalars['String'];
     FilePath: Scalars['String'];
     idAssetGroup?: Maybe<Scalars['Int']>;
+    idVAssetType?: Maybe<Scalars['Int']>;
     idSystemObject?: Maybe<Scalars['Int']>;
     StorageKey?: Maybe<Scalars['String']>;
     AssetGroup?: Maybe<AssetGroup>;
@@ -495,6 +552,7 @@ export type AssetGroup = {
 };
 
 export type CreateCaptureDataInput = {
+    Name: Scalars['String'];
     idVCaptureMethod: Scalars['Int'];
     DateCaptured: Scalars['DateTime'];
     Description: Scalars['String'];
@@ -555,6 +613,7 @@ export type CaptureData = {
     VCaptureMethod?: Maybe<Vocabulary>;
     CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
     CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
+    CaptureDataPhoto?: Maybe<Array<Maybe<CaptureDataPhoto>>>;
     SystemObject?: Maybe<SystemObject>;
 };
 
@@ -649,16 +708,75 @@ export type IngestPhotogrammetryInput = {
     identifiers: Array<IngestIdentifierInput>;
 };
 
+export type IngestUvMapInput = {
+    name: Scalars['String'];
+    edgeLength: Scalars['Int'];
+    mapType: Scalars['Int'];
+};
+
+export type RelatedObjectInput = {
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    identifier?: Maybe<Scalars['String']>;
+    objectType: Scalars['Int'];
+};
+
 export type IngestModelInput = {
     idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    master: Scalars['Boolean'];
     authoritative: Scalars['Boolean'];
-    dateCreated: Scalars['String'];
     creationMethod: Scalars['Int'];
     modality: Scalars['Int'];
     purpose: Scalars['Int'];
     units: Scalars['Int'];
-    master: Scalars['Boolean'];
+    dateCaptured: Scalars['String'];
+    modelFileType: Scalars['Int'];
     directory: Scalars['String'];
+    identifiers: Array<IngestIdentifierInput>;
+    uvMaps: Array<IngestUvMapInput>;
+    sourceObjects: Array<RelatedObjectInput>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export type ReferenceModelInput = {
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    fileSize: Scalars['Int'];
+    resolution?: Maybe<Scalars['Int']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    action: ReferenceModelAction;
+};
+
+export type IngestSceneInput = {
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifierInput>;
+    referenceModels: Array<ReferenceModelInput>;
+};
+
+export type IngestOtherInput = {
+    idAssetVersion: Scalars['Int'];
+    systemCreated: Scalars['Boolean'];
+    identifiers: Array<IngestIdentifierInput>;
 };
 
 export type IngestDataInput = {
@@ -666,6 +784,9 @@ export type IngestDataInput = {
     project: IngestProjectInput;
     item: IngestItemInput;
     photogrammetry: Array<IngestPhotogrammetryInput>;
+    model: Array<IngestModelInput>;
+    scene: Array<IngestSceneInput>;
+    other: Array<IngestOtherInput>;
 };
 
 export type IngestDataResult = {
@@ -713,11 +834,13 @@ export type LicenseAssignment = {
 };
 
 export type CreateModelInput = {
+    Name: Scalars['String'];
     Authoritative: Scalars['Boolean'];
     idVCreationMethod: Scalars['Int'];
     idVModality: Scalars['Int'];
     idVPurpose: Scalars['Int'];
     idVUnits: Scalars['Int'];
+    idVFileType: Scalars['Int'];
     Master: Scalars['Boolean'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
 };
@@ -739,49 +862,97 @@ export type GetModelResult = {
 export type Model = {
     __typename?: 'Model';
     idModel: Scalars['Int'];
-    Authoritative: Scalars['Boolean'];
+    Name: Scalars['String'];
     DateCreated: Scalars['DateTime'];
-    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    Master: Scalars['Boolean'];
+    Authoritative: Scalars['Boolean'];
     idVCreationMethod: Scalars['Int'];
     idVModality: Scalars['Int'];
     idVPurpose: Scalars['Int'];
     idVUnits: Scalars['Int'];
-    Master: Scalars['Boolean'];
-    AssetThumbnail?: Maybe<Asset>;
+    idVFileType: Scalars['Int'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idModelMetrics?: Maybe<Scalars['Int']>;
+    ModelConstellation?: Maybe<ModelConstellation>;
     VCreationMethod?: Maybe<Vocabulary>;
     VModality?: Maybe<Vocabulary>;
     VPurpose?: Maybe<Vocabulary>;
     VUnits?: Maybe<Vocabulary>;
-    ModelGeometryFile?: Maybe<Array<Maybe<ModelGeometryFile>>>;
+    VFileType?: Maybe<Vocabulary>;
+    AssetThumbnail?: Maybe<Asset>;
+    ModelMetrics?: Maybe<ModelMetrics>;
+    ModelObject?: Maybe<Array<Maybe<ModelObject>>>;
     ModelProcessingAction?: Maybe<Array<Maybe<ModelProcessingAction>>>;
     ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
     SystemObject?: Maybe<SystemObject>;
 };
 
-export type ModelGeometryFile = {
-    __typename?: 'ModelGeometryFile';
-    idModelGeometryFile: Scalars['Int'];
-    idAsset: Scalars['Int'];
+export type ModelMaterial = {
+    __typename?: 'ModelMaterial';
+    idModelMaterial: Scalars['Int'];
+    idModelObject: Scalars['Int'];
+    Name?: Maybe<Scalars['String']>;
+    ModelObject: ModelObject;
+};
+
+export type ModelMaterialChannel = {
+    __typename?: 'ModelMaterialChannel';
+    idModelMaterialChannel: Scalars['Int'];
+    idModelMaterial: Scalars['Int'];
+    idVMaterialType?: Maybe<Scalars['Int']>;
+    MaterialTypeOther?: Maybe<Scalars['String']>;
+    idModelMaterialUVMap?: Maybe<Scalars['Int']>;
+    ChannelPosition?: Maybe<Scalars['Int']>;
+    ChannelWidth?: Maybe<Scalars['Int']>;
+    Scalar1?: Maybe<Scalars['Float']>;
+    Scalar2?: Maybe<Scalars['Float']>;
+    Scalar3?: Maybe<Scalars['Float']>;
+    Scalar4?: Maybe<Scalars['Float']>;
+    ModelMaterial: ModelMaterial;
+    VMaterialType?: Maybe<Vocabulary>;
+    ModelMaterialUVMap?: Maybe<ModelMaterialUvMap>;
+};
+
+export type ModelMaterialUvMap = {
+    __typename?: 'ModelMaterialUVMap';
+    idModelMaterialUVMap: Scalars['Int'];
     idModel: Scalars['Int'];
-    idVModelFileType: Scalars['Int'];
+    idAsset: Scalars['Int'];
+    UVMapEdgeLength: Scalars['Int'];
+    Model: Model;
+    Asset: Asset;
+};
+
+export type ModelMetrics = {
+    __typename?: 'ModelMetrics';
+    idModelMetrics: Scalars['Int'];
     BoundingBoxP1X?: Maybe<Scalars['Float']>;
     BoundingBoxP1Y?: Maybe<Scalars['Float']>;
     BoundingBoxP1Z?: Maybe<Scalars['Float']>;
     BoundingBoxP2X?: Maybe<Scalars['Float']>;
     BoundingBoxP2Y?: Maybe<Scalars['Float']>;
     BoundingBoxP2Z?: Maybe<Scalars['Float']>;
-    FaceCount?: Maybe<Scalars['Int']>;
-    HasNormals?: Maybe<Scalars['Boolean']>;
-    HasUVSpace?: Maybe<Scalars['Boolean']>;
+    CountPoint?: Maybe<Scalars['Int']>;
+    CountFace?: Maybe<Scalars['Int']>;
+    CountColorChannel?: Maybe<Scalars['Int']>;
+    CountTextureCoorinateChannel?: Maybe<Scalars['Int']>;
+    HasBones?: Maybe<Scalars['Boolean']>;
+    HasFaceNormals?: Maybe<Scalars['Boolean']>;
+    HasTangents?: Maybe<Scalars['Boolean']>;
+    HasTextureCoordinates?: Maybe<Scalars['Boolean']>;
+    HasVertexNormals?: Maybe<Scalars['Boolean']>;
     HasVertexColor?: Maybe<Scalars['Boolean']>;
+    IsManifold?: Maybe<Scalars['Boolean']>;
     IsWatertight?: Maybe<Scalars['Boolean']>;
-    Metalness?: Maybe<Scalars['Float']>;
-    PointCount?: Maybe<Scalars['Int']>;
-    Roughness?: Maybe<Scalars['Float']>;
-    Asset?: Maybe<Asset>;
-    Model?: Maybe<Model>;
-    VModelFileType?: Maybe<Vocabulary>;
-    ModelUVMapFile?: Maybe<Array<Maybe<ModelUvMapFile>>>;
+};
+
+export type ModelObject = {
+    __typename?: 'ModelObject';
+    idModelObject: Scalars['Int'];
+    idModel: Scalars['Int'];
+    idModelMetrics?: Maybe<Scalars['Int']>;
+    Model: Model;
+    ModelMetrics?: Maybe<ModelMetrics>;
 };
 
 export type ModelProcessingAction = {
@@ -823,26 +994,15 @@ export type ModelSceneXref = {
     Scene?: Maybe<Scene>;
 };
 
-export type ModelUvMapChannel = {
-    __typename?: 'ModelUVMapChannel';
-    idModelUVMapChannel: Scalars['Int'];
-    ChannelPosition: Scalars['Int'];
-    ChannelWidth: Scalars['Int'];
-    idModelUVMapFile: Scalars['Int'];
-    idVUVMapType: Scalars['Int'];
-    ModelUVMapFile?: Maybe<ModelUvMapFile>;
-    VUVMapType?: Maybe<Vocabulary>;
-};
-
-export type ModelUvMapFile = {
-    __typename?: 'ModelUVMapFile';
-    idModelUVMapFile: Scalars['Int'];
-    idAsset: Scalars['Int'];
-    idModelGeometryFile: Scalars['Int'];
-    UVMapEdgeLength: Scalars['Int'];
-    Asset?: Maybe<Asset>;
-    ModelGeometryFile?: Maybe<ModelGeometryFile>;
-    ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
+export type ModelConstellation = {
+    __typename?: 'ModelConstellation';
+    Model: Model;
+    ModelObjects?: Maybe<Array<Maybe<ModelObject>>>;
+    ModelMaterials?: Maybe<Array<Maybe<ModelMaterial>>>;
+    ModelMaterialChannels?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
+    ModelMaterialUVMaps?: Maybe<Array<Maybe<ModelMaterialUvMap>>>;
+    ModelMetric?: Maybe<ModelMetrics>;
+    ModelObjectMetrics?: Maybe<Array<Maybe<ModelMetrics>>>;
 };
 
 export type PaginationInput = {
@@ -855,7 +1015,17 @@ export type PaginationInput = {
 export type GetObjectChildrenInput = {
     idRoot: Scalars['Int'];
     objectTypes: Array<Scalars['Int']>;
+    objectsToDisplay: Array<Scalars['Int']>;
     metadataColumns: Array<Scalars['Int']>;
+    search: Scalars['String'];
+    units: Array<Scalars['Int']>;
+    projects: Array<Scalars['Int']>;
+    has: Array<Scalars['Int']>;
+    missing: Array<Scalars['Int']>;
+    captureMethod: Array<Scalars['Int']>;
+    variantType: Array<Scalars['Int']>;
+    modelPurpose: Array<Scalars['Int']>;
+    modelFileType: Array<Scalars['Int']>;
 };
 
 export type NavigationResultEntry = {
@@ -873,6 +1043,12 @@ export type GetObjectChildrenResult = {
     error: Scalars['String'];
     entries: Array<NavigationResultEntry>;
     metadataColumns: Array<Scalars['Int']>;
+};
+
+export type GetFilterViewDataResult = {
+    __typename?: 'GetFilterViewDataResult';
+    units: Array<Unit>;
+    projects: Array<Project>;
 };
 
 export type CreateSceneInput = {
@@ -934,6 +1110,402 @@ export type IntermediaryFile = {
     idAsset: Scalars['Int'];
     Asset?: Maybe<Asset>;
     SystemObject?: Maybe<SystemObject>;
+};
+
+export type UpdateObjectDetailsInput = {
+    idSystemObject: Scalars['Int'];
+    idObject: Scalars['Int'];
+    objectType: Scalars['Int'];
+    data: UpdateObjectDetailsDataInput;
+};
+
+export type UnitDetailFieldsInput = {
+    Abbreviation?: Maybe<Scalars['String']>;
+    ARKPrefix?: Maybe<Scalars['String']>;
+};
+
+export type ProjectDetailFieldsInput = {
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type SubjectDetailFieldsInput = {
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type ItemDetailFieldsInput = {
+    EntireSubject?: Maybe<Scalars['Boolean']>;
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type CaptureDataDetailFieldsInput = {
+    captureMethod?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['DateTime']>;
+    datasetType?: Maybe<Scalars['Int']>;
+    systemCreated?: Maybe<Scalars['Boolean']>;
+    description?: Maybe<Scalars['String']>;
+    cameraSettingUniform?: Maybe<Scalars['Boolean']>;
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    folders: Array<IngestFolderInput>;
+};
+
+export type ModelDetailFieldsInput = {
+    size?: Maybe<Scalars['Int']>;
+    master?: Maybe<Scalars['Boolean']>;
+    authoritative?: Maybe<Scalars['Boolean']>;
+    creationMethod?: Maybe<Scalars['Int']>;
+    modality?: Maybe<Scalars['Int']>;
+    purpose?: Maybe<Scalars['Int']>;
+    units?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['DateTime']>;
+    modelFileType?: Maybe<Scalars['Int']>;
+    uvMaps: Array<IngestUvMapInput>;
+    roughness?: Maybe<Scalars['Int']>;
+    metalness?: Maybe<Scalars['Int']>;
+    pointCount?: Maybe<Scalars['Int']>;
+    faceCount?: Maybe<Scalars['Int']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+    hasNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    hasUVSpace?: Maybe<Scalars['Boolean']>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+};
+
+export type SceneDetailFieldsInput = {
+    Links: Array<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+    Tours?: Maybe<Scalars['Int']>;
+    Annotation?: Maybe<Scalars['Int']>;
+    HasBeenQCd?: Maybe<Scalars['Boolean']>;
+    IsOriented?: Maybe<Scalars['Boolean']>;
+};
+
+export type ProjectDocumentationDetailFieldsInput = {
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type AssetDetailFieldsInput = {
+    FilePath?: Maybe<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+};
+
+export type AssetVersionDetailFieldsInput = {
+    Creator?: Maybe<Scalars['String']>;
+    DateCreated?: Maybe<Scalars['DateTime']>;
+    Ingested?: Maybe<Scalars['Boolean']>;
+    Version?: Maybe<Scalars['Int']>;
+    StorageSize?: Maybe<Scalars['Int']>;
+};
+
+export type ActorDetailFieldsInput = {
+    OrganizationName?: Maybe<Scalars['String']>;
+};
+
+export type StakeholderDetailFieldsInput = {
+    OrganizationName?: Maybe<Scalars['String']>;
+    MailingAddress?: Maybe<Scalars['String']>;
+    EmailAddress?: Maybe<Scalars['String']>;
+    PhoneNumberMobile?: Maybe<Scalars['String']>;
+    PhoneNumberOffice?: Maybe<Scalars['String']>;
+};
+
+export type UpdateObjectDetailsDataInput = {
+    Name?: Maybe<Scalars['String']>;
+    Retired?: Maybe<Scalars['Boolean']>;
+    Unit?: Maybe<UnitDetailFieldsInput>;
+    Project?: Maybe<ProjectDetailFieldsInput>;
+    Subject?: Maybe<SubjectDetailFieldsInput>;
+    Item?: Maybe<ItemDetailFieldsInput>;
+    CaptureData?: Maybe<CaptureDataDetailFieldsInput>;
+    Model?: Maybe<ModelDetailFieldsInput>;
+    Scene?: Maybe<SceneDetailFieldsInput>;
+    ProjectDocumentation?: Maybe<ProjectDocumentationDetailFieldsInput>;
+    Asset?: Maybe<AssetDetailFieldsInput>;
+    AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
+    Actor?: Maybe<ActorDetailFieldsInput>;
+    Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+};
+
+export type UpdateObjectDetailsResult = {
+    __typename?: 'UpdateObjectDetailsResult';
+    success: Scalars['Boolean'];
+};
+
+export type GetDetailsTabDataForObjectInput = {
+    idSystemObject: Scalars['Int'];
+    objectType: Scalars['Int'];
+};
+
+export type UnitDetailFields = {
+    __typename?: 'UnitDetailFields';
+    Abbreviation?: Maybe<Scalars['String']>;
+    ARKPrefix?: Maybe<Scalars['String']>;
+};
+
+export type ProjectDetailFields = {
+    __typename?: 'ProjectDetailFields';
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type SubjectDetailFields = {
+    __typename?: 'SubjectDetailFields';
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type ItemDetailFields = {
+    __typename?: 'ItemDetailFields';
+    EntireSubject?: Maybe<Scalars['Boolean']>;
+    Altitude?: Maybe<Scalars['Float']>;
+    Latitude?: Maybe<Scalars['Float']>;
+    Longitude?: Maybe<Scalars['Float']>;
+    R0?: Maybe<Scalars['Float']>;
+    R1?: Maybe<Scalars['Float']>;
+    R2?: Maybe<Scalars['Float']>;
+    R3?: Maybe<Scalars['Float']>;
+    TS0?: Maybe<Scalars['Float']>;
+    TS1?: Maybe<Scalars['Float']>;
+    TS2?: Maybe<Scalars['Float']>;
+};
+
+export type CaptureDataDetailFields = {
+    __typename?: 'CaptureDataDetailFields';
+    captureMethod?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['String']>;
+    datasetType?: Maybe<Scalars['Int']>;
+    systemCreated?: Maybe<Scalars['Boolean']>;
+    description?: Maybe<Scalars['String']>;
+    cameraSettingUniform?: Maybe<Scalars['Boolean']>;
+    datasetFieldId?: Maybe<Scalars['Int']>;
+    itemPositionType?: Maybe<Scalars['Int']>;
+    itemPositionFieldId?: Maybe<Scalars['Int']>;
+    itemArrangementFieldId?: Maybe<Scalars['Int']>;
+    focusType?: Maybe<Scalars['Int']>;
+    lightsourceType?: Maybe<Scalars['Int']>;
+    backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+    clusterType?: Maybe<Scalars['Int']>;
+    clusterGeometryFieldId?: Maybe<Scalars['Int']>;
+    folders: Array<IngestFolder>;
+};
+
+export type ModelDetailFields = {
+    __typename?: 'ModelDetailFields';
+    size?: Maybe<Scalars['Int']>;
+    master?: Maybe<Scalars['Boolean']>;
+    authoritative?: Maybe<Scalars['Boolean']>;
+    creationMethod?: Maybe<Scalars['Int']>;
+    modality?: Maybe<Scalars['Int']>;
+    purpose?: Maybe<Scalars['Int']>;
+    units?: Maybe<Scalars['Int']>;
+    dateCaptured?: Maybe<Scalars['String']>;
+    modelFileType?: Maybe<Scalars['Int']>;
+    uvMaps: Array<IngestUvMap>;
+    boundingBoxP1X?: Maybe<Scalars['Float']>;
+    boundingBoxP1Y?: Maybe<Scalars['Float']>;
+    boundingBoxP1Z?: Maybe<Scalars['Float']>;
+    boundingBoxP2X?: Maybe<Scalars['Float']>;
+    boundingBoxP2Y?: Maybe<Scalars['Float']>;
+    boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    countPoint?: Maybe<Scalars['Int']>;
+    countFace?: Maybe<Scalars['Int']>;
+    countColorChannel?: Maybe<Scalars['Int']>;
+    countTextureCoorinateChannel?: Maybe<Scalars['Int']>;
+    hasBones?: Maybe<Scalars['Boolean']>;
+    hasFaceNormals?: Maybe<Scalars['Boolean']>;
+    hasTangents?: Maybe<Scalars['Boolean']>;
+    hasTextureCoordinates?: Maybe<Scalars['Boolean']>;
+    hasVertexNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    isManifold?: Maybe<Scalars['Boolean']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
+};
+
+export type SceneDetailFields = {
+    __typename?: 'SceneDetailFields';
+    Links: Array<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+    Tours?: Maybe<Scalars['Int']>;
+    Annotation?: Maybe<Scalars['Int']>;
+    HasBeenQCd?: Maybe<Scalars['Boolean']>;
+    IsOriented?: Maybe<Scalars['Boolean']>;
+};
+
+export type IntermediaryFileDetailFields = {
+    __typename?: 'IntermediaryFileDetailFields';
+    idIntermediaryFile: Scalars['Int'];
+};
+
+export type ProjectDocumentationDetailFields = {
+    __typename?: 'ProjectDocumentationDetailFields';
+    Description?: Maybe<Scalars['String']>;
+};
+
+export type AssetDetailFields = {
+    __typename?: 'AssetDetailFields';
+    FilePath?: Maybe<Scalars['String']>;
+    AssetType?: Maybe<Scalars['Int']>;
+};
+
+export type AssetVersionDetailFields = {
+    __typename?: 'AssetVersionDetailFields';
+    Creator?: Maybe<Scalars['String']>;
+    DateCreated?: Maybe<Scalars['DateTime']>;
+    Ingested?: Maybe<Scalars['Boolean']>;
+    Version?: Maybe<Scalars['Int']>;
+    StorageSize?: Maybe<Scalars['Int']>;
+};
+
+export type ActorDetailFields = {
+    __typename?: 'ActorDetailFields';
+    OrganizationName?: Maybe<Scalars['String']>;
+};
+
+export type StakeholderDetailFields = {
+    __typename?: 'StakeholderDetailFields';
+    OrganizationName?: Maybe<Scalars['String']>;
+    MailingAddress?: Maybe<Scalars['String']>;
+    EmailAddress?: Maybe<Scalars['String']>;
+    PhoneNumberMobile?: Maybe<Scalars['String']>;
+    PhoneNumberOffice?: Maybe<Scalars['String']>;
+};
+
+export type GetDetailsTabDataForObjectResult = {
+    __typename?: 'GetDetailsTabDataForObjectResult';
+    Unit?: Maybe<UnitDetailFields>;
+    Project?: Maybe<ProjectDetailFields>;
+    Subject?: Maybe<SubjectDetailFields>;
+    Item?: Maybe<ItemDetailFields>;
+    CaptureData?: Maybe<CaptureDataDetailFields>;
+    Model?: Maybe<ModelDetailFields>;
+    Scene?: Maybe<SceneDetailFields>;
+    IntermediaryFile?: Maybe<IntermediaryFileDetailFields>;
+    ProjectDocumentation?: Maybe<ProjectDocumentationDetailFields>;
+    Asset?: Maybe<AssetDetailFields>;
+    AssetVersion?: Maybe<AssetVersionDetailFields>;
+    Actor?: Maybe<ActorDetailFields>;
+    Stakeholder?: Maybe<StakeholderDetailFields>;
+};
+
+export type GetSystemObjectDetailsInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type RepositoryPath = {
+    __typename?: 'RepositoryPath';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    objectType: Scalars['Int'];
+};
+
+export type GetSystemObjectDetailsResult = {
+    __typename?: 'GetSystemObjectDetailsResult';
+    idObject: Scalars['Int'];
+    name: Scalars['String'];
+    retired: Scalars['Boolean'];
+    objectType: Scalars['Int'];
+    allowed: Scalars['Boolean'];
+    publishedState: Scalars['String'];
+    thumbnail?: Maybe<Scalars['String']>;
+    identifiers: Array<IngestIdentifier>;
+    objectAncestors: Array<Array<RepositoryPath>>;
+    sourceObjects: Array<RelatedObject>;
+    derivedObjects: Array<RelatedObject>;
+    unit?: Maybe<RepositoryPath>;
+    project?: Maybe<RepositoryPath>;
+    subject?: Maybe<RepositoryPath>;
+    item?: Maybe<RepositoryPath>;
+};
+
+export type GetSourceObjectIdentiferInput = {
+    idSystemObjects: Array<Scalars['Int']>;
+};
+
+export type SourceObjectIdentifier = {
+    __typename?: 'SourceObjectIdentifier';
+    idSystemObject: Scalars['Int'];
+    identifier?: Maybe<Scalars['String']>;
+};
+
+export type GetSourceObjectIdentiferResult = {
+    __typename?: 'GetSourceObjectIdentiferResult';
+    sourceObjectIdentifiers: Array<SourceObjectIdentifier>;
+};
+
+export type AssetDetail = {
+    __typename?: 'AssetDetail';
+    idSystemObject: Scalars['Int'];
+    name: Scalars['String'];
+    path: Scalars['String'];
+    assetType: Scalars['Int'];
+    version: Scalars['Int'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
+export type GetAssetDetailsForSystemObjectInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type GetAssetDetailsForSystemObjectResult = {
+    __typename?: 'GetAssetDetailsForSystemObjectResult';
+    assetDetails: Array<AssetDetail>;
+};
+
+export type DetailVersion = {
+    __typename?: 'DetailVersion';
+    idSystemObject: Scalars['Int'];
+    version: Scalars['Int'];
+    name: Scalars['String'];
+    creator: Scalars['String'];
+    dateCreated: Scalars['DateTime'];
+    size: Scalars['Int'];
+};
+
+export type GetVersionsForSystemObjectInput = {
+    idSystemObject: Scalars['Int'];
+};
+
+export type GetVersionsForSystemObjectResult = {
+    __typename?: 'GetVersionsForSystemObjectResult';
+    versions: Array<DetailVersion>;
 };
 
 export type SystemObject = {
@@ -1448,960 +2020,668 @@ export type DiscardUploadedAssetVersionsMutationVariables = Exact<{
     input: DiscardUploadedAssetVersionsInput;
 }>;
 
-
-export type DiscardUploadedAssetVersionsMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        discardUploadedAssetVersions: (
-            { __typename?: 'DiscardUploadedAssetVersionsResult' }
-            & Pick<DiscardUploadedAssetVersionsResult, 'success'>
-        )
-    }
-);
+export type DiscardUploadedAssetVersionsMutation = { __typename?: 'Mutation' } & {
+    discardUploadedAssetVersions: { __typename?: 'DiscardUploadedAssetVersionsResult' } & Pick<DiscardUploadedAssetVersionsResult, 'success'>;
+};
 
 export type UploadAssetMutationVariables = Exact<{
     file: Scalars['Upload'];
     type: Scalars['Int'];
 }>;
 
-
-export type UploadAssetMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        uploadAsset: (
-            { __typename?: 'UploadAssetResult' }
-            & Pick<UploadAssetResult, 'status' | 'idAssetVersions' | 'error'>
-        )
-    }
-);
+export type UploadAssetMutation = { __typename?: 'Mutation' } & {
+    uploadAsset: { __typename?: 'UploadAssetResult' } & Pick<UploadAssetResult, 'status' | 'idAssetVersions' | 'error'>;
+};
 
 export type CreateCaptureDataMutationVariables = Exact<{
     input: CreateCaptureDataInput;
 }>;
 
-
-export type CreateCaptureDataMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createCaptureData: (
-            { __typename?: 'CreateCaptureDataResult' }
-            & {
-                CaptureData?: Maybe<(
-                    { __typename?: 'CaptureData' }
-                    & Pick<CaptureData, 'idCaptureData'>
-                )>
-            }
-        )
-    }
-);
+export type CreateCaptureDataMutation = { __typename?: 'Mutation' } & {
+    createCaptureData: { __typename?: 'CreateCaptureDataResult' } & { CaptureData?: Maybe<{ __typename?: 'CaptureData' } & Pick<CaptureData, 'idCaptureData'>> };
+};
 
 export type CreateCaptureDataPhotoMutationVariables = Exact<{
     input: CreateCaptureDataPhotoInput;
 }>;
 
-
-export type CreateCaptureDataPhotoMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createCaptureDataPhoto: (
-            { __typename?: 'CreateCaptureDataPhotoResult' }
-            & {
-                CaptureDataPhoto?: Maybe<(
-                    { __typename?: 'CaptureDataPhoto' }
-                    & Pick<CaptureDataPhoto, 'idCaptureDataPhoto'>
-                )>
-            }
-        )
-    }
-);
+export type CreateCaptureDataPhotoMutation = { __typename?: 'Mutation' } & {
+    createCaptureDataPhoto: { __typename?: 'CreateCaptureDataPhotoResult' } & {
+        CaptureDataPhoto?: Maybe<{ __typename?: 'CaptureDataPhoto' } & Pick<CaptureDataPhoto, 'idCaptureDataPhoto'>>;
+    };
+};
 
 export type IngestDataMutationVariables = Exact<{
     input: IngestDataInput;
 }>;
 
-
-export type IngestDataMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        ingestData: (
-            { __typename?: 'IngestDataResult' }
-            & Pick<IngestDataResult, 'success'>
-        )
-    }
-);
+export type IngestDataMutation = { __typename?: 'Mutation' } & { ingestData: { __typename?: 'IngestDataResult' } & Pick<IngestDataResult, 'success'> };
 
 export type CreateModelMutationVariables = Exact<{
     input: CreateModelInput;
 }>;
 
-
-export type CreateModelMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createModel: (
-            { __typename?: 'CreateModelResult' }
-            & {
-                Model?: Maybe<(
-                    { __typename?: 'Model' }
-                    & Pick<Model, 'idModel'>
-                )>
-            }
-        )
-    }
-);
+export type CreateModelMutation = { __typename?: 'Mutation' } & {
+    createModel: { __typename?: 'CreateModelResult' } & { Model?: Maybe<{ __typename?: 'Model' } & Pick<Model, 'idModel'>> };
+};
 
 export type CreateSceneMutationVariables = Exact<{
     input: CreateSceneInput;
 }>;
 
+export type CreateSceneMutation = { __typename?: 'Mutation' } & {
+    createScene: { __typename?: 'CreateSceneResult' } & { Scene?: Maybe<{ __typename?: 'Scene' } & Pick<Scene, 'idScene'>> };
+};
 
-export type CreateSceneMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createScene: (
-            { __typename?: 'CreateSceneResult' }
-            & {
-                Scene?: Maybe<(
-                    { __typename?: 'Scene' }
-                    & Pick<Scene, 'idScene'>
-                )>
-            }
-        )
-    }
-);
+export type UpdateObjectDetailsMutationVariables = Exact<{
+    input: UpdateObjectDetailsInput;
+}>;
+
+export type UpdateObjectDetailsMutation = { __typename?: 'Mutation' } & {
+    updateObjectDetails: { __typename?: 'UpdateObjectDetailsResult' } & Pick<UpdateObjectDetailsResult, 'success'>;
+};
 
 export type CreateItemMutationVariables = Exact<{
     input: CreateItemInput;
 }>;
 
-
-export type CreateItemMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createItem: (
-            { __typename?: 'CreateItemResult' }
-            & {
-                Item?: Maybe<(
-                    { __typename?: 'Item' }
-                    & Pick<Item, 'idItem'>
-                )>
-            }
-        )
-    }
-);
+export type CreateItemMutation = { __typename?: 'Mutation' } & {
+    createItem: { __typename?: 'CreateItemResult' } & { Item?: Maybe<{ __typename?: 'Item' } & Pick<Item, 'idItem'>> };
+};
 
 export type CreateProjectMutationVariables = Exact<{
     input: CreateProjectInput;
 }>;
 
-
-export type CreateProjectMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createProject: (
-            { __typename?: 'CreateProjectResult' }
-            & {
-                Project?: Maybe<(
-                    { __typename?: 'Project' }
-                    & Pick<Project, 'idProject'>
-                )>
-            }
-        )
-    }
-);
+export type CreateProjectMutation = { __typename?: 'Mutation' } & {
+    createProject: { __typename?: 'CreateProjectResult' } & { Project?: Maybe<{ __typename?: 'Project' } & Pick<Project, 'idProject'>> };
+};
 
 export type CreateSubjectMutationVariables = Exact<{
     input: CreateSubjectInput;
 }>;
 
-
-export type CreateSubjectMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createSubject: (
-            { __typename?: 'CreateSubjectResult' }
-            & {
-                Subject?: Maybe<(
-                    { __typename?: 'Subject' }
-                    & Pick<Subject, 'idSubject'>
-                )>
-            }
-        )
-    }
-);
+export type CreateSubjectMutation = { __typename?: 'Mutation' } & {
+    createSubject: { __typename?: 'CreateSubjectResult' } & { Subject?: Maybe<{ __typename?: 'Subject' } & Pick<Subject, 'idSubject'>> };
+};
 
 export type CreateUnitMutationVariables = Exact<{
     input: CreateUnitInput;
 }>;
 
-
-export type CreateUnitMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createUnit: (
-            { __typename?: 'CreateUnitResult' }
-            & {
-                Unit?: Maybe<(
-                    { __typename?: 'Unit' }
-                    & Pick<Unit, 'idUnit'>
-                )>
-            }
-        )
-    }
-);
+export type CreateUnitMutation = { __typename?: 'Mutation' } & {
+    createUnit: { __typename?: 'CreateUnitResult' } & { Unit?: Maybe<{ __typename?: 'Unit' } & Pick<Unit, 'idUnit'>> };
+};
 
 export type CreateUserMutationVariables = Exact<{
     input: CreateUserInput;
 }>;
 
-
-export type CreateUserMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createUser: (
-            { __typename?: 'CreateUserResult' }
-            & {
-                User?: Maybe<(
-                    { __typename?: 'User' }
-                    & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>
-                )>
-            }
-        )
-    }
-);
+export type CreateUserMutation = { __typename?: 'Mutation' } & {
+    createUser: { __typename?: 'CreateUserResult' } & { User?: Maybe<{ __typename?: 'User' } & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>> };
+};
 
 export type CreateVocabularyMutationVariables = Exact<{
     input: CreateVocabularyInput;
 }>;
 
-
-export type CreateVocabularyMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createVocabulary: (
-            { __typename?: 'CreateVocabularyResult' }
-            & {
-                Vocabulary?: Maybe<(
-                    { __typename?: 'Vocabulary' }
-                    & Pick<Vocabulary, 'idVocabulary'>
-                )>
-            }
-        )
-    }
-);
+export type CreateVocabularyMutation = { __typename?: 'Mutation' } & {
+    createVocabulary: { __typename?: 'CreateVocabularyResult' } & { Vocabulary?: Maybe<{ __typename?: 'Vocabulary' } & Pick<Vocabulary, 'idVocabulary'>> };
+};
 
 export type CreateVocabularySetMutationVariables = Exact<{
     input: CreateVocabularySetInput;
 }>;
 
-
-export type CreateVocabularySetMutation = (
-    { __typename?: 'Mutation' }
-    & {
-        createVocabularySet: (
-            { __typename?: 'CreateVocabularySetResult' }
-            & {
-                VocabularySet?: Maybe<(
-                    { __typename?: 'VocabularySet' }
-                    & Pick<VocabularySet, 'idVocabularySet'>
-                )>
-            }
-        )
-    }
-);
+export type CreateVocabularySetMutation = { __typename?: 'Mutation' } & {
+    createVocabularySet: { __typename?: 'CreateVocabularySetResult' } & { VocabularySet?: Maybe<{ __typename?: 'VocabularySet' } & Pick<VocabularySet, 'idVocabularySet'>> };
+};
 
 export type GetAccessPolicyQueryVariables = Exact<{
     input: GetAccessPolicyInput;
 }>;
 
-
-export type GetAccessPolicyQuery = (
-    { __typename?: 'Query' }
-    & {
-        getAccessPolicy: (
-            { __typename?: 'GetAccessPolicyResult' }
-            & {
-                AccessPolicy?: Maybe<(
-                    { __typename?: 'AccessPolicy' }
-                    & Pick<AccessPolicy, 'idAccessPolicy'>
-                )>
-            }
-        )
-    }
-);
+export type GetAccessPolicyQuery = { __typename?: 'Query' } & {
+    getAccessPolicy: { __typename?: 'GetAccessPolicyResult' } & { AccessPolicy?: Maybe<{ __typename?: 'AccessPolicy' } & Pick<AccessPolicy, 'idAccessPolicy'>> };
+};
 
 export type GetAssetQueryVariables = Exact<{
     input: GetAssetInput;
 }>;
 
-
-export type GetAssetQuery = (
-    { __typename?: 'Query' }
-    & {
-        getAsset: (
-            { __typename?: 'GetAssetResult' }
-            & {
-                Asset?: Maybe<(
-                    { __typename?: 'Asset' }
-                    & Pick<Asset, 'idAsset'>
-                )>
-            }
-        )
-    }
-);
+export type GetAssetQuery = { __typename?: 'Query' } & { getAsset: { __typename?: 'GetAssetResult' } & { Asset?: Maybe<{ __typename?: 'Asset' } & Pick<Asset, 'idAsset'>> } };
 
 export type GetAssetVersionsDetailsQueryVariables = Exact<{
     input: GetAssetVersionsDetailsInput;
 }>;
 
-
-export type GetAssetVersionsDetailsQuery = (
-    { __typename?: 'Query' }
-    & {
-        getAssetVersionsDetails: (
-            { __typename?: 'GetAssetVersionsDetailsResult' }
-            & Pick<GetAssetVersionsDetailsResult, 'valid'>
-            & {
-                Details: Array<(
-                    { __typename?: 'GetAssetVersionDetailResult' }
-                    & Pick<GetAssetVersionDetailResult, 'idAssetVersion'>
-                    & {
-                        SubjectUnitIdentifier?: Maybe<(
-                            { __typename?: 'SubjectUnitIdentifier' }
-                            & Pick<SubjectUnitIdentifier, 'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
-                        )>, Project?: Maybe<Array<(
-                            { __typename?: 'Project' }
-                            & Pick<Project, 'idProject' | 'Name'>
-                        )>>, Item?: Maybe<(
-                            { __typename?: 'Item' }
-                            & Pick<Item, 'idItem' | 'Name' | 'EntireSubject'>
-                        )>, CaptureDataPhoto?: Maybe<(
-                            { __typename?: 'IngestPhotogrammetry' }
-                            & Pick<IngestPhotogrammetry, 'idAssetVersion' | 'dateCaptured' | 'datasetType' | 'systemCreated' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId' | 'directory'>
-                            & {
-                                folders: Array<(
-                                    { __typename?: 'IngestFolder' }
-                                    & Pick<IngestFolder, 'name' | 'variantType'>
-                                )>, identifiers: Array<(
-                                    { __typename?: 'IngestIdentifier' }
-                                    & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
-                                )>
-                            }
-                        )>, Model?: Maybe<(
-                            { __typename?: 'IngestModel' }
-                            & Pick<IngestModel, 'idAssetVersion' | 'authoritative' | 'dateCreated' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'master' | 'directory'>
-                        )>
-                    }
-                )>
+export type GetAssetVersionsDetailsQuery = { __typename?: 'Query' } & {
+    getAssetVersionsDetails: { __typename?: 'GetAssetVersionsDetailsResult' } & Pick<GetAssetVersionsDetailsResult, 'valid'> & {
+        Details: Array<
+        { __typename?: 'GetAssetVersionDetailResult' } & Pick<GetAssetVersionDetailResult, 'idAssetVersion'> & {
+            SubjectUnitIdentifier?: Maybe<
+            { __typename?: 'SubjectUnitIdentifier' } & Pick<
+            SubjectUnitIdentifier,
+            'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'
+            >
+            >;
+            Project?: Maybe<Array<{ __typename?: 'Project' } & Pick<Project, 'idProject' | 'Name'>>>;
+            Item?: Maybe<{ __typename?: 'Item' } & Pick<Item, 'idItem' | 'Name' | 'EntireSubject'>>;
+            CaptureDataPhoto?: Maybe<
+            { __typename?: 'IngestPhotogrammetry' } & Pick<
+            IngestPhotogrammetry,
+            | 'idAssetVersion'
+            | 'dateCaptured'
+            | 'datasetType'
+            | 'systemCreated'
+            | 'description'
+            | 'cameraSettingUniform'
+            | 'datasetFieldId'
+            | 'itemPositionType'
+            | 'itemPositionFieldId'
+            | 'itemArrangementFieldId'
+            | 'focusType'
+            | 'lightsourceType'
+            | 'backgroundRemovalMethod'
+            | 'clusterType'
+            | 'clusterGeometryFieldId'
+            | 'directory'
+            > & {
+                folders: Array<{ __typename?: 'IngestFolder' } & Pick<IngestFolder, 'name' | 'variantType'>>;
+                identifiers: Array<{ __typename?: 'IngestIdentifier' } & Pick<IngestIdentifier, 'identifier' | 'identifierType'>>;
             }
-        )
-    }
-);
+            >;
+            Model?: Maybe<
+            { __typename?: 'IngestModel' } & Pick<
+            IngestModel,
+            | 'idAssetVersion'
+            | 'systemCreated'
+            | 'master'
+            | 'authoritative'
+            | 'creationMethod'
+            | 'modality'
+            | 'purpose'
+            | 'units'
+            | 'dateCaptured'
+            | 'modelFileType'
+            | 'directory'
+            | 'roughness'
+            | 'metalness'
+            | 'pointCount'
+            | 'faceCount'
+            | 'isWatertight'
+            | 'hasNormals'
+            | 'hasVertexColor'
+            | 'hasUVSpace'
+            | 'boundingBoxP1X'
+            | 'boundingBoxP1Y'
+            | 'boundingBoxP1Z'
+            | 'boundingBoxP2X'
+            | 'boundingBoxP2Y'
+            | 'boundingBoxP2Z'
+            > & {
+                identifiers: Array<{ __typename?: 'IngestIdentifier' } & Pick<IngestIdentifier, 'identifier' | 'identifierType'>>;
+                uvMaps: Array<{ __typename?: 'IngestUVMap' } & Pick<IngestUvMap, 'name' | 'edgeLength' | 'mapType'>>;
+            }
+            >;
+            Scene?: Maybe<
+            { __typename?: 'IngestScene' } & Pick<IngestScene, 'idAssetVersion'> & {
+                identifiers: Array<{ __typename?: 'IngestIdentifier' } & Pick<IngestIdentifier, 'identifier' | 'identifierType'>>;
+            }
+            >;
+        }
+        >;
+    };
+};
 
 export type GetContentsForAssetVersionsQueryVariables = Exact<{
     input: GetContentsForAssetVersionsInput;
 }>;
 
+export type GetContentsForAssetVersionsQuery = { __typename?: 'Query' } & {
+    getContentsForAssetVersions: { __typename?: 'GetContentsForAssetVersionsResult' } & {
+        AssetVersionContent: Array<{ __typename?: 'AssetVersionContent' } & Pick<AssetVersionContent, 'idAssetVersion' | 'folders' | 'all'>>;
+    };
+};
 
-export type GetContentsForAssetVersionsQuery = (
-    { __typename?: 'Query' }
-    & {
-        getContentsForAssetVersions: (
-            { __typename?: 'GetContentsForAssetVersionsResult' }
-            & {
-                AssetVersionContent: Array<(
-                    { __typename?: 'AssetVersionContent' }
-                    & Pick<AssetVersionContent, 'idAssetVersion' | 'folders' | 'all'>
-                )>
-            }
-        )
-    }
-);
+export type GetUploadedAssetVersionQueryVariables = Exact<{ [key: string]: never }>;
 
-export type GetUploadedAssetVersionQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetUploadedAssetVersionQuery = (
-    { __typename?: 'Query' }
-    & {
-        getUploadedAssetVersion: (
-            { __typename?: 'GetUploadedAssetVersionResult' }
-            & {
-                AssetVersion: Array<(
-                    { __typename?: 'AssetVersion' }
-                    & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName'>
-                    & {
-                        Asset?: Maybe<(
-                            { __typename?: 'Asset' }
-                            & Pick<Asset, 'idAsset'>
-                            & {
-                                VAssetType?: Maybe<(
-                                    { __typename?: 'Vocabulary' }
-                                    & Pick<Vocabulary, 'idVocabulary' | 'Term'>
-                                )>
-                            }
-                        )>
-                    }
-                )>
-            }
-        )
-    }
-);
+export type GetUploadedAssetVersionQuery = { __typename?: 'Query' } & {
+    getUploadedAssetVersion: { __typename?: 'GetUploadedAssetVersionResult' } & {
+        AssetVersion: Array<
+        { __typename?: 'AssetVersion' } & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated'> & {
+            Asset?: Maybe<
+            { __typename?: 'Asset' } & Pick<Asset, 'idAsset'> & { VAssetType?: Maybe<{ __typename?: 'Vocabulary' } & Pick<Vocabulary, 'idVocabulary' | 'Term'>> }
+            >;
+        }
+        >;
+    };
+};
 
 export type GetCaptureDataQueryVariables = Exact<{
     input: GetCaptureDataInput;
 }>;
 
-
-export type GetCaptureDataQuery = (
-    { __typename?: 'Query' }
-    & {
-        getCaptureData: (
-            { __typename?: 'GetCaptureDataResult' }
-            & {
-                CaptureData?: Maybe<(
-                    { __typename?: 'CaptureData' }
-                    & Pick<CaptureData, 'idCaptureData'>
-                )>
-            }
-        )
-    }
-);
+export type GetCaptureDataQuery = { __typename?: 'Query' } & {
+    getCaptureData: { __typename?: 'GetCaptureDataResult' } & { CaptureData?: Maybe<{ __typename?: 'CaptureData' } & Pick<CaptureData, 'idCaptureData'>> };
+};
 
 export type GetCaptureDataPhotoQueryVariables = Exact<{
     input: GetCaptureDataPhotoInput;
 }>;
 
-
-export type GetCaptureDataPhotoQuery = (
-    { __typename?: 'Query' }
-    & {
-        getCaptureDataPhoto: (
-            { __typename?: 'GetCaptureDataPhotoResult' }
-            & {
-                CaptureDataPhoto?: Maybe<(
-                    { __typename?: 'CaptureDataPhoto' }
-                    & Pick<CaptureDataPhoto, 'idCaptureDataPhoto'>
-                )>
-            }
-        )
-    }
-);
+export type GetCaptureDataPhotoQuery = { __typename?: 'Query' } & {
+    getCaptureDataPhoto: { __typename?: 'GetCaptureDataPhotoResult' } & {
+        CaptureDataPhoto?: Maybe<{ __typename?: 'CaptureDataPhoto' } & Pick<CaptureDataPhoto, 'idCaptureDataPhoto'>>;
+    };
+};
 
 export type AreCameraSettingsUniformQueryVariables = Exact<{
     input: AreCameraSettingsUniformInput;
 }>;
 
-
-export type AreCameraSettingsUniformQuery = (
-    { __typename?: 'Query' }
-    & {
-        areCameraSettingsUniform: (
-            { __typename?: 'AreCameraSettingsUniformResult' }
-            & Pick<AreCameraSettingsUniformResult, 'isUniform'>
-        )
-    }
-);
+export type AreCameraSettingsUniformQuery = { __typename?: 'Query' } & {
+    areCameraSettingsUniform: { __typename?: 'AreCameraSettingsUniformResult' } & Pick<AreCameraSettingsUniformResult, 'isUniform'>;
+};
 
 export type GetLicenseQueryVariables = Exact<{
     input: GetLicenseInput;
 }>;
 
-
-export type GetLicenseQuery = (
-    { __typename?: 'Query' }
-    & {
-        getLicense: (
-            { __typename?: 'GetLicenseResult' }
-            & {
-                License?: Maybe<(
-                    { __typename?: 'License' }
-                    & Pick<License, 'idLicense'>
-                )>
-            }
-        )
-    }
-);
+export type GetLicenseQuery = { __typename?: 'Query' } & {
+    getLicense: { __typename?: 'GetLicenseResult' } & { License?: Maybe<{ __typename?: 'License' } & Pick<License, 'idLicense'>> };
+};
 
 export type GetModelQueryVariables = Exact<{
     input: GetModelInput;
 }>;
 
+export type GetModelQuery = { __typename?: 'Query' } & { getModel: { __typename?: 'GetModelResult' } & { Model?: Maybe<{ __typename?: 'Model' } & Pick<Model, 'idModel'>> } };
 
-export type GetModelQuery = (
-    { __typename?: 'Query' }
-    & {
-        getModel: (
-            { __typename?: 'GetModelResult' }
-            & {
-                Model?: Maybe<(
-                    { __typename?: 'Model' }
-                    & Pick<Model, 'idModel'>
-                )>
-            }
-        )
-    }
-);
+export type GetFilterViewDataQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetFilterViewDataQuery = { __typename?: 'Query' } & {
+    getFilterViewData: { __typename?: 'GetFilterViewDataResult' } & {
+        units: Array<{ __typename?: 'Unit' } & Pick<Unit, 'idUnit' | 'Name'> & { SystemObject?: Maybe<{ __typename?: 'SystemObject' } & Pick<SystemObject, 'idSystemObject'>> }>;
+        projects: Array<
+        { __typename?: 'Project' } & Pick<Project, 'idProject' | 'Name'> & { SystemObject?: Maybe<{ __typename?: 'SystemObject' } & Pick<SystemObject, 'idSystemObject'>> }
+        >;
+    };
+};
 
 export type GetObjectChildrenQueryVariables = Exact<{
     input: GetObjectChildrenInput;
 }>;
 
-
-export type GetObjectChildrenQuery = (
-    { __typename?: 'Query' }
-    & {
-        getObjectChildren: (
-            { __typename?: 'GetObjectChildrenResult' }
-            & Pick<GetObjectChildrenResult, 'success' | 'error' | 'metadataColumns'>
-            & {
-                entries: Array<(
-                    { __typename?: 'NavigationResultEntry' }
-                    & Pick<NavigationResultEntry, 'idSystemObject' | 'name' | 'objectType' | 'idObject' | 'metadata'>
-                )>
-            }
-        )
-    }
-);
+export type GetObjectChildrenQuery = { __typename?: 'Query' } & {
+    getObjectChildren: { __typename?: 'GetObjectChildrenResult' } & Pick<GetObjectChildrenResult, 'success' | 'error' | 'metadataColumns'> & {
+        entries: Array<{ __typename?: 'NavigationResultEntry' } & Pick<NavigationResultEntry, 'idSystemObject' | 'name' | 'objectType' | 'idObject' | 'metadata'>>;
+    };
+};
 
 export type GetIntermediaryFileQueryVariables = Exact<{
     input: GetIntermediaryFileInput;
 }>;
 
-
-export type GetIntermediaryFileQuery = (
-    { __typename?: 'Query' }
-    & {
-        getIntermediaryFile: (
-            { __typename?: 'GetIntermediaryFileResult' }
-            & {
-                IntermediaryFile?: Maybe<(
-                    { __typename?: 'IntermediaryFile' }
-                    & Pick<IntermediaryFile, 'idIntermediaryFile'>
-                )>
-            }
-        )
-    }
-);
+export type GetIntermediaryFileQuery = { __typename?: 'Query' } & {
+    getIntermediaryFile: { __typename?: 'GetIntermediaryFileResult' } & {
+        IntermediaryFile?: Maybe<{ __typename?: 'IntermediaryFile' } & Pick<IntermediaryFile, 'idIntermediaryFile'>>;
+    };
+};
 
 export type GetSceneQueryVariables = Exact<{
     input: GetSceneInput;
 }>;
 
+export type GetSceneQuery = { __typename?: 'Query' } & { getScene: { __typename?: 'GetSceneResult' } & { Scene?: Maybe<{ __typename?: 'Scene' } & Pick<Scene, 'idScene'>> } };
 
-export type GetSceneQuery = (
-    { __typename?: 'Query' }
-    & {
-        getScene: (
-            { __typename?: 'GetSceneResult' }
-            & {
-                Scene?: Maybe<(
-                    { __typename?: 'Scene' }
-                    & Pick<Scene, 'idScene'>
-                )>
-            }
-        )
-    }
-);
+export type GetAssetDetailsForSystemObjectQueryVariables = Exact<{
+    input: GetAssetDetailsForSystemObjectInput;
+}>;
+
+export type GetAssetDetailsForSystemObjectQuery = { __typename?: 'Query' } & {
+    getAssetDetailsForSystemObject: { __typename?: 'GetAssetDetailsForSystemObjectResult' } & {
+        assetDetails: Array<{ __typename?: 'AssetDetail' } & Pick<AssetDetail, 'idSystemObject' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>>;
+    };
+};
+
+export type GetDetailsTabDataForObjectQueryVariables = Exact<{
+    input: GetDetailsTabDataForObjectInput;
+}>;
+
+export type GetDetailsTabDataForObjectQuery = { __typename?: 'Query' } & {
+    getDetailsTabDataForObject: { __typename?: 'GetDetailsTabDataForObjectResult' } & {
+        Unit?: Maybe<{ __typename?: 'UnitDetailFields' } & Pick<UnitDetailFields, 'Abbreviation' | 'ARKPrefix'>>;
+        Project?: Maybe<{ __typename?: 'ProjectDetailFields' } & Pick<ProjectDetailFields, 'Description'>>;
+        Subject?: Maybe<
+        { __typename?: 'SubjectDetailFields' } & Pick<SubjectDetailFields, 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
+        >;
+        Item?: Maybe<
+        { __typename?: 'ItemDetailFields' } & Pick<
+        ItemDetailFields,
+        'EntireSubject' | 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'
+        >
+        >;
+        CaptureData?: Maybe<
+        { __typename?: 'CaptureDataDetailFields' } & Pick<
+        CaptureDataDetailFields,
+        | 'captureMethod'
+        | 'dateCaptured'
+        | 'datasetType'
+        | 'description'
+        | 'cameraSettingUniform'
+        | 'datasetFieldId'
+        | 'itemPositionType'
+        | 'itemPositionFieldId'
+        | 'itemArrangementFieldId'
+        | 'focusType'
+        | 'lightsourceType'
+        | 'backgroundRemovalMethod'
+        | 'clusterType'
+        | 'clusterGeometryFieldId'
+        > & { folders: Array<{ __typename?: 'IngestFolder' } & Pick<IngestFolder, 'name' | 'variantType'>> }
+        >;
+        Model?: Maybe<
+        { __typename?: 'ModelDetailFields' } & Pick<
+        ModelDetailFields,
+        | 'size'
+        | 'master'
+        | 'authoritative'
+        | 'creationMethod'
+        | 'modality'
+        | 'purpose'
+        | 'units'
+        | 'modelFileType'
+        | 'dateCaptured'
+        | 'boundingBoxP1X'
+        | 'boundingBoxP1Y'
+        | 'boundingBoxP1Z'
+        | 'boundingBoxP2X'
+        | 'boundingBoxP2Y'
+        | 'boundingBoxP2Z'
+        | 'countPoint'
+        | 'countFace'
+        | 'countColorChannel'
+        | 'countTextureCoorinateChannel'
+        | 'hasBones'
+        | 'hasFaceNormals'
+        | 'hasTangents'
+        | 'hasTextureCoordinates'
+        | 'hasVertexNormals'
+        | 'hasVertexColor'
+        | 'isManifold'
+        | 'isWatertight'
+        > & { uvMaps: Array<{ __typename?: 'IngestUVMap' } & Pick<IngestUvMap, 'name' | 'edgeLength' | 'mapType'>> }
+        >;
+        Scene?: Maybe<{ __typename?: 'SceneDetailFields' } & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented'>>;
+        IntermediaryFile?: Maybe<{ __typename?: 'IntermediaryFileDetailFields' } & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>>;
+        ProjectDocumentation?: Maybe<{ __typename?: 'ProjectDocumentationDetailFields' } & Pick<ProjectDocumentationDetailFields, 'Description'>>;
+        Asset?: Maybe<{ __typename?: 'AssetDetailFields' } & Pick<AssetDetailFields, 'FilePath' | 'AssetType'>>;
+        AssetVersion?: Maybe<{ __typename?: 'AssetVersionDetailFields' } & Pick<AssetVersionDetailFields, 'Creator' | 'DateCreated' | 'StorageSize' | 'Ingested' | 'Version'>>;
+        Actor?: Maybe<{ __typename?: 'ActorDetailFields' } & Pick<ActorDetailFields, 'OrganizationName'>>;
+        Stakeholder?: Maybe<
+        { __typename?: 'StakeholderDetailFields' } & Pick<
+        StakeholderDetailFields,
+        'OrganizationName' | 'EmailAddress' | 'PhoneNumberMobile' | 'PhoneNumberOffice' | 'MailingAddress'
+        >
+        >;
+    };
+};
+
+export type GetSourceObjectIdentiferQueryVariables = Exact<{
+    input: GetSourceObjectIdentiferInput;
+}>;
+
+export type GetSourceObjectIdentiferQuery = { __typename?: 'Query' } & {
+    getSourceObjectIdentifer: { __typename?: 'GetSourceObjectIdentiferResult' } & {
+        sourceObjectIdentifiers: Array<{ __typename?: 'SourceObjectIdentifier' } & Pick<SourceObjectIdentifier, 'idSystemObject' | 'identifier'>>;
+    };
+};
+
+export type GetSystemObjectDetailsQueryVariables = Exact<{
+    input: GetSystemObjectDetailsInput;
+}>;
+
+export type GetSystemObjectDetailsQuery = { __typename?: 'Query' } & {
+    getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult' } & Pick<
+    GetSystemObjectDetailsResult,
+    'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'
+    > & {
+        identifiers: Array<{ __typename?: 'IngestIdentifier' } & Pick<IngestIdentifier, 'identifier' | 'identifierType'>>;
+        unit?: Maybe<{ __typename?: 'RepositoryPath' } & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>>;
+        project?: Maybe<{ __typename?: 'RepositoryPath' } & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>>;
+        subject?: Maybe<{ __typename?: 'RepositoryPath' } & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>>;
+        item?: Maybe<{ __typename?: 'RepositoryPath' } & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>>;
+        objectAncestors: Array<Array<{ __typename?: 'RepositoryPath' } & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>>>;
+        sourceObjects: Array<{ __typename?: 'RelatedObject' } & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>>;
+        derivedObjects: Array<{ __typename?: 'RelatedObject' } & Pick<RelatedObject, 'idSystemObject' | 'name' | 'identifier' | 'objectType'>>;
+    };
+};
+
+export type GetVersionsForSystemObjectQueryVariables = Exact<{
+    input: GetVersionsForSystemObjectInput;
+}>;
+
+export type GetVersionsForSystemObjectQuery = { __typename?: 'Query' } & {
+    getVersionsForSystemObject: { __typename?: 'GetVersionsForSystemObjectResult' } & {
+        versions: Array<{ __typename?: 'DetailVersion' } & Pick<DetailVersion, 'idSystemObject' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size'>>;
+    };
+};
 
 export type GetIngestionItemsForSubjectsQueryVariables = Exact<{
     input: GetIngestionItemsForSubjectsInput;
 }>;
 
-
-export type GetIngestionItemsForSubjectsQuery = (
-    { __typename?: 'Query' }
-    & {
-        getIngestionItemsForSubjects: (
-            { __typename?: 'GetIngestionItemsForSubjectsResult' }
-            & {
-                Item: Array<(
-                    { __typename?: 'Item' }
-                    & Pick<Item, 'idItem' | 'EntireSubject' | 'Name'>
-                )>
-            }
-        )
-    }
-);
+export type GetIngestionItemsForSubjectsQuery = { __typename?: 'Query' } & {
+    getIngestionItemsForSubjects: { __typename?: 'GetIngestionItemsForSubjectsResult' } & {
+        Item: Array<{ __typename?: 'Item' } & Pick<Item, 'idItem' | 'EntireSubject' | 'Name'>>;
+    };
+};
 
 export type GetIngestionProjectsForSubjectsQueryVariables = Exact<{
     input: GetIngestionProjectsForSubjectsInput;
 }>;
 
-
-export type GetIngestionProjectsForSubjectsQuery = (
-    { __typename?: 'Query' }
-    & {
-        getIngestionProjectsForSubjects: (
-            { __typename?: 'GetIngestionProjectsForSubjectsResult' }
-            & {
-                Project: Array<(
-                    { __typename?: 'Project' }
-                    & Pick<Project, 'idProject' | 'Name'>
-                )>
-            }
-        )
-    }
-);
+export type GetIngestionProjectsForSubjectsQuery = { __typename?: 'Query' } & {
+    getIngestionProjectsForSubjects: { __typename?: 'GetIngestionProjectsForSubjectsResult' } & {
+        Project: Array<{ __typename?: 'Project' } & Pick<Project, 'idProject' | 'Name'>>;
+    };
+};
 
 export type GetItemQueryVariables = Exact<{
     input: GetItemInput;
 }>;
 
-
-export type GetItemQuery = (
-    { __typename?: 'Query' }
-    & {
-        getItem: (
-            { __typename?: 'GetItemResult' }
-            & {
-                Item?: Maybe<(
-                    { __typename?: 'Item' }
-                    & Pick<Item, 'idItem'>
-                )>
-            }
-        )
-    }
-);
+export type GetItemQuery = { __typename?: 'Query' } & { getItem: { __typename?: 'GetItemResult' } & { Item?: Maybe<{ __typename?: 'Item' } & Pick<Item, 'idItem'>> } };
 
 export type GetItemsForSubjectQueryVariables = Exact<{
     input: GetItemsForSubjectInput;
 }>;
 
-
-export type GetItemsForSubjectQuery = (
-    { __typename?: 'Query' }
-    & {
-        getItemsForSubject: (
-            { __typename?: 'GetItemsForSubjectResult' }
-            & {
-                Item: Array<(
-                    { __typename?: 'Item' }
-                    & Pick<Item, 'idItem' | 'Name'>
-                )>
-            }
-        )
-    }
-);
+export type GetItemsForSubjectQuery = { __typename?: 'Query' } & {
+    getItemsForSubject: { __typename?: 'GetItemsForSubjectResult' } & { Item: Array<{ __typename?: 'Item' } & Pick<Item, 'idItem' | 'Name'>> };
+};
 
 export type GetObjectsForItemQueryVariables = Exact<{
     input: GetObjectsForItemInput;
 }>;
 
-
-export type GetObjectsForItemQuery = (
-    { __typename?: 'Query' }
-    & {
-        getObjectsForItem: (
-            { __typename?: 'GetObjectsForItemResult' }
-            & {
-                CaptureData: Array<(
-                    { __typename?: 'CaptureData' }
-                    & Pick<CaptureData, 'idCaptureData' | 'DateCaptured' | 'Description'>
-                )>, Model: Array<(
-                    { __typename?: 'Model' }
-                    & Pick<Model, 'idModel' | 'Authoritative' | 'DateCreated'>
-                )>, Scene: Array<(
-                    { __typename?: 'Scene' }
-                    & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name'>
-                )>, IntermediaryFile: Array<(
-                    { __typename?: 'IntermediaryFile' }
-                    & Pick<IntermediaryFile, 'idIntermediaryFile' | 'DateCreated'>
-                )>, ProjectDocumentation: Array<(
-                    { __typename?: 'ProjectDocumentation' }
-                    & Pick<ProjectDocumentation, 'idProjectDocumentation' | 'Description' | 'Name'>
-                )>
-            }
-        )
-    }
-);
+export type GetObjectsForItemQuery = { __typename?: 'Query' } & {
+    getObjectsForItem: { __typename?: 'GetObjectsForItemResult' } & {
+        CaptureData: Array<{ __typename?: 'CaptureData' } & Pick<CaptureData, 'idCaptureData' | 'DateCaptured' | 'Description'>>;
+        Model: Array<{ __typename?: 'Model' } & Pick<Model, 'idModel' | 'Authoritative' | 'DateCreated'>>;
+        Scene: Array<{ __typename?: 'Scene' } & Pick<Scene, 'idScene' | 'HasBeenQCd' | 'IsOriented' | 'Name'>>;
+        IntermediaryFile: Array<{ __typename?: 'IntermediaryFile' } & Pick<IntermediaryFile, 'idIntermediaryFile' | 'DateCreated'>>;
+        ProjectDocumentation: Array<{ __typename?: 'ProjectDocumentation' } & Pick<ProjectDocumentation, 'idProjectDocumentation' | 'Description' | 'Name'>>;
+    };
+};
 
 export type GetProjectQueryVariables = Exact<{
     input: GetProjectInput;
 }>;
 
-
-export type GetProjectQuery = (
-    { __typename?: 'Query' }
-    & {
-        getProject: (
-            { __typename?: 'GetProjectResult' }
-            & {
-                Project?: Maybe<(
-                    { __typename?: 'Project' }
-                    & Pick<Project, 'idProject'>
-                )>
-            }
-        )
-    }
-);
+export type GetProjectQuery = { __typename?: 'Query' } & {
+    getProject: { __typename?: 'GetProjectResult' } & { Project?: Maybe<{ __typename?: 'Project' } & Pick<Project, 'idProject'>> };
+};
 
 export type GetProjectDocumentationQueryVariables = Exact<{
     input: GetProjectDocumentationInput;
 }>;
 
-
-export type GetProjectDocumentationQuery = (
-    { __typename?: 'Query' }
-    & {
-        getProjectDocumentation: (
-            { __typename?: 'GetProjectDocumentationResult' }
-            & {
-                ProjectDocumentation?: Maybe<(
-                    { __typename?: 'ProjectDocumentation' }
-                    & Pick<ProjectDocumentation, 'idProjectDocumentation'>
-                )>
-            }
-        )
-    }
-);
+export type GetProjectDocumentationQuery = { __typename?: 'Query' } & {
+    getProjectDocumentation: { __typename?: 'GetProjectDocumentationResult' } & {
+        ProjectDocumentation?: Maybe<{ __typename?: 'ProjectDocumentation' } & Pick<ProjectDocumentation, 'idProjectDocumentation'>>;
+    };
+};
 
 export type GetSubjectQueryVariables = Exact<{
     input: GetSubjectInput;
 }>;
 
-
-export type GetSubjectQuery = (
-    { __typename?: 'Query' }
-    & {
-        getSubject: (
-            { __typename?: 'GetSubjectResult' }
-            & {
-                Subject?: Maybe<(
-                    { __typename?: 'Subject' }
-                    & Pick<Subject, 'idSubject'>
-                )>
-            }
-        )
-    }
-);
+export type GetSubjectQuery = { __typename?: 'Query' } & {
+    getSubject: { __typename?: 'GetSubjectResult' } & { Subject?: Maybe<{ __typename?: 'Subject' } & Pick<Subject, 'idSubject'>> };
+};
 
 export type GetSubjectsForUnitQueryVariables = Exact<{
     input: GetSubjectsForUnitInput;
 }>;
 
-
-export type GetSubjectsForUnitQuery = (
-    { __typename?: 'Query' }
-    & {
-        getSubjectsForUnit: (
-            { __typename?: 'GetSubjectsForUnitResult' }
-            & {
-                Subject: Array<(
-                    { __typename?: 'Subject' }
-                    & Pick<Subject, 'idSubject' | 'Name'>
-                )>
-            }
-        )
-    }
-);
+export type GetSubjectsForUnitQuery = { __typename?: 'Query' } & {
+    getSubjectsForUnit: { __typename?: 'GetSubjectsForUnitResult' } & { Subject: Array<{ __typename?: 'Subject' } & Pick<Subject, 'idSubject' | 'Name'>> };
+};
 
 export type GetUnitQueryVariables = Exact<{
     input: GetUnitInput;
 }>;
 
-
-export type GetUnitQuery = (
-    { __typename?: 'Query' }
-    & {
-        getUnit: (
-            { __typename?: 'GetUnitResult' }
-            & {
-                Unit?: Maybe<(
-                    { __typename?: 'Unit' }
-                    & Pick<Unit, 'idUnit'>
-                )>
-            }
-        )
-    }
-);
+export type GetUnitQuery = { __typename?: 'Query' } & { getUnit: { __typename?: 'GetUnitResult' } & { Unit?: Maybe<{ __typename?: 'Unit' } & Pick<Unit, 'idUnit'>> } };
 
 export type SearchIngestionSubjectsQueryVariables = Exact<{
     input: SearchIngestionSubjectsInput;
 }>;
 
+export type SearchIngestionSubjectsQuery = { __typename?: 'Query' } & {
+    searchIngestionSubjects: { __typename?: 'SearchIngestionSubjectsResult' } & {
+        SubjectUnitIdentifier: Array<
+        { __typename?: 'SubjectUnitIdentifier' } & Pick<SubjectUnitIdentifier, 'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
+        >;
+    };
+};
 
-export type SearchIngestionSubjectsQuery = (
-    { __typename?: 'Query' }
-    & {
-        searchIngestionSubjects: (
-            { __typename?: 'SearchIngestionSubjectsResult' }
-            & {
-                SubjectUnitIdentifier: Array<(
-                    { __typename?: 'SubjectUnitIdentifier' }
-                    & Pick<SubjectUnitIdentifier, 'idSubject' | 'SubjectName' | 'UnitAbbreviation' | 'IdentifierPublic' | 'IdentifierCollection'>
-                )>
-            }
-        )
-    }
-);
+export type GetCurrentUserQueryVariables = Exact<{ [key: string]: never }>;
 
-export type GetCurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetCurrentUserQuery = (
-    { __typename?: 'Query' }
-    & {
-        getCurrentUser: (
-            { __typename?: 'GetCurrentUserResult' }
-            & {
-                User?: Maybe<(
-                    { __typename?: 'User' }
-                    & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated' | 'DateDisabled' | 'EmailAddress' | 'EmailSettings' | 'SecurityID' | 'WorkflowNotificationTime'>
-                )>
-            }
-        )
-    }
-);
+export type GetCurrentUserQuery = { __typename?: 'Query' } & {
+    getCurrentUser: { __typename?: 'GetCurrentUserResult' } & {
+        User?: Maybe<
+        { __typename?: 'User' } & Pick<
+        User,
+        'idUser' | 'Name' | 'Active' | 'DateActivated' | 'DateDisabled' | 'EmailAddress' | 'EmailSettings' | 'SecurityID' | 'WorkflowNotificationTime'
+        >
+        >;
+    };
+};
 
 export type GetUserQueryVariables = Exact<{
     input: GetUserInput;
 }>;
 
-
-export type GetUserQuery = (
-    { __typename?: 'Query' }
-    & {
-        getUser: (
-            { __typename?: 'GetUserResult' }
-            & {
-                User?: Maybe<(
-                    { __typename?: 'User' }
-                    & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>
-                )>
-            }
-        )
-    }
-);
+export type GetUserQuery = { __typename?: 'Query' } & {
+    getUser: { __typename?: 'GetUserResult' } & { User?: Maybe<{ __typename?: 'User' } & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>> };
+};
 
 export type GetVocabularyQueryVariables = Exact<{
     input: GetVocabularyInput;
 }>;
 
-
-export type GetVocabularyQuery = (
-    { __typename?: 'Query' }
-    & {
-        getVocabulary: (
-            { __typename?: 'GetVocabularyResult' }
-            & {
-                Vocabulary?: Maybe<(
-                    { __typename?: 'Vocabulary' }
-                    & Pick<Vocabulary, 'idVocabulary'>
-                )>
-            }
-        )
-    }
-);
+export type GetVocabularyQuery = { __typename?: 'Query' } & {
+    getVocabulary: { __typename?: 'GetVocabularyResult' } & { Vocabulary?: Maybe<{ __typename?: 'Vocabulary' } & Pick<Vocabulary, 'idVocabulary'>> };
+};
 
 export type GetVocabularyEntriesQueryVariables = Exact<{
     input: GetVocabularyEntriesInput;
 }>;
 
-
-export type GetVocabularyEntriesQuery = (
-    { __typename?: 'Query' }
-    & {
-        getVocabularyEntries: (
-            { __typename?: 'GetVocabularyEntriesResult' }
-            & {
-                VocabularyEntries: Array<(
-                    { __typename?: 'VocabularyEntry' }
-                    & Pick<VocabularyEntry, 'eVocabSetID'>
-                    & {
-                        Vocabulary: Array<(
-                            { __typename?: 'Vocabulary' }
-                            & Pick<Vocabulary, 'idVocabulary' | 'Term'>
-                        )>
-                    }
-                )>
-            }
-        )
-    }
-);
+export type GetVocabularyEntriesQuery = { __typename?: 'Query' } & {
+    getVocabularyEntries: { __typename?: 'GetVocabularyEntriesResult' } & {
+        VocabularyEntries: Array<
+        { __typename?: 'VocabularyEntry' } & Pick<VocabularyEntry, 'eVocabSetID'> & {
+            Vocabulary: Array<{ __typename?: 'Vocabulary' } & Pick<Vocabulary, 'idVocabulary' | 'Term'>>;
+        }
+        >;
+    };
+};
 
 export type GetWorkflowQueryVariables = Exact<{
     input: GetWorkflowInput;
 }>;
 
-
-export type GetWorkflowQuery = (
-    { __typename?: 'Query' }
-    & {
-        getWorkflow: (
-            { __typename?: 'GetWorkflowResult' }
-            & {
-                Workflow?: Maybe<(
-                    { __typename?: 'Workflow' }
-                    & Pick<Workflow, 'idWorkflow'>
-                )>
-            }
-        )
-    }
-);
-
+export type GetWorkflowQuery = { __typename?: 'Query' } & {
+    getWorkflow: { __typename?: 'GetWorkflowResult' } & { Workflow?: Maybe<{ __typename?: 'Workflow' } & Pick<Workflow, 'idWorkflow'>> };
+};
 
 export const DiscardUploadedAssetVersionsDocument = gql`
-                                                                                                                                                                                                                                                                                        mutation discardUploadedAssetVersions($input: DiscardUploadedAssetVersionsInput!) {
-                                                                                                                                                                                                                                                                                          discardUploadedAssetVersions(input: $input) {
-                                                                                                                                                                                                                                                                                            success
-                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                        `;
+    mutation discardUploadedAssetVersions($input: DiscardUploadedAssetVersionsInput!) {
+        discardUploadedAssetVersions(input: $input) {
+            success
+        }
+    }
+`;
 export type DiscardUploadedAssetVersionsMutationFn = Apollo.MutationFunction<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
 
 /**
-* __useDiscardUploadedAssetVersionsMutation__
-*
-* To run a mutation, you first call `useDiscardUploadedAssetVersionsMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useDiscardUploadedAssetVersionsMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [discardUploadedAssetVersionsMutation, { data, loading, error }] = useDiscardUploadedAssetVersionsMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
-export function useDiscardUploadedAssetVersionsMutation(baseOptions?: Apollo.MutationHookOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>) {
+ * __useDiscardUploadedAssetVersionsMutation__
+ *
+ * To run a mutation, you first call `useDiscardUploadedAssetVersionsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDiscardUploadedAssetVersionsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [discardUploadedAssetVersionsMutation, { data, loading, error }] = useDiscardUploadedAssetVersionsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDiscardUploadedAssetVersionsMutation(
+    baseOptions?: Apollo.MutationHookOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>
+) {
     return Apollo.useMutation<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>(DiscardUploadedAssetVersionsDocument, baseOptions);
 }
 export type DiscardUploadedAssetVersionsMutationHookResult = ReturnType<typeof useDiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationResult = Apollo.MutationResult<DiscardUploadedAssetVersionsMutation>;
 export type DiscardUploadedAssetVersionsMutationOptions = Apollo.BaseMutationOptions<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
 export const UploadAssetDocument = gql`
-                                                                                                                                                                                                                                                                                            mutation uploadAsset($file: Upload!, $type: Int!) {
-                                                                                                                                                                                                                                                                                              uploadAsset(file: $file, type: $type) {
-                                                                                                                                                                                                                                                                                                status
-                                                                                                                                                                                                                                                                                                idAssetVersions
-                                                                                                                                                                                                                                                                                                error
-                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                            `;
+    mutation uploadAsset($file: Upload!, $type: Int!) {
+        uploadAsset(file: $file, type: $type) {
+            status
+            idAssetVersions
+            error
+        }
+    }
+`;
 export type UploadAssetMutationFn = Apollo.MutationFunction<UploadAssetMutation, UploadAssetMutationVariables>;
 
 /**
-* __useUploadAssetMutation__
-*
-* To run a mutation, you first call `useUploadAssetMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useUploadAssetMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [uploadAssetMutation, { data, loading, error }] = useUploadAssetMutation({
-  *   variables: {
-    *      file: // value for 'file'
-    *      type: // value for 'type'
-    *   },
-    * });
-    */
+ * __useUploadAssetMutation__
+ *
+ * To run a mutation, you first call `useUploadAssetMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUploadAssetMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [uploadAssetMutation, { data, loading, error }] = useUploadAssetMutation({
+ *   variables: {
+ *      file: // value for 'file'
+ *      type: // value for 'type'
+ *   },
+ * });
+ */
 export function useUploadAssetMutation(baseOptions?: Apollo.MutationHookOptions<UploadAssetMutation, UploadAssetMutationVariables>) {
     return Apollo.useMutation<UploadAssetMutation, UploadAssetMutationVariables>(UploadAssetDocument, baseOptions);
 }
@@ -2409,33 +2689,33 @@ export type UploadAssetMutationHookResult = ReturnType<typeof useUploadAssetMuta
 export type UploadAssetMutationResult = Apollo.MutationResult<UploadAssetMutation>;
 export type UploadAssetMutationOptions = Apollo.BaseMutationOptions<UploadAssetMutation, UploadAssetMutationVariables>;
 export const CreateCaptureDataDocument = gql`
-                                                                                                                                                                                                                                                                                                mutation createCaptureData($input: CreateCaptureDataInput!) {
-                                                                                                                                                                                                                                                                                                  createCaptureData(input: $input) {
-                                                                                                                                                                                                                                                                                                    CaptureData {
-                                                                                                                                                                                                                                                                                                      idCaptureData
-                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                `;
+    mutation createCaptureData($input: CreateCaptureDataInput!) {
+        createCaptureData(input: $input) {
+            CaptureData {
+                idCaptureData
+            }
+        }
+    }
+`;
 export type CreateCaptureDataMutationFn = Apollo.MutationFunction<CreateCaptureDataMutation, CreateCaptureDataMutationVariables>;
 
 /**
-* __useCreateCaptureDataMutation__
-*
-* To run a mutation, you first call `useCreateCaptureDataMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateCaptureDataMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createCaptureDataMutation, { data, loading, error }] = useCreateCaptureDataMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateCaptureDataMutation__
+ *
+ * To run a mutation, you first call `useCreateCaptureDataMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateCaptureDataMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createCaptureDataMutation, { data, loading, error }] = useCreateCaptureDataMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateCaptureDataMutation(baseOptions?: Apollo.MutationHookOptions<CreateCaptureDataMutation, CreateCaptureDataMutationVariables>) {
     return Apollo.useMutation<CreateCaptureDataMutation, CreateCaptureDataMutationVariables>(CreateCaptureDataDocument, baseOptions);
 }
@@ -2443,33 +2723,33 @@ export type CreateCaptureDataMutationHookResult = ReturnType<typeof useCreateCap
 export type CreateCaptureDataMutationResult = Apollo.MutationResult<CreateCaptureDataMutation>;
 export type CreateCaptureDataMutationOptions = Apollo.BaseMutationOptions<CreateCaptureDataMutation, CreateCaptureDataMutationVariables>;
 export const CreateCaptureDataPhotoDocument = gql`
-                                                                                                                                                                                                                                                                                                    mutation createCaptureDataPhoto($input: CreateCaptureDataPhotoInput!) {
-                                                                                                                                                                                                                                                                                                      createCaptureDataPhoto(input: $input) {
-                                                                                                                                                                                                                                                                                                        CaptureDataPhoto {
-                                                                                                                                                                                                                                                                                                          idCaptureDataPhoto
-                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                    `;
+    mutation createCaptureDataPhoto($input: CreateCaptureDataPhotoInput!) {
+        createCaptureDataPhoto(input: $input) {
+            CaptureDataPhoto {
+                idCaptureDataPhoto
+            }
+        }
+    }
+`;
 export type CreateCaptureDataPhotoMutationFn = Apollo.MutationFunction<CreateCaptureDataPhotoMutation, CreateCaptureDataPhotoMutationVariables>;
 
 /**
-* __useCreateCaptureDataPhotoMutation__
-*
-* To run a mutation, you first call `useCreateCaptureDataPhotoMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateCaptureDataPhotoMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createCaptureDataPhotoMutation, { data, loading, error }] = useCreateCaptureDataPhotoMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateCaptureDataPhotoMutation__
+ *
+ * To run a mutation, you first call `useCreateCaptureDataPhotoMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateCaptureDataPhotoMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createCaptureDataPhotoMutation, { data, loading, error }] = useCreateCaptureDataPhotoMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateCaptureDataPhotoMutation(baseOptions?: Apollo.MutationHookOptions<CreateCaptureDataPhotoMutation, CreateCaptureDataPhotoMutationVariables>) {
     return Apollo.useMutation<CreateCaptureDataPhotoMutation, CreateCaptureDataPhotoMutationVariables>(CreateCaptureDataPhotoDocument, baseOptions);
 }
@@ -2477,31 +2757,31 @@ export type CreateCaptureDataPhotoMutationHookResult = ReturnType<typeof useCrea
 export type CreateCaptureDataPhotoMutationResult = Apollo.MutationResult<CreateCaptureDataPhotoMutation>;
 export type CreateCaptureDataPhotoMutationOptions = Apollo.BaseMutationOptions<CreateCaptureDataPhotoMutation, CreateCaptureDataPhotoMutationVariables>;
 export const IngestDataDocument = gql`
-                                                                                                                                                                                                                                                                                                        mutation ingestData($input: IngestDataInput!) {
-                                                                                                                                                                                                                                                                                                          ingestData(input: $input) {
-                                                                                                                                                                                                                                                                                                            success
-                                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                        `;
+    mutation ingestData($input: IngestDataInput!) {
+        ingestData(input: $input) {
+            success
+        }
+    }
+`;
 export type IngestDataMutationFn = Apollo.MutationFunction<IngestDataMutation, IngestDataMutationVariables>;
 
 /**
-* __useIngestDataMutation__
-*
-* To run a mutation, you first call `useIngestDataMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useIngestDataMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [ingestDataMutation, { data, loading, error }] = useIngestDataMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useIngestDataMutation__
+ *
+ * To run a mutation, you first call `useIngestDataMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useIngestDataMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [ingestDataMutation, { data, loading, error }] = useIngestDataMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useIngestDataMutation(baseOptions?: Apollo.MutationHookOptions<IngestDataMutation, IngestDataMutationVariables>) {
     return Apollo.useMutation<IngestDataMutation, IngestDataMutationVariables>(IngestDataDocument, baseOptions);
 }
@@ -2509,33 +2789,33 @@ export type IngestDataMutationHookResult = ReturnType<typeof useIngestDataMutati
 export type IngestDataMutationResult = Apollo.MutationResult<IngestDataMutation>;
 export type IngestDataMutationOptions = Apollo.BaseMutationOptions<IngestDataMutation, IngestDataMutationVariables>;
 export const CreateModelDocument = gql`
-                                                                                                                                                                                                                                                                                                            mutation createModel($input: CreateModelInput!) {
-                                                                                                                                                                                                                                                                                                              createModel(input: $input) {
-                                                                                                                                                                                                                                                                                                                Model {
-                                                                                                                                                                                                                                                                                                                  idModel
-                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                            `;
+    mutation createModel($input: CreateModelInput!) {
+        createModel(input: $input) {
+            Model {
+                idModel
+            }
+        }
+    }
+`;
 export type CreateModelMutationFn = Apollo.MutationFunction<CreateModelMutation, CreateModelMutationVariables>;
 
 /**
-* __useCreateModelMutation__
-*
-* To run a mutation, you first call `useCreateModelMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateModelMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createModelMutation, { data, loading, error }] = useCreateModelMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateModelMutation__
+ *
+ * To run a mutation, you first call `useCreateModelMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateModelMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createModelMutation, { data, loading, error }] = useCreateModelMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateModelMutation(baseOptions?: Apollo.MutationHookOptions<CreateModelMutation, CreateModelMutationVariables>) {
     return Apollo.useMutation<CreateModelMutation, CreateModelMutationVariables>(CreateModelDocument, baseOptions);
 }
@@ -2543,67 +2823,99 @@ export type CreateModelMutationHookResult = ReturnType<typeof useCreateModelMuta
 export type CreateModelMutationResult = Apollo.MutationResult<CreateModelMutation>;
 export type CreateModelMutationOptions = Apollo.BaseMutationOptions<CreateModelMutation, CreateModelMutationVariables>;
 export const CreateSceneDocument = gql`
-                                                                                                                                                                                                                                                                                                                mutation createScene($input: CreateSceneInput!) {
-                                                                                                                                                                                                                                                                                                                  createScene(input: $input) {
-                                                                                                                                                                                                                                                                                                                    Scene {
-                                                                                                                                                                                                                                                                                                                      idScene
-                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                `;
+    mutation createScene($input: CreateSceneInput!) {
+        createScene(input: $input) {
+            Scene {
+                idScene
+            }
+        }
+    }
+`;
 export type CreateSceneMutationFn = Apollo.MutationFunction<CreateSceneMutation, CreateSceneMutationVariables>;
 
 /**
-* __useCreateSceneMutation__
-*
-* To run a mutation, you first call `useCreateSceneMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateSceneMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createSceneMutation, { data, loading, error }] = useCreateSceneMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateSceneMutation__
+ *
+ * To run a mutation, you first call `useCreateSceneMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateSceneMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createSceneMutation, { data, loading, error }] = useCreateSceneMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateSceneMutation(baseOptions?: Apollo.MutationHookOptions<CreateSceneMutation, CreateSceneMutationVariables>) {
     return Apollo.useMutation<CreateSceneMutation, CreateSceneMutationVariables>(CreateSceneDocument, baseOptions);
 }
 export type CreateSceneMutationHookResult = ReturnType<typeof useCreateSceneMutation>;
 export type CreateSceneMutationResult = Apollo.MutationResult<CreateSceneMutation>;
 export type CreateSceneMutationOptions = Apollo.BaseMutationOptions<CreateSceneMutation, CreateSceneMutationVariables>;
+export const UpdateObjectDetailsDocument = gql`
+    mutation updateObjectDetails($input: UpdateObjectDetailsInput!) {
+        updateObjectDetails(input: $input) {
+            success
+        }
+    }
+`;
+export type UpdateObjectDetailsMutationFn = Apollo.MutationFunction<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables>;
+
+/**
+ * __useUpdateObjectDetailsMutation__
+ *
+ * To run a mutation, you first call `useUpdateObjectDetailsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateObjectDetailsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateObjectDetailsMutation, { data, loading, error }] = useUpdateObjectDetailsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateObjectDetailsMutation(baseOptions?: Apollo.MutationHookOptions<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables>) {
+    return Apollo.useMutation<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables>(UpdateObjectDetailsDocument, baseOptions);
+}
+export type UpdateObjectDetailsMutationHookResult = ReturnType<typeof useUpdateObjectDetailsMutation>;
+export type UpdateObjectDetailsMutationResult = Apollo.MutationResult<UpdateObjectDetailsMutation>;
+export type UpdateObjectDetailsMutationOptions = Apollo.BaseMutationOptions<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables>;
 export const CreateItemDocument = gql`
-                                                                                                                                                                                                                                                                                                                    mutation createItem($input: CreateItemInput!) {
-                                                                                                                                                                                                                                                                                                                      createItem(input: $input) {
-                                                                                                                                                                                                                                                                                                                        Item {
-                                                                                                                                                                                                                                                                                                                          idItem
-                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                    `;
+    mutation createItem($input: CreateItemInput!) {
+        createItem(input: $input) {
+            Item {
+                idItem
+            }
+        }
+    }
+`;
 export type CreateItemMutationFn = Apollo.MutationFunction<CreateItemMutation, CreateItemMutationVariables>;
 
 /**
-* __useCreateItemMutation__
-*
-* To run a mutation, you first call `useCreateItemMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateItemMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createItemMutation, { data, loading, error }] = useCreateItemMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateItemMutation__
+ *
+ * To run a mutation, you first call `useCreateItemMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateItemMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createItemMutation, { data, loading, error }] = useCreateItemMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateItemMutation(baseOptions?: Apollo.MutationHookOptions<CreateItemMutation, CreateItemMutationVariables>) {
     return Apollo.useMutation<CreateItemMutation, CreateItemMutationVariables>(CreateItemDocument, baseOptions);
 }
@@ -2611,33 +2923,33 @@ export type CreateItemMutationHookResult = ReturnType<typeof useCreateItemMutati
 export type CreateItemMutationResult = Apollo.MutationResult<CreateItemMutation>;
 export type CreateItemMutationOptions = Apollo.BaseMutationOptions<CreateItemMutation, CreateItemMutationVariables>;
 export const CreateProjectDocument = gql`
-                                                                                                                                                                                                                                                                                                                        mutation createProject($input: CreateProjectInput!) {
-                                                                                                                                                                                                                                                                                                                          createProject(input: $input) {
-                                                                                                                                                                                                                                                                                                                            Project {
-                                                                                                                                                                                                                                                                                                                              idProject
-                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                        `;
+    mutation createProject($input: CreateProjectInput!) {
+        createProject(input: $input) {
+            Project {
+                idProject
+            }
+        }
+    }
+`;
 export type CreateProjectMutationFn = Apollo.MutationFunction<CreateProjectMutation, CreateProjectMutationVariables>;
 
 /**
-* __useCreateProjectMutation__
-*
-* To run a mutation, you first call `useCreateProjectMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateProjectMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createProjectMutation, { data, loading, error }] = useCreateProjectMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateProjectMutation__
+ *
+ * To run a mutation, you first call `useCreateProjectMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateProjectMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createProjectMutation, { data, loading, error }] = useCreateProjectMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateProjectMutation(baseOptions?: Apollo.MutationHookOptions<CreateProjectMutation, CreateProjectMutationVariables>) {
     return Apollo.useMutation<CreateProjectMutation, CreateProjectMutationVariables>(CreateProjectDocument, baseOptions);
 }
@@ -2645,33 +2957,33 @@ export type CreateProjectMutationHookResult = ReturnType<typeof useCreateProject
 export type CreateProjectMutationResult = Apollo.MutationResult<CreateProjectMutation>;
 export type CreateProjectMutationOptions = Apollo.BaseMutationOptions<CreateProjectMutation, CreateProjectMutationVariables>;
 export const CreateSubjectDocument = gql`
-                                                                                                                                                                                                                                                                                                                            mutation createSubject($input: CreateSubjectInput!) {
-                                                                                                                                                                                                                                                                                                                              createSubject(input: $input) {
-                                                                                                                                                                                                                                                                                                                                Subject {
-                                                                                                                                                                                                                                                                                                                                  idSubject
-                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                            `;
+    mutation createSubject($input: CreateSubjectInput!) {
+        createSubject(input: $input) {
+            Subject {
+                idSubject
+            }
+        }
+    }
+`;
 export type CreateSubjectMutationFn = Apollo.MutationFunction<CreateSubjectMutation, CreateSubjectMutationVariables>;
 
 /**
-* __useCreateSubjectMutation__
-*
-* To run a mutation, you first call `useCreateSubjectMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateSubjectMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createSubjectMutation, { data, loading, error }] = useCreateSubjectMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateSubjectMutation__
+ *
+ * To run a mutation, you first call `useCreateSubjectMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateSubjectMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createSubjectMutation, { data, loading, error }] = useCreateSubjectMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateSubjectMutation(baseOptions?: Apollo.MutationHookOptions<CreateSubjectMutation, CreateSubjectMutationVariables>) {
     return Apollo.useMutation<CreateSubjectMutation, CreateSubjectMutationVariables>(CreateSubjectDocument, baseOptions);
 }
@@ -2679,33 +2991,33 @@ export type CreateSubjectMutationHookResult = ReturnType<typeof useCreateSubject
 export type CreateSubjectMutationResult = Apollo.MutationResult<CreateSubjectMutation>;
 export type CreateSubjectMutationOptions = Apollo.BaseMutationOptions<CreateSubjectMutation, CreateSubjectMutationVariables>;
 export const CreateUnitDocument = gql`
-                                                                                                                                                                                                                                                                                                                                mutation createUnit($input: CreateUnitInput!) {
-                                                                                                                                                                                                                                                                                                                                  createUnit(input: $input) {
-                                                                                                                                                                                                                                                                                                                                    Unit {
-                                                                                                                                                                                                                                                                                                                                      idUnit
-                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                `;
+    mutation createUnit($input: CreateUnitInput!) {
+        createUnit(input: $input) {
+            Unit {
+                idUnit
+            }
+        }
+    }
+`;
 export type CreateUnitMutationFn = Apollo.MutationFunction<CreateUnitMutation, CreateUnitMutationVariables>;
 
 /**
-* __useCreateUnitMutation__
-*
-* To run a mutation, you first call `useCreateUnitMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateUnitMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createUnitMutation, { data, loading, error }] = useCreateUnitMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateUnitMutation__
+ *
+ * To run a mutation, you first call `useCreateUnitMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateUnitMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createUnitMutation, { data, loading, error }] = useCreateUnitMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateUnitMutation(baseOptions?: Apollo.MutationHookOptions<CreateUnitMutation, CreateUnitMutationVariables>) {
     return Apollo.useMutation<CreateUnitMutation, CreateUnitMutationVariables>(CreateUnitDocument, baseOptions);
 }
@@ -2713,36 +3025,36 @@ export type CreateUnitMutationHookResult = ReturnType<typeof useCreateUnitMutati
 export type CreateUnitMutationResult = Apollo.MutationResult<CreateUnitMutation>;
 export type CreateUnitMutationOptions = Apollo.BaseMutationOptions<CreateUnitMutation, CreateUnitMutationVariables>;
 export const CreateUserDocument = gql`
-                                                                                                                                                                                                                                                                                                                                    mutation createUser($input: CreateUserInput!) {
-                                                                                                                                                                                                                                                                                                                                      createUser(input: $input) {
-                                                                                                                                                                                                                                                                                                                                        User {
-                                                                                                                                                                                                                                                                                                                                          idUser
-                                                                                                                                                                                                                                                                                                                                          Name
-                                                                                                                                                                                                                                                                                                                                          Active
-                                                                                                                                                                                                                                                                                                                                          DateActivated
-                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                    `;
+    mutation createUser($input: CreateUserInput!) {
+        createUser(input: $input) {
+            User {
+                idUser
+                Name
+                Active
+                DateActivated
+            }
+        }
+    }
+`;
 export type CreateUserMutationFn = Apollo.MutationFunction<CreateUserMutation, CreateUserMutationVariables>;
 
 /**
-* __useCreateUserMutation__
-*
-* To run a mutation, you first call `useCreateUserMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateUserMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createUserMutation, { data, loading, error }] = useCreateUserMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateUserMutation__
+ *
+ * To run a mutation, you first call `useCreateUserMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateUserMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createUserMutation, { data, loading, error }] = useCreateUserMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateUserMutation(baseOptions?: Apollo.MutationHookOptions<CreateUserMutation, CreateUserMutationVariables>) {
     return Apollo.useMutation<CreateUserMutation, CreateUserMutationVariables>(CreateUserDocument, baseOptions);
 }
@@ -2750,33 +3062,33 @@ export type CreateUserMutationHookResult = ReturnType<typeof useCreateUserMutati
 export type CreateUserMutationResult = Apollo.MutationResult<CreateUserMutation>;
 export type CreateUserMutationOptions = Apollo.BaseMutationOptions<CreateUserMutation, CreateUserMutationVariables>;
 export const CreateVocabularyDocument = gql`
-                                                                                                                                                                                                                                                                                                                                        mutation createVocabulary($input: CreateVocabularyInput!) {
-                                                                                                                                                                                                                                                                                                                                          createVocabulary(input: $input) {
-                                                                                                                                                                                                                                                                                                                                            Vocabulary {
-                                                                                                                                                                                                                                                                                                                                              idVocabulary
-                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                        `;
+    mutation createVocabulary($input: CreateVocabularyInput!) {
+        createVocabulary(input: $input) {
+            Vocabulary {
+                idVocabulary
+            }
+        }
+    }
+`;
 export type CreateVocabularyMutationFn = Apollo.MutationFunction<CreateVocabularyMutation, CreateVocabularyMutationVariables>;
 
 /**
-* __useCreateVocabularyMutation__
-*
-* To run a mutation, you first call `useCreateVocabularyMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateVocabularyMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createVocabularyMutation, { data, loading, error }] = useCreateVocabularyMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateVocabularyMutation__
+ *
+ * To run a mutation, you first call `useCreateVocabularyMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateVocabularyMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createVocabularyMutation, { data, loading, error }] = useCreateVocabularyMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateVocabularyMutation(baseOptions?: Apollo.MutationHookOptions<CreateVocabularyMutation, CreateVocabularyMutationVariables>) {
     return Apollo.useMutation<CreateVocabularyMutation, CreateVocabularyMutationVariables>(CreateVocabularyDocument, baseOptions);
 }
@@ -2784,33 +3096,33 @@ export type CreateVocabularyMutationHookResult = ReturnType<typeof useCreateVoca
 export type CreateVocabularyMutationResult = Apollo.MutationResult<CreateVocabularyMutation>;
 export type CreateVocabularyMutationOptions = Apollo.BaseMutationOptions<CreateVocabularyMutation, CreateVocabularyMutationVariables>;
 export const CreateVocabularySetDocument = gql`
-                                                                                                                                                                                                                                                                                                                                            mutation createVocabularySet($input: CreateVocabularySetInput!) {
-                                                                                                                                                                                                                                                                                                                                              createVocabularySet(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                VocabularySet {
-                                                                                                                                                                                                                                                                                                                                                  idVocabularySet
-                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                            `;
+    mutation createVocabularySet($input: CreateVocabularySetInput!) {
+        createVocabularySet(input: $input) {
+            VocabularySet {
+                idVocabularySet
+            }
+        }
+    }
+`;
 export type CreateVocabularySetMutationFn = Apollo.MutationFunction<CreateVocabularySetMutation, CreateVocabularySetMutationVariables>;
 
 /**
-* __useCreateVocabularySetMutation__
-*
-* To run a mutation, you first call `useCreateVocabularySetMutation` within a React component and pass it any options that fit your needs.
-* When your component renders, `useCreateVocabularySetMutation` returns a tuple that includes:
-* - A mutate function that you can call at any time to execute the mutation
-* - An object with fields that represent the current status of the mutation's execution
-*
-* @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
-*
-* @example
-* const [createVocabularySetMutation, { data, loading, error }] = useCreateVocabularySetMutation({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useCreateVocabularySetMutation__
+ *
+ * To run a mutation, you first call `useCreateVocabularySetMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateVocabularySetMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createVocabularySetMutation, { data, loading, error }] = useCreateVocabularySetMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useCreateVocabularySetMutation(baseOptions?: Apollo.MutationHookOptions<CreateVocabularySetMutation, CreateVocabularySetMutationVariables>) {
     return Apollo.useMutation<CreateVocabularySetMutation, CreateVocabularySetMutationVariables>(CreateVocabularySetDocument, baseOptions);
 }
@@ -2818,31 +3130,31 @@ export type CreateVocabularySetMutationHookResult = ReturnType<typeof useCreateV
 export type CreateVocabularySetMutationResult = Apollo.MutationResult<CreateVocabularySetMutation>;
 export type CreateVocabularySetMutationOptions = Apollo.BaseMutationOptions<CreateVocabularySetMutation, CreateVocabularySetMutationVariables>;
 export const GetAccessPolicyDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                query getAccessPolicy($input: GetAccessPolicyInput!) {
-                                                                                                                                                                                                                                                                                                                                                  getAccessPolicy(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                    AccessPolicy {
-                                                                                                                                                                                                                                                                                                                                                      idAccessPolicy
-                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                `;
+    query getAccessPolicy($input: GetAccessPolicyInput!) {
+        getAccessPolicy(input: $input) {
+            AccessPolicy {
+                idAccessPolicy
+            }
+        }
+    }
+`;
 
 /**
-* __useGetAccessPolicyQuery__
-*
-* To run a query within a React component, call `useGetAccessPolicyQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetAccessPolicyQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetAccessPolicyQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetAccessPolicyQuery__
+ *
+ * To run a query within a React component, call `useGetAccessPolicyQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAccessPolicyQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAccessPolicyQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetAccessPolicyQuery(baseOptions?: Apollo.QueryHookOptions<GetAccessPolicyQuery, GetAccessPolicyQueryVariables>) {
     return Apollo.useQuery<GetAccessPolicyQuery, GetAccessPolicyQueryVariables>(GetAccessPolicyDocument, baseOptions);
 }
@@ -2853,31 +3165,31 @@ export type GetAccessPolicyQueryHookResult = ReturnType<typeof useGetAccessPolic
 export type GetAccessPolicyLazyQueryHookResult = ReturnType<typeof useGetAccessPolicyLazyQuery>;
 export type GetAccessPolicyQueryResult = Apollo.QueryResult<GetAccessPolicyQuery, GetAccessPolicyQueryVariables>;
 export const GetAssetDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                    query getAsset($input: GetAssetInput!) {
-                                                                                                                                                                                                                                                                                                                                                      getAsset(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                        Asset {
-                                                                                                                                                                                                                                                                                                                                                          idAsset
-                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                    `;
+    query getAsset($input: GetAssetInput!) {
+        getAsset(input: $input) {
+            Asset {
+                idAsset
+            }
+        }
+    }
+`;
 
 /**
-* __useGetAssetQuery__
-*
-* To run a query within a React component, call `useGetAssetQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetAssetQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetAssetQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetAssetQuery__
+ *
+ * To run a query within a React component, call `useGetAssetQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAssetQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAssetQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetAssetQuery(baseOptions?: Apollo.QueryHookOptions<GetAssetQuery, GetAssetQueryVariables>) {
     return Apollo.useQuery<GetAssetQuery, GetAssetQueryVariables>(GetAssetDocument, baseOptions);
 }
@@ -2888,85 +3200,117 @@ export type GetAssetQueryHookResult = ReturnType<typeof useGetAssetQuery>;
 export type GetAssetLazyQueryHookResult = ReturnType<typeof useGetAssetLazyQuery>;
 export type GetAssetQueryResult = Apollo.QueryResult<GetAssetQuery, GetAssetQueryVariables>;
 export const GetAssetVersionsDetailsDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                        query getAssetVersionsDetails($input: GetAssetVersionsDetailsInput!) {
-                                                                                                                                                                                                                                                                                                                                                          getAssetVersionsDetails(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                            valid
-                                                                                                                                                                                                                                                                                                                                                            Details {
-                                                                                                                                                                                                                                                                                                                                                              idAssetVersion
-                                                                                                                                                                                                                                                                                                                                                              SubjectUnitIdentifier {
-                                                                                                                                                                                                                                                                                                                                                                idSubject
-                                                                                                                                                                                                                                                                                                                                                                SubjectName
-                                                                                                                                                                                                                                                                                                                                                                UnitAbbreviation
-                                                                                                                                                                                                                                                                                                                                                                IdentifierPublic
-                                                                                                                                                                                                                                                                                                                                                                IdentifierCollection
-                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                              Project {
-                                                                                                                                                                                                                                                                                                                                                                idProject
-                                                                                                                                                                                                                                                                                                                                                                Name
-                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                              Item {
-                                                                                                                                                                                                                                                                                                                                                                idItem
-                                                                                                                                                                                                                                                                                                                                                                Name
-                                                                                                                                                                                                                                                                                                                                                                EntireSubject
-                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                              CaptureDataPhoto {
-                                                                                                                                                                                                                                                                                                                                                                idAssetVersion
-                                                                                                                                                                                                                                                                                                                                                                dateCaptured
-                                                                                                                                                                                                                                                                                                                                                                datasetType
-                                                                                                                                                                                                                                                                                                                                                                systemCreated
-                                                                                                                                                                                                                                                                                                                                                                description
-                                                                                                                                                                                                                                                                                                                                                                cameraSettingUniform
-                                                                                                                                                                                                                                                                                                                                                                datasetFieldId
-                                                                                                                                                                                                                                                                                                                                                                itemPositionType
-                                                                                                                                                                                                                                                                                                                                                                itemPositionFieldId
-                                                                                                                                                                                                                                                                                                                                                                itemArrangementFieldId
-                                                                                                                                                                                                                                                                                                                                                                focusType
-                                                                                                                                                                                                                                                                                                                                                                lightsourceType
-                                                                                                                                                                                                                                                                                                                                                                backgroundRemovalMethod
-                                                                                                                                                                                                                                                                                                                                                                clusterType
-                                                                                                                                                                                                                                                                                                                                                                clusterGeometryFieldId
-                                                                                                                                                                                                                                                                                                                                                                directory
-                                                                                                                                                                                                                                                                                                                                                                folders {
-                                                                                                                                                                                                                                                                                                                                                                  name
-                                                                                                                                                                                                                                                                                                                                                                  variantType
-                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                identifiers {
-                                                                                                                                                                                                                                                                                                                                                                  identifier
-                                                                                                                                                                                                                                                                                                                                                                  identifierType
-                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                              Model {
-                                                                                                                                                                                                                                                                                                                                                                idAssetVersion
-                                                                                                                                                                                                                                                                                                                                                                authoritative
-                                                                                                                                                                                                                                                                                                                                                                dateCreated
-                                                                                                                                                                                                                                                                                                                                                                creationMethod
-                                                                                                                                                                                                                                                                                                                                                                modality
-                                                                                                                                                                                                                                                                                                                                                                purpose
-                                                                                                                                                                                                                                                                                                                                                                units
-                                                                                                                                                                                                                                                                                                                                                                master
-                                                                                                                                                                                                                                                                                                                                                                directory
-                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                        `;
+    query getAssetVersionsDetails($input: GetAssetVersionsDetailsInput!) {
+        getAssetVersionsDetails(input: $input) {
+            valid
+            Details {
+                idAssetVersion
+                SubjectUnitIdentifier {
+                    idSubject
+                    SubjectName
+                    UnitAbbreviation
+                    IdentifierPublic
+                    IdentifierCollection
+                }
+                Project {
+                    idProject
+                    Name
+                }
+                Item {
+                    idItem
+                    Name
+                    EntireSubject
+                }
+                CaptureDataPhoto {
+                    idAssetVersion
+                    dateCaptured
+                    datasetType
+                    systemCreated
+                    description
+                    cameraSettingUniform
+                    datasetFieldId
+                    itemPositionType
+                    itemPositionFieldId
+                    itemArrangementFieldId
+                    focusType
+                    lightsourceType
+                    backgroundRemovalMethod
+                    clusterType
+                    clusterGeometryFieldId
+                    directory
+                    folders {
+                        name
+                        variantType
+                    }
+                    identifiers {
+                        identifier
+                        identifierType
+                    }
+                }
+                Model {
+                    idAssetVersion
+                    systemCreated
+                    master
+                    authoritative
+                    creationMethod
+                    modality
+                    purpose
+                    units
+                    dateCaptured
+                    modelFileType
+                    directory
+                    identifiers {
+                        identifier
+                        identifierType
+                    }
+                    uvMaps {
+                        name
+                        edgeLength
+                        mapType
+                    }
+                    roughness
+                    metalness
+                    pointCount
+                    faceCount
+                    isWatertight
+                    hasNormals
+                    hasVertexColor
+                    hasUVSpace
+                    boundingBoxP1X
+                    boundingBoxP1Y
+                    boundingBoxP1Z
+                    boundingBoxP2X
+                    boundingBoxP2Y
+                    boundingBoxP2Z
+                }
+                Scene {
+                    idAssetVersion
+                    identifiers {
+                        identifier
+                        identifierType
+                    }
+                }
+            }
+        }
+    }
+`;
 
 /**
-* __useGetAssetVersionsDetailsQuery__
-*
-* To run a query within a React component, call `useGetAssetVersionsDetailsQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetAssetVersionsDetailsQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetAssetVersionsDetailsQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetAssetVersionsDetailsQuery__
+ *
+ * To run a query within a React component, call `useGetAssetVersionsDetailsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAssetVersionsDetailsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAssetVersionsDetailsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetAssetVersionsDetailsQuery(baseOptions?: Apollo.QueryHookOptions<GetAssetVersionsDetailsQuery, GetAssetVersionsDetailsQueryVariables>) {
     return Apollo.useQuery<GetAssetVersionsDetailsQuery, GetAssetVersionsDetailsQueryVariables>(GetAssetVersionsDetailsDocument, baseOptions);
 }
@@ -2977,33 +3321,33 @@ export type GetAssetVersionsDetailsQueryHookResult = ReturnType<typeof useGetAss
 export type GetAssetVersionsDetailsLazyQueryHookResult = ReturnType<typeof useGetAssetVersionsDetailsLazyQuery>;
 export type GetAssetVersionsDetailsQueryResult = Apollo.QueryResult<GetAssetVersionsDetailsQuery, GetAssetVersionsDetailsQueryVariables>;
 export const GetContentsForAssetVersionsDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                            query getContentsForAssetVersions($input: GetContentsForAssetVersionsInput!) {
-                                                                                                                                                                                                                                                                                                                                                              getContentsForAssetVersions(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                AssetVersionContent {
-                                                                                                                                                                                                                                                                                                                                                                  idAssetVersion
-                                                                                                                                                                                                                                                                                                                                                                  folders
-                                                                                                                                                                                                                                                                                                                                                                  all
-                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                            `;
+    query getContentsForAssetVersions($input: GetContentsForAssetVersionsInput!) {
+        getContentsForAssetVersions(input: $input) {
+            AssetVersionContent {
+                idAssetVersion
+                folders
+                all
+            }
+        }
+    }
+`;
 
 /**
-* __useGetContentsForAssetVersionsQuery__
-*
-* To run a query within a React component, call `useGetContentsForAssetVersionsQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetContentsForAssetVersionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetContentsForAssetVersionsQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetContentsForAssetVersionsQuery__
+ *
+ * To run a query within a React component, call `useGetContentsForAssetVersionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetContentsForAssetVersionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetContentsForAssetVersionsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetContentsForAssetVersionsQuery(baseOptions?: Apollo.QueryHookOptions<GetContentsForAssetVersionsQuery, GetContentsForAssetVersionsQueryVariables>) {
     return Apollo.useQuery<GetContentsForAssetVersionsQuery, GetContentsForAssetVersionsQueryVariables>(GetContentsForAssetVersionsDocument, baseOptions);
 }
@@ -3014,39 +3358,40 @@ export type GetContentsForAssetVersionsQueryHookResult = ReturnType<typeof useGe
 export type GetContentsForAssetVersionsLazyQueryHookResult = ReturnType<typeof useGetContentsForAssetVersionsLazyQuery>;
 export type GetContentsForAssetVersionsQueryResult = Apollo.QueryResult<GetContentsForAssetVersionsQuery, GetContentsForAssetVersionsQueryVariables>;
 export const GetUploadedAssetVersionDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                query getUploadedAssetVersion {
-                                                                                                                                                                                                                                                                                                                                                                  getUploadedAssetVersion {
-                                                                                                                                                                                                                                                                                                                                                                    AssetVersion {
-                                                                                                                                                                                                                                                                                                                                                                      idAssetVersion
-                                                                                                                                                                                                                                                                                                                                                                      StorageSize
-                                                                                                                                                                                                                                                                                                                                                                      FileName
-                                                                                                                                                                                                                                                                                                                                                                      Asset {
-                                                                                                                                                                                                                                                                                                                                                                        idAsset
-                                                                                                                                                                                                                                                                                                                                                                        VAssetType {
-                                                                                                                                                                                                                                                                                                                                                                          idVocabulary
-                                                                                                                                                                                                                                                                                                                                                                          Term
-                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                `;
+    query getUploadedAssetVersion {
+        getUploadedAssetVersion {
+            AssetVersion {
+                idAssetVersion
+                StorageSize
+                FileName
+                DateCreated
+                Asset {
+                    idAsset
+                    VAssetType {
+                        idVocabulary
+                        Term
+                    }
+                }
+            }
+        }
+    }
+`;
 
 /**
-* __useGetUploadedAssetVersionQuery__
-*
-* To run a query within a React component, call `useGetUploadedAssetVersionQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetUploadedAssetVersionQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetUploadedAssetVersionQuery({
-  *   variables: {
-    *   },
-    * });
-    */
+ * __useGetUploadedAssetVersionQuery__
+ *
+ * To run a query within a React component, call `useGetUploadedAssetVersionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUploadedAssetVersionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUploadedAssetVersionQuery({
+ *   variables: {
+ *   },
+ * });
+ */
 export function useGetUploadedAssetVersionQuery(baseOptions?: Apollo.QueryHookOptions<GetUploadedAssetVersionQuery, GetUploadedAssetVersionQueryVariables>) {
     return Apollo.useQuery<GetUploadedAssetVersionQuery, GetUploadedAssetVersionQueryVariables>(GetUploadedAssetVersionDocument, baseOptions);
 }
@@ -3057,31 +3402,31 @@ export type GetUploadedAssetVersionQueryHookResult = ReturnType<typeof useGetUpl
 export type GetUploadedAssetVersionLazyQueryHookResult = ReturnType<typeof useGetUploadedAssetVersionLazyQuery>;
 export type GetUploadedAssetVersionQueryResult = Apollo.QueryResult<GetUploadedAssetVersionQuery, GetUploadedAssetVersionQueryVariables>;
 export const GetCaptureDataDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                    query getCaptureData($input: GetCaptureDataInput!) {
-                                                                                                                                                                                                                                                                                                                                                                      getCaptureData(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                        CaptureData {
-                                                                                                                                                                                                                                                                                                                                                                          idCaptureData
-                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                    `;
+    query getCaptureData($input: GetCaptureDataInput!) {
+        getCaptureData(input: $input) {
+            CaptureData {
+                idCaptureData
+            }
+        }
+    }
+`;
 
 /**
-* __useGetCaptureDataQuery__
-*
-* To run a query within a React component, call `useGetCaptureDataQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetCaptureDataQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetCaptureDataQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetCaptureDataQuery__
+ *
+ * To run a query within a React component, call `useGetCaptureDataQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetCaptureDataQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetCaptureDataQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetCaptureDataQuery(baseOptions?: Apollo.QueryHookOptions<GetCaptureDataQuery, GetCaptureDataQueryVariables>) {
     return Apollo.useQuery<GetCaptureDataQuery, GetCaptureDataQueryVariables>(GetCaptureDataDocument, baseOptions);
 }
@@ -3092,31 +3437,31 @@ export type GetCaptureDataQueryHookResult = ReturnType<typeof useGetCaptureDataQ
 export type GetCaptureDataLazyQueryHookResult = ReturnType<typeof useGetCaptureDataLazyQuery>;
 export type GetCaptureDataQueryResult = Apollo.QueryResult<GetCaptureDataQuery, GetCaptureDataQueryVariables>;
 export const GetCaptureDataPhotoDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                        query getCaptureDataPhoto($input: GetCaptureDataPhotoInput!) {
-                                                                                                                                                                                                                                                                                                                                                                          getCaptureDataPhoto(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                            CaptureDataPhoto {
-                                                                                                                                                                                                                                                                                                                                                                              idCaptureDataPhoto
-                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                        `;
+    query getCaptureDataPhoto($input: GetCaptureDataPhotoInput!) {
+        getCaptureDataPhoto(input: $input) {
+            CaptureDataPhoto {
+                idCaptureDataPhoto
+            }
+        }
+    }
+`;
 
 /**
-* __useGetCaptureDataPhotoQuery__
-*
-* To run a query within a React component, call `useGetCaptureDataPhotoQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetCaptureDataPhotoQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetCaptureDataPhotoQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetCaptureDataPhotoQuery__
+ *
+ * To run a query within a React component, call `useGetCaptureDataPhotoQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetCaptureDataPhotoQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetCaptureDataPhotoQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetCaptureDataPhotoQuery(baseOptions?: Apollo.QueryHookOptions<GetCaptureDataPhotoQuery, GetCaptureDataPhotoQueryVariables>) {
     return Apollo.useQuery<GetCaptureDataPhotoQuery, GetCaptureDataPhotoQueryVariables>(GetCaptureDataPhotoDocument, baseOptions);
 }
@@ -3127,29 +3472,29 @@ export type GetCaptureDataPhotoQueryHookResult = ReturnType<typeof useGetCapture
 export type GetCaptureDataPhotoLazyQueryHookResult = ReturnType<typeof useGetCaptureDataPhotoLazyQuery>;
 export type GetCaptureDataPhotoQueryResult = Apollo.QueryResult<GetCaptureDataPhotoQuery, GetCaptureDataPhotoQueryVariables>;
 export const AreCameraSettingsUniformDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                            query areCameraSettingsUniform($input: AreCameraSettingsUniformInput!) {
-                                                                                                                                                                                                                                                                                                                                                                              areCameraSettingsUniform(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                isUniform
-                                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                            `;
+    query areCameraSettingsUniform($input: AreCameraSettingsUniformInput!) {
+        areCameraSettingsUniform(input: $input) {
+            isUniform
+        }
+    }
+`;
 
 /**
-* __useAreCameraSettingsUniformQuery__
-*
-* To run a query within a React component, call `useAreCameraSettingsUniformQuery` and pass it any options that fit your needs.
-* When your component renders, `useAreCameraSettingsUniformQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useAreCameraSettingsUniformQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useAreCameraSettingsUniformQuery__
+ *
+ * To run a query within a React component, call `useAreCameraSettingsUniformQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAreCameraSettingsUniformQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAreCameraSettingsUniformQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useAreCameraSettingsUniformQuery(baseOptions?: Apollo.QueryHookOptions<AreCameraSettingsUniformQuery, AreCameraSettingsUniformQueryVariables>) {
     return Apollo.useQuery<AreCameraSettingsUniformQuery, AreCameraSettingsUniformQueryVariables>(AreCameraSettingsUniformDocument, baseOptions);
 }
@@ -3160,31 +3505,31 @@ export type AreCameraSettingsUniformQueryHookResult = ReturnType<typeof useAreCa
 export type AreCameraSettingsUniformLazyQueryHookResult = ReturnType<typeof useAreCameraSettingsUniformLazyQuery>;
 export type AreCameraSettingsUniformQueryResult = Apollo.QueryResult<AreCameraSettingsUniformQuery, AreCameraSettingsUniformQueryVariables>;
 export const GetLicenseDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                query getLicense($input: GetLicenseInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                  getLicense(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                    License {
-                                                                                                                                                                                                                                                                                                                                                                                      idLicense
-                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                `;
+    query getLicense($input: GetLicenseInput!) {
+        getLicense(input: $input) {
+            License {
+                idLicense
+            }
+        }
+    }
+`;
 
 /**
-* __useGetLicenseQuery__
-*
-* To run a query within a React component, call `useGetLicenseQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetLicenseQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetLicenseQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetLicenseQuery__
+ *
+ * To run a query within a React component, call `useGetLicenseQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLicenseQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLicenseQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetLicenseQuery(baseOptions?: Apollo.QueryHookOptions<GetLicenseQuery, GetLicenseQueryVariables>) {
     return Apollo.useQuery<GetLicenseQuery, GetLicenseQueryVariables>(GetLicenseDocument, baseOptions);
 }
@@ -3195,31 +3540,31 @@ export type GetLicenseQueryHookResult = ReturnType<typeof useGetLicenseQuery>;
 export type GetLicenseLazyQueryHookResult = ReturnType<typeof useGetLicenseLazyQuery>;
 export type GetLicenseQueryResult = Apollo.QueryResult<GetLicenseQuery, GetLicenseQueryVariables>;
 export const GetModelDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                    query getModel($input: GetModelInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                      getModel(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                        Model {
-                                                                                                                                                                                                                                                                                                                                                                                          idModel
-                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                    `;
+    query getModel($input: GetModelInput!) {
+        getModel(input: $input) {
+            Model {
+                idModel
+            }
+        }
+    }
+`;
 
 /**
-* __useGetModelQuery__
-*
-* To run a query within a React component, call `useGetModelQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetModelQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetModelQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetModelQuery__
+ *
+ * To run a query within a React component, call `useGetModelQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetModelQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetModelQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetModelQuery(baseOptions?: Apollo.QueryHookOptions<GetModelQuery, GetModelQueryVariables>) {
     return Apollo.useQuery<GetModelQuery, GetModelQueryVariables>(GetModelDocument, baseOptions);
 }
@@ -3229,39 +3574,84 @@ export function useGetModelLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetModelQueryHookResult = ReturnType<typeof useGetModelQuery>;
 export type GetModelLazyQueryHookResult = ReturnType<typeof useGetModelLazyQuery>;
 export type GetModelQueryResult = Apollo.QueryResult<GetModelQuery, GetModelQueryVariables>;
-export const GetObjectChildrenDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                        query getObjectChildren($input: GetObjectChildrenInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                          getObjectChildren(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                            success
-                                                                                                                                                                                                                                                                                                                                                                                            error
-                                                                                                                                                                                                                                                                                                                                                                                            entries {
-                                                                                                                                                                                                                                                                                                                                                                                              idSystemObject
-                                                                                                                                                                                                                                                                                                                                                                                              name
-                                                                                                                                                                                                                                                                                                                                                                                              objectType
-                                                                                                                                                                                                                                                                                                                                                                                              idObject
-                                                                                                                                                                                                                                                                                                                                                                                              metadata
-                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                            metadataColumns
-                                                                                                                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                        `;
+export const GetFilterViewDataDocument = gql`
+    query getFilterViewData {
+        getFilterViewData {
+            units {
+                idUnit
+                Name
+                SystemObject {
+                    idSystemObject
+                }
+            }
+            projects {
+                idProject
+                Name
+                SystemObject {
+                    idSystemObject
+                }
+            }
+        }
+    }
+`;
 
 /**
-* __useGetObjectChildrenQuery__
-*
-* To run a query within a React component, call `useGetObjectChildrenQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetObjectChildrenQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetObjectChildrenQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetFilterViewDataQuery__
+ *
+ * To run a query within a React component, call `useGetFilterViewDataQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFilterViewDataQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFilterViewDataQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetFilterViewDataQuery(baseOptions?: Apollo.QueryHookOptions<GetFilterViewDataQuery, GetFilterViewDataQueryVariables>) {
+    return Apollo.useQuery<GetFilterViewDataQuery, GetFilterViewDataQueryVariables>(GetFilterViewDataDocument, baseOptions);
+}
+export function useGetFilterViewDataLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetFilterViewDataQuery, GetFilterViewDataQueryVariables>) {
+    return Apollo.useLazyQuery<GetFilterViewDataQuery, GetFilterViewDataQueryVariables>(GetFilterViewDataDocument, baseOptions);
+}
+export type GetFilterViewDataQueryHookResult = ReturnType<typeof useGetFilterViewDataQuery>;
+export type GetFilterViewDataLazyQueryHookResult = ReturnType<typeof useGetFilterViewDataLazyQuery>;
+export type GetFilterViewDataQueryResult = Apollo.QueryResult<GetFilterViewDataQuery, GetFilterViewDataQueryVariables>;
+export const GetObjectChildrenDocument = gql`
+    query getObjectChildren($input: GetObjectChildrenInput!) {
+        getObjectChildren(input: $input) {
+            success
+            error
+            entries {
+                idSystemObject
+                name
+                objectType
+                idObject
+                metadata
+            }
+            metadataColumns
+        }
+    }
+`;
+
+/**
+ * __useGetObjectChildrenQuery__
+ *
+ * To run a query within a React component, call `useGetObjectChildrenQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetObjectChildrenQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetObjectChildrenQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetObjectChildrenQuery(baseOptions?: Apollo.QueryHookOptions<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>) {
     return Apollo.useQuery<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>(GetObjectChildrenDocument, baseOptions);
 }
@@ -3272,31 +3662,31 @@ export type GetObjectChildrenQueryHookResult = ReturnType<typeof useGetObjectChi
 export type GetObjectChildrenLazyQueryHookResult = ReturnType<typeof useGetObjectChildrenLazyQuery>;
 export type GetObjectChildrenQueryResult = Apollo.QueryResult<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>;
 export const GetIntermediaryFileDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                            query getIntermediaryFile($input: GetIntermediaryFileInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                              getIntermediaryFile(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                IntermediaryFile {
-                                                                                                                                                                                                                                                                                                                                                                                                  idIntermediaryFile
-                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                            `;
+    query getIntermediaryFile($input: GetIntermediaryFileInput!) {
+        getIntermediaryFile(input: $input) {
+            IntermediaryFile {
+                idIntermediaryFile
+            }
+        }
+    }
+`;
 
 /**
-* __useGetIntermediaryFileQuery__
-*
-* To run a query within a React component, call `useGetIntermediaryFileQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetIntermediaryFileQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetIntermediaryFileQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetIntermediaryFileQuery__
+ *
+ * To run a query within a React component, call `useGetIntermediaryFileQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetIntermediaryFileQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetIntermediaryFileQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetIntermediaryFileQuery(baseOptions?: Apollo.QueryHookOptions<GetIntermediaryFileQuery, GetIntermediaryFileQueryVariables>) {
     return Apollo.useQuery<GetIntermediaryFileQuery, GetIntermediaryFileQueryVariables>(GetIntermediaryFileDocument, baseOptions);
 }
@@ -3307,31 +3697,31 @@ export type GetIntermediaryFileQueryHookResult = ReturnType<typeof useGetInterme
 export type GetIntermediaryFileLazyQueryHookResult = ReturnType<typeof useGetIntermediaryFileLazyQuery>;
 export type GetIntermediaryFileQueryResult = Apollo.QueryResult<GetIntermediaryFileQuery, GetIntermediaryFileQueryVariables>;
 export const GetSceneDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                query getScene($input: GetSceneInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                  getScene(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                    Scene {
-                                                                                                                                                                                                                                                                                                                                                                                                      idScene
-                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                `;
+    query getScene($input: GetSceneInput!) {
+        getScene(input: $input) {
+            Scene {
+                idScene
+            }
+        }
+    }
+`;
 
 /**
-* __useGetSceneQuery__
-*
-* To run a query within a React component, call `useGetSceneQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetSceneQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetSceneQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetSceneQuery__
+ *
+ * To run a query within a React component, call `useGetSceneQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSceneQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSceneQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetSceneQuery(baseOptions?: Apollo.QueryHookOptions<GetSceneQuery, GetSceneQueryVariables>) {
     return Apollo.useQuery<GetSceneQuery, GetSceneQueryVariables>(GetSceneDocument, baseOptions);
 }
@@ -3341,34 +3731,386 @@ export function useGetSceneLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetSceneQueryHookResult = ReturnType<typeof useGetSceneQuery>;
 export type GetSceneLazyQueryHookResult = ReturnType<typeof useGetSceneLazyQuery>;
 export type GetSceneQueryResult = Apollo.QueryResult<GetSceneQuery, GetSceneQueryVariables>;
-export const GetIngestionItemsForSubjectsDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                    query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                      getIngestionItemsForSubjects(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                        Item {
-                                                                                                                                                                                                                                                                                                                                                                                                          idItem
-                                                                                                                                                                                                                                                                                                                                                                                                          EntireSubject
-                                                                                                                                                                                                                                                                                                                                                                                                          Name
-                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                    `;
+export const GetAssetDetailsForSystemObjectDocument = gql`
+    query getAssetDetailsForSystemObject($input: GetAssetDetailsForSystemObjectInput!) {
+        getAssetDetailsForSystemObject(input: $input) {
+            assetDetails {
+                idSystemObject
+                name
+                path
+                assetType
+                version
+                dateCreated
+                size
+            }
+        }
+    }
+`;
 
 /**
-* __useGetIngestionItemsForSubjectsQuery__
-*
-* To run a query within a React component, call `useGetIngestionItemsForSubjectsQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetIngestionItemsForSubjectsQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetIngestionItemsForSubjectsQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetAssetDetailsForSystemObjectQuery__
+ *
+ * To run a query within a React component, call `useGetAssetDetailsForSystemObjectQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAssetDetailsForSystemObjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAssetDetailsForSystemObjectQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetAssetDetailsForSystemObjectQuery(baseOptions?: Apollo.QueryHookOptions<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>) {
+    return Apollo.useQuery<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>(GetAssetDetailsForSystemObjectDocument, baseOptions);
+}
+export function useGetAssetDetailsForSystemObjectLazyQuery(
+    baseOptions?: Apollo.LazyQueryHookOptions<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>
+) {
+    return Apollo.useLazyQuery<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>(GetAssetDetailsForSystemObjectDocument, baseOptions);
+}
+export type GetAssetDetailsForSystemObjectQueryHookResult = ReturnType<typeof useGetAssetDetailsForSystemObjectQuery>;
+export type GetAssetDetailsForSystemObjectLazyQueryHookResult = ReturnType<typeof useGetAssetDetailsForSystemObjectLazyQuery>;
+export type GetAssetDetailsForSystemObjectQueryResult = Apollo.QueryResult<GetAssetDetailsForSystemObjectQuery, GetAssetDetailsForSystemObjectQueryVariables>;
+export const GetDetailsTabDataForObjectDocument = gql`
+    query getDetailsTabDataForObject($input: GetDetailsTabDataForObjectInput!) {
+        getDetailsTabDataForObject(input: $input) {
+            Unit {
+                Abbreviation
+                ARKPrefix
+            }
+            Project {
+                Description
+            }
+            Subject {
+                Altitude
+                Latitude
+                Longitude
+                R0
+                R1
+                R2
+                R3
+                TS0
+                TS1
+                TS2
+            }
+            Item {
+                EntireSubject
+                Altitude
+                Latitude
+                Longitude
+                R0
+                R1
+                R2
+                R3
+                TS0
+                TS1
+                TS2
+            }
+            CaptureData {
+                captureMethod
+                dateCaptured
+                datasetType
+                description
+                cameraSettingUniform
+                datasetFieldId
+                itemPositionType
+                itemPositionFieldId
+                itemArrangementFieldId
+                focusType
+                lightsourceType
+                backgroundRemovalMethod
+                clusterType
+                clusterGeometryFieldId
+                folders {
+                    name
+                    variantType
+                }
+            }
+            Model {
+                size
+                master
+                authoritative
+                creationMethod
+                modality
+                purpose
+                units
+                modelFileType
+                dateCaptured
+                uvMaps {
+                    name
+                    edgeLength
+                    mapType
+                }
+                boundingBoxP1X
+                boundingBoxP1Y
+                boundingBoxP1Z
+                boundingBoxP2X
+                boundingBoxP2Y
+                boundingBoxP2Z
+                countPoint
+                countFace
+                countColorChannel
+                countTextureCoorinateChannel
+                hasBones
+                hasFaceNormals
+                hasTangents
+                hasTextureCoordinates
+                hasVertexNormals
+                hasVertexColor
+                isManifold
+                isWatertight
+            }
+            Scene {
+                Links
+                AssetType
+                Tours
+                Annotation
+                HasBeenQCd
+                IsOriented
+            }
+            IntermediaryFile {
+                idIntermediaryFile
+            }
+            ProjectDocumentation {
+                Description
+            }
+            Asset {
+                FilePath
+                AssetType
+            }
+            AssetVersion {
+                Creator
+                DateCreated
+                StorageSize
+                Ingested
+                Version
+            }
+            Actor {
+                OrganizationName
+            }
+            Stakeholder {
+                OrganizationName
+                EmailAddress
+                PhoneNumberMobile
+                PhoneNumberOffice
+                MailingAddress
+            }
+        }
+    }
+`;
+
+/**
+ * __useGetDetailsTabDataForObjectQuery__
+ *
+ * To run a query within a React component, call `useGetDetailsTabDataForObjectQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetDetailsTabDataForObjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetDetailsTabDataForObjectQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetDetailsTabDataForObjectQuery(baseOptions?: Apollo.QueryHookOptions<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>) {
+    return Apollo.useQuery<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>(GetDetailsTabDataForObjectDocument, baseOptions);
+}
+export function useGetDetailsTabDataForObjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>) {
+    return Apollo.useLazyQuery<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>(GetDetailsTabDataForObjectDocument, baseOptions);
+}
+export type GetDetailsTabDataForObjectQueryHookResult = ReturnType<typeof useGetDetailsTabDataForObjectQuery>;
+export type GetDetailsTabDataForObjectLazyQueryHookResult = ReturnType<typeof useGetDetailsTabDataForObjectLazyQuery>;
+export type GetDetailsTabDataForObjectQueryResult = Apollo.QueryResult<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>;
+export const GetSourceObjectIdentiferDocument = gql`
+    query getSourceObjectIdentifer($input: GetSourceObjectIdentiferInput!) {
+        getSourceObjectIdentifer(input: $input) {
+            sourceObjectIdentifiers {
+                idSystemObject
+                identifier
+            }
+        }
+    }
+`;
+
+/**
+ * __useGetSourceObjectIdentiferQuery__
+ *
+ * To run a query within a React component, call `useGetSourceObjectIdentiferQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSourceObjectIdentiferQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSourceObjectIdentiferQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSourceObjectIdentiferQuery(baseOptions?: Apollo.QueryHookOptions<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>) {
+    return Apollo.useQuery<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>(GetSourceObjectIdentiferDocument, baseOptions);
+}
+export function useGetSourceObjectIdentiferLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>) {
+    return Apollo.useLazyQuery<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>(GetSourceObjectIdentiferDocument, baseOptions);
+}
+export type GetSourceObjectIdentiferQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferQuery>;
+export type GetSourceObjectIdentiferLazyQueryHookResult = ReturnType<typeof useGetSourceObjectIdentiferLazyQuery>;
+export type GetSourceObjectIdentiferQueryResult = Apollo.QueryResult<GetSourceObjectIdentiferQuery, GetSourceObjectIdentiferQueryVariables>;
+export const GetSystemObjectDetailsDocument = gql`
+    query getSystemObjectDetails($input: GetSystemObjectDetailsInput!) {
+        getSystemObjectDetails(input: $input) {
+            idObject
+            name
+            retired
+            objectType
+            allowed
+            publishedState
+            thumbnail
+            identifiers {
+                identifier
+                identifierType
+            }
+            unit {
+                idSystemObject
+                name
+                objectType
+            }
+            project {
+                idSystemObject
+                name
+                objectType
+            }
+            subject {
+                idSystemObject
+                name
+                objectType
+            }
+            item {
+                idSystemObject
+                name
+                objectType
+            }
+            objectAncestors {
+                idSystemObject
+                name
+                objectType
+            }
+            sourceObjects {
+                idSystemObject
+                name
+                identifier
+                objectType
+            }
+            derivedObjects {
+                idSystemObject
+                name
+                identifier
+                objectType
+            }
+        }
+    }
+`;
+
+/**
+ * __useGetSystemObjectDetailsQuery__
+ *
+ * To run a query within a React component, call `useGetSystemObjectDetailsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSystemObjectDetailsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSystemObjectDetailsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetSystemObjectDetailsQuery(baseOptions?: Apollo.QueryHookOptions<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>) {
+    return Apollo.useQuery<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>(GetSystemObjectDetailsDocument, baseOptions);
+}
+export function useGetSystemObjectDetailsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>) {
+    return Apollo.useLazyQuery<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>(GetSystemObjectDetailsDocument, baseOptions);
+}
+export type GetSystemObjectDetailsQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsQuery>;
+export type GetSystemObjectDetailsLazyQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsLazyQuery>;
+export type GetSystemObjectDetailsQueryResult = Apollo.QueryResult<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>;
+export const GetVersionsForSystemObjectDocument = gql`
+    query getVersionsForSystemObject($input: GetVersionsForSystemObjectInput!) {
+        getVersionsForSystemObject(input: $input) {
+            versions {
+                idSystemObject
+                version
+                name
+                creator
+                dateCreated
+                size
+            }
+        }
+    }
+`;
+
+/**
+ * __useGetVersionsForSystemObjectQuery__
+ *
+ * To run a query within a React component, call `useGetVersionsForSystemObjectQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetVersionsForSystemObjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetVersionsForSystemObjectQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetVersionsForSystemObjectQuery(baseOptions?: Apollo.QueryHookOptions<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>) {
+    return Apollo.useQuery<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>(GetVersionsForSystemObjectDocument, baseOptions);
+}
+export function useGetVersionsForSystemObjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>) {
+    return Apollo.useLazyQuery<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>(GetVersionsForSystemObjectDocument, baseOptions);
+}
+export type GetVersionsForSystemObjectQueryHookResult = ReturnType<typeof useGetVersionsForSystemObjectQuery>;
+export type GetVersionsForSystemObjectLazyQueryHookResult = ReturnType<typeof useGetVersionsForSystemObjectLazyQuery>;
+export type GetVersionsForSystemObjectQueryResult = Apollo.QueryResult<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>;
+export const GetIngestionItemsForSubjectsDocument = gql`
+    query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
+        getIngestionItemsForSubjects(input: $input) {
+            Item {
+                idItem
+                EntireSubject
+                Name
+            }
+        }
+    }
+`;
+
+/**
+ * __useGetIngestionItemsForSubjectsQuery__
+ *
+ * To run a query within a React component, call `useGetIngestionItemsForSubjectsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetIngestionItemsForSubjectsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetIngestionItemsForSubjectsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetIngestionItemsForSubjectsQuery(baseOptions?: Apollo.QueryHookOptions<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>) {
     return Apollo.useQuery<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>(GetIngestionItemsForSubjectsDocument, baseOptions);
 }
@@ -3379,67 +4121,71 @@ export type GetIngestionItemsForSubjectsQueryHookResult = ReturnType<typeof useG
 export type GetIngestionItemsForSubjectsLazyQueryHookResult = ReturnType<typeof useGetIngestionItemsForSubjectsLazyQuery>;
 export type GetIngestionItemsForSubjectsQueryResult = Apollo.QueryResult<GetIngestionItemsForSubjectsQuery, GetIngestionItemsForSubjectsQueryVariables>;
 export const GetIngestionProjectsForSubjectsDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                        query getIngestionProjectsForSubjects($input: GetIngestionProjectsForSubjectsInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                          getIngestionProjectsForSubjects(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                            Project {
-                                                                                                                                                                                                                                                                                                                                                                                                              idProject
-                                                                                                                                                                                                                                                                                                                                                                                                              Name
-                                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                        `;
+    query getIngestionProjectsForSubjects($input: GetIngestionProjectsForSubjectsInput!) {
+        getIngestionProjectsForSubjects(input: $input) {
+            Project {
+                idProject
+                Name
+            }
+        }
+    }
+`;
 
 /**
-* __useGetIngestionProjectsForSubjectsQuery__
-*
-* To run a query within a React component, call `useGetIngestionProjectsForSubjectsQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetIngestionProjectsForSubjectsQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetIngestionProjectsForSubjectsQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
-export function useGetIngestionProjectsForSubjectsQuery(baseOptions?: Apollo.QueryHookOptions<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>) {
+ * __useGetIngestionProjectsForSubjectsQuery__
+ *
+ * To run a query within a React component, call `useGetIngestionProjectsForSubjectsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetIngestionProjectsForSubjectsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetIngestionProjectsForSubjectsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetIngestionProjectsForSubjectsQuery(
+    baseOptions?: Apollo.QueryHookOptions<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>
+) {
     return Apollo.useQuery<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>(GetIngestionProjectsForSubjectsDocument, baseOptions);
 }
-export function useGetIngestionProjectsForSubjectsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>) {
+export function useGetIngestionProjectsForSubjectsLazyQuery(
+    baseOptions?: Apollo.LazyQueryHookOptions<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>
+) {
     return Apollo.useLazyQuery<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>(GetIngestionProjectsForSubjectsDocument, baseOptions);
 }
 export type GetIngestionProjectsForSubjectsQueryHookResult = ReturnType<typeof useGetIngestionProjectsForSubjectsQuery>;
 export type GetIngestionProjectsForSubjectsLazyQueryHookResult = ReturnType<typeof useGetIngestionProjectsForSubjectsLazyQuery>;
 export type GetIngestionProjectsForSubjectsQueryResult = Apollo.QueryResult<GetIngestionProjectsForSubjectsQuery, GetIngestionProjectsForSubjectsQueryVariables>;
 export const GetItemDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                            query getItem($input: GetItemInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                              getItem(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                Item {
-                                                                                                                                                                                                                                                                                                                                                                                                                  idItem
-                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                                            `;
+    query getItem($input: GetItemInput!) {
+        getItem(input: $input) {
+            Item {
+                idItem
+            }
+        }
+    }
+`;
 
 /**
-* __useGetItemQuery__
-*
-* To run a query within a React component, call `useGetItemQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetItemQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetItemQuery__
+ *
+ * To run a query within a React component, call `useGetItemQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetItemQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetItemQuery(baseOptions?: Apollo.QueryHookOptions<GetItemQuery, GetItemQueryVariables>) {
     return Apollo.useQuery<GetItemQuery, GetItemQueryVariables>(GetItemDocument, baseOptions);
 }
@@ -3450,32 +4196,32 @@ export type GetItemQueryHookResult = ReturnType<typeof useGetItemQuery>;
 export type GetItemLazyQueryHookResult = ReturnType<typeof useGetItemLazyQuery>;
 export type GetItemQueryResult = Apollo.QueryResult<GetItemQuery, GetItemQueryVariables>;
 export const GetItemsForSubjectDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                query getItemsForSubject($input: GetItemsForSubjectInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                  getItemsForSubject(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                    Item {
-                                                                                                                                                                                                                                                                                                                                                                                                                      idItem
-                                                                                                                                                                                                                                                                                                                                                                                                                      Name
-                                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                `;
+    query getItemsForSubject($input: GetItemsForSubjectInput!) {
+        getItemsForSubject(input: $input) {
+            Item {
+                idItem
+                Name
+            }
+        }
+    }
+`;
 
 /**
-* __useGetItemsForSubjectQuery__
-*
-* To run a query within a React component, call `useGetItemsForSubjectQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetItemsForSubjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetItemsForSubjectQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetItemsForSubjectQuery__
+ *
+ * To run a query within a React component, call `useGetItemsForSubjectQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetItemsForSubjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetItemsForSubjectQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetItemsForSubjectQuery(baseOptions?: Apollo.QueryHookOptions<GetItemsForSubjectQuery, GetItemsForSubjectQueryVariables>) {
     return Apollo.useQuery<GetItemsForSubjectQuery, GetItemsForSubjectQueryVariables>(GetItemsForSubjectDocument, baseOptions);
 }
@@ -3486,53 +4232,53 @@ export type GetItemsForSubjectQueryHookResult = ReturnType<typeof useGetItemsFor
 export type GetItemsForSubjectLazyQueryHookResult = ReturnType<typeof useGetItemsForSubjectLazyQuery>;
 export type GetItemsForSubjectQueryResult = Apollo.QueryResult<GetItemsForSubjectQuery, GetItemsForSubjectQueryVariables>;
 export const GetObjectsForItemDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                    query getObjectsForItem($input: GetObjectsForItemInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                      getObjectsForItem(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                        CaptureData {
-                                                                                                                                                                                                                                                                                                                                                                                                                          idCaptureData
-                                                                                                                                                                                                                                                                                                                                                                                                                          DateCaptured
-                                                                                                                                                                                                                                                                                                                                                                                                                          Description
-                                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                                        Model {
-                                                                                                                                                                                                                                                                                                                                                                                                                          idModel
-                                                                                                                                                                                                                                                                                                                                                                                                                          Authoritative
-                                                                                                                                                                                                                                                                                                                                                                                                                          DateCreated
-                                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                                        Scene {
-                                                                                                                                                                                                                                                                                                                                                                                                                          idScene
-                                                                                                                                                                                                                                                                                                                                                                                                                          HasBeenQCd
-                                                                                                                                                                                                                                                                                                                                                                                                                          IsOriented
-                                                                                                                                                                                                                                                                                                                                                                                                                          Name
-                                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                                        IntermediaryFile {
-                                                                                                                                                                                                                                                                                                                                                                                                                          idIntermediaryFile
-                                                                                                                                                                                                                                                                                                                                                                                                                          DateCreated
-                                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                                        ProjectDocumentation {
-                                                                                                                                                                                                                                                                                                                                                                                                                          idProjectDocumentation
-                                                                                                                                                                                                                                                                                                                                                                                                                          Description
-                                                                                                                                                                                                                                                                                                                                                                                                                          Name
-                                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                                    `;
+    query getObjectsForItem($input: GetObjectsForItemInput!) {
+        getObjectsForItem(input: $input) {
+            CaptureData {
+                idCaptureData
+                DateCaptured
+                Description
+            }
+            Model {
+                idModel
+                Authoritative
+                DateCreated
+            }
+            Scene {
+                idScene
+                HasBeenQCd
+                IsOriented
+                Name
+            }
+            IntermediaryFile {
+                idIntermediaryFile
+                DateCreated
+            }
+            ProjectDocumentation {
+                idProjectDocumentation
+                Description
+                Name
+            }
+        }
+    }
+`;
 
 /**
-* __useGetObjectsForItemQuery__
-*
-* To run a query within a React component, call `useGetObjectsForItemQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetObjectsForItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetObjectsForItemQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetObjectsForItemQuery__
+ *
+ * To run a query within a React component, call `useGetObjectsForItemQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetObjectsForItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetObjectsForItemQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetObjectsForItemQuery(baseOptions?: Apollo.QueryHookOptions<GetObjectsForItemQuery, GetObjectsForItemQueryVariables>) {
     return Apollo.useQuery<GetObjectsForItemQuery, GetObjectsForItemQueryVariables>(GetObjectsForItemDocument, baseOptions);
 }
@@ -3543,31 +4289,31 @@ export type GetObjectsForItemQueryHookResult = ReturnType<typeof useGetObjectsFo
 export type GetObjectsForItemLazyQueryHookResult = ReturnType<typeof useGetObjectsForItemLazyQuery>;
 export type GetObjectsForItemQueryResult = Apollo.QueryResult<GetObjectsForItemQuery, GetObjectsForItemQueryVariables>;
 export const GetProjectDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                        query getProject($input: GetProjectInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                          getProject(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                            Project {
-                                                                                                                                                                                                                                                                                                                                                                                                                              idProject
-                                                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                                        `;
+    query getProject($input: GetProjectInput!) {
+        getProject(input: $input) {
+            Project {
+                idProject
+            }
+        }
+    }
+`;
 
 /**
-* __useGetProjectQuery__
-*
-* To run a query within a React component, call `useGetProjectQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetProjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetProjectQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetProjectQuery__
+ *
+ * To run a query within a React component, call `useGetProjectQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetProjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetProjectQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetProjectQuery(baseOptions?: Apollo.QueryHookOptions<GetProjectQuery, GetProjectQueryVariables>) {
     return Apollo.useQuery<GetProjectQuery, GetProjectQueryVariables>(GetProjectDocument, baseOptions);
 }
@@ -3578,31 +4324,31 @@ export type GetProjectQueryHookResult = ReturnType<typeof useGetProjectQuery>;
 export type GetProjectLazyQueryHookResult = ReturnType<typeof useGetProjectLazyQuery>;
 export type GetProjectQueryResult = Apollo.QueryResult<GetProjectQuery, GetProjectQueryVariables>;
 export const GetProjectDocumentationDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                            query getProjectDocumentation($input: GetProjectDocumentationInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                              getProjectDocumentation(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                ProjectDocumentation {
-                                                                                                                                                                                                                                                                                                                                                                                                                                  idProjectDocumentation
-                                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                                                            `;
+    query getProjectDocumentation($input: GetProjectDocumentationInput!) {
+        getProjectDocumentation(input: $input) {
+            ProjectDocumentation {
+                idProjectDocumentation
+            }
+        }
+    }
+`;
 
 /**
-* __useGetProjectDocumentationQuery__
-*
-* To run a query within a React component, call `useGetProjectDocumentationQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetProjectDocumentationQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetProjectDocumentationQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetProjectDocumentationQuery__
+ *
+ * To run a query within a React component, call `useGetProjectDocumentationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetProjectDocumentationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetProjectDocumentationQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetProjectDocumentationQuery(baseOptions?: Apollo.QueryHookOptions<GetProjectDocumentationQuery, GetProjectDocumentationQueryVariables>) {
     return Apollo.useQuery<GetProjectDocumentationQuery, GetProjectDocumentationQueryVariables>(GetProjectDocumentationDocument, baseOptions);
 }
@@ -3613,31 +4359,31 @@ export type GetProjectDocumentationQueryHookResult = ReturnType<typeof useGetPro
 export type GetProjectDocumentationLazyQueryHookResult = ReturnType<typeof useGetProjectDocumentationLazyQuery>;
 export type GetProjectDocumentationQueryResult = Apollo.QueryResult<GetProjectDocumentationQuery, GetProjectDocumentationQueryVariables>;
 export const GetSubjectDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                                query getSubject($input: GetSubjectInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                  getSubject(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                    Subject {
-                                                                                                                                                                                                                                                                                                                                                                                                                                      idSubject
-                                                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                                `;
+    query getSubject($input: GetSubjectInput!) {
+        getSubject(input: $input) {
+            Subject {
+                idSubject
+            }
+        }
+    }
+`;
 
 /**
-* __useGetSubjectQuery__
-*
-* To run a query within a React component, call `useGetSubjectQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetSubjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetSubjectQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetSubjectQuery__
+ *
+ * To run a query within a React component, call `useGetSubjectQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSubjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSubjectQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetSubjectQuery(baseOptions?: Apollo.QueryHookOptions<GetSubjectQuery, GetSubjectQueryVariables>) {
     return Apollo.useQuery<GetSubjectQuery, GetSubjectQueryVariables>(GetSubjectDocument, baseOptions);
 }
@@ -3648,32 +4394,32 @@ export type GetSubjectQueryHookResult = ReturnType<typeof useGetSubjectQuery>;
 export type GetSubjectLazyQueryHookResult = ReturnType<typeof useGetSubjectLazyQuery>;
 export type GetSubjectQueryResult = Apollo.QueryResult<GetSubjectQuery, GetSubjectQueryVariables>;
 export const GetSubjectsForUnitDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                                    query getSubjectsForUnit($input: GetSubjectsForUnitInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                      getSubjectsForUnit(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                        Subject {
-                                                                                                                                                                                                                                                                                                                                                                                                                                          idSubject
-                                                                                                                                                                                                                                                                                                                                                                                                                                          Name
-                                                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                                                    `;
+    query getSubjectsForUnit($input: GetSubjectsForUnitInput!) {
+        getSubjectsForUnit(input: $input) {
+            Subject {
+                idSubject
+                Name
+            }
+        }
+    }
+`;
 
 /**
-* __useGetSubjectsForUnitQuery__
-*
-* To run a query within a React component, call `useGetSubjectsForUnitQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetSubjectsForUnitQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetSubjectsForUnitQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetSubjectsForUnitQuery__
+ *
+ * To run a query within a React component, call `useGetSubjectsForUnitQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSubjectsForUnitQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSubjectsForUnitQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetSubjectsForUnitQuery(baseOptions?: Apollo.QueryHookOptions<GetSubjectsForUnitQuery, GetSubjectsForUnitQueryVariables>) {
     return Apollo.useQuery<GetSubjectsForUnitQuery, GetSubjectsForUnitQueryVariables>(GetSubjectsForUnitDocument, baseOptions);
 }
@@ -3684,31 +4430,31 @@ export type GetSubjectsForUnitQueryHookResult = ReturnType<typeof useGetSubjects
 export type GetSubjectsForUnitLazyQueryHookResult = ReturnType<typeof useGetSubjectsForUnitLazyQuery>;
 export type GetSubjectsForUnitQueryResult = Apollo.QueryResult<GetSubjectsForUnitQuery, GetSubjectsForUnitQueryVariables>;
 export const GetUnitDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                                        query getUnit($input: GetUnitInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                          getUnit(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                            Unit {
-                                                                                                                                                                                                                                                                                                                                                                                                                                              idUnit
-                                                                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                                                        `;
+    query getUnit($input: GetUnitInput!) {
+        getUnit(input: $input) {
+            Unit {
+                idUnit
+            }
+        }
+    }
+`;
 
 /**
-* __useGetUnitQuery__
-*
-* To run a query within a React component, call `useGetUnitQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetUnitQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetUnitQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetUnitQuery__
+ *
+ * To run a query within a React component, call `useGetUnitQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUnitQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUnitQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetUnitQuery(baseOptions?: Apollo.QueryHookOptions<GetUnitQuery, GetUnitQueryVariables>) {
     return Apollo.useQuery<GetUnitQuery, GetUnitQueryVariables>(GetUnitDocument, baseOptions);
 }
@@ -3719,35 +4465,35 @@ export type GetUnitQueryHookResult = ReturnType<typeof useGetUnitQuery>;
 export type GetUnitLazyQueryHookResult = ReturnType<typeof useGetUnitLazyQuery>;
 export type GetUnitQueryResult = Apollo.QueryResult<GetUnitQuery, GetUnitQueryVariables>;
 export const SearchIngestionSubjectsDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                                            query searchIngestionSubjects($input: SearchIngestionSubjectsInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                              searchIngestionSubjects(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                SubjectUnitIdentifier {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                  idSubject
-                                                                                                                                                                                                                                                                                                                                                                                                                                                  SubjectName
-                                                                                                                                                                                                                                                                                                                                                                                                                                                  UnitAbbreviation
-                                                                                                                                                                                                                                                                                                                                                                                                                                                  IdentifierPublic
-                                                                                                                                                                                                                                                                                                                                                                                                                                                  IdentifierCollection
-                                                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                                                                            `;
+    query searchIngestionSubjects($input: SearchIngestionSubjectsInput!) {
+        searchIngestionSubjects(input: $input) {
+            SubjectUnitIdentifier {
+                idSubject
+                SubjectName
+                UnitAbbreviation
+                IdentifierPublic
+                IdentifierCollection
+            }
+        }
+    }
+`;
 
 /**
-* __useSearchIngestionSubjectsQuery__
-*
-* To run a query within a React component, call `useSearchIngestionSubjectsQuery` and pass it any options that fit your needs.
-* When your component renders, `useSearchIngestionSubjectsQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useSearchIngestionSubjectsQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useSearchIngestionSubjectsQuery__
+ *
+ * To run a query within a React component, call `useSearchIngestionSubjectsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSearchIngestionSubjectsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSearchIngestionSubjectsQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useSearchIngestionSubjectsQuery(baseOptions?: Apollo.QueryHookOptions<SearchIngestionSubjectsQuery, SearchIngestionSubjectsQueryVariables>) {
     return Apollo.useQuery<SearchIngestionSubjectsQuery, SearchIngestionSubjectsQueryVariables>(SearchIngestionSubjectsDocument, baseOptions);
 }
@@ -3758,38 +4504,38 @@ export type SearchIngestionSubjectsQueryHookResult = ReturnType<typeof useSearch
 export type SearchIngestionSubjectsLazyQueryHookResult = ReturnType<typeof useSearchIngestionSubjectsLazyQuery>;
 export type SearchIngestionSubjectsQueryResult = Apollo.QueryResult<SearchIngestionSubjectsQuery, SearchIngestionSubjectsQueryVariables>;
 export const GetCurrentUserDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                                                query getCurrentUser {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                  getCurrentUser {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    User {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      idUser
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      Name
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      Active
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      DateActivated
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      DateDisabled
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      EmailAddress
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      EmailSettings
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      SecurityID
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      WorkflowNotificationTime
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                `;
+    query getCurrentUser {
+        getCurrentUser {
+            User {
+                idUser
+                Name
+                Active
+                DateActivated
+                DateDisabled
+                EmailAddress
+                EmailSettings
+                SecurityID
+                WorkflowNotificationTime
+            }
+        }
+    }
+`;
 
 /**
-* __useGetCurrentUserQuery__
-*
-* To run a query within a React component, call `useGetCurrentUserQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetCurrentUserQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetCurrentUserQuery({
-  *   variables: {
-    *   },
-    * });
-    */
+ * __useGetCurrentUserQuery__
+ *
+ * To run a query within a React component, call `useGetCurrentUserQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetCurrentUserQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetCurrentUserQuery({
+ *   variables: {
+ *   },
+ * });
+ */
 export function useGetCurrentUserQuery(baseOptions?: Apollo.QueryHookOptions<GetCurrentUserQuery, GetCurrentUserQueryVariables>) {
     return Apollo.useQuery<GetCurrentUserQuery, GetCurrentUserQueryVariables>(GetCurrentUserDocument, baseOptions);
 }
@@ -3800,34 +4546,34 @@ export type GetCurrentUserQueryHookResult = ReturnType<typeof useGetCurrentUserQ
 export type GetCurrentUserLazyQueryHookResult = ReturnType<typeof useGetCurrentUserLazyQuery>;
 export type GetCurrentUserQueryResult = Apollo.QueryResult<GetCurrentUserQuery, GetCurrentUserQueryVariables>;
 export const GetUserDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    query getUser($input: GetUserInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      getUser(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                        User {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          idUser
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          Name
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          Active
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          DateActivated
-                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                      }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    `;
+    query getUser($input: GetUserInput!) {
+        getUser(input: $input) {
+            User {
+                idUser
+                Name
+                Active
+                DateActivated
+            }
+        }
+    }
+`;
 
 /**
-* __useGetUserQuery__
-*
-* To run a query within a React component, call `useGetUserQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetUserQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetUserQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetUserQuery__
+ *
+ * To run a query within a React component, call `useGetUserQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUserQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUserQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetUserQuery(baseOptions?: Apollo.QueryHookOptions<GetUserQuery, GetUserQueryVariables>) {
     return Apollo.useQuery<GetUserQuery, GetUserQueryVariables>(GetUserDocument, baseOptions);
 }
@@ -3838,31 +4584,31 @@ export type GetUserQueryHookResult = ReturnType<typeof useGetUserQuery>;
 export type GetUserLazyQueryHookResult = ReturnType<typeof useGetUserLazyQuery>;
 export type GetUserQueryResult = Apollo.QueryResult<GetUserQuery, GetUserQueryVariables>;
 export const GetVocabularyDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                                                        query getVocabulary($input: GetVocabularyInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          getVocabulary(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            Vocabulary {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                              idVocabulary
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                        `;
+    query getVocabulary($input: GetVocabularyInput!) {
+        getVocabulary(input: $input) {
+            Vocabulary {
+                idVocabulary
+            }
+        }
+    }
+`;
 
 /**
-* __useGetVocabularyQuery__
-*
-* To run a query within a React component, call `useGetVocabularyQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetVocabularyQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetVocabularyQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetVocabularyQuery__
+ *
+ * To run a query within a React component, call `useGetVocabularyQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetVocabularyQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetVocabularyQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetVocabularyQuery(baseOptions?: Apollo.QueryHookOptions<GetVocabularyQuery, GetVocabularyQueryVariables>) {
     return Apollo.useQuery<GetVocabularyQuery, GetVocabularyQueryVariables>(GetVocabularyDocument, baseOptions);
 }
@@ -3873,35 +4619,35 @@ export type GetVocabularyQueryHookResult = ReturnType<typeof useGetVocabularyQue
 export type GetVocabularyLazyQueryHookResult = ReturnType<typeof useGetVocabularyLazyQuery>;
 export type GetVocabularyQueryResult = Apollo.QueryResult<GetVocabularyQuery, GetVocabularyQueryVariables>;
 export const GetVocabularyEntriesDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            query getVocabularyEntries($input: GetVocabularyEntriesInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                              getVocabularyEntries(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                VocabularyEntries {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  eVocabSetID
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Vocabulary {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                    idVocabulary
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                    Term
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            `;
+    query getVocabularyEntries($input: GetVocabularyEntriesInput!) {
+        getVocabularyEntries(input: $input) {
+            VocabularyEntries {
+                eVocabSetID
+                Vocabulary {
+                    idVocabulary
+                    Term
+                }
+            }
+        }
+    }
+`;
 
 /**
-* __useGetVocabularyEntriesQuery__
-*
-* To run a query within a React component, call `useGetVocabularyEntriesQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetVocabularyEntriesQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetVocabularyEntriesQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetVocabularyEntriesQuery__
+ *
+ * To run a query within a React component, call `useGetVocabularyEntriesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetVocabularyEntriesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetVocabularyEntriesQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetVocabularyEntriesQuery(baseOptions?: Apollo.QueryHookOptions<GetVocabularyEntriesQuery, GetVocabularyEntriesQueryVariables>) {
     return Apollo.useQuery<GetVocabularyEntriesQuery, GetVocabularyEntriesQueryVariables>(GetVocabularyEntriesDocument, baseOptions);
 }
@@ -3912,31 +4658,31 @@ export type GetVocabularyEntriesQueryHookResult = ReturnType<typeof useGetVocabu
 export type GetVocabularyEntriesLazyQueryHookResult = ReturnType<typeof useGetVocabularyEntriesLazyQuery>;
 export type GetVocabularyEntriesQueryResult = Apollo.QueryResult<GetVocabularyEntriesQuery, GetVocabularyEntriesQueryVariables>;
 export const GetWorkflowDocument = gql`
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                query getWorkflow($input: GetWorkflowInput!) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  getWorkflow(input: $input) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                    Workflow {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                      idWorkflow
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                `;
+    query getWorkflow($input: GetWorkflowInput!) {
+        getWorkflow(input: $input) {
+            Workflow {
+                idWorkflow
+            }
+        }
+    }
+`;
 
 /**
-* __useGetWorkflowQuery__
-*
-* To run a query within a React component, call `useGetWorkflowQuery` and pass it any options that fit your needs.
-* When your component renders, `useGetWorkflowQuery` returns an object from Apollo Client that contains loading, error, and data properties
-* you can use to render your UI.
-*
-* @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
-*
-* @example
-* const { data, loading, error } = useGetWorkflowQuery({
-  *   variables: {
-    *      input: // value for 'input'
-    *   },
-    * });
-    */
+ * __useGetWorkflowQuery__
+ *
+ * To run a query within a React component, call `useGetWorkflowQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetWorkflowQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetWorkflowQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
 export function useGetWorkflowQuery(baseOptions?: Apollo.QueryHookOptions<GetWorkflowQuery, GetWorkflowQueryVariables>) {
     return Apollo.useQuery<GetWorkflowQuery, GetWorkflowQueryVariables>(GetWorkflowDocument, baseOptions);
 }

@@ -5,8 +5,8 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const Model = {
-    AssetThumbnail: async (parent: Parent): Promise<DBAPI.Asset | null> => {
-        return await DBAPI.Asset.fetch(parent.idAssetThumbnail);
+    ModelConstellation: async (parent: Parent): Promise<DBAPI.ModelConstellation | null> => {
+        return await DBAPI.ModelConstellation.fetch(parent.idModel);
     },
     VCreationMethod: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
         return await DBAPI.Vocabulary.fetch(parent.idVCreationMethod);
@@ -20,8 +20,17 @@ const Model = {
     VUnits: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
         return await DBAPI.Vocabulary.fetch(parent.idVUnits);
     },
-    ModelGeometryFile: async (parent: Parent): Promise<DBAPI.ModelGeometryFile[] | null> => {
-        return await DBAPI.ModelGeometryFile.fetchFromModel(parent.idModel);
+    VFileType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVFileType);
+    },
+    AssetThumbnail: async (parent: Parent): Promise<DBAPI.Asset | null> => {
+        return await DBAPI.Asset.fetch(parent.idAssetThumbnail);
+    },
+    ModelMetrics: async (parent: Parent): Promise<DBAPI.ModelMetrics | null> => {
+        return await DBAPI.ModelMetrics.fetch(parent.idModelMetrics);
+    },
+    ModelObject: async (parent: Parent): Promise<DBAPI.ModelObject[] | null> => {
+        return await DBAPI.ModelObject.fetchFromModel(parent.idModel);
     },
     ModelProcessingAction: async (parent: Parent): Promise<DBAPI.ModelProcessingAction[] | null> => {
         return await DBAPI.ModelProcessingAction.fetchFromModel(parent.idModel);

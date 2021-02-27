@@ -2,7 +2,11 @@ import * as LOG from '../utils/logger';
 import { CacheControl } from './CacheControl';
 import { Vocabulary, VocabularySet } from '../db';
 
-/** enum used to provide declarative, programmatic access to sorted vocabulary for system-generated vocabulary sets */
+/**
+ * enum used to provide declarative, programmatic access to sorted vocabulary for system-generated vocabulary sets
+ *
+ * Note: these types are also used at client/src/types/server.ts, make sure to update the enum's there as well
+ * */
 export enum eVocabularySetID {
     eCaptureDataCaptureMethod,
     eCaptureDataDatasetType,
@@ -16,9 +20,9 @@ export enum eVocabularySetID {
     eModelModality,
     eModelUnits,
     eModelPurpose,
-    eModelGeometryFileModelFileType,
+    eModelFileType,
     eModelProcessingActionStepActionMethod,
-    eModelUVMapChannelUVMapType,
+    eModelMaterialChannelMaterialType,
     eIdentifierIdentifierType,
     eIdentifierIdentifierTypeActor,
     eMetadataMetadataSource,
@@ -126,9 +130,9 @@ export class VocabularyCache {
                 case 'Model.Modality':                          eVocabSetEnum = eVocabularySetID.eModelModality; break;
                 case 'Model.Units':                             eVocabSetEnum = eVocabularySetID.eModelUnits; break;
                 case 'Model.Purpose':                           eVocabSetEnum = eVocabularySetID.eModelPurpose; break;
-                case 'ModelGeometryFile.ModelFileType':         eVocabSetEnum = eVocabularySetID.eModelGeometryFileModelFileType; break;
+                case 'Model.FileType':                          eVocabSetEnum = eVocabularySetID.eModelFileType; break;
                 case 'ModelProcessingActionStep.ActionMethod':  eVocabSetEnum = eVocabularySetID.eModelProcessingActionStepActionMethod; break;
-                case 'ModelUVMapChannel.UVMapType':             eVocabSetEnum = eVocabularySetID.eModelUVMapChannelUVMapType; break;
+                case 'ModelMaterialChannel.MaterialType':       eVocabSetEnum = eVocabularySetID.eModelMaterialChannelMaterialType; break;
                 case 'Identifier.IdentifierType':               eVocabSetEnum = eVocabularySetID.eIdentifierIdentifierType; break;
                 case 'Identifier.IdentifierTypeActor':          eVocabSetEnum = eVocabularySetID.eIdentifierIdentifierTypeActor; break;
                 case 'Metadata.MetadataSource':                 eVocabSetEnum = eVocabularySetID.eMetadataMetadataSource; break;

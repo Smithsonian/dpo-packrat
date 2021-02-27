@@ -1,72 +1,57 @@
-import { ApolloError, useLazyQuery, useQuery } from '@apollo/client';
-import { RepositoryFilter } from '../index';
-import { GetObjectChildrenDocument, GetObjectChildrenQuery, GetObjectChildrenQueryVariables } from '../../../types/graphql';
-import { eMetadata, eSystemObjectType } from '../../../types/server';
+/**
+ * Repository hook
+ *
+ * This custom hook provides reusable functions for getting repository tree data.
+ */
+import { ApolloQueryResult } from '@apollo/client';
+import { RepositoryFilter } from '..';
+import { apolloClient } from '../../../graphql';
+import { GetObjectChildrenDocument, GetObjectChildrenQuery } from '../../../types/graphql';
 
-interface UseGetRootObjects {
-    getRootObjectsData: GetObjectChildrenQuery | undefined;
-    getRootObjectsLoading: boolean;
-    getRootObjectsError: ApolloError | undefined;
-}
-
-function useGetRootObjects(objectTypes: eSystemObjectType[], filter: RepositoryFilter): UseGetRootObjects {
-    const { data: getRootObjectsData, loading: getRootObjectsLoading, error: getRootObjectsError } = useQuery<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>(
-        GetObjectChildrenDocument,
-        {
-            variables: {
-                input: {
-                    idRoot: 0,
-                    objectTypes,
-                    metadataColumns: getMetadataColumnsForFilter(filter)
-                }
+function getObjectChildrenForRoot(filter: RepositoryFilter): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
+    return apolloClient.query({
+        query: GetObjectChildrenDocument,
+        variables: {
+            input: {
+                idRoot: 0,
+                objectTypes: filter.repositoryRootType,
+                metadataColumns: filter.metadataToDisplay,
+                objectsToDisplay: filter.objectsToDisplay,
+                search: filter.search,
+                units: filter.units,
+                projects: filter.projects,
+                has: filter.has,
+                missing: filter.missing,
+                captureMethod: filter.captureMethod,
+                variantType: filter.variantType,
+                modelPurpose: filter.modelPurpose,
+                modelFileType: filter.modelFileType,
             }
         }
-    );
-
-    return {
-        getRootObjectsData,
-        getRootObjectsLoading,
-        getRootObjectsError
-    };
+    });
 }
 
-interface UseGetObjectChildren {
-    getObjectChildren: () => void;
-    getObjectChildrenData: GetObjectChildrenQuery | undefined;
-    getObjectChildrenLoading: boolean;
-    getObjectChildrenError: ApolloError | undefined;
-}
-
-function useGetObjectChildren(idRoot: number, filter: RepositoryFilter): UseGetObjectChildren {
-    const [getObjectChildren, { data: getObjectChildrenData, loading: getObjectChildrenLoading, error: getObjectChildrenError }] = useLazyQuery<GetObjectChildrenQuery, GetObjectChildrenQueryVariables>(
-        GetObjectChildrenDocument,
-        {
-            variables: {
-                input: {
-                    idRoot,
-                    objectTypes: [],
-                    metadataColumns: getMetadataColumnsForFilter(filter)
-                }
+function getObjectChildren(idRoot: number, filter: RepositoryFilter): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
+    return apolloClient.query({
+        query: GetObjectChildrenDocument,
+        variables: {
+            input: {
+                idRoot,
+                objectTypes: [],
+                metadataColumns: filter.metadataToDisplay,
+                objectsToDisplay: filter.objectsToDisplay,
+                search: filter.search,
+                units: filter.units,
+                projects: filter.projects,
+                has: filter.has,
+                missing: filter.missing,
+                captureMethod: filter.captureMethod,
+                variantType: filter.variantType,
+                modelPurpose: filter.modelPurpose,
+                modelFileType: filter.modelFileType,
             }
         }
-    );
-
-    return {
-        getObjectChildren,
-        getObjectChildrenData,
-        getObjectChildrenLoading,
-        getObjectChildrenError,
-    };
+    });
 }
 
-function getMetadataColumnsForFilter(filter: RepositoryFilter): eMetadata[] {
-    const metadataColumns: eMetadata[] = [eMetadata.eSubjectIdentifier, eMetadata.eItemName];
-
-    if (filter.units || filter.projects) {
-        metadataColumns.unshift(eMetadata.eUnitAbbreviation);
-    }
-
-    return metadataColumns;
-}
-
-export { useGetRootObjects, useGetObjectChildren };
+export { getObjectChildrenForRoot, getObjectChildren };

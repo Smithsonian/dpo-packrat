@@ -1,8 +1,13 @@
+/**
+ * UploadListHeader
+ *
+ * This component renders upload list header for FileList component.
+ */
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     header: {
         display: 'flex',
         alignItems: 'center',
@@ -10,6 +15,9 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         width: '100%',
         borderRadius: 5,
         background: palette.background.paper,
+        [breakpoints.down('lg')]: {
+            height: 35,
+        }
     },
     fileDetails: {
         display: 'flex',
@@ -43,13 +51,13 @@ function UploadListHeader(): React.ReactElement {
     return (
         <Box className={classes.header}>
             <Box className={classes.fileDetails}>
-                <Typography className={classes.label} variant='body1'>Filename</Typography>
+                <Typography className={classes.label} variant='caption'>Filename</Typography>
             </Box>
             <Box className={classes.size}>
-                <Typography className={classes.label} variant='body1'>Size</Typography>
+                <Typography className={classes.label} variant='caption'>Size</Typography>
             </Box>
             <Box className={classes.assetType}>
-                <Typography className={classes.label} variant='body1'>Asset Type</Typography>
+                <Typography className={classes.label} variant='caption'>Asset Type</Typography>
             </Box>
         </Box>
     );

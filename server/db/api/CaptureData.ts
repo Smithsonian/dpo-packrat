@@ -6,6 +6,7 @@ import * as LOG from '../../utils/logger';
 
 export class CaptureData extends DBC.DBObject<CaptureDataBase> implements CaptureDataBase, SystemObjectBased {
     idCaptureData!: number;
+    Name!: string;
     idVCaptureMethod!: number;
     DateCaptured!: Date;
     Description!: string;
@@ -23,11 +24,12 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idVCaptureMethod, DateCaptured, Description, idAssetThumbnail } = this;
-            ({ idCaptureData: this.idCaptureData, idVCaptureMethod: this.idVCaptureMethod,
+            const { Name, idVCaptureMethod, DateCaptured, Description, idAssetThumbnail } = this;
+            ({ idCaptureData: this.idCaptureData, Name: this.Name, idVCaptureMethod: this.idVCaptureMethod,
                 DateCaptured: this.DateCaptured, Description: this.Description, idAssetThumbnail: this.idAssetThumbnail } =
                 await DBC.DBConnection.prisma.captureData.create({
                     data: {
+                        Name,
                         Vocabulary:     { connect: { idVocabulary: idVCaptureMethod }, },
                         DateCaptured,
                         Description,
@@ -44,10 +46,11 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idCaptureData, idVCaptureMethod, DateCaptured, Description, idAssetThumbnail, idAssetThumbnailOrig } = this;
+            const { idCaptureData, Name, idVCaptureMethod, DateCaptured, Description, idAssetThumbnail, idAssetThumbnailOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.captureData.update({
                 where: { idCaptureData, },
                 data: {
+                    Name,
                     Vocabulary:     { connect: { idVocabulary: idVCaptureMethod }, },
                     DateCaptured,
                     Description,
@@ -80,6 +83,16 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 await DBC.DBConnection.prisma.captureData.findOne({ where: { idCaptureData, }, }), CaptureData);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetch', error);
+            return null;
+        }
+    }
+
+    static async fetchAll(): Promise<CaptureData[] | null> {
+        try {
+            return DBC.CopyArray<CaptureDataBase, CaptureData>(
+                await DBC.DBConnection.prisma.captureData.findMany(), CaptureData);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.CaptureData.fetchAll', error);
             return null;
         }
     }

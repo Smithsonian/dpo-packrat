@@ -86,16 +86,16 @@ model Actor {
 }
 
 model Asset {
-  idAsset                                         Int                 @default(autoincrement()) @id
+  idAsset                                         Int                  @default(autoincrement()) @id
   FileName                                        String
   FilePath                                        String
   idAssetGroup                                    Int?
   idVAssetType                                    Int
   idSystemObject                                  Int?
-  StorageKey                                      String?             @unique
-  AssetGroup                                      AssetGroup?         @relation(fields: [idAssetGroup], references: [idAssetGroup])
-  SystemObject_Asset_idSystemObjectToSystemObject SystemObject?       @relation("Asset_idSystemObjectToSystemObject", fields: [idSystemObject], references: [idSystemObject])
-  Vocabulary                                      Vocabulary          @relation(fields: [idVAssetType], references: [idVocabulary])
+  StorageKey                                      String?              @unique
+  AssetGroup                                      AssetGroup?          @relation(fields: [idAssetGroup], references: [idAssetGroup])
+  SystemObject_Asset_idSystemObjectToSystemObject SystemObject?        @relation("Asset_idSystemObjectToSystemObject", fields: [idSystemObject], references: [idSystemObject])
+  Vocabulary                                      Vocabulary           @relation(fields: [idVAssetType], references: [idVocabulary])
   AssetVersion                                    AssetVersion[]
   CaptureData                                     CaptureData[]
   CaptureDataFile                                 CaptureDataFile[]
@@ -103,11 +103,10 @@ model Asset {
   Item                                            Item[]
   Metadata                                        Metadata[]
   Model                                           Model[]
-  ModelGeometryFile                               ModelGeometryFile[]
-  ModelUVMapFile                                  ModelUVMapFile[]
+  ModelMaterialUVMap                              ModelMaterialUVMap[]
   Scene                                           Scene[]
   Subject                                         Subject[]
-  SystemObject_AssetToSystemObject_idAsset        SystemObject?       @relation("AssetToSystemObject_idAsset")
+  SystemObject_AssetToSystemObject_idAsset        SystemObject?        @relation("AssetToSystemObject_idAsset")
 
   @@index([idAssetGroup], name: "Asset_idAssetGroup")
   @@index([idSystemObject], name: "fk_asset_systemobject1")
@@ -144,6 +143,7 @@ model AssetVersion {
 
 model CaptureData {
   idCaptureData                   Int                               @default(autoincrement()) @id
+  Name                            String
   idVCaptureMethod                Int
   DateCaptured                    DateTime
   Description                     String
@@ -355,58 +355,117 @@ model Metadata {
 
 model Model {
   idModel                                        Int                     @default(autoincrement()) @id
+  Name                                           String
   DateCreated                                    DateTime
-  idVCreationMethod                              Int
   Master                                         Boolean
   Authoritative                                  Boolean
+  idVCreationMethod                              Int
   idVModality                                    Int
   idVUnits                                       Int
   idVPurpose                                     Int
+  idVFileType                                    Int
   idAssetThumbnail                               Int?
+  idModelMetrics                                 Int?
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset])
+  ModelMetrics                                   ModelMetrics?           @relation(fields: [idModelMetrics], references: [idModelMetrics])
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary              @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary])
+  Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary              @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary])
   Vocabulary_Model_idVModalityToVocabulary       Vocabulary              @relation("Model_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary])
   Vocabulary_Model_idVPurposeToVocabulary        Vocabulary              @relation("Model_idVPurposeToVocabulary", fields: [idVPurpose], references: [idVocabulary])
   Vocabulary_Model_idVUnitsToVocabulary          Vocabulary              @relation("Model_idVUnitsToVocabulary", fields: [idVUnits], references: [idVocabulary])
-  ModelGeometryFile                              ModelGeometryFile[]
+  ModelMaterialUVMap                             ModelMaterialUVMap[]
+  ModelObject                                    ModelObject[]
   ModelProcessingAction                          ModelProcessingAction[]
   ModelSceneXref                                 ModelSceneXref[]
   SystemObject                                   SystemObject?
 
   @@index([idAssetThumbnail], name: "fk_model_asset1")
+  @@index([idModelMetrics], name: "fk_model_modelmetrics1")
   @@index([idVCreationMethod], name: "fk_model_vocabulary1")
   @@index([idVModality], name: "fk_model_vocabulary2")
   @@index([idVUnits], name: "fk_model_vocabulary3")
   @@index([idVPurpose], name: "fk_model_vocabulary4")
+  @@index([idVFileType], name: "fk_model_vocabulary5")
 }
 
-model ModelGeometryFile {
-  idModelGeometryFile Int              @default(autoincrement()) @id
-  idModel             Int
-  idAsset             Int
-  idVModelFileType    Int
-  Roughness           Float?
-  Metalness           Float?
-  PointCount          Int?
-  FaceCount           Int?
-  IsWatertight        Boolean?
-  HasNormals          Boolean?
-  HasVertexColor      Boolean?
-  HasUVSpace          Boolean?
-  BoundingBoxP1X      Float?
-  BoundingBoxP1Y      Float?
-  BoundingBoxP1Z      Float?
-  BoundingBoxP2X      Float?
-  BoundingBoxP2Y      Float?
-  BoundingBoxP2Z      Float?
-  Asset               Asset            @relation(fields: [idAsset], references: [idAsset])
-  Model               Model            @relation(fields: [idModel], references: [idModel])
-  Vocabulary          Vocabulary       @relation(fields: [idVModelFileType], references: [idVocabulary])
-  ModelUVMapFile      ModelUVMapFile[]
+model ModelMaterial {
+  idModelMaterial      Int                    @default(autoincrement()) @id
+  idModelObject        Int
+  Name                 String?
+  ModelObject          ModelObject            @relation(fields: [idModelObject], references: [idModelObject])
+  ModelMaterialChannel ModelMaterialChannel[]
 
-  @@index([idAsset], name: "ModelGeometryFile_idAsset")
-  @@index([idModel], name: "ModelGeometryFile_idModel")
-  @@index([idVModelFileType], name: "fk_modelgeometryfile_vocabulary1")
+  @@index([idModelObject], name: "Model_idModelObject")
+}
+
+model ModelMaterialChannel {
+  idModelMaterialChannel Int                 @default(autoincrement()) @id
+  idModelMaterial        Int
+  idVMaterialType        Int?
+  MaterialTypeOther      String?
+  idModelMaterialUVMap   Int?
+  ChannelPosition        Int?
+  ChannelWidth           Int?
+  Scalar1                Float?
+  Scalar2                Float?
+  Scalar3                Float?
+  Scalar4                Float?
+  ModelMaterial          ModelMaterial       @relation(fields: [idModelMaterial], references: [idModelMaterial])
+  ModelMaterialUVMap     ModelMaterialUVMap? @relation(fields: [idModelMaterialUVMap], references: [idModelMaterialUVMap])
+  Vocabulary             Vocabulary?         @relation(fields: [idVMaterialType], references: [idVocabulary])
+
+  @@index([idModelMaterial], name: "ModelMaterialChannel_idModelMaterial")
+  @@index([idModelMaterialUVMap], name: "fk_modelmaterialchannel_modelmaterialuvmap1")
+  @@index([idVMaterialType], name: "fk_modelmaterialchannel_vocabulary1")
+}
+
+model ModelMaterialUVMap {
+  idModelMaterialUVMap Int                    @default(autoincrement()) @id
+  idModel              Int
+  idAsset              Int
+  UVMapEdgeLength      Int
+  Asset                Asset                  @relation(fields: [idAsset], references: [idAsset])
+  Model                Model                  @relation(fields: [idModel], references: [idModel])
+  ModelMaterialChannel ModelMaterialChannel[]
+
+  @@index([idAsset], name: "ModelUVMapFile_idAsset")
+  @@index([idModel], name: "ModelUVMapFile_idModel")
+}
+
+model ModelMetrics {
+  idModelMetrics               Int           @default(autoincrement()) @id
+  BoundingBoxP1X               Float?
+  BoundingBoxP1Y               Float?
+  BoundingBoxP1Z               Float?
+  BoundingBoxP2X               Float?
+  BoundingBoxP2Y               Float?
+  BoundingBoxP2Z               Float?
+  CountPoint                   Int?
+  CountFace                    Int?
+  CountColorChannel            Int?
+  CountTextureCoorinateChannel Int?
+  HasBones                     Boolean?
+  HasFaceNormals               Boolean?
+  HasTangents                  Boolean?
+  HasTextureCoordinates        Boolean?
+  HasVertexNormals             Boolean?
+  HasVertexColor               Boolean?
+  IsManifold                   Boolean?
+  IsWatertight                 Boolean?
+  Model                        Model[]
+  ModelObject                  ModelObject[]
+}
+
+model ModelObject {
+  idModelObject  Int             @default(autoincrement()) @id
+  idModel        Int
+  idModelMetrics Int?
+  Model          Model           @relation(fields: [idModel], references: [idModel])
+  ModelMetrics   ModelMetrics?   @relation(fields: [idModelMetrics], references: [idModelMetrics])
+  ModelMaterial  ModelMaterial[]
+
+  @@index([idModel], name: "ModelObject_idModel")
+  @@index([idModelMetrics], name: "fk_modelobject_modelmetrics1")
 }
 
 model ModelProcessingAction {
@@ -452,32 +511,6 @@ model ModelSceneXref {
 
   @@index([idModel], name: "ModelSceneXref_idModel")
   @@index([idScene], name: "ModelSceneXref_idScene")
-}
-
-model ModelUVMapChannel {
-  idModelUVMapChannel Int            @default(autoincrement()) @id
-  idModelUVMapFile    Int
-  ChannelPosition     Int
-  ChannelWidth        Int
-  idVUVMapType        Int
-  ModelUVMapFile      ModelUVMapFile @relation(fields: [idModelUVMapFile], references: [idModelUVMapFile])
-  Vocabulary          Vocabulary     @relation(fields: [idVUVMapType], references: [idVocabulary])
-
-  @@index([idModelUVMapFile], name: "ModelUVMapChannel_idModelUVMapFile")
-  @@index([idVUVMapType], name: "fk_modeluvmapchannel_vocabulary1")
-}
-
-model ModelUVMapFile {
-  idModelUVMapFile    Int                 @default(autoincrement()) @id
-  idModelGeometryFile Int
-  idAsset             Int
-  UVMapEdgeLength     Int
-  Asset               Asset               @relation(fields: [idAsset], references: [idAsset])
-  ModelGeometryFile   ModelGeometryFile   @relation(fields: [idModelGeometryFile], references: [idModelGeometryFile])
-  ModelUVMapChannel   ModelUVMapChannel[]
-
-  @@index([idAsset], name: "ModelUVMapFile_idAsset")
-  @@index([idModelGeometryFile], name: "ModelUVMapFile_idModelGeometryFile")
 }
 
 model Project {
@@ -703,12 +736,12 @@ model Vocabulary {
   JobTask                                                                  JobTask[]
   Metadata                                                                 Metadata[]
   Model_Model_idVCreationMethodToVocabulary                                Model[]                     @relation("Model_idVCreationMethodToVocabulary")
+  Model_Model_idVFileTypeToVocabulary                                      Model[]                     @relation("Model_idVFileTypeToVocabulary")
   Model_Model_idVModalityToVocabulary                                      Model[]                     @relation("Model_idVModalityToVocabulary")
   Model_Model_idVPurposeToVocabulary                                       Model[]                     @relation("Model_idVPurposeToVocabulary")
   Model_Model_idVUnitsToVocabulary                                         Model[]                     @relation("Model_idVUnitsToVocabulary")
-  ModelGeometryFile                                                        ModelGeometryFile[]
+  ModelMaterialChannel                                                     ModelMaterialChannel[]
   ModelProcessingActionStep                                                ModelProcessingActionStep[]
-  ModelUVMapChannel                                                        ModelUVMapChannel[]
   WorkflowStep                                                             WorkflowStep[]
 
   @@index([idVocabularySet, SortOrder], name: "Vocabulary_idVocabulySet_SortOrder")

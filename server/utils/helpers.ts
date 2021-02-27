@@ -12,21 +12,21 @@ import * as crypto from 'crypto';
 import * as LOG from './logger';
 
 export type IOResults = {
-    success: boolean,
-    error: string
+    success: boolean;
+    error: string;
 };
 
 export type HashResults = {
-    hash: string,
-    dataLength: number,
-    success: boolean,
-    error: string
+    hash: string;
+    dataLength: number;
+    success: boolean;
+    error: string;
 };
 
 export type StatResults = {
-    stat: Stats | null,
-    success: boolean,
-    error: string
+    stat: Stats | null;
+    success: boolean;
+    error: string;
 };
 
 export class Helpers {

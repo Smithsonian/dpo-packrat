@@ -50,15 +50,47 @@ const getAssetVersionsDetails = gql`
                 }
                 Model {
                     idAssetVersion
+                    systemCreated
+                    master
                     authoritative
-                    dateCreated
                     creationMethod
                     modality
                     purpose
                     units
-                    master
+                    dateCaptured
+                    modelFileType
                     directory
-                }                
+                    identifiers {
+                        identifier
+                        identifierType
+                    }
+                    uvMaps {
+                        name
+                        edgeLength
+                        mapType
+                    }
+                    roughness
+                    metalness
+                    pointCount
+                    faceCount
+                    isWatertight
+                    hasNormals
+                    hasVertexColor
+                    hasUVSpace
+                    boundingBoxP1X
+                    boundingBoxP1Y
+                    boundingBoxP1Z
+                    boundingBoxP2X
+                    boundingBoxP2Y
+                    boundingBoxP2Z
+                }
+                Scene {
+                    idAssetVersion
+                    identifiers {
+                        identifier
+                        identifierType
+                    }
+                }
             }
         }
     }

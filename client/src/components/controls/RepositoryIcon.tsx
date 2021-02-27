@@ -1,3 +1,8 @@
+/**
+ * RepositoryIcon
+ *
+ * This component renders the icons for the repository tree view item.
+ */
 import React from 'react';
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -9,8 +14,8 @@ const useStyles = makeStyles(({ typography, breakpoints }) => ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: 20,
-        width: 20,
+        height: 18,
+        width: 18,
         borderRadius: 2.5,
         backgroundColor: ({ backgroundColor }: RepositoryIconProps) => backgroundColor,
         [breakpoints.down('lg')]: {
@@ -20,21 +25,22 @@ const useStyles = makeStyles(({ typography, breakpoints }) => ({
     },
     initial: {
         fontSize: 10,
-        fontWeight: typography.fontWeightBold,
+        fontWeight: typography.fontWeightMedium,
         color: ({ textColor }: RepositoryIconProps) => textColor,
     }
 }));
 
-interface RepositoryIconProps {
+export interface RepositoryIconProps {
     objectType: eSystemObjectType;
     backgroundColor: string;
     textColor: string;
+    overrideText?: string | undefined;
 }
 
-function RepositoryIcon(props: RepositoryIconProps): React.ReactElement {
-    const { objectType } = props;
+export function RepositoryIcon(props: RepositoryIconProps): React.ReactElement {
+    const { objectType, overrideText } = props;
     const classes = useStyles(props);
-    const initial = getTermForSystemObjectType(objectType).toUpperCase().slice(0, 1);
+    const initial = !overrideText ? getTermForSystemObjectType(objectType).toUpperCase().slice(0, 1) : overrideText;
 
     return (
         <Box className={classes.container}>
@@ -42,5 +48,3 @@ function RepositoryIcon(props: RepositoryIconProps): React.ReactElement {
         </Box>
     );
 }
-
-export default RepositoryIcon;
