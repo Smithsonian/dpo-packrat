@@ -107,7 +107,7 @@ jobs:
       # Ideally .env will be created from secrets ${{ secrets.DEV/PROD_ENV }} > .env
       - name: Prepare build
         run: touch .env.dev && touch .env.prod
-`
+
       - name: Build Dev images
         run: docker-compose --env-file .env.dev -f docker-compose.dev.yml build
         if: contains(github.ref, 'develop')
