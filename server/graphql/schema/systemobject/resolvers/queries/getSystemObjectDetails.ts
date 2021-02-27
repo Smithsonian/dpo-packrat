@@ -304,14 +304,11 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
 
         case eSystemObjectType.eModel:
             if (systemObject.idModel) {
-                const ModelGeometryFile = await DBAPI.ModelGeometryFile.fetchFromModel(systemObject.idModel);
-                if (ModelGeometryFile && ModelGeometryFile[0]) {
-                    const Asset = await DBAPI.Asset.fetch(ModelGeometryFile[0].idAsset);
-                    if (Asset) {
-                        return Asset.FileName;
-                    }
-                }
+                const Model = await DBAPI.Model.fetch(systemObject.idModel);
+                if (Model)
+                    return Model.Name;
             }
+
             return unknownName;
 
         case eSystemObjectType.eScene:

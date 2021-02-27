@@ -146,7 +146,7 @@ export function getRepositoryFilterOptions({ units, projects, data, getEntries }
     const captureMethodOptions: FilterOption[] = vocabulariesToFilterOption(getEntries(eVocabularySetID.eCaptureDataCaptureMethod));
     const variantTypeOptions: FilterOption[] = vocabulariesToFilterOption(getEntries(eVocabularySetID.eCaptureDataFileVariantType));
     const modelPurposeOptions: FilterOption[] = vocabulariesToFilterOption(getEntries(eVocabularySetID.eModelPurpose));
-    const fileTypeOptions: FilterOption[] = vocabulariesToFilterOption(getEntries(eVocabularySetID.eModelGeometryFileModelFileType));
+    const fileTypeOptions: FilterOption[] = vocabulariesToFilterOption(getEntries(eVocabularySetID.eModelFileType));
     const hasOptions: FilterOption[] = systemObjectTypes;
     const missingOptions: FilterOption[] = systemObjectTypes;
 

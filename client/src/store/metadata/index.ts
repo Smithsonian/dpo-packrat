@@ -178,7 +178,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             modality: getInitialEntry(eVocabularySetID.eModelModality),
             units: getInitialEntry(eVocabularySetID.eModelUnits),
             purpose: getInitialEntry(eVocabularySetID.eModelPurpose),
-            modelFileType: getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType)
+            modelFileType: getInitialEntry(eVocabularySetID.eModelFileType)
         };
 
         const defaultScene: SceneFields = {
