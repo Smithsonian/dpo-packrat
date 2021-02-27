@@ -39,6 +39,7 @@ import createProjectTest from './mutations/unit/createProject.test';
 import createItemTest from './mutations/unit/createItem.test';
 import createSubjectTest from './mutations/unit/createSubject.test';
 import createUserTest from './mutations/user/createUser.test';
+import updateUserTest from './mutations/user/updateUser.test';
 import createVocabularyTest from './mutations/vocabulary/createVocabulary.test';
 import createVocabularySetTest from './mutations/vocabulary/createVocabularySet.test';
 import uploadAssetTest from './mutations/asset/uploadAsset.test';
@@ -86,6 +87,7 @@ describe('GraphQL Test Suite', () => {
     createItemTest(utils);
     createSubjectTest(utils);
     createUserTest(utils);
+    updateUserTest(utils);
     createVocabularyTest(utils);
     createVocabularySetTest(utils);
     uploadAssetTest(utils);
