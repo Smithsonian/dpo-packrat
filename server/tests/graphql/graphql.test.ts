@@ -1,9 +1,11 @@
 /**
  * GraphQL Test suite
  */
+/* Queries */
 import TestSuiteUtils from './utils';
 import getUserTest from './queries/user/getUser.test';
 import getCurrentUserTest from './queries/user/getCurrentUser.test';
+import getAllUsersTest from './queries/user/getAllUsers.test';
 import getAccessPolicyTest from './queries/accesscontrol/getAccessPolicy.test';
 import getAssetTest from './queries/asset/getAsset.test';
 import getCaptureDataTest from './queries/capturedata/getCaptureData.test';
@@ -28,6 +30,7 @@ import getIntermediaryFileTest from './queries/scene/getIntermediaryFile.test';
 import getSourceObjectIdentiferTest from './queries/systemobject/getSourceObjectIdentifer.test';
 import getSystemObjectDetailsTest from './queries/systemobject/getSystemObjectDetails.test';
 
+/* Mutations */
 import createCaptureDataTest from './mutations/capturedata/createCaptureData.test';
 import createModelTest from './mutations/model/createModel.test';
 import createSceneTest from './mutations/scene/createScene.test';
@@ -56,6 +59,7 @@ describe('GraphQL Test Suite', () => {
     getSceneTest(utils);
     getUnitTest(utils);
     getUserTest(utils);
+    getAllUsersTest(utils);
     getCurrentUserTest(utils);
     getVocabularyTest(utils);
     getWorkflowTest(utils);
