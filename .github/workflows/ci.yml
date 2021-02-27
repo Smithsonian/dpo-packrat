@@ -92,6 +92,8 @@ jobs:
       PACKRAT_DB_PORT: 3306
       MYSQL_ROOT_PASSWORD: packrat
       REACT_APP_SERVER_ENDPOINT: http://packrat-server
+      PACKRAT_SOLR_PORT: 8983
+      PACKRAT_SOLR_HOST: packrat-solr
 
     steps:
       - name: Checkout code

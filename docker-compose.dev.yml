@@ -55,6 +55,7 @@ services:
             - EDAN_APPID=$EDAN_APPID
             - OCFL_STORAGE_ROOT=$OCFL_STORAGE_ROOT
             - OCFL_STAGING_ROOT=$OCFL_STAGING_ROOT
+            - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
         volumes:
             - ./node_modules:/app/node_modules
             - ./package.json:/app/package.json
@@ -87,8 +88,7 @@ services:
             target: solr
         ports:
             - $PACKRAT_SOLR_PORT:8983
-        env_file:
-            - .env
+
 networks:
     default:
         ipam:

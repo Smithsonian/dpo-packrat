@@ -49,6 +49,7 @@ services:
             - EDAN_APPID=$EDAN_APPID
             - OCFL_STORAGE_ROOT=$OCFL_STORAGE_ROOT
             - OCFL_STAGING_ROOT=$OCFL_STAGING_ROOT
+            - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
         depends_on:
             - db
 
@@ -60,6 +61,18 @@ services:
             - $PACKRAT_DB_PORT:3306
         environment:
             - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+
+    packrat-solr:
+        container_name: packrat-solr
+        image: packrat-solr
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker/solr.Dockerfile
+            target: solr
+        ports:
+            - $PACKRAT_SOLR_PORT:8983
+
 networks:
     default:
         ipam:
