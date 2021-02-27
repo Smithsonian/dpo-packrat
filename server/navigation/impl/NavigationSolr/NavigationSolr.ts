@@ -190,7 +190,9 @@ export class NavigationSolr implements NAV.INavigation {
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
 
-        LOG.logger.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length}, nextCursorMark: ${queryResult.result.nextCursorMark} }`);
+        LOG.logger.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, ` +
+            `start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length}, ` +
+            `nextCursorMark: ${queryResult.result.nextCursorMark} }`);
         // let docNumber: number = 1;
         for (const doc of queryResult.result.response.docs) {
             if (!doc.idSystemObject || !doc.CommonObjectType || !doc.CommonidObject || !doc.CommonName) {

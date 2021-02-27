@@ -11,6 +11,7 @@ input CreateModelInput {
     idVModality: Int!
     idVPurpose: Int!
     idVUnits: Int!
+    idVFileType: Int!
     Master: Boolean!
     idAssetThumbnail: Int
 }

@@ -158,7 +158,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
     // Subject: as a thumbnail
     // Item: as a thumbnail
     // CaptureData: as a thumbnail, and as an asset representing all or part of a CaptureData set (explicitly connected to CaptureDataFile)
-    // Model: as a thumbnail, and as an asset representing all or part of a Model (explicitly connected to ModelGeometryFile and ModelMVMapFile)
+    // Model: as a thumbnail, and as an asset representing all or part of a Model (implicity connected via SystemObjectXref, and explicitly connected to ModelMaterialUVMap)
     // Scene: as a thumbnail, and as an asset representing all or part of a Scene
     // IntermediaryFile: as an asset representing all or part of an IntermediaryFile
     // ProjectDocumentation: as an asset representing all or part of a ProjectDocumentation

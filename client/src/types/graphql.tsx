@@ -840,6 +840,7 @@ export type CreateModelInput = {
     idVModality: Scalars['Int'];
     idVPurpose: Scalars['Int'];
     idVUnits: Scalars['Int'];
+    idVFileType: Scalars['Int'];
     Master: Scalars['Boolean'];
     idAssetThumbnail?: Maybe<Scalars['Int']>;
 };
@@ -862,49 +863,96 @@ export type Model = {
     __typename?: 'Model';
     idModel: Scalars['Int'];
     Name: Scalars['String'];
-    Authoritative: Scalars['Boolean'];
     DateCreated: Scalars['DateTime'];
-    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    Master: Scalars['Boolean'];
+    Authoritative: Scalars['Boolean'];
     idVCreationMethod: Scalars['Int'];
     idVModality: Scalars['Int'];
     idVPurpose: Scalars['Int'];
     idVUnits: Scalars['Int'];
-    Master: Scalars['Boolean'];
-    AssetThumbnail?: Maybe<Asset>;
+    idVFileType: Scalars['Int'];
+    idAssetThumbnail?: Maybe<Scalars['Int']>;
+    idModelMetrics?: Maybe<Scalars['Int']>;
+    ModelConstellation?: Maybe<ModelConstellation>;
     VCreationMethod?: Maybe<Vocabulary>;
     VModality?: Maybe<Vocabulary>;
     VPurpose?: Maybe<Vocabulary>;
     VUnits?: Maybe<Vocabulary>;
-    ModelGeometryFile?: Maybe<Array<Maybe<ModelGeometryFile>>>;
+    VFileType?: Maybe<Vocabulary>;
+    AssetThumbnail?: Maybe<Asset>;
+    ModelMetrics?: Maybe<ModelMetrics>;
+    ModelObject?: Maybe<Array<Maybe<ModelObject>>>;
     ModelProcessingAction?: Maybe<Array<Maybe<ModelProcessingAction>>>;
     ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
     SystemObject?: Maybe<SystemObject>;
 };
 
-export type ModelGeometryFile = {
-    __typename?: 'ModelGeometryFile';
-    idModelGeometryFile: Scalars['Int'];
-    idAsset: Scalars['Int'];
+export type ModelMaterial = {
+    __typename?: 'ModelMaterial';
+    idModelMaterial: Scalars['Int'];
+    idModelObject: Scalars['Int'];
+    Name?: Maybe<Scalars['String']>;
+    ModelObject: ModelObject;
+};
+
+export type ModelMaterialChannel = {
+    __typename?: 'ModelMaterialChannel';
+    idModelMaterialChannel: Scalars['Int'];
+    idModelMaterial: Scalars['Int'];
+    idVMaterialType?: Maybe<Scalars['Int']>;
+    MaterialTypeOther?: Maybe<Scalars['String']>;
+    idModelMaterialUVMap?: Maybe<Scalars['Int']>;
+    ChannelPosition?: Maybe<Scalars['Int']>;
+    ChannelWidth?: Maybe<Scalars['Int']>;
+    Scalar1?: Maybe<Scalars['Float']>;
+    Scalar2?: Maybe<Scalars['Float']>;
+    Scalar3?: Maybe<Scalars['Float']>;
+    Scalar4?: Maybe<Scalars['Float']>;
+    ModelMaterial: ModelMaterial;
+    VMaterialType?: Maybe<Vocabulary>;
+    ModelMaterialUVMap?: Maybe<ModelMaterialUvMap>;
+};
+
+export type ModelMaterialUvMap = {
+    __typename?: 'ModelMaterialUVMap';
+    idModelMaterialUVMap: Scalars['Int'];
     idModel: Scalars['Int'];
-    idVModelFileType: Scalars['Int'];
+    idAsset: Scalars['Int'];
+    UVMapEdgeLength: Scalars['Int'];
+    Model: Model;
+    Asset: Asset;
+};
+
+export type ModelMetrics = {
+    __typename?: 'ModelMetrics';
+    idModelMetrics: Scalars['Int'];
     BoundingBoxP1X?: Maybe<Scalars['Float']>;
     BoundingBoxP1Y?: Maybe<Scalars['Float']>;
     BoundingBoxP1Z?: Maybe<Scalars['Float']>;
     BoundingBoxP2X?: Maybe<Scalars['Float']>;
     BoundingBoxP2Y?: Maybe<Scalars['Float']>;
     BoundingBoxP2Z?: Maybe<Scalars['Float']>;
-    FaceCount?: Maybe<Scalars['Int']>;
-    HasNormals?: Maybe<Scalars['Boolean']>;
-    HasUVSpace?: Maybe<Scalars['Boolean']>;
+    CountPoint?: Maybe<Scalars['Int']>;
+    CountFace?: Maybe<Scalars['Int']>;
+    CountColorChannel?: Maybe<Scalars['Int']>;
+    CountTextureCoorinateChannel?: Maybe<Scalars['Int']>;
+    HasBones?: Maybe<Scalars['Boolean']>;
+    HasFaceNormals?: Maybe<Scalars['Boolean']>;
+    HasTangents?: Maybe<Scalars['Boolean']>;
+    HasTextureCoordinates?: Maybe<Scalars['Boolean']>;
+    HasVertexNormals?: Maybe<Scalars['Boolean']>;
     HasVertexColor?: Maybe<Scalars['Boolean']>;
+    IsManifold?: Maybe<Scalars['Boolean']>;
     IsWatertight?: Maybe<Scalars['Boolean']>;
-    Metalness?: Maybe<Scalars['Float']>;
-    PointCount?: Maybe<Scalars['Int']>;
-    Roughness?: Maybe<Scalars['Float']>;
-    Asset?: Maybe<Asset>;
-    Model?: Maybe<Model>;
-    VModelFileType?: Maybe<Vocabulary>;
-    ModelUVMapFile?: Maybe<Array<Maybe<ModelUvMapFile>>>;
+};
+
+export type ModelObject = {
+    __typename?: 'ModelObject';
+    idModelObject: Scalars['Int'];
+    idModel: Scalars['Int'];
+    idModelMetrics?: Maybe<Scalars['Int']>;
+    Model: Model;
+    ModelMetrics?: Maybe<ModelMetrics>;
 };
 
 export type ModelProcessingAction = {
@@ -946,26 +994,15 @@ export type ModelSceneXref = {
     Scene?: Maybe<Scene>;
 };
 
-export type ModelUvMapChannel = {
-    __typename?: 'ModelUVMapChannel';
-    idModelUVMapChannel: Scalars['Int'];
-    ChannelPosition: Scalars['Int'];
-    ChannelWidth: Scalars['Int'];
-    idModelUVMapFile: Scalars['Int'];
-    idVUVMapType: Scalars['Int'];
-    ModelUVMapFile?: Maybe<ModelUvMapFile>;
-    VUVMapType?: Maybe<Vocabulary>;
-};
-
-export type ModelUvMapFile = {
-    __typename?: 'ModelUVMapFile';
-    idModelUVMapFile: Scalars['Int'];
-    idAsset: Scalars['Int'];
-    idModelGeometryFile: Scalars['Int'];
-    UVMapEdgeLength: Scalars['Int'];
-    Asset?: Maybe<Asset>;
-    ModelGeometryFile?: Maybe<ModelGeometryFile>;
-    ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
+export type ModelConstellation = {
+    __typename?: 'ModelConstellation';
+    Model: Model;
+    ModelObjects?: Maybe<Array<Maybe<ModelObject>>>;
+    ModelMaterials?: Maybe<Array<Maybe<ModelMaterial>>>;
+    ModelMaterialChannels?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
+    ModelMaterialUVMaps?: Maybe<Array<Maybe<ModelMaterialUvMap>>>;
+    ModelMetric?: Maybe<ModelMetrics>;
+    ModelObjectMetrics?: Maybe<Array<Maybe<ModelMetrics>>>;
 };
 
 export type PaginationInput = {
@@ -1301,20 +1338,24 @@ export type ModelDetailFields = {
     dateCaptured?: Maybe<Scalars['String']>;
     modelFileType?: Maybe<Scalars['Int']>;
     uvMaps: Array<IngestUvMap>;
-    roughness?: Maybe<Scalars['Int']>;
-    metalness?: Maybe<Scalars['Int']>;
-    pointCount?: Maybe<Scalars['Int']>;
-    faceCount?: Maybe<Scalars['Int']>;
-    isWatertight?: Maybe<Scalars['Boolean']>;
-    hasNormals?: Maybe<Scalars['Boolean']>;
-    hasVertexColor?: Maybe<Scalars['Boolean']>;
-    hasUVSpace?: Maybe<Scalars['Boolean']>;
     boundingBoxP1X?: Maybe<Scalars['Float']>;
     boundingBoxP1Y?: Maybe<Scalars['Float']>;
     boundingBoxP1Z?: Maybe<Scalars['Float']>;
     boundingBoxP2X?: Maybe<Scalars['Float']>;
     boundingBoxP2Y?: Maybe<Scalars['Float']>;
     boundingBoxP2Z?: Maybe<Scalars['Float']>;
+    countPoint?: Maybe<Scalars['Int']>;
+    countFace?: Maybe<Scalars['Int']>;
+    countColorChannel?: Maybe<Scalars['Int']>;
+    countTextureCoorinateChannel?: Maybe<Scalars['Int']>;
+    hasBones?: Maybe<Scalars['Boolean']>;
+    hasFaceNormals?: Maybe<Scalars['Boolean']>;
+    hasTangents?: Maybe<Scalars['Boolean']>;
+    hasTextureCoordinates?: Maybe<Scalars['Boolean']>;
+    hasVertexNormals?: Maybe<Scalars['Boolean']>;
+    hasVertexColor?: Maybe<Scalars['Boolean']>;
+    isManifold?: Maybe<Scalars['Boolean']>;
+    isWatertight?: Maybe<Scalars['Boolean']>;
 };
 
 export type SceneDetailFields = {
@@ -1997,9 +2038,7 @@ export type CreateCaptureDataMutationVariables = Exact<{
 }>;
 
 export type CreateCaptureDataMutation = { __typename?: 'Mutation' } & {
-    createCaptureData: { __typename?: 'CreateCaptureDataResult' } & {
-        CaptureData?: Maybe<{ __typename?: 'CaptureData' } & Pick<CaptureData, 'idCaptureData'>>;
-    };
+    createCaptureData: { __typename?: 'CreateCaptureDataResult' } & { CaptureData?: Maybe<{ __typename?: 'CaptureData' } & Pick<CaptureData, 'idCaptureData'>> };
 };
 
 export type CreateCaptureDataPhotoMutationVariables = Exact<{
@@ -2016,18 +2055,14 @@ export type IngestDataMutationVariables = Exact<{
     input: IngestDataInput;
 }>;
 
-export type IngestDataMutation = { __typename?: 'Mutation' } & {
-    ingestData: { __typename?: 'IngestDataResult' } & Pick<IngestDataResult, 'success'>;
-};
+export type IngestDataMutation = { __typename?: 'Mutation' } & { ingestData: { __typename?: 'IngestDataResult' } & Pick<IngestDataResult, 'success'> };
 
 export type CreateModelMutationVariables = Exact<{
     input: CreateModelInput;
 }>;
 
 export type CreateModelMutation = { __typename?: 'Mutation' } & {
-    createModel: { __typename?: 'CreateModelResult' } & {
-        Model?: Maybe<{ __typename?: 'Model' } & Pick<Model, 'idModel'>>;
-    };
+    createModel: { __typename?: 'CreateModelResult' } & { Model?: Maybe<{ __typename?: 'Model' } & Pick<Model, 'idModel'>> };
 };
 
 export type CreateSceneMutationVariables = Exact<{
@@ -2035,9 +2070,7 @@ export type CreateSceneMutationVariables = Exact<{
 }>;
 
 export type CreateSceneMutation = { __typename?: 'Mutation' } & {
-    createScene: { __typename?: 'CreateSceneResult' } & {
-        Scene?: Maybe<{ __typename?: 'Scene' } & Pick<Scene, 'idScene'>>;
-    };
+    createScene: { __typename?: 'CreateSceneResult' } & { Scene?: Maybe<{ __typename?: 'Scene' } & Pick<Scene, 'idScene'>> };
 };
 
 export type UpdateObjectDetailsMutationVariables = Exact<{
@@ -2053,9 +2086,7 @@ export type CreateItemMutationVariables = Exact<{
 }>;
 
 export type CreateItemMutation = { __typename?: 'Mutation' } & {
-    createItem: { __typename?: 'CreateItemResult' } & {
-        Item?: Maybe<{ __typename?: 'Item' } & Pick<Item, 'idItem'>>;
-    };
+    createItem: { __typename?: 'CreateItemResult' } & { Item?: Maybe<{ __typename?: 'Item' } & Pick<Item, 'idItem'>> };
 };
 
 export type CreateProjectMutationVariables = Exact<{
@@ -2063,9 +2094,7 @@ export type CreateProjectMutationVariables = Exact<{
 }>;
 
 export type CreateProjectMutation = { __typename?: 'Mutation' } & {
-    createProject: { __typename?: 'CreateProjectResult' } & {
-        Project?: Maybe<{ __typename?: 'Project' } & Pick<Project, 'idProject'>>;
-    };
+    createProject: { __typename?: 'CreateProjectResult' } & { Project?: Maybe<{ __typename?: 'Project' } & Pick<Project, 'idProject'>> };
 };
 
 export type CreateSubjectMutationVariables = Exact<{
@@ -2073,9 +2102,7 @@ export type CreateSubjectMutationVariables = Exact<{
 }>;
 
 export type CreateSubjectMutation = { __typename?: 'Mutation' } & {
-    createSubject: { __typename?: 'CreateSubjectResult' } & {
-        Subject?: Maybe<{ __typename?: 'Subject' } & Pick<Subject, 'idSubject'>>;
-    };
+    createSubject: { __typename?: 'CreateSubjectResult' } & { Subject?: Maybe<{ __typename?: 'Subject' } & Pick<Subject, 'idSubject'>> };
 };
 
 export type CreateUnitMutationVariables = Exact<{
@@ -2083,9 +2110,7 @@ export type CreateUnitMutationVariables = Exact<{
 }>;
 
 export type CreateUnitMutation = { __typename?: 'Mutation' } & {
-    createUnit: { __typename?: 'CreateUnitResult' } & {
-        Unit?: Maybe<{ __typename?: 'Unit' } & Pick<Unit, 'idUnit'>>;
-    };
+    createUnit: { __typename?: 'CreateUnitResult' } & { Unit?: Maybe<{ __typename?: 'Unit' } & Pick<Unit, 'idUnit'>> };
 };
 
 export type CreateUserMutationVariables = Exact<{
@@ -2093,9 +2118,7 @@ export type CreateUserMutationVariables = Exact<{
 }>;
 
 export type CreateUserMutation = { __typename?: 'Mutation' } & {
-    createUser: { __typename?: 'CreateUserResult' } & {
-        User?: Maybe<{ __typename?: 'User' } & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>>;
-    };
+    createUser: { __typename?: 'CreateUserResult' } & { User?: Maybe<{ __typename?: 'User' } & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>> };
 };
 
 export type CreateVocabularyMutationVariables = Exact<{
@@ -2103,9 +2126,7 @@ export type CreateVocabularyMutationVariables = Exact<{
 }>;
 
 export type CreateVocabularyMutation = { __typename?: 'Mutation' } & {
-    createVocabulary: { __typename?: 'CreateVocabularyResult' } & {
-        Vocabulary?: Maybe<{ __typename?: 'Vocabulary' } & Pick<Vocabulary, 'idVocabulary'>>;
-    };
+    createVocabulary: { __typename?: 'CreateVocabularyResult' } & { Vocabulary?: Maybe<{ __typename?: 'Vocabulary' } & Pick<Vocabulary, 'idVocabulary'>> };
 };
 
 export type CreateVocabularySetMutationVariables = Exact<{
@@ -2113,9 +2134,7 @@ export type CreateVocabularySetMutationVariables = Exact<{
 }>;
 
 export type CreateVocabularySetMutation = { __typename?: 'Mutation' } & {
-    createVocabularySet: { __typename?: 'CreateVocabularySetResult' } & {
-        VocabularySet?: Maybe<{ __typename?: 'VocabularySet' } & Pick<VocabularySet, 'idVocabularySet'>>;
-    };
+    createVocabularySet: { __typename?: 'CreateVocabularySetResult' } & { VocabularySet?: Maybe<{ __typename?: 'VocabularySet' } & Pick<VocabularySet, 'idVocabularySet'>> };
 };
 
 export type GetAccessPolicyQueryVariables = Exact<{
@@ -2123,20 +2142,14 @@ export type GetAccessPolicyQueryVariables = Exact<{
 }>;
 
 export type GetAccessPolicyQuery = { __typename?: 'Query' } & {
-    getAccessPolicy: { __typename?: 'GetAccessPolicyResult' } & {
-        AccessPolicy?: Maybe<{ __typename?: 'AccessPolicy' } & Pick<AccessPolicy, 'idAccessPolicy'>>;
-    };
+    getAccessPolicy: { __typename?: 'GetAccessPolicyResult' } & { AccessPolicy?: Maybe<{ __typename?: 'AccessPolicy' } & Pick<AccessPolicy, 'idAccessPolicy'>> };
 };
 
 export type GetAssetQueryVariables = Exact<{
     input: GetAssetInput;
 }>;
 
-export type GetAssetQuery = { __typename?: 'Query' } & {
-    getAsset: { __typename?: 'GetAssetResult' } & {
-        Asset?: Maybe<{ __typename?: 'Asset' } & Pick<Asset, 'idAsset'>>;
-    };
-};
+export type GetAssetQuery = { __typename?: 'Query' } & { getAsset: { __typename?: 'GetAssetResult' } & { Asset?: Maybe<{ __typename?: 'Asset' } & Pick<Asset, 'idAsset'>> } };
 
 export type GetAssetVersionsDetailsQueryVariables = Exact<{
     input: GetAssetVersionsDetailsInput;
@@ -2238,9 +2251,7 @@ export type GetUploadedAssetVersionQuery = { __typename?: 'Query' } & {
         AssetVersion: Array<
         { __typename?: 'AssetVersion' } & Pick<AssetVersion, 'idAssetVersion' | 'StorageSize' | 'FileName' | 'DateCreated'> & {
             Asset?: Maybe<
-            { __typename?: 'Asset' } & Pick<Asset, 'idAsset'> & {
-                VAssetType?: Maybe<{ __typename?: 'Vocabulary' } & Pick<Vocabulary, 'idVocabulary' | 'Term'>>;
-            }
+            { __typename?: 'Asset' } & Pick<Asset, 'idAsset'> & { VAssetType?: Maybe<{ __typename?: 'Vocabulary' } & Pick<Vocabulary, 'idVocabulary' | 'Term'>> }
             >;
         }
         >;
@@ -2252,9 +2263,7 @@ export type GetCaptureDataQueryVariables = Exact<{
 }>;
 
 export type GetCaptureDataQuery = { __typename?: 'Query' } & {
-    getCaptureData: { __typename?: 'GetCaptureDataResult' } & {
-        CaptureData?: Maybe<{ __typename?: 'CaptureData' } & Pick<CaptureData, 'idCaptureData'>>;
-    };
+    getCaptureData: { __typename?: 'GetCaptureDataResult' } & { CaptureData?: Maybe<{ __typename?: 'CaptureData' } & Pick<CaptureData, 'idCaptureData'>> };
 };
 
 export type GetCaptureDataPhotoQueryVariables = Exact<{
@@ -2280,34 +2289,22 @@ export type GetLicenseQueryVariables = Exact<{
 }>;
 
 export type GetLicenseQuery = { __typename?: 'Query' } & {
-    getLicense: { __typename?: 'GetLicenseResult' } & {
-        License?: Maybe<{ __typename?: 'License' } & Pick<License, 'idLicense'>>;
-    };
+    getLicense: { __typename?: 'GetLicenseResult' } & { License?: Maybe<{ __typename?: 'License' } & Pick<License, 'idLicense'>> };
 };
 
 export type GetModelQueryVariables = Exact<{
     input: GetModelInput;
 }>;
 
-export type GetModelQuery = { __typename?: 'Query' } & {
-    getModel: { __typename?: 'GetModelResult' } & {
-        Model?: Maybe<{ __typename?: 'Model' } & Pick<Model, 'idModel'>>;
-    };
-};
+export type GetModelQuery = { __typename?: 'Query' } & { getModel: { __typename?: 'GetModelResult' } & { Model?: Maybe<{ __typename?: 'Model' } & Pick<Model, 'idModel'>> } };
 
 export type GetFilterViewDataQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetFilterViewDataQuery = { __typename?: 'Query' } & {
     getFilterViewData: { __typename?: 'GetFilterViewDataResult' } & {
-        units: Array<
-        { __typename?: 'Unit' } & Pick<Unit, 'idUnit' | 'Name'> & {
-            SystemObject?: Maybe<{ __typename?: 'SystemObject' } & Pick<SystemObject, 'idSystemObject'>>;
-        }
-        >;
+        units: Array<{ __typename?: 'Unit' } & Pick<Unit, 'idUnit' | 'Name'> & { SystemObject?: Maybe<{ __typename?: 'SystemObject' } & Pick<SystemObject, 'idSystemObject'>> }>;
         projects: Array<
-        { __typename?: 'Project' } & Pick<Project, 'idProject' | 'Name'> & {
-            SystemObject?: Maybe<{ __typename?: 'SystemObject' } & Pick<SystemObject, 'idSystemObject'>>;
-        }
+        { __typename?: 'Project' } & Pick<Project, 'idProject' | 'Name'> & { SystemObject?: Maybe<{ __typename?: 'SystemObject' } & Pick<SystemObject, 'idSystemObject'>> }
         >;
     };
 };
@@ -2336,11 +2333,7 @@ export type GetSceneQueryVariables = Exact<{
     input: GetSceneInput;
 }>;
 
-export type GetSceneQuery = { __typename?: 'Query' } & {
-    getScene: { __typename?: 'GetSceneResult' } & {
-        Scene?: Maybe<{ __typename?: 'Scene' } & Pick<Scene, 'idScene'>>;
-    };
-};
+export type GetSceneQuery = { __typename?: 'Query' } & { getScene: { __typename?: 'GetSceneResult' } & { Scene?: Maybe<{ __typename?: 'Scene' } & Pick<Scene, 'idScene'>> } };
 
 export type GetAssetDetailsForSystemObjectQueryVariables = Exact<{
     input: GetAssetDetailsForSystemObjectInput;
@@ -2386,9 +2379,7 @@ export type GetDetailsTabDataForObjectQuery = { __typename?: 'Query' } & {
         | 'backgroundRemovalMethod'
         | 'clusterType'
         | 'clusterGeometryFieldId'
-        > & {
-            folders: Array<{ __typename?: 'IngestFolder' } & Pick<IngestFolder, 'name' | 'variantType'>>;
-        }
+        > & { folders: Array<{ __typename?: 'IngestFolder' } & Pick<IngestFolder, 'name' | 'variantType'>> }
         >;
         Model?: Maybe<
         { __typename?: 'ModelDetailFields' } & Pick<
@@ -2400,25 +2391,27 @@ export type GetDetailsTabDataForObjectQuery = { __typename?: 'Query' } & {
         | 'modality'
         | 'purpose'
         | 'units'
-        | 'dateCaptured'
         | 'modelFileType'
-        | 'roughness'
-        | 'metalness'
-        | 'pointCount'
-        | 'faceCount'
-        | 'isWatertight'
-        | 'hasNormals'
-        | 'hasVertexColor'
-        | 'hasUVSpace'
+        | 'dateCaptured'
         | 'boundingBoxP1X'
         | 'boundingBoxP1Y'
         | 'boundingBoxP1Z'
         | 'boundingBoxP2X'
         | 'boundingBoxP2Y'
         | 'boundingBoxP2Z'
-        > & {
-            uvMaps: Array<{ __typename?: 'IngestUVMap' } & Pick<IngestUvMap, 'name' | 'edgeLength' | 'mapType'>>;
-        }
+        | 'countPoint'
+        | 'countFace'
+        | 'countColorChannel'
+        | 'countTextureCoorinateChannel'
+        | 'hasBones'
+        | 'hasFaceNormals'
+        | 'hasTangents'
+        | 'hasTextureCoordinates'
+        | 'hasVertexNormals'
+        | 'hasVertexColor'
+        | 'isManifold'
+        | 'isWatertight'
+        > & { uvMaps: Array<{ __typename?: 'IngestUVMap' } & Pick<IngestUvMap, 'name' | 'edgeLength' | 'mapType'>> }
         >;
         Scene?: Maybe<{ __typename?: 'SceneDetailFields' } & Pick<SceneDetailFields, 'Links' | 'AssetType' | 'Tours' | 'Annotation' | 'HasBeenQCd' | 'IsOriented'>>;
         IntermediaryFile?: Maybe<{ __typename?: 'IntermediaryFileDetailFields' } & Pick<IntermediaryFileDetailFields, 'idIntermediaryFile'>>;
@@ -2499,20 +2492,14 @@ export type GetItemQueryVariables = Exact<{
     input: GetItemInput;
 }>;
 
-export type GetItemQuery = { __typename?: 'Query' } & {
-    getItem: { __typename?: 'GetItemResult' } & {
-        Item?: Maybe<{ __typename?: 'Item' } & Pick<Item, 'idItem'>>;
-    };
-};
+export type GetItemQuery = { __typename?: 'Query' } & { getItem: { __typename?: 'GetItemResult' } & { Item?: Maybe<{ __typename?: 'Item' } & Pick<Item, 'idItem'>> } };
 
 export type GetItemsForSubjectQueryVariables = Exact<{
     input: GetItemsForSubjectInput;
 }>;
 
 export type GetItemsForSubjectQuery = { __typename?: 'Query' } & {
-    getItemsForSubject: { __typename?: 'GetItemsForSubjectResult' } & {
-        Item: Array<{ __typename?: 'Item' } & Pick<Item, 'idItem' | 'Name'>>;
-    };
+    getItemsForSubject: { __typename?: 'GetItemsForSubjectResult' } & { Item: Array<{ __typename?: 'Item' } & Pick<Item, 'idItem' | 'Name'>> };
 };
 
 export type GetObjectsForItemQueryVariables = Exact<{
@@ -2534,9 +2521,7 @@ export type GetProjectQueryVariables = Exact<{
 }>;
 
 export type GetProjectQuery = { __typename?: 'Query' } & {
-    getProject: { __typename?: 'GetProjectResult' } & {
-        Project?: Maybe<{ __typename?: 'Project' } & Pick<Project, 'idProject'>>;
-    };
+    getProject: { __typename?: 'GetProjectResult' } & { Project?: Maybe<{ __typename?: 'Project' } & Pick<Project, 'idProject'>> };
 };
 
 export type GetProjectDocumentationQueryVariables = Exact<{
@@ -2554,9 +2539,7 @@ export type GetSubjectQueryVariables = Exact<{
 }>;
 
 export type GetSubjectQuery = { __typename?: 'Query' } & {
-    getSubject: { __typename?: 'GetSubjectResult' } & {
-        Subject?: Maybe<{ __typename?: 'Subject' } & Pick<Subject, 'idSubject'>>;
-    };
+    getSubject: { __typename?: 'GetSubjectResult' } & { Subject?: Maybe<{ __typename?: 'Subject' } & Pick<Subject, 'idSubject'>> };
 };
 
 export type GetSubjectsForUnitQueryVariables = Exact<{
@@ -2564,20 +2547,14 @@ export type GetSubjectsForUnitQueryVariables = Exact<{
 }>;
 
 export type GetSubjectsForUnitQuery = { __typename?: 'Query' } & {
-    getSubjectsForUnit: { __typename?: 'GetSubjectsForUnitResult' } & {
-        Subject: Array<{ __typename?: 'Subject' } & Pick<Subject, 'idSubject' | 'Name'>>;
-    };
+    getSubjectsForUnit: { __typename?: 'GetSubjectsForUnitResult' } & { Subject: Array<{ __typename?: 'Subject' } & Pick<Subject, 'idSubject' | 'Name'>> };
 };
 
 export type GetUnitQueryVariables = Exact<{
     input: GetUnitInput;
 }>;
 
-export type GetUnitQuery = { __typename?: 'Query' } & {
-    getUnit: { __typename?: 'GetUnitResult' } & {
-        Unit?: Maybe<{ __typename?: 'Unit' } & Pick<Unit, 'idUnit'>>;
-    };
-};
+export type GetUnitQuery = { __typename?: 'Query' } & { getUnit: { __typename?: 'GetUnitResult' } & { Unit?: Maybe<{ __typename?: 'Unit' } & Pick<Unit, 'idUnit'>> } };
 
 export type SearchIngestionSubjectsQueryVariables = Exact<{
     input: SearchIngestionSubjectsInput;
@@ -2609,9 +2586,7 @@ export type GetUserQueryVariables = Exact<{
 }>;
 
 export type GetUserQuery = { __typename?: 'Query' } & {
-    getUser: { __typename?: 'GetUserResult' } & {
-        User?: Maybe<{ __typename?: 'User' } & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>>;
-    };
+    getUser: { __typename?: 'GetUserResult' } & { User?: Maybe<{ __typename?: 'User' } & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>> };
 };
 
 export type GetVocabularyQueryVariables = Exact<{
@@ -2619,9 +2594,7 @@ export type GetVocabularyQueryVariables = Exact<{
 }>;
 
 export type GetVocabularyQuery = { __typename?: 'Query' } & {
-    getVocabulary: { __typename?: 'GetVocabularyResult' } & {
-        Vocabulary?: Maybe<{ __typename?: 'Vocabulary' } & Pick<Vocabulary, 'idVocabulary'>>;
-    };
+    getVocabulary: { __typename?: 'GetVocabularyResult' } & { Vocabulary?: Maybe<{ __typename?: 'Vocabulary' } & Pick<Vocabulary, 'idVocabulary'>> };
 };
 
 export type GetVocabularyEntriesQueryVariables = Exact<{
@@ -2643,9 +2616,7 @@ export type GetWorkflowQueryVariables = Exact<{
 }>;
 
 export type GetWorkflowQuery = { __typename?: 'Query' } & {
-    getWorkflow: { __typename?: 'GetWorkflowResult' } & {
-        Workflow?: Maybe<{ __typename?: 'Workflow' } & Pick<Workflow, 'idWorkflow'>>;
-    };
+    getWorkflow: { __typename?: 'GetWorkflowResult' } & { Workflow?: Maybe<{ __typename?: 'Workflow' } & Pick<Workflow, 'idWorkflow'>> };
 };
 
 export const DiscardUploadedAssetVersionsDocument = gql`
@@ -3866,27 +3837,31 @@ export const GetDetailsTabDataForObjectDocument = gql`
                 modality
                 purpose
                 units
-                dateCaptured
                 modelFileType
+                dateCaptured
                 uvMaps {
                     name
                     edgeLength
                     mapType
                 }
-                roughness
-                metalness
-                pointCount
-                faceCount
-                isWatertight
-                hasNormals
-                hasVertexColor
-                hasUVSpace
                 boundingBoxP1X
                 boundingBoxP1Y
                 boundingBoxP1Z
                 boundingBoxP2X
                 boundingBoxP2Y
                 boundingBoxP2Z
+                countPoint
+                countFace
+                countColorChannel
+                countTextureCoorinateChannel
+                hasBones
+                hasFaceNormals
+                hasTangents
+                hasTextureCoordinates
+                hasVertexNormals
+                hasVertexColor
+                isManifold
+                isWatertight
             }
             Scene {
                 Links
