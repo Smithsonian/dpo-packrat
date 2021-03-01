@@ -1,83 +1,23 @@
-/**
- * Admin
- *
- * This component renders Admin UI and all the sub-components
- */
+import Checkbox from '@material-ui/core/Checkbox';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import React, { useState, useEffect } from 'react';
 import { Box } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import Checkbox from '@material-ui/core/Checkbox';
-import Tooltip from '@material-ui/core/Tooltip';
-import ClearIcon from '@material-ui/icons/Clear';
-import CheckIcon from '@material-ui/icons/Check';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
-import MenuList from '@material-ui/core/MenuList';
-import Typography from '@material-ui/core/Typography';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import { DataGrid, Columns } from '@material-ui/data-grid';
-import { PrivateRoute } from '../../components';
-import { HOME_ROUTES, ADMIN_ROUTE, ADMIN_ROUTES_TYPE, resolveRoute, resolveSubRoute, ADMIN_EDIT_USER } from '../../constants';
-import { Redirect, useParams, useLocation, useHistory } from 'react-router';
+import { extractISOMonthDateYear, formatISOToHoursMinutes } from '../../../constants/index';
+import { useParams, useLocation, useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
-import { useGetUserQuery, useGetAllUsersQuery, User_Status, CreateUserDocument, UpdateUserDocument } from '../../types/graphql';
-import { GetAllUsersResult /* , User */ } from '../../types/graphql';
+import { useGetUserQuery, CreateUserDocument, UpdateUserDocument } from '../../types/graphql';
 import { apolloClient } from '../../graphql/index';
+import { makeStyles } from '@material-ui/core/styles';
 import GenericBreadcrumbsView from '../../components/shared/GenericBreadcrumbsView';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
 
-/* Utility functions */
-function toTitleCase(str) {
-    return str.replace(/\w\S*/g, txt => {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
-}
-
-function formatISOToHoursMinutes(time): string {
-    const newTime = new Date(time);
-    let hours = String(newTime.getHours());
-    let minutes = String(newTime.getMinutes());
-    if (Number(hours) < 10) {
-        hours = '0' + hours;
-    }
-    if (Number(minutes) < 10) {
-        minutes = '0' + minutes;
-    }
-    return `${hours}:${minutes}`;
-}
-
-function extractISOMonthDateYear(iso, materialUI = false): string | null {
-    if (!iso) {
-        return null;
-    }
-    const time = new Date(iso);
-    if (materialUI) {
-        // year-month-date
-        let year = String(time.getFullYear());
-        let month = String(time.getMonth() + 1);
-        let date = String(time.getDate());
-        if (Number(month) < 10) {
-            month = '0' + month;
-        }
-        if (Number(date) < 10) {
-            date = '0' + date;
-        }
-        const result = `${year}-${month}-${date}`;
-        return result;
-    }
-    const result = `${time.getMonth() + 1}/${time.getDate()}/${time.getFullYear()}`;
-    return result;
-}
-
 const useStyles = makeStyles({
-    AdminPageContainer: {
-        display: 'flex',
-        font: 'var(--unnamed-font-style-normal) normal medium 11px/17px var(--unnamed-font-family-heebo)'
-    },
     AdminUsersViewContainer: {
         display: 'flex',
         flex: 1,
@@ -88,56 +28,8 @@ const useStyles = makeStyles({
         width: '1200px',
         margin: '0 auto'
     },
-    AdminUsersListContainer: {
-        marginTop: '2%',
-        width: '1000px',
-        padding: '20px',
-        height: 'calc(100% - 120px)',
-        display: 'flex',
-        border: '1px solid #B7D2E5CC',
-        margin: '1px solid #B7D2E5CC',
-        alignItems: 'center',
-        backgroundColor: '#687DDB1A',
-        borderRadius: '4px'
-    },
     formControl: {
         minWidth: 120
-    },
-    UsersListDataGrid: {
-        letterSpacing: '1.7px',
-        color: '#8DABC4',
-        border: '1px solid #B7D2E5CC',
-        borderRadius: '2px',
-        backgroundColor: 'white'
-    },
-    searchUsersFilterButton: {
-        backgroundColor: '#687DDB',
-        color: 'white',
-        width: '90px',
-        height: '30px'
-    },
-    AdminUsersSearchFilterContainer: {
-        display: 'flex',
-        justifyContent: 'space-around',
-        height: '70px',
-        width: '900px',
-        backgroundColor: '#FFFCD1',
-        paddingLeft: '20px',
-        paddingRight: '20px'
-    },
-    AdminUsersSearchFilterSettingsContainer: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        height: '100%',
-        width: '80%'
-    },
-    AdminUsersSearchFilterSettingsContainer2: {
-        display: 'flex',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        height: '100%',
-        width: '20%'
     },
     AdminUserFormContainer: {
         display: 'flex',
@@ -173,30 +65,6 @@ const useStyles = makeStyles({
             marginRight: '30px'
         }
     },
-    AdminSidebarMenuRow: {
-        maxHeight: '100%',
-        background: '#ECF5FD 0% 0% no-repeat padding-box',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        padding: '0.8rem',
-        width: 160,
-        transition: 'all 250ms ease-in',
-        textDecoration: 'none',
-        overflow: 'hidden',
-        borderRadius: 5,
-        marginTop: 2
-    },
-    AdminSidebarMenuContainer: {
-        display: 'flex',
-        flexDirection: 'column',
-        border: '2px solid #C5D9E8',
-        padding: '1em 1em'
-    },
-    searchFilter: {
-        width: '380px'
-    },
     formField: {
         backgroundColor: 'white',
         borderRadius: '4px'
@@ -211,184 +79,15 @@ const useStyles = makeStyles({
         color: '#3F536E',
         marginBottom: '2%',
         width: 'fit-content'
+    },
+    searchUsersFilterButton: {
+        backgroundColor: '#687DDB',
+        color: 'white',
+        width: '90px',
+        height: '30px'
     }
 });
 
-function AdminSidebarMenuRow({ path }: { path: string }) {
-    const classes = useStyles();
-
-    return (
-        <Link style={{ textDecoration: 'none', color: '#0093EE' }} to={`/admin/${path}`}>
-            <MenuItem className={classes.AdminSidebarMenuRow}>
-                <Typography variant='inherit' noWrap>
-                    {toTitleCase(path)}
-                </Typography>
-            </MenuItem>
-        </Link>
-    );
-}
-
-function AdminSidebarMenu() {
-    const classes = useStyles();
-    const adminRoutes = ['users'];
-
-    return (
-        <Box className={classes.AdminSidebarMenuContainer}>
-            <MenuList>
-                {adminRoutes.map(route => {
-                    return <AdminSidebarMenuRow path={route} key={route} />;
-                })}
-            </MenuList>
-        </Box>
-    );
-}
-
-function AdminUsersFilter({
-    handleActiveUpdate,
-    handleUsersSearchUpdate
-}: {
-    handleActiveUpdate: (input: string) => void;
-    handleUsersSearchUpdate: (input: string) => void;
-}): React.ReactElement {
-    const [searchFilter, setSearchFilter] = useState('');
-    const [activeStatusFilter, setActiveStatusFilter] = useState('All');
-    const classes = useStyles();
-
-    const handleActiveStatusFilterChange = e => {
-        setActiveStatusFilter(e.target.value);
-    };
-
-    const handleSearchFilterChange = e => {
-        setSearchFilter(e.target.value);
-    };
-
-    const searchUsers = () => {
-        handleActiveUpdate(activeStatusFilter);
-        handleUsersSearchUpdate(searchFilter);
-    };
-
-    return (
-        <Box className={classes.AdminUsersSearchFilterContainer}>
-            <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
-                <TextField
-                    className={classes.searchFilter}
-                    placeholder='Search Packrat User'
-                    type='search'
-                    value={searchFilter}
-                    id='searchFilter'
-                    onChange={handleSearchFilterChange}
-                />
-                <p>Active</p>
-                <FormControl variant='outlined'>
-                    <Select value={activeStatusFilter} className={classes.formField} style={{ height: '30px', width: '100px' }} onChange={handleActiveStatusFilterChange}>
-                        <MenuItem value={'All'}>All</MenuItem>
-                        <MenuItem value={'Active'}>Active</MenuItem>
-                        <MenuItem value={'Inactive'}>Inactive</MenuItem>
-                    </Select>
-                </FormControl>
-                <Button className={classes.searchUsersFilterButton} onClick={searchUsers}>
-                    Search
-                </Button>
-            </Box>
-            <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/user/create'>
-                    <Button className={classes.searchUsersFilterButton}>Add User</Button>
-                </Link>
-            </Box>
-        </Box>
-    );
-}
-
-function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.ReactElement {
-    const classes = useStyles();
-
-    const usersWithId: any = users.map(user => {
-        const { idUser, Active, DateActivated, EmailAddress, Name, SecurityID, DateDisabled, EmailSettings, WorkflowNotificationTime } = user;
-
-        return {
-            id: idUser,
-            idUser,
-            Active,
-            DateActivated,
-            EmailAddress,
-            Name,
-            SecurityID,
-            DateDisabled,
-            EmailSettings,
-            WorkflowNotificationTime
-        };
-    });
-
-    const columnHeader: Columns = [
-        {
-            field: 'Active',
-            headerName: 'Active',
-            flex: 1,
-            headerAlign: 'center',
-            renderCell: params => (Boolean(params.getValue('Active')) ? <CheckIcon color='primary' /> : <ClearIcon color='error' />)
-        },
-        {
-            field: 'Name',
-            headerName: 'Name',
-            flex: 1.7,
-            renderCell: params => (
-                <Tooltip placement='left' title={`${params.getValue('Name')}`} arrow>
-                    <div>{`${params.getValue('Name')}`}</div>
-                </Tooltip>
-            )
-        },
-        {
-            field: 'EmailAddress',
-            headerName: 'Email',
-            flex: 1.7,
-            renderCell: params => (
-                <Tooltip placement='left' title={`${params.getValue('EmailAddress')}`} arrow>
-                    <div>{`${params.getValue('EmailAddress')}`}</div>
-                </Tooltip>
-            )
-        },
-        {
-            field: 'DateActivated',
-            headerName: 'Date Activated',
-            type: 'string',
-            flex: 1.7,
-            valueFormatter: params => extractISOMonthDateYear(params.value)
-        },
-        {
-            field: 'DateDisabled',
-            headerName: 'Date Disabled',
-            type: 'string',
-            flex: 1.6,
-            valueFormatter: params => extractISOMonthDateYear(params.value)
-        },
-        {
-            field: 'Action',
-            headerName: 'Action',
-            flex: 1,
-            sortable: false,
-            renderCell: params => <Link to={`/admin/user/${[params.row.idUser]}`}>Edit</Link>
-        }
-    ];
-
-    return (
-        <Box className={classes.AdminUsersListContainer}>
-            <DataGrid
-                className={classes.UsersListDataGrid}
-                rows={usersWithId}
-                columns={columnHeader}
-                rowHeight={55}
-                scrollbarSize={5}
-                density='compact'
-                disableSelectionOnClick={true}
-                disableColumnResize={undefined}
-                hideFooter={true}
-            />
-        </Box>
-    );
-}
-
-// AdminUserForm
-// TODO
 function AdminUserForm(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
@@ -702,90 +401,4 @@ function AdminUserForm(): React.ReactElement {
     );
 }
 
-// AdminUsersView - should contain both AdminUsersFilter and AdminUsersList
-// Also handles create newUser and update upon that
-// Passes both list of users and filter term to UsersList
-function AdminUsersView(): React.ReactElement {
-    const classes = useStyles();
-    const [active, setActive] = useState('All');
-    const [userSearchFilter, setUserSearchFilter] = useState('');
-    const location = useLocation();
-
-    const { data } = useGetAllUsersQuery({
-        variables: {
-            input: {
-                search: '',
-                active: User_Status.EAll
-            }
-        }
-    });
-
-    let users: GetAllUsersResult['User'] = data?.getAllUsers?.User || [];
-
-    const handleActiveUpdate = newActive => {
-        setActive(newActive);
-    };
-
-    const handleUsersSearchUpdate = newUserSearch => {
-        setUserSearchFilter(newUserSearch);
-    };
-
-    // filter by active and keyword
-    let filteredUsers = users;
-
-    switch (active) {
-        case 'Active':
-            filteredUsers = users.filter(user => user?.Active);
-            break;
-        case 'Inactive':
-            filteredUsers = users.filter(user => !user?.Active);
-            break;
-        default:
-            filteredUsers = users;
-            break;
-    }
-
-    filteredUsers = filteredUsers.filter(user => {
-        const lowerCaseSearch = userSearchFilter.toLowerCase();
-        return user?.EmailAddress.toLowerCase().includes(lowerCaseSearch) || user?.Name.toLowerCase().includes(lowerCaseSearch);
-    });
-
-    return (
-        <React.Fragment>
-            <Box className={classes.AdminUsersViewContainer}>
-                <Box className={classes.AdminBreadCrumbsContainer}>
-                    <GenericBreadcrumbsView items={location.pathname.slice(1)} />
-                </Box>
-                <AdminUsersFilter handleActiveUpdate={handleActiveUpdate} handleUsersSearchUpdate={handleUsersSearchUpdate} />
-                <AdminUsersList users={filteredUsers} />
-            </Box>
-        </React.Fragment>
-    );
-}
-
-function Admin(): React.ReactElement {
-    // Responsible for handling the routing to various admin components
-    const classes = useStyles();
-
-    return (
-        <React.Fragment>
-            <Box className={classes.AdminPageContainer}>
-                <AdminSidebarMenu />
-                <PrivateRoute path={resolveRoute(HOME_ROUTES.ADMIN)}>
-                    <PrivateRoute exact path={resolveRoute(ADMIN_ROUTE.TYPE)}>
-                        <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />
-                    </PrivateRoute>
-                    <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.USER)}>
-                        <Redirect to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} />
-                    </PrivateRoute>
-                    <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.USERS)} component={AdminUsersView} />
-                    <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.USER)}>
-                        <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_EDIT_USER.USER)} component={AdminUserForm} />
-                    </PrivateRoute>
-                </PrivateRoute>
-            </Box>
-        </React.Fragment>
-    );
-}
-
-export default Admin;
+export default AdminUserForm;
