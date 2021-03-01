@@ -1,3 +1,11 @@
+/**
+ * This component is a link from AdminUsersList
+ * Upon mounting/rendering, it will make a GraphQL request
+ * to retrieve the appropriate user and render the information.
+ *
+ * Also is responsible for user-related updating and creating GraphQL mutations
+ */
+
 import Checkbox from '@material-ui/core/Checkbox';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import React, { useState, useEffect } from 'react';
@@ -10,10 +18,10 @@ import MenuItem from '@material-ui/core/MenuItem';
 import { extractISOMonthDateYear, formatISOToHoursMinutes } from '../../../constants/index';
 import { useParams, useLocation, useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
-import { useGetUserQuery, CreateUserDocument, UpdateUserDocument } from '../../types/graphql';
-import { apolloClient } from '../../graphql/index';
+import { useGetUserQuery, CreateUserDocument, UpdateUserDocument } from '../../../types/graphql';
+import { apolloClient } from '../../../graphql/index';
 import { makeStyles } from '@material-ui/core/styles';
-import GenericBreadcrumbsView from '../../components/shared/GenericBreadcrumbsView';
+import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
 
@@ -120,7 +128,6 @@ function AdminUserForm(): React.ReactElement {
     });
 
     const fetchedUser = request.data?.getUser.User;
-    console.log('fetchedUser', fetchedUser);
     /**
      * Approach 1
      * change the return to null
