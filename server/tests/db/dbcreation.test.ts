@@ -52,14 +52,19 @@ let metadata: DBAPI.Metadata | null;
 let metadataNull: DBAPI.Metadata | null;
 let model: DBAPI.Model | null;
 let modelNulls: DBAPI.Model | null;
-let modelGeometryFile: DBAPI.ModelGeometryFile | null;
-let modelGeometryFileNulls: DBAPI.ModelGeometryFile | null;
+let modelMaterial: DBAPI.ModelMaterial | null;
+let modelMaterialChannel: DBAPI.ModelMaterialChannel | null;
+let modelMaterialChannelNulls: DBAPI.ModelMaterialChannel | null;
+let modelMaterialUVMap: DBAPI.ModelMaterialUVMap | null;
+let modelMetrics: DBAPI.ModelMetrics | null;
+let modelMetrics2: DBAPI.ModelMetrics | null;
+let modelObject: DBAPI.ModelObject | null;
+let modelObject2: DBAPI.ModelObject | null;
+let modelObject3: DBAPI.ModelObject | null;
 let modelProcessingAction: DBAPI.ModelProcessingAction | null;
 let modelProcessingActionStep: DBAPI.ModelProcessingActionStep | null;
 let modelSceneXref: DBAPI.ModelSceneXref | null;
 let modelSceneXrefNull: DBAPI.ModelSceneXref | null;
-let modelUVMapChannel: DBAPI.ModelUVMapChannel | null;
-let modelUVMapFile: DBAPI.ModelUVMapFile | null;
 let license: DBAPI.License | null;
 let licenseAssignment: DBAPI.LicenseAssignment | null;
 let licenseAssignmentNull: DBAPI.LicenseAssignment | null;
@@ -571,6 +576,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: CaptureData', async () => {
         if (vocabulary && assetThumbnail)
             captureData = await UTIL.createCaptureDataTest({
+                Name: 'Test Capture Data',
                 idVCaptureMethod: vocabulary.idVocabulary,
                 DateCaptured: UTIL.nowCleansed(),
                 Description: 'Test Capture Data',
@@ -583,6 +589,7 @@ describe('DB Creation Test Suite', () => {
     test('DB Creation: CaptureData With Nulls', async () => {
         if (vocabulary)
             captureDataNulls = await UTIL.createCaptureDataTest({
+                Name: 'Test Capture Data Nulls',
                 idVCaptureMethod: vocabulary.idVocabulary,
                 DateCaptured: UTIL.nowCleansed(),
                 Description: 'Test Capture Data Nulls',
@@ -843,70 +850,142 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
+    test('DB Creation: ModelMetrics', async () => {
+        modelMetrics = await UTIL.createModelMetricsTest({
+            BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
+            CountPoint: 100, CountFace: 50, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: true, HasFaceNormals: false,
+            HasTangents: true, HasTextureCoordinates: false, HasVertexNormals: true, HasVertexColor: false, IsManifold: true, IsWatertight: false,
+            idModelMetrics: 0
+        });
+        expect(modelMetrics).toBeTruthy();
+
+        modelMetrics2 = await UTIL.createModelMetricsTest({
+            BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 2, BoundingBoxP2Y: 2, BoundingBoxP2Z: 2,
+            CountPoint: null, CountFace: null, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: false, HasFaceNormals: false,
+            HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: false, HasVertexColor: true, IsManifold: false, IsWatertight: false,
+            idModelMetrics: 0
+        });
+        expect(modelMetrics2).toBeTruthy();
+    });
+
     test('DB Creation: Model', async () => {
-        if (vocabulary && assetThumbnail)
+        if (vocabulary && assetThumbnail && modelMetrics)
             model = await UTIL.createModelTest({
-                DateCreated: UTIL.nowCleansed(),
-                idVCreationMethod: vocabulary.idVocabulary,
+                Name: 'Test Model',
                 Master: true,
                 Authoritative: true,
+                DateCreated: UTIL.nowCleansed(),
+                idVCreationMethod: vocabulary.idVocabulary,
                 idVModality: vocabulary.idVocabulary,
                 idVUnits: vocabulary.idVocabulary,
                 idVPurpose: vocabulary.idVocabulary,
+                idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: assetThumbnail.idAsset,
+                idModelMetrics: modelMetrics.idModelMetrics,
                 idModel: 0
             });
         expect(model).toBeTruthy();
     });
 
     test('DB Creation: Model With Nulls', async () => {
-        if (vocabulary)
+        if (assetThumbnail && vocabulary)
             modelNulls = await UTIL.createModelTest({
-                DateCreated: UTIL.nowCleansed(),
-                idVCreationMethod: vocabulary.idVocabulary,
+                Name: 'Test Model with Nulls',
                 Master: true,
                 Authoritative: true,
+                DateCreated: UTIL.nowCleansed(),
+                idVCreationMethod: vocabulary.idVocabulary,
                 idVModality: vocabulary.idVocabulary,
                 idVUnits: vocabulary.idVocabulary,
                 idVPurpose: vocabulary.idVocabulary,
+                idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: null,
+                idModelMetrics: null,
                 idModel: 0
             });
         expect(modelNulls).toBeTruthy();
     });
 
-    test('DB Creation: ModelGeometryFile', async () => {
-        if (model && assetThumbnail && vocabulary)
-            modelGeometryFile = new DBAPI.ModelGeometryFile({
+    test('DB Creation: ModelObject', async () => {
+        if (model && modelMetrics)
+            modelObject = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
-                idAsset: assetThumbnail.idAsset,
-                idVModelFileType: vocabulary.idVocabulary,
-                Roughness: 0, Metalness: 0, PointCount: 0, FaceCount: 0, IsWatertight: false, HasNormals: false, HasVertexColor: false, HasUVSpace: false,
-                BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 0, BoundingBoxP2Y: 0, BoundingBoxP2Z: 0,
-                idModelGeometryFile: 0
+                idModelMetrics: modelMetrics.idModelMetrics,
+                idModelObject: 0
             });
-        expect(modelGeometryFile).toBeTruthy();
-        if (modelGeometryFile) {
-            expect(await modelGeometryFile.create()).toBeTruthy();
-            expect(modelGeometryFile.idModelGeometryFile).toBeGreaterThan(0);
-        }
+        expect(modelObject).toBeTruthy();
+
+        if (model && modelMetrics2)
+            modelObject2 = await UTIL.createModelObjectTest({
+                idModel: model.idModel,
+                idModelMetrics: modelMetrics2.idModelMetrics,
+                idModelObject: 0
+            });
+        expect(modelObject2).toBeTruthy();
+
+        if (model)
+            modelObject3 = await UTIL.createModelObjectTest({
+                idModel: model.idModel,
+                idModelMetrics: 0,
+                idModelObject: 0
+            });
+        expect(modelObject3).toBeTruthy();
+
     });
 
-    test('DB Creation: ModelGeometryFile With Nulls', async () => {
-        if (model && assetThumbnail && vocabulary)
-            modelGeometryFileNulls = new DBAPI.ModelGeometryFile({
+    test('DB Creation: ModelMaterial', async () => {
+        if (modelObject)
+            modelMaterial = await UTIL.createModelMaterialTest({
+                idModelObject: modelObject.idModelObject,
+                Name: 'Test ModelMaterial',
+                idModelMaterial: 0
+            });
+        expect(modelMaterial).toBeTruthy();
+    });
+
+    test('DB Creation: ModelMaterialUVMap', async () => {
+        if (model && assetThumbnail)
+            modelMaterialUVMap = await UTIL.createModelMaterialUVMapTest({
                 idModel: model.idModel,
                 idAsset: assetThumbnail.idAsset,
-                idVModelFileType: vocabulary.idVocabulary,
-                Roughness: null, Metalness: null, PointCount: null, FaceCount: null, IsWatertight: null, HasNormals: null, HasVertexColor: null, HasUVSpace: null,
-                BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null, BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
-                idModelGeometryFile: 0
+                UVMapEdgeLength: 1000,
+                idModelMaterialUVMap: 0
             });
-        expect(modelGeometryFileNulls).toBeTruthy();
-        if (modelGeometryFileNulls) {
-            expect(await modelGeometryFileNulls.create()).toBeTruthy();
-            expect(modelGeometryFileNulls.idModelGeometryFile).toBeGreaterThan(0);
-        }
+        expect(modelMaterialUVMap).toBeTruthy();
+    });
+
+    test('DB Creation: ModelMaterialChannel', async () => {
+        if (modelMaterial && modelMaterialUVMap && vocabulary)
+            modelMaterialChannel = await UTIL.createModelMaterialChannelTest({
+                idModelMaterial: modelMaterial.idModelMaterial,
+                idVMaterialType: vocabulary.idVocabulary,
+                MaterialTypeOther: 'Model Material Type',
+                idModelMaterialUVMap: modelMaterialUVMap.idModelMaterialUVMap,
+                ChannelPosition: 0,
+                ChannelWidth: 1,
+                Scalar1: null,
+                Scalar2: null,
+                Scalar3: null,
+                Scalar4: null,
+                idModelMaterialChannel: 0
+            });
+        expect(modelMaterialChannel).toBeTruthy();
+
+        if (modelMaterial && modelMaterialUVMap && vocabulary)
+            modelMaterialChannelNulls = await UTIL.createModelMaterialChannelTest({
+                idModelMaterial: modelMaterial.idModelMaterial,
+                idVMaterialType: null,
+                MaterialTypeOther: 'Model Material Type',
+                idModelMaterialUVMap: null,
+                ChannelPosition: 0,
+                ChannelWidth: 1,
+                Scalar1: null,
+                Scalar2: null,
+                Scalar3: null,
+                Scalar4: null,
+                idModelMaterialChannel: 0
+            });
+        expect(modelMaterialChannelNulls).toBeTruthy();
     });
 
     test('DB Creation: ModelProcessingAction', async () => {
@@ -1098,36 +1177,6 @@ describe('DB Creation Test Suite', () => {
         expect(systemObjectXrefUnitProject2).toBeTruthy();
         if (systemObjectXrefUnitProject2)
             expect(systemObjectXrefUnitProject2.idSystemObjectXref).toBeGreaterThan(0);
-    });
-
-    test('DB Creation: ModelUVMapFile', async () => {
-        if (modelGeometryFile && assetThumbnail)
-            modelUVMapFile = new DBAPI.ModelUVMapFile({
-                idModelGeometryFile: modelGeometryFile.idModelGeometryFile,
-                idAsset: assetThumbnail.idAsset,
-                UVMapEdgeLength: 0,
-                idModelUVMapFile: 0
-            });
-        expect(modelUVMapFile).toBeTruthy();
-        if (modelUVMapFile) {
-            expect(await modelUVMapFile.create()).toBeTruthy();
-            expect(modelUVMapFile.idModelUVMapFile).toBeGreaterThan(0);
-        }
-    });
-
-    test('DB Creation: ModelUVMapChannel', async () => {
-        if (modelUVMapFile && vocabulary)
-            modelUVMapChannel = new DBAPI.ModelUVMapChannel({
-                idModelUVMapFile: modelUVMapFile.idModelUVMapFile,
-                ChannelPosition: 0, ChannelWidth: 1,
-                idVUVMapType: vocabulary.idVocabulary,
-                idModelUVMapChannel: 0
-            });
-        expect(modelUVMapChannel).toBeTruthy();
-        if (modelUVMapChannel) {
-            expect(await modelUVMapChannel.create()).toBeTruthy();
-            expect(modelUVMapChannel.idModelUVMapChannel).toBeGreaterThan(0);
-        }
     });
 
     test('DB Creation: License', async () => {
@@ -1977,29 +2026,64 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(modelFetch).toBeTruthy();
     });
 
-    test('DB Fetch By ID: ModelGeometryFile', async () => {
-        let modelGeometryFileFetch: DBAPI.ModelGeometryFile | null = null;
-        if (modelGeometryFile) {
-            modelGeometryFileFetch = await DBAPI.ModelGeometryFile.fetch(modelGeometryFile.idModelGeometryFile);
-            if (modelGeometryFileFetch) {
-                expect(modelGeometryFileFetch).toMatchObject(modelGeometryFile);
-                expect(modelGeometryFile).toMatchObject(modelGeometryFileFetch);
+    test('DB Fetch By ID: ModelMaterial', async () => {
+        let modelMaterialFetch: DBAPI.ModelMaterial | null = null;
+        if (modelMaterial) {
+            modelMaterialFetch = await DBAPI.ModelMaterial.fetch(modelMaterial.idModelMaterial);
+            if (modelMaterialFetch) {
+                expect(modelMaterialFetch).toMatchObject(modelMaterial);
+                expect(modelMaterial).toMatchObject(modelMaterialFetch);
             }
         }
-        expect(modelGeometryFileFetch).toBeTruthy();
+        expect(modelMaterialFetch).toBeTruthy();
     });
 
-    test('DB Fetch ModelGeometryFile: ModelGeometryFile.fetchFromModel', async () => {
-        let modelGeometryFileFetch: DBAPI.ModelGeometryFile[] | null = null;
-        if (model) {
-            modelGeometryFileFetch = await DBAPI.ModelGeometryFile.fetchFromModel(model.idModel);
-            if (modelGeometryFileFetch) {
-                if (modelGeometryFile) {
-                    expect(modelGeometryFileFetch).toEqual(expect.arrayContaining([modelGeometryFile]));
-                }
+    test('DB Fetch By ID: ModelMaterialChannel', async () => {
+        let modelMaterialChannelFetch: DBAPI.ModelMaterialChannel | null = null;
+        if (modelMaterialChannel) {
+            modelMaterialChannelFetch = await DBAPI.ModelMaterialChannel.fetch(modelMaterialChannel.idModelMaterialChannel);
+            if (modelMaterialChannelFetch) {
+                expect(modelMaterialChannelFetch).toMatchObject(modelMaterialChannel);
+                expect(modelMaterialChannel).toMatchObject(modelMaterialChannelFetch);
             }
         }
-        expect(modelGeometryFileFetch).toBeTruthy();
+        expect(modelMaterialChannelFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: ModelMaterialUVMap', async () => {
+        let modelMaterialUVMapFetch: DBAPI.ModelMaterialUVMap | null = null;
+        if (modelMaterialUVMap) {
+            modelMaterialUVMapFetch = await DBAPI.ModelMaterialUVMap.fetch(modelMaterialUVMap.idModelMaterialUVMap);
+            if (modelMaterialUVMapFetch) {
+                expect(modelMaterialUVMapFetch).toMatchObject(modelMaterialUVMap);
+                expect(modelMaterialUVMap).toMatchObject(modelMaterialUVMapFetch);
+            }
+        }
+        expect(modelMaterialUVMapFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: ModelMetrics', async () => {
+        let modelMetricsFetch: DBAPI.ModelMetrics | null = null;
+        if (modelMetrics) {
+            modelMetricsFetch = await DBAPI.ModelMetrics.fetch(modelMetrics.idModelMetrics);
+            if (modelMetricsFetch) {
+                expect(modelMetricsFetch).toMatchObject(modelMetrics);
+                expect(modelMetrics).toMatchObject(modelMetricsFetch);
+            }
+        }
+        expect(modelMetricsFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: ModelObject', async () => {
+        let modelObjectFetch: DBAPI.ModelObject | null = null;
+        if (modelObject) {
+            modelObjectFetch = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
+            if (modelObjectFetch) {
+                expect(modelObjectFetch).toMatchObject(modelObject);
+                expect(modelObject).toMatchObject(modelObjectFetch);
+            }
+        }
+        expect(modelObjectFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: ModelProcessingAction', async () => {
@@ -2082,52 +2166,6 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(modelSceneXrefFetch).toBeTruthy();
-    });
-
-    test('DB Fetch By ID: ModelUVMapChannel', async () => {
-        let modelUVMapChannelFetch: DBAPI.ModelUVMapChannel | null = null;
-        if (modelUVMapChannel) {
-            modelUVMapChannelFetch = await DBAPI.ModelUVMapChannel.fetch(modelUVMapChannel.idModelUVMapChannel);
-            if (modelUVMapChannelFetch) {
-                expect(modelUVMapChannelFetch).toMatchObject(modelUVMapChannel);
-                expect(modelUVMapChannel).toMatchObject(modelUVMapChannelFetch);
-            }
-        }
-        expect(modelUVMapChannelFetch).toBeTruthy();
-    });
-
-    test('DB Fetch ModelUVMapChannel: ModelUVMapChannel.fetchFromModelUVMapFile', async () => {
-        let modelUVMapChannelFetch: DBAPI.ModelUVMapChannel[] | null = null;
-        if (modelUVMapFile) {
-            modelUVMapChannelFetch = await DBAPI.ModelUVMapChannel.fetchFromModelUVMapFile(modelUVMapFile.idModelUVMapFile);
-            if (modelUVMapChannelFetch) {
-                expect(modelUVMapChannelFetch).toEqual(expect.arrayContaining([modelUVMapChannel]));
-            }
-        }
-        expect(modelUVMapChannelFetch).toBeTruthy();
-    });
-
-    test('DB Fetch By ID: ModelUVMapFile', async () => {
-        let modelUVMapFileFetch: DBAPI.ModelUVMapFile | null = null;
-        if (modelUVMapFile) {
-            modelUVMapFileFetch = await DBAPI.ModelUVMapFile.fetch(modelUVMapFile.idModelUVMapFile);
-            if (modelUVMapFileFetch) {
-                expect(modelUVMapFileFetch).toMatchObject(modelUVMapFile);
-                expect(modelUVMapFile).toMatchObject(modelUVMapFileFetch);
-            }
-        }
-        expect(modelUVMapFileFetch).toBeTruthy();
-    });
-
-    test('DB Fetch ModelUVMapFile: ModelUVMapFile.fetchFromModelGeometryFile', async () => {
-        let modelUVMapFileFetch: DBAPI.ModelUVMapFile[] | null = null;
-        if (modelGeometryFile) {
-            modelUVMapFileFetch = await DBAPI.ModelUVMapFile.fetchFromModelGeometryFile(modelGeometryFile.idModelGeometryFile);
-            if (modelUVMapFileFetch) {
-                expect(modelUVMapFileFetch).toEqual(expect.arrayContaining([modelUVMapFile]));
-            }
-        }
-        expect(modelUVMapFileFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: Project', async () => {
@@ -3308,6 +3346,42 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         }
         expect(SYOP).toBeTruthy();
     });
+
+    test('DB Fetch SystemObject: SystemObjectTypeToName', async () => {
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eUnit)).toEqual('Unit');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eProject)).toEqual('Project');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eSubject)).toEqual('Subject');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eItem)).toEqual('Item');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eCaptureData)).toEqual('Capture Data');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eModel)).toEqual('Model');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eScene)).toEqual('Scene');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eIntermediaryFile)).toEqual('Intermediary File');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eProjectDocumentation)).toEqual('Project Documentation');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eAsset)).toEqual('Asset');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eAssetVersion)).toEqual('Asset Version');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eActor)).toEqual('Actor');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eStakeholder)).toEqual('Stakeholder');
+        expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eUnknown)).toEqual('Unknown');
+        expect(DBAPI.SystemObjectTypeToName(null)).toEqual('Unknown');
+    });
+
+    test('DB Fetch SystemObject: SystemObjectNameToType', async () => {
+        expect(DBAPI.SystemObjectNameToType('Unit')).toEqual(DBAPI.eSystemObjectType.eUnit);
+        expect(DBAPI.SystemObjectNameToType('Project')).toEqual(DBAPI.eSystemObjectType.eProject);
+        expect(DBAPI.SystemObjectNameToType('Subject')).toEqual(DBAPI.eSystemObjectType.eSubject);
+        expect(DBAPI.SystemObjectNameToType('Item')).toEqual(DBAPI.eSystemObjectType.eItem);
+        expect(DBAPI.SystemObjectNameToType('Capture Data')).toEqual(DBAPI.eSystemObjectType.eCaptureData);
+        expect(DBAPI.SystemObjectNameToType('Model')).toEqual(DBAPI.eSystemObjectType.eModel);
+        expect(DBAPI.SystemObjectNameToType('Scene')).toEqual(DBAPI.eSystemObjectType.eScene);
+        expect(DBAPI.SystemObjectNameToType('Intermediary File')).toEqual(DBAPI.eSystemObjectType.eIntermediaryFile);
+        expect(DBAPI.SystemObjectNameToType('Project Documentation')).toEqual(DBAPI.eSystemObjectType.eProjectDocumentation);
+        expect(DBAPI.SystemObjectNameToType('Asset')).toEqual(DBAPI.eSystemObjectType.eAsset);
+        expect(DBAPI.SystemObjectNameToType('Asset Version')).toEqual(DBAPI.eSystemObjectType.eAssetVersion);
+        expect(DBAPI.SystemObjectNameToType('Actor')).toEqual(DBAPI.eSystemObjectType.eActor);
+        expect(DBAPI.SystemObjectNameToType('Stakeholder')).toEqual(DBAPI.eSystemObjectType.eStakeholder);
+        expect(DBAPI.SystemObjectNameToType('Unknown')).toEqual(DBAPI.eSystemObjectType.eUnknown);
+        expect(DBAPI.SystemObjectNameToType(null)).toEqual(DBAPI.eSystemObjectType.eUnknown);
+    });
 });
 
 describe('DB Fetch Xref Test Suite', () => {
@@ -3495,7 +3569,17 @@ describe('DB Fetch Xref Test Suite', () => {
 // DB Fetch Special Test Suite
 // *******************************************************************
 describe('DB Fetch Special Test Suite', () => {
-    test('DB FetchSpecial: Asset.assetType undefined', async() => {
+    test('DB Fetch Special: Actor.fetchAll', async () => {
+        let actorFetch: DBAPI.Actor[] | null = null;
+        if (actorWithUnit && actorWithOutUnit) {
+            actorFetch = await DBAPI.Actor.fetchAll();
+            if (actorFetch)
+                expect(actorFetch).toEqual(expect.arrayContaining([actorWithUnit, actorWithOutUnit]));
+        }
+        expect(actorFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Asset.assetType undefined', async() => {
         let eVocabID: eVocabularyID | undefined = undefined;
         if (assetThumbnail)
             eVocabID = await assetThumbnail.assetType();
@@ -3503,7 +3587,7 @@ describe('DB Fetch Special Test Suite', () => {
         expect(eVocabID).toBeFalsy();
     });
 
-    test('DB FetchSpecial: Asset.assetType defined', async() => {
+    test('DB Fetch Special: Asset.assetType defined', async() => {
         let eVocabID: eVocabularyID | undefined = undefined;
         if (assetBulkIngest)
             eVocabID = await assetBulkIngest.assetType();
@@ -3512,7 +3596,7 @@ describe('DB Fetch Special Test Suite', () => {
         expect(eVocabID).toEqual(eVocabularyID.eAssetAssetTypeBulkIngestion);
     });
 
-    test('DB FetchSpecial: Asset.setAssetType', async() => {
+    test('DB Fetch Special: Asset.setAssetType', async() => {
         expect(assetThumbnail).toBeTruthy();
         if (assetThumbnail) {
             expect(await assetThumbnail.setAssetType(eVocabularyID.eNone)).toBeFalsy();
@@ -3528,20 +3612,39 @@ describe('DB Fetch Special Test Suite', () => {
         }
     });
 
+    test('DB Fetch Special: Asset.fetchAll', async () => {
+        let assetFetch: DBAPI.Asset[] | null = null;
+        if (assetThumbnail && assetWithoutAG && assetBulkIngest) {
+            assetFetch = await DBAPI.Asset.fetchAll();
+            if (assetFetch)
+                expect(assetFetch).toEqual(expect.arrayContaining([assetThumbnail, assetWithoutAG, assetBulkIngest]));
+        }
+        expect(assetFetch).toBeTruthy();
+    });
 
-    test('DB FetchSpecial: Asset.fetchSourceSystemObject 1', async() => {
+    test('DB Fetch Special: Asset.fetchSourceSystemObject 1', async() => {
         let SOAsset: DBAPI.SystemObject | null = null;
         if (assetBulkIngest)
             SOAsset = await assetBulkIngest.fetchSourceSystemObject();
         expect(SOAsset).toBeFalsy();
     });
 
-    test('DB FetchSpecial: Asset.fetchSourceSystemObject 2', async() => {
+    test('DB Fetch Special: Asset.fetchSourceSystemObject 2', async() => {
         let SOAssetSource: DBAPI.SystemObject | null = null;
         if (assetWithoutAG)
             SOAssetSource = await assetWithoutAG.fetchSourceSystemObject();
         expect(SOAssetSource).toBeTruthy();
         expect(SOAssetSource).toEqual(systemObjectSubject);
+    });
+
+    test('DB Fetch Special: AssetVersion.fetchAll', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (assetVersion && assetVersion2 && assetVersionNotIngested) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchAll();
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersion2, assetVersionNotIngested]));
+        }
+        expect(assetVersionFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: CaptureData.fetchFromCaptureDataPhoto', async () => {
@@ -3568,6 +3671,36 @@ describe('DB Fetch Special Test Suite', () => {
         expect(captureDataFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: CaptureData.fetchAll', async () => {
+        let captureDataFetch: DBAPI.CaptureData[] | null = null;
+        if (captureData && captureDataNulls) {
+            captureDataFetch = await DBAPI.CaptureData.fetchAll();
+            if (captureDataFetch)
+                expect(captureDataFetch).toEqual(expect.arrayContaining([captureData, captureDataNulls]));
+        }
+        expect(captureDataFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: CaptureDataPhoto.fetchAll', async () => {
+        let captureDataPhotoFetch: DBAPI.CaptureDataPhoto[] | null = null;
+        if (captureDataPhoto && captureDataPhotoNulls) {
+            captureDataPhotoFetch = await DBAPI.CaptureDataPhoto.fetchAll();
+            if (captureDataPhotoFetch)
+                expect(captureDataPhotoFetch).toEqual(expect.arrayContaining([captureDataPhoto, captureDataPhotoNulls]));
+        }
+        expect(captureDataPhotoFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: CaptureDataPhoto.fetchFromCaptureData', async () => {
+        let captureDataPhotoFetch: DBAPI.CaptureDataPhoto[] | null = null;
+        if (captureData && captureDataPhoto && captureDataPhotoNulls) {
+            captureDataPhotoFetch = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(captureData.idCaptureData);
+            if (captureDataPhotoFetch)
+                expect(captureDataPhotoFetch).toEqual(expect.arrayContaining([captureDataPhoto, captureDataPhotoNulls]));
+        }
+        expect(captureDataPhotoFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: Identifier.fetchFromIdentifierValue', async () => {
         const identifierFetch: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(identifierValue);
         expect(identifierFetch).toBeTruthy();
@@ -3585,6 +3718,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(identifierFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: IntermediaryFile.fetchAll', async () => {
+        let ifFetch: DBAPI.IntermediaryFile[] | null = null;
+        if (intermediaryFile) {
+            ifFetch = await DBAPI.IntermediaryFile.fetchAll();
+            if (ifFetch)
+                expect(ifFetch).toEqual(expect.arrayContaining([intermediaryFile]));
+        }
+        expect(ifFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: IntermediaryFile.fetchDerivedFromItems', async () => {
         let intermediaryFileFetch: DBAPI.IntermediaryFile[] | null = null;
         if (item && itemNulls) {
@@ -3597,6 +3740,16 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(intermediaryFileFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Item.fetchAll', async () => {
+        let itemFetch: DBAPI.Item[] | null = null;
+        if (item && itemNulls) {
+            itemFetch = await DBAPI.Item.fetchAll();
+            if (itemFetch)
+                expect(itemFetch).toEqual(expect.arrayContaining([item, itemNulls]));
+        }
+        expect(itemFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: Item.fetchDerivedFromSubject', async () => {
@@ -3668,6 +3821,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(itemFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Model.fetchAll', async () => {
+        let modelFetch: DBAPI.Model[] | null = null;
+        if (model && modelNulls) {
+            modelFetch = await DBAPI.Model.fetchAll();
+            if (modelFetch)
+                expect(modelFetch).toEqual(expect.arrayContaining([model, modelNulls]));
+        }
+        expect(modelFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: Model.fetchDerivedFromItems', async () => {
         let modelFetch: DBAPI.Model[] | null = null;
         if (item && itemNulls) {
@@ -3680,6 +3843,124 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(modelFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelConstellation', async () => {
+        let modelConstellation1: DBAPI.ModelConstellation | null = null;
+        let modelConstellation2: DBAPI.ModelConstellation | null = null;
+
+        if (model) {
+            modelConstellation1 = await DBAPI.ModelConstellation.fetch(model.idModel);
+            if (modelConstellation1) {
+                expect(modelConstellation1.model).toEqual(model);
+                expect(modelConstellation1.modelObjects).toEqual(expect.arrayContaining([modelObject]));
+                expect(modelConstellation1.modelMaterials).toEqual(expect.arrayContaining([modelMaterial]));
+                expect(modelConstellation1.modelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel]));
+                expect(modelConstellation1.modelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
+                if (modelMetrics)
+                    expect(modelConstellation1.modelMetric).toEqual(modelMetrics);
+                expect(modelConstellation1.modelObjectMetrics).toEqual(expect.arrayContaining([modelMetrics]));
+            }
+        }
+        expect(modelConstellation1).toBeTruthy();
+
+        if (modelNulls) {
+            modelConstellation2 = await DBAPI.ModelConstellation.fetch(modelNulls.idModel);
+            if (modelConstellation2) {
+                expect(modelConstellation2.model).toEqual(modelNulls);
+                expect(modelConstellation2.modelObjects).toEqual([]);
+                expect(modelConstellation2.modelMaterials).toBeFalsy();
+                expect(modelConstellation2.modelMaterialChannels).toBeFalsy();
+                expect(modelConstellation2.modelMaterialUVMaps).toEqual([]);
+                expect(modelConstellation2.modelMetric).toBeFalsy();
+                expect(modelConstellation2.modelObjectMetrics).toBeFalsy();
+            }
+        }
+        expect(modelConstellation2).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelMaterial.fetchFromModelObjects', async () => {
+        let modelMaterials: DBAPI.ModelMaterial[] | null = null;
+        if (modelObject) {
+            modelMaterials = await DBAPI.ModelMaterial.fetchFromModelObjects([modelObject]);
+            if (modelMaterials) {
+                expect(modelMaterials.length).toEqual(1);
+                expect(modelMaterials).toEqual(expect.arrayContaining([modelMaterial]));
+            }
+        }
+        expect(modelMaterials).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelMaterialChannel.fetchFromModelMaterial', async () => {
+        let modelMaterialChannels: DBAPI.ModelMaterialChannel[] | null = null;
+        if (modelMaterial) {
+            modelMaterialChannels = await DBAPI.ModelMaterialChannel.fetchFromModelMaterial(modelMaterial.idModelMaterial);
+            if (modelMaterialChannels) {
+                expect(modelMaterialChannels.length).toEqual(2);
+                expect(modelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel, modelMaterialChannelNulls]));
+            }
+        }
+        expect(modelMaterialChannels).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelMaterialChannel.fetchFromModelMaterials', async () => {
+        let modelMaterialChannels: DBAPI.ModelMaterialChannel[] | null = null;
+        if (modelMaterial) {
+            modelMaterialChannels = await DBAPI.ModelMaterialChannel.fetchFromModelMaterials([modelMaterial]);
+            if (modelMaterialChannels) {
+                expect(modelMaterialChannels.length).toEqual(2);
+                expect(modelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel, modelMaterialChannelNulls]));
+            }
+        }
+        expect(modelMaterialChannels).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelMaterialUVMap.fetchFromModel', async () => {
+        let modelMaterialUVMaps: DBAPI.ModelMaterialUVMap[] | null = null;
+        if (model) {
+            modelMaterialUVMaps = await DBAPI.ModelMaterialUVMap.fetchFromModel(model.idModel);
+            if (modelMaterialUVMaps) {
+                expect(modelMaterialUVMaps.length).toEqual(1);
+                expect(modelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
+            }
+        }
+        expect(modelMaterialUVMaps).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelMaterialUVMap.fetchFromModels', async () => {
+        let modelMaterialUVMaps: DBAPI.ModelMaterialUVMap[] | null = null;
+        if (model) {
+            modelMaterialUVMaps = await DBAPI.ModelMaterialUVMap.fetchFromModels([model]);
+            if (modelMaterialUVMaps) {
+                expect(modelMaterialUVMaps.length).toEqual(1);
+                expect(modelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
+            }
+        }
+        expect(modelMaterialUVMaps).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelMetrics.fetchFromModelObjects', async () => {
+        let modelMetricsList: DBAPI.ModelMetrics[] | null = null;
+        if (modelObject) {
+            modelMetricsList = await DBAPI.ModelMetrics.fetchFromModelObjects([modelObject]);
+            if (modelMetricsList) {
+                expect(modelMetricsList.length).toEqual(1);
+                expect(modelMetricsList).toEqual(expect.arrayContaining([modelMetrics]));
+            }
+        }
+        expect(modelMetricsList).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelObject.fetchFromModel', async () => {
+        let modelObjects: DBAPI.ModelObject[] | null = null;
+        if (model) {
+            modelObjects = await DBAPI.ModelObject.fetchFromModel(model.idModel);
+            if (modelObjects) {
+                expect(modelObjects.length).toEqual(3);
+                expect(modelObjects).toEqual(expect.arrayContaining([modelObject, modelObject2, modelObject3]));
+            }
+        }
+        expect(modelObjects).toBeTruthy();
     });
 
     test('DB Fetch Special: Project.fetchMasterFromSubjects', async () => {
@@ -3732,6 +4013,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(projectFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: ProjectDocumentation.fetchAll', async () => {
+        let pdFetch: DBAPI.ProjectDocumentation[] | null = null;
+        if (projectDocumentation) {
+            pdFetch = await DBAPI.ProjectDocumentation.fetchAll();
+            if (pdFetch)
+                expect(pdFetch).toEqual(expect.arrayContaining([projectDocumentation]));
+        }
+        expect(pdFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: ProjectDocumentation.fetchDerivedFromProjects', async () => {
         let projectDocumentationFetch: DBAPI.ProjectDocumentation[] | null = null;
         if (project && project2) {
@@ -3740,6 +4031,16 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(projectDocumentationFetch).toEqual(expect.arrayContaining([projectDocumentation]));
         }
         expect(projectDocumentationFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Scene.fetchAll', async () => {
+        let sceneFetch: DBAPI.Scene[] | null = null;
+        if (scene && sceneNulls) {
+            sceneFetch = await DBAPI.Scene.fetchAll();
+            if (sceneFetch)
+                expect(sceneFetch).toEqual(expect.arrayContaining([scene, sceneNulls]));
+        }
+        expect(sceneFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: Scene.fetchDerivedFromItems', async () => {
@@ -3756,6 +4057,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(sceneFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Stakeholder.fetchAll', async () => {
+        let stakeholderFetch: DBAPI.Stakeholder[] | null = null;
+        if (stakeholder) {
+            stakeholderFetch = await DBAPI.Stakeholder.fetchAll();
+            if (stakeholderFetch)
+                expect(stakeholderFetch).toEqual(expect.arrayContaining([stakeholder]));
+        }
+        expect(stakeholderFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: Stakeholder.fetchDerivedFromProjects', async () => {
         let stakeholderFetch: DBAPI.Stakeholder[] | null = null;
         if (project && project2) {
@@ -3764,6 +4075,16 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(stakeholderFetch).toEqual(expect.arrayContaining([stakeholder]));
         }
         expect(stakeholderFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Subject.fetchAll', async () => {
+        let subjectFetch: DBAPI.Subject[] | null = null;
+        if (subject && subjectNulls) {
+            subjectFetch = await DBAPI.Subject.fetchAll();
+            if (subjectFetch)
+                expect(subjectFetch).toEqual(expect.arrayContaining([subject, subjectNulls]));
+        }
+        expect(subjectFetch).toBeTruthy();
     });
 
     test('DB Fetch Special: SystemObject.fetchAll', async () => {
@@ -4645,17 +4966,19 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: Model.update', async () => {
         let bUpdated: boolean = false;
-        if (modelNulls && assetThumbnail) {
+        if (modelNulls && assetThumbnail && modelMetrics) {
             const SOOld: DBAPI.SystemObject | null = await modelNulls.fetchSystemObject();
             expect(SOOld).toBeTruthy();
 
             modelNulls.idAssetThumbnail = assetThumbnail.idAsset;
+            modelNulls.idModelMetrics = modelMetrics.idModelMetrics;
             bUpdated = await modelNulls.update();
 
             const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
             expect(modelFetch).toBeTruthy();
             if (modelFetch) {
                 expect(modelFetch.idAssetThumbnail).toBe(assetThumbnail.idAsset);
+                expect(modelFetch.idModelMetrics).toBe(modelMetrics.idModelMetrics);
 
                 const SONew: DBAPI.SystemObject | null = await modelFetch.fetchSystemObject();
                 expect(SONew).toBeTruthy();
@@ -4670,12 +4993,15 @@ describe('DB Update Test Suite', () => {
         let bUpdated: boolean = false;
         if (modelNulls) {
             modelNulls.idAssetThumbnail = null;
+            modelNulls.idModelMetrics = null;
             bUpdated = await modelNulls.update();
 
             const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
             expect(modelFetch).toBeTruthy();
-            if (modelFetch)
+            if (modelFetch) {
                 expect(modelFetch.idAssetThumbnail).toBeNull();
+                expect(modelFetch.idModelMetrics).toBeNull();
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -4694,17 +5020,138 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
-    test('DB Update: ModelGeometryFile.update', async () => {
+    test('DB Update: ModelMaterial.update', async () => {
         let bUpdated: boolean = false;
-        if (modelGeometryFileNulls) {
-            const roughness: number = 2.0;
-            modelGeometryFileNulls.Roughness = roughness;
-            bUpdated = await modelGeometryFileNulls.update();
+        if (modelMaterial) {
+            const updatedName: string = 'Updated ModelMaterial Name';
+            modelMaterial.Name = updatedName;
+            bUpdated = await modelMaterial.update();
 
-            const modelGeometryFileFetch: DBAPI.ModelGeometryFile | null = await DBAPI.ModelGeometryFile.fetch(modelGeometryFileNulls.idModelGeometryFile);
-            expect(modelGeometryFileFetch).toBeTruthy();
-            if (modelGeometryFileFetch)
-                expect(modelGeometryFileFetch.Roughness).toBe(roughness);
+            const modelMaterialFetch: DBAPI.ModelMaterial | null = await DBAPI.ModelMaterial.fetch(modelMaterial.idModelMaterial);
+            expect(modelMaterialFetch).toBeTruthy();
+            if (modelMaterialFetch)
+                expect(modelMaterialFetch.Name).toBe(updatedName);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelMaterialChannel.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelMaterialChannel) {
+            const updatedName: string = 'Updated ModelMaterialChannel Material Type';
+            modelMaterialChannel.MaterialTypeOther = updatedName;
+            bUpdated = await modelMaterialChannel.update();
+
+            const modelMaterialChannelFetch: DBAPI.ModelMaterialChannel | null = await DBAPI.ModelMaterialChannel.fetch(modelMaterialChannel.idModelMaterialChannel);
+            expect(modelMaterialChannelFetch).toBeTruthy();
+            if (modelMaterialChannelFetch)
+                expect(modelMaterialChannelFetch.MaterialTypeOther).toBe(updatedName);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelMaterialChannel.update disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (modelMaterialChannel) {
+            modelMaterialChannel.idVMaterialType = null;
+            modelMaterialChannel.idModelMaterialUVMap = null;
+            bUpdated = await modelMaterialChannel.update();
+
+            const modelMaterialChannelFetch: DBAPI.ModelMaterialChannel | null = await DBAPI.ModelMaterialChannel.fetch(modelMaterialChannel.idModelMaterialChannel);
+            expect(modelMaterialChannelFetch).toBeTruthy();
+            if (modelMaterialChannelFetch) {
+                expect(modelMaterialChannelFetch.idVMaterialType).toBeNull();
+                expect(modelMaterialChannelFetch.idModelMaterialUVMap).toBeNull();
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelMaterialChannel.update disconnect null', async () => {
+        let bUpdated: boolean = false;
+        if (modelMaterialChannel) {
+            expect(modelMaterialChannel.idVMaterialType).toBeNull();
+            expect(modelMaterialChannel.idModelMaterialUVMap).toBeNull();
+            bUpdated = await modelMaterialChannel.update();
+
+            const modelMaterialChannelFetch: DBAPI.ModelMaterialChannel | null = await DBAPI.ModelMaterialChannel.fetch(modelMaterialChannel.idModelMaterialChannel);
+            expect(modelMaterialChannelFetch).toBeTruthy();
+            if (modelMaterialChannelFetch) {
+                expect(modelMaterialChannelFetch.idVMaterialType).toBeNull();
+                expect(modelMaterialChannelFetch.idModelMaterialUVMap).toBeNull();
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelMaterialUVMap.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelMaterialUVMap) {
+            const updated: number = 369;
+            modelMaterialUVMap.UVMapEdgeLength = updated;
+            bUpdated = await modelMaterialUVMap.update();
+
+            const modelMaterialUVMapFetch: DBAPI.ModelMaterialUVMap | null = await DBAPI.ModelMaterialUVMap.fetch(modelMaterialUVMap.idModelMaterialUVMap);
+            expect(modelMaterialUVMapFetch).toBeTruthy();
+            if (modelMaterialUVMapFetch)
+                expect(modelMaterialUVMapFetch.UVMapEdgeLength).toBe(updated);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelMetrics.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelMetrics) {
+            const updated: number = 369;
+            modelMetrics.CountFace = updated;
+            bUpdated = await modelMetrics.update();
+
+            const modelMetricsFetch: DBAPI.ModelMetrics | null = await DBAPI.ModelMetrics.fetch(modelMetrics.idModelMetrics);
+            expect(modelMetricsFetch).toBeTruthy();
+            if (modelMetricsFetch)
+                expect(modelMetricsFetch.CountFace).toBe(updated);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelObject.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelObject && modelMetrics2) {
+            modelObject.idModelMetrics = modelMetrics2.idModelMetrics;
+            bUpdated = await modelObject.update();
+
+            const modelObjectFetch: DBAPI.ModelObject | null = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
+            expect(modelObjectFetch).toBeTruthy();
+            if (modelObjectFetch)
+                expect(modelObjectFetch.idModelMetrics).toBe(modelMetrics2.idModelMetrics);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelObject.update disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (modelObject) {
+            modelObject.idModelMetrics = null;
+            bUpdated = await modelObject.update();
+
+            const modelObjectFetch: DBAPI.ModelObject | null = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
+            expect(modelObjectFetch).toBeTruthy();
+            if (modelObjectFetch)
+                expect(modelObjectFetch.idModelMetrics).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: ModelObject.update disconnect null', async () => {
+        let bUpdated: boolean = false;
+        if (modelObject) {
+            expect(modelObject.idModelMetrics).toBeNull();
+            bUpdated = await modelObject.update();
+
+            const modelObjectFetch: DBAPI.ModelObject | null = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
+            expect(modelObjectFetch).toBeTruthy();
+            if (modelObjectFetch)
+                expect(modelObjectFetch.idModelMetrics).toBeNull();
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -4750,36 +5197,6 @@ describe('DB Update Test Suite', () => {
             expect(modelSceneXrefFetch).toBeTruthy();
             if (modelSceneXrefFetch)
                 expect(modelSceneXrefFetch.R0).toBe(r0);
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
-    test('DB Update: ModelUVMapChannel.update', async () => {
-        let bUpdated: boolean = false;
-        if (modelUVMapChannel) {
-            const updatedWidth: number = 2;
-            modelUVMapChannel.ChannelWidth = updatedWidth;
-            bUpdated            = await modelUVMapChannel.update();
-
-            const modelUVMapChannelFetch: DBAPI.ModelUVMapChannel | null = await DBAPI.ModelUVMapChannel.fetch(modelUVMapChannel.idModelUVMapChannel);
-            expect(modelUVMapChannelFetch).toBeTruthy();
-            if (modelUVMapChannelFetch)
-                expect(modelUVMapChannelFetch.ChannelWidth).toBe(updatedWidth);
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
-    test('DB Update: ModelUVMapFile.update', async () => {
-        let bUpdated: boolean = false;
-        if (modelUVMapFile) {
-            const updatedEdgeLen: number = 3;
-            modelUVMapFile.UVMapEdgeLength = updatedEdgeLen;
-            bUpdated = await modelUVMapFile.update();
-
-            const modelUVMapFileFetch: DBAPI.ModelUVMapFile | null = await DBAPI.ModelUVMapFile.fetch(modelUVMapFile.idModelUVMapFile);
-            expect(modelUVMapFileFetch).toBeTruthy();
-            if (modelUVMapFileFetch)
-                expect(modelUVMapFileFetch.UVMapEdgeLength).toBe(updatedEdgeLen);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -5423,6 +5840,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.CaptureDataGroup.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.CaptureDataGroupCaptureDataXref.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureDataPhoto.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureDataPhoto.fetchFromCaptureData(0)).toBeNull();
         expect(await DBC.CopyArray<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
         expect(await DBC.CopyObject<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
         expect(await DBAPI.GeoLocation.fetch(0)).toBeNull();
@@ -5454,8 +5872,19 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Model.fetch(0)).toBeNull();
         expect(await DBAPI.Model.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.Model.fetchDerivedFromItems([])).toBeNull();
-        expect(await DBAPI.ModelGeometryFile.fetch(0)).toBeNull();
-        expect(await DBAPI.ModelGeometryFile.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelMaterial.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelMaterial.fetchFromModelObjects([])).toBeNull();
+        expect(await DBAPI.ModelMaterialChannel.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialChannel.fetchFromModelMaterial(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialChannel.fetchFromModelMaterials([])).toBeNull();
+        expect(await DBAPI.ModelMaterialUVMap.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialUVMap.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialUVMap.fetchFromModels([])).toBeNull();
+        expect(await DBAPI.ModelMetrics.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelMetrics.fetchFromModelObjects([])).toBeNull();
+        expect(await DBAPI.ModelObject.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelObject.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelConstellation.fetch(0)).toBeNull();
         expect(await DBAPI.ModelProcessingAction.fetch(0)).toBeNull();
         expect(await DBAPI.ModelProcessingAction.fetchFromModel(0)).toBeNull();
         expect(await DBAPI.ModelProcessingActionStep.fetch(0)).toBeNull();
@@ -5463,10 +5892,6 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ModelSceneXref.fetch(0)).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromScene(0)).toBeNull();
         expect(await DBAPI.ModelSceneXref.fetchFromModel(0)).toBeNull();
-        expect(await DBAPI.ModelUVMapChannel.fetch(0)).toBeNull();
-        expect(await DBAPI.ModelUVMapChannel.fetchFromModelUVMapFile(0)).toBeNull();
-        expect(await DBAPI.ModelUVMapFile.fetch(0)).toBeNull();
-        expect(await DBAPI.ModelUVMapFile.fetchFromModelGeometryFile(0)).toBeNull();
         expect(await DBAPI.Project.fetch(0)).toBeNull();
         expect(await DBAPI.Project.fetchDerivedFromUnits([])).toBeNull();
         expect(await DBAPI.Project.fetchMasterFromSubjects([])).toBeNull();

@@ -112,6 +112,16 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
         }
     }
 
+    static async fetchAll(): Promise<CaptureDataPhoto[] | null> {
+        try {
+            return DBC.CopyArray<CaptureDataPhotoBase, CaptureDataPhoto>(
+                await DBC.DBConnection.prisma.captureDataPhoto.findMany(), CaptureDataPhoto);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.CaptureDataPhoto.fetchAll', error);
+            return null;
+        }
+    }
+
     static async fetchFromCaptureData(idCaptureData: number): Promise<CaptureDataPhoto[] | null> {
         if (!idCaptureData)
             return null;

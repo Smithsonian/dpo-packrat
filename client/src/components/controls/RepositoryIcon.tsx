@@ -30,16 +30,17 @@ const useStyles = makeStyles(({ typography, breakpoints }) => ({
     }
 }));
 
-interface RepositoryIconProps {
+export interface RepositoryIconProps {
     objectType: eSystemObjectType;
     backgroundColor: string;
     textColor: string;
+    overrideText?: string | undefined;
 }
 
-function RepositoryIcon(props: RepositoryIconProps): React.ReactElement {
-    const { objectType } = props;
+export function RepositoryIcon(props: RepositoryIconProps): React.ReactElement {
+    const { objectType, overrideText } = props;
     const classes = useStyles(props);
-    const initial = getTermForSystemObjectType(objectType).toUpperCase().slice(0, 1);
+    const initial = !overrideText ? getTermForSystemObjectType(objectType).toUpperCase().slice(0, 1) : overrideText;
 
     return (
         <Box className={classes.container}>
@@ -47,5 +48,3 @@ function RepositoryIcon(props: RepositoryIconProps): React.ReactElement {
         </Box>
     );
 }
-
-export default RepositoryIcon;

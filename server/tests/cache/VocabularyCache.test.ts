@@ -163,9 +163,9 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularySetID.eModelModality:
                     case eVocabularySetID.eModelUnits:
                     case eVocabularySetID.eModelPurpose:
-                    case eVocabularySetID.eModelGeometryFileModelFileType:
+                    case eVocabularySetID.eModelFileType:
                     case eVocabularySetID.eModelProcessingActionStepActionMethod:
-                    case eVocabularySetID.eModelUVMapChannelUVMapType:
+                    case eVocabularySetID.eModelMaterialChannelMaterialType:
                     case eVocabularySetID.eIdentifierIdentifierType:
                     case eVocabularySetID.eIdentifierIdentifierTypeActor:
                     case eVocabularySetID.eMetadataMetadataSource:
@@ -307,32 +307,32 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Web Delivery');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Print Delivery');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelPurpose, 'Intermediate Processing Step');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'obj - Alias Wavefront Object');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'ply - Stanford Polygon File Format');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'stl - StereoLithography');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'glb - GL Transmission Format Binary');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'gltf - GL Transmission Format');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'usdz - Universal Scene Description (zipped)');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'x3d');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'wrl - VRML');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'dae - COLLADA');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'fbx - Filmbox');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'ma - Maya');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, '3ds - 3D Studio');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'ptx');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelGeometryFileModelFileType, 'pts');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Diffuse');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Normal: Tangent Space');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Normal: Object Space');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Ambient Occlusion');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Roughness');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Metalness');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Specular');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Transparency');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'BRDF');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Hole Fill');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Reflection');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelUVMapChannelUVMapType, 'Refraction');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'obj - Alias Wavefront Object');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'ply - Stanford Polygon File Format');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'stl - StereoLithography');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'glb - GL Transmission Format Binary');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'gltf - GL Transmission Format');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'usdz - Universal Scene Description (zipped)');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'x3d');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'wrl - VRML');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'dae - COLLADA');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'fbx - Filmbox');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'ma - Maya');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, '3ds - 3D Studio');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'ptx');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'pts');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Diffuse');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Normal: Tangent Space');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Normal: Object Space');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Ambient Occlusion');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Roughness');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Metalness');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Specular');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Transparency');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'BRDF');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Hole Fill');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Reflection');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Refraction');
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'ARK');
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'DOI');
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'Unit CMS ID');

@@ -51,20 +51,24 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 dateCaptured: Model?.dateCaptured,
                 modelFileType: Model?.modelFileType,
                 uvMaps: Model?.uvMaps || [],
-                roughness: Model?.roughness,
-                metalness: Model?.metalness,
-                pointCount: Model?.pointCount,
-                faceCount: Model?.faceCount,
-                isWatertight: Model?.isWatertight,
-                hasNormals: Model?.hasNormals,
-                hasVertexColor: Model?.hasVertexColor,
-                hasUVSpace: Model?.hasUVSpace,
                 boundingBoxP1X: Model?.boundingBoxP1X,
                 boundingBoxP1Y: Model?.boundingBoxP1Y,
                 boundingBoxP1Z: Model?.boundingBoxP1Z,
                 boundingBoxP2X: Model?.boundingBoxP2X,
                 boundingBoxP2Y: Model?.boundingBoxP2Y,
                 boundingBoxP2Z: Model?.boundingBoxP2Z,
+                countPoint: Model?.countPoint,
+                countFace: Model?.countFace,
+                countColorChannel: Model?.countColorChannel,
+                countTextureCoorinateChannel: Model?.countTextureCoorinateChannel,
+                hasBones: Model?.hasBones,
+                hasFaceNormals: Model?.hasFaceNormals,
+                hasTangents: Model?.hasTangents,
+                hasTextureCoordinates: Model?.hasTextureCoordinates,
+                hasVertexNormals: Model?.hasVertexNormals,
+                hasVertexColor: Model?.hasVertexColor,
+                isManifold: Model?.isManifold,
+                isWatertight: Model?.isWatertight,
             });
         }
     }, [data, loading]);
@@ -208,77 +212,104 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                     updated={isFieldUpdated(details, modelData, 'modelFileType')}
                     disabled={disabled}
                     label='Model File Type'
-                    value={withDefaultValueNumber(details.modelFileType, getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType))}
+                    value={withDefaultValueNumber(details.modelFileType, getInitialEntry(eVocabularySetID.eModelFileType))}
                     name='modelFileType'
                     onChange={setIdField}
-                    options={getEntries(eVocabularySetID.eModelGeometryFileModelFileType)}
+                    options={getEntries(eVocabularySetID.eModelFileType)}
                 />
                 <UVContents
                     viewMode
                     disabled={disabled}
-                    initialEntry={getInitialEntry(eVocabularySetID.eModelUVMapChannelUVMapType)}
+                    initialEntry={getInitialEntry(eVocabularySetID.eModelMaterialChannelMaterialType)}
                     uvMaps={parseUVMapsToState(details?.uvMaps ?? [])}
-                    options={getEntries(eVocabularySetID.eModelUVMapChannelUVMapType)}
+                    options={getEntries(eVocabularySetID.eModelMaterialChannelMaterialType)}
                     onUpdate={updateUVMapsVariant}
                 />
             </Box>
             <Box display='flex' flex={1} flexDirection='column' ml={1}>
                 <InputField
                     viewMode
-                    updated={isFieldUpdated(details, modelData, 'roughness')}
-                    disabled={disabled}
-                    type='number'
-                    label='Roughness'
-                    value={details?.roughness}
-                    name='roughness'
-                    onChange={setIdField}
-                />
-                <InputField
-                    viewMode
-                    updated={isFieldUpdated(details, modelData, 'metalness')}
-                    disabled={disabled}
-                    type='number'
-                    label='Metalness'
-                    value={details?.metalness}
-                    name='metalness'
-                    onChange={setIdField}
-                />
-                <InputField
-                    viewMode
-                    updated={isFieldUpdated(details, modelData, 'pointCount')}
+                    updated={isFieldUpdated(details, modelData, 'countPoint')}
                     disabled={disabled}
                     type='number'
                     label='Point Count'
-                    value={details?.pointCount}
-                    name='pointCount'
+                    value={details?.countPoint}
+                    name='countPoint'
                     onChange={setIdField}
                 />
                 <InputField
                     viewMode
-                    updated={isFieldUpdated(details, modelData, 'faceCount')}
+                    updated={isFieldUpdated(details, modelData, 'countFace')}
                     disabled={disabled}
                     type='number'
                     label='Face Count'
-                    value={details?.faceCount}
-                    name='faceCount'
+                    value={details?.countFace}
+                    name='countFace'
+                    onChange={setIdField}
+                />
+                <InputField
+                    viewMode
+                    updated={isFieldUpdated(details, modelData, 'countColorChannel')}
+                    disabled={disabled}
+                    type='number'
+                    label='Color Channel Count'
+                    value={details?.countColorChannel}
+                    name='countColorChannel'
+                    onChange={setIdField}
+                />
+                <InputField
+                    viewMode
+                    updated={isFieldUpdated(details, modelData, 'countTextureCoorinateChannel')}
+                    disabled={disabled}
+                    type='number'
+                    label='Texture Coordinate Channel Count'
+                    value={details?.countTextureCoorinateChannel}
+                    name='countTextureCoorinateChannel'
                     onChange={setIdField}
                 />
                 <CheckboxField
                     viewMode
-                    updated={isFieldUpdated(details, modelData, 'isWatertight')}
+                    updated={isFieldUpdated(details, modelData, 'hasBones')}
                     disabled={disabled}
-                    name='isWatertight'
-                    label='Is Watertight?'
-                    value={details?.isWatertight ?? false}
+                    name='hasBones'
+                    label='Has Bones?'
+                    value={details?.hasBones ?? false}
                     onChange={setCheckboxField}
                 />
                 <CheckboxField
                     viewMode
-                    updated={isFieldUpdated(details, modelData, 'hasNormals')}
+                    updated={isFieldUpdated(details, modelData, 'hasFaceNormals')}
                     disabled={disabled}
-                    name='hasNormals'
-                    label='Has Normals?'
-                    value={details?.hasNormals ?? false}
+                    name='hasFaceNormals'
+                    label='Has Face Normals?'
+                    value={details?.hasFaceNormals ?? false}
+                    onChange={setCheckboxField}
+                />
+                <CheckboxField
+                    viewMode
+                    updated={isFieldUpdated(details, modelData, 'hasTangents')}
+                    disabled={disabled}
+                    name='hasTangents'
+                    label='Has Tangents?'
+                    value={details?.hasTangents ?? false}
+                    onChange={setCheckboxField}
+                />
+                <CheckboxField
+                    viewMode
+                    updated={isFieldUpdated(details, modelData, 'hasTextureCoordinates')}
+                    disabled={disabled}
+                    name='hasTextureCoordinates'
+                    label='Has Texture Coordinates?'
+                    value={details?.hasTextureCoordinates ?? false}
+                    onChange={setCheckboxField}
+                />
+                <CheckboxField
+                    viewMode
+                    updated={isFieldUpdated(details, modelData, 'hasVertexNormals')}
+                    disabled={disabled}
+                    name='hasVertexNormals'
+                    label='Has Vertex Normals?'
+                    value={details?.hasVertexNormals ?? false}
                     onChange={setCheckboxField}
                 />
                 <CheckboxField
@@ -292,11 +323,20 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <CheckboxField
                     viewMode
-                    updated={isFieldUpdated(details, modelData, 'hasUVSpace')}
+                    updated={isFieldUpdated(details, modelData, 'isWatertight')}
                     disabled={disabled}
-                    name='hasUVSpace'
-                    label='Has UV Space?'
-                    value={details?.hasUVSpace ?? false}
+                    name='isWatertight'
+                    label='Is Watertight?'
+                    value={details?.isWatertight ?? false}
+                    onChange={setCheckboxField}
+                />
+                <CheckboxField
+                    viewMode
+                    updated={isFieldUpdated(details, modelData, 'isManifold')}
+                    disabled={disabled}
+                    name='isManifold'
+                    label='Is Manifold?'
+                    value={details?.isManifold ?? false}
                     onChange={setCheckboxField}
                 />
                 <BoundingBoxInput

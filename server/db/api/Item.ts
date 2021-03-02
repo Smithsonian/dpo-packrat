@@ -86,6 +86,16 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
         }
     }
 
+    static async fetchAll(): Promise<Item[] | null> {
+        try {
+            return DBC.CopyArray<ItemBase, Item>(
+                await DBC.DBConnection.prisma.item.findMany(), Item);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Item.fetchAll', error);
+            return null;
+        }
+    }
+
     static async fetchDerivedFromSubject(idSubject: number): Promise<Item[] | null> {
         if (!idSubject)
             return null;

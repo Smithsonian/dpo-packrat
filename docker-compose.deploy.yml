@@ -49,6 +49,7 @@ services:
             - EDAN_APPID=$EDAN_APPID
             - OCFL_STORAGE_ROOT=$OCFL_STORAGE_ROOT
             - OCFL_STAGING_ROOT=$OCFL_STAGING_ROOT
+            - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
 
     packrat-server-prod:
         container_name: packrat-server-prod
@@ -70,17 +71,18 @@ services:
             - EDAN_APPID=$EDAN_APPID
             - OCFL_STORAGE_ROOT=$OCFL_STORAGE_ROOT
             - OCFL_STAGING_ROOT=$OCFL_STAGING_ROOT
+            - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
 
     packrat-db-dev:
-            container_name: packrat-db-dev
-            image: mariadb:10.5
-            restart: always
-            ports:
-                - $PACKRAT_DB_PORT:3306
-            environment:
-                - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
-            volumes:
-                - ./server/db/sql:/app/
+        container_name: packrat-db-dev
+        image: mariadb:10.5
+        restart: always
+        ports:
+            - $PACKRAT_DB_PORT:3306
+        environment:
+            - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+        volumes:
+            - ./server/db/sql:/app/
 
     packrat-db-prod:
         container_name: packrat-db-prod
@@ -92,7 +94,33 @@ services:
             - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
         volumes:
             - ./server/db/sql:/app/
+
+    packrat-solr-dev:
+        container_name: packrat-solr-dev
+        image: "packrat-solr-dev:${IMAGE_TAG}"
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker/solr.Dockerfile
+            target: solr
+        ports:
+            - $PACKRAT_SOLR_PORT:8983
+        environment:
+            - PACKRAT_SOLR_HOST=packrat-solr-dev
             
+    packrat-solr-prod:
+        container_name: packrat-solr-prod
+        image: "packrat-solr-prod:${IMAGE_TAG}"
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker/solr.Dockerfile
+            target: solr
+        ports:
+            - $PACKRAT_SOLR_PORT:8983
+        environment:
+            - PACKRAT_SOLR_HOST=packrat-solr-prod
+
 networks:
     default:
         ipam:

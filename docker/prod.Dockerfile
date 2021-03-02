@@ -48,3 +48,6 @@ EXPOSE 80
 RUN rm /usr/share/nginx/html/*
 COPY nginx.conf /etc/nginx/nginx.conf
 CMD ["nginx", "-g", "daemon off;"]
+
+FROM solr:8 as solr
+COPY --chown=solr:solr ./server/config/solr/data/packrat/ /var/solr/data/packrat/

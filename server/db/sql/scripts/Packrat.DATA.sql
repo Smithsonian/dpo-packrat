@@ -13,9 +13,9 @@ INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Model.CreationMethod
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Model.Modality', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Model.Units', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Model.Purpose', 1);
-INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelGeometryFile.ModelFileType', 1);
+INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Model.FileType', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelProcessingActionStep.ActionMethod', 1);
-INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelUVMapChannel.UVMapType', 1);
+INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('ModelMaterialChannel.MaterialType', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Identifier.IdentifierType', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Identifier.IdentifierTypeActor', 1);
 INSERT INTO VocabularySet (Name, SystemMaintained) VALUES ('Metadata.MetadataSource', 1);

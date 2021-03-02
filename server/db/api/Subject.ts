@@ -92,6 +92,16 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
         }
     }
 
+    static async fetchAll(): Promise<Subject[] | null> {
+        try {
+            return DBC.CopyArray<SubjectBase, Subject>(
+                await DBC.DBConnection.prisma.subject.findMany(), Subject);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Subject.fetchAll', error);
+            return null;
+        }
+    }
+
     static async fetchFromUnit(idUnit: number): Promise<Subject[] | null> {
         if (!idUnit)
             return null;

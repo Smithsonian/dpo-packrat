@@ -5,10 +5,12 @@ import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import { eSystemObjectType, SystemObjectBased, SystemObject } from '../../../db';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
+import { NAVIGATION_TYPE } from '../../../config';
+
 
 let nav: INavigation | null = null;
 const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
-const metadataColumns: eMetadata[] = [eMetadata.eUnitAbbreviation, eMetadata.eSubjectIdentifier, eMetadata.eItemName];
+const metadataColumns: eMetadata[] = [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem];
 LOG;
 
 afterAll(async done => {
@@ -22,7 +24,7 @@ describe('Navigation Init', () => {
         await OHTS.initialize();
         await OHTS.wire();
 
-        nav = await NavigationFactory.getInstance();
+        nav = await NavigationFactory.getInstance(NAVIGATION_TYPE.DB);
         expect(nav).toBeTruthy();
 
         nav = await NavigationFactory.getInstance();
@@ -44,6 +46,8 @@ const mockFilter: NavigationFilter = {
     variantType: [],
     modelPurpose: [],
     modelFileType: [],
+    rows: 100,
+    cursorMark: ''
 };
 
 describe('Navigation Traversal', () => {
