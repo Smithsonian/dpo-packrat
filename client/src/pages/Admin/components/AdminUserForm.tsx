@@ -112,14 +112,14 @@ function AdminUserForm(): React.ReactElement {
     const [validEmailInput, setValidEmailInput] = useState<boolean | null>(null);
 
     const location = useLocation();
-    let create: boolean = idUser === 'create';
+    const create: boolean = idUser === 'create';
 
     const schema = yup.object().shape({
         fullName: yup.string().min(1),
         email: yup.string().email().min(1)
     });
 
-    let request = useGetUserQuery({
+    const request = useGetUserQuery({
         variables: {
             input: {
                 idUser: Number(idUser)
@@ -154,9 +154,9 @@ function AdminUserForm(): React.ReactElement {
 
     const validateFields = async (): Promise<boolean | void> => {
         try {
-            let validNameResponse = await schema.isValid({ fullName: name });
+            const validNameResponse = await schema.isValid({ fullName: name });
             setValidNameInput(validNameResponse);
-            let validEmailResponse = await schema.isValid({ email });
+            const validEmailResponse = await schema.isValid({ email });
             setValidEmailInput(validEmailResponse);
             return validNameResponse && validEmailResponse;
         } catch (error) {
@@ -166,18 +166,18 @@ function AdminUserForm(): React.ReactElement {
     };
 
     const updateExistingUser = async () => {
-        let validUpdate = await validateFields();
+        const validUpdate = await validateFields();
         if (!validUpdate) {
             toast.warn('Update Failed. Please double-check your form inputs');
             return;
         }
-        let manipulatedTime = new Date();
+        const manipulatedTime = new Date();
         const newHours = workflowNotificationTime?.slice(0, 2);
         const newMinutes = workflowNotificationTime?.slice(3);
         manipulatedTime.setHours(Number(newHours));
         manipulatedTime.setMinutes(Number(newMinutes));
 
-        let updating = await apolloClient.mutate({
+        const updating = await apolloClient.mutate({
             mutation: UpdateUserDocument,
             variables: {
                 input: {
@@ -196,12 +196,12 @@ function AdminUserForm(): React.ReactElement {
     };
 
     const createNewUser = async () => {
-        let validCreate = await validateFields();
+        const validCreate = await validateFields();
         if (!validCreate) {
             toast.warn('Creation Failed. Please be sure to include a name and email');
             return;
         }
-        let creating = await apolloClient.mutate({
+        const creating = await apolloClient.mutate({
             mutation: CreateUserDocument,
             variables: {
                 input: {
@@ -351,12 +351,12 @@ function AdminUserForm(): React.ReactElement {
                         value={typeof workflowNotificationType === 'number' ? workflowNotificationType : ''}
                         className={classes.formField}
                         variant='outlined'
-                        style={{ width: '160px', height: '40px' }}
                         onChange={e => {
                             if (typeof e.target.value === 'number') {
                                 setWorkflowNotificationType(e.target.value);
                             }
-                        }}>
+                        }}
+                        style={{ width: '160px', height: '40px' }}>
                         <MenuItem value={0}>Daily Digest</MenuItem>
                         <MenuItem value={1}>Immediately</MenuItem>
                     </Select>

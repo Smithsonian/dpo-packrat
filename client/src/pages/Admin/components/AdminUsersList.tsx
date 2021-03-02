@@ -57,7 +57,7 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
             headerName: 'Active',
             flex: 1,
             headerAlign: 'center',
-            renderCell: params => (Boolean(params.getValue('Active')) ? <CheckIcon color='primary' /> : <ClearIcon color='error' />)
+            renderCell: params => (params.getValue('Active') ? <CheckIcon color='primary' /> : <ClearIcon color='error' />)
         },
         {
             field: 'Name',

@@ -1,10 +1,10 @@
-export function toTitleCase(str) {
+export function toTitleCase(str: string): string {
     return str.replace(/\w\S*/g, txt => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
 }
 
-export function formatISOToHoursMinutes(time): string {
+export function formatISOToHoursMinutes(time: string): string {
     const newTime = new Date(time);
     let hours = String(newTime.getHours());
     let minutes = String(newTime.getMinutes());
@@ -24,7 +24,7 @@ export function extractISOMonthDateYear(iso, materialUI = false): string | null 
     const time = new Date(iso);
     if (materialUI) {
         // year-month-date
-        let year = String(time.getFullYear());
+        const year = String(time.getFullYear());
         let month = String(time.getMonth() + 1);
         let date = String(time.getDate());
         if (Number(month) < 10) {

@@ -31,7 +31,7 @@ const useStyles = makeStyles({
     }
 });
 
-function AdminSidebarMenuRow({ path }: { path: string }) {
+function AdminSidebarMenuRow({ path }: { path: string }): React.ReactElement {
     const classes = useStyles();
 
     return (
