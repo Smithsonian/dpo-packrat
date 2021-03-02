@@ -44,4 +44,4 @@ export ENV=$ENV
 echo "Deploying docker images for env $1 with tag: $IMAGE_TAG"
 
 # Build packrat-server and client dynamically for environment's requested
-docker-compose --env-file .env.$1 -f docker-compose.deploy.yml up --build -d packrat-server-$1 packrat-client-$1
+docker-compose --env-file .env.$1 -f docker-compose.deploy.yml up --build -d packrat-server-$1 packrat-client-$1 packrat-solr-$1

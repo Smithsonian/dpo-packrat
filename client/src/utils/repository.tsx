@@ -11,9 +11,10 @@ import lodash from 'lodash';
 import * as qs from 'query-string';
 import React from 'react';
 import { AiOutlineFileText } from 'react-icons/ai';
-import { RepositoryIcon } from '../components';
+import { RepositoryIcon, RepositoryIconProps } from '../components';
 import { RepositoryFilter } from '../pages/Repository';
 import { TreeViewColumn } from '../pages/Repository/components/RepositoryTreeView/MetadataView';
+import { metadataToDisplayOptions } from '../pages/Repository/components/RepositoryFilterView/RepositoryFilterOptions';
 import { StateRelatedObject } from '../store';
 import { palette } from '../theme';
 import Colors, { RepositoryColorVariant } from '../theme/colors';
@@ -109,7 +110,10 @@ export function parseRepositoryUrl(search: string): any {
 }
 
 export function generateRepositoryUrl(filter: RepositoryFilter): string {
-    return `?${qs.stringify(filter, { arrayFormat: 'comma', skipEmptyString: true })}`;
+    return `?${qs.stringify(filter, {
+        arrayFormat: 'comma',
+        skipEmptyString: true
+    })}`;
 }
 
 export function getTreeWidth(columnSize: number, sideBarExpanded: boolean, fullWidth: boolean): string {
@@ -137,9 +141,17 @@ export function getTreeColorVariant(index: number): RepositoryColorVariant {
     return index % 2 ? RepositoryColorVariant.light : RepositoryColorVariant.regular;
 }
 
+// cached data, computed once
+let metadataTitleMap: Map<eMetadata, string> | null = null;
+
 export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boolean, values?: string[]): TreeViewColumn[] {
     const treeColumns: TreeViewColumn[] = [];
     const MIN_SIZE = 5;
+
+    if (!metadataTitleMap) {
+        metadataTitleMap = new Map<eMetadata, string>();
+        for (const filterOption of metadataToDisplayOptions) metadataTitleMap.set(filterOption.value, filterOption.label);
+    }
 
     metadataColumns.forEach((metadataColumn, index: number) => {
         const treeColumn: TreeViewColumn = {
@@ -148,21 +160,15 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
             size: MIN_SIZE
         };
 
+        if (isHeader) treeColumn.label = metadataTitleMap ? metadataTitleMap.get(metadataColumn) || 'Unknown' : 'Unknown';
+
         switch (metadataColumn) {
-            case eMetadata.eUnitAbbreviation:
-                if (isHeader) treeColumn.label = 'Unit';
-                break;
-
-            case eMetadata.eSubjectIdentifier:
-                if (isHeader) treeColumn.label = 'Subject';
+            case eMetadata.eHierarchySubject:
                 treeColumn.size = MIN_SIZE * 3;
                 break;
-
-            case eMetadata.eItemName:
-                if (isHeader) treeColumn.label = 'Item';
+            case eMetadata.eHierarchyItem:
                 treeColumn.size = MIN_SIZE * 3;
                 break;
-
             default:
                 break;
         }
@@ -187,23 +193,29 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
     const textColor: string = Colors.defaults.white;
     const backgroundColor: string = Colors.repository[objectType][RepositoryColorVariant.dark] || Colors.repository.default[RepositoryColorVariant.dark];
 
-    const iconProps = { objectType, backgroundColor, textColor };
+    const iconProps: RepositoryIconProps = { objectType, backgroundColor, textColor, overrideText: undefined };
 
     switch (objectType) {
-        case eSystemObjectType.eUnit:
-            return { icon: <RepositoryIcon {...iconProps} />, color };
-        case eSystemObjectType.eProject:
-            return { icon: <RepositoryIcon {...iconProps} />, color };
-        case eSystemObjectType.eSubject:
-            return { icon: <RepositoryIcon {...iconProps} />, color };
-        case eSystemObjectType.eItem:
-            return { icon: <RepositoryIcon {...iconProps} />, color };
-        case eSystemObjectType.eCaptureData:
-            return { icon: <AiOutlineFileText />, color };
-
         default:
-            return { icon: <AiOutlineFileText />, color: Colors.repository.default[variant] };
+            break;
+        case eSystemObjectType.eIntermediaryFile:
+            iconProps.overrideText = 'IF';
+            break;
+        case eSystemObjectType.eProjectDocumentation:
+            iconProps.overrideText = 'PD';
+            break;
+        case eSystemObjectType.eActor:
+            iconProps.overrideText = 'AC';
+            break;
+        case eSystemObjectType.eStakeholder:
+            iconProps.overrideText = 'ST';
+            break;
+
+        case eSystemObjectType.eAsset:
+        case eSystemObjectType.eAssetVersion:
+            return { icon: <AiOutlineFileText />, color };
     }
+    return { icon: <RepositoryIcon {...iconProps} />, color };
 }
 
 export function sortEntriesAlphabetically(entries: NavigationResultEntry[]): NavigationResultEntry[] {

@@ -86,6 +86,16 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
         }
     }
 
+    static async fetchAll(): Promise<Stakeholder[] | null> {
+        try {
+            return DBC.CopyArray<StakeholderBase, Stakeholder>(
+                await DBC.DBConnection.prisma.stakeholder.findMany(), Stakeholder);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Stakeholder.fetchAll', error);
+            return null;
+        }
+    }
+
     /**
      * Computes the array of Stakeholders that are connected to any of the specified projects.
      * Stakeholders are connected to system objects; we examine those system objects which are in a *derived* relationship

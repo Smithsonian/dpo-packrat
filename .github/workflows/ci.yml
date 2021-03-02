@@ -92,6 +92,8 @@ jobs:
       PACKRAT_DB_PORT: 3306
       MYSQL_ROOT_PASSWORD: packrat
       REACT_APP_SERVER_ENDPOINT: http://packrat-server
+      PACKRAT_SOLR_PORT: 8983
+      PACKRAT_SOLR_HOST: packrat-solr
 
     steps:
       - name: Checkout code
@@ -104,7 +106,7 @@ jobs:
       # Runs commands pre-build
       # Ideally .env will be created from secrets ${{ secrets.DEV/PROD_ENV }} > .env
       - name: Prepare build
-        run: touch .env.dev && touch env.prod
+        run: touch .env.dev && touch .env.prod
 
       - name: Build Dev images
         run: docker-compose --env-file .env.dev -f docker-compose.dev.yml build

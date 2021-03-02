@@ -610,6 +610,7 @@ export type AssetGroup = {
 };
 
 export type CreateCaptureDataInput = {
+  Name: Scalars['String'];
   idVCaptureMethod: Scalars['Int'];
   DateCaptured: Scalars['DateTime'];
   Description: Scalars['String'];
@@ -891,11 +892,13 @@ export type LicenseAssignment = {
 };
 
 export type CreateModelInput = {
+  Name: Scalars['String'];
   Authoritative: Scalars['Boolean'];
   idVCreationMethod: Scalars['Int'];
   idVModality: Scalars['Int'];
   idVPurpose: Scalars['Int'];
   idVUnits: Scalars['Int'];
+  idVFileType: Scalars['Int'];
   Master: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
 };
@@ -917,49 +920,97 @@ export type GetModelResult = {
 export type Model = {
   __typename?: 'Model';
   idModel: Scalars['Int'];
-  Authoritative: Scalars['Boolean'];
+  Name: Scalars['String'];
   DateCreated: Scalars['DateTime'];
-  idAssetThumbnail?: Maybe<Scalars['Int']>;
+  Master: Scalars['Boolean'];
+  Authoritative: Scalars['Boolean'];
   idVCreationMethod: Scalars['Int'];
   idVModality: Scalars['Int'];
   idVPurpose: Scalars['Int'];
   idVUnits: Scalars['Int'];
-  Master: Scalars['Boolean'];
-  AssetThumbnail?: Maybe<Asset>;
+  idVFileType: Scalars['Int'];
+  idAssetThumbnail?: Maybe<Scalars['Int']>;
+  idModelMetrics?: Maybe<Scalars['Int']>;
+  ModelConstellation?: Maybe<ModelConstellation>;
   VCreationMethod?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
   VPurpose?: Maybe<Vocabulary>;
   VUnits?: Maybe<Vocabulary>;
-  ModelGeometryFile?: Maybe<Array<Maybe<ModelGeometryFile>>>;
+  VFileType?: Maybe<Vocabulary>;
+  AssetThumbnail?: Maybe<Asset>;
+  ModelMetrics?: Maybe<ModelMetrics>;
+  ModelObject?: Maybe<Array<Maybe<ModelObject>>>;
   ModelProcessingAction?: Maybe<Array<Maybe<ModelProcessingAction>>>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
 };
 
-export type ModelGeometryFile = {
-  __typename?: 'ModelGeometryFile';
-  idModelGeometryFile: Scalars['Int'];
-  idAsset: Scalars['Int'];
+export type ModelMaterial = {
+  __typename?: 'ModelMaterial';
+  idModelMaterial: Scalars['Int'];
+  idModelObject: Scalars['Int'];
+  Name?: Maybe<Scalars['String']>;
+  ModelObject: ModelObject;
+};
+
+export type ModelMaterialChannel = {
+  __typename?: 'ModelMaterialChannel';
+  idModelMaterialChannel: Scalars['Int'];
+  idModelMaterial: Scalars['Int'];
+  idVMaterialType?: Maybe<Scalars['Int']>;
+  MaterialTypeOther?: Maybe<Scalars['String']>;
+  idModelMaterialUVMap?: Maybe<Scalars['Int']>;
+  ChannelPosition?: Maybe<Scalars['Int']>;
+  ChannelWidth?: Maybe<Scalars['Int']>;
+  Scalar1?: Maybe<Scalars['Float']>;
+  Scalar2?: Maybe<Scalars['Float']>;
+  Scalar3?: Maybe<Scalars['Float']>;
+  Scalar4?: Maybe<Scalars['Float']>;
+  ModelMaterial: ModelMaterial;
+  VMaterialType?: Maybe<Vocabulary>;
+  ModelMaterialUVMap?: Maybe<ModelMaterialUvMap>;
+};
+
+export type ModelMaterialUvMap = {
+  __typename?: 'ModelMaterialUVMap';
+  idModelMaterialUVMap: Scalars['Int'];
   idModel: Scalars['Int'];
-  idVModelFileType: Scalars['Int'];
+  idAsset: Scalars['Int'];
+  UVMapEdgeLength: Scalars['Int'];
+  Model: Model;
+  Asset: Asset;
+};
+
+export type ModelMetrics = {
+  __typename?: 'ModelMetrics';
+  idModelMetrics: Scalars['Int'];
   BoundingBoxP1X?: Maybe<Scalars['Float']>;
   BoundingBoxP1Y?: Maybe<Scalars['Float']>;
   BoundingBoxP1Z?: Maybe<Scalars['Float']>;
   BoundingBoxP2X?: Maybe<Scalars['Float']>;
   BoundingBoxP2Y?: Maybe<Scalars['Float']>;
   BoundingBoxP2Z?: Maybe<Scalars['Float']>;
-  FaceCount?: Maybe<Scalars['Int']>;
-  HasNormals?: Maybe<Scalars['Boolean']>;
-  HasUVSpace?: Maybe<Scalars['Boolean']>;
+  CountPoint?: Maybe<Scalars['Int']>;
+  CountFace?: Maybe<Scalars['Int']>;
+  CountColorChannel?: Maybe<Scalars['Int']>;
+  CountTextureCoorinateChannel?: Maybe<Scalars['Int']>;
+  HasBones?: Maybe<Scalars['Boolean']>;
+  HasFaceNormals?: Maybe<Scalars['Boolean']>;
+  HasTangents?: Maybe<Scalars['Boolean']>;
+  HasTextureCoordinates?: Maybe<Scalars['Boolean']>;
+  HasVertexNormals?: Maybe<Scalars['Boolean']>;
   HasVertexColor?: Maybe<Scalars['Boolean']>;
+  IsManifold?: Maybe<Scalars['Boolean']>;
   IsWatertight?: Maybe<Scalars['Boolean']>;
-  Metalness?: Maybe<Scalars['Float']>;
-  PointCount?: Maybe<Scalars['Int']>;
-  Roughness?: Maybe<Scalars['Float']>;
-  Asset?: Maybe<Asset>;
-  Model?: Maybe<Model>;
-  VModelFileType?: Maybe<Vocabulary>;
-  ModelUVMapFile?: Maybe<Array<Maybe<ModelUvMapFile>>>;
+};
+
+export type ModelObject = {
+  __typename?: 'ModelObject';
+  idModelObject: Scalars['Int'];
+  idModel: Scalars['Int'];
+  idModelMetrics?: Maybe<Scalars['Int']>;
+  Model: Model;
+  ModelMetrics?: Maybe<ModelMetrics>;
 };
 
 export type ModelProcessingAction = {
@@ -1001,26 +1052,15 @@ export type ModelSceneXref = {
   Scene?: Maybe<Scene>;
 };
 
-export type ModelUvMapChannel = {
-  __typename?: 'ModelUVMapChannel';
-  idModelUVMapChannel: Scalars['Int'];
-  ChannelPosition: Scalars['Int'];
-  ChannelWidth: Scalars['Int'];
-  idModelUVMapFile: Scalars['Int'];
-  idVUVMapType: Scalars['Int'];
-  ModelUVMapFile?: Maybe<ModelUvMapFile>;
-  VUVMapType?: Maybe<Vocabulary>;
-};
-
-export type ModelUvMapFile = {
-  __typename?: 'ModelUVMapFile';
-  idModelUVMapFile: Scalars['Int'];
-  idAsset: Scalars['Int'];
-  idModelGeometryFile: Scalars['Int'];
-  UVMapEdgeLength: Scalars['Int'];
-  Asset?: Maybe<Asset>;
-  ModelGeometryFile?: Maybe<ModelGeometryFile>;
-  ModelUVMapChannel?: Maybe<Array<Maybe<ModelUvMapChannel>>>;
+export type ModelConstellation = {
+  __typename?: 'ModelConstellation';
+  Model: Model;
+  ModelObjects?: Maybe<Array<Maybe<ModelObject>>>;
+  ModelMaterials?: Maybe<Array<Maybe<ModelMaterial>>>;
+  ModelMaterialChannels?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
+  ModelMaterialUVMaps?: Maybe<Array<Maybe<ModelMaterialUvMap>>>;
+  ModelMetric?: Maybe<ModelMetrics>;
+  ModelObjectMetrics?: Maybe<Array<Maybe<ModelMetrics>>>;
 };
 
 export type PaginationInput = {
@@ -1356,20 +1396,24 @@ export type ModelDetailFields = {
   dateCaptured?: Maybe<Scalars['String']>;
   modelFileType?: Maybe<Scalars['Int']>;
   uvMaps: Array<IngestUvMap>;
-  roughness?: Maybe<Scalars['Int']>;
-  metalness?: Maybe<Scalars['Int']>;
-  pointCount?: Maybe<Scalars['Int']>;
-  faceCount?: Maybe<Scalars['Int']>;
-  isWatertight?: Maybe<Scalars['Boolean']>;
-  hasNormals?: Maybe<Scalars['Boolean']>;
-  hasVertexColor?: Maybe<Scalars['Boolean']>;
-  hasUVSpace?: Maybe<Scalars['Boolean']>;
   boundingBoxP1X?: Maybe<Scalars['Float']>;
   boundingBoxP1Y?: Maybe<Scalars['Float']>;
   boundingBoxP1Z?: Maybe<Scalars['Float']>;
   boundingBoxP2X?: Maybe<Scalars['Float']>;
   boundingBoxP2Y?: Maybe<Scalars['Float']>;
   boundingBoxP2Z?: Maybe<Scalars['Float']>;
+  countPoint?: Maybe<Scalars['Int']>;
+  countFace?: Maybe<Scalars['Int']>;
+  countColorChannel?: Maybe<Scalars['Int']>;
+  countTextureCoorinateChannel?: Maybe<Scalars['Int']>;
+  hasBones?: Maybe<Scalars['Boolean']>;
+  hasFaceNormals?: Maybe<Scalars['Boolean']>;
+  hasTangents?: Maybe<Scalars['Boolean']>;
+  hasTextureCoordinates?: Maybe<Scalars['Boolean']>;
+  hasVertexNormals?: Maybe<Scalars['Boolean']>;
+  hasVertexColor?: Maybe<Scalars['Boolean']>;
+  isManifold?: Maybe<Scalars['Boolean']>;
+  isWatertight?: Maybe<Scalars['Boolean']>;
 };
 
 export type SceneDetailFields = {
@@ -2621,7 +2665,7 @@ export type GetDetailsTabDataForObjectQuery = (
       )> }
     )>, Model?: Maybe<(
       { __typename?: 'ModelDetailFields' }
-      & Pick<ModelDetailFields, 'size' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'roughness' | 'metalness' | 'pointCount' | 'faceCount' | 'isWatertight' | 'hasNormals' | 'hasVertexColor' | 'hasUVSpace' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z'>
+      & Pick<ModelDetailFields, 'size' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'modelFileType' | 'dateCaptured' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z' | 'countPoint' | 'countFace' | 'countColorChannel' | 'countTextureCoorinateChannel' | 'hasBones' | 'hasFaceNormals' | 'hasTangents' | 'hasTextureCoordinates' | 'hasVertexNormals' | 'hasVertexColor' | 'isManifold' | 'isWatertight'>
       & { uvMaps: Array<(
         { __typename?: 'IngestUVMap' }
         & Pick<IngestUvMap, 'name' | 'edgeLength' | 'mapType'>
@@ -4263,27 +4307,31 @@ export const GetDetailsTabDataForObjectDocument = gql`
       modality
       purpose
       units
-      dateCaptured
       modelFileType
+      dateCaptured
       uvMaps {
         name
         edgeLength
         mapType
       }
-      roughness
-      metalness
-      pointCount
-      faceCount
-      isWatertight
-      hasNormals
-      hasVertexColor
-      hasUVSpace
       boundingBoxP1X
       boundingBoxP1Y
       boundingBoxP1Z
       boundingBoxP2X
       boundingBoxP2Y
       boundingBoxP2Z
+      countPoint
+      countFace
+      countColorChannel
+      countTextureCoorinateChannel
+      hasBones
+      hasFaceNormals
+      hasTangents
+      hasTextureCoordinates
+      hasVertexNormals
+      hasVertexColor
+      isManifold
+      isWatertight
     }
     Scene {
       Links

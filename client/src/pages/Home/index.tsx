@@ -38,7 +38,7 @@ function Home(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <PrivateRoute exact path={path}>
-                <Redirect to={resolveRoute(HOME_ROUTES.DASHBOARD)} />
+                <Redirect to={resolveRoute(HOME_ROUTES.REPOSITORY)} />
             </PrivateRoute>
             <PrivateRoute path={HOME_ROUTE.TYPE}>
                 <Header />

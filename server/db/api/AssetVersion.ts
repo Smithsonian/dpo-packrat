@@ -158,6 +158,16 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         }
     }
 
+    static async fetchAll(): Promise<AssetVersion[] | null> {
+        try {
+            return DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBC.DBConnection.prisma.assetVersion.findMany(), AssetVersion);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.AssetVersion.fetchAll', error);
+            return null;
+        }
+    }
+
     static async fetchByAssetAndVersion(idAsset: number, Version: number): Promise<AssetVersion[] | null> {
         if (!idAsset)
             return null;

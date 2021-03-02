@@ -435,9 +435,9 @@ export class AssetStorageAdapter {
         }
 
         // clear StorageKeyStaging and updated Ingested flag from this retired asset version
-        assetVersion.StorageKeyStaging = ''; /* istanbul ignore next */
+        assetVersion.StorageKeyStaging = '';
         assetVersion.Ingested = true;
-        if (!await assetVersion.update()) {
+        if (!await assetVersion.update()) /* istanbul ignore next */ {
             const error: string = `Unable to clear staging storage key from AssetVersion ${JSON.stringify(assetVersion)}`;
             LOG.logger.error(error);
             return { assets, assetVersions, success: false, error };

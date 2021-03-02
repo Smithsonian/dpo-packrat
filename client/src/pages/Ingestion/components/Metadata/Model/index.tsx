@@ -205,15 +205,15 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Model File Type'
                             error={errors.model.modelFileType}
-                            value={withDefaultValueNumber(model.modelFileType, getInitialEntry(eVocabularySetID.eModelGeometryFileModelFileType))}
+                            value={withDefaultValueNumber(model.modelFileType, getInitialEntry(eVocabularySetID.eModelFileType))}
                             name='modelFileType'
                             onChange={setIdField}
-                            options={getEntries(eVocabularySetID.eModelGeometryFileModelFileType)}
+                            options={getEntries(eVocabularySetID.eModelFileType)}
                         />
                         <UVContents
-                            initialEntry={getInitialEntry(eVocabularySetID.eModelUVMapChannelUVMapType)}
+                            initialEntry={getInitialEntry(eVocabularySetID.eModelMaterialChannelMaterialType)}
                             uvMaps={model.uvMaps}
-                            options={getEntries(eVocabularySetID.eModelUVMapChannelUVMapType)}
+                            options={getEntries(eVocabularySetID.eModelMaterialChannelMaterialType)}
                             onUpdate={updateUVMapsVariant}
                         />
                     </Box>

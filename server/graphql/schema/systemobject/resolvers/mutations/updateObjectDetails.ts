@@ -226,20 +226,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         dateCaptured,
                         size,
                         modelFileType,
-                        roughness,
-                        metalness,
-                        pointCount,
-                        faceCount,
-                        isWatertight,
-                        hasNormals,
-                        hasVertexColor,
-                        hasUVSpace,
-                        boundingBoxP1X,
-                        boundingBoxP1Y,
-                        boundingBoxP1Z,
-                        boundingBoxP2X,
-                        boundingBoxP2Y,
-                        boundingBoxP2Z
+                        // roughness, metalness, pointCount, faceCount, isWatertight, hasNormals, hasVertexColor, hasUVSpace, boundingBoxP1X, boundingBoxP1Y, boundingBoxP1Z, boundingBoxP2X, boundingBoxP2Y, boundingBoxP2Z
                     } = data.Model;
 
                     if (master) Model.Master = master;
@@ -248,6 +235,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (modality) Model.idVModality = modality;
                     if (purpose) Model.idVPurpose = purpose;
                     if (units) Model.idVUnits = units;
+                    if (modelFileType) Model.idVFileType = modelFileType;
                     Model.DateCreated = new Date(dateCaptured);
 
                     if (Model.idAssetThumbnail) {
@@ -258,17 +246,16 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         }
                     }
 
-                    const ModelGeometryFile = await DBAPI.ModelGeometryFile.fetchFromModel(Model.idModel);
-                    if (ModelGeometryFile && ModelGeometryFile[0]) {
-                        const [MGF] = ModelGeometryFile;
-
+                    /*
+                    // TODO: do we want to update the asset name and metrics?  I don't think so...
+                    const modelMetrics = await DBAPI.ModelMetrics.fetch(Model.idModelMetrics);
+                    if (modelMetrics) {
                         const Asset = await DBAPI.Asset.fetch(MGF.idAsset);
                         if (Asset) {
                             Asset.FileName = data.Name;
                             await Asset.update();
                         }
 
-                        if (modelFileType) MGF.idVModelFileType = modelFileType;
                         MGF.Roughness = maybe<number>(roughness);
                         MGF.Metalness = maybe<number>(metalness);
                         MGF.PointCount = maybe<number>(pointCount);
@@ -286,6 +273,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                         await MGF.update();
                     }
+                    */
                     await Model.update();
                 }
             }

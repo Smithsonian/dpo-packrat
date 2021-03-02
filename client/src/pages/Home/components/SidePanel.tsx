@@ -16,7 +16,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: palette.primary.dark,
+        backgroundColor: palette.primary.dark
     },
     menuOptions: {
         display: 'flex',
@@ -47,7 +47,7 @@ interface SidePanelProps {
 }
 
 type SidePanelParams = {
-    type: string
+    type: string;
 };
 
 function SidePanel(props: SidePanelProps): React.ReactElement {
@@ -63,13 +63,13 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
     const classes = useStyles();
 
     const Options: SidePanelOptionProps[] = [
-        {
-            title: 'Dashboard',
-            type: HOME_ROUTES.DASHBOARD,
-            color: Colors.sidebarOptions.dashboard,
-            isExpanded,
-            isSelected: selectedOption === HOME_ROUTES.DASHBOARD
-        },
+        // {
+        //     title: 'Dashboard',
+        //     type: HOME_ROUTES.DASHBOARD,
+        //     color: Colors.sidebarOptions.dashboard,
+        //     isExpanded,
+        //     isSelected: selectedOption === HOME_ROUTES.DASHBOARD
+        // },
         {
             title: 'Repository',
             type: HOME_ROUTES.REPOSITORY,
@@ -84,21 +84,21 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
             isExpanded,
             isSelected: selectedOption === HOME_ROUTES.INGESTION
         },
-        {
-            title: 'Workflow',
-            type: HOME_ROUTES.WORKFLOW,
-            color: Colors.sidebarOptions.workflow,
-            isExpanded,
-            isSelected: selectedOption === HOME_ROUTES.WORKFLOW
-        },
-        {
-            title: 'Reporting',
-            type: HOME_ROUTES.REPORTING,
-            color: Colors.sidebarOptions.reporting,
-            isExpanded,
-            isSelected: selectedOption === HOME_ROUTES.REPORTING
+        // {
+        //     title: 'Workflow',
+        //     type: HOME_ROUTES.WORKFLOW,
+        //     color: Colors.sidebarOptions.workflow,
+        //     isExpanded,
+        //     isSelected: selectedOption === HOME_ROUTES.WORKFLOW
+        // },
+        // {
+        //     title: 'Reporting',
+        //     type: HOME_ROUTES.REPORTING,
+        //     color: Colors.sidebarOptions.reporting,
+        //     isExpanded,
+        //     isSelected: selectedOption === HOME_ROUTES.REPORTING
 
-        },
+        // },
         {
             title: 'Admin',
             type: HOME_ROUTES.ADMIN,
@@ -111,23 +111,17 @@ function SidePanel(props: SidePanelProps): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Grid container className={classes.menuOptions} direction='column'>
-                {Options.map((props, index) => <SidePanelOption key={index} {...props} />)}
+                {Options.map((props, index) => (
+                    <SidePanelOption key={index} {...props} />
+                ))}
             </Grid>
             <Box display='flex' flex={1} />
             <Box className={classes.bottomOptions}>
-                {isExpanded ?
-                    <FaChevronLeft
-                        className={classes.anchor}
-                        size={20}
-                        color={Colors.defaults.white}
-                        onClick={onToggle}
-                    /> :
-                    <FaChevronRight
-                        className={classes.anchor}
-                        size={20}
-                        color={Colors.defaults.white}
-                        onClick={onToggle}
-                    />}
+                {isExpanded ? (
+                    <FaChevronLeft className={classes.anchor} size={20} color={Colors.defaults.white} onClick={onToggle} />
+                ) : (
+                    <FaChevronRight className={classes.anchor} size={20} color={Colors.defaults.white} onClick={onToggle} />
+                )}
             </Box>
         </Box>
     );

@@ -323,6 +323,7 @@ type AssetGroup {
 }
 
 input CreateCaptureDataInput {
+  Name: String!
   idVCaptureMethod: Int!
   DateCaptured: DateTime!
   Description: String!
@@ -591,11 +592,13 @@ type LicenseAssignment {
 }
 
 input CreateModelInput {
+  Name: String!
   Authoritative: Boolean!
   idVCreationMethod: Int!
   idVModality: Int!
   idVPurpose: Int!
   idVUnits: Int!
+  idVFileType: Int!
   Master: Boolean!
   idAssetThumbnail: Int
 }
@@ -614,48 +617,92 @@ type GetModelResult {
 
 type Model {
   idModel: Int!
-  Authoritative: Boolean!
+  Name: String!
   DateCreated: DateTime!
-  idAssetThumbnail: Int
+  Master: Boolean!
+  Authoritative: Boolean!
   idVCreationMethod: Int!
   idVModality: Int!
   idVPurpose: Int!
   idVUnits: Int!
-  Master: Boolean!
-  AssetThumbnail: Asset
+  idVFileType: Int!
+  idAssetThumbnail: Int
+  idModelMetrics: Int
+  ModelConstellation: ModelConstellation
   VCreationMethod: Vocabulary
   VModality: Vocabulary
   VPurpose: Vocabulary
   VUnits: Vocabulary
-  ModelGeometryFile: [ModelGeometryFile]
+  VFileType: Vocabulary
+  AssetThumbnail: Asset
+  ModelMetrics: ModelMetrics
+  ModelObject: [ModelObject]
   ModelProcessingAction: [ModelProcessingAction]
   ModelSceneXref: [ModelSceneXref]
   SystemObject: SystemObject
 }
 
-type ModelGeometryFile {
-  idModelGeometryFile: Int!
-  idAsset: Int!
+type ModelMaterial {
+  idModelMaterial: Int!
+  idModelObject: Int!
+  Name: String
+  ModelObject: ModelObject!
+}
+
+type ModelMaterialChannel {
+  idModelMaterialChannel: Int!
+  idModelMaterial: Int!
+  idVMaterialType: Int
+  MaterialTypeOther: String
+  idModelMaterialUVMap: Int
+  ChannelPosition: Int
+  ChannelWidth: Int
+  Scalar1: Float
+  Scalar2: Float
+  Scalar3: Float
+  Scalar4: Float
+  ModelMaterial: ModelMaterial!
+  VMaterialType: Vocabulary
+  ModelMaterialUVMap: ModelMaterialUVMap
+}
+
+type ModelMaterialUVMap {
+  idModelMaterialUVMap: Int!
   idModel: Int!
-  idVModelFileType: Int!
+  idAsset: Int!
+  UVMapEdgeLength: Int!
+  Model: Model!
+  Asset: Asset!
+}
+
+type ModelMetrics {
+  idModelMetrics: Int!
   BoundingBoxP1X: Float
   BoundingBoxP1Y: Float
   BoundingBoxP1Z: Float
   BoundingBoxP2X: Float
   BoundingBoxP2Y: Float
   BoundingBoxP2Z: Float
-  FaceCount: Int
-  HasNormals: Boolean
-  HasUVSpace: Boolean
+  CountPoint: Int
+  CountFace: Int
+  CountColorChannel: Int
+  CountTextureCoorinateChannel: Int
+  HasBones: Boolean
+  HasFaceNormals: Boolean
+  HasTangents: Boolean
+  HasTextureCoordinates: Boolean
+  HasVertexNormals: Boolean
   HasVertexColor: Boolean
+  IsManifold: Boolean
   IsWatertight: Boolean
-  Metalness: Float
-  PointCount: Int
-  Roughness: Float
-  Asset: Asset
-  Model: Model
-  VModelFileType: Vocabulary
-  ModelUVMapFile: [ModelUVMapFile]
+}
+
+type ModelObject {
+  idModelObject: Int!
+  idModel: Int!
+  idModelMetrics: Int
+  Model: Model!
+  ModelMetrics: ModelMetrics
 }
 
 type ModelProcessingAction {
@@ -694,24 +741,14 @@ type ModelSceneXref {
   Scene: Scene
 }
 
-type ModelUVMapChannel {
-  idModelUVMapChannel: Int!
-  ChannelPosition: Int!
-  ChannelWidth: Int!
-  idModelUVMapFile: Int!
-  idVUVMapType: Int!
-  ModelUVMapFile: ModelUVMapFile
-  VUVMapType: Vocabulary
-}
-
-type ModelUVMapFile {
-  idModelUVMapFile: Int!
-  idAsset: Int!
-  idModelGeometryFile: Int!
-  UVMapEdgeLength: Int!
-  Asset: Asset
-  ModelGeometryFile: ModelGeometryFile
-  ModelUVMapChannel: [ModelUVMapChannel]
+type ModelConstellation {
+  Model: Model!
+  ModelObjects: [ModelObject]
+  ModelMaterials: [ModelMaterial]
+  ModelMaterialChannels: [ModelMaterialChannel]
+  ModelMaterialUVMaps: [ModelMaterialUVMap]
+  ModelMetric: ModelMetrics
+  ModelObjectMetrics: [ModelMetrics]
 }
 
 input PaginationInput {
@@ -1031,20 +1068,24 @@ type ModelDetailFields {
   dateCaptured: String
   modelFileType: Int
   uvMaps: [IngestUVMap!]!
-  roughness: Int
-  metalness: Int
-  pointCount: Int
-  faceCount: Int
-  isWatertight: Boolean
-  hasNormals: Boolean
-  hasVertexColor: Boolean
-  hasUVSpace: Boolean
   boundingBoxP1X: Float
   boundingBoxP1Y: Float
   boundingBoxP1Z: Float
   boundingBoxP2X: Float
   boundingBoxP2Y: Float
   boundingBoxP2Z: Float
+  countPoint: Int
+  countFace: Int
+  countColorChannel: Int
+  countTextureCoorinateChannel: Int
+  hasBones: Boolean
+  hasFaceNormals: Boolean
+  hasTangents: Boolean
+  hasTextureCoordinates: Boolean
+  hasVertexNormals: Boolean
+  hasVertexColor: Boolean
+  isManifold: Boolean
+  isWatertight: Boolean
 }
 
 type SceneDetailFields {

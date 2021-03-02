@@ -194,21 +194,26 @@ async function getModelDetailFields(idModel: number): Promise<ModelDetailFields>
     };
 
     // TODO: KARAN resolve uvMaps, systemCreated?
-    const Model = await DBAPI.Model.fetch(idModel);
+    const modelConstellation = await DBAPI.ModelConstellation.fetch(idModel);
+    if (!modelConstellation)
+        return fields;
+
+    const model = modelConstellation.model;
     fields = {
         ...fields,
-        master: Model?.Master,
-        authoritative: Model?.Authoritative,
-        creationMethod: Model?.idVCreationMethod,
-        modality: Model?.idVModality,
-        purpose: Model?.idVPurpose,
-        units: Model?.idVUnits,
-        dateCaptured: Model?.DateCreated.toISOString(),
+        master: model?.Master,
+        authoritative: model?.Authoritative,
+        creationMethod: model?.idVCreationMethod,
+        modality: model?.idVModality,
+        purpose: model?.idVPurpose,
+        units: model?.idVUnits,
+        dateCaptured: model?.DateCreated.toISOString(),
+        modelFileType: model?.idVFileType,
     };
 
-
-    if (Model?.idAssetThumbnail) {
-        const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(Model.idAssetThumbnail);
+    // TODO: fetch all assets associated with Model and ModelMaterialUVMap's; add up storage size
+    if (model?.idAssetThumbnail) {
+        const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(model.idAssetThumbnail);
         if (AssetVersion && AssetVersion[0]) {
             const [AV] = AssetVersion;
             fields = {
@@ -218,28 +223,29 @@ async function getModelDetailFields(idModel: number): Promise<ModelDetailFields>
         }
     }
 
-    const ModelGeometryFile = await DBAPI.ModelGeometryFile.fetchFromModel(idModel);
-
-    if (ModelGeometryFile && ModelGeometryFile[0]) {
-        const [MGF] = ModelGeometryFile;
-
+    // TODO: fetch Material Channels, etc.
+    const modelMetrics = modelConstellation.modelMetric;
+    if (modelMetrics) {
         fields = {
             ...fields,
-            modelFileType: MGF.idVModelFileType,
-            roughness: MGF.Roughness,
-            metalness: MGF.Metalness,
-            pointCount: MGF.PointCount,
-            faceCount: MGF.FaceCount,
-            isWatertight: MGF.IsWatertight,
-            hasNormals: MGF.HasNormals,
-            hasVertexColor: MGF.HasVertexColor,
-            hasUVSpace: MGF.HasUVSpace,
-            boundingBoxP1X: MGF.BoundingBoxP1X,
-            boundingBoxP1Y: MGF.BoundingBoxP1Y,
-            boundingBoxP1Z: MGF.BoundingBoxP1Z,
-            boundingBoxP2X: MGF.BoundingBoxP2X,
-            boundingBoxP2Y: MGF.BoundingBoxP2Y,
-            boundingBoxP2Z: MGF.BoundingBoxP2Z
+            boundingBoxP1X: modelMetrics.BoundingBoxP1X,
+            boundingBoxP1Y: modelMetrics.BoundingBoxP1Y,
+            boundingBoxP1Z: modelMetrics.BoundingBoxP1Z,
+            boundingBoxP2X: modelMetrics.BoundingBoxP2X,
+            boundingBoxP2Y: modelMetrics.BoundingBoxP2Y,
+            boundingBoxP2Z: modelMetrics.BoundingBoxP2Z,
+            countPoint: modelMetrics.CountPoint,
+            countFace: modelMetrics.CountFace,
+            countColorChannel: modelMetrics.CountColorChannel,
+            countTextureCoorinateChannel: modelMetrics.CountTextureCoorinateChannel,
+            hasBones: modelMetrics.HasBones,
+            hasFaceNormals: modelMetrics.HasFaceNormals,
+            hasTangents: modelMetrics.HasTangents,
+            hasTextureCoordinates: modelMetrics.HasTextureCoordinates,
+            hasVertexNormals: modelMetrics.HasVertexNormals,
+            hasVertexColor: modelMetrics.HasVertexColor,
+            isManifold: modelMetrics.IsManifold,
+            isWatertight: modelMetrics.IsWatertight,
         };
     }
 
