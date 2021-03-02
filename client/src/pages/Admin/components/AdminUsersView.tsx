@@ -164,7 +164,7 @@ function AdminUsersView(): React.ReactElement {
         }
     });
 
-    let users: GetAllUsersResult['User'] = data?.getAllUsers?.User || [];
+    const users: GetAllUsersResult['User'] = data?.getAllUsers?.User || [];
 
     const handleActiveUpdate = newActive => {
         setActive(newActive);

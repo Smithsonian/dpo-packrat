@@ -36,7 +36,7 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
 
             User.forEach((user) => {
                 expect(user.Active).toEqual(true);
-            })
+            });
         });
     });
 
@@ -65,8 +65,8 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
             const { User } = users;
 
             User.forEach((user) => {
-                expect(user.Name || user.EmailAddress).toMatch(/[Jj]on/)
-            })
+                expect(user.Name || user.EmailAddress).toMatch(/[Jj]on/);
+            });
         });
     });
 };
