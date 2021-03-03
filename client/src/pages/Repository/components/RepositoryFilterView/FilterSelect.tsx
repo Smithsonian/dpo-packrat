@@ -12,7 +12,7 @@ import { FilterOption } from './RepositoryFilterOptions';
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     label: {
         fontSize: '0.8em',
-        color: palette.primary.dark,
+        color: palette.primary.dark
     },
     select: {
         width: 160,
@@ -24,11 +24,11 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         borderRadius: 5,
         border: `0.5px solid ${palette.primary.contrastText}`,
         [breakpoints.down('lg')]: {
-            height: 26,
+            height: 26
         }
     },
     icon: {
-        color: palette.primary.contrastText,
+        color: palette.primary.contrastText
     }
 }));
 
@@ -41,6 +41,7 @@ interface FilterSelectProps {
 
 function FilterSelect(props: FilterSelectProps): React.ReactElement {
     const { label, name, multiple, options } = props;
+
     const classes = useStyles();
 
     const [value, updateFilterValue] = useRepositoryStore(state => [state[name], state.updateFilterValue]);
@@ -64,17 +65,40 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
     return (
         <Box display='flex' alignItems='center' justifyContent='space-between' mb={1}>
             <Typography className={classes.label}>{label}</Typography>
-            <Select
-                value={value || []}
-                multiple={multiple || false}
-                className={classes.select}
-                name={name}
-                onChange={onChange}
-                disableUnderline
-                inputProps={inputProps}
-            >
-                {options.map(({ label, value }: FilterOption, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
-            </Select>
+            {(name === 'has' || name === 'missing') && value.length < 1 ? (
+                <Select
+                    value={value || []}
+                    multiple={multiple || false}
+                    className={classes.select}
+                    name={name}
+                    onChange={onChange}
+                    disableUnderline
+                    inputProps={inputProps}
+                    renderValue={selected => {
+                        if ((selected as string[]).length === 0) {
+                            return <span>(Ignore)</span>;
+                        }
+
+                        return (selected as string[]).join(', ');
+                    }}
+                    displayEmpty>
+                    {options.map(({ label, value }: FilterOption, index) => {
+                        return (
+                            <MenuItem key={index} value={value}>
+                                {label}
+                            </MenuItem>
+                        );
+                    })}
+                </Select>
+            ) : (
+                <Select value={value || []} multiple={multiple || false} className={classes.select} name={name} onChange={onChange} disableUnderline inputProps={inputProps}>
+                    {options.map(({ label, value }: FilterOption, index) => (
+                        <MenuItem key={index} value={value}>
+                            {label}
+                        </MenuItem>
+                    ))}
+                </Select>
+            )}
         </Box>
     );
 }
