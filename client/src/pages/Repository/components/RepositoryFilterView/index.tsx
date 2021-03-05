@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * RepositoryFilterView
  *
@@ -22,14 +24,14 @@ import { ChipOption, getRepositoryFilterOptions } from './RepositoryFilterOption
 const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     container: {
         display: 'flex',
-        height: (isExpanded: boolean) => isExpanded ? 235 : 35,
+        height: (isExpanded: boolean) => (isExpanded ? 235 : 35),
         background: palette.primary.light,
         borderRadius: 5,
         padding: 10,
         marginBottom: 10,
         transition: '250ms height ease',
         [breakpoints.down('lg')]: {
-            height: (isExpanded: boolean) => isExpanded ? 215 : 30
+            height: (isExpanded: boolean) => (isExpanded ? 215 : 30)
         }
     },
     content: {
@@ -52,12 +54,12 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         transition: 'all 250ms linear',
         [breakpoints.down('lg')]: {
             height: 20,
-            padding: '0px 5px',
+            padding: '0px 5px'
         },
         '&:hover': {
             cursor: 'pointer',
             backgroundColor: fade(palette.primary.light, 0.2)
-        },
+        }
     },
     caption: {
         marginTop: 4,
@@ -88,7 +90,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     options: {
         display: 'flex',
-        alignItems: (isExpanded: boolean) => isExpanded ? 'flex-end' : 'center',
+        alignItems: (isExpanded: boolean) => (isExpanded ? 'flex-end' : 'center'),
         justifyContent: 'center'
     }
 }));
@@ -136,13 +138,7 @@ function RepositoryFilterView(): React.ReactElement {
                 <Typography variant='body1'>Unit: All</Typography>
             </Box>
 
-            <Box
-                display='flex'
-                alignItems='center'
-                height='40px'
-                width='64vw'
-                overflow='scroll'
-            >
+            <Box display='flex' alignItems='center' height='40px' width='64vw' overflow='hidden'>
                 {chipsOptions.map((chip: ChipOption, index: number) => {
                     const { id, type, name } = chip;
                     const label: string = `${getTermForSystemObjectType(type)}: ${name}`;
@@ -168,14 +164,7 @@ function RepositoryFilterView(): React.ReactElement {
         </Box>
     );
 
-    let expandIcon: React.ReactNode = (
-        <FaChevronDown
-            className={classes.anchor}
-            size={15}
-            color={palette.primary.main}
-            onClick={toggleFilter}
-        />
-    );
+    let expandIcon: React.ReactNode = <FaChevronDown className={classes.anchor} size={15} color={palette.primary.main} onClick={toggleFilter} />;
 
     if (isExpanded) {
         content = (
@@ -208,14 +197,7 @@ function RepositoryFilterView(): React.ReactElement {
             </React.Fragment>
         );
 
-        expandIcon = (
-            <FaChevronUp
-                className={classes.anchor}
-                size={15}
-                color={palette.primary.main}
-                onClick={toggleFilter}
-            />
-        );
+        expandIcon = <FaChevronUp className={classes.anchor} size={15} color={palette.primary.main} onClick={toggleFilter} />;
     }
 
     if (!data || loading) {
@@ -224,11 +206,9 @@ function RepositoryFilterView(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <Box className={classes.content}>
-                {content}
-            </Box>
+            <Box className={classes.content}>{content}</Box>
             <Box className={classes.options}>
-                <Box display='flex' >
+                <Box display='flex'>
                     <FiLink2 className={classes.anchor} color={palette.primary.main} size={20} onClick={onCopyLink} />
                     {expandIcon}
                 </Box>
