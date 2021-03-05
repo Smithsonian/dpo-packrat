@@ -10,12 +10,7 @@ import React from 'react';
 import { Colors } from '../../theme';
 import { Link } from 'react-router-dom';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
-
-function toTitleCase(str) {
-    return str.replace(/\w\S*/g, txt => {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
-}
+import { toTitleCase } from '../../constants/helperfunctions';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
