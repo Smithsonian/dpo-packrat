@@ -356,7 +356,8 @@ function AdminUserForm(): React.ReactElement {
                                 setWorkflowNotificationType(e.target.value);
                             }
                         }}
-                        style={{ width: '160px', height: '40px' }}>
+                        style={{ width: '160px', height: '40px' }}
+                    >
                         <MenuItem value={0}>Daily Digest</MenuItem>
                         <MenuItem value={1}>Immediately</MenuItem>
                     </Select>

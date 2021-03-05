@@ -8,6 +8,3 @@ node_modules/
 *.yml
 client/src/types/graphql.tsx
 server/types/graphql.ts
-client/src/pages/Admin/AdminUsersList.tsx
-client/src/pages/Admin/AdminUsersView.tsx
-server/tests/graphql/queries/user/getAllUsers.test.ts

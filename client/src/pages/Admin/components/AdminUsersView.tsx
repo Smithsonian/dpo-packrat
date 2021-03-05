@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+
 import React, { useState } from 'react';
 import AdminUsersFilter from './AdminUsersFilter';
 import AdminUsersList from './AdminUsersList';
