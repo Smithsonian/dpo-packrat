@@ -1,3 +1,6 @@
+/* eslint-disable react/display-name */
+/* eslint-disable import/no-unresolved */
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Box } from '@material-ui/core';
@@ -5,7 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Tooltip from '@material-ui/core/Tooltip';
 import ClearIcon from '@material-ui/icons/Clear';
 import CheckIcon from '@material-ui/icons/Check';
-import { DataGrid, Columns } from '@material-ui/data-grid';
+import { DataGrid } from '@material-ui/data-grid';
 import { GetAllUsersResult } from '../../../types/graphql';
 import { extractISOMonthDateYear } from '../../../constants/index';
 
@@ -34,7 +37,8 @@ const useStyles = makeStyles({
 function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.ReactElement {
     const classes = useStyles();
 
-    const usersWithId: any = users.map(user => {
+    // usersWithId is necessary because DataGrid only takes in objects with id
+    const usersWithId = users.map(user => {
         const { idUser, Active, DateActivated, EmailAddress, Name, SecurityID, DateDisabled, EmailSettings, WorkflowNotificationTime } = user;
 
         return {
@@ -51,7 +55,7 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
         };
     });
 
-    const columnHeader: Columns = [
+    const columnHeader = [
         {
             field: 'Active',
             headerName: 'Active',
@@ -111,9 +115,9 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
                 rowHeight={55}
                 scrollbarSize={5}
                 density='compact'
-                disableSelectionOnClick={true}
+                disableSelectionOnClick
                 disableColumnResize={undefined}
-                hideFooter={true}
+                hideFooter
             />
         </Box>
     );

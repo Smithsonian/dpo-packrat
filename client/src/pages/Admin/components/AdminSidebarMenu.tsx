@@ -45,7 +45,7 @@ function AdminSidebarMenuRow({ path }: { path: string }): React.ReactElement {
     );
 }
 
-function AdminSidebarMenu() {
+function AdminSidebarMenu(): React.ReactElement {
     const classes = useStyles();
     const adminRoutes = ['users'];
 
