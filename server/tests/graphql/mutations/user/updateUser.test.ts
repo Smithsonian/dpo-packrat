@@ -25,14 +25,16 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                 idUser: 0
             };
 
+            const newTime = new Date();
             const user = await new DBAPI.User(userArgs);
+
             if (await user.create()) {
                 const updateUserInput: UpdateUserInput = {
                     idUser: user.idUser,
                     Name: randomStorageKey('testUser'),
                     EmailAddress: randomStorageKey('test@si.edu'),
                     EmailSettings: 2,
-                    WorkflowNotificationTime: '11:59:59',
+                    WorkflowNotificationTime: newTime,
                     Active: true
                 };
 
@@ -60,13 +62,15 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
             };
 
             const user = await new DBAPI.User(userArgs);
+            const newTime = new Date();
+
             if (await user.create()) {
                 const updateUserInput: UpdateUserInput = {
                     idUser: user.idUser,
                     Name: randomStorageKey('testUser'),
                     EmailAddress: randomStorageKey('test@si.edu'),
                     EmailSettings: 2,
-                    WorkflowNotificationTime: '11:59:59',
+                    WorkflowNotificationTime: newTime,
                     Active: false
                 };
 
