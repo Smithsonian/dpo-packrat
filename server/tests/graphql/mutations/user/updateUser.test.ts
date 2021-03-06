@@ -65,6 +65,7 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
             const newTime = new Date();
 
             if (await user.create()) {
+                console.log('here is user', user);
                 const updateUserInput: UpdateUserInput = {
                     idUser: user.idUser,
                     Name: randomStorageKey('testUser'),
@@ -75,6 +76,7 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                 };
 
                 const { User }: GetUserResult = await graphQLApi.updateUser(updateUserInput);
+                console.log('here is User', User)
                 if (User) {
                     expect(User?.Active).toEqual(false);
                     expect(User?.Active).not.toBe(user?.Active);
