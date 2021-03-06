@@ -1,6 +1,11 @@
+/* eslint-disable camelcase */
+
 import { GetAllUsersInput, GetAllUsersResult, User_Status } from '../../../../types/graphql';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
+import * as DBAPI from '../../../../db';
+import { randomStorageKey } from '../../../db/utils';
+
 
 const getAllUsersTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
@@ -23,9 +28,7 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
                 expect(User.length).toBeGreaterThanOrEqual(1);
             }
         });
-    });
 
-    describe('Query: getAllUsers', () => {
         test('should return active users', async () => {
             const input: GetAllUsersInput = {
                 search: '',
@@ -36,11 +39,9 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
 
             User.forEach((user) => {
                 expect(user.Active).toEqual(true);
-            })
+            });
         });
-    });
 
-    describe('Query: getAllUsers', () => {
         test('should return inactive users', async () => {
             const input: GetAllUsersInput = {
                 search: '',
@@ -51,22 +52,37 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
 
             User.forEach((user) => {
                 expect(user.Active).toEqual(false);
-            })
+            });
         });
-    });
 
-    describe('Query: getAllUsers', () => {
-        test('should return users with matching name or email', async () => {
+        test('should return users with matching email', async () => {
+            const randomName = randomStorageKey('getAllUsers');
+            const randomEmail = randomStorageKey('getAllUsers@example.com');
+
+            const userArgs = {
+                Name: randomName,
+                EmailAddress: randomEmail,
+                SecurityID: 'SECURITY_ID',
+                Active: true,
+                DateActivated: new Date(),
+                DateDisabled: null,
+                WorkflowNotificationTime: new Date(),
+                EmailSettings: 0,
+                idUser: 0
+            };
+
+            new DBAPI.User(userArgs);
+
             const input: GetAllUsersInput = {
-                search: 'jon',
+                search: randomEmail,
                 active: User_Status.EAll
             };
+
             const users: GetAllUsersResult = await graphQLApi.getAllUsers(input);
             const { User } = users;
 
-            User.forEach((user) => {
-                expect(user.Name || user.EmailAddress).toMatch(/[Jj]on/)
-            })
+            expect(User.length).toEqual(1);
+            expect(User[0].EmailAddress).toEqual(randomEmail);
         });
     });
 };

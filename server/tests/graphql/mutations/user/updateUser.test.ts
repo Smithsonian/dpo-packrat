@@ -74,7 +74,7 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
             expect(updatedUser.User?.Active).not.toBe(user?.Active);
             expect(user.DateDisabled).toBeNull();
             expect(updatedUser.User?.DateDisabled).not.toBeNull();
-        })
+        });
     });
 };
 export default updateUserTest;

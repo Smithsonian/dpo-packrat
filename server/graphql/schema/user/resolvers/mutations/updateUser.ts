@@ -10,7 +10,7 @@ export default async function updateUser(_: Parent, args: MutationUpdateUserArgs
 
     const User = await DBAPI.User.fetch(idUser);
 
-    if (!User) {
+    if (User === null) {
         // LOG.logger.info('Error when fetching user in updateUser.ts');
         throw new Error('User not found');
     }
@@ -21,7 +21,7 @@ export default async function updateUser(_: Parent, args: MutationUpdateUserArgs
     User.EmailSettings = EmailSettings;
     User.WorkflowNotificationTime = WorkflowNotificationTime;
 
-    let success = await User.update();
+    const success = await User.update();
     if (!success) {
         // LOG.logger.info('Error when updating user in updateUser.ts');
         throw new Error('Error when updating user in updateUser.ts');
