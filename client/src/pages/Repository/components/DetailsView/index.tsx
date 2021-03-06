@@ -216,7 +216,6 @@ function DetailsView(): React.ReactElement {
                 throw new Error('Update request returned success: false');
             }
         } catch (error) {
-            console.log(JSON.stringify(error));
             toast.error('Failed to save updated data');
         } finally {
             setIsUpdatingData(false);
@@ -229,7 +228,7 @@ function DetailsView(): React.ReactElement {
         updatedDataFields.Retired = target.checked;
         setUpdatedData(updatedDataFields);
     };
-    console.log(objectAncestors);
+
     return (
         <Box className={classes.container}>
             <DetailsHeader

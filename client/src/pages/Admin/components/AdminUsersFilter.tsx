@@ -47,13 +47,7 @@ const useStyles = makeStyles({
     }
 });
 
-function AdminUsersFilter({
-    handleActiveUpdate,
-    handleUsersSearchUpdate
-}: {
-    handleActiveUpdate: (input: string) => void;
-    handleUsersSearchUpdate: (input: string) => void;
-}): React.ReactElement {
+function AdminUsersFilter({ handleActiveUpdate }: { handleActiveUpdate: (input: string) => void }): React.ReactElement {
     const [searchFilter, setSearchFilter] = useState('');
     const [activeStatusFilter, setActiveStatusFilter] = useState('All');
     const classes = useStyles();
@@ -68,7 +62,6 @@ function AdminUsersFilter({
 
     const searchUsers = () => {
         handleActiveUpdate(activeStatusFilter);
-        handleUsersSearchUpdate(searchFilter);
     };
 
     return (
@@ -85,9 +78,9 @@ function AdminUsersFilter({
                 <p>Active</p>
                 <FormControl variant='outlined'>
                     <Select value={activeStatusFilter} className={classes.formField} style={{ height: '30px', width: '100px' }} onChange={handleActiveStatusFilterChange}>
-                        <MenuItem value={'All'}>All</MenuItem>
-                        <MenuItem value={'Active'}>Active</MenuItem>
-                        <MenuItem value={'Inactive'}>Inactive</MenuItem>
+                        <MenuItem value={0}>All</MenuItem>
+                        <MenuItem value={1}>Active</MenuItem>
+                        <MenuItem value={2}>Inactive</MenuItem>
                     </Select>
                 </FormControl>
                 <Button className={classes.searchUsersFilterButton} onClick={searchUsers}>

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Repository utilities
  *
@@ -37,34 +38,20 @@ export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystem
 
 export function getTermForSystemObjectType(objectType: eSystemObjectType): string {
     switch (objectType) {
-        case eSystemObjectType.eUnit:
-            return 'Unit';
-        case eSystemObjectType.eProject:
-            return 'Project';
-        case eSystemObjectType.eSubject:
-            return 'Subject';
-        case eSystemObjectType.eItem:
-            return 'Item';
-        case eSystemObjectType.eCaptureData:
-            return 'Capture Data';
-        case eSystemObjectType.eModel:
-            return 'Model';
-        case eSystemObjectType.eScene:
-            return 'Scene';
-        case eSystemObjectType.eIntermediaryFile:
-            return 'Intermediary File';
-        case eSystemObjectType.eProjectDocumentation:
-            return 'Project Documentation';
-        case eSystemObjectType.eAsset:
-            return 'Asset';
-        case eSystemObjectType.eAssetVersion:
-            return 'Asset Version';
-        case eSystemObjectType.eActor:
-            return 'Actor';
-        case eSystemObjectType.eStakeholder:
-            return 'Stakeholder';
-        default:
-            return 'Unknown';
+        case eSystemObjectType.eUnit:                   return 'Unit';
+        case eSystemObjectType.eProject:                return 'Project';
+        case eSystemObjectType.eSubject:                return 'Subject';
+        case eSystemObjectType.eItem:                   return 'Item';
+        case eSystemObjectType.eCaptureData:            return 'Capture Data';
+        case eSystemObjectType.eModel:                  return 'Model';
+        case eSystemObjectType.eScene:                  return 'Scene';
+        case eSystemObjectType.eIntermediaryFile:       return 'Intermediary File';
+        case eSystemObjectType.eProjectDocumentation:   return 'Project Documentation';
+        case eSystemObjectType.eAsset:                  return 'Asset';
+        case eSystemObjectType.eAssetVersion:           return 'Asset Version';
+        case eSystemObjectType.eActor:                  return 'Actor';
+        case eSystemObjectType.eStakeholder:            return 'Stakeholder';
+        default:                                        return 'Unknown';
     }
 }
 
@@ -150,7 +137,8 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
 
     if (!metadataTitleMap) {
         metadataTitleMap = new Map<eMetadata, string>();
-        for (const filterOption of metadataToDisplayOptions) metadataTitleMap.set(filterOption.value, filterOption.label);
+        for (const filterOption of metadataToDisplayOptions)
+            metadataTitleMap.set(filterOption.value, filterOption.label);
     }
 
     metadataColumns.forEach((metadataColumn, index: number) => {
@@ -160,17 +148,13 @@ export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boole
             size: MIN_SIZE
         };
 
-        if (isHeader) treeColumn.label = metadataTitleMap ? metadataTitleMap.get(metadataColumn) || 'Unknown' : 'Unknown';
+        if (isHeader)
+            treeColumn.label = metadataTitleMap ? (metadataTitleMap.get(metadataColumn) || 'Unknown') : 'Unknown';
 
         switch (metadataColumn) {
-            case eMetadata.eHierarchySubject:
-                treeColumn.size = MIN_SIZE * 3;
-                break;
-            case eMetadata.eHierarchyItem:
-                treeColumn.size = MIN_SIZE * 3;
-                break;
-            default:
-                break;
+            case eMetadata.eHierarchySubject:   treeColumn.size = MIN_SIZE * 3; break;
+            case eMetadata.eHierarchyItem:      treeColumn.size = MIN_SIZE * 3; break;
+            default: break;
         }
 
         treeColumns.push(treeColumn);
@@ -196,20 +180,11 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
     const iconProps: RepositoryIconProps = { objectType, backgroundColor, textColor, overrideText: undefined };
 
     switch (objectType) {
-        default:
-            break;
-        case eSystemObjectType.eIntermediaryFile:
-            iconProps.overrideText = 'IF';
-            break;
-        case eSystemObjectType.eProjectDocumentation:
-            iconProps.overrideText = 'PD';
-            break;
-        case eSystemObjectType.eActor:
-            iconProps.overrideText = 'AC';
-            break;
-        case eSystemObjectType.eStakeholder:
-            iconProps.overrideText = 'ST';
-            break;
+        default:                                        break;
+        case eSystemObjectType.eIntermediaryFile:       iconProps.overrideText = 'IF'; break;
+        case eSystemObjectType.eProjectDocumentation:   iconProps.overrideText = 'PD'; break;
+        case eSystemObjectType.eActor:                  iconProps.overrideText = 'AC'; break;
+        case eSystemObjectType.eStakeholder:            iconProps.overrideText = 'ST'; break;
 
         case eSystemObjectType.eAsset:
         case eSystemObjectType.eAssetVersion:
