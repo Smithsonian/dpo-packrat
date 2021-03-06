@@ -8,3 +8,4 @@ node_modules/
 *.yml
 client/src/types/graphql.tsx
 server/types/graphql.ts
+client/src/utils/repository.tsx

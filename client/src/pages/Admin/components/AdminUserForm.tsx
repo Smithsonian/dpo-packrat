@@ -3,7 +3,7 @@
  * Upon mounting/rendering, it will make a GraphQL request
  * to retrieve the appropriate user and render the information.
  *
- * Also is responsible for user-related updating and creating GraphQL mutations
+ * Component also responsible for user-related updating and creating GraphQL mutations
  */
 
 import Checkbox from '@material-ui/core/Checkbox';
@@ -128,12 +128,12 @@ function AdminUserForm(): React.ReactElement {
     });
 
     const fetchedUser = request.data?.getUser.User;
-    /**
-     * Approach 1
-     * change the return to null
-     * then render until I get the query back
-     */
 
+    // Performs graphql query to retrieve user information
+    // if query returns user info,
+    // redirect to adminuserform
+    // else
+    // redirect to users
     useEffect(() => {
         if (fetchedUser) {
             setName(fetchedUser?.Name);
@@ -145,12 +145,6 @@ function AdminUserForm(): React.ReactElement {
             setWorkflowNotificationTime(formatISOToHoursMinutes(fetchedUser?.WorkflowNotificationTime));
         }
     }, [fetchedUser]);
-
-    // Performs graphql query to retrieve user information
-    // if query returns user info,
-    // redirect to adminuserform
-    // else
-    // redirect to users
 
     const validateFields = async (): Promise<boolean | void> => {
         try {

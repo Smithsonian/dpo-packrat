@@ -153,8 +153,7 @@ const useStyles = makeStyles({
 
 function AdminUsersView(): React.ReactElement {
     const classes = useStyles();
-    const [active, setActive] = useState('All');
-    const [userSearchFilter, setUserSearchFilter] = useState('');
+    const [active, setActive] = useState(0);
     const location = useLocation();
 
     const { data } = useGetAllUsersQuery({
@@ -172,18 +171,14 @@ function AdminUsersView(): React.ReactElement {
         setActive(newActive);
     };
 
-    const handleUsersSearchUpdate = newUserSearch => {
-        setUserSearchFilter(newUserSearch);
-    };
-
     // filter by active and keyword
     let filteredUsers = users;
 
     switch (active) {
-        case 'Active':
+        case 1:
             filteredUsers = users.filter(user => user?.Active);
             break;
-        case 'Inactive':
+        case 2:
             filteredUsers = users.filter(user => !user?.Active);
             break;
         default:
@@ -191,18 +186,13 @@ function AdminUsersView(): React.ReactElement {
             break;
     }
 
-    filteredUsers = filteredUsers.filter(user => {
-        const lowerCaseSearch = userSearchFilter.toLowerCase();
-        return user?.EmailAddress.toLowerCase().includes(lowerCaseSearch) || user?.Name.toLowerCase().includes(lowerCaseSearch);
-    });
-
     return (
         <React.Fragment>
             <Box className={classes.AdminUsersViewContainer}>
                 <Box className={classes.AdminBreadCrumbsContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />
                 </Box>
-                <AdminUsersFilter handleActiveUpdate={handleActiveUpdate} handleUsersSearchUpdate={handleUsersSearchUpdate} />
+                <AdminUsersFilter handleActiveUpdate={handleActiveUpdate} />
                 <AdminUsersList users={filteredUsers} />
             </Box>
         </React.Fragment>
