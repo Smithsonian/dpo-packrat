@@ -26,22 +26,24 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
             };
 
             const user = await new DBAPI.User(userArgs);
+            if (await user.create()) {
+                const updateUserInput: UpdateUserInput = {
+                    idUser: user.idUser,
+                    Name: randomStorageKey('testUser'),
+                    EmailAddress: randomStorageKey('test@si.edu'),
+                    EmailSettings: 2,
+                    WorkflowNotificationTime: '11:59:59',
+                    Active: true
+                };
 
-            const updateUserInput: UpdateUserInput = {
-                idUser: user.idUser,
-                Name: randomStorageKey('testUser'),
-                EmailAddress: randomStorageKey('test@si.edu'),
-                EmailSettings: 2,
-                WorkflowNotificationTime: '11:59:59',
-                Active: true
-            };
-
-            const updatedUser = await graphQLApi.updateUser(updateUserInput);
-
-            expect(updatedUser.User?.Name).toEqual(updateUserInput.Name);
-            expect(updatedUser.User?.EmailAddress).toEqual(updateUserInput.EmailAddress);
-            expect(updatedUser.User?.EmailSettings).toEqual(updateUserInput.EmailSettings);
-            expect(updatedUser.User?.WorkflowNotificationTime).toEqual(updateUserInput.WorkflowNotificationTime);
+                const updatedUser = await graphQLApi.updateUser(updateUserInput);
+                if (updatedUser) {
+                    expect(updatedUser.User?.Name).toEqual(updateUserInput.Name);
+                    expect(updatedUser.User?.EmailAddress).toEqual(updateUserInput.EmailAddress);
+                    expect(updatedUser.User?.EmailSettings).toEqual(updateUserInput.EmailSettings);
+                    expect(updatedUser.User?.WorkflowNotificationTime).toEqual(updateUserInput.WorkflowNotificationTime);
+                }
+            }
         });
 
         test('should update datedisabled and active if marking user as inactive', async () => {
@@ -58,22 +60,24 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
             };
 
             const user = await new DBAPI.User(userArgs);
+            if (await user.create()) {
+                const updateUserInput: UpdateUserInput = {
+                    idUser: user.idUser,
+                    Name: randomStorageKey('testUser'),
+                    EmailAddress: randomStorageKey('test@si.edu'),
+                    EmailSettings: 2,
+                    WorkflowNotificationTime: '11:59:59',
+                    Active: false
+                };
 
-            const updateUserInput: UpdateUserInput = {
-                idUser: user.idUser,
-                Name: randomStorageKey('testUser'),
-                EmailAddress: randomStorageKey('test@si.edu'),
-                EmailSettings: 2,
-                WorkflowNotificationTime: '11:59:59',
-                Active: false
-            };
-
-            const updatedUser = await graphQLApi.updateUser(updateUserInput);
-
-            expect(updatedUser.User?.Active).toEqual(false);
-            expect(updatedUser.User?.Active).not.toBe(user?.Active);
-            expect(user.DateDisabled).toBeNull();
-            expect(updatedUser.User?.DateDisabled).not.toBeNull();
+                const updatedUser = await graphQLApi.updateUser(updateUserInput);
+                if (updatedUser) {
+                    expect(updatedUser.User?.Active).toEqual(false);
+                    expect(updatedUser.User?.Active).not.toBe(user?.Active);
+                    expect(user.DateDisabled).toBeNull();
+                    expect(updatedUser.User?.DateDisabled).not.toBeNull();
+                }
+            }
         });
     });
 };
