@@ -71,8 +71,8 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
                 idUser: 0
             };
 
-            new DBAPI.User(userArgs);
-
+            const user = new DBAPI.User(userArgs);
+            console.log('user', user);
             const input: GetAllUsersInput = {
                 search: randomEmail,
                 active: User_Status.EAll
@@ -80,7 +80,7 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
 
             const users: GetAllUsersResult = await graphQLApi.getAllUsers(input);
             const { User } = users;
-
+            console.log('User', User);
             expect(User.length).toEqual(1);
             expect(User[0].EmailAddress).toEqual(randomEmail);
         });
