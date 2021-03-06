@@ -1,6 +1,7 @@
 import { CreateUserResult, MutationUpdateUserArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
+// import * as LOG from '../../../../utils/logger';
 
 export default async function updateUser(_: Parent, args: MutationUpdateUserArgs): Promise<CreateUserResult> {
     const { input } = args;
@@ -10,7 +11,7 @@ export default async function updateUser(_: Parent, args: MutationUpdateUserArgs
     const User = await DBAPI.User.fetch(idUser);
 
     if (!User) {
-        console.log('User not found');
+        // LOG.logger.info('Error when fetching user in updateUser.ts');
         throw new Error('User not found');
     }
 
@@ -20,7 +21,11 @@ export default async function updateUser(_: Parent, args: MutationUpdateUserArgs
     User.EmailSettings = EmailSettings;
     User.WorkflowNotificationTime = WorkflowNotificationTime;
 
-    await User.update();
-    // User.updateWorker(userArgs);
+    let success = await User.update();
+    if (!success) {
+        // LOG.logger.info('Error when updating user in updateUser.ts');
+        throw new Error('Error when updating user in updateUser.ts');
+    }
+
     return { User };
 }

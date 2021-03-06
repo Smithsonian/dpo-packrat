@@ -1,6 +1,3 @@
-/* eslint-disable camelcase */
-
-
 import { GetAllUsersInput, GetAllUsersResult, User_Status } from '../../../../types/graphql';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
@@ -39,7 +36,7 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
 
             User.forEach((user) => {
                 expect(user.Active).toEqual(true);
-            });
+            })
         });
     });
 
@@ -54,7 +51,7 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
 
             User.forEach((user) => {
                 expect(user.Active).toEqual(false);
-            });
+            })
         });
     });
 
@@ -68,8 +65,8 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
             const { User } = users;
 
             User.forEach((user) => {
-                expect(user.Name || user.EmailAddress).toMatch(/[Jj]on/);
-            });
+                expect(user.Name || user.EmailAddress).toMatch(/[Jj]on/)
+            })
         });
     });
 };
