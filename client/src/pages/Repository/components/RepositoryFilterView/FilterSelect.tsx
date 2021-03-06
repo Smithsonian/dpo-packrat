@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-max-props-per-line */
 /**
  * FilterSelect
  *
@@ -81,7 +82,8 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
 
                         return (selected as string[]).join(', ');
                     }}
-                    displayEmpty>
+                    displayEmpty
+                >
                     {options.map(({ label, value }: FilterOption, index) => {
                         return (
                             <MenuItem key={index} value={value}>
