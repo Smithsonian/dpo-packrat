@@ -71,18 +71,21 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
                 idUser: 0
             };
 
-            const user = await new DBAPI.User(userArgs);
-            console.log('user', user);
-            const input: GetAllUsersInput = {
-                search: randomEmail,
-                active: User_Status.EAll
-            };
+            const user = new DBAPI.User(userArgs);
+            if (await user.create()) {
+                const input: GetAllUsersInput = {
+                    search: randomEmail,
+                    active: User_Status.EAll
+                };
 
-            const users: GetAllUsersResult = await graphQLApi.getAllUsers(input);
-            const { User } = users;
-            console.log('User', User);
-            expect(User.length).toEqual(1);
-            expect(User[0].EmailAddress).toEqual(randomEmail);
+                const users: GetAllUsersResult = await graphQLApi.getAllUsers(input);
+                const { User } = users;
+                if (User) {
+                    expect(User.length).toEqual(1);
+                    expect(User[0].EmailAddress).toEqual(randomEmail);
+                }
+
+            }
         });
     });
 };
