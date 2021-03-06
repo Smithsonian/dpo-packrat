@@ -13,7 +13,7 @@ services:
             - packrat-client
             - packrat-server
         ports:
-            - 80:80
+            - $PACKRAT_PROXY_PORT:80
 
     packrat-client:
         container_name: packrat-client
