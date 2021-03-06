@@ -10,7 +10,7 @@ export default async function createUser(_: Parent, args: MutationCreateUserArgs
         idUser: 0,
         Name,
         EmailAddress,
-        SecurityID: 'TBD',
+        SecurityID: '',
         Active: true,
         DateActivated: new Date(),
         DateDisabled: null,
