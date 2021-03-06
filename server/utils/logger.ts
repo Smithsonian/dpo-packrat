@@ -22,12 +22,15 @@ function configureLogger(logPath: string | null): void {
             level: 'verbose',
             format: winston.format.combine(
                 winston.format.errors({ stack: true }), // emit stack trace when Error objects are passed in
+                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
                 /*
-                winston.format.timestamp(),
                 // winston.format.colorize(),
                 winston.format.json()
                 */
-                winston.format.simple()
+                // winston.format.simple(),
+                winston.format.printf((info) => {
+                    return `${info.timestamp} ${info.level}: ${info.message}`;
+                })
             ),
             transports: [
                 new winston.transports.File({
