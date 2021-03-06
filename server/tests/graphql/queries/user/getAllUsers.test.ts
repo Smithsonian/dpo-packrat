@@ -71,7 +71,7 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
                 idUser: 0
             };
 
-            const user = new DBAPI.User(userArgs);
+            const user = await new DBAPI.User(userArgs);
             console.log('user', user);
             const input: GetAllUsersInput = {
                 search: randomEmail,

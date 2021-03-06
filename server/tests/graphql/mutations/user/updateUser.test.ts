@@ -25,7 +25,7 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                 idUser: 0
             };
 
-            const user = new DBAPI.User(userArgs);
+            const user = await new DBAPI.User(userArgs);
 
             const updateUserInput: UpdateUserInput = {
                 idUser: user.idUser,
@@ -57,7 +57,7 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                 idUser: 0
             };
 
-            const user = new DBAPI.User(userArgs);
+            const user = await new DBAPI.User(userArgs);
 
             const updateUserInput: UpdateUserInput = {
                 idUser: user.idUser,
