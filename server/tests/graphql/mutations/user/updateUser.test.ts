@@ -1,4 +1,4 @@
-import { UpdateUserInput } from '../../../../types/graphql';
+import { GetUserResult, UpdateUserInput } from '../../../../types/graphql';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
 import * as DBAPI from '../../../../db';
@@ -36,12 +36,12 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                     Active: true
                 };
 
-                const updatedUser = await graphQLApi.updateUser(updateUserInput);
-                if (updatedUser) {
-                    expect(updatedUser.User?.Name).toEqual(updateUserInput.Name);
-                    expect(updatedUser.User?.EmailAddress).toEqual(updateUserInput.EmailAddress);
-                    expect(updatedUser.User?.EmailSettings).toEqual(updateUserInput.EmailSettings);
-                    expect(updatedUser.User?.WorkflowNotificationTime).toEqual(updateUserInput.WorkflowNotificationTime);
+                const { User }: GetUserResult = await graphQLApi.updateUser(updateUserInput);
+                if (User) {
+                    expect(User?.Name).toEqual(updateUserInput.Name);
+                    expect(User?.EmailAddress).toEqual(updateUserInput.EmailAddress);
+                    expect(User?.EmailSettings).toEqual(updateUserInput.EmailSettings);
+                    expect(User?.WorkflowNotificationTime).toEqual(updateUserInput.WorkflowNotificationTime);
                 }
             }
         });
@@ -70,12 +70,12 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                     Active: false
                 };
 
-                const updatedUser = await graphQLApi.updateUser(updateUserInput);
-                if (updatedUser) {
-                    expect(updatedUser.User?.Active).toEqual(false);
-                    expect(updatedUser.User?.Active).not.toBe(user?.Active);
+                const { User }: GetUserResult = await graphQLApi.updateUser(updateUserInput);
+                if (User) {
+                    expect(User?.Active).toEqual(false);
+                    expect(User?.Active).not.toBe(user?.Active);
                     expect(user.DateDisabled).toBeNull();
-                    expect(updatedUser.User?.DateDisabled).not.toBeNull();
+                    expect(User?.DateDisabled).not.toBeNull();
                 }
             }
         });
