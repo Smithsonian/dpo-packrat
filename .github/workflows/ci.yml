@@ -110,11 +110,11 @@ jobs:
         run: touch .env.dev && touch .env.prod
 
       - name: Build Dev images
-        run: docker-compose --env-file .env.dev -f docker-compose.dev.yml build
+        run: docker-compose --env-file .env.dev -f ./conf/docker/docker-compose.dev.yml build
         if: contains(github.ref, 'develop')
 
       - name: Build Prod images
-        run: docker-compose --env-file .env.prod -f docker-compose.prod.yml build
+        run: docker-compose --env-file .env.prod -f ./conf/docker/docker-compose.prod.yml build
         if: contains(github.ref, 'master')
 
       # Prepares tag for docker images
