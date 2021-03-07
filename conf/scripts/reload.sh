@@ -1,5 +1,5 @@
 # This script helps with updating docker images with new .env's
-# usage: ./scripts/reload.sh <environment> (environment: dev | prod)
+# usage: ./conf/scripts/reload.sh <environment> (environment: dev | prod)
 
 DEV="dev"
 PROD="prod"
@@ -31,4 +31,4 @@ export ENV=$ENV
 echo "Reloading docker images for env $1 with tag: $IMAGE_TAG"
 
 # Build packrat-server and client dynamically for environment's requested
-docker-compose --env-file .env.$1 -f docker-compose.deploy.yml up -d packrat-server-$1 packrat-client-$1 packrat-solr-$1
+docker-compose --env-file .env.$1 -f ./conf/docker/docker-compose.deploy.yml up -d packrat-server-$1 packrat-client-$1 packrat-solr-$1

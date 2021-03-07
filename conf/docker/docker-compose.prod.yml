@@ -6,8 +6,8 @@ services:
         image: packrat-proxy
         restart: always
         build:
-            context: .
-            dockerfile: ./docker/prod.Dockerfile
+            context: ../..
+            dockerfile: ./conf/docker/proxy-prod.Dockerfile
             target: proxy
         depends_on:
             - packrat-client
@@ -20,8 +20,8 @@ services:
         image: packrat-client
         restart: always
         build:
-            context: .
-            dockerfile: ./docker/prod.Dockerfile
+            context: ../..
+            dockerfile: ./conf/docker/client-prod.Dockerfile
             target: client
         ports:
             - $PACKRAT_CLIENT_PORT:3000
@@ -34,8 +34,8 @@ services:
         image: packrat-server
         restart: always
         build:
-            context: .
-            dockerfile: ./docker/prod.Dockerfile
+            context: ../..
+            dockerfile: ./conf/docker/server-prod.Dockerfile
             target: server
         ports:
             - $PACKRAT_SERVER_PORT:4000
@@ -67,8 +67,8 @@ services:
         image: packrat-solr
         restart: always
         build:
-            context: .
-            dockerfile: ./docker/solr.Dockerfile
+            context: ../..
+            dockerfile: ./conf/docker/solr.Dockerfile
             target: solr
         ports:
             - $PACKRAT_SOLR_PORT:8983

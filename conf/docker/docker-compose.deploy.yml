@@ -6,8 +6,8 @@ services:
         image: "packrat-client-dev:${IMAGE_TAG}"
         restart: always
         build:
-            context: .
-            dockerfile: ./docker/dev.Dockerfile
+            context: ../..
+            dockerfile: ./conf/docker/client-dev.Dockerfile
             target: client
         ports:
             - $PACKRAT_CLIENT_PORT:3000
@@ -20,8 +20,8 @@ services:
       image: "packrat-client-prod:${IMAGE_TAG}"
       restart: always
       build:
-            context: .
-            dockerfile: ./docker/prod.Dockerfile
+            context: ../..
+            dockerfile: ./conf/docker/client-prod.Dockerfile
             target: client
       ports:
           - $PACKRAT_CLIENT_PORT:3000
@@ -34,8 +34,8 @@ services:
         image: "packrat-server-dev:${IMAGE_TAG}"
         restart: always
         build:
-            context: .
-            dockerfile: ./docker/dev.Dockerfile
+            context: ../..
+            dockerfile: ./conf/docker/server-dev.Dockerfile
             target: server
         ports:
             - $PACKRAT_SERVER_PORT:4000
@@ -56,8 +56,8 @@ services:
         image: "packrat-server-prod:${IMAGE_TAG}"
         restart: always
         build:
-            context: .
-            dockerfile: ./docker/prod.Dockerfile
+            context: ../..
+            dockerfile: ./conf/docker/server-prod.Dockerfile
             target: server
         ports:
             - $PACKRAT_SERVER_PORT:4000
@@ -82,7 +82,7 @@ services:
         environment:
             - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
         volumes:
-            - ./server/db/sql:/app/
+            - ../../server/db/sql:/app/
 
     packrat-db-prod:
         container_name: packrat-db-prod
@@ -93,15 +93,15 @@ services:
         environment:
             - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
         volumes:
-            - ./server/db/sql:/app/
+            - ../../server/db/sql:/app/
 
     packrat-solr-dev:
         container_name: packrat-solr-dev
         image: "packrat-solr-dev:${IMAGE_TAG}"
         restart: always
         build:
-            context: .
-            dockerfile: ./docker/solr.Dockerfile
+            context: ../..
+            dockerfile: ./conf/docker/solr.Dockerfile
             target: solr
         ports:
             - $PACKRAT_SOLR_PORT:8983
@@ -113,8 +113,8 @@ services:
         image: "packrat-solr-prod:${IMAGE_TAG}"
         restart: always
         build:
-            context: .
-            dockerfile: ./docker/solr.Dockerfile
+            context: ../..
+            dockerfile: ./conf/docker/solr.Dockerfile
             target: solr
         ports:
             - $PACKRAT_SOLR_PORT:8983
