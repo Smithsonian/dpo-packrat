@@ -1,20 +1,21 @@
 import { gql } from 'apollo-server-express';
 
-const getUser = gql`
-    query getUser($input: GetUserInput!) {
-        getUser(input: $input) {
+const getAllUsers = gql`
+    query getAllUsers($input: GetAllUsersInput!) {
+        getAllUsers(input: $input) {
             User {
                 idUser
-                Name
                 Active
                 DateActivated
+                EmailAddress
+                Name
+                SecurityID
                 DateDisabled
                 EmailSettings
-                EmailAddress
                 WorkflowNotificationTime
             }
         }
     }
 `;
 
-export default getUser;
+export default getAllUsers;

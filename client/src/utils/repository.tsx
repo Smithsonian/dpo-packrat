@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Repository utilities
  *
@@ -35,6 +36,7 @@ export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystem
     return objectTypes;
 }
 
+// prettier-ignore
 export function getTermForSystemObjectType(objectType: eSystemObjectType): string {
     switch (objectType) {
         case eSystemObjectType.eUnit:                   return 'Unit';
@@ -130,6 +132,7 @@ export function getTreeColorVariant(index: number): RepositoryColorVariant {
 // cached data, computed once
 let metadataTitleMap: Map<eMetadata, string> | null = null;
 
+// prettier-ignore
 export function getTreeViewColumns(metadataColumns: eMetadata[], isHeader: boolean, values?: string[]): TreeViewColumn[] {
     const treeColumns: TreeViewColumn[] = [];
     const MIN_SIZE = 5;
@@ -171,6 +174,7 @@ type ObjectInterfaceDetails = {
     color: string;
 };
 
+// prettier-ignore
 export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant: RepositoryColorVariant): ObjectInterfaceDetails {
     const color: string = Colors.repository[objectType][variant];
     const textColor: string = Colors.defaults.white;
@@ -207,6 +211,7 @@ export function getDetailsUrlForObject(idSystemObject: number): string {
     return `/repository/details/${idSystemObject}`;
 }
 
+// prettier-ignore
 export function getTreeViewStyleHeight(isExpanded: boolean, isModal: boolean, breakpoint: Breakpoint): string {
     const isSmallScreen: boolean = breakpoint === 'lg';
 

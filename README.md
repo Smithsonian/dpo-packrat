@@ -52,6 +52,7 @@ yarn start:server
 # Alternative docker workflow:
 
 ```
+# If step 2. wasn't working, follow this alternative instead.
 # Creates Devbox for packrat
 yarn devbox:up
 # Creates DB for devbox

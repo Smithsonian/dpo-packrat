@@ -103,7 +103,10 @@ import {
     GetDetailsTabDataForObjectResult,
     GetFilterViewDataResult,
     UpdateObjectDetailsInput,
-    UpdateObjectDetailsResult
+    UpdateObjectDetailsResult,
+    GetAllUsersInput,
+    GetAllUsersResult,
+    UpdateUserInput
 } from '../../types/graphql';
 
 // Queries
@@ -142,6 +145,7 @@ import getAssetDetailsForSystemObject from './queries/systemobject/getAssetDetai
 import getVersionsForSystemObject from './queries/systemobject/getVersionsForSystemObject';
 import getDetailsTabDataForObject from './queries/systemobject/getDetailsTabDataForObject';
 import getFilterViewData from './queries/repository/getFilterViewData';
+import getAllUsers from './queries/user/getAllUsers';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -159,6 +163,7 @@ import uploadAsset from './mutations/asset/uploadAsset';
 import ingestData from './mutations/ingestion/ingestData';
 import discardUploadedAssetVersions from './mutations/asset/discardUploadedAssetVersions';
 import updateObjectDetails from './mutations/systemobject/updateObjectDetails';
+import updateUser from './mutations/user/updateUser';
 
 import { Context } from '../../types/resolvers';
 
@@ -212,7 +217,9 @@ const allQueries = {
     getVersionsForSystemObject,
     getDetailsTabDataForObject,
     getFilterViewData,
-    updateObjectDetails
+    updateObjectDetails,
+    getAllUsers,
+    updateUser
 };
 
 type GraphQLRequest = {
@@ -715,6 +722,26 @@ class GraphQLApi {
 
     async getWorkflow(input: GetWorkflowInput, context?: Context): Promise<GetWorkflowResult> {
         const operationName = 'getWorkflow';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getAllUsers(input: GetAllUsersInput, context?: Context): Promise<GetAllUsersResult> {
+        const operationName = 'getAllUsers';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async updateUser(input: UpdateUserInput, context?: Context): Promise<GetUserResult> {
+        const operationName = 'updateUser';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
