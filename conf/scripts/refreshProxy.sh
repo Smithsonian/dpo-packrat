@@ -1,5 +1,5 @@
 # Updates the global nginx.conf on the server
-sudo cp -v ./scripts/proxy/nginx.conf /etc/nginx/nginx.conf
+sudo cp -v ./conf/nginx/nginx-prod.conf /etc/nginx/nginx.conf
 
 echo "Restarting nginx service"
 # Restart nginx service

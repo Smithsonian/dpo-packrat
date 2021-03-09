@@ -1,7 +1,7 @@
 # This script helps with deployment of Packrat system's DB
-# usage: ./scripts/initdb.sh <environment> (environment: dev | prod)
+# usage: ./conf/scripts/initdb.sh <environment> (environment: dev | prod)
 #
-# example: MYSQL_ROOT_PASSWORD=<your_password> ./scripts/initdb.sh dev
+# example: MYSQL_ROOT_PASSWORD=<your_password> ./conf/scripts/initdb.sh dev
 
 # Check if the variable MYSQL_ROOT_PASSWORD is set or not
 if [[ -z "${MYSQL_ROOT_PASSWORD}" ]]
@@ -38,7 +38,7 @@ export ENV=$ENV
 echo "Starting docker DB image for env $1 with tag: $IMAGE_TAG"
 
 # Start the databases
-docker-compose --env-file .env.$1 -f docker-compose.deploy.yml up -d packrat-db-$1
+docker-compose --env-file .env.$1 -f ./conf/docker/docker-compose.deploy.yml up -d packrat-db-$1
 
 # DB init scripts
 docker exec -i packrat-db-$1 sh -c "mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.SCHEMA.sql"
