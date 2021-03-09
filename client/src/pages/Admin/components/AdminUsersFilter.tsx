@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+
 import React, { useState } from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -6,6 +8,7 @@ import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import { User_Status } from '../../../types/graphql';
 import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles({
@@ -47,9 +50,9 @@ const useStyles = makeStyles({
     }
 });
 
-function AdminUsersFilter({ handleActiveUpdate }: { handleActiveUpdate: (input: string) => void }): React.ReactElement {
+function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActive: User_Status, newSearchText: string) => Promise<void> }): React.ReactElement {
     const [searchFilter, setSearchFilter] = useState('');
-    const [activeStatusFilter, setActiveStatusFilter] = useState('All');
+    const [activeStatusFilter, setActiveStatusFilter] = useState(User_Status.EAll);
     const classes = useStyles();
 
     const handleActiveStatusFilterChange = e => {
@@ -61,7 +64,7 @@ function AdminUsersFilter({ handleActiveUpdate }: { handleActiveUpdate: (input: 
     };
 
     const searchUsers = () => {
-        handleActiveUpdate(activeStatusFilter);
+        queryUsersByFilter(activeStatusFilter, searchFilter);
     };
 
     return (
@@ -76,14 +79,14 @@ function AdminUsersFilter({ handleActiveUpdate }: { handleActiveUpdate: (input: 
                     onChange={handleSearchFilterChange}
                 />
                 <p>Active</p>
-                <FormControl variant='outlined'>
+                <FormControl variant='outlined' style={{ right: '25px' }}>
                     <Select value={activeStatusFilter} className={classes.formField} style={{ height: '30px', width: '100px' }} onChange={handleActiveStatusFilterChange}>
-                        <MenuItem value={0}>All</MenuItem>
-                        <MenuItem value={1}>Active</MenuItem>
-                        <MenuItem value={2}>Inactive</MenuItem>
+                        <MenuItem value={User_Status.EAll}>All</MenuItem>
+                        <MenuItem value={User_Status.EActive}>Active</MenuItem>
+                        <MenuItem value={User_Status.EInactive}>Inactive</MenuItem>
                     </Select>
                 </FormControl>
-                <Button className={classes.searchUsersFilterButton} onClick={searchUsers}>
+                <Button className={classes.searchUsersFilterButton} style={{ right: '25px' }} onClick={searchUsers}>
                     Search
                 </Button>
             </Box>
