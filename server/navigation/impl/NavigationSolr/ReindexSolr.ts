@@ -468,30 +468,30 @@ export class ReindexSolr {
 
         }
         doc.ModelMaterialName = [...modelMaterialNameMap.keys()];
-        doc.modelMaterialChannelType = [...modelMaterialChannelTypeMap.keys()];
-        doc.modelMaterialChannelTypeOther = [...modelMaterialChannelTypeOtherMap.keys()];
-        doc.modelMaterialChannelPosition = [...modelMaterialChannelPositionMap.keys()];
-        doc.modelMaterialChannelWidth = [...modelMaterialChannelWidthMap.keys()];
-        doc.modelMaterialChannelValues = [...modelMaterialChannelValuesMap.keys()];
-        doc.modelMaterialUVMapEdgeLength = [...modelMaterialUVMapEdgeLengthMap.keys()];
-        doc.modelMetricsBoundingBoxP1X = [...modelMetricsBoundingBoxP1XMap.keys()];
-        doc.modelMetricsBoundingBoxP1Y = [...modelMetricsBoundingBoxP1YMap.keys()];
-        doc.modelMetricsBoundingBoxP1Z = [...modelMetricsBoundingBoxP1ZMap.keys()];
-        doc.modelMetricsBoundingBoxP2X = [...modelMetricsBoundingBoxP2XMap.keys()];
-        doc.modelMetricsBoundingBoxP2Y = [...modelMetricsBoundingBoxP2YMap.keys()];
-        doc.modelMetricsBoundingBoxP2Z = [...modelMetricsBoundingBoxP2ZMap.keys()];
-        doc.modelMetricsCountPoint = [...modelMetricsCountPointMap.keys()];
-        doc.modelMetricsCountFace = [...modelMetricsCountFaceMap.keys()];
-        doc.modelMetricsCountColorChannel = [...modelMetricsCountColorChannelMap.keys()];
-        doc.modelMetricsCountTextureCoorinateChannel = [...modelMetricsCountTextureCoorinateChannelMap.keys()];
-        doc.modelMetricsHasBones = [...modelMetricsHasBonesMap.keys()];
-        doc.modelMetricsHasFaceNormals = [...modelMetricsHasFaceNormalsMap.keys()];
-        doc.modelMetricsHasTangents = [...modelMetricsHasTangentsMap.keys()];
-        doc.modelMetricsHasTextureCoordinates = [...modelMetricsHasTextureCoordinatesMap.keys()];
-        doc.modelMetricsHasVertexNormals = [...modelMetricsHasVertexNormalsMap.keys()];
-        doc.modelMetricsHasVertexColor = [...modelMetricsHasVertexColorMap.keys()];
-        doc.modelMetricsIsManifold = [...modelMetricsIsManifoldMap.keys()];
-        doc.modelMetricsIsWatertight = [...modelMetricsIsWatertightMap.keys()];
+        doc.ModelMaterialChannelType = [...modelMaterialChannelTypeMap.keys()];
+        doc.ModelMaterialChannelTypeOther = [...modelMaterialChannelTypeOtherMap.keys()];
+        doc.ModelMaterialChannelPosition = [...modelMaterialChannelPositionMap.keys()];
+        doc.ModelMaterialChannelWidth = [...modelMaterialChannelWidthMap.keys()];
+        doc.ModelMaterialChannelValues = [...modelMaterialChannelValuesMap.keys()];
+        doc.ModelMaterialUVMapEdgeLength = [...modelMaterialUVMapEdgeLengthMap.keys()];
+        doc.ModelMetricsBoundingBoxP1X = [...modelMetricsBoundingBoxP1XMap.keys()];
+        doc.ModelMetricsBoundingBoxP1Y = [...modelMetricsBoundingBoxP1YMap.keys()];
+        doc.ModelMetricsBoundingBoxP1Z = [...modelMetricsBoundingBoxP1ZMap.keys()];
+        doc.ModelMetricsBoundingBoxP2X = [...modelMetricsBoundingBoxP2XMap.keys()];
+        doc.ModelMetricsBoundingBoxP2Y = [...modelMetricsBoundingBoxP2YMap.keys()];
+        doc.ModelMetricsBoundingBoxP2Z = [...modelMetricsBoundingBoxP2ZMap.keys()];
+        doc.ModelMetricsCountPoint = [...modelMetricsCountPointMap.keys()];
+        doc.ModelMetricsCountFace = [...modelMetricsCountFaceMap.keys()];
+        doc.ModelMetricsCountColorChannel = [...modelMetricsCountColorChannelMap.keys()];
+        doc.ModelMetricsCountTextureCoorinateChannel = [...modelMetricsCountTextureCoorinateChannelMap.keys()];
+        doc.ModelMetricsHasBones = [...modelMetricsHasBonesMap.keys()];
+        doc.ModelMetricsHasFaceNormals = [...modelMetricsHasFaceNormalsMap.keys()];
+        doc.ModelMetricsHasTangents = [...modelMetricsHasTangentsMap.keys()];
+        doc.ModelMetricsHasTextureCoordinates = [...modelMetricsHasTextureCoordinatesMap.keys()];
+        doc.ModelMetricsHasVertexNormals = [...modelMetricsHasVertexNormalsMap.keys()];
+        doc.ModelMetricsHasVertexColor = [...modelMetricsHasVertexColorMap.keys()];
+        doc.ModelMetricsIsManifold = [...modelMetricsIsManifoldMap.keys()];
+        doc.ModelMetricsIsWatertight = [...modelMetricsIsWatertightMap.keys()];
 
         // TODO: should we turn multivalued metrics and bounding boxes into single valued attributes, and combine the multiple values in a meaningful way (e.g. add point and face counts, combine bounding boxes)
         return true;
