@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+
 import React, { useState } from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -48,7 +50,7 @@ const useStyles = makeStyles({
     }
 });
 
-function AdminUsersFilter({ queryUsersByFilter }): React.ReactElement {
+function AdminUsersFilter({ queryUsersByFilter }: { queryUsersByFilter: (newActive: User_Status, newSearchText: string) => Promise<void> }): React.ReactElement {
     const [searchFilter, setSearchFilter] = useState('');
     const [activeStatusFilter, setActiveStatusFilter] = useState(User_Status.EAll);
     const classes = useStyles();
