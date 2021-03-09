@@ -1,5 +1,6 @@
 /* eslint-disable react/display-name */
 /* eslint-disable import/no-unresolved */
+/* eslint-disable @typescript-eslint/ban-types */
 
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -8,7 +9,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Tooltip from '@material-ui/core/Tooltip';
 import ClearIcon from '@material-ui/icons/Clear';
 import CheckIcon from '@material-ui/icons/Check';
-import { DataGrid, Columns } from '@material-ui/data-grid';
+import { DataGrid, Columns, CellValue } from '@material-ui/data-grid';
 import { GetAllUsersResult } from '../../../types/graphql';
 import { extractISOMonthDateYear } from '../../../constants/index';
 
@@ -88,14 +89,14 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
             headerName: 'Date Activated',
             type: 'string',
             flex: 1.7,
-            valueFormatter: params => extractISOMonthDateYear(params.value)
+            valueFormatter: params => extractISOMonthDateYearHelper(params.value)
         },
         {
             field: 'DateDisabled',
             headerName: 'Date Disabled',
             type: 'string',
             flex: 1.6,
-            valueFormatter: params => extractISOMonthDateYear(params.value)
+            valueFormatter: params => extractISOMonthDateYearHelper(params.value)
         },
         {
             field: 'Action',
@@ -121,6 +122,12 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
             />
         </Box>
     );
+}
+
+function extractISOMonthDateYearHelper(iso: CellValue): string | null {
+    if (typeof iso !== 'string' && (!(iso instanceof Date)))
+        return null;
+    return extractISOMonthDateYear(iso);
 }
 
 export default AdminUsersList;
