@@ -82,8 +82,8 @@ jobs:
           DATABASE_URL: mysql://root:test@localhost:3306/Packrat
 
   build:
-    # Only run this step on push to specified branches (PR merge counts as push too)
-    if: github.event_name == 'push'
+    # Only run this step on pull_request or push to specified branches (PR merge counts as push too)
+    if: ${{github.event_name == 'pull_request' || github.event_name == 'push'}}
     runs-on: ubuntu-latest
     needs: test
     env: # Ideally this will be stored in github secrets and will be accessed via ${{ secrets.* }}
@@ -110,16 +110,17 @@ jobs:
         run: touch .env.dev && touch .env.prod
 
       - name: Build Dev images
+        if: ${{!contains(github.ref, 'master')}}
         run: docker-compose --env-file .env.dev -f ./conf/docker/docker-compose.dev.yml build
-        if: contains(github.ref, 'develop')
 
       - name: Build Prod images
-        run: docker-compose --env-file .env.prod -f ./conf/docker/docker-compose.prod.yml build
         if: contains(github.ref, 'master')
+        run: docker-compose --env-file .env.prod -f ./conf/docker/docker-compose.prod.yml build
 
       # Prepares tag for docker images
       - name: Prepare image tag
         id: prepare-tag
+        if: ${{contains(github.ref, 'develop') || contains(github.ref, 'master')}}
         run: |
           if [ ${{ contains(github.ref, 'master') }} = true ]; then stage="prod"; else stage="dev"; fi
           version=${{ steps.packrat-version.outputs.current-version }}
@@ -128,6 +129,7 @@ jobs:
 
       # Tags images with "stage-env-version-commit-sha" eg. dev-1.0.0-abcd123
       - name: Tag images
+        if: ${{contains(github.ref, 'develop') || contains(github.ref, 'master')}}
         run: |
           echo Tagging with ${{ steps.prepare-tag.outputs.tag }}
           docker tag packrat-server:latest packrat-server:${{ steps.prepare-tag.outputs.tag }}
@@ -136,6 +138,7 @@ jobs:
 
       # Runs commands post-build
       - name: Build cleanup
+        if: ${{contains(github.ref, 'develop') || contains(github.ref, 'master')}}
         run: |
           echo Cleaning up redundant tags
           docker rmi packrat-server:latest packrat-client:latest packrat-proxy:latest
@@ -143,4 +146,5 @@ jobs:
 
       # Pushes built images to container registry
       - name: Push images
+        if: ${{contains(github.ref, 'develop') || contains(github.ref, 'master')}}
         run: echo Pushing images to container registry...
