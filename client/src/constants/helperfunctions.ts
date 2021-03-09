@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
-
 export function toTitleCase(str: string): string {
     return str.replace(/\w\S*/g, txt => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -19,10 +17,8 @@ export function formatISOToHoursMinutes(time: string): string {
     return `${hours}:${minutes}`;
 }
 
-export function extractISOMonthDateYear(iso: string | number | boolean | Date | null | undefined | object, materialUI = false): string | null {
+export function extractISOMonthDateYear(iso: string | Date, materialUI = false): string | null {
     if (!iso)
-        return null;
-    if (typeof iso !== 'string' && (!(iso instanceof Date)))
         return null;
 
     const time = new Date(iso);
