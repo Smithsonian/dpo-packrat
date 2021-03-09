@@ -50,7 +50,7 @@ const utils = new TestSuiteUtils();
 utils.setupJest();
 
 describe('GraphQL Test Suite', () => {
-    // Queries
+    //Queries
     getAccessPolicyTest(utils);
     getAssetTest(utils);
     getCaptureDataTest(utils);

@@ -14,7 +14,7 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
     describe('Mutation: updateUser', () => {
         test('should update user name, email, email settings, and workflownotificationtime', async () => {
             const userArgs = {
-                Name: randomStorageKey('testUser'),
+                Name: randomStorageKey('updateUser'),
                 EmailAddress: randomStorageKey('test@si.edu'),
                 SecurityID: 'SECURITY_ID',
                 Active: true,
@@ -31,11 +31,11 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
             if (await user.create()) {
                 const updateUserInput: UpdateUserInput = {
                     idUser: user.idUser,
-                    Name: randomStorageKey('testUser'),
+                    Name: randomStorageKey('updateUser'),
                     EmailAddress: randomStorageKey('test@si.edu'),
                     EmailSettings: 2,
                     WorkflowNotificationTime: newTime,
-                    Active: true
+                    Active: true,
                 };
 
                 const { User }: GetUserResult = await graphQLApi.updateUser(updateUserInput);
@@ -65,23 +65,21 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
             const newTime = new Date();
 
             if (await user.create()) {
-                console.log('here is user', user);
                 const updateUserInput: UpdateUserInput = {
                     idUser: user.idUser,
-                    Name: randomStorageKey('testUser'),
+                    Name: randomStorageKey('disablinguser'),
                     EmailAddress: randomStorageKey('test@si.edu'),
                     EmailSettings: 2,
                     WorkflowNotificationTime: newTime,
                     Active: false
                 };
 
-                const { User }: GetUserResult = await graphQLApi.updateUser(updateUserInput);
-                console.log('here is User', User)
-                if (User) {
-                    expect(User?.Active).toEqual(false);
-                    expect(User?.Active).not.toBe(user?.Active);
+                const { User: updatedUser }: GetUserResult = await graphQLApi.updateUser(updateUserInput);
+                if (updatedUser) {
+                    expect(updatedUser?.Active).toEqual(false);
+                    expect(updatedUser?.Active).not.toBe(user?.Active);
                     expect(user.DateDisabled).toBeNull();
-                    expect(User?.DateDisabled).not.toBeNull();
+                    expect(updatedUser?.DateDisabled).not.toBeNull();
                 }
             }
         });

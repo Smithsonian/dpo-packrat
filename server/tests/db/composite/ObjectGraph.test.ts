@@ -866,6 +866,7 @@ describe('DB Composite ObjectGraph.fetch Invalid', () => {
     });
 
     test('DB Composite ObjectGraph Invalid Object Wiring Descending 2', async () => {
+        jest.setTimeout(60000);
         await UTIL.createXref(OHTS.actor2, OHTS.assetVersion2);
         await UTIL.createXref(OHTS.actor2, OHTS.intermediaryFile1);
         await UTIL.createXref(OHTS.assetVersion2, OHTS.intermediaryFile1);
