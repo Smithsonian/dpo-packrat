@@ -56,7 +56,9 @@ yarn start:server
 yarn devbox:up
 # Creates DB for devbox
 yarn devbox:db
-# Create and Connects db and devbox to the same network
+# Creates SOLR for devbox
+yarn devbox:solr
+# Create and Connects devbox-db, devbox-solr, and devbox to the same network
 yarn devbox:network
 # Drops you into shell inside the image
 yarn devbox:start
