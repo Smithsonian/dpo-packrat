@@ -8,7 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Tooltip from '@material-ui/core/Tooltip';
 import ClearIcon from '@material-ui/icons/Clear';
 import CheckIcon from '@material-ui/icons/Check';
-import { DataGrid } from '@material-ui/data-grid';
+import { DataGrid, Columns } from '@material-ui/data-grid';
 import { GetAllUsersResult } from '../../../types/graphql';
 import { extractISOMonthDateYear } from '../../../constants/index';
 
@@ -55,7 +55,7 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
         };
     });
 
-    const columnHeader = [
+    const columnHeader: Columns = [
         {
             field: 'Active',
             headerName: 'Active',
