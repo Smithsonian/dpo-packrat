@@ -4,13 +4,13 @@ import * as DBAPI from '../../../../../db';
 
 export default async function createUser(_: Parent, args: MutationCreateUserArgs): Promise<CreateUserResult> {
     const { input } = args;
-    const { Name, EmailAddress, SecurityID } = input;
+    const { Name, EmailAddress } = input;
 
     const userArgs = {
         idUser: 0,
         Name,
         EmailAddress,
-        SecurityID,
+        SecurityID: '',
         Active: true,
         DateActivated: new Date(),
         DateDisabled: null,

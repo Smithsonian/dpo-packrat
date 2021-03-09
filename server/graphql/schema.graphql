@@ -1,6 +1,7 @@
 type Query {
   areCameraSettingsUniform(input: AreCameraSettingsUniformInput!): AreCameraSettingsUniformResult!
   getAccessPolicy(input: GetAccessPolicyInput!): GetAccessPolicyResult!
+  getAllUsers(input: GetAllUsersInput!): GetAllUsersResult!
   getAsset(input: GetAssetInput!): GetAssetResult!
   getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
   getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
@@ -106,6 +107,7 @@ type Mutation {
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
   updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
+  updateUser(input: UpdateUserInput!): CreateUserResult!
   uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
 }
 
@@ -1522,11 +1524,20 @@ type Item {
 input CreateUserInput {
   Name: String!
   EmailAddress: String!
-  SecurityID: String!
+  SecurityID: String
 }
 
 type CreateUserResult {
   User: User
+}
+
+input UpdateUserInput {
+  idUser: Int!
+  Name: String!
+  EmailAddress: String!
+  Active: Boolean!
+  EmailSettings: Int!
+  WorkflowNotificationTime: DateTime!
 }
 
 type GetCurrentUserResult {
@@ -1539,6 +1550,21 @@ input GetUserInput {
 
 type GetUserResult {
   User: User
+}
+
+enum USER_STATUS {
+  eAll
+  eActive
+  eInactive
+}
+
+input GetAllUsersInput {
+  search: String!
+  active: USER_STATUS!
+}
+
+type GetAllUsersResult {
+  User: [User!]!
 }
 
 type User {

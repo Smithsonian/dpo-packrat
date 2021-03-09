@@ -21,7 +21,7 @@ const getAssetVersionDetailsTest = (utils: TestSuiteUtils): void => {
         createVocabularySetInput = utils.createVocabularySetInput;
     });
 
-    describe('Query: getAssetVersionDetails', () => {
+    describe('Query: getAssetVersionsDetails', () => {
         test('should work with valid input', async () => {
             const vocabularySetArgs: CreateVocabularySetInput = createVocabularySetInput();
             const { VocabularySet } = await graphQLApi.createVocabularySet(vocabularySetArgs);
@@ -47,8 +47,10 @@ const getAssetVersionDetailsTest = (utils: TestSuiteUtils): void => {
                         const assetVersion = new DBAPI.AssetVersion(assetVersionInput);
                         if (await assetVersion.create()) {
                             const getContentsInput: GetAssetVersionsDetailsInput = {
-                                idAssetVersions: [assetVersion.idAsset]
+                                idAssetVersions: [assetVersion.idAssetVersion]
                             };
+                            console.log('getContentsInput', JSON.stringify(getContentsInput));
+                            console.log('User', JSON.stringify(User));
                             const { valid, Details } = await graphQLApi.getAssetVersionsDetails(getContentsInput, { user: User, isAuthenticated: true });
                             expect(valid).toBeTruthy();
                             expect(Details.length).toBeGreaterThan(0);
