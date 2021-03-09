@@ -8,7 +8,7 @@ import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
-import { Link, useHistory, useLocation } from 'react-router-dom';
+import { Link, useHistory /*, useLocation */ } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Logo from '../../assets/images/logo-packrat.square.png';
 import { Selectors } from '../../config';
@@ -27,7 +27,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         color: Colors.defaults.white
     },
     logo: {
-        paddingRight: spacing(2),
+        paddingRight: spacing(2)
     },
     searchBox: {
         display: 'flex',
@@ -39,8 +39,8 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         borderRadius: 5,
         backgroundColor: fade(Colors.defaults.white, 0.1),
         [breakpoints.down('lg')]: {
-            marginLeft: 30,
-        },
+            marginLeft: 30
+        }
     },
     search: {
         height: 25,
@@ -55,7 +55,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
             height: 20,
-            fontSize: 14,
+            fontSize: 14
         },
         '&::placeholder': {
             color: fade(Colors.defaults.white, 0.65),
@@ -83,7 +83,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
 function Header(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    const { pathname } = useLocation();
+    // const { pathname } = useLocation();
     const { user, logout } = useUserStore();
     const [search, updateSearch] = useRepositoryStore(state => [state.search, state.updateSearch]);
 
@@ -107,7 +107,7 @@ function Header(): React.ReactElement {
         }
     };
 
-    const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
+    // const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
 
     return (
         <Box className={classes.container}>
@@ -115,29 +115,32 @@ function Header(): React.ReactElement {
                 <Link className={classes.logo} to={resolveRoute(HOME_ROUTES.DASHBOARD)}>
                     <img style={{ height: 30, width: 30 }} src={Logo} alt='packrat' />
                 </Link>
-                <Typography color='inherit' variant='body2'>{user?.Name}</Typography>
+                <Typography color='inherit' variant='body2'>
+                    {user?.Name}
+                </Typography>
             </Box>
-            {isRepository && (
-                <Box className={classes.searchBox}>
-                    <IoIosSearch size={20} color={fade(Colors.defaults.white, 0.65)} />
-                    <DebounceInput
-                        element='input'
-                        className={classes.search}
-                        name='search'
-                        value={search}
-                        onChange={({ target }) => updateSearch(target.value)}
-                        forceNotifyByEnter
-                        debounceTimeout={400}
-                        placeholder='Search...'
-                    />
-                </Box>
-            )}
+            <Box className={classes.searchBox}>
+                <IoIosSearch size={20} color={fade(Colors.defaults.white, 0.65)} />
+                <DebounceInput
+                    element='input'
+                    className={classes.search}
+                    name='search'
+                    value={search}
+                    onChange={({ target }) => updateSearch(target.value)}
+                    onKeyPress={e => {
+                        if (e.key === 'Enter') {
+                            onSearch();
+                        }
+                    }}
+                    forceNotifyByEnter
+                    debounceTimeout={400}
+                    placeholder='Search...'
+                />
+            </Box>
             <Box className={classes.navOptionsContainer}>
-                {!isRepository && (
-                    <NavOption onClick={onSearch}>
-                        <IoIosSearch size={25} color={Colors.defaults.white} />
-                    </NavOption>
-                )}
+                <NavOption onClick={onSearch}>
+                    <IoIosSearch size={25} color={Colors.defaults.white} />
+                </NavOption>
                 <NavOption>
                     <IoIosNotifications size={25} color={Colors.defaults.white} />
                 </NavOption>
