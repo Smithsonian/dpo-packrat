@@ -1,7 +1,7 @@
 /**
  * Header
  *
- * This component renders the dashboard's header.
+ * This component renders the header consistent across the app.
  */
 import { Box, Typography, Button } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
@@ -80,10 +80,10 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         cursor: 'pointer'
     },
     searchRepositoryButton: {
-        backgroundColor: '#687DDB',
         color: 'white',
         width: '90px',
-        height: '30px'
+        height: '30px',
+        border: 'solid 1px white'
     }
 }));
 
@@ -92,12 +92,13 @@ function Header(): React.ReactElement {
     const history = useHistory();
     const { pathname } = useLocation();
     const { user, logout } = useUserStore();
-    const [search, updateSearch, getFilterState, initializeTree] = useRepositoryStore(state => [state.search, state.updateSearch, state.getFilterState, state.initializeTree]);
-
-    const onSearch = (): void => {
-        const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
-        history.push(route);
-    };
+    const [search, updateSearch, getFilterState, initializeTree, resetRepositoryFilter] = useRepositoryStore(state => [
+        state.search,
+        state.updateSearch,
+        state.getFilterState,
+        state.initializeTree,
+        state.resetRepositoryFilter
+    ]);
 
     const onLogout = async (): Promise<void> => {
         const isConfirmed = global.confirm('Are you sure you want to logout?');
@@ -116,12 +117,20 @@ function Header(): React.ReactElement {
 
     const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
 
+    // Specific to search while in repository view
     const updateRepositorySearch = () => {
         const filterState = getFilterState();
         const repositoryURL = generateRepositoryUrl(filterState);
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
         history.push(route + repositoryURL);
         initializeTree();
+    };
+
+    // General search function when in different views
+    const onSearch = (): void => {
+        const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
+        resetRepositoryFilter();
+        history.push(route);
     };
 
     return (
@@ -136,6 +145,10 @@ function Header(): React.ReactElement {
             </Box>
             <Box className={classes.searchBox}>
                 <IoIosSearch size={20} color={fade(Colors.defaults.white, 0.65)} />
+                {/* Note:
+                The way the search in repository view is slightly different from other views. In other views, search simply
+                pushes history to the repository view and lets react hooks handle the search with the filters held in state. While
+                in repository view, the search needs to reconstruct the URL based on the state of the search and then re-initialize the tree */}
                 {isRepository ? (
                     <DebounceInput
                         element='input'
@@ -172,11 +185,15 @@ function Header(): React.ReactElement {
             </Box>
             {isRepository ? (
                 <NavOption onClick={updateRepositorySearch}>
-                    <Button className={classes.searchRepositoryButton}>Search</Button>
+                    <Button variant='outlined' className={classes.searchRepositoryButton}>
+                        Search
+                    </Button>
                 </NavOption>
             ) : (
                 <NavOption onClick={onSearch}>
-                    <Button className={classes.searchRepositoryButton}>Search</Button>
+                    <Button variant='outlined' className={classes.searchRepositoryButton}>
+                        Search
+                    </Button>
                 </NavOption>
             )}
 

@@ -33,6 +33,7 @@ type RepositoryStore = {
     getFilterState: () => RepositoryFilter;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
     updateFilterValue: (name: string, value: number | number[] | Date) => void;
+    resetRepositoryFilter: () => void;
     initializeTree: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
     updateRepositoryFilter: (filter: RepositoryFilter) => void;
@@ -145,6 +146,23 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             variantType: validateArray<number>(filter.variantType, variantType),
             modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
             modelFileType: validateArray<number>(filter.modelFileType, modelFileType),
+        };
+
+        set(stateValues);
+    },
+    resetRepositoryFilter: (): void => {
+        const stateValues = {
+            repositoryRootType: [eSystemObjectType.eUnit],
+            objectsToDisplay: [],
+            metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
+            units: [],
+            projects: [],
+            has: [],
+            missing: [],
+            captureMethod: [],
+            variantType: [],
+            modelPurpose: [],
+            modelFileType: [],
         };
 
         set(stateValues);
