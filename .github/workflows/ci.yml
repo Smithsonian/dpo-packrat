@@ -52,6 +52,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Setup test DB
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test -e 'CREATE DATABASE IF NOT EXISTS Packrat'
+
       - name: Setup test DB Schema
         run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test < server/db/sql/scripts/Packrat.SCHEMA.sql
 
