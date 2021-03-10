@@ -1,13 +1,14 @@
 /* eslint-disable camelcase */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminUsersFilter from './AdminUsersFilter';
 import AdminUsersList from './AdminUsersList';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useLocation } from 'react-router';
-import { useGetAllUsersQuery, User_Status } from '../../../types/graphql';
+import { GetAllUsersDocument, User_Status } from '../../../types/graphql';
 import { GetAllUsersResult } from '../../../types/graphql';
+import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 
 const useStyles = makeStyles({
@@ -153,38 +154,48 @@ const useStyles = makeStyles({
 
 function AdminUsersView(): React.ReactElement {
     const classes = useStyles();
-    const [active, setActive] = useState(0);
+    const [usersList, setUsersList] = useState<GetAllUsersResult['User'] | []>([]);
     const location = useLocation();
 
-    const { data } = useGetAllUsersQuery({
-        variables: {
-            input: {
-                search: '',
-                active: User_Status.EAll
-            }
+    useEffect(() => {
+        async function fetchInitialUsersList() {
+            const initialUsersListQuery = await apolloClient.query({
+                query: GetAllUsersDocument,
+                variables: {
+                    input: {
+                        active: User_Status.EAll,
+                        search: ''
+                    }
+                }
+            });
+            const {
+                data: {
+                    getAllUsers: { User: queriedUsers }
+                }
+            } = initialUsersListQuery;
+            await setUsersList(queriedUsers);
         }
-    });
 
-    const users: GetAllUsersResult['User'] = data?.getAllUsers?.User || [];
+        fetchInitialUsersList();
+    }, []);
 
-    const handleActiveUpdate = newActive => {
-        setActive(newActive);
+    const queryUsersByFilter = async (newActive, newSearchText) => {
+        const newFilterQuery = await apolloClient.query({
+            query: GetAllUsersDocument,
+            variables: {
+                input: {
+                    active: newActive,
+                    search: newSearchText
+                }
+            }
+        });
+        const {
+            data: {
+                getAllUsers: { User: queriedUsers }
+            }
+        } = newFilterQuery;
+        setUsersList(queriedUsers);
     };
-
-    // filter by active and keyword
-    let filteredUsers = users;
-
-    switch (active) {
-        case 1:
-            filteredUsers = users.filter(user => user?.Active);
-            break;
-        case 2:
-            filteredUsers = users.filter(user => !user?.Active);
-            break;
-        default:
-            filteredUsers = users;
-            break;
-    }
 
     return (
         <React.Fragment>
@@ -192,8 +203,8 @@ function AdminUsersView(): React.ReactElement {
                 <Box className={classes.AdminBreadCrumbsContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />
                 </Box>
-                <AdminUsersFilter handleActiveUpdate={handleActiveUpdate} />
-                <AdminUsersList users={filteredUsers} />
+                <AdminUsersFilter queryUsersByFilter={queryUsersByFilter} />
+                <AdminUsersList users={usersList} />
             </Box>
         </React.Fragment>
     );
