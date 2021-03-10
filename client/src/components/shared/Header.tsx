@@ -3,14 +3,15 @@
  *
  * This component renders the dashboard's header.
  */
-import { Box, Typography } from '@material-ui/core';
+import { Box, Typography, Button } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { IoIosLogOut, IoIosNotifications, IoIosSearch } from 'react-icons/io';
-import { Link, useHistory /*, useLocation */ } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Logo from '../../assets/images/logo-packrat.square.png';
+import { generateRepositoryUrl } from '../../utils/repository';
 import { Selectors } from '../../config';
 import { HOME_ROUTES, resolveRoute, ROUTES } from '../../constants';
 import { useRepositoryStore, useUserStore } from '../../store';
@@ -77,15 +78,21 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         marginLeft: spacing(2),
         transition: 'all 250ms ease-in',
         cursor: 'pointer'
+    },
+    searchRepositoryButton: {
+        backgroundColor: '#687DDB',
+        color: 'white',
+        width: '90px',
+        height: '30px'
     }
 }));
 
 function Header(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
-    // const { pathname } = useLocation();
+    const { pathname } = useLocation();
     const { user, logout } = useUserStore();
-    const [search, updateSearch] = useRepositoryStore(state => [state.search, state.updateSearch]);
+    const [search, updateSearch, getFilterState, initializeTree] = useRepositoryStore(state => [state.search, state.updateSearch, state.getFilterState, state.initializeTree]);
 
     const onSearch = (): void => {
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
@@ -107,12 +114,20 @@ function Header(): React.ReactElement {
         }
     };
 
-    // const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
+    const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
+
+    const updateRepositorySearch = () => {
+        const filterState = getFilterState();
+        const repositoryURL = generateRepositoryUrl(filterState);
+        const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
+        history.push(route + repositoryURL);
+        initializeTree();
+    };
 
     return (
         <Box className={classes.container}>
             <Box display='flex' alignItems='center'>
-                <Link className={classes.logo} to={resolveRoute(HOME_ROUTES.DASHBOARD)}>
+                <Link className={classes.logo} to={resolveRoute(HOME_ROUTES.REPOSITORY)}>
                     <img style={{ height: 30, width: 30 }} src={Logo} alt='packrat' />
                 </Link>
                 <Typography color='inherit' variant='body2'>
@@ -121,26 +136,51 @@ function Header(): React.ReactElement {
             </Box>
             <Box className={classes.searchBox}>
                 <IoIosSearch size={20} color={fade(Colors.defaults.white, 0.65)} />
-                <DebounceInput
-                    element='input'
-                    className={classes.search}
-                    name='search'
-                    value={search}
-                    onChange={({ target }) => updateSearch(target.value)}
-                    onKeyPress={e => {
-                        if (e.key === 'Enter') {
-                            onSearch();
-                        }
-                    }}
-                    forceNotifyByEnter
-                    debounceTimeout={400}
-                    placeholder='Search...'
-                />
+                {isRepository ? (
+                    <DebounceInput
+                        element='input'
+                        className={classes.search}
+                        name='search'
+                        value={search}
+                        onChange={({ target }) => updateSearch(target.value)}
+                        onKeyPress={e => {
+                            if (e.key === 'Enter') {
+                                updateRepositorySearch();
+                            }
+                        }}
+                        forceNotifyByEnter
+                        debounceTimeout={400}
+                        placeholder='Search Repository'
+                    />
+                ) : (
+                    <DebounceInput
+                        element='input'
+                        className={classes.search}
+                        name='search'
+                        value={search}
+                        onChange={({ target }) => updateSearch(target.value)}
+                        onKeyPress={e => {
+                            if (e.key === 'Enter') {
+                                onSearch();
+                            }
+                        }}
+                        forceNotifyByEnter
+                        debounceTimeout={400}
+                        placeholder='Search Repository'
+                    />
+                )}
             </Box>
-            <Box className={classes.navOptionsContainer}>
-                <NavOption onClick={onSearch}>
-                    <IoIosSearch size={25} color={Colors.defaults.white} />
+            {isRepository ? (
+                <NavOption onClick={updateRepositorySearch}>
+                    <Button className={classes.searchRepositoryButton}>Search</Button>
                 </NavOption>
+            ) : (
+                <NavOption onClick={onSearch}>
+                    <Button className={classes.searchRepositoryButton}>Search</Button>
+                </NavOption>
+            )}
+
+            <Box className={classes.navOptionsContainer}>
                 <NavOption>
                     <IoIosNotifications size={25} color={Colors.defaults.white} />
                 </NavOption>
