@@ -105,6 +105,27 @@ function TreeViewPage(): React.ReactElement {
         [search, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
     );
 
+    // suspect initialfilterstate should be where I check for cookies
+    const repositoryCookies = document.cookie;
+    if (repositoryCookies.length) {
+        console.log('there is something here', document.cookie);
+        let cookieFilterSelections = document.cookie;
+    } else {
+        document.cookie = `filterSelections=${JSON.stringify({
+            repositoryRootType: [eSystemObjectType.eUnit],
+            objectsToDisplay: [],
+            metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
+            units: [],
+            projects: [],
+            has: [],
+            missing: [],
+            captureMethod: [],
+            variantType: [],
+            modelPurpose: [],
+            modelFileType: []
+        })}`;
+        console.log(document.cookie);
+    }
     const initialFilterState = Object.keys(queries).length ? queries : filterState;
 
     useEffect(() => {
