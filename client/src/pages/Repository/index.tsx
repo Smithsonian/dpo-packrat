@@ -85,9 +85,7 @@ function TreeViewPage(): React.ReactElement {
         updateRepositoryFilter
     } = useRepositoryStore();
 
-    console.log('location', location);
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
-    console.log('queries', queries);
 
     const filterState: RepositoryFilter = React.useMemo(
         () => ({
@@ -115,10 +113,8 @@ function TreeViewPage(): React.ReactElement {
 
     useEffect(() => {
         const route = generateRepositoryUrl(filterState);
-        console.log('filterState', filterState);
-        console.log('route', route);
         history.push(route);
-    }, [filterState, history]);
+    }, [history]);
 
     return (
         <React.Fragment>
