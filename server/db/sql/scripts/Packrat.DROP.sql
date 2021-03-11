@@ -53,3 +53,5 @@ DROP TABLE IF EXISTS `WorkflowStep`;
 DROP TABLE IF EXISTS `WorkflowStepSystemObjectXref`;
 DROP TABLE IF EXISTS `WorkflowTemplate`;
 SET foreign_key_checks = 1;
+
+DROP PROCEDURE IF EXISTS AssetVersionCreate;

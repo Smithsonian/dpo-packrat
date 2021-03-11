@@ -29,7 +29,8 @@ function configureLogger(logPath: string | null): void {
                 */
                 // winston.format.simple(),
                 winston.format.printf((info) => {
-                    return `${info.timestamp} ${info.level}: ${info.message}`;
+                    const stack: string = info.stack ? ` ${info.stack}` : '';
+                    return `${info.timestamp} ${info.level}: ${info.message}${stack}`;
                 })
             ),
             transports: [
