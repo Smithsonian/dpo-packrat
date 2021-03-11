@@ -105,12 +105,7 @@ function TreeViewPage(): React.ReactElement {
         [search, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
     );
 
-    // suspect initialfilterstate should be where I check for cookies
-    const repositoryCookies = document.cookie;
-    if (repositoryCookies.length) {
-        console.log('there is something here', document.cookie);
-        let cookieFilterSelections = document.cookie;
-    } else {
+    const resetFilterSelectionsCookie = () => {
         document.cookie = `filterSelections=${JSON.stringify({
             repositoryRootType: [eSystemObjectType.eUnit],
             objectsToDisplay: [],
@@ -124,8 +119,23 @@ function TreeViewPage(): React.ReactElement {
             modelPurpose: [],
             modelFileType: []
         })}`;
-        console.log(document.cookie);
+    };
+
+    let cookieFilterSelections;
+    let cookie: string = document?.cookie;
+    if (cookie.length) {
+        cookieFilterSelections = cookie.split(';');
+        cookieFilterSelections = cookieFilterSelections.find(row => row.trim().startsWith('filterSelections'));
+        if (cookieFilterSelections) {
+            cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
+            console.log('line 131', generateRepositoryUrl(cookieFilterSelections));
+        } else {
+            resetFilterSelectionsCookie();
+        }
+    } else {
+        resetFilterSelectionsCookie();
     }
+
     const initialFilterState = Object.keys(queries).length ? queries : filterState;
 
     useEffect(() => {
@@ -133,7 +143,9 @@ function TreeViewPage(): React.ReactElement {
     }, [updateRepositoryFilter]);
 
     useEffect(() => {
-        const route = generateRepositoryUrl(filterState);
+        console.log('line 146', cookieFilterSelections);
+        const route = generateRepositoryUrl(cookieFilterSelections) || generateRepositoryUrl(filterState);
+        // console.log('generateURL', generateRepositoryUrl(cookieFilterSelections), generateRepositoryUrl(filterState));
         history.push(route);
     }, [history]);
 

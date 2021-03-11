@@ -45,7 +45,7 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
 
     const classes = useStyles();
 
-    const [value, updateFilterValue] = useRepositoryStore(state => [state[name], state.updateFilterValue]);
+    const [value, updateFilterValue, getFilterState] = useRepositoryStore(state => [state[name], state.updateFilterValue, state.getFilterState]);
 
     const onChange = ({ target }) => {
         let { value } = target;
@@ -55,6 +55,36 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
         }
 
         updateFilterValue(name, value);
+
+        const {
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        } = getFilterState();
+
+        const updatedFilters = {
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        };
+        const updatedFiltersCookie = `filterSelections=${JSON.stringify(updatedFilters)};max-age=2628000000`;
+        document.cookie = updatedFiltersCookie;
     };
 
     const inputProps = {
