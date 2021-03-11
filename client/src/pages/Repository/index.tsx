@@ -82,7 +82,8 @@ function TreeViewPage(): React.ReactElement {
         variantType,
         modelPurpose,
         modelFileType,
-        updateRepositoryFilter
+        updateRepositoryFilter,
+        getFilterState
     } = useRepositoryStore();
 
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
@@ -128,6 +129,7 @@ function TreeViewPage(): React.ReactElement {
         cookieFilterSelections = cookieFilterSelections.find(row => row.trim().startsWith('filterSelections'));
         if (cookieFilterSelections) {
             cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
+            // updateRepositoryFilter(cookieFilterSelections);
             console.log('line 131', generateRepositoryUrl(cookieFilterSelections));
         } else {
             resetFilterSelectionsCookie();
@@ -139,14 +141,16 @@ function TreeViewPage(): React.ReactElement {
     const initialFilterState = Object.keys(queries).length ? queries : filterState;
 
     useEffect(() => {
-        updateRepositoryFilter(initialFilterState);
+        console.log('getfilterstate1', getFilterState());
+        cookieFilterSelections ? updateRepositoryFilter(cookieFilterSelections) : updateRepositoryFilter(initialFilterState);
+        console.log('getfilterstate2', getFilterState());
     }, [updateRepositoryFilter]);
 
     useEffect(() => {
         console.log('line 146', cookieFilterSelections);
         const route = generateRepositoryUrl(cookieFilterSelections) || generateRepositoryUrl(filterState);
-        // console.log('generateURL', generateRepositoryUrl(cookieFilterSelections), generateRepositoryUrl(filterState));
         history.push(route);
+        console.log('secondUseEffect');
     }, [history]);
 
     return (
