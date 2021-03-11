@@ -4013,6 +4013,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(projectFetch).toBeTruthy();
     });
 
+    test('DB Fetch Project: Project.fetchProjectList', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (project) {
+            projectFetch = await DBAPI.Project.fetchProjectList('Test Project');
+            if (projectFetch)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: ProjectDocumentation.fetchAll', async () => {
         let pdFetch: DBAPI.ProjectDocumentation[] | null = null;
         if (projectDocumentation) {
