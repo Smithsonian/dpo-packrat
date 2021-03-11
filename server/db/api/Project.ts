@@ -195,4 +195,15 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return null;
         }
     }
+
+    static async fetchProjectList(search: string): Promise<Project[] | null> {
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(await DBC.DBConnection.prisma.project.findMany({
+                where: { Name: { contains: search }, },
+            }), Project);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Project.fetchProjectList', error);
+            return null;
+        }
+    }
 }
