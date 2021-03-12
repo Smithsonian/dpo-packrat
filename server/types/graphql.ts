@@ -36,6 +36,7 @@ export type Query = {
   getObjectsForItem: GetObjectsForItemResult;
   getProject: GetProjectResult;
   getProjectDocumentation: GetProjectDocumentationResult;
+  getProjectList: GetProjectListResult;
   getScene: GetSceneResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
@@ -155,6 +156,11 @@ export type QueryGetProjectArgs = {
 
 export type QueryGetProjectDocumentationArgs = {
   input: GetProjectDocumentationInput;
+};
+
+
+export type QueryGetProjectListArgs = {
+  input: GetProjectListInput;
 };
 
 
@@ -1568,6 +1574,15 @@ export type GetVersionsForSystemObjectInput = {
 export type GetVersionsForSystemObjectResult = {
   __typename?: 'GetVersionsForSystemObjectResult';
   versions: Array<DetailVersion>;
+};
+
+export type GetProjectListResult = {
+  __typename?: 'GetProjectListResult';
+  projects: Array<Project>;
+};
+
+export type GetProjectListInput = {
+  search: Scalars['String'];
 };
 
 export type SystemObject = {

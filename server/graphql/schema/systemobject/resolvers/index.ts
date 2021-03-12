@@ -7,6 +7,7 @@ import getSourceObjectIdentifer from './queries/getSourceObjectIdentifer';
 import getAssetDetailsForSystemObject from './queries/getAssetDetailsForSystemObject';
 import getVersionsForSystemObject from './queries/getVersionsForSystemObject';
 import getDetailsTabDataForObject from './queries/getDetailsTabDataForObject';
+import getProjectList from './queries/getProjectList';
 import updateObjectDetails from './mutations/updateObjectDetails';
 
 const resolvers = {
@@ -15,7 +16,8 @@ const resolvers = {
         getSourceObjectIdentifer,
         getAssetDetailsForSystemObject,
         getVersionsForSystemObject,
-        getDetailsTabDataForObject
+        getDetailsTabDataForObject,
+        getProjectList
     },
     Mutation: {
         updateObjectDetails
