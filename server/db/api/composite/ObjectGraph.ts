@@ -4,6 +4,7 @@ import { Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model,
 import * as LOG from '../../../utils/logger';
 import * as L from 'lodash';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
+import { ObjectGraphDataEntry } from './ObjectGraphDataEntry';
 
 export type SystemObjectIDType = {
     idSystemObject: number;
@@ -102,15 +103,26 @@ export class ObjectGraph {
             if (this.pushCount++ >= this.maxPushCount)
                 return true;
 
-            // short-circuit if we're building an ObjectGraphDatabase and we've already processed this object
-            if (this.objectGraphDatabase && this.objectGraphDatabase.alreadyProcssed(idSystemObject, relatedType))
-                return true;
-
-            const sourceType: SystemObjectIDType = {
+            let sourceType: SystemObjectIDType = {
                 idSystemObject,
                 idObject: 0,
                 eObjectType: eSystemObjectType.eUnknown
             };
+
+            // short-circuit if we're building an ObjectGraphDatabase and we've already processed this object
+            if (this.objectGraphDatabase && this.objectGraphDatabase.alreadyProcessed(idSystemObject, relatedType)) {
+                if (relatedType) {
+                    const OBDE: ObjectGraphDataEntry | undefined = this.objectGraphDatabase.objectMap.get(idSystemObject);
+                    if (OBDE) {
+                        sourceType = OBDE.systemObjectIDType;
+                        if (eMode == eObjectGraphMode.eAncestors)
+                            await this.objectGraphDatabase.recordRelationship(sourceType, relatedType);
+                        else
+                            await this.objectGraphDatabase.recordRelationship(relatedType, sourceType);
+                    }
+                }
+                return true;
+            }
 
             const SOP: SystemObjectPairs | null = await SystemObjectPairs.fetch(idSystemObject);
             /* istanbul ignore next */
