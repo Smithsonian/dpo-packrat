@@ -138,20 +138,18 @@ function TreeViewPage(): React.ReactElement {
         resetFilterSelectionsCookie();
     }
 
-    const initialFilterState = Object.keys(queries).length ? queries : filterState;
+    console.log('queries', queries);
+
+    const initialFilterState = Object.keys(queries).length ? queries : cookieFilterSelections; //queries : cookies
 
     useEffect(() => {
-        console.log('getfilterstate1', getFilterState());
-        cookieFilterSelections ? updateRepositoryFilter(cookieFilterSelections) : updateRepositoryFilter(initialFilterState);
-        console.log('getfilterstate2', getFilterState());
+        updateRepositoryFilter(initialFilterState);
     }, [updateRepositoryFilter]);
 
     useEffect(() => {
-        console.log('line 146', cookieFilterSelections);
-        const route = generateRepositoryUrl(cookieFilterSelections) || generateRepositoryUrl(filterState);
+        const route = generateRepositoryUrl(filterState) || generateRepositoryUrl(cookieFilterSelections);
         history.push(route);
-        console.log('secondUseEffect');
-    }, [history]);
+    }, [history, filterState]);
 
     return (
         <React.Fragment>

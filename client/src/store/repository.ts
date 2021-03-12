@@ -130,7 +130,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            initializeTree
         } = get();
 
         const stateValues: RepositoryFilter = {
@@ -149,6 +150,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         };
 
         set(stateValues);
+        initializeTree();
     },
     resetRepositoryFilter: (): void => {
         const stateValues = {
