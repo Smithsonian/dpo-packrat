@@ -28,6 +28,7 @@ type Query {
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
   getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
+  getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput!): GetUnitsFromNameSearchResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
   getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
@@ -1439,6 +1440,14 @@ input GetItemInput {
 
 type GetItemResult {
   Item: Item
+}
+
+type GetUnitsFromNameSearchResult {
+  Units: [Unit!]!
+}
+
+input GetUnitsFromNameSearchInput {
+  search: String!
 }
 
 type Unit {

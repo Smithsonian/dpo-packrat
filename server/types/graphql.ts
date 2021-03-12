@@ -42,6 +42,7 @@ export type Query = {
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
+  getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
   getVersionsForSystemObject: GetVersionsForSystemObjectResult;
@@ -184,6 +185,11 @@ export type QueryGetSystemObjectDetailsArgs = {
 
 export type QueryGetUnitArgs = {
   input: GetUnitInput;
+};
+
+
+export type QueryGetUnitsFromNameSearchArgs = {
+  input: GetUnitsFromNameSearchInput;
 };
 
 
@@ -1801,6 +1807,15 @@ export type GetItemInput = {
 export type GetItemResult = {
   __typename?: 'GetItemResult';
   Item?: Maybe<Item>;
+};
+
+export type GetUnitsFromNameSearchResult = {
+  __typename?: 'GetUnitsFromNameSearchResult';
+  Units: Array<Unit>;
+};
+
+export type GetUnitsFromNameSearchInput = {
+  search: Scalars['String'];
 };
 
 export type Unit = {

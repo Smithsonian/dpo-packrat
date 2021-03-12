@@ -19,6 +19,7 @@ import getSubjectsForUnit from './queries/getSubjectsForUnit';
 import getItemsForSubject from './queries/getItemsForSubject';
 import getObjectsForItem from './queries/getObjectsForItem';
 import getProjectDocumentation from './queries/getProjectDocumentation';
+import getUnitsFromNameSearch from './queries/getUnitsFromNameSearch';
 
 const resolvers = {
     Query: {
@@ -32,7 +33,8 @@ const resolvers = {
         getSubjectsForUnit,
         getItemsForSubject,
         getObjectsForItem,
-        getProjectDocumentation
+        getProjectDocumentation,
+        getUnitsFromNameSearch
     },
     Mutation: {
         createUnit,
