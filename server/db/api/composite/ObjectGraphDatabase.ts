@@ -35,7 +35,7 @@ export class ObjectGraphDatabase {
         childData.recordParent(parent);
     }
 
-    alreadyProcssed(idSystemObject: number, relatedType: SystemObjectIDType | null): boolean {
+    alreadyProcessed(idSystemObject: number, relatedType: SystemObjectIDType | null): boolean {
         const sourceFound: boolean = this.objectMap.has(idSystemObject);
         const relatedFound: boolean = !relatedType || this.objectMap.has(relatedType.idSystemObject);
         return sourceFound && relatedFound;
