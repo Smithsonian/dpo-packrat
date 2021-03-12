@@ -108,7 +108,9 @@ import {
     GetAllUsersResult,
     UpdateUserInput,
     GetUnitsFromNameSearchResult,
-    GetUnitsFromNameSearchInput
+    GetUnitsFromNameSearchInput,
+    GetProjectListResult,
+    GetProjectListInput
 } from '../../types/graphql';
 
 // Queries
@@ -149,6 +151,7 @@ import getDetailsTabDataForObject from './queries/systemobject/getDetailsTabData
 import getFilterViewData from './queries/repository/getFilterViewData';
 import getAllUsers from './queries/user/getAllUsers';
 import getUnitsFromNameSearch from './queries/unit/getUnitsFromNameSearch';
+import getProjectList from './queries/systemobject/getProjectList';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -223,7 +226,8 @@ const allQueries = {
     updateObjectDetails,
     getAllUsers,
     updateUser,
-    getUnitsFromNameSearch
+    getUnitsFromNameSearch,
+    getProjectList
 };
 
 type GraphQLRequest = {
@@ -756,6 +760,16 @@ class GraphQLApi {
 
     async getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput, context?: Context): Promise<GetUnitsFromNameSearchResult> {
         const operationName = 'getUnitsFromNameSearch';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getProjectList(input: GetProjectListInput, context?: Context): Promise<GetProjectListResult> {
+        const operationName = 'getProjectList';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

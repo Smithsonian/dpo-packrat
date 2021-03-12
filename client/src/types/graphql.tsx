@@ -38,6 +38,7 @@ export type Query = {
   getObjectsForItem: GetObjectsForItemResult;
   getProject: GetProjectResult;
   getProjectDocumentation: GetProjectDocumentationResult;
+  getProjectList: GetProjectListResult;
   getScene: GetSceneResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
@@ -157,6 +158,11 @@ export type QueryGetProjectArgs = {
 
 export type QueryGetProjectDocumentationArgs = {
   input: GetProjectDocumentationInput;
+};
+
+
+export type QueryGetProjectListArgs = {
+  input: GetProjectListInput;
 };
 
 
@@ -1572,6 +1578,15 @@ export type GetVersionsForSystemObjectResult = {
   versions: Array<DetailVersion>;
 };
 
+export type GetProjectListResult = {
+  __typename?: 'GetProjectListResult';
+  projects: Array<Project>;
+};
+
+export type GetProjectListInput = {
+  search: Scalars['String'];
+};
+
 export type SystemObject = {
   __typename?: 'SystemObject';
   idSystemObject: Scalars['Int'];
@@ -2710,6 +2725,22 @@ export type GetDetailsTabDataForObjectQuery = (
   ) }
 );
 
+export type GetProjectListQueryVariables = Exact<{
+  input: GetProjectListInput;
+}>;
+
+
+export type GetProjectListQuery = (
+  { __typename?: 'Query' }
+  & { getProjectList: (
+    { __typename?: 'GetProjectListResult' }
+    & { projects: Array<(
+      { __typename?: 'Project' }
+      & Pick<Project, 'idProject' | 'Name'>
+    )> }
+  ) }
+);
+
 export type GetSourceObjectIdentiferQueryVariables = Exact<{
   input: GetSourceObjectIdentiferInput;
 }>;
@@ -2963,7 +2994,7 @@ export type GetUnitsFromNameSearchQuery = (
     { __typename?: 'GetUnitsFromNameSearchResult' }
     & { Units: Array<(
       { __typename?: 'Unit' }
-      & Pick<Unit, 'idUnit' | 'Name'>
+      & Pick<Unit, 'idUnit' | 'Name' | 'Abbreviation'>
     )> }
   ) }
 );
@@ -4428,6 +4459,42 @@ export function useGetDetailsTabDataForObjectLazyQuery(baseOptions?: Apollo.Lazy
 export type GetDetailsTabDataForObjectQueryHookResult = ReturnType<typeof useGetDetailsTabDataForObjectQuery>;
 export type GetDetailsTabDataForObjectLazyQueryHookResult = ReturnType<typeof useGetDetailsTabDataForObjectLazyQuery>;
 export type GetDetailsTabDataForObjectQueryResult = Apollo.QueryResult<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>;
+export const GetProjectListDocument = gql`
+    query getProjectList($input: GetProjectListInput!) {
+  getProjectList(input: $input) {
+    projects {
+      idProject
+      Name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetProjectListQuery__
+ *
+ * To run a query within a React component, call `useGetProjectListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetProjectListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetProjectListQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetProjectListQuery(baseOptions?: Apollo.QueryHookOptions<GetProjectListQuery, GetProjectListQueryVariables>) {
+        return Apollo.useQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, baseOptions);
+      }
+export function useGetProjectListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetProjectListQuery, GetProjectListQueryVariables>) {
+          return Apollo.useLazyQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, baseOptions);
+        }
+export type GetProjectListQueryHookResult = ReturnType<typeof useGetProjectListQuery>;
+export type GetProjectListLazyQueryHookResult = ReturnType<typeof useGetProjectListLazyQuery>;
+export type GetProjectListQueryResult = Apollo.QueryResult<GetProjectListQuery, GetProjectListQueryVariables>;
 export const GetSourceObjectIdentiferDocument = gql`
     query getSourceObjectIdentifer($input: GetSourceObjectIdentiferInput!) {
   getSourceObjectIdentifer(input: $input) {
@@ -4967,6 +5034,7 @@ export const GetUnitsFromNameSearchDocument = gql`
     Units {
       idUnit
       Name
+      Abbreviation
     }
   }
 }

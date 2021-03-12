@@ -22,6 +22,7 @@ type Query {
   getObjectsForItem(input: GetObjectsForItemInput!): GetObjectsForItemResult!
   getProject(input: GetProjectInput!): GetProjectResult!
   getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
+  getProjectList(input: GetProjectListInput!): GetProjectListResult!
   getScene(input: GetSceneInput!): GetSceneResult!
   getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
@@ -1221,6 +1222,14 @@ input GetVersionsForSystemObjectInput {
 
 type GetVersionsForSystemObjectResult {
   versions: [DetailVersion!]!
+}
+
+type GetProjectListResult {
+  projects: [Project!]!
+}
+
+input GetProjectListInput {
+  search: String!
 }
 
 type SystemObject {

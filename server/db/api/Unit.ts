@@ -25,7 +25,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                         Name,
                         Abbreviation,
                         ARKPrefix,
-                        SystemObject:   { create: { Retired: false }, },
+                        SystemObject: { create: { Retired: false }, },
                     },
                 }));
             return true;
@@ -123,14 +123,18 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
 
     static async fetchFromNameSearch(search: string): Promise<Unit[] | null> {
         if (!search)
-            return null;
+            return this.fetchAll();
         try {
             return DBC.CopyArray<UnitBase, Unit>(
-                await DBC.DBConnection.prisma.unit.findMany({ where: { OR: [
-                    { UnitEdan: { some: { Abbreviation: { contains: search }, }, }, },
-                    { Abbreviation: { contains: search }, },
-                    { Name: { contains: search }, },
-                ] }, }), Unit);
+                await DBC.DBConnection.prisma.unit.findMany({
+                    where: {
+                        OR: [
+                            { UnitEdan: { some: { Abbreviation: { contains: search }, }, }, },
+                            { Abbreviation: { contains: search }, },
+                            { Name: { contains: search }, },
+                        ]
+                    },
+                }), Unit);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.fetchFromNameSearch', error);
             return null;
