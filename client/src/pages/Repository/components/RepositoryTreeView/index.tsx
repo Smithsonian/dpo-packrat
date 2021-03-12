@@ -12,7 +12,16 @@ import React, { useCallback, useEffect } from 'react';
 import { Loader } from '../../../../components';
 import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore } from '../../../../store';
 import { NavigationResultEntry } from '../../../../types/graphql';
-import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeViewStyleHeight, getTreeViewStyleWidth, getTreeWidth, isRepositoryItemSelected } from '../../../../utils/repository';
+import {
+    getObjectInterfaceDetails,
+    getRepositoryTreeNodeId,
+    getTreeColorVariant,
+    getTreeViewColumns,
+    getTreeViewStyleHeight,
+    getTreeViewStyleWidth,
+    getTreeWidth,
+    isRepositoryItemSelected
+} from '../../../../utils/repository';
 import RepositoryTreeHeader from './RepositoryTreeHeader';
 import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
@@ -69,15 +78,18 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         initializeTree();
     }, [initializeTree]);
 
-    const onNodeToggle = useCallback(async (_, nodeIds: string[]) => {
-        if (!nodeIds.length) return;
-        const [nodeId] = nodeIds.slice();
-        const alreadyLoaded = tree.has(nodeId);
+    const onNodeToggle = useCallback(
+        async (_, nodeIds: string[]) => {
+            if (!nodeIds.length) return;
+            const [nodeId] = nodeIds.slice();
+            const alreadyLoaded = tree.has(nodeId);
 
-        if (!alreadyLoaded) {
-            getChildren(nodeId);
-        }
-    }, [tree, getChildren]);
+            if (!alreadyLoaded) {
+                getChildren(nodeId);
+            }
+        },
+        [tree, getChildren]
+    );
 
     const renderTree = (children: NavigationResultEntry[] | undefined) => {
         if (!children) return null;
@@ -136,13 +148,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             );
 
             return (
-                <StyledTreeItem
-                    key={idSystemObject}
-                    nodeId={nodeId}
-                    icon={icon}
-                    color={color}
-                    label={label}
-                >
+                <StyledTreeItem key={idSystemObject} nodeId={nodeId} icon={icon} color={color} label={label}>
                     {childNodesContent}
                 </StyledTreeItem>
             );
@@ -157,13 +163,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         const children = tree.get(treeRootKey);
 
         content = (
-            <TreeView
-                className={classes.tree}
-                defaultCollapseIcon={<ExpandMoreIcon />}
-                defaultExpandIcon={<ChevronRightIcon />}
-                onNodeToggle={onNodeToggle}
-                style={{ width }}
-            >
+            <TreeView className={classes.tree} defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />} onNodeToggle={onNodeToggle} style={{ width }}>
                 <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />
                 {renderTree(children)}
             </TreeView>

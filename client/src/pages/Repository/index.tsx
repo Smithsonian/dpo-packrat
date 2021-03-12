@@ -82,8 +82,7 @@ function TreeViewPage(): React.ReactElement {
         variantType,
         modelPurpose,
         modelFileType,
-        updateRepositoryFilter,
-        getFilterState
+        updateRepositoryFilter
     } = useRepositoryStore();
 
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
