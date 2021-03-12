@@ -6,6 +6,7 @@ const getUnitsFromNameSearch = gql`
             Units {
                 idUnit
                 Name
+                Abbreviation
             }
         }
     }
