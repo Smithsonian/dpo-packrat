@@ -23,7 +23,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                     data: {
                         Name,
                         Description,
-                        SystemObject:   { create: { Retired: false }, },
+                        SystemObject: { create: { Retired: false }, },
                     }
                 }));
             return true;
@@ -197,6 +197,8 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
     }
 
     static async fetchProjectList(search: string): Promise<Project[] | null> {
+        if (!search)
+            return null;
         try {
             return DBC.CopyArray<ProjectBase, Project>(await DBC.DBConnection.prisma.project.findMany({
                 where: { Name: { contains: search }, },
