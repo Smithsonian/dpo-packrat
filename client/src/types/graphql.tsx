@@ -44,6 +44,7 @@ export type Query = {
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
+  getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
   getVersionsForSystemObject: GetVersionsForSystemObjectResult;
@@ -186,6 +187,11 @@ export type QueryGetSystemObjectDetailsArgs = {
 
 export type QueryGetUnitArgs = {
   input: GetUnitInput;
+};
+
+
+export type QueryGetUnitsFromNameSearchArgs = {
+  input: GetUnitsFromNameSearchInput;
 };
 
 
@@ -1805,6 +1811,15 @@ export type GetItemResult = {
   Item?: Maybe<Item>;
 };
 
+export type GetUnitsFromNameSearchResult = {
+  __typename?: 'GetUnitsFromNameSearchResult';
+  Units: Array<Unit>;
+};
+
+export type GetUnitsFromNameSearchInput = {
+  search: Scalars['String'];
+};
+
 export type Unit = {
   __typename?: 'Unit';
   idUnit: Scalars['Int'];
@@ -2933,6 +2948,22 @@ export type GetUnitQuery = (
     & { Unit?: Maybe<(
       { __typename?: 'Unit' }
       & Pick<Unit, 'idUnit'>
+    )> }
+  ) }
+);
+
+export type GetUnitsFromNameSearchQueryVariables = Exact<{
+  input: GetUnitsFromNameSearchInput;
+}>;
+
+
+export type GetUnitsFromNameSearchQuery = (
+  { __typename?: 'Query' }
+  & { getUnitsFromNameSearch: (
+    { __typename?: 'GetUnitsFromNameSearchResult' }
+    & { Units: Array<(
+      { __typename?: 'Unit' }
+      & Pick<Unit, 'idUnit' | 'Name'>
     )> }
   ) }
 );
@@ -4930,6 +4961,42 @@ export function useGetUnitLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ge
 export type GetUnitQueryHookResult = ReturnType<typeof useGetUnitQuery>;
 export type GetUnitLazyQueryHookResult = ReturnType<typeof useGetUnitLazyQuery>;
 export type GetUnitQueryResult = Apollo.QueryResult<GetUnitQuery, GetUnitQueryVariables>;
+export const GetUnitsFromNameSearchDocument = gql`
+    query getUnitsFromNameSearch($input: GetUnitsFromNameSearchInput!) {
+  getUnitsFromNameSearch(input: $input) {
+    Units {
+      idUnit
+      Name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetUnitsFromNameSearchQuery__
+ *
+ * To run a query within a React component, call `useGetUnitsFromNameSearchQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUnitsFromNameSearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUnitsFromNameSearchQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetUnitsFromNameSearchQuery(baseOptions?: Apollo.QueryHookOptions<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>) {
+        return Apollo.useQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, baseOptions);
+      }
+export function useGetUnitsFromNameSearchLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>) {
+          return Apollo.useLazyQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, baseOptions);
+        }
+export type GetUnitsFromNameSearchQueryHookResult = ReturnType<typeof useGetUnitsFromNameSearchQuery>;
+export type GetUnitsFromNameSearchLazyQueryHookResult = ReturnType<typeof useGetUnitsFromNameSearchLazyQuery>;
+export type GetUnitsFromNameSearchQueryResult = Apollo.QueryResult<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>;
 export const SearchIngestionSubjectsDocument = gql`
     query searchIngestionSubjects($input: SearchIngestionSubjectsInput!) {
   searchIngestionSubjects(input: $input) {
