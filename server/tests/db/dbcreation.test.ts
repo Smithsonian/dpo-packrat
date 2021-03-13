@@ -4023,6 +4023,16 @@ describe('DB Fetch Special Test Suite', () => {
         expect(projectFetch).toBeTruthy();
     });
 
+    test('DB Fetch Project: Project.fetchProjectList with empty string', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (project) {
+            projectFetch = await DBAPI.Project.fetchProjectList('');
+            if (projectFetch)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: ProjectDocumentation.fetchAll', async () => {
         let pdFetch: DBAPI.ProjectDocumentation[] | null = null;
         if (projectDocumentation) {
@@ -4141,6 +4151,16 @@ describe('DB Fetch Special Test Suite', () => {
         let unitFetch: DBAPI.Unit[] | null = null;
         if (unitEdan) {
             unitFetch = await DBAPI.Unit.fetchFromNameSearch(unitEdan.Abbreviation);
+            if (unitFetch && unit)
+                expect(unitFetch).toEqual(expect.arrayContaining([unit]));
+        }
+        expect(unitFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Unit.fetchFromNameSearch with empty string', async () => {
+        let unitFetch: DBAPI.Unit[] | null = null;
+        if (unitEdan) {
+            unitFetch = await DBAPI.Unit.fetchFromNameSearch('');
             if (unitFetch && unit)
                 expect(unitFetch).toEqual(expect.arrayContaining([unit]));
         }
@@ -5978,7 +5998,6 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Unit.fetch(0)).toBeNull();
         expect(await DBAPI.Unit.fetchMasterFromProjects([])).toBeNull();
         expect(await DBAPI.Unit.fetchFromUnitEdanAbbreviation('')).toBeNull();
-        expect(await DBAPI.Unit.fetchFromNameSearch('')).toBeNull();
         expect(await DBAPI.UnitEdan.fetch(0)).toBeNull();
         expect(await DBAPI.UnitEdan.fetchFromUnit(0)).toBeNull();
         expect(await DBAPI.UnitEdan.fetchFromAbbreviation('')).toBeNull();
