@@ -5,6 +5,7 @@ export * from './CaptureData.util';
 export * from './Identifier.util';
 export * from './IntermediaryFile.util';
 export * from './Item.util';
+export * from './Job.util';
 export * from './Model.util';
 export * from './Project.util';
 export * from './ProjectDocumentation.util';

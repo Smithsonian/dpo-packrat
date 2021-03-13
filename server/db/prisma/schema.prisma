@@ -1,7 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "../../../node_modules/@prisma/client"
-  binaryTargets = ["native", "linux-musl", "debian-openssl-1.1.x", "darwin"]
+  binaryTargets = ["native", "linux-musl", "darwin"]
 }
 
 datasource mariasql {
@@ -276,37 +276,34 @@ model Item {
 }
 
 model Job {
-  idJob   Int       @default(autoincrement()) @id
-  Name    String
-  JobTask JobTask[]
+  idJob      Int        @default(autoincrement()) @id
+  idVJobType Int
+  Name       String
+  Status     Int
+  Frequency  String
+  Vocabulary Vocabulary @relation(fields: [idVJobType], references: [idVocabulary])
+  JobRun     JobRun[]
+
+  @@index([Name], name: "Job_Name")
+  @@index([Status], name: "Job_Status")
+  @@index([idVJobType, idJob], name: "Job_idVJobType_idJob")
 }
 
-model JobTask {
-  idJobTask   Int           @default(autoincrement()) @id
-  idJob       Int
-  idVJobType  Int
-  State       String?
-  Step        String?
-  Error       String?
-  Parameters  String?
-  Report      String?
-  Job         Job           @relation(fields: [idJob], references: [idJob])
-  Vocabulary  Vocabulary    @relation(fields: [idVJobType], references: [idVocabulary])
-  JobTaskCook JobTaskCook[]
+model JobRun {
+  idJobRun      Int       @default(autoincrement()) @id
+  idJob         Int
+  Status        Int
+  Result        Boolean?
+  DateStart     DateTime?
+  DateEnd       DateTime?
+  Configuration String?
+  Parameters    String?
+  Output        String?
+  Error         String?
+  Job           Job       @relation(fields: [idJob], references: [idJob])
 
-  @@index([idJob], name: "JobTask_idJob")
-  @@index([idVJobType, idJob], name: "JobTask_idVJobType_idJob")
-}
-
-model JobTaskCook {
-  idJobTaskCook Int     @default(autoincrement()) @id
-  idJobTask     Int
-  JobID         String
-  RecipeID      String
-  JobTask       JobTask @relation(fields: [idJobTask], references: [idJobTask])
-
-  @@index([JobID], name: "JobTaskCook_JobID")
-  @@index([idJobTask], name: "JobTaskCook_idJobTask")
+  @@index([Status], name: "JobRun_Status")
+  @@index([idJob], name: "JobRun_idJob")
 }
 
 model License {
@@ -346,7 +343,7 @@ model Metadata {
   User              User?         @relation(fields: [idUser], references: [idUser])
   Vocabulary        Vocabulary?   @relation(fields: [idVMetadataSource], references: [idVocabulary])
 
-  @@index([Name, ValueShort], name: "Metadata_Name_ValueShort")
+  @@index([Name], name: "Metadata_Name")
   @@index([idAssetValue], name: "Metadata_idAssetValue")
   @@index([idSystemObject], name: "Metadata_idSystemObject")
   @@index([idUser], name: "fk_metadata_user1")
@@ -733,7 +730,7 @@ model Vocabulary {
   CaptureDataPhoto_CaptureDataPhoto_idVItemPositionTypeToVocabulary        CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVItemPositionTypeToVocabulary")
   CaptureDataPhoto_CaptureDataPhoto_idVLightSourceTypeToVocabulary         CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVLightSourceTypeToVocabulary")
   Identifier                                                               Identifier[]
-  JobTask                                                                  JobTask[]
+  Job                                                                      Job[]
   Metadata                                                                 Metadata[]
   Model_Model_idVCreationMethodToVocabulary                                Model[]                     @relation("Model_idVCreationMethodToVocabulary")
   Model_Model_idVFileTypeToVocabulary                                      Model[]                     @relation("Model_idVFileTypeToVocabulary")

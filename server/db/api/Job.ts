@@ -5,7 +5,10 @@ import * as LOG from '../../utils/logger';
 
 export class Job extends DBC.DBObject<JobBase> implements JobBase {
     idJob!: number;
+    idVJobType!: number;
     Name!: string;
+    Status!: number;
+    Frequency!: string;
 
     constructor(input: JobBase) {
         super(input);
@@ -15,8 +18,16 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name } = this;
-            ({ idJob: this.idJob, Name: this.Name } = await DBC.DBConnection.prisma.job.create({ data: { Name, } }));
+            const { idVJobType, Name, Status, Frequency } = this;
+            ({ idJob: this.idJob, idVJobType: this.idVJobType, Name: this.Name, Status: this.Status, Frequency: this.Frequency } =
+                await DBC.DBConnection.prisma.job.create({
+                    data: {
+                        Vocabulary: { connect: { idVocabulary: idVJobType }, },
+                        Name,
+                        Status,
+                        Frequency
+                    }
+                }));
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Job.create', error);
@@ -26,10 +37,15 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idJob, Name } = this;
+            const { idJob, idVJobType, Name, Status, Frequency } = this;
             return await DBC.DBConnection.prisma.job.update({
                 where: { idJob, },
-                data: { Name, },
+                data: {
+                    Vocabulary: { connect: { idVocabulary: idVJobType }, },
+                    Name,
+                    Status,
+                    Frequency
+                }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Job.update', error);

@@ -19,6 +19,7 @@ export enum eVocabularySetID {
     eMetadataMetadataSource,
     eWorkflowStepWorkflowStepType,
     eAssetAssetType,
+    eJobJobType,
     eNone = -1
 }
 
@@ -42,6 +43,7 @@ export enum eVocabularyID {
     eAssetAssetTypeProjectDocumentation,
     eAssetAssetTypeIntermediaryFile,
     eAssetAssetTypeOther,
+    eMetadataMetadataSourceBulkIngestion,
     eCaptureDataCaptureMethodPhotogrammetry,
     eCaptureDataCaptureMethodCT,
     eCaptureDataCaptureMethodStructuredLight,
@@ -50,7 +52,7 @@ export enum eVocabularyID {
     eCaptureDataFileVariantTypeRaw,
     eCaptureDataFileVariantTypeProcessed,
     eCaptureDataFileVariantTypeFromCamera,
-    eMetadataMetadataSourceBulkIngestion,
+    eJobJobTypeCookInspectMesh,
     eNone = -1
 }
 

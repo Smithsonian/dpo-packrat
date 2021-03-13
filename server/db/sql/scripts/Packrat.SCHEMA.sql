@@ -193,32 +193,30 @@ CREATE TABLE IF NOT EXISTS `Item` (
 
 CREATE TABLE IF NOT EXISTS `Job` (
   `idJob` int(11) NOT NULL AUTO_INCREMENT,
-  `Name` varchar(255) NOT NULL,
-  PRIMARY KEY (`idJob`)
-) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
-
-CREATE TABLE IF NOT EXISTS `JobTask` (
-  `idJobTask` int(11) NOT NULL AUTO_INCREMENT,
-  `idJob` int(11) NOT NULL,
   `idVJobType` int(11) NOT NULL,
-  `State` varchar(255) NULL,
-  `Step` varchar(255) NULL,
-  `Error` varchar(255) NULL,
-  `Parameters` text NULL,
-  `Report` text NULL,
-  PRIMARY KEY (`idJobTask`),
-  KEY `JobTask_idJob` (`idJob`),
-  KEY `JobTask_idVJobType_idJob` (`idVJobType`, `idJob`)
+  `Name` varchar(80) NOT NULL,
+  `Status` int(11) NOT NULL,
+  `Frequency` varchar(80) NOT NULL,
+  PRIMARY KEY (`idJob`),
+  KEY `Job_idVJobType_idJob` (`idVJobType`, `idJob`),
+  KEY `Job_Name` (`Name`),
+  KEY `Job_Status` (`Status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
-CREATE TABLE IF NOT EXISTS `JobTaskCook` (
-  `idJobTaskCook` int(11) NOT NULL AUTO_INCREMENT,
-  `idJobTask` int(11) NOT NULL,
-  `JobID` varchar(32) NOT NULL,
-  `RecipeID` varchar(32) NOT NULL,
-  PRIMARY KEY (`idJobTaskCook`),
-  KEY `JobTaskCook_idJobTask` (`idJobTask`),
-  KEY `JobTaskCook_JobID` (`JobID`)
+CREATE TABLE IF NOT EXISTS `JobRun` (
+  `idJobRun` int(11) NOT NULL AUTO_INCREMENT,
+  `idJob` int(11) NOT NULL,
+  `Status` int(11) NOT NULL,
+  `Result` boolean NULL,
+  `DateStart` datetime NULL,
+  `DateEnd` datetime NULL,
+  `Configuration` text NULL,
+  `Parameters` text NULL,
+  `Output` text NULL,
+  `Error` text NULL,
+  PRIMARY KEY (`idJobRun`),
+  KEY `JobRun_idJob` (`idJob`),
+  KEY `JobRun_Status` (`Status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `License` (
@@ -760,22 +758,17 @@ ADD CONSTRAINT `fk_item_geolocation1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `JobTask` 
-ADD CONSTRAINT `fk_jobtask_job1`
-  FOREIGN KEY (`idJob`)
-  REFERENCES `Job` (`idJob`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_jobtask_vocabulary1`
+ALTER TABLE `Job` 
+ADD CONSTRAINT `fk_job_vocabulary1`
   FOREIGN KEY (`idVJobType`)
   REFERENCES `Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `JobTaskCook` 
-ADD CONSTRAINT `fk_jobtaskcook_jobtask1`
-  FOREIGN KEY (`idJobTask`)
-  REFERENCES `JobTask` (`idJobTask`)
+ALTER TABLE `JobRun` 
+ADD CONSTRAINT `fk_jobrun_job1`
+  FOREIGN KEY (`idJob`)
+  REFERENCES `Job` (`idJob`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
