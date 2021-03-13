@@ -35,8 +35,14 @@ export class ObjectGraphDatabase {
         childData.recordParent(parent);
     }
 
-    alreadyProcessed(idSystemObject: number, relatedType: SystemObjectIDType | null): boolean {
-        const sourceFound: boolean = this.objectMap.has(idSystemObject);
+    /** Populates sourceType, if sourceType.idSystemObject exists in the objectMap; returns true if both source and related exist in the object map */
+    alreadyProcessed(sourceType: SystemObjectIDType, relatedType: SystemObjectIDType | null): boolean {
+        const OBDE: ObjectGraphDataEntry | undefined = this.objectMap.get(sourceType.idSystemObject);
+        let sourceFound: boolean = false;
+        if (OBDE) {
+            sourceType = OBDE.systemObjectIDType;
+            sourceFound = true;
+        }
         const relatedFound: boolean = !relatedType || this.objectMap.has(relatedType.idSystemObject);
         return sourceFound && relatedFound;
     }
