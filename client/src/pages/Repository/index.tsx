@@ -128,8 +128,6 @@ function TreeViewPage(): React.ReactElement {
         cookieFilterSelections = cookieFilterSelections.find(row => row.trim().startsWith('filterSelections'));
         if (cookieFilterSelections) {
             cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
-            // updateRepositoryFilter(cookieFilterSelections);
-            console.log('line 131', generateRepositoryUrl(cookieFilterSelections));
         } else {
             resetFilterSelectionsCookie();
         }
@@ -137,9 +135,7 @@ function TreeViewPage(): React.ReactElement {
         resetFilterSelectionsCookie();
     }
 
-    console.log('queries', queries);
-
-    const initialFilterState = Object.keys(queries).length ? queries : cookieFilterSelections; //queries : cookies
+    const initialFilterState = Object.keys(queries).length ? queries : cookieFilterSelections;
 
     useEffect(() => {
         updateRepositoryFilter(initialFilterState);
