@@ -19,6 +19,7 @@ INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (17, 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (18, 'Metadata.MetadataSource', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (19, 'WorkflowStep.WorkflowStepType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (20, 'Asset.AssetType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (21, 'Job.JobType', 1);
 
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 1, 'Photogrammetry');
@@ -100,6 +101,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 2, 'DOI');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 3, 'Unit CMS ID');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (17, 1, 'ORCID');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (17, 2, 'ISNI');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 1, 'Bulk Ingestion');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 1, 'Bulk Ingestion');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 2, 'Capture Data Set: Photogrammetry');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 3, 'Capture Data Set: Diconde');
@@ -116,7 +118,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 13, 'Scene
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 14, 'Project Documentation');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 15, 'Intermediary File');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 16, 'Other');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 1, 'Bulk Ingestion');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 1, 'Cook: Inspect Mesh');
 
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary 
 WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');

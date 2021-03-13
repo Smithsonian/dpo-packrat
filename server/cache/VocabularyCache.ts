@@ -28,6 +28,7 @@ export enum eVocabularySetID {
     eMetadataMetadataSource,
     eWorkflowStepWorkflowStepType,
     eAssetAssetType,
+    eJobJobType,
     eNone = -1
 }
 
@@ -51,6 +52,7 @@ export enum eVocabularyID {
     eAssetAssetTypeProjectDocumentation,
     eAssetAssetTypeIntermediaryFile,
     eAssetAssetTypeOther,
+    eMetadataMetadataSourceBulkIngestion,
     eCaptureDataCaptureMethodPhotogrammetry,
     eCaptureDataCaptureMethodCT,
     eCaptureDataCaptureMethodStructuredLight,
@@ -59,7 +61,7 @@ export enum eVocabularyID {
     eCaptureDataFileVariantTypeRaw,
     eCaptureDataFileVariantTypeProcessed,
     eCaptureDataFileVariantTypeFromCamera,
-    eMetadataMetadataSourceBulkIngestion,
+    eJobJobTypeCookInspectMesh,
     eNone = -1
 }
 
@@ -138,6 +140,7 @@ export class VocabularyCache {
                 case 'Metadata.MetadataSource':                 eVocabSetEnum = eVocabularySetID.eMetadataMetadataSource; break;
                 case 'WorkflowStep.WorkflowStepType':           eVocabSetEnum = eVocabularySetID.eWorkflowStepWorkflowStepType; break;
                 case 'Asset.AssetType':                         eVocabSetEnum = eVocabularySetID.eAssetAssetType; break;
+                case 'Job.JobType':                             eVocabSetEnum = eVocabularySetID.eJobJobType; break;
             }
 
             /* istanbul ignore else */
@@ -210,6 +213,12 @@ export class VocabularyCache {
                 case eVocabularySetID.eMetadataMetadataSource: {
                     switch (vocabulary.Term) {
                         case 'Bulk Ingestion':      eVocabEnum = eVocabularyID.eMetadataMetadataSourceBulkIngestion; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eJobJobType: {
+                    switch (vocabulary.Term) {
+                        case 'Cook: Inspect Mesh':  eVocabEnum = eVocabularyID.eJobJobTypeCookInspectMesh; break;
                     }
                 } break;
             }
