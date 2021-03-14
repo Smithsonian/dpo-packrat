@@ -1,10 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
-export enum eJobRunStatus {
-    eNotStarted,
-    eRunning,
-    ePaused,
-    eCompleted
-}
+import { eJobRunStatus } from '../../db';
 
 export interface IJob {
     start(): Promise<boolean>;

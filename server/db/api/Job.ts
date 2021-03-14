@@ -3,6 +3,12 @@ import { Job as JobBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
+export enum eJobStatus {
+    eInactive = 0,
+    eActive = 1,
+    eTest = 2,
+}
+
 export class Job extends DBC.DBObject<JobBase> implements JobBase {
     idJob!: number;
     idVJobType!: number;
@@ -13,6 +19,18 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
     constructor(input: JobBase) {
         super(input);
     }
+
+    static convertJobStatusToEnum(Status: number): eJobStatus {
+        switch (Status) {
+            default:    return eJobStatus.eInactive;
+            case 0:     return eJobStatus.eInactive;
+            case 1:     return eJobStatus.eActive;
+            case 2:     return eJobStatus.eTest;
+        }
+    }
+
+    getStatus(): eJobStatus { return Job.convertJobStatusToEnum(this.Status); }
+    setStatus(eStatus: eJobStatus): void { this.Status = eStatus; }
 
     protected updateCachedValues(): void { }
 
