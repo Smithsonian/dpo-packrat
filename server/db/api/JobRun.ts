@@ -3,6 +3,13 @@ import { JobRun as JobRunBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
+export enum eJobRunStatus {
+    eNotStarted = 0,
+    eRunning = 1,
+    ePaused = 2,
+    eCompleted = 3
+}
+
 export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
     idJobRun!: number;
     idJob!: number;
@@ -18,6 +25,19 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
     constructor(input: JobRunBase) {
         super(input);
     }
+
+    static convertJobRunStatusToEnum(Status: number): eJobRunStatus {
+        switch (Status) {
+            default:    return eJobRunStatus.eNotStarted;
+            case 0:     return eJobRunStatus.eNotStarted;
+            case 1:     return eJobRunStatus.eRunning;
+            case 2:     return eJobRunStatus.ePaused;
+            case 3:     return eJobRunStatus.eCompleted;
+        }
+    }
+
+    getStatus(): eJobRunStatus { return JobRun.convertJobRunStatusToEnum(this.Status); }
+    setStatus(eStatus: eJobRunStatus): void { this.Status = eStatus; }
 
     protected updateCachedValues(): void { }
 

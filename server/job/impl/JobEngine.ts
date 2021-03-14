@@ -60,7 +60,7 @@ export class JobEngine implements JOB.IJobEngine {
         }
 
         if (!dbJob) {
-            dbJob = new DBAPI.Job({ idJob: 0, idVJobType, Name, Status: JOB.eJobStatus.eActive, Frequency: frequency || '' });
+            dbJob = new DBAPI.Job({ idJob: 0, idVJobType, Name, Status: DBAPI.eJobStatus.eActive, Frequency: frequency || '' });
             if (!await dbJob.create()) {
                 LOG.logger.error('JobEngine.createJobDBRecord failed');
                 return null;
@@ -72,7 +72,7 @@ export class JobEngine implements JOB.IJobEngine {
 
     private async createJobRunDBRecord(dbJob: DBAPI.Job, parameters: any): Promise<DBAPI.JobRun | null> {
         const dbJobRun: DBAPI.JobRun = new DBAPI.JobRun({
-            idJobRun: 0, idJob: dbJob.idJob, Status: JOB.eJobRunStatus.eNotStarted,
+            idJobRun: 0, idJob: dbJob.idJob, Status: DBAPI.eJobRunStatus.eNotStarted,
             Result: null, DateStart: null, DateEnd: null, Configuration: null,
             Parameters: JSON.stringify(parameters),
             Output: null, Error: null

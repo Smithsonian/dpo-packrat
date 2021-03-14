@@ -3,7 +3,7 @@ import * as JOB from '../../interface';
 import { Config } from '../../../config';
 // import * as LOG from '../../utils/logger';
 // import * as CACHE from '../../cache';
-// import * as DBAPI from '../../db';
+import * as DBAPI from '../../../db';
 // import * as H from '../../utils/helpers';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -49,7 +49,7 @@ class JobCookPostBody<T> {
 
 export abstract class JobCook<T> implements JOB.IJob {
     private configuration: JobCookConfiguration;
-    private eJobRunStatus: JOB.eJobRunStatus = JOB.eJobRunStatus.eNotStarted;
+    private eJobRunStatus: DBAPI.eJobRunStatus = DBAPI.eJobRunStatus.eNotStarted;
 
     protected abstract getParameters(): T;
 
@@ -60,10 +60,10 @@ export abstract class JobCook<T> implements JOB.IJob {
 
     async start(): Promise<boolean> {
         // POST to /job JobCookInitiation
-        const jobCookInitiation: JobCookPostBody<T> = new JobCookPostBody<T>(this.configuration, this.getParameters(), eJobCookPriority.eNormal);
+        const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this.configuration, this.getParameters(), eJobCookPriority.eNormal);
         const requestUrl: string = Config.job.cookServerUrl + 'job';
         requestUrl;
-        JSON.stringify(jobCookInitiation);
+        JSON.stringify(jobCookPostBody);
         return false;
     }
 
@@ -71,7 +71,7 @@ export abstract class JobCook<T> implements JOB.IJob {
     async resume(): Promise<boolean> { return false; }
     async terminate(): Promise<boolean> { return false; }
 
-    async getStatus(): Promise<JOB.eJobRunStatus> {
+    async getStatus(): Promise<DBAPI.eJobRunStatus> {
         // poll server for status update
         // update eJobRunStatus
         // on completion, handle completion steps
