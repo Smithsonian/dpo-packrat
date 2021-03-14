@@ -1,6 +1,6 @@
 import { ICollection } from './ICollection';
 import { EdanCollection } from '../impl';
-import Config, { COLLECTION_TYPE } from '../../config';
+import { Config, COLLECTION_TYPE } from '../../config';
 
 export class CollectionFactory {
     private static instance: ICollection | null = null;

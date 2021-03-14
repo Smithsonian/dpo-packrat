@@ -56,6 +56,8 @@ services:
             - OCFL_STORAGE_ROOT=$OCFL_STORAGE_ROOT
             - OCFL_STAGING_ROOT=$OCFL_STAGING_ROOT
             - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
+            - COOK_SERVER_URL=$COOK_SERVER_URL
+
         volumes:
             - ../../node_modules:/app/node_modules
             - ../../package.json:/app/package.json

@@ -1,7 +1,7 @@
 import * as winston from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
-import Config from '../config';
+import { Config } from '../config';
 
 export type Logger = winston.Logger;
 export let logger: Logger;

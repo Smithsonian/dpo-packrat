@@ -6,7 +6,7 @@ import * as CACHE from '../../../cache';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 import { IngestMetadata } from '../../../utils/parser';
-import Config from '../../../config';
+import { Config } from '../../../config';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
 import { createItemAndIDsForBagitTesting } from '../../db/api/Item.util';
 import { AssetVersionContent } from '../../../types/graphql';
