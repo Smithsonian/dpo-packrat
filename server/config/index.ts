@@ -8,18 +8,22 @@ enum AUTH_TYPE {
     LDAP = 'ldapauth'
 }
 
-enum STORAGE_TYPE {
-    LOCAL = 'local'
-}
-
 enum COLLECTION_TYPE {
     EDAN = 'edan'
+}
+
+enum JOB_TYPE {
+    DEFAULT = 'default'
 }
 
 enum NAVIGATION_TYPE {
     DEFAULT,
     DB = 'db',
     SOLR = 'solr'
+}
+
+enum STORAGE_TYPE {
+    LOCAL = 'local'
 }
 
 type ConfigType = {
@@ -39,16 +43,21 @@ type ConfigType = {
             authKey: string;
         }
     }
+    job: {
+        type: JOB_TYPE;
+        cookServerUrl: string;
+        cookClientId: string;
+    },
     log: {
         root: string;
-    }
+    },
+    navigation: {
+        type: NAVIGATION_TYPE;
+    },
     storage: {
         type: STORAGE_TYPE;
         rootRepository: string;
         rootStaging: string; // this should be local storage (not NAS or cloud)
-    },
-    navigation: {
-        type: NAVIGATION_TYPE;
     },
 };
 
@@ -71,17 +80,22 @@ const Config: ConfigType = {
             authKey: process.env.EDAN_AUTH_KEY ? process.env.EDAN_AUTH_KEY : /* istanbul ignore next */  ''
         }
     },
+    job: {
+        type: JOB_TYPE.DEFAULT,
+        cookServerUrl: process.env.COOK_SERVER_URL ? process.env.COOK_SERVER_URL : /* istanbul ignore next */ 'http://si-3ddigip01.si.edu:8000/',
+        cookClientId: '5b258c8e-108c-4990-a088-17ffd6e22852', // Concierge's client ID; taken from C:\Tools\CookDev\server\clients.json on Cook server
+    },
     log: {
         root: './var/logs'
+    },
+    navigation: {
+        type: NAVIGATION_TYPE.SOLR,
     },
     storage: {
         type: STORAGE_TYPE.LOCAL,
         rootRepository: process.env.OCFL_STORAGE_ROOT ? process.env.OCFL_STORAGE_ROOT : /* istanbul ignore next */ './var/Storage/Repository',
         rootStaging: process.env.OCFL_STAGING_ROOT ? process.env.OCFL_STAGING_ROOT : /* istanbul ignore next */ './var/Storage/Staging'
     },
-    navigation: {
-        type: NAVIGATION_TYPE.SOLR,
-    },
 };
 
-export { Config as default, AUTH_TYPE, COLLECTION_TYPE, STORAGE_TYPE, NAVIGATION_TYPE };
+export { Config, AUTH_TYPE, COLLECTION_TYPE, JOB_TYPE, NAVIGATION_TYPE, STORAGE_TYPE };

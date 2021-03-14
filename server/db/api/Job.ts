@@ -64,4 +64,16 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
             return null;
         }
     }
+
+    static async fetchByType(idVJobType: number): Promise<Job[] | null> {
+        if (!idVJobType)
+            return null;
+        try {
+            return DBC.CopyArray<JobBase, Job>(
+                await DBC.DBConnection.prisma.job.findMany({ where: { idVJobType, }, }), Job);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Job.fetchByType', error);
+            return null;
+        }
+    }
 }

@@ -1903,6 +1903,40 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(itemFetch).toBeTruthy();
     });
 
+    test('DB Fetch By ID: Job', async () => {
+        let jobFetch: DBAPI.Job | null = null;
+        if (job) {
+            jobFetch = await DBAPI.Job.fetch(job.idJob);
+            if (jobFetch) {
+                expect(jobFetch).toMatchObject(job);
+                expect(job).toMatchObject(jobFetch);
+            }
+        }
+        expect(jobFetch).toBeTruthy();
+    });
+
+    test('DB Fetch: Job.fetchByType', async () => {
+        let jobFetch: DBAPI.Job[] | null = [];
+        if (job) {
+            jobFetch = await DBAPI.Job.fetchByType(job.idVJobType);
+            if (jobFetch)
+                expect(jobFetch).toEqual(expect.arrayContaining([job]));
+        }
+        expect(jobFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: JobRun', async () => {
+        let jobRunFetch: DBAPI.JobRun | null = null;
+        if (jobRun) {
+            jobRunFetch = await DBAPI.JobRun.fetch(jobRun.idJobRun);
+            if (jobRunFetch) {
+                expect(jobRunFetch).toMatchObject(jobRun);
+                expect(jobRun).toMatchObject(jobRunFetch);
+            }
+        }
+        expect(jobRunFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: License', async () => {
         let licenseFetch: DBAPI.License | null = null;
         if (license) {
@@ -5833,6 +5867,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Item.fetchMasterFromScenes([])).toBeNull();
         expect(await DBAPI.Item.fetchMasterFromIntermediaryFiles([])).toBeNull();
         expect(await DBAPI.Job.fetch(0)).toBeNull();
+        expect(await DBAPI.Job.fetchByType(0)).toBeNull();
         expect(await DBAPI.JobRun.fetch(0)).toBeNull();
         expect(await DBAPI.License.fetch(0)).toBeNull();
         expect(await DBAPI.LicenseAssignment.fetch(0)).toBeNull();
