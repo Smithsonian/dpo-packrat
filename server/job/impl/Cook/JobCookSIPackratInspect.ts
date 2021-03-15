@@ -19,8 +19,9 @@ export class JobCookSIPackratInspectParameters {
 export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectParameters> {
     private parameters: JobCookSIPackratInspectParameters;
 
-    constructor(parameters: JobCookSIPackratInspectParameters) {
-        super(Config.job.cookClientId, 'si-packrat-inspect', CookRecipe.getCookRecipeID('si-packrat-inspect', 'bb602690-76c9-11eb-9439-0242ac130002'));
+    constructor(idAssetVersions: number[] | null, parameters: JobCookSIPackratInspectParameters) {
+        super(Config.job.cookClientId, 'si-packrat-inspect',
+            CookRecipe.getCookRecipeID('si-packrat-inspect', 'bb602690-76c9-11eb-9439-0242ac130002'), null, idAssetVersions);
         this.parameters = parameters;
     }
 

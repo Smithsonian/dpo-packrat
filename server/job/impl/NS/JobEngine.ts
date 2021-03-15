@@ -1,17 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
-import * as JOB from '../interface';
-import * as COOK from './Cook';
-import * as LOG from '../../utils/logger';
-import * as CACHE from '../../cache';
-import * as DBAPI from '../../db';
+import * as JOB from '../../interface';
+import { JobPackrat } from './JobPackrat';
+import * as COOK from '../Cook';
+import * as LOG from '../../../utils/logger';
+import * as CACHE from '../../../cache';
+import * as DBAPI from '../../../db';
 
 import * as NS from 'node-schedule';
 
 export class JobEngine implements JOB.IJobEngine {
-    // private jobMap: Map<JOB.IJob, NS.Job> = new Map<JOB.IJob, NS.Job>();
+    private jobList: JobPackrat[] = [];
 
     // #region IJobEngine interface
-    async createByID(idJob: number, parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
+    async createByID(idJob: number, idAssetVersions: number[] | null,
+        parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
         const dbJob: DBAPI.Job | null = await DBAPI.Job.fetch(idJob);
         if (!dbJob) {
             LOG.logger.error(`JobEngine.createByID unable to fetch Job with ID ${idJob}`);
@@ -24,14 +26,15 @@ export class JobEngine implements JOB.IJobEngine {
             return null;
         }
 
-        const job: JOB.IJob | null = await this.createJob(eJobType, parameters, frequency);
+        const job: JobPackrat | null = await this.createJob(eJobType, idAssetVersions, parameters, frequency);
         if (job)
             await this.createJobRunDBRecord(dbJob, job.getConfiguration(), parameters);
         return job;
     }
 
-    async createByType(eJobType: CACHE.eVocabularyID, parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
-        const job: JOB.IJob | null = await this.createJob(eJobType, parameters, frequency);
+    async createByType(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null,
+        parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
+        const job: JobPackrat | null = await this.createJob(eJobType, idAssetVersions, parameters, frequency);
         if (job) {
             const dbJob: DBAPI.Job | null = await this.createJobDBRecord(eJobType, frequency);
             if (dbJob)
@@ -91,33 +94,32 @@ export class JobEngine implements JOB.IJobEngine {
     // #endregion
 
     // #region Job Creation Factory
-    private async createJob(eJobType: CACHE.eVocabularyID, parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
+    private async createJob(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null,
+        parameters: any, frequency: string | null): Promise<JobPackrat | null> {
         // create job
-        const job: JOB.IJob | null = this.createJobWorker(eJobType, parameters);
+        const job: JobPackrat | null = this.createJobWorker(eJobType, idAssetVersions, parameters);
         if (!job)
             return null;
+        this.jobList.push(job);
 
         // schedule/launch job
         if (frequency === null) // no frequency means just create the job
             return job;
 
+        let nsJob: NS.Job;
         if (frequency === '') { // empty frequency means run it once, now
-            // run job once
             const dtNow: Date = new Date();
-            const nsJob: NS.Job = NS.scheduleJob(job.name(), { start: dtNow, end: dtNow, rule: '* * * * * *' }, job.jobCallback);
-            nsJob;
-            return job;
-        }
+            nsJob = NS.scheduleJob(job.name(), { start: dtNow, end: dtNow, rule: '* * * * * *' }, job.jobCallback);
+        } else                  // non-empty frequency means run job on schedule
+            nsJob = NS.scheduleJob(job.name(), frequency, job.jobCallback);
 
-        // non-empty frequency means run job on schedule
-        const nsJob: NS.Job = NS.scheduleJob(job.name(), frequency, job.jobCallback);
-        nsJob;
+        job.setNSJob(nsJob);
         return job;
     }
 
-    private createJobWorker(eJobType: CACHE.eVocabularyID, parameters: any): JOB.IJob | null {
+    private createJobWorker(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null, parameters: any): JobPackrat | null {
         switch (eJobType) {
-            case CACHE.eVocabularyID.eJobJobTypeCookInspectMesh: return new COOK.JobCookSIPackratInspect(parameters);
+            case CACHE.eVocabularyID.eJobJobTypeCookInspectMesh: return new COOK.JobCookSIPackratInspect(idAssetVersions, parameters);
             default:
                 LOG.logger.error(`JobEngine.createByType unknown job type ${CACHE.eVocabularyID[eJobType]}`);
                 return null;

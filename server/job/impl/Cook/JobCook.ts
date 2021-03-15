@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
-import * as JOB from '../../interface';
-import { Config } from '../../../config';
+import { JobPackrat } from  '../NS/JobPackrat';
 import * as LOG from '../../../utils/logger';
-// import * as CACHE from '../../cache';
 import * as DBAPI from '../../../db';
+import { Config } from '../../../config';
+// import * as CACHE from '../../cache';
 // import * as H from '../../utils/helpers';
 import { v4 as uuidv4 } from 'uuid';
+import * as NS from 'node-schedule';
 
 class JobCookConfiguration {
     clientId: string;
@@ -47,15 +48,19 @@ class JobCookPostBody<T> {
     }
 }
 
-export abstract class JobCook<T> implements JOB.IJob {
+export abstract class JobCook<T> extends JobPackrat {
     private configuration: JobCookConfiguration;
     private eJobRunStatus: DBAPI.eJobRunStatus = DBAPI.eJobRunStatus.eNotStarted;
+    private pollingJob: NS.Job | null = null;
+    private idAssetVersions: number[] | null;
 
     protected abstract getParameters(): T;
 
     // null jobId means create a new one
-    constructor(clientId: string, jobName: string, recipeId: string, jobId: string | null = null) {
+    constructor(clientId: string, jobName: string, recipeId: string, jobId: string | null, idAssetVersions: number[] | null) {
+        super();
         this.configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId);
+        this.idAssetVersions = idAssetVersions;
     }
 
     name(): string {
@@ -71,18 +76,38 @@ export abstract class JobCook<T> implements JOB.IJob {
         requestUrl;
         JSON.stringify(jobCookPostBody);
 
-        // schedule getStatus() polling
+        // Ask job to move files
+
+        // Initiate job
+
+        // schedule status polling, every 30 seconds:
+        const dtNow: Date = new Date();
+        const seconds1: number = Math.floor(dtNow.getSeconds());
+        const seconds2: number = ((seconds1 + 30) % 60);
+        this.pollingJob = NS.scheduleJob(`${this.name()}: status polling`, `${seconds1},${seconds2} * * * * *`, this.pollingCallback);
 
         LOG.logger.info(`JobCook ${this.name()} completed`);
     }
 
-    async getStatus(): Promise<DBAPI.eJobRunStatus> {
+    pollingCallback(fireDate: Date): void {
+        LOG.logger.info(`JobCook ${this.name()} polling; scheduled at ${fireDate.toISOString()}`);
+
         // poll server for status update
         // update eJobRunStatus
         // on completion, handle completion steps
         // update DB ... or pass back info needed by JobEngine to update DB
-        return this.eJobRunStatus;
+        this.eJobRunStatus;
+        this.pollingJob;
     }
 
     getConfiguration(): any { return this.configuration; }
+
+    protected async stageFiles(destination: string): Promise<boolean> {
+        // Temp folder is accessed via WebDav, at serverURL/jobID
+        destination;
+        this.idAssetVersions;
+        return false;
+
+    }
+
 }

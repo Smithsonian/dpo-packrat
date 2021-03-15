@@ -13,7 +13,7 @@ enum COLLECTION_TYPE {
 }
 
 enum JOB_TYPE {
-    DEFAULT = 'default'
+    NODE_SCHEDULE = 'node-schedule'
 }
 
 enum NAVIGATION_TYPE {
@@ -81,7 +81,7 @@ const Config: ConfigType = {
         }
     },
     job: {
-        type: JOB_TYPE.DEFAULT,
+        type: JOB_TYPE.NODE_SCHEDULE,
         cookServerUrl: process.env.COOK_SERVER_URL ? process.env.COOK_SERVER_URL : /* istanbul ignore next */ 'http://si-3ddigip01.si.edu:8000/',
         cookClientId: '5b258c8e-108c-4990-a088-17ffd6e22852', // Concierge's client ID; taken from C:\Tools\CookDev\server\clients.json on Cook server
     },
