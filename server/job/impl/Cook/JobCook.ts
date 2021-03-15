@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as JOB from '../../interface';
 import { Config } from '../../../config';
-// import * as LOG from '../../utils/logger';
+import * as LOG from '../../../utils/logger';
 // import * as CACHE from '../../cache';
 import * as DBAPI from '../../../db';
 // import * as H from '../../utils/helpers';
@@ -58,18 +58,23 @@ export abstract class JobCook<T> implements JOB.IJob {
         this.configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId);
     }
 
-    async start(): Promise<boolean> {
+    name(): string {
+        return this.configuration.jobName;
+    }
+
+    jobCallback(fireDate: Date): void {
+        LOG.logger.info(`JobCook ${this.name()} starting; scheduled at ${fireDate.toISOString()}`);
+
         // POST to /job JobCookInitiation
         const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this.configuration, this.getParameters(), eJobCookPriority.eNormal);
         const requestUrl: string = Config.job.cookServerUrl + 'job';
         requestUrl;
         JSON.stringify(jobCookPostBody);
-        return false;
-    }
 
-    async pause(): Promise<boolean> { return false; }
-    async resume(): Promise<boolean> { return false; }
-    async terminate(): Promise<boolean> { return false; }
+        // schedule getStatus() polling
+
+        LOG.logger.info(`JobCook ${this.name()} completed`);
+    }
 
     async getStatus(): Promise<DBAPI.eJobRunStatus> {
         // poll server for status update
@@ -79,5 +84,5 @@ export abstract class JobCook<T> implements JOB.IJob {
         return this.eJobRunStatus;
     }
 
-    async getConfiguration(): Promise<any> { return this.configuration; }
+    getConfiguration(): any { return this.configuration; }
 }

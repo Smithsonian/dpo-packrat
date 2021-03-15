@@ -5,7 +5,11 @@ import * as LOG from '../../utils/logger';
 import * as CACHE from '../../cache';
 import * as DBAPI from '../../db';
 
+import * as NS from 'node-schedule';
+
 export class JobEngine implements JOB.IJobEngine {
+    // private jobMap: Map<JOB.IJob, NS.Job> = new Map<JOB.IJob, NS.Job>();
+
     // #region IJobEngine interface
     async createByID(idJob: number, parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
         const dbJob: DBAPI.Job | null = await DBAPI.Job.fetch(idJob);
@@ -20,18 +24,18 @@ export class JobEngine implements JOB.IJobEngine {
             return null;
         }
 
-        const job: JOB.IJob | null = this.createJob(eJobType, parameters, frequency);
+        const job: JOB.IJob | null = await this.createJob(eJobType, parameters, frequency);
         if (job)
-            await this.createJobRunDBRecord(dbJob, parameters);
+            await this.createJobRunDBRecord(dbJob, job.getConfiguration(), parameters);
         return job;
     }
 
     async createByType(eJobType: CACHE.eVocabularyID, parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
-        const job: JOB.IJob | null = this.createJob(eJobType, parameters, frequency);
+        const job: JOB.IJob | null = await this.createJob(eJobType, parameters, frequency);
         if (job) {
             const dbJob: DBAPI.Job | null = await this.createJobDBRecord(eJobType, frequency);
             if (dbJob)
-                await this.createJobRunDBRecord(dbJob, parameters);
+                await this.createJobRunDBRecord(dbJob, job.getConfiguration(), parameters);
         }
         return job;
     }
@@ -70,10 +74,10 @@ export class JobEngine implements JOB.IJobEngine {
         return dbJob;
     }
 
-    private async createJobRunDBRecord(dbJob: DBAPI.Job, parameters: any): Promise<DBAPI.JobRun | null> {
+    private async createJobRunDBRecord(dbJob: DBAPI.Job, configuration: any, parameters: any): Promise<DBAPI.JobRun | null> {
         const dbJobRun: DBAPI.JobRun = new DBAPI.JobRun({
             idJobRun: 0, idJob: dbJob.idJob, Status: DBAPI.eJobRunStatus.eNotStarted,
-            Result: null, DateStart: null, DateEnd: null, Configuration: null,
+            Result: null, DateStart: null, DateEnd: null, Configuration: JSON.stringify(configuration),
             Parameters: JSON.stringify(parameters),
             Output: null, Error: null
         });
@@ -87,20 +91,27 @@ export class JobEngine implements JOB.IJobEngine {
     // #endregion
 
     // #region Job Creation Factory
-    private createJob(eJobType: CACHE.eVocabularyID, parameters: any, frequency: string | null): JOB.IJob | null {
+    private async createJob(eJobType: CACHE.eVocabularyID, parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
         // create job
         const job: JOB.IJob | null = this.createJobWorker(eJobType, parameters);
         if (!job)
             return null;
 
         // schedule/launch job
-        if (frequency === null)
+        if (frequency === null) // no frequency means just create the job
             return job;
-        if (frequency === '') {
+
+        if (frequency === '') { // empty frequency means run it once, now
             // run job once
+            const dtNow: Date = new Date();
+            const nsJob: NS.Job = NS.scheduleJob(job.name(), { start: dtNow, end: dtNow, rule: '* * * * * *' }, job.jobCallback);
+            nsJob;
             return job;
         }
-        // run job on schedule
+
+        // non-empty frequency means run job on schedule
+        const nsJob: NS.Job = NS.scheduleJob(job.name(), frequency, job.jobCallback);
+        nsJob;
         return job;
     }
 
