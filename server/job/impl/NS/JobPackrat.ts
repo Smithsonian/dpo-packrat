@@ -6,70 +6,85 @@ import * as H from '../../../utils/helpers';
 import * as NS from 'node-schedule';
 
 export abstract class JobPackrat implements JOB.IJob {
-    protected nsJob: NS.Job | null = null;
-    protected dbJobRun: DBAPI.JobRun;
+    protected _nsJob: NS.Job | null = null;
+    protected _dbJobRun: DBAPI.JobRun;
 
     constructor(dbJobRun: DBAPI.JobRun) {
-        this.dbJobRun = dbJobRun;
+        this._dbJobRun = dbJobRun;
     }
 
-    protected abstract startJob(fireDate: Date): Promise<H.IOResults>;
-    protected abstract cancelJob(): Promise<H.IOResults>;
-
-    async jobCallback(fireDate: Date): Promise<void> {
+    // #region IJob interface
+    async startJob(fireDate: Date): Promise<H.IOResults> {
         await this.recordStart();
-        const res: H.IOResults = await this.startJob(fireDate);
+        const res: H.IOResults = await this.startJobWorker(fireDate);
         if (!res.success)
             await this.recordFailure(res.error);
+        return res;
     }
 
-    async cancel(): Promise<void> {
-        const res: H.IOResults = await this.cancelJob();
+    async cancelJob(): Promise<H.IOResults> {
+        const res: H.IOResults = await this.cancelJobWorker();
         await this.recordCancel(res.error);
-    }
-
-    setNSJob(nsJob: NS.Job): void {
-        this.nsJob = nsJob;
+        return res;
     }
 
     name(): string {
         throw new Error('JobPackrat.name() called but is only implemented in derived classes');
     }
-    getConfiguration(): any {
-        throw new Error('JobPackrat.getConfiguration() called but is only implemented in derived classes');
+    configuration(): any {
+        throw new Error('JobPackrat.configuration() called but is only implemented in derived classes');
+    }
+    // #endregion
+
+    // #region JobPackrat interface
+    // To be implemented by derived classes
+    protected abstract startJobWorker(fireDate: Date): Promise<H.IOResults>;
+    protected abstract cancelJobWorker(): Promise<H.IOResults>;
+    // #endregion
+
+    // #region node-scheduler interface
+    async nsJobCallback(fireDate: Date): Promise<void> {
+        await this.startJob(fireDate);
     }
 
+    setNSJob(nsJob: NS.Job): void {
+        this._nsJob = nsJob;
+    }
+    // #endregion
+
+    // #region JobRun helper methods
     async recordStart(): Promise<void> {
-        this.dbJobRun.DateStart = new Date();
-        this.dbJobRun.setStatus(DBAPI.eJobRunStatus.eRunning);
-        await this.dbJobRun.update();
+        this._dbJobRun.DateStart = new Date();
+        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eRunning);
+        await this._dbJobRun.update();
     }
 
     async recordSuccess(output: string): Promise<void> {
-        this.dbJobRun.DateEnd = new Date();
-        this.dbJobRun.Result = true;
-        this.dbJobRun.setStatus(DBAPI.eJobRunStatus.eCompleted);
-        this.dbJobRun.Output = output;
-        await this.dbJobRun.update();
+        this._dbJobRun.DateEnd = new Date();
+        this._dbJobRun.Result = true;
+        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCompleted);
+        this._dbJobRun.Output = output;
+        await this._dbJobRun.update();
     }
 
     async recordFailure(errorMsg: string): Promise<void> {
-        this.dbJobRun.DateEnd = new Date();
-        this.dbJobRun.Result = false;
-        this.dbJobRun.setStatus(DBAPI.eJobRunStatus.eCompleted);
-        this.dbJobRun.Error = errorMsg;
-        await this.dbJobRun.update();
+        this._dbJobRun.DateEnd = new Date();
+        this._dbJobRun.Result = false;
+        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCompleted);
+        this._dbJobRun.Error = errorMsg;
+        await this._dbJobRun.update();
         LOG.logger.error(errorMsg);
     }
 
     async recordCancel(errorMsg: string): Promise<void> {
-        this.dbJobRun.DateEnd = new Date();
-        this.dbJobRun.Result = false;
-        this.dbJobRun.setStatus(DBAPI.eJobRunStatus.eCancelled);
+        this._dbJobRun.DateEnd = new Date();
+        this._dbJobRun.Result = false;
+        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCancelled);
         if (errorMsg) {
             LOG.logger.error(errorMsg);
-            this.dbJobRun.Error = errorMsg;
+            this._dbJobRun.Error = errorMsg;
         }
-        await this.dbJobRun.update();
+        await this._dbJobRun.update();
     }
+    // #endregion
 }

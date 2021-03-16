@@ -54,9 +54,9 @@ class JobCookPostBody<T> {
 }
 
 export abstract class JobCook<T> extends JobPackrat {
-    private configuration: JobCookConfiguration;
-    private pollingJob: NS.Job | null = null;
-    private idAssetVersions: number[] | null;
+    private _configuration: JobCookConfiguration;
+    private _pollingJob: NS.Job | null = null;
+    private _idAssetVersions: number[] | null;
 
     protected abstract getParameters(): T;
 
@@ -64,19 +64,23 @@ export abstract class JobCook<T> extends JobPackrat {
     constructor(clientId: string, jobName: string, recipeId: string, jobId: string | null,
         idAssetVersions: number[] | null, dbJobRun: DBAPI.JobRun) {
         super(dbJobRun);
-        this.configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId);
-        this.idAssetVersions = idAssetVersions;
+        this._configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId);
+        this._idAssetVersions = idAssetVersions;
     }
 
     name(): string {
-        return `${this.configuration.jobName}: ${this.dbJobRun.idJobRun}`;
+        return `${this._configuration.jobName}: ${this._dbJobRun.idJobRun}`;
     }
 
-    async startJob(fireDate: Date): Promise<H.IOResults> {
+    configuration(): any {
+        return this._configuration;
+    }
+
+    async startJobWorker(fireDate: Date): Promise<H.IOResults> {
         LOG.logger.info(`JobCook ${this.name()} starting; scheduled for ${fireDate.toISOString()}`);
 
         // Create job via POST to /job
-        const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this.configuration, this.getParameters(), eJobCookPriority.eNormal);
+        const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, this.getParameters(), eJobCookPriority.eNormal);
         let requestUrl: string = Config.job.cookServerUrl + 'job';
         try {
             const axiosResponse = await axios.post(requestUrl, jobCookPostBody);
@@ -92,7 +96,7 @@ export abstract class JobCook<T> extends JobPackrat {
             return res;
 
         // Initiate job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/run
-        requestUrl = Config.job.cookServerUrl + `clients/${this.configuration.clientId}/jobs/${this.configuration.jobId}/run`;
+        requestUrl = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
         try {
             const axiosResponse = await axios.patch(requestUrl);
             if (axiosResponse.status !== 202)
@@ -105,9 +109,27 @@ export abstract class JobCook<T> extends JobPackrat {
         const dtNow: Date = new Date();
         const seconds1: number = Math.floor(dtNow.getSeconds());
         const seconds2: number = ((seconds1 + 30) % 60);
-        this.pollingJob = NS.scheduleJob(`${this.name()}: status polling`, `${seconds1},${seconds2} * * * * *`, this.pollingCallback);
+        this._pollingJob = NS.scheduleJob(`${this.name()}: status polling`, `${seconds1},${seconds2} * * * * *`, this.pollingCallback);
 
         LOG.logger.info(`JobCook ${this.name()} running`);
+        return { success: true, error: '' };
+    }
+
+    async cancelJobWorker(): Promise<H.IOResults> {
+        // Cancel job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/cancel
+        LOG.logger.info(`JobCook ${this.name()} cancelling`);
+        const requestUrl: string = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/cancel`;
+        try {
+            const axiosResponse = await axios.patch(requestUrl);
+            if (axiosResponse.status !== 200)
+                return { success: false, error: `JobCook ${this.name()} patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
+        } catch (error) {
+            return { success: false, error: `JobCook ${this.name()} patch ${requestUrl}: ${JSON.stringify(error)}` };
+        }
+
+        this.cancelPollingJob();
+
+        LOG.logger.info(`JobCook ${this.name()} cancelled`);
         return { success: true, error: '' };
     }
 
@@ -116,7 +138,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
         // poll server for status update
         // Get job report via GET to /clients/<CLIENTID>/jobs/<JOBID>/report
-        const requestUrl: string = Config.job.cookServerUrl + `clients/${this.configuration.clientId}/jobs/${this.configuration.jobId}/report`;
+        const requestUrl: string = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/report`;
         try {
             const axiosResponse = await axios.patch(requestUrl);
             if (axiosResponse.status !== 200) {
@@ -130,10 +152,7 @@ export abstract class JobCook<T> extends JobPackrat {
             const cookJobReport = axiosResponse.data;
             if (cookJobReport['state'] === 'done') {
                 this.recordSuccess(JSON.stringify(cookJobReport));
-                if (this.pollingJob) {
-                    NS.cancelJob(this.pollingJob);
-                    this.pollingJob = null;
-                }
+                this.cancelPollingJob();
                 return;
             }
         } catch (error) {
@@ -141,34 +160,24 @@ export abstract class JobCook<T> extends JobPackrat {
         }
     }
 
-    async cancelJob(): Promise<H.IOResults> {
-        // Cancel job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/cancel
-        LOG.logger.info(`JobCook ${this.name()} cancelling`);
-        const requestUrl: string = Config.job.cookServerUrl + `clients/${this.configuration.clientId}/jobs/${this.configuration.jobId}/cancel`;
-        try {
-            const axiosResponse = await axios.patch(requestUrl);
-            if (axiosResponse.status !== 200)
-                return { success: false, error: `JobCook ${this.name()} patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
-        } catch (error) {
-            return { success: false, error: `JobCook ${this.name()} patch ${requestUrl}: ${JSON.stringify(error)}` };
+    cancelPollingJob(): void {
+        if (this._pollingJob) {
+            NS.cancelJob(this._pollingJob);
+            this._pollingJob = null;
         }
-        LOG.logger.info(`JobCook ${this.name()} cancelled`);
-        return { success: true, error: '' };
     }
 
-    getConfiguration(): any { return this.configuration; }
-
     protected async stageFiles(): Promise<H.IOResults> {
-        if (!this.idAssetVersions)
+        if (!this._idAssetVersions)
             return { success: true, error: '' };
 
-        for (const idAssetVersion of this.idAssetVersions) {
+        for (const idAssetVersion of this._idAssetVersions) {
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion);
             if (!RSR.success || !RSR.readStream || !RSR.fileName)
                 return { success: false, error: `JobCook.stageFiles unable to read asset version ${idAssetVersion}: ${RSR.error}` };
 
             // transmit file to Cook work folder via WebDAV
-            const destination: string = `/${this.configuration.jobId}/${RSR.fileName}`;
+            const destination: string = `/${this._configuration.jobId}/${RSR.fileName}`;
             LOG.logger.info(`JobCook.stageFiles staging ${RSR.fileName} on WebDAV host ${Config.job.cookServerUrl} at ${destination}`);
             const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl);
             const WS: Writable = webdavClient.createWriteStream(destination);
