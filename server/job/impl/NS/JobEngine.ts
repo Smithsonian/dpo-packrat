@@ -64,7 +64,7 @@ export class JobEngine implements JOB.IJobEngine {
             return null;
         }
 
-        const configuration: string = JSON.stringify(job.getConfiguration());
+        const configuration: string = JSON.stringify(job.configuration());
         if (configuration) {
             dbJobRun.Configuration = configuration;
             await dbJobRun.update();
@@ -139,9 +139,9 @@ export class JobEngine implements JOB.IJobEngine {
         let nsJob: NS.Job;
         if (frequency === '') { // empty frequency means run it once, now
             const dtNow: Date = new Date();
-            nsJob = NS.scheduleJob(job.name(), { start: dtNow, end: dtNow, rule: '* * * * * *' }, job.jobCallback);
+            nsJob = NS.scheduleJob(job.name(), { start: dtNow, end: dtNow, rule: '* * * * * *' }, job.nsJobCallback);
         } else                  // non-empty frequency means run job on schedule
-            nsJob = NS.scheduleJob(job.name(), frequency, job.jobCallback);
+            nsJob = NS.scheduleJob(job.name(), frequency, job.nsJobCallback);
 
         job.setNSJob(nsJob);
         return job;
