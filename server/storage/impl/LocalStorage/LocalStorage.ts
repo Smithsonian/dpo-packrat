@@ -23,6 +23,7 @@ export class LocalStorage implements STORE.IStorage {
     async readStream(readStreamInput: STORE.ReadStreamInput): Promise<STORE.ReadStreamResult> {
         const retValue: STORE.ReadStreamResult = {
             readStream: null,
+            fileName: null,
             storageHash: null,
             success: false,
             error: ''
@@ -64,6 +65,7 @@ export class LocalStorage implements STORE.IStorage {
 
         try {
             retValue.readStream = fs.createReadStream(filePath);
+            retValue.fileName = fileName;
             retValue.success = true;
             retValue.error = '';
         } catch (error) /* istanbul ignore next */ {

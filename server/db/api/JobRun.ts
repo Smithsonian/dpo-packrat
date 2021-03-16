@@ -7,7 +7,8 @@ export enum eJobRunStatus {
     eNotStarted = 0,
     eRunning = 1,
     ePaused = 2,
-    eCompleted = 3
+    eCompleted = 3,
+    eCancelled = 4,
 }
 
 export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {

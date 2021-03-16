@@ -1,7 +1,6 @@
 import { INavigation, NavigationFactory, NavigationResult, NavigationResultEntry, NavigationFilter, eMetadata } from '../../../navigation/interface';
-import * as H from '../../../utils/helpers';
+// import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
-// import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import { eSystemObjectType, SystemObjectBased, SystemObject } from '../../../db';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
@@ -14,8 +13,8 @@ const metadataColumns: eMetadata[] = [eMetadata.eHierarchyUnit, eMetadata.eHiera
 LOG;
 
 afterAll(async done => {
-    jest.setTimeout(3000);
-    await H.Helpers.sleep(2000);
+    // jest.setTimeout(3000);
+    // await H.Helpers.sleep(2000);
     done();
 });
 

@@ -2,11 +2,16 @@
 import { JobPackrat } from  '../NS/JobPackrat';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
+import * as STORE from '../../../storage/interface';
 import { Config } from '../../../config';
 // import * as CACHE from '../../cache';
-// import * as H from '../../utils/helpers';
+import * as H from '../../../utils/helpers';
+
 import { v4 as uuidv4 } from 'uuid';
 import * as NS from 'node-schedule';
+import { createClient, WebDAVClient } from 'webdav';
+import { Writable } from 'stream';
+import axios from 'axios';
 
 class JobCookConfiguration {
     clientId: string;
@@ -50,35 +55,51 @@ class JobCookPostBody<T> {
 
 export abstract class JobCook<T> extends JobPackrat {
     private configuration: JobCookConfiguration;
-    private eJobRunStatus: DBAPI.eJobRunStatus = DBAPI.eJobRunStatus.eNotStarted;
     private pollingJob: NS.Job | null = null;
     private idAssetVersions: number[] | null;
 
     protected abstract getParameters(): T;
 
     // null jobId means create a new one
-    constructor(clientId: string, jobName: string, recipeId: string, jobId: string | null, idAssetVersions: number[] | null) {
-        super();
+    constructor(clientId: string, jobName: string, recipeId: string, jobId: string | null,
+        idAssetVersions: number[] | null, dbJobRun: DBAPI.JobRun) {
+        super(dbJobRun);
         this.configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId);
         this.idAssetVersions = idAssetVersions;
     }
 
     name(): string {
-        return this.configuration.jobName;
+        return `${this.configuration.jobName}: ${this.dbJobRun.idJobRun}`;
     }
 
-    jobCallback(fireDate: Date): void {
-        LOG.logger.info(`JobCook ${this.name()} starting; scheduled at ${fireDate.toISOString()}`);
+    async startJob(fireDate: Date): Promise<H.IOResults> {
+        LOG.logger.info(`JobCook ${this.name()} starting; scheduled for ${fireDate.toISOString()}`);
 
-        // POST to /job JobCookInitiation
+        // Create job via POST to /job
         const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this.configuration, this.getParameters(), eJobCookPriority.eNormal);
-        const requestUrl: string = Config.job.cookServerUrl + 'job';
-        requestUrl;
-        JSON.stringify(jobCookPostBody);
+        let requestUrl: string = Config.job.cookServerUrl + 'job';
+        try {
+            const axiosResponse = await axios.post(requestUrl, jobCookPostBody);
+            if (axiosResponse.status !== 201)
+                return { success: false, error: `JobCook ${this.name()} post ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
+        } catch (error) {
+            return { success: false, error: `JobCook ${this.name()} post ${requestUrl}: ${JSON.stringify(error)}` };
+        }
 
-        // Ask job to move files
+        // stage files
+        const res: H.IOResults = await this.stageFiles();
+        if (!res.success)
+            return res;
 
-        // Initiate job
+        // Initiate job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/run
+        requestUrl = Config.job.cookServerUrl + `clients/${this.configuration.clientId}/jobs/${this.configuration.jobId}/run`;
+        try {
+            const axiosResponse = await axios.patch(requestUrl);
+            if (axiosResponse.status !== 202)
+                return { success: false, error: `JobCook ${this.name()} patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
+        } catch (error) {
+            return { success: false, error: `JobCook ${this.name()} patch ${requestUrl} failed: ${JSON.stringify(error)}` };
+        }
 
         // schedule status polling, every 30 seconds:
         const dtNow: Date = new Date();
@@ -86,28 +107,75 @@ export abstract class JobCook<T> extends JobPackrat {
         const seconds2: number = ((seconds1 + 30) % 60);
         this.pollingJob = NS.scheduleJob(`${this.name()}: status polling`, `${seconds1},${seconds2} * * * * *`, this.pollingCallback);
 
-        LOG.logger.info(`JobCook ${this.name()} completed`);
+        LOG.logger.info(`JobCook ${this.name()} running`);
+        return { success: true, error: '' };
     }
 
-    pollingCallback(fireDate: Date): void {
-        LOG.logger.info(`JobCook ${this.name()} polling; scheduled at ${fireDate.toISOString()}`);
+    async pollingCallback(fireDate: Date): Promise<void> {
+        LOG.logger.info(`JobCook ${this.name()} polling; scheduled for ${fireDate.toISOString()}`);
 
         // poll server for status update
-        // update eJobRunStatus
-        // on completion, handle completion steps
-        // update DB ... or pass back info needed by JobEngine to update DB
-        this.eJobRunStatus;
-        this.pollingJob;
+        // Get job report via GET to /clients/<CLIENTID>/jobs/<JOBID>/report
+        const requestUrl: string = Config.job.cookServerUrl + `clients/${this.configuration.clientId}/jobs/${this.configuration.jobId}/report`;
+        try {
+            const axiosResponse = await axios.patch(requestUrl);
+            if (axiosResponse.status !== 200) {
+                LOG.logger.error(`JobCook ${this.name()} polling get ${requestUrl} failed: ${JSON.stringify(axiosResponse)}`);
+                return;
+            }
+
+            // look for completion in "state" member, via value of "done"
+            // update eJobRunStatus
+            // terminate polling job
+            const cookJobReport = axiosResponse.data;
+            if (cookJobReport['state'] === 'done') {
+                this.recordSuccess(JSON.stringify(cookJobReport));
+                if (this.pollingJob) {
+                    NS.cancelJob(this.pollingJob);
+                    this.pollingJob = null;
+                }
+                return;
+            }
+        } catch (error) {
+            LOG.logger.error(`JobCook ${this.name()} polling get ${requestUrl} failed: ${JSON.stringify(error)}`);
+        }
+    }
+
+    async cancelJob(): Promise<H.IOResults> {
+        // Cancel job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/cancel
+        LOG.logger.info(`JobCook ${this.name()} cancelling`);
+        const requestUrl: string = Config.job.cookServerUrl + `clients/${this.configuration.clientId}/jobs/${this.configuration.jobId}/cancel`;
+        try {
+            const axiosResponse = await axios.patch(requestUrl);
+            if (axiosResponse.status !== 200)
+                return { success: false, error: `JobCook ${this.name()} patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
+        } catch (error) {
+            return { success: false, error: `JobCook ${this.name()} patch ${requestUrl}: ${JSON.stringify(error)}` };
+        }
+        LOG.logger.info(`JobCook ${this.name()} cancelled`);
+        return { success: true, error: '' };
     }
 
     getConfiguration(): any { return this.configuration; }
 
-    protected async stageFiles(destination: string): Promise<boolean> {
-        // Temp folder is accessed via WebDav, at serverURL/jobID
-        destination;
-        this.idAssetVersions;
-        return false;
+    protected async stageFiles(): Promise<H.IOResults> {
+        if (!this.idAssetVersions)
+            return { success: true, error: '' };
 
+        for (const idAssetVersion of this.idAssetVersions) {
+            const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion);
+            if (!RSR.success || !RSR.readStream || !RSR.fileName)
+                return { success: false, error: `JobCook.stageFiles unable to read asset version ${idAssetVersion}: ${RSR.error}` };
+
+            // transmit file to Cook work folder via WebDAV
+            const destination: string = `/${this.configuration.jobId}/${RSR.fileName}`;
+            LOG.logger.info(`JobCook.stageFiles staging ${RSR.fileName} on WebDAV host ${Config.job.cookServerUrl} at ${destination}`);
+            const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl);
+            const WS: Writable = webdavClient.createWriteStream(destination);
+            const res: H.IOResults = await H.Helpers.writeStreamToStream(RSR.readStream, WS);
+            if (!res.success)
+                return { success: false, error: `JobCook.stageFiles unable to transmit file ${RSR.fileName} for asset version ${idAssetVersion}: ${RSR.error}` };
+        }
+        return { success: true, error: '' };
     }
-
 }
