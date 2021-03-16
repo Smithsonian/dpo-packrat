@@ -51,6 +51,7 @@ const mockFilter: NavigationFilter = {
 
 describe('Navigation Traversal', () => {
     test('Navigation Root', async () => {
+        jest.setTimeout(60000);
 
         await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [eSystemObjectType.eUnit], metadataColumns });
         await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [eSystemObjectType.eProject], metadataColumns });
