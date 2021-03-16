@@ -118,7 +118,19 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 13, 'Scene
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 14, 'Project Documentation');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 15, 'Intermediary File');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 16, 'Other');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 1, 'Cook: Inspect Mesh');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 1, 'Cook: bake');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 2, 'Cook: decimate-unwrap');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 3, 'Cook: decimate');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 4, 'Cook: generate-usdz');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 5, 'Cook: generate-web-gltf');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 6, 'Cook: inspect-mesh');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 7, 'Cook: si-ar-backfill-fix');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 8, 'Cook: si-generate-downloads');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 9, 'Cook: si-orient-model-to-svx');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 10, 'Cook: si-packrat-inspect');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 11, 'Cook: si-voyager-asset');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 12, 'Cook: si-voyager-scene');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 13, 'Cook: unwrap');
 
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary 
 WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
