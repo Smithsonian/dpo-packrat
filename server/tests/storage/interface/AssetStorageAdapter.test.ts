@@ -98,56 +98,67 @@ describe('AssetStorageAdapter Methods', () => {
     test('AssetStorageAdapter.commitNewAsset', async() => {
         TestCase1 = await testCommitNewAsset(null, 10000, OHTS.captureData1);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.ingestAsset', async() => {
         await testIngestAsset(TestCase1, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersionByID(TestCase1, true);
     });
 
     test('AssetStorageAdapter.commitNewAsset 2', async() => {
         TestCase1 = await testCommitNewAsset(TestCase1, 12000, OHTS.model1);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.ingestAsset 2', async() => {
         await testIngestAsset(TestCase1, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersionByID(TestCase1, true);
     });
 
     test('AssetStorageAdapter.commitNewAsset 3', async() => {
         TestCase1 = await testCommitNewAsset(TestCase1, 14000, OHTS.model1); // don't change metadata this time for fuller code coverage
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.ingestAsset 3', async() => {
         await testIngestAsset(TestCase1, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersionByID(TestCase1, true);
     });
 
     test('AssetStorageAdapter.renameAsset', async() => {
         await testRenameAsset(TestCase1, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.hideAsset', async() => {
         await testHideAsset(TestCase1, true);
         await testReadAsset(TestCase1, false); // Expected failure as asset was hidden
+        await testReadAssetVersionByID(TestCase1, false); // Expected failure as asset was hidden
     });
 
     test('AssetStorageAdapter.reinstateAsset', async() => {
         await testReinstateAsset(TestCase1, -1, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.hideAsset', async() => {
         await testHideAsset(TestCase1, true);
         await testReadAsset(TestCase1, false); // Expected failure as asset was hidden
+        await testReadAssetVersionByID(TestCase1, false); // Expected failure as asset was hidden
     });
 
     test('AssetStorageAdapter.reinstateAsset', async() => {
         await testReinstateAsset(TestCase1, 4, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.discardAssetVersion', async() => {
@@ -309,22 +320,54 @@ async function testReadAsset(TestCase: AssetStorageAdapterTestCase, expectSucces
 
         // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.readAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
-
-        if (!RSR.success && expectSuccess)
-            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.readAsset: ${RSR.error}`);
-        expect(RSR.success).toEqual(expectSuccess);
-        if (!RSR.success)
-            return !expectSuccess;
-
-        expect(RSR.readStream).toBeTruthy();
-        expect(RSR.storageHash).toEqual(assetVersion.StorageHash);
-        if (!RSR.readStream)
+        if (!testReadAssetResults(RSR, assetVersion, expectSuccess, 'readAsset'))
             return false;
+    }
+    return true;
+}
 
-        const hashResults: H.HashResults = await H.Helpers.computeHashFromStream(RSR.readStream, ST.OCFLDigestAlgorithm);
-        expect(hashResults.success).toBeTruthy();
-        expect(hashResults.hash).toEqual(RSR.storageHash);
-        expect(hashResults.hash).toEqual(assetVersion.StorageHash);
+async function testReadAssetResults(RSR: STORE.ReadStreamResult, assetVersion: DBAPI.AssetVersion, expectSuccess: boolean, errorContext: string): Promise<boolean> {
+    if (!RSR.success && expectSuccess)
+        LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.${errorContext}: ${RSR.error}`);
+    expect(RSR.success).toEqual(expectSuccess);
+    if (!RSR.success)
+        return !expectSuccess;
+
+    expect(RSR.readStream).toBeTruthy();
+    expect(RSR.fileName).toEqual(assetVersion.FileName);
+    expect(RSR.storageHash).toEqual(assetVersion.StorageHash);
+    if (!RSR.readStream)
+        return false;
+
+    const hashResults: H.HashResults = await H.Helpers.computeHashFromStream(RSR.readStream, ST.OCFLDigestAlgorithm);
+    expect(hashResults.success).toBeTruthy();
+    expect(hashResults.hash).toEqual(RSR.storageHash);
+    expect(hashResults.hash).toEqual(assetVersion.StorageHash);
+    return true;
+}
+
+async function testReadAssetVersion(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    for (let index = 0; index < TestCase.assets.length; index++) {
+        // const asset: DBAPI.Asset = TestCase.assets[index];
+        const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
+
+        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.readAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(assetVersion);
+        if (!testReadAssetResults(RSR, assetVersion, expectSuccess, 'readAssetVersion'))
+            return false;
+    }
+    return true;
+}
+
+async function testReadAssetVersionByID(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    for (let index = 0; index < TestCase.assets.length; index++) {
+        // const asset: DBAPI.Asset = TestCase.assets[index];
+        const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
+
+        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.readAssetByID (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(assetVersion.idAssetVersion);
+        if (!testReadAssetResults(RSR, assetVersion, expectSuccess, 'readAssetVersionByID'))
+            return false;
     }
     return true;
 }

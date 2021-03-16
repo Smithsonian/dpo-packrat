@@ -3,4 +3,5 @@ export interface IJob {
     name(): string;
     jobCallback(fireDate: Date): void;
     getConfiguration(): any;
+    cancel(): void;
 }

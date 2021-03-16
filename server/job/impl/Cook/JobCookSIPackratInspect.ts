@@ -4,7 +4,7 @@ import { Config } from '../../../config';
 
 // import * as LOG from '../../utils/logger';
 // import * as CACHE from '../../cache';
-// import * as DBAPI from '../../db';
+import * as DBAPI from '../../../db';
 // import * as H from '../../utils/helpers';
 
 export class JobCookSIPackratInspectParameters {
@@ -19,9 +19,10 @@ export class JobCookSIPackratInspectParameters {
 export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectParameters> {
     private parameters: JobCookSIPackratInspectParameters;
 
-    constructor(idAssetVersions: number[] | null, parameters: JobCookSIPackratInspectParameters) {
+    constructor(idAssetVersions: number[] | null, parameters: JobCookSIPackratInspectParameters, dbJobRun: DBAPI.JobRun) {
         super(Config.job.cookClientId, 'si-packrat-inspect',
-            CookRecipe.getCookRecipeID('si-packrat-inspect', 'bb602690-76c9-11eb-9439-0242ac130002'), null, idAssetVersions);
+            CookRecipe.getCookRecipeID('si-packrat-inspect', 'bb602690-76c9-11eb-9439-0242ac130002'),
+            null, idAssetVersions, dbJobRun);
         this.parameters = parameters;
     }
 

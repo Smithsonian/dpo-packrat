@@ -346,6 +346,7 @@ async function testReadStream(LSTC: LocalStorageTestCase, expectSuccess: boolean
     expect(RSR.success).toEqual(expectSuccess);
     if (expectSuccess) {
         expect(RSR.storageHash).toEqual(LSTC.storageHash);
+        expect(RSR.fileName).toEqual(LSTC.fileName);
         expect(RSR.readStream).toBeTruthy();
         if (RSR.readStream)
             expect(await readStreamAndComputeHash(RSR.readStream)).toEqual(LSTC.storageHash);

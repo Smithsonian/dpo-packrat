@@ -8,8 +8,20 @@ import * as DBAPI from '../../../db';
 
 import * as NS from 'node-schedule';
 
+class JobData {
+    job: JobPackrat;
+    dbJob: DBAPI.Job;
+    dbJobRun: DBAPI.JobRun;
+
+    constructor(job: JobPackrat, dbJob: DBAPI.Job, dbJobRun: DBAPI.JobRun) {
+        this.job = job;
+        this.dbJob = dbJob;
+        this.dbJobRun = dbJobRun;
+    }
+}
+
 export class JobEngine implements JOB.IJobEngine {
-    private jobList: JobPackrat[] = [];
+    private jobMap: Map<number, JobData> = new Map<number, JobData>();  // map from JobRun.idJobRun to JobData
 
     // #region IJobEngine interface
     async createByID(idJob: number, idAssetVersions: number[] | null,
@@ -26,20 +38,39 @@ export class JobEngine implements JOB.IJobEngine {
             return null;
         }
 
-        const job: JobPackrat | null = await this.createJob(eJobType, idAssetVersions, parameters, frequency);
-        if (job)
-            await this.createJobRunDBRecord(dbJob, job.getConfiguration(), parameters);
-        return job;
+        return await this.createByWorker(dbJob, eJobType, idAssetVersions, parameters, frequency);
     }
 
     async createByType(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null,
         parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
-        const job: JobPackrat | null = await this.createJob(eJobType, idAssetVersions, parameters, frequency);
-        if (job) {
-            const dbJob: DBAPI.Job | null = await this.createJobDBRecord(eJobType, frequency);
-            if (dbJob)
-                await this.createJobRunDBRecord(dbJob, job.getConfiguration(), parameters);
+        const dbJob: DBAPI.Job | null = await this.createJobDBRecord(eJobType, frequency);
+        if (!dbJob)
+            return null;
+        return await this.createByWorker(dbJob, eJobType, idAssetVersions, parameters, frequency);
+    }
+
+    private async createByWorker(dbJob: DBAPI.Job, eJobType: CACHE.eVocabularyID,
+        idAssetVersions: number[] | null, parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
+
+        const dbJobRun: DBAPI.JobRun | null = await this.createJobRunDBRecord(dbJob, null, parameters);
+        if (!dbJobRun) {
+            LOG.logger.error('JobEngine.createWorker unable to create JobRun');
+            return null;
         }
+
+        const job: JobPackrat | null = await this.createJob(eJobType, idAssetVersions, parameters, frequency, dbJobRun);
+        if (!job) {
+            LOG.logger.error('JobEngine.createWorker unable to create Job');
+            return null;
+        }
+
+        const configuration: string = JSON.stringify(job.getConfiguration());
+        if (configuration) {
+            dbJobRun.Configuration = configuration;
+            await dbJobRun.update();
+        }
+
+        this.jobMap.set(dbJobRun.idJobRun, new JobData(job, dbJob, dbJobRun));
         return job;
     }
     // #endregion
@@ -95,12 +126,11 @@ export class JobEngine implements JOB.IJobEngine {
 
     // #region Job Creation Factory
     private async createJob(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null,
-        parameters: any, frequency: string | null): Promise<JobPackrat | null> {
+        parameters: any, frequency: string | null, dbJobRun: DBAPI.JobRun): Promise<JobPackrat | null> {
         // create job
-        const job: JobPackrat | null = this.createJobWorker(eJobType, idAssetVersions, parameters);
+        const job: JobPackrat | null = this.createJobWorker(eJobType, idAssetVersions, parameters, dbJobRun);
         if (!job)
             return null;
-        this.jobList.push(job);
 
         // schedule/launch job
         if (frequency === null) // no frequency means just create the job
@@ -117,9 +147,9 @@ export class JobEngine implements JOB.IJobEngine {
         return job;
     }
 
-    private createJobWorker(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null, parameters: any): JobPackrat | null {
+    private createJobWorker(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null, parameters: any, dbJobRun: DBAPI.JobRun): JobPackrat | null {
         switch (eJobType) {
-            case CACHE.eVocabularyID.eJobJobTypeCookInspectMesh: return new COOK.JobCookSIPackratInspect(idAssetVersions, parameters);
+            case CACHE.eVocabularyID.eJobJobTypeCookInspectMesh: return new COOK.JobCookSIPackratInspect(idAssetVersions, parameters, dbJobRun);
             default:
                 LOG.logger.error(`JobEngine.createByType unknown job type ${CACHE.eVocabularyID[eJobType]}`);
                 return null;
