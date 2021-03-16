@@ -61,7 +61,19 @@ export enum eVocabularyID {
     eCaptureDataFileVariantTypeRaw,
     eCaptureDataFileVariantTypeProcessed,
     eCaptureDataFileVariantTypeFromCamera,
+    eJobJobTypeCookBake,
+    eJobJobTypeCookDecimateUnwrap,
+    eJobJobTypeCookDecimate,
+    eJobJobTypeCookGenerateUsdz,
+    eJobJobTypeCookGenerateWebGltf,
     eJobJobTypeCookInspectMesh,
+    eJobJobTypeCookSIArBackfillFix,
+    eJobJobTypeCookSIGenerateDownloads,
+    eJobJobTypeCookSIOrientModelToSvx,
+    eJobJobTypeCookSIPackratInspect,
+    eJobJobTypeCookSIVoyagerAsset,
+    eJobJobTypeCookSIVoyagerScene,
+    eJobJobTypeCookUnwrap,
     eNone = -1
 }
 
@@ -218,7 +230,19 @@ export class VocabularyCache {
 
                 case eVocabularySetID.eJobJobType: {
                     switch (vocabulary.Term) {
-                        case 'Cook: Inspect Mesh':  eVocabEnum = eVocabularyID.eJobJobTypeCookInspectMesh; break;
+                        case 'Cook: bake':                      eVocabEnum = eVocabularyID.eJobJobTypeCookBake; break;
+                        case 'Cook: decimate-unwrap':           eVocabEnum = eVocabularyID.eJobJobTypeCookDecimateUnwrap; break;
+                        case 'Cook: decimate':                  eVocabEnum = eVocabularyID.eJobJobTypeCookDecimate; break;
+                        case 'Cook: generate-usdz':             eVocabEnum = eVocabularyID.eJobJobTypeCookGenerateUsdz; break;
+                        case 'Cook: generate-web-gltf':         eVocabEnum = eVocabularyID.eJobJobTypeCookGenerateWebGltf; break;
+                        case 'Cook: inspect-mesh':              eVocabEnum = eVocabularyID.eJobJobTypeCookInspectMesh; break;
+                        case 'Cook: si-ar-backfill-fix':        eVocabEnum = eVocabularyID.eJobJobTypeCookSIArBackfillFix; break;
+                        case 'Cook: si-generate-downloads':     eVocabEnum = eVocabularyID.eJobJobTypeCookSIGenerateDownloads; break;
+                        case 'Cook: si-orient-model-to-svx':    eVocabEnum = eVocabularyID.eJobJobTypeCookSIOrientModelToSvx; break;
+                        case 'Cook: si-packrat-inspect':        eVocabEnum = eVocabularyID.eJobJobTypeCookSIPackratInspect; break;
+                        case 'Cook: si-voyager-asset':          eVocabEnum = eVocabularyID.eJobJobTypeCookSIVoyagerAsset; break;
+                        case 'Cook: si-voyager-scene':          eVocabEnum = eVocabularyID.eJobJobTypeCookSIVoyagerScene; break;
+                        case 'Cook: unwrap':                    eVocabEnum = eVocabularyID.eJobJobTypeCookUnwrap; break;
                     }
                 } break;
             }

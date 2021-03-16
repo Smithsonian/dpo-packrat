@@ -149,7 +149,7 @@ export class JobEngine implements JOB.IJobEngine {
 
     private createJobWorker(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null, parameters: any, dbJobRun: DBAPI.JobRun): JobPackrat | null {
         switch (eJobType) {
-            case CACHE.eVocabularyID.eJobJobTypeCookInspectMesh: return new COOK.JobCookSIPackratInspect(idAssetVersions, parameters, dbJobRun);
+            case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect: return new COOK.JobCookSIPackratInspect(idAssetVersions, parameters, dbJobRun);
             default:
                 LOG.logger.error(`JobEngine.createByType unknown job type ${CACHE.eVocabularyID[eJobType]}`);
                 return null;

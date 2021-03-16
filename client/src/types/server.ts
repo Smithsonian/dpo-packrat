@@ -52,7 +52,19 @@ export enum eVocabularyID {
     eCaptureDataFileVariantTypeRaw,
     eCaptureDataFileVariantTypeProcessed,
     eCaptureDataFileVariantTypeFromCamera,
+    eJobJobTypeCookBake,
+    eJobJobTypeCookDecimateUnwrap,
+    eJobJobTypeCookDecimate,
+    eJobJobTypeCookGenerateUsdz,
+    eJobJobTypeCookGenerateWebGltf,
     eJobJobTypeCookInspectMesh,
+    eJobJobTypeCookSIArBackfillFix,
+    eJobJobTypeCookSIGenerateDownloads,
+    eJobJobTypeCookSIOrientModelToSvx,
+    eJobJobTypeCookSIPackratInspect,
+    eJobJobTypeCookSIVoyagerAsset,
+    eJobJobTypeCookSIVoyagerScene,
+    eJobJobTypeCookUnwrap,
     eNone = -1
 }
 
