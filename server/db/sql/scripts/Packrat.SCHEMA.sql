@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS `Job` (
   `idVJobType` int(11) NOT NULL,
   `Name` varchar(80) NOT NULL,
   `Status` int(11) NOT NULL,
-  `Frequency` varchar(80) NOT NULL,
+  `Frequency` varchar(80) NULL,
   PRIMARY KEY (`idJob`),
   KEY `Job_idVJobType_idJob` (`idVJobType`, `idJob`),
   KEY `Job_Name` (`Name`),

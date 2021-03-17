@@ -110,7 +110,7 @@ export class JobEngine implements JOB.IJobEngine {
 
     private async createJobRunDBRecord(dbJob: DBAPI.Job, configuration: any, parameters: any): Promise<DBAPI.JobRun | null> {
         const dbJobRun: DBAPI.JobRun = new DBAPI.JobRun({
-            idJobRun: 0, idJob: dbJob.idJob, Status: DBAPI.eJobRunStatus.eNotStarted,
+            idJobRun: 0, idJob: dbJob.idJob, Status: DBAPI.eJobRunStatus.eCreated,
             Result: null, DateStart: null, DateEnd: null, Configuration: JSON.stringify(configuration),
             Parameters: JSON.stringify(parameters),
             Output: null, Error: null
@@ -151,7 +151,7 @@ export class JobEngine implements JOB.IJobEngine {
         switch (eJobType) {
             case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect: return new COOK.JobCookSIPackratInspect(idAssetVersions, parameters, dbJobRun);
             default:
-                LOG.logger.error(`JobEngine.createByType unknown job type ${CACHE.eVocabularyID[eJobType]}`);
+                LOG.logger.error(`JobEngine.createJobWorker unknown job type ${CACHE.eVocabularyID[eJobType]}`);
                 return null;
         }
     }

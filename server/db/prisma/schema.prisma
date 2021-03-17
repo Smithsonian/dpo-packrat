@@ -280,7 +280,7 @@ model Job {
   idVJobType Int
   Name       String
   Status     Int
-  Frequency  String
+  Frequency  String?
   Vocabulary Vocabulary @relation(fields: [idVJobType], references: [idVocabulary])
   JobRun     JobRun[]
 
