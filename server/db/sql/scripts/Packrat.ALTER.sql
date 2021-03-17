@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `Job` (
   `idVJobType` int(11) NOT NULL,
   `Name` varchar(80) NOT NULL,
   `Status` int(11) NOT NULL,
-  `Frequency` varchar(80) NOT NULL,
+  `Frequency` varchar(80) NULL,
   PRIMARY KEY (`idJob`),
   KEY `Job_idVJobType_idJob` (`idVJobType`, `idJob`),
   KEY `Job_Name` (`Name`),
@@ -46,4 +46,31 @@ ADD CONSTRAINT `fk_jobrun_job1`
   ON UPDATE NO ACTION;
 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (21, 'Job.JobType', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 1, 'Cook: Inspect Mesh');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 1, 'Cook: bake');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 2, 'Cook: decimate-unwrap');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 3, 'Cook: decimate');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 4, 'Cook: generate-usdz');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 5, 'Cook: generate-web-gltf');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 6, 'Cook: inspect-mesh');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 7, 'Cook: si-ar-backfill-fix');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 8, 'Cook: si-generate-downloads');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 9, 'Cook: si-orient-model-to-svx');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 10, 'Cook: si-packrat-inspect');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 11, 'Cook: si-voyager-asset');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 12, 'Cook: si-voyager-scene');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 13, 'Cook: unwrap');
+
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: bake';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: decimate-unwrap';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: decimate';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: generate-usdz';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: generate-web-gltf';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: inspect-mesh';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-ar-backfill-fix';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-generate-downloads';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-orient-model-to-svx';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-packrat-inspect';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-asset';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-scene';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: unwrap';
+

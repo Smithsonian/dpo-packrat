@@ -146,14 +146,15 @@ export abstract class JobCook<T> extends JobPackrat {
                 return;
             }
 
-            // look for completion in "state" member, via value of "done"
-            // update eJobRunStatus
-            // terminate polling job
+            // look for completion in "state" member, via value of "done", "error", or "cancelled"; update eJobRunStatus and terminate polling job
             const cookJobReport = axiosResponse.data;
-            if (cookJobReport['state'] === 'done') {
-                this.recordSuccess(JSON.stringify(cookJobReport));
-                this.cancelPollingJob();
-                return;
+            switch (cookJobReport['state']) {
+                case 'created':                                 await this.recordCreated();                                 break;
+                case 'waiting':                                 await this.recordWaiting();                                 break;
+                case 'running':                                 await this.recordStart();                                   break;
+                case 'done':        this.cancelPollingJob();    await this.recordSuccess(JSON.stringify(cookJobReport));    break;
+                case 'error':       this.cancelPollingJob();    await this.recordFailure(cookJobReport['error']);           break;
+                case 'cancelled':   this.cancelPollingJob();    await this.recordCancel(cookJobReport['error']);            break;
             }
         } catch (error) {
             LOG.logger.error(`JobCook ${this.name()} polling get ${requestUrl} failed: ${JSON.stringify(error)}`);

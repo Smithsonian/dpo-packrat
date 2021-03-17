@@ -4,11 +4,12 @@ import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
 export enum eJobRunStatus {
-    eNotStarted = 0,
+    eCreated = 0,
     eRunning = 1,
-    ePaused = 2,
-    eCompleted = 3,
-    eCancelled = 4,
+    eWaiting = 2,
+    eDone = 3,
+    eError = 4,
+    eCancelled = 5,
 }
 
 export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
@@ -29,11 +30,13 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
 
     static convertJobRunStatusToEnum(Status: number): eJobRunStatus {
         switch (Status) {
-            default:    return eJobRunStatus.eNotStarted;
-            case 0:     return eJobRunStatus.eNotStarted;
+            default:    return eJobRunStatus.eCreated;
+            case 0:     return eJobRunStatus.eCreated;
             case 1:     return eJobRunStatus.eRunning;
-            case 2:     return eJobRunStatus.ePaused;
-            case 3:     return eJobRunStatus.eCompleted;
+            case 2:     return eJobRunStatus.eWaiting;
+            case 3:     return eJobRunStatus.eDone;
+            case 4:     return eJobRunStatus.eError;
+            case 5:     return eJobRunStatus.eCancelled;
         }
     }
 

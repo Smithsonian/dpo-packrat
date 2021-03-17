@@ -14,7 +14,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
     idVJobType!: number;
     Name!: string;
     Status!: number;
-    Frequency!: string;
+    Frequency!: string | null;
 
     constructor(input: JobBase) {
         super(input);

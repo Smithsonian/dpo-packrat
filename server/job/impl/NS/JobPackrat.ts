@@ -15,7 +15,7 @@ export abstract class JobPackrat implements JOB.IJob {
 
     // #region IJob interface
     async startJob(fireDate: Date): Promise<H.IOResults> {
-        await this.recordStart();
+        await this.recordCreated();
         const res: H.IOResults = await this.startJobWorker(fireDate);
         if (!res.success)
             await this.recordFailure(res.error);
@@ -53,16 +53,29 @@ export abstract class JobPackrat implements JOB.IJob {
     // #endregion
 
     // #region JobRun helper methods
-    async recordStart(): Promise<void> {
+    async recordCreated(): Promise<void> {
         this._dbJobRun.DateStart = new Date();
-        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eRunning);
+        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
         await this._dbJobRun.update();
+    }
+
+    async recordWaiting(): Promise<void> {
+        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eWaiting);
+        await this._dbJobRun.update();
+    }
+
+    async recordStart(): Promise<void> {
+        if (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eRunning) {
+            this._dbJobRun.DateStart = new Date();
+            this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eRunning);
+            await this._dbJobRun.update();
+        }
     }
 
     async recordSuccess(output: string): Promise<void> {
         this._dbJobRun.DateEnd = new Date();
         this._dbJobRun.Result = true;
-        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCompleted);
+        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eDone);
         this._dbJobRun.Output = output;
         await this._dbJobRun.update();
     }
@@ -70,7 +83,7 @@ export abstract class JobPackrat implements JOB.IJob {
     async recordFailure(errorMsg: string): Promise<void> {
         this._dbJobRun.DateEnd = new Date();
         this._dbJobRun.Result = false;
-        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCompleted);
+        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eError);
         this._dbJobRun.Error = errorMsg;
         await this._dbJobRun.update();
         LOG.logger.error(errorMsg);
