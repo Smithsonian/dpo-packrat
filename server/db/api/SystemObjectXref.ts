@@ -54,7 +54,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
             return null;
         try {
             return DBC.CopyObject<SystemObjectXrefBase, SystemObjectXref>(
-                await DBC.DBConnection.prisma.systemObjectXref.findOne({ where: { idSystemObjectXref, }, }), SystemObjectXref);
+                await DBC.DBConnection.prisma.systemObjectXref.findUnique({ where: { idSystemObjectXref, }, }), SystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectXref.fetch', error);
             return null;

@@ -1,5 +1,5 @@
 /* eslint-disable camelcase, @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any */
-import { ModelMetrics as ModelMetricsBase, join } from '@prisma/client';
+import { ModelMetrics as ModelMetricsBase, Prisma } from '@prisma/client';
 import { ModelObject } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -80,7 +80,7 @@ export class ModelMetrics extends DBC.DBObject<ModelMetricsBase> implements Mode
             return null;
         try {
             return DBC.CopyObject<ModelMetricsBase, ModelMetrics>(
-                await DBC.DBConnection.prisma.modelMetrics.findOne({ where: { idModelMetrics, }, }), ModelMetrics);
+                await DBC.DBConnection.prisma.modelMetrics.findUnique({ where: { idModelMetrics, }, }), ModelMetrics);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelMetrics.fetch', error);
             return null;
@@ -113,7 +113,7 @@ export class ModelMetrics extends DBC.DBObject<ModelMetricsBase> implements Mode
                 SELECT DISTINCT *
                 FROM ModelMetrics
                 WHERE idModelMetrics IN
-                (SELECT idModelMetrics FROM ModelObject WHERE idModelObject IN (${join(idModelObjects)}))`; // , ModelMetrics);
+                (SELECT idModelMetrics FROM ModelObject WHERE idModelObject IN (${Prisma.join(idModelObjects)}))`; // , ModelMetrics);
 
             const modelMetricsList: ModelMetrics[] = [];
             for (const modelMetricsBase of modelMetricsBaseList) {

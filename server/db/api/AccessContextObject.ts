@@ -53,7 +53,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             return null;
         try {
             return DBC.CopyObject<AccessContextObjectBase, AccessContextObject>(
-                await DBC.DBConnection.prisma.accessContextObject.findOne({ where: { idAccessContextObject, }, }), AccessContextObject);
+                await DBC.DBConnection.prisma.accessContextObject.findUnique({ where: { idAccessContextObject, }, }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContextObject.fetch', error);
             return null;

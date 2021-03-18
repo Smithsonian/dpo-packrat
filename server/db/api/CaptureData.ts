@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { CaptureData as CaptureDataBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { CaptureData as CaptureDataBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -68,7 +68,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
         try {
             const { idCaptureData } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idCaptureData, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idCaptureData, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetchSystemObject', error);
             return null;
@@ -80,7 +80,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             return null;
         try {
             return DBC.CopyObject<CaptureDataBase, CaptureData>(
-                await DBC.DBConnection.prisma.captureData.findOne({ where: { idCaptureData, }, }), CaptureData);
+                await DBC.DBConnection.prisma.captureData.findUnique({ where: { idCaptureData, }, }), CaptureData);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetch', error);
             return null;
@@ -145,7 +145,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 JOIN SystemObject AS SOC ON (C.idCaptureData = SOC.idCaptureData)
                 JOIN SystemObjectXref AS SOX ON (SOC.idSystemObject = SOX.idSystemObjectDerived)
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
-                WHERE SOI.idItem IN (${join(idItem)})`, CaptureData);
+                WHERE SOI.idItem IN (${Prisma.join(idItem)})`, CaptureData);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureData.fetchDerivedFromItems', error);
             return null;

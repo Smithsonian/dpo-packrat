@@ -12,7 +12,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     idUserCreator!: number;
     DateCreated!: Date;
     StorageHash!: string;
-    StorageSize!: number;
+    StorageSize!: bigint;
     StorageKeyStaging!: string;
     Ingested!: boolean;
     BulkIngest!: boolean;
@@ -119,7 +119,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         try {
             const { idAssetVersion } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAssetVersion, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAssetVersion, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetVersion.fetchSystemObject', error);
             return null;
@@ -151,7 +151,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return null;
         try {
             return DBC.CopyObject<AssetVersionBase, AssetVersion>(
-                await DBC.DBConnection.prisma.assetVersion.findOne({ where: { idAssetVersion, }, }), AssetVersion);
+                await DBC.DBConnection.prisma.assetVersion.findUnique({ where: { idAssetVersion, }, }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetVersion.fetch', error);
             return null;
@@ -216,7 +216,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 idUserCreator: assetVersion.idUserCreator,
                 DateCreated: new Date(assetVersion.DateCreated),
                 StorageHash: assetVersion.StorageHash,
-                StorageSize: assetVersion.StorageSize,
+                StorageSize: BigInt(assetVersion.StorageSize),
                 StorageKeyStaging: assetVersion.StorageKeyStaging,
                 Ingested: assetVersion.Ingested ? true : false,
                 BulkIngest: assetVersion.BulkIngest ? true : false,

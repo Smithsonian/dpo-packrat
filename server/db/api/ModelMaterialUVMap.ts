@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ModelMaterialUVMap as ModelMaterialUVMapBase, join } from '@prisma/client';
+import { ModelMaterialUVMap as ModelMaterialUVMapBase, Prisma } from '@prisma/client';
 import { Model } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -57,7 +57,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return null;
         try {
             return DBC.CopyObject<ModelMaterialUVMapBase, ModelMaterialUVMap>(
-                await DBC.DBConnection.prisma.modelMaterialUVMap.findOne({ where: { idModelMaterialUVMap, }, }), ModelMaterialUVMap);
+                await DBC.DBConnection.prisma.modelMaterialUVMap.findUnique({ where: { idModelMaterialUVMap, }, }), ModelMaterialUVMap);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelMaterialUVMap.fetch', error);
             return null;
@@ -88,7 +88,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
                 await DBC.DBConnection.prisma.$queryRaw<ModelMaterialUVMap[]>`
                 SELECT DISTINCT *
                 FROM ModelMaterialUVMap
-                WHERE idModel IN (${join(idModel)})`,
+                WHERE idModel IN (${Prisma.join(idModel)})`,
                 ModelMaterialUVMap
             );
         } catch (error) /* istanbul ignore next */ {

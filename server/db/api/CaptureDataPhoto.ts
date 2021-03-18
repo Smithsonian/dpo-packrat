@@ -105,7 +105,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
             return null;
         try {
             return DBC.CopyObject<CaptureDataPhotoBase, CaptureDataPhoto>(
-                await DBC.DBConnection.prisma.captureDataPhoto.findOne({ where: { idCaptureDataPhoto, }, }), CaptureDataPhoto);
+                await DBC.DBConnection.prisma.captureDataPhoto.findUnique({ where: { idCaptureDataPhoto, }, }), CaptureDataPhoto);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataPhoto.fetch', error);
             return null;

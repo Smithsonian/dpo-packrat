@@ -70,7 +70,7 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
             return null;
         try {
             return DBC.CopyObject<LicenseAssignmentBase, LicenseAssignment>(
-                await DBC.DBConnection.prisma.licenseAssignment.findOne({ where: { idLicenseAssignment, }, }), LicenseAssignment);
+                await DBC.DBConnection.prisma.licenseAssignment.findUnique({ where: { idLicenseAssignment, }, }), LicenseAssignment);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.LicenseAssignment.fetch', error);
             return null;

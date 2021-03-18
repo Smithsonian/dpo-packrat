@@ -61,7 +61,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
         try {
             const { idActor } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idActor, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idActor, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.fetchSystemObject', error);
             return null;
@@ -73,7 +73,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             return null;
         try {
             return DBC.CopyObject<ActorBase, Actor>(
-                await DBC.DBConnection.prisma.actor.findOne({ where: { idActor, }, }), Actor);
+                await DBC.DBConnection.prisma.actor.findUnique({ where: { idActor, }, }), Actor);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Actor.fetch', error);
             return null;

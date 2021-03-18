@@ -53,7 +53,7 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
             return null;
         try {
             return DBC.CopyObject<CaptureDataGroupCaptureDataXrefBase, CaptureDataGroupCaptureDataXref>(
-                await DBC.DBConnection.prisma.captureDataGroupCaptureDataXref.findOne({ where: { idCaptureDataGroupCaptureDataXref, }, }),
+                await DBC.DBConnection.prisma.captureDataGroupCaptureDataXref.findUnique({ where: { idCaptureDataGroupCaptureDataXref, }, }),
                 CaptureDataGroupCaptureDataXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroupCaptureDataXref.fetch', error);

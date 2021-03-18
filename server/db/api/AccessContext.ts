@@ -51,7 +51,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
             return null;
         try {
             return DBC.CopyObject<AccessContextBase, AccessContext>(
-                await DBC.DBConnection.prisma.accessContext.findOne({ where: { idAccessContext, }, }), AccessContext);
+                await DBC.DBConnection.prisma.accessContext.findUnique({ where: { idAccessContext, }, }), AccessContext);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessContext.fetch', error);
             return null;

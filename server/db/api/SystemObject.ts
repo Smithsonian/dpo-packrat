@@ -86,7 +86,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idSystemObject, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSystemObject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetch', error);
             return null;
@@ -162,7 +162,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idActor } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idActor } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromActor', error);
             return null;
@@ -174,7 +174,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAsset } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAsset } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromAsset', error);
             return null;
@@ -186,7 +186,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAssetVersion } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAssetVersion } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromAssetVersion', error);
             return null;
@@ -198,7 +198,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idCaptureData } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idCaptureData } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromCaptureData', error);
             return null;
@@ -210,7 +210,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idIntermediaryFile } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idIntermediaryFile } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromIntermediaryFile', error);
             return null;
@@ -222,7 +222,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idItem } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idItem } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromItem', error);
             return null;
@@ -234,7 +234,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idModel } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idModel } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromModel', error);
             return null;
@@ -246,7 +246,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idProject } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProject } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromProject', error);
             return null;
@@ -258,7 +258,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idProjectDocumentation } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProjectDocumentation } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromProjectDocumentation', error);
             return null;
@@ -270,7 +270,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idScene } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idScene } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromScene', error);
             return null;
@@ -282,7 +282,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idStakeholder } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idStakeholder } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromStakeholder', error);
             return null;
@@ -294,7 +294,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idSubject } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSubject } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromSubject', error);
             return null;
@@ -306,7 +306,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return null;
         try {
             return DBC.CopyObject<P.SystemObject, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idUnit } }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idUnit } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObject.fetchSystemObjectFromUnit', error);
             return null;

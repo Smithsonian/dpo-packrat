@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Unit as UnitBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { Unit as UnitBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -56,7 +56,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
         try {
             const { idUnit } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idUnit, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idUnit, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.fetchSystemObject', error);
             return null;
@@ -68,7 +68,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return null;
         try {
             return DBC.CopyObject<UnitBase, Unit>(
-                await DBC.DBConnection.prisma.unit.findOne({ where: { idUnit, }, }), Unit);
+                await DBC.DBConnection.prisma.unit.findUnique({ where: { idUnit, }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.fetch', error);
             return null;
@@ -102,7 +102,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 JOIN SystemObject AS SOU ON (U.idUnit = SOU.idUnit)
                 JOIN SystemObjectXref AS SOX ON (SOU.idSystemObject = SOX.idSystemObjectMaster)
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectDerived = SOP.idSystemObject)
-                WHERE SOP.idProject IN (${join(idProjects)})`, Unit);
+                WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Unit);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.fetchMasterFromProjects', error);
             return null;

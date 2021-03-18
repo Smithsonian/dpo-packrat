@@ -97,7 +97,7 @@ enum ReferenceModelAction {
 type ReferenceModel {
     idSystemObject: Int!
     name: String!
-    fileSize: Int!
+    fileSize: BigInt!
     resolution: Int
     boundingBoxP1X: Float
     boundingBoxP1Y: Float

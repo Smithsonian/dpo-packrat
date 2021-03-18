@@ -1,4 +1,5 @@
 scalar DateTime
+scalar BigInt
 
 type Asset {
     idAsset: Int!
@@ -21,7 +22,7 @@ type AssetVersion {
     idAsset: Int!
     idUserCreator: Int!
     StorageHash: String!
-    StorageSize: Int!
+    StorageSize: BigInt!
     StorageKeyStaging: String!
     FileName: String!
     Ingested: Boolean!

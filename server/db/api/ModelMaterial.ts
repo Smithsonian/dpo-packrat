@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ModelMaterial as ModelMaterialBase, ModelObject, join } from '@prisma/client';
+import { ModelMaterial as ModelMaterialBase, ModelObject, Prisma } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -53,7 +53,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
             return null;
         try {
             return DBC.CopyObject<ModelMaterialBase, ModelMaterial>(
-                await DBC.DBConnection.prisma.modelMaterial.findOne({ where: { idModelMaterial, }, }), ModelMaterial);
+                await DBC.DBConnection.prisma.modelMaterial.findUnique({ where: { idModelMaterial, }, }), ModelMaterial);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelMaterial.fetch', error);
             return null;
@@ -72,7 +72,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
                 await DBC.DBConnection.prisma.$queryRaw<ModelMaterial[]>`
                 SELECT DISTINCT *
                 FROM ModelMaterial
-                WHERE idModelObject IN (${join(idModelObjects)})`,
+                WHERE idModelObject IN (${Prisma.join(idModelObjects)})`,
                 ModelMaterial
             );
         } catch (error) /* istanbul ignore next */ {

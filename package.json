@@ -69,7 +69,7 @@
     "lerna": "3.22.1",
     "nodemon": "2.0.4",
     "prettier": "2.1.1",
-    "typescript": "3.9.3"
+    "typescript": "4.2.3"
   },
   "husky": {
     "hooks": {
@@ -86,7 +86,7 @@
     ]
   },
   "volta": {
-    "node": "12.18.4",
-    "yarn": "1.22.4"
+    "node": "14.16.0",
+    "yarn": "1.22.10"
   }
 }

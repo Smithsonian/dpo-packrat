@@ -56,7 +56,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
             return null;
         try {
             return DBC.CopyObject<ModelProcessingActionStepBase, ModelProcessingActionStep>(
-                await DBC.DBConnection.prisma.modelProcessingActionStep.findOne({ where: { idModelProcessingActionStep, }, }), ModelProcessingActionStep);
+                await DBC.DBConnection.prisma.modelProcessingActionStep.findUnique({ where: { idModelProcessingActionStep, }, }), ModelProcessingActionStep);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelProcessingActionStep.fetch', error);
             return null;

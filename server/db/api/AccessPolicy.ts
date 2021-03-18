@@ -56,7 +56,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
             return null;
         try {
             return DBC.CopyObject<AccessPolicyBase, AccessPolicy>(
-                await DBC.DBConnection.prisma.accessPolicy.findOne({ where: { idAccessPolicy, }, }), AccessPolicy);
+                await DBC.DBConnection.prisma.accessPolicy.findUnique({ where: { idAccessPolicy, }, }), AccessPolicy);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessPolicy.fetch', error);
             return null;

@@ -40,7 +40,7 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
             return null;
         try {
             return DBC.CopyObject<CaptureDataGroupBase, CaptureDataGroup>(
-                await DBC.DBConnection.prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
+                await DBC.DBConnection.prisma.captureDataGroup.findUnique({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataGroup.fetch', error);
             return null;

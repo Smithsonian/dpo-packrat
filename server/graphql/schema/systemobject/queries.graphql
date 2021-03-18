@@ -69,7 +69,7 @@ type CaptureDataDetailFields {
 }
 
 type ModelDetailFields {
-    size: Int
+    size: BigInt
     master: Boolean
     authoritative: Boolean
     creationMethod: Int
@@ -125,7 +125,7 @@ type AssetVersionDetailFields {
     DateCreated: DateTime
     Ingested: Boolean
     Version: Int
-    StorageSize: Int
+    StorageSize: BigInt
 }
 
 type ActorDetailFields {
@@ -204,7 +204,7 @@ type AssetDetail {
     assetType: Int!
     version: Int!
     dateCreated: DateTime!
-    size: Int!
+    size: BigInt!
 }
 
 input GetAssetDetailsForSystemObjectInput {
@@ -221,7 +221,7 @@ type DetailVersion {
     name: String!
     creator: String!
     dateCreated: DateTime!
-    size: Int!
+    size: BigInt!
 }
 
 input GetVersionsForSystemObjectInput {
