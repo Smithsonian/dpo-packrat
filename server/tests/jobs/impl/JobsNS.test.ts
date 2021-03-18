@@ -8,8 +8,11 @@ import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
+import * as MTS from '../../db/composite/Model.setup';
 
 let jobEngine: IJobEngine | null = null;
+let modelTestAvailable: boolean | null = null;
+let modelTestSetup: MTS.ModelTestSetup | null = null;
 
 afterAll(async done => {
     jest.setTimeout(5000);
@@ -21,6 +24,10 @@ describe('Jobs NS Init', () => {
     test('JobFactory.getInstance', async () => {
         jobEngine = await JobFactory.getInstance(JOB_TYPE.NODE_SCHEDULE);
         expect(jobEngine).toBeTruthy();
+
+        modelTestSetup = new MTS.ModelTestSetup();
+        modelTestAvailable = await modelTestSetup.initialize();
+        expect(modelTestAvailable === null || modelTestAvailable).toBeTruthy(); // null means that model test files were not available, which is ok
     });
 });
 

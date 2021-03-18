@@ -285,7 +285,10 @@ export class ModelTestSetup {
     }
 
     private async testFileExistence(MTD: ModelTestData): Promise<boolean> {
-        const res: H.StatResults = await H.Helpers.stat(this.computeFilePath(MTD));
-        return res.success && (res.stat !== null) && res.stat.isFile();
+        const filePath: string = this.computeFilePath(MTD);
+        const res: H.StatResults = await H.Helpers.stat(filePath);
+        const success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
+        LOG.logger.info(`ModelTestSetup.testFileExistience(${filePath}) = ${success}`);
+        return success;
     }
 }
