@@ -40,7 +40,7 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
             return null;
         try {
             return DBC.CopyObject<AssetGroupBase, AssetGroup>(
-                await DBC.DBConnection.prisma.assetGroup.findOne({ where: { idAssetGroup, }, }), AssetGroup);
+                await DBC.DBConnection.prisma.assetGroup.findUnique({ where: { idAssetGroup, }, }), AssetGroup);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetGroup.fetch', error);
             return null;

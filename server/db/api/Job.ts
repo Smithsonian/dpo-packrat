@@ -76,7 +76,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
             return null;
         try {
             return DBC.CopyObject<JobBase, Job>(
-                await DBC.DBConnection.prisma.job.findOne({ where: { idJob, }, }), Job);
+                await DBC.DBConnection.prisma.job.findUnique({ where: { idJob, }, }), Job);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Job.fetch', error);
             return null;

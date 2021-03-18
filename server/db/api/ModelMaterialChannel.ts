@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ModelMaterialChannel as ModelMaterialChannelBase, join } from '@prisma/client';
+import { ModelMaterialChannel as ModelMaterialChannelBase, Prisma } from '@prisma/client';
 import { ModelMaterial } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -88,7 +88,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return null;
         try {
             return DBC.CopyObject<ModelMaterialChannelBase, ModelMaterialChannel>(
-                await DBC.DBConnection.prisma.modelMaterialChannel.findOne({ where: { idModelMaterialChannel, }, }), ModelMaterialChannel);
+                await DBC.DBConnection.prisma.modelMaterialChannel.findUnique({ where: { idModelMaterialChannel, }, }), ModelMaterialChannel);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelMaterialChannel.fetch', error);
             return null;
@@ -119,7 +119,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                 await DBC.DBConnection.prisma.$queryRaw<ModelMaterialChannel[]>`
                 SELECT DISTINCT *
                 FROM ModelMaterialChannel
-                WHERE idModelMaterial IN (${join(idModelMaterials)})`,
+                WHERE idModelMaterial IN (${Prisma.join(idModelMaterials)})`,
                 ModelMaterialChannel
             );
         } catch (error) /* istanbul ignore next */ {

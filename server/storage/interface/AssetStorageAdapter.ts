@@ -250,7 +250,7 @@ export class AssetStorageAdapter {
             idUserCreator,
             DateCreated,
             StorageHash: resStorage.storageHash ? resStorage.storageHash : /* istanbul ignore next */ '',
-            StorageSize: resStorage.storageSize ? resStorage.storageSize : /* istanbul ignore next */ 0,
+            StorageSize: resStorage.storageSize ? BigInt(resStorage.storageSize) : /* istanbul ignore next */ BigInt(0),
             StorageKeyStaging: storageKey,
             Ingested: false,
             BulkIngest,

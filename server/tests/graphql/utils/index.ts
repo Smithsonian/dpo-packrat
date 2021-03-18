@@ -163,7 +163,7 @@ class TestSuiteUtils {
             DateCreated: nowCleansed(),
             StorageHash: 'Asset Checksum',
             StorageKeyStaging: '',
-            StorageSize: 50,
+            StorageSize: BigInt(50),
             idAssetVersion: 0,
             Ingested: false,
             BulkIngest: false,

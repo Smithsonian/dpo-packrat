@@ -227,7 +227,7 @@ enum ReferenceModelAction {
 type ReferenceModel {
   idSystemObject: Int!
   name: String!
-  fileSize: Int!
+  fileSize: BigInt!
   resolution: Int
   boundingBoxP1X: Float
   boundingBoxP1Y: Float
@@ -286,6 +286,8 @@ type GetContentsForAssetVersionsResult {
   AssetVersionContent: [AssetVersionContent!]!
 }
 
+scalar BigInt
+
 type Asset {
   idAsset: Int!
   FileName: String!
@@ -307,7 +309,7 @@ type AssetVersion {
   idAsset: Int!
   idUserCreator: Int!
   StorageHash: String!
-  StorageSize: Int!
+  StorageSize: BigInt!
   StorageKeyStaging: String!
   FileName: String!
   Ingested: Boolean!
@@ -518,7 +520,7 @@ input IngestModelInput {
 input ReferenceModelInput {
   idSystemObject: Int!
   name: String!
-  fileSize: Int!
+  fileSize: BigInt!
   resolution: Int
   boundingBoxP1X: Float
   boundingBoxP1Y: Float
@@ -912,7 +914,7 @@ input CaptureDataDetailFieldsInput {
 }
 
 input ModelDetailFieldsInput {
-  size: Int
+  size: BigInt
   master: Boolean
   authoritative: Boolean
   creationMethod: Int
@@ -961,7 +963,7 @@ input AssetVersionDetailFieldsInput {
   DateCreated: DateTime
   Ingested: Boolean
   Version: Int
-  StorageSize: Int
+  StorageSize: BigInt
 }
 
 input ActorDetailFieldsInput {
@@ -1058,7 +1060,7 @@ type CaptureDataDetailFields {
 }
 
 type ModelDetailFields {
-  size: Int
+  size: BigInt
   master: Boolean
   authoritative: Boolean
   creationMethod: Int
@@ -1115,7 +1117,7 @@ type AssetVersionDetailFields {
   DateCreated: DateTime
   Ingested: Boolean
   Version: Int
-  StorageSize: Int
+  StorageSize: BigInt
 }
 
 type ActorDetailFields {
@@ -1194,7 +1196,7 @@ type AssetDetail {
   assetType: Int!
   version: Int!
   dateCreated: DateTime!
-  size: Int!
+  size: BigInt!
 }
 
 input GetAssetDetailsForSystemObjectInput {
@@ -1211,7 +1213,7 @@ type DetailVersion {
   name: String!
   creator: String!
   dateCreated: DateTime!
-  size: Int!
+  size: BigInt!
 }
 
 input GetVersionsForSystemObjectInput {

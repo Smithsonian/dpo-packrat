@@ -59,7 +59,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             return null;
         try {
             return DBC.CopyObject<CaptureDataFileBase, CaptureDataFile>(
-                await DBC.DBConnection.prisma.captureDataFile.findOne({ where: { idCaptureDataFile, }, }), CaptureDataFile);
+                await DBC.DBConnection.prisma.captureDataFile.findUnique({ where: { idCaptureDataFile, }, }), CaptureDataFile);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.CaptureDataFile.fetch', error);
             return null;

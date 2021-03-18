@@ -98,7 +98,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
             return null;
         try {
             return DBC.CopyObject<JobRunBase, JobRun>(
-                await DBC.DBConnection.prisma.jobRun.findOne({ where: { idJobRun, }, }), JobRun);
+                await DBC.DBConnection.prisma.jobRun.findUnique({ where: { idJobRun, }, }), JobRun);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.JobRun.fetch', error);
             return null;

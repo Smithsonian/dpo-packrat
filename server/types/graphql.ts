@@ -1,5 +1,7 @@
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -9,6 +11,7 @@ export type Scalars = {
   Float: number;
   DateTime: any;
   Upload: any;
+  BigInt: any;
 };
 
 export type Query = {
@@ -502,7 +505,7 @@ export type ReferenceModel = {
   __typename?: 'ReferenceModel';
   idSystemObject: Scalars['Int'];
   name: Scalars['String'];
-  fileSize: Scalars['Int'];
+  fileSize: Scalars['BigInt'];
   resolution?: Maybe<Scalars['Int']>;
   boundingBoxP1X?: Maybe<Scalars['Float']>;
   boundingBoxP1Y?: Maybe<Scalars['Float']>;
@@ -568,6 +571,7 @@ export type GetContentsForAssetVersionsResult = {
   AssetVersionContent: Array<AssetVersionContent>;
 };
 
+
 export type Asset = {
   __typename?: 'Asset';
   idAsset: Scalars['Int'];
@@ -591,7 +595,7 @@ export type AssetVersion = {
   idAsset: Scalars['Int'];
   idUserCreator: Scalars['Int'];
   StorageHash: Scalars['String'];
-  StorageSize: Scalars['Int'];
+  StorageSize: Scalars['BigInt'];
   StorageKeyStaging: Scalars['String'];
   FileName: Scalars['String'];
   Ingested: Scalars['Boolean'];
@@ -811,7 +815,7 @@ export type IngestModelInput = {
 export type ReferenceModelInput = {
   idSystemObject: Scalars['Int'];
   name: Scalars['String'];
-  fileSize: Scalars['Int'];
+  fileSize: Scalars['BigInt'];
   resolution?: Maybe<Scalars['Int']>;
   boundingBoxP1X?: Maybe<Scalars['Float']>;
   boundingBoxP1Y?: Maybe<Scalars['Float']>;
@@ -1231,7 +1235,7 @@ export type CaptureDataDetailFieldsInput = {
 };
 
 export type ModelDetailFieldsInput = {
-  size?: Maybe<Scalars['Int']>;
+  size?: Maybe<Scalars['BigInt']>;
   master?: Maybe<Scalars['Boolean']>;
   authoritative?: Maybe<Scalars['Boolean']>;
   creationMethod?: Maybe<Scalars['Int']>;
@@ -1280,7 +1284,7 @@ export type AssetVersionDetailFieldsInput = {
   DateCreated?: Maybe<Scalars['DateTime']>;
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
-  StorageSize?: Maybe<Scalars['Int']>;
+  StorageSize?: Maybe<Scalars['BigInt']>;
 };
 
 export type ActorDetailFieldsInput = {
@@ -1384,7 +1388,7 @@ export type CaptureDataDetailFields = {
 
 export type ModelDetailFields = {
   __typename?: 'ModelDetailFields';
-  size?: Maybe<Scalars['Int']>;
+  size?: Maybe<Scalars['BigInt']>;
   master?: Maybe<Scalars['Boolean']>;
   authoritative?: Maybe<Scalars['Boolean']>;
   creationMethod?: Maybe<Scalars['Int']>;
@@ -1446,7 +1450,7 @@ export type AssetVersionDetailFields = {
   DateCreated?: Maybe<Scalars['DateTime']>;
   Ingested?: Maybe<Scalars['Boolean']>;
   Version?: Maybe<Scalars['Int']>;
-  StorageSize?: Maybe<Scalars['Int']>;
+  StorageSize?: Maybe<Scalars['BigInt']>;
 };
 
 export type ActorDetailFields = {
@@ -1533,7 +1537,7 @@ export type AssetDetail = {
   assetType: Scalars['Int'];
   version: Scalars['Int'];
   dateCreated: Scalars['DateTime'];
-  size: Scalars['Int'];
+  size: Scalars['BigInt'];
 };
 
 export type GetAssetDetailsForSystemObjectInput = {
@@ -1552,7 +1556,7 @@ export type DetailVersion = {
   name: Scalars['String'];
   creator: Scalars['String'];
   dateCreated: Scalars['DateTime'];
-  size: Scalars['Int'];
+  size: Scalars['BigInt'];
 };
 
 export type GetVersionsForSystemObjectInput = {

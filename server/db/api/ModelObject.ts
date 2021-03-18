@@ -57,7 +57,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
             return null;
         try {
             return DBC.CopyObject<ModelObjectBase, ModelObject>(
-                await DBC.DBConnection.prisma.modelObject.findOne({ where: { idModelObject, }, }), ModelObject);
+                await DBC.DBConnection.prisma.modelObject.findUnique({ where: { idModelObject, }, }), ModelObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelObject.fetch', error);
             return null;

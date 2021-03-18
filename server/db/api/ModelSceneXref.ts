@@ -62,7 +62,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return null;
         try {
             return DBC.CopyObject<ModelSceneXrefBase, ModelSceneXref>(
-                await DBC.DBConnection.prisma.modelSceneXref.findOne({ where: { idModelSceneXref, }, }), ModelSceneXref);
+                await DBC.DBConnection.prisma.modelSceneXref.findUnique({ where: { idModelSceneXref, }, }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelSceneXref.fetch', error);
             return null;

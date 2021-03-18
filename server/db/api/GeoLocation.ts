@@ -55,7 +55,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
             return null;
         try {
             return DBC.CopyObject<GeoLocationBase, GeoLocation>(
-                await DBC.DBConnection.prisma.geoLocation.findOne({ where: { idGeoLocation, }, }), GeoLocation);
+                await DBC.DBConnection.prisma.geoLocation.findUnique({ where: { idGeoLocation, }, }), GeoLocation);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.GeoLocation.fetch', error);
             return null;

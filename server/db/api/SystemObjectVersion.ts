@@ -53,7 +53,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return null;
         try {
             return DBC.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
-                await DBC.DBConnection.prisma.systemObjectVersion.findOne({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
+                await DBC.DBConnection.prisma.systemObjectVersion.findUnique({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.SystemObjectVersion.fetch', error);
             return null;

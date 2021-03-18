@@ -67,7 +67,7 @@ input CaptureDataDetailFieldsInput {
 }
 
 input ModelDetailFieldsInput {
-    size: Int
+    size: BigInt
     master: Boolean
     authoritative: Boolean
     creationMethod: Int
@@ -115,7 +115,7 @@ input AssetVersionDetailFieldsInput {
     DateCreated: DateTime
     Ingested: Boolean
     Version: Int
-    StorageSize: Int
+    StorageSize: BigInt
 }
 
 input ActorDetailFieldsInput {

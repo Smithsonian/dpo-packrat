@@ -75,7 +75,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
         try {
             const { idAsset } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAsset, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAsset, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchSystemObject', error);
             return null;
@@ -87,7 +87,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return null;
         try {
             return DBC.CopyObject<AssetBase, Asset>(
-                await DBC.DBConnection.prisma.asset.findOne({ where: { idAsset, }, }), Asset);
+                await DBC.DBConnection.prisma.asset.findUnique({ where: { idAsset, }, }), Asset);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetch', error);
             return null;
@@ -109,7 +109,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return null;
         try {
             return DBC.CopyObject<AssetBase, Asset>(
-                await DBC.DBConnection.prisma.asset.findOne({ where: { StorageKey, }, }), Asset);
+                await DBC.DBConnection.prisma.asset.findUnique({ where: { StorageKey, }, }), Asset);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchByStorageKey', error);
             return null;
@@ -147,7 +147,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return null;
         try {
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idSystemObject, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSystemObject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Asset.fetchSourceSystemObject', error);
             return null;
