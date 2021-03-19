@@ -81,7 +81,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return null;
         try {
             return DBC.CopyObject<MetadataBase, Metadata>(
-                await DBC.DBConnection.prisma.metadata.findOne({ where: { idMetadata, }, }), Metadata);
+                await DBC.DBConnection.prisma.metadata.findUnique({ where: { idMetadata, }, }), Metadata);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Metadata.fetch', error);
             return null;

@@ -3,7 +3,7 @@
 import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
 import * as COL from '../interface';
-import Config from '../../config';
+import { Config } from '../../config';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 

@@ -7,7 +7,7 @@ import { Context } from '../../../../types/resolvers';
 import { CreateUserInput } from '../../../../types/graphql';
 import * as CACHE from '../../../../cache';
 import * as H from '../../../../utils/helpers';
-import Config from '../../../../config';
+import { Config } from '../../../../config';
 
 let rootRepositoryOrig: string;
 let rootRepositoryNew: string;

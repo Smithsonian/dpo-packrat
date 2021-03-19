@@ -102,15 +102,18 @@ export class ObjectGraph {
             if (this.pushCount++ >= this.maxPushCount)
                 return true;
 
-            // short-circuit if we're building an ObjectGraphDatabase and we've already processed this object
-            if (this.objectGraphDatabase && this.objectGraphDatabase.alreadyProcssed(idSystemObject, relatedType))
-                return true;
-
             const sourceType: SystemObjectIDType = {
                 idSystemObject,
                 idObject: 0,
                 eObjectType: eSystemObjectType.eUnknown
             };
+
+            // short-circuit if we're building an ObjectGraphDatabase and we've already processed this object
+            if (this.objectGraphDatabase && this.objectGraphDatabase.alreadyProcessed(sourceType, relatedType)) {
+                if (sourceType.idObject)
+                    await this.recordRelationship(sourceType, relatedType, eMode);
+                return true;
+            }
 
             const SOP: SystemObjectPairs | null = await SystemObjectPairs.fetch(idSystemObject);
             /* istanbul ignore next */
@@ -155,14 +158,7 @@ export class ObjectGraph {
             this.systemObjectAdded.set(idSystemObject, sourceType);
 
             // record relationship
-            if (this.objectGraphDatabase) {
-                if (relatedType) {
-                    if (eMode == eObjectGraphMode.eAncestors)
-                        await this.objectGraphDatabase.recordRelationship(sourceType, relatedType);
-                    else
-                        await this.objectGraphDatabase.recordRelationship(relatedType, sourceType);
-                }
-            }
+            await this.recordRelationship(sourceType, relatedType, eMode);
 
             /*
             const valid: string = (this.validHierarchy ? '' : ' INVALID HIERARCHY') + (this.noCycles ? '' : ' CYCLE');
@@ -219,6 +215,17 @@ export class ObjectGraph {
         }
 
         return true;
+    }
+
+    private async recordRelationship(sourceType: SystemObjectIDType, relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<void> {
+        if (this.objectGraphDatabase) {
+            if (relatedType) {
+                if (eMode == eObjectGraphMode.eAncestors)
+                    await this.objectGraphDatabase.recordRelationship(sourceType, relatedType);
+                else
+                    await this.objectGraphDatabase.recordRelationship(relatedType, sourceType);
+            }
+        }
     }
 
     private async pushActor(actor: Actor, sourceType: SystemObjectIDType,

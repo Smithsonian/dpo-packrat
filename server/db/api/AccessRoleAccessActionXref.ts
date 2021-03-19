@@ -53,7 +53,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
             return null;
         try {
             return DBC.CopyObject<AccessRoleAccessActionXrefBase, AccessRoleAccessActionXref>(
-                await DBC.DBConnection.prisma.accessRoleAccessActionXref.findOne({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
+                await DBC.DBConnection.prisma.accessRoleAccessActionXref.findUnique({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRoleAccessActionXref.fetch', error);
             return null;

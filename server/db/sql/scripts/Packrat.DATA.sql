@@ -19,6 +19,7 @@ INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (17, 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (18, 'Metadata.MetadataSource', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (19, 'WorkflowStep.WorkflowStepType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (20, 'Asset.AssetType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (21, 'Job.JobType', 1);
 
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 1, 'Photogrammetry');
@@ -100,6 +101,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 2, 'DOI');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (16, 3, 'Unit CMS ID');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (17, 1, 'ORCID');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (17, 2, 'ISNI');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 1, 'Bulk Ingestion');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 1, 'Bulk Ingestion');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 2, 'Capture Data Set: Photogrammetry');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 3, 'Capture Data Set: Diconde');
@@ -116,7 +118,19 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 13, 'Scene
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 14, 'Project Documentation');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 15, 'Intermediary File');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 16, 'Other');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 1, 'Bulk Ingestion');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 1, 'Cook: bake');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 2, 'Cook: decimate-unwrap');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 3, 'Cook: decimate');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 4, 'Cook: generate-usdz');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 5, 'Cook: generate-web-gltf');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 6, 'Cook: inspect-mesh');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 7, 'Cook: si-ar-backfill-fix');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 8, 'Cook: si-generate-downloads');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 9, 'Cook: si-orient-model-to-svx');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 10, 'Cook: si-packrat-inspect');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 11, 'Cook: si-voyager-asset');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 12, 'Cook: si-voyager-scene');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 13, 'Cook: unwrap');
 
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary 
 WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
@@ -1242,6 +1256,20 @@ INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (1, 'SJ_BL');
 INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (1, 'SLC_YT');
 INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (1, 'SS_BL');
 INSERT INTO UnitEdan (idUnit, Abbreviation) VALUES (32, 'STRI_YT');
+
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: bake';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: decimate-unwrap';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: decimate';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: generate-usdz';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: generate-web-gltf';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: inspect-mesh';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-ar-backfill-fix';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-generate-downloads';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-orient-model-to-svx';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-packrat-inspect';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-asset';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-scene';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: unwrap';
 
 -- Entries for Test code
 INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELECT 'ITEM_GUID_1', @idVocabARK, idSystemObject FROM SystemObject WHERE idItem = (SELECT idItem FROM Item WHERE NAME = '401524 turtle scute');

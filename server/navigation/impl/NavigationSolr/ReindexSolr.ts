@@ -88,6 +88,7 @@ export class ReindexSolr {
             return false;
         }
 
+        let documentCount: number = 0;
         let docs: any[] = [];
         for (const objectGraphDataEntry of this.objectGraphDatabase.objectMap.values()) {
             const doc: any = {};
@@ -97,6 +98,8 @@ export class ReindexSolr {
                 if (docs.length >= 1000) {
                     solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
                     solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
+                    documentCount += docs.length;
+                    LOG.logger.info(`ReindexSolr.fullIndex committed ${documentCount} total documents`);
                     docs = [];
                 }
             } else
@@ -106,6 +109,8 @@ export class ReindexSolr {
         if (docs.length > 0) {
             solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
             solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
+            documentCount += docs.length;
+            LOG.logger.info(`ReindexSolr.fullIndex committed ${documentCount} total documents`);
         }
         return true;
     }

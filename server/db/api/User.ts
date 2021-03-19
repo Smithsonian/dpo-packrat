@@ -100,7 +100,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
             return null;
         try {
             return DBC.CopyObject<UserBase, User>(
-                await DBC.DBConnection.prisma.user.findOne({ where: { idUser, }, }), User);
+                await DBC.DBConnection.prisma.user.findUnique({ where: { idUser, }, }), User);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.User.fetch', error);
             return null;

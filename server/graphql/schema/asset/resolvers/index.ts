@@ -7,6 +7,7 @@ import getUploadedAssetVersion from './queries/getUploadedAssetVersion';
 import getContentsForAssetVersions from './queries/getContentsForAssetVersions';
 import getAssetVersionsDetails from './queries/getAssetVersionsDetails';
 import discardUploadedAssetVersions from './mutations/discardUploadedAssetVersions';
+import { BigIntResolver } from 'graphql-scalars';
 
 const resolvers = {
     Query: {
@@ -21,7 +22,8 @@ const resolvers = {
     },
     Asset,
     AssetGroup,
-    AssetVersion
+    AssetVersion,
+    BigInt: BigIntResolver
 };
 
 export default resolvers;

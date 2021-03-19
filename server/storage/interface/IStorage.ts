@@ -15,6 +15,7 @@ export type ReadStreamInput = {
 
 export type ReadStreamResult = {
     readStream: NodeJS.ReadableStream | null,
+    fileName: string | null,
     storageHash: string | null,
     success: boolean,
     error: string

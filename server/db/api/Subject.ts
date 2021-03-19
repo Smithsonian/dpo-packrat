@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Subject as SubjectBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { Subject as SubjectBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -73,7 +73,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
         try {
             const { idSubject } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idSubject, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSubject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.subject.fetchSystemObject', error);
             return null;
@@ -85,7 +85,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return null;
         try {
             return DBC.CopyObject<SubjectBase, Subject>(
-                await DBC.DBConnection.prisma.subject.findOne({ where: { idSubject, }, }), Subject);
+                await DBC.DBConnection.prisma.subject.findUnique({ where: { idSubject, }, }), Subject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Subject.fetch', error);
             return null;
@@ -131,7 +131,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 JOIN SystemObject AS SOS ON (S.idSubject = SOS.idSubject)
                 JOIN SystemObjectXref AS SOX ON (SOS.idSystemObject = SOX.idSystemObjectMaster)
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectDerived = SOI.idSystemObject)
-                WHERE SOI.idItem IN (${join(idItems)})`, Subject);
+                WHERE SOI.idItem IN (${Prisma.join(idItems)})`, Subject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Item.fetchMasterFromItems', error);
             return null;
@@ -155,7 +155,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 JOIN SystemObject AS SOS ON (S.idSubject = SOS.idSubject)
                 JOIN SystemObjectXref AS SOX ON (SOS.idSystemObject = SOX.idSystemObjectDerived)
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectMaster = SOP.idSystemObject)
-                WHERE SOP.idProject IN (${join(idProjects)})`, Subject);
+                WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Subject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Item.fetchDerivedFromProjects', error);
             return null;

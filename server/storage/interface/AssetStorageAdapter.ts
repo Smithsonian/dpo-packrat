@@ -72,13 +72,13 @@ export class AssetStorageAdapter {
         if (!storage) {
             const error: string = 'AssetStorageAdapter.readAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
             LOG.logger.error(error);
-            return { readStream: null, storageHash: null, success: false, error };
+            return { readStream: null, fileName: null, storageHash: null, success: false, error };
         }
 
         const { storageKey, ingested, error } = AssetStorageAdapter.computeStorageKeyAndIngested(asset, assetVersion); ingested; /* istanbul ignore next */
         if (!storageKey) {
             LOG.logger.error(error);
-            return { readStream: null, storageHash: null, success: false, error };
+            return { readStream: null, fileName: null, storageHash: null, success: false, error };
         }
 
         const readStreamInput: STORE.ReadStreamInput = {
@@ -89,6 +89,28 @@ export class AssetStorageAdapter {
         };
 
         return await storage.readStream(readStreamInput);
+    }
+
+    static async readAssetVersion(assetVersion: DBAPI.AssetVersion): Promise<STORE.ReadStreamResult> {
+        const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset); /* istanbul ignore next */
+        if (!asset) {
+            const error: string = `AssetStorageAdapter.readAssetVersion: Unable to retrieve Asset ${assetVersion.idAsset}`;
+            LOG.logger.error(error);
+            return { readStream: null, fileName: null, storageHash: null, success: false, error };
+        }
+
+        return await AssetStorageAdapter.readAsset(asset, assetVersion);
+    }
+
+    static async readAssetVersionByID(idAssetVersion: number): Promise<STORE.ReadStreamResult> {
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion); /* istanbul ignore next */
+        if (!assetVersion) {
+            const error: string = `AssetStorageAdapter.readAssetVersionByID: Unable to retrieve Asset ${idAssetVersion}`;
+            LOG.logger.error(error);
+            return { readStream: null, fileName: null, storageHash: null, success: false, error };
+        }
+
+        return await AssetStorageAdapter.readAssetVersion(assetVersion);
     }
 
     /**
@@ -228,7 +250,7 @@ export class AssetStorageAdapter {
             idUserCreator,
             DateCreated,
             StorageHash: resStorage.storageHash ? resStorage.storageHash : /* istanbul ignore next */ '',
-            StorageSize: resStorage.storageSize ? resStorage.storageSize : /* istanbul ignore next */ 0,
+            StorageSize: resStorage.storageSize ? BigInt(resStorage.storageSize) : /* istanbul ignore next */ BigInt(0),
             StorageKeyStaging: storageKey,
             Ingested: false,
             BulkIngest,

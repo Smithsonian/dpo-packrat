@@ -44,7 +44,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
             return null;
         try {
             return DBC.CopyObject<AccessRoleBase, AccessRole>(
-                await DBC.DBConnection.prisma.accessRole.findOne({ where: { idAccessRole, }, }), AccessRole);
+                await DBC.DBConnection.prisma.accessRole.findUnique({ where: { idAccessRole, }, }), AccessRole);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessRole.fetch', error);
             return null;

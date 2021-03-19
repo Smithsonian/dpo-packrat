@@ -56,7 +56,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
             return null;
         try {
             return DBC.CopyObject<UnitEdanBase, UnitEdan>(
-                await DBC.DBConnection.prisma.unitEdan.findOne({ where: { idUnitEdan, }, }), UnitEdan);
+                await DBC.DBConnection.prisma.unitEdan.findUnique({ where: { idUnitEdan, }, }), UnitEdan);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UnitEdan.fetch', error);
             return null;
@@ -81,7 +81,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
             return null;
         try {
             return DBC.CopyObject<UnitEdanBase, UnitEdan>(
-                await DBC.DBConnection.prisma.unitEdan.findOne({ where: { Abbreviation }, }), UnitEdan);
+                await DBC.DBConnection.prisma.unitEdan.findUnique({ where: { Abbreviation }, }), UnitEdan);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Unit.fetchFromAbbreviation', error);
             return null;
