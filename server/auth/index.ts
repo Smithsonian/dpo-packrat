@@ -26,12 +26,12 @@ if (!SESSION_SECRET) {
 
 const Store = MemoryStore(session);
 
-const { maxAge, checkPeriod, expires } = Config.auth.session;
+const { maxAge, checkPeriod } = Config.auth.session;
+// const maxAge: number = Date.now() + age;
 
 const sessionConfig = {
     cookie: {
-        maxAge,
-        expires
+        maxAge
     },
     secret: SESSION_SECRET,
     resave: true,
