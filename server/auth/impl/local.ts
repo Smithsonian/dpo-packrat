@@ -35,7 +35,7 @@ class LocalAuth implements IAuth {
         if (!user.Active) {
             LOG.logger.info(`LocalAuth.verifyUser ${email} is inactive`);
             return {
-                user,
+                user: null,
                 error: 'User is not active'
             };
         }
@@ -44,7 +44,7 @@ class LocalAuth implements IAuth {
         if (password !== user.EmailAddress) {
             LOG.logger.error(`LocalAuth.verifyUser invalid password for ${email}`);
             return {
-                user,
+                user: null,
                 error: 'Invalid password for user'
             };
         }

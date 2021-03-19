@@ -32,7 +32,6 @@ type ConfigType = {
         session: {
             maxAge: number;
             checkPeriod: number;
-            expires: Date;
         };
     },
     collection: {
@@ -61,15 +60,14 @@ type ConfigType = {
     },
 };
 
-const oneDayMs = 24 * 60 * 60 * 1000; // 24hrs in milliseconds
+const oneDayInSeconds = 24 * 60 * 60; // 24hrs in seconds
 
 const Config: ConfigType = {
     auth: {
         type: AUTH_TYPE.LOCAL,
         session: {
-            maxAge: Date.now() + oneDayMs, // 24hrs expiration time
-            expires: new Date(Date.now() + oneDayMs),
-            checkPeriod: 24 * 60 * 60 // prune expired entries every 24h
+            maxAge: oneDayInSeconds * 1000, // expiration time = 24 hours, in milliseconds
+            checkPeriod: oneDayInSeconds    // prune expired entries every 24 hours
         }
     },
     collection: {
