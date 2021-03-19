@@ -42,6 +42,6 @@ docker-compose --env-file .env.$1 -f ./conf/docker/docker-compose.deploy.yml up 
 
 # DB init scripts
 docker exec -i packrat-db-$1 sh -c "mysql -u root -p$MYSQL_ROOT_PASSWORD -e 'CREATE DATABASE IF NOT EXISTS Packrat'"
-docker exec -i packrat-db-$1 sh -c "mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.SCHEMA.sql"
-docker exec -i packrat-db-$1 sh -c "mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.PROC.sql"
-docker exec -i packrat-db-$1 sh -c "mysql -u root -p$MYSQL_ROOT_PASSWORD < /app/scripts/Packrat.DATA.sql"
+docker exec -i packrat-db-$1 sh -c "mysql -u root -p$MYSQL_ROOT_PASSWORD --database=Packrat < /app/scripts/Packrat.SCHEMA.sql"
+docker exec -i packrat-db-$1 sh -c "mysql -u root -p$MYSQL_ROOT_PASSWORD --database=Packrat < /app/scripts/Packrat.PROC.sql"
+docker exec -i packrat-db-$1 sh -c "mysql -u root -p$MYSQL_ROOT_PASSWORD --database=Packrat < /app/scripts/Packrat.DATA.sql"
