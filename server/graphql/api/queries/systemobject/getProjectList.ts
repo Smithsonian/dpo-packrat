@@ -6,6 +6,9 @@ const getProjectList = gql`
             projects {
                 idProject
                 Name
+                SystemObject {
+                    idSystemObject
+                }
             }
         }
     }
