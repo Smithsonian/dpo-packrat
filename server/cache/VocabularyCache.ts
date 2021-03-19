@@ -85,6 +85,7 @@ export enum eVocabularyID {
     eModelFileTypestl,
     eModelFileTypeglb,
     eModelFileTypegltf,
+    eModelFileTypeusd,
     eModelFileTypeusdz,
     eModelFileTypex3d,
     eModelFileTypewrl,
@@ -306,6 +307,7 @@ export class VocabularyCache {
                         case 'stl - StereoLithography':                     eVocabEnum = eVocabularyID.eModelFileTypestl; break;
                         case 'glb - GL Transmission Format Binary':         eVocabEnum = eVocabularyID.eModelFileTypeglb; break;
                         case 'gltf - GL Transmission Format':               eVocabEnum = eVocabularyID.eModelFileTypegltf; break;
+                        case 'usd - Universal Scene Description':           eVocabEnum = eVocabularyID.eModelFileTypeusd; break;
                         case 'usdz - Universal Scene Description (zipped)': eVocabEnum = eVocabularyID.eModelFileTypeusdz; break;
                         case 'x3d':                                         eVocabEnum = eVocabularyID.eModelFileTypex3d; break;
                         case 'wrl - VRML':                                  eVocabEnum = eVocabularyID.eModelFileTypewrl; break;
@@ -507,22 +509,27 @@ export class VocabularyCache {
         const extension: string = path.extname(fileName).toLowerCase() || fileName.toLowerCase();
 
         switch (extension) {
-            case 'obj':  eVocabID = eVocabularyID.eModelFileTypeobj; break;
-            case 'ply':  eVocabID = eVocabularyID.eModelFileTypeply; break;
-            case 'stl':  eVocabID = eVocabularyID.eModelFileTypestl; break;
-            case 'glb':  eVocabID = eVocabularyID.eModelFileTypeglb; break;
-            case 'gltf': eVocabID = eVocabularyID.eModelFileTypegltf; break;
-            case 'usdz': eVocabID = eVocabularyID.eModelFileTypeusdz; break;
-            case 'x3d':  eVocabID = eVocabularyID.eModelFileTypex3d; break;
-            case 'wrl':  eVocabID = eVocabularyID.eModelFileTypewrl; break;
-            case 'dae':  eVocabID = eVocabularyID.eModelFileTypedae; break;
-            case 'fbx':  eVocabID = eVocabularyID.eModelFileTypefbx; break;
-            case 'ma':   eVocabID = eVocabularyID.eModelFileTypema; break;
-            case '3ds':  eVocabID = eVocabularyID.eModelFileType3ds; break;
-            case 'ptx':  eVocabID = eVocabularyID.eModelFileTypeptx; break;
-            case 'pts':  eVocabID = eVocabularyID.eModelFileTypepts; break;
-            default: return undefined;
+            case '.obj':  eVocabID = eVocabularyID.eModelFileTypeobj; break;
+            case '.ply':  eVocabID = eVocabularyID.eModelFileTypeply; break;
+            case '.stl':  eVocabID = eVocabularyID.eModelFileTypestl; break;
+            case '.glb':  eVocabID = eVocabularyID.eModelFileTypeglb; break;
+            case '.gltf': eVocabID = eVocabularyID.eModelFileTypegltf; break;
+            case '.usda': eVocabID = eVocabularyID.eModelFileTypeusd; break;
+            case '.usdc': eVocabID = eVocabularyID.eModelFileTypeusd; break;
+            case '.usdz': eVocabID = eVocabularyID.eModelFileTypeusdz; break;
+            case '.x3d':  eVocabID = eVocabularyID.eModelFileTypex3d; break;
+            case '.wrl':  eVocabID = eVocabularyID.eModelFileTypewrl; break;
+            case '.dae':  eVocabID = eVocabularyID.eModelFileTypedae; break;
+            case '.fbx':  eVocabID = eVocabularyID.eModelFileTypefbx; break;
+            case '.ma':   eVocabID = eVocabularyID.eModelFileTypema; break;
+            case '.3ds':  eVocabID = eVocabularyID.eModelFileType3ds; break;
+            case '.ptx':  eVocabID = eVocabularyID.eModelFileTypeptx; break;
+            case '.pts':  eVocabID = eVocabularyID.eModelFileTypepts; break;
+            default:
+                // LOG.logger.info(`VocabularyCache.mapModelFileByExtension(${fileName}) using unrecognized ext ${extension}`);
+                return undefined;
         }
+        // LOG.logger.info(`VocabularyCache.mapModelFileByExtension(${fileName}) = ${eVocabularyID[eVocabID]} using ext ${extension}`);
         return await VocabularyCache.vocabularyByEnum(eVocabID);
     }
 
