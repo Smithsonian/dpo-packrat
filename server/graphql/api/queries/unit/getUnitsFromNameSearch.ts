@@ -7,6 +7,9 @@ const getUnitsFromNameSearch = gql`
                 idUnit
                 Name
                 Abbreviation
+                SystemObject {
+                    idSystemObject
+                }
             }
         }
     }

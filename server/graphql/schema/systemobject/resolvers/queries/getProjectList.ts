@@ -9,7 +9,7 @@ export default async function getProjectList(_: Parent, args: QueryGetProjectLis
     if (!projects) {
         return {
             projects: []
-        }
+        };
     }
     return { projects };
 }

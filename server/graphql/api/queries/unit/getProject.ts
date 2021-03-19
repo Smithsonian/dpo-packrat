@@ -4,7 +4,10 @@ const getProject = gql`
     query getProject($input: GetProjectInput!) {
         getProject(input: $input) {
             Project {
-                idProject
+                idProject,
+                SystemObject {
+                    idSystemObject
+                }
             }
         }
     }

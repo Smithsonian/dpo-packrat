@@ -9,7 +9,7 @@ export default async function getUnitsFromNameSearch(_: Parent, args: QueryGetUn
     if (!Units) {
         return {
             Units: []
-        }
+        };
     }
     return { Units };
 }
