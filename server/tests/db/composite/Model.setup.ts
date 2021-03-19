@@ -97,6 +97,7 @@ export class ModelTestSetup {
 
     storage:            STORE.IStorage | null = null;
     /* #endregion */
+    modelMap: Map<string, DBAPI.Model> = new Map<string, DBAPI.Model>(); // map of testcase name to model object
 
     //** Returns null if initialize cannot locate test files.  Do not treat this as an error */
     async initialize(): Promise<boolean | null> {
@@ -130,25 +131,36 @@ export class ModelTestSetup {
                 return null;
             }
 
-            const vocabMFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(MTD.fileName);
-            if (!vocabMFileType) {
-                LOG.logger.error('ModelTestSetup failed to fetch Model file type Vocabulary');
-                return false;
-            }
+            let model: DBAPI.Model | null | undefined = undefined;
 
-            const model: DBAPI.Model | null = await UTIL.createModelTest({
-                Name: MTD.fileName,
-                DateCreated: UTIL.nowCleansed(),
-                idVCreationMethod: this.vocabMCreation.idVocabulary,
-                Master: true, Authoritative: true,
-                idVModality: this.vocabMModality.idVocabulary,
-                idVUnits: this.vocabMUnits.idVocabulary,
-                idVPurpose: this.vocabMPurpose.idVocabulary,
-                idVFileType: vocabMFileType.idVocabulary,
-                idAssetThumbnail: null,
-                idModelMetrics: 0,
-                idModel: 0
-            });
+            if (MTD.geometry) {
+                const vocabMFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(MTD.fileName);
+                if (!vocabMFileType) {
+                    LOG.logger.error('ModelTestSetup failed to fetch Model file type Vocabulary');
+                    return false;
+                }
+
+                model = await UTIL.createModelTest({
+                    Name: MTD.fileName,
+                    DateCreated: UTIL.nowCleansed(),
+                    idVCreationMethod: this.vocabMCreation.idVocabulary,
+                    Master: true, Authoritative: true,
+                    idVModality: this.vocabMModality.idVocabulary,
+                    idVUnits: this.vocabMUnits.idVocabulary,
+                    idVPurpose: this.vocabMPurpose.idVocabulary,
+                    idVFileType: vocabMFileType.idVocabulary,
+                    idAssetThumbnail: null,
+                    idModelMetrics: 0,
+                    idModel: 0
+                });
+                this.modelMap.set(MTD.testCase, model);
+            } else {
+                model = this.modelMap.get(MTD.testCase);
+                if (!model) {
+                    LOG.logger.error(`ModelTesetSetup attempting to ingest non-model ${MTD.fileName} without model already created`);
+                    return false;
+                }
+            }
 
             const { success, asset, assetVersion } = await this.ingestFile(MTD, model);
             if (!success) {
@@ -281,14 +293,14 @@ export class ModelTestSetup {
     }
 
     private computeFilePath(MTD: ModelTestData): string {
-        return path.join('../../mock/models', MTD.directory, MTD.fileName);
+        return path.join(__dirname, '../../mock/models', MTD.directory, MTD.fileName);
     }
 
     private async testFileExistence(MTD: ModelTestData): Promise<boolean> {
         const filePath: string = this.computeFilePath(MTD);
         const res: H.StatResults = await H.Helpers.stat(filePath);
         const success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
-        LOG.logger.info(`ModelTestSetup.testFileExistience(${filePath}) = ${success}`);
+        LOG.logger.info(`ModelTestSetup.testFileExistience('${filePath}') = ${success}`);
         return success;
     }
 }

@@ -140,6 +140,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eModelFileTypestl: testVocabulary(vocabulary, 'stl - StereoLithography'); break;
                     case eVocabularyID.eModelFileTypeglb: testVocabulary(vocabulary, 'glb - GL Transmission Format Binary'); break;
                     case eVocabularyID.eModelFileTypegltf: testVocabulary(vocabulary, 'gltf - GL Transmission Format'); break;
+                    case eVocabularyID.eModelFileTypeusd: testVocabulary(vocabulary, 'usd - Universal Scene Description'); break;
                     case eVocabularyID.eModelFileTypeusdz: testVocabulary(vocabulary, 'usdz - Universal Scene Description (zipped)'); break;
                     case eVocabularyID.eModelFileTypex3d: testVocabulary(vocabulary, 'x3d'); break;
                     case eVocabularyID.eModelFileTypewrl: testVocabulary(vocabulary, 'wrl - VRML'); break;
@@ -359,6 +360,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'stl - StereoLithography');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'glb - GL Transmission Format Binary');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'gltf - GL Transmission Format');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'usd - Universal Scene Description');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'usdz - Universal Scene Description (zipped)');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'x3d');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'wrl - VRML');
@@ -441,20 +443,22 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
         });
 
         test('Cache: VocabularyCache.mapModelFileByExtension ' + description, async () => {
-            await testMapModelFileByExtension('obj',  eVocabularyID.eModelFileTypeobj);
-            await testMapModelFileByExtension('ply',  eVocabularyID.eModelFileTypeply);
-            await testMapModelFileByExtension('stl',  eVocabularyID.eModelFileTypestl);
-            await testMapModelFileByExtension('glb' , eVocabularyID.eModelFileTypeglb);
-            await testMapModelFileByExtension('gltf', eVocabularyID.eModelFileTypegltf);
-            await testMapModelFileByExtension('usdz', eVocabularyID.eModelFileTypeusdz);
-            await testMapModelFileByExtension('x3d',  eVocabularyID.eModelFileTypex3d);
-            await testMapModelFileByExtension('wrl',  eVocabularyID.eModelFileTypewrl);
-            await testMapModelFileByExtension('dae',  eVocabularyID.eModelFileTypedae);
-            await testMapModelFileByExtension('fbx',  eVocabularyID.eModelFileTypefbx);
-            await testMapModelFileByExtension('ma',   eVocabularyID.eModelFileTypema);
-            await testMapModelFileByExtension('3ds',  eVocabularyID.eModelFileType3ds);
-            await testMapModelFileByExtension('ptx',  eVocabularyID.eModelFileTypeptx);
-            await testMapModelFileByExtension('pts',  eVocabularyID.eModelFileTypepts);
+            await testMapModelFileByExtension('.obj',  eVocabularyID.eModelFileTypeobj);
+            await testMapModelFileByExtension('.ply',  eVocabularyID.eModelFileTypeply);
+            await testMapModelFileByExtension('.stl',  eVocabularyID.eModelFileTypestl);
+            await testMapModelFileByExtension('.glb' , eVocabularyID.eModelFileTypeglb);
+            await testMapModelFileByExtension('.gltf', eVocabularyID.eModelFileTypegltf);
+            await testMapModelFileByExtension('.usda',  eVocabularyID.eModelFileTypeusd);
+            await testMapModelFileByExtension('.usdc',  eVocabularyID.eModelFileTypeusd);
+            await testMapModelFileByExtension('.usdz', eVocabularyID.eModelFileTypeusdz);
+            await testMapModelFileByExtension('.x3d',  eVocabularyID.eModelFileTypex3d);
+            await testMapModelFileByExtension('.wrl',  eVocabularyID.eModelFileTypewrl);
+            await testMapModelFileByExtension('.dae',  eVocabularyID.eModelFileTypedae);
+            await testMapModelFileByExtension('.fbx',  eVocabularyID.eModelFileTypefbx);
+            await testMapModelFileByExtension('.ma',   eVocabularyID.eModelFileTypema);
+            await testMapModelFileByExtension('.3ds',  eVocabularyID.eModelFileType3ds);
+            await testMapModelFileByExtension('.ptx',  eVocabularyID.eModelFileTypeptx);
+            await testMapModelFileByExtension('.pts',  eVocabularyID.eModelFileTypepts);
             await testMapModelFileByExtension('FOOBARFAULTY', eVocabularyID.eNone);
         });
 

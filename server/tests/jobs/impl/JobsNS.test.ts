@@ -22,6 +22,7 @@ afterAll(async done => {
 
 describe('Jobs NS Init', () => {
     test('JobFactory.getInstance', async () => {
+        jest.setTimeout(60000);
         jobEngine = await JobFactory.getInstance(JOB_TYPE.NODE_SCHEDULE);
         expect(jobEngine).toBeTruthy();
 
