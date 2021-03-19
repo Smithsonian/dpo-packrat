@@ -44,7 +44,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
             return null;
         try {
             return DBC.CopyObject<LicenseBase, License>(
-                await DBC.DBConnection.prisma.license.findOne({ where: { idLicense, }, }), License);
+                await DBC.DBConnection.prisma.license.findUnique({ where: { idLicense, }, }), License);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.License.fetch', error);
             return null;

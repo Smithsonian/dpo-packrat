@@ -1,5 +1,5 @@
 import { LocalAuth, LDAPAuth } from '../impl';
-import Config, { AUTH_TYPE } from '../../config';
+import { Config, AUTH_TYPE } from '../../config';
 
 class AuthFactory {
     private static instance: LocalAuth | LDAPAuth;

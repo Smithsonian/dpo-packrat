@@ -33,12 +33,14 @@ export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: Ge
         const authResponse = await API.login(email, password);
 
         if (!authResponse.success) {
+            console.log(`Attempted login for ${email} failed`);
             return {
                 ...authResponse,
                 success: false
             };
         }
 
+        console.log(`Attempted login for ${email} retrieving authenticated user`);
         const user: User | null = await getAuthenticatedUser();
 
         if (!user) {
@@ -73,7 +75,8 @@ async function getAuthenticatedUser(): Promise<User | null> {
         const { getCurrentUser } = data;
 
         return getCurrentUser.User;
-    } catch {
+    } catch (error) {
+        console.log(`getAuthenticatedUser failure: ${JSON.stringify(error)}`);
         return null;
     }
 }

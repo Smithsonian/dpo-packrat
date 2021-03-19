@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ProjectDocumentation as ProjectDocumentationBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { ProjectDocumentation as ProjectDocumentationBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -57,7 +57,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
         try {
             const { idProjectDocumentation } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idProjectDocumentation, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProjectDocumentation, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.projectDocumentation.fetchSystemObject', error);
             return null;
@@ -69,7 +69,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
             return null;
         try {
             return DBC.CopyObject<ProjectDocumentationBase, ProjectDocumentation>(
-                await DBC.DBConnection.prisma.projectDocumentation.findOne({ where: { idProjectDocumentation, }, }), ProjectDocumentation);
+                await DBC.DBConnection.prisma.projectDocumentation.findUnique({ where: { idProjectDocumentation, }, }), ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.fetch', error);
             return null;
@@ -110,7 +110,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
                 await DBC.DBConnection.prisma.$queryRaw<ProjectDocumentation[]>`
                 SELECT DISTINCT PD.*
                 FROM ProjectDocumentation AS PD
-                WHERE PD.idProject IN (${join(idProjects)})`, ProjectDocumentation);
+                WHERE PD.idProject IN (${Prisma.join(idProjects)})`, ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ProjectDocumentation.fetchDerivedFromProjects', error);
             return null;

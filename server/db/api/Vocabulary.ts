@@ -55,7 +55,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return null;
         try {
             return DBC.CopyObject<VocabularyBase, Vocabulary>(
-                await DBC.DBConnection.prisma.vocabulary.findOne({ where: { idVocabulary, }, }), Vocabulary);
+                await DBC.DBConnection.prisma.vocabulary.findUnique({ where: { idVocabulary, }, }), Vocabulary);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Vocabulary.fetch', error);
             return null;

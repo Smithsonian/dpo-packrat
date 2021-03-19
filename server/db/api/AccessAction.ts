@@ -49,7 +49,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
             return null;
         try {
             return DBC.CopyObject<AccessActionBase, AccessAction>(
-                await DBC.DBConnection.prisma.accessAction.findOne({ where: { idAccessAction, }, }), AccessAction);
+                await DBC.DBConnection.prisma.accessAction.findUnique({ where: { idAccessAction, }, }), AccessAction);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AccessAction.fetch', error);
             return null;

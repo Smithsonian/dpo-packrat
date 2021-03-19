@@ -2,7 +2,7 @@ import { passport } from './framework';
 import AuthRouter from './AuthRouter';
 import session from 'express-session';
 import MemoryStore from 'memorystore';
-import Config from '../config';
+import { Config } from '../config';
 
 const { CLIENT_ENDPOINT, SESSION_SECRET } = process.env;
 
@@ -26,12 +26,12 @@ if (!SESSION_SECRET) {
 
 const Store = MemoryStore(session);
 
-const { maxAge, checkPeriod, expires } = Config.auth.session;
+const { maxAge, checkPeriod } = Config.auth.session;
+// const maxAge: number = Date.now() + age;
 
 const sessionConfig = {
     cookie: {
-        maxAge,
-        expires
+        maxAge
     },
     secret: SESSION_SECRET,
     resave: true,

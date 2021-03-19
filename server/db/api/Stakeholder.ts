@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Stakeholder as StakeholderBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { Stakeholder as StakeholderBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -67,7 +67,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
         try {
             const { idStakeholder } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idStakeholder, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idStakeholder, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.stakeholder.fetchSystemObject', error);
             return null;
@@ -79,7 +79,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
             return null;
         try {
             return DBC.CopyObject<StakeholderBase, Stakeholder>(
-                await DBC.DBConnection.prisma.stakeholder.findOne({ where: { idStakeholder, }, }), Stakeholder);
+                await DBC.DBConnection.prisma.stakeholder.findUnique({ where: { idStakeholder, }, }), Stakeholder);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Stakeholder.fetch', error);
             return null;
@@ -113,7 +113,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
                 JOIN SystemObject AS SOS ON (S.idStakeholder = SOS.idStakeholder)
                 JOIN SystemObjectXref AS SOX ON (SOS.idSystemObject = SOX.idSystemObjectDerived)
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectMaster = SOP.idSystemObject)
-                WHERE SOP.idProject IN (${join(idProjects)})`, Stakeholder);
+                WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Stakeholder);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Stakeholder.fetchDerivedFromProjects', error);
             return null;

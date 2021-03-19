@@ -61,7 +61,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             return null;
         try {
             return DBC.CopyObject<IdentifierBase, Identifier>(
-                await DBC.DBConnection.prisma.identifier.findOne({ where: { idIdentifier, }, }), Identifier);
+                await DBC.DBConnection.prisma.identifier.findUnique({ where: { idIdentifier, }, }), Identifier);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Identifier.fetch', error);
             return null;

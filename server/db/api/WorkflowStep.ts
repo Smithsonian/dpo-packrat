@@ -67,7 +67,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return null;
         try {
             return DBC.CopyObject<WorkflowStepBase, WorkflowStep>(
-                await DBC.DBConnection.prisma.workflowStep.findOne({ where: { idWorkflowStep, }, }), WorkflowStep);
+                await DBC.DBConnection.prisma.workflowStep.findUnique({ where: { idWorkflowStep, }, }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowStep.fetch', error);
             return null;

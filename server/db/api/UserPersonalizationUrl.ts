@@ -56,7 +56,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
             return null;
         try {
             return DBC.CopyObject<UserPersonalizationUrlBase, UserPersonalizationUrl>(
-                await DBC.DBConnection.prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
+                await DBC.DBConnection.prisma.userPersonalizationUrl.findUnique({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationUrl.fetch', error);
             return null;

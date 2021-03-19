@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Model as ModelBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { Model as ModelBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { ModelObject, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap, ModelMetrics, SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -133,7 +133,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         try {
             const { idModel } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idModel, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idModel, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.model.fetchSystemObject', error);
             return null;
@@ -145,7 +145,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return null;
         try {
             return DBC.CopyObject<ModelBase, Model>(
-                await DBC.DBConnection.prisma.model.findOne({ where: { idModel, }, }), Model);
+                await DBC.DBConnection.prisma.model.findUnique({ where: { idModel, }, }), Model);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Model.fetch', error);
             return null;
@@ -191,7 +191,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 JOIN SystemObject AS SOM ON (M.idModel = SOM.idModel)
                 JOIN SystemObjectXref AS SOX ON (SOM.idSystemObject = SOX.idSystemObjectDerived)
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
-                WHERE SOI.idItem IN (${join(idItem)})`, Model);
+                WHERE SOI.idItem IN (${Prisma.join(idItem)})`, Model);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Model.fetchDerivedFromItems', error);
             return null;

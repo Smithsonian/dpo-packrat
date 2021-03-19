@@ -56,7 +56,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
             return null;
         try {
             return DBC.CopyObject<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
-                await DBC.DBConnection.prisma.userPersonalizationSystemObject.findOne({ where: { idUserPersonalizationSystemObject, }, }), UserPersonalizationSystemObject);
+                await DBC.DBConnection.prisma.userPersonalizationSystemObject.findUnique({ where: { idUserPersonalizationSystemObject, }, }), UserPersonalizationSystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.UserPersonalizationSystemObject.fetch', error);
             return null;

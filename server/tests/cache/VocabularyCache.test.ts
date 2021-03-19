@@ -117,7 +117,53 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eCaptureDataFileVariantTypeRaw: testVocabulary(vocabulary, 'Raw'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeProcessed: testVocabulary(vocabulary, 'Processed'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeFromCamera: testVocabulary(vocabulary, 'From Camera'); break;
-                    case eVocabularyID.eMetadataMetadataSourceBulkIngestion: testVocabulary(vocabulary, 'Bulk Ingestion'); break;
+                    case eVocabularyID.eModelCreationMethodScanToMesh: testVocabulary(vocabulary, 'Scan To Mesh'); break;
+                    case eVocabularyID.eModelCreationMethodCAD: testVocabulary(vocabulary, 'CAD'); break;
+                    case eVocabularyID.eModelModalityPointCloud: testVocabulary(vocabulary, 'Point Cloud'); break;
+                    case eVocabularyID.eModelModalityMesh: testVocabulary(vocabulary, 'Mesh'); break;
+                    case eVocabularyID.eModelUnitsMicrometer: testVocabulary(vocabulary, 'Micrometer'); break;
+                    case eVocabularyID.eModelUnitsMillimeter: testVocabulary(vocabulary, 'Millimeter'); break;
+                    case eVocabularyID.eModelUnitsCentimeter: testVocabulary(vocabulary, 'Centimeter'); break;
+                    case eVocabularyID.eModelUnitsMeter: testVocabulary(vocabulary, 'Meter'); break;
+                    case eVocabularyID.eModelUnitsKilometer: testVocabulary(vocabulary, 'Kilometer'); break;
+                    case eVocabularyID.eModelUnitsInch: testVocabulary(vocabulary, 'Inch'); break;
+                    case eVocabularyID.eModelUnitsFoot: testVocabulary(vocabulary, 'Foot'); break;
+                    case eVocabularyID.eModelUnitsYard: testVocabulary(vocabulary, 'Yard'); break;
+                    case eVocabularyID.eModelUnitsMile: testVocabulary(vocabulary, 'Mile'); break;
+                    case eVocabularyID.eModelUnitsAstronomicalUnit: testVocabulary(vocabulary, 'Astronomical Unit'); break;
+                    case eVocabularyID.eModelPurposeMaster: testVocabulary(vocabulary, 'Master'); break;
+                    case eVocabularyID.eModelPurposeWebDelivery: testVocabulary(vocabulary, 'Web Delivery'); break;
+                    case eVocabularyID.eModelPurposePrintDelivery: testVocabulary(vocabulary, 'Print Delivery'); break;
+                    case eVocabularyID.eModelPurposeIntermediateProcessingStep: testVocabulary(vocabulary, 'Intermediate Processing Step'); break;
+                    case eVocabularyID.eModelFileTypeobj: testVocabulary(vocabulary, 'obj - Alias Wavefront Object'); break;
+                    case eVocabularyID.eModelFileTypeply: testVocabulary(vocabulary, 'ply - Stanford Polygon File Format'); break;
+                    case eVocabularyID.eModelFileTypestl: testVocabulary(vocabulary, 'stl - StereoLithography'); break;
+                    case eVocabularyID.eModelFileTypeglb: testVocabulary(vocabulary, 'glb - GL Transmission Format Binary'); break;
+                    case eVocabularyID.eModelFileTypegltf: testVocabulary(vocabulary, 'gltf - GL Transmission Format'); break;
+                    case eVocabularyID.eModelFileTypeusdz: testVocabulary(vocabulary, 'usdz - Universal Scene Description (zipped)'); break;
+                    case eVocabularyID.eModelFileTypex3d: testVocabulary(vocabulary, 'x3d'); break;
+                    case eVocabularyID.eModelFileTypewrl: testVocabulary(vocabulary, 'wrl - VRML'); break;
+                    case eVocabularyID.eModelFileTypedae: testVocabulary(vocabulary, 'dae - COLLADA'); break;
+                    case eVocabularyID.eModelFileTypefbx: testVocabulary(vocabulary, 'fbx - Filmbox'); break;
+                    case eVocabularyID.eModelFileTypema: testVocabulary(vocabulary, 'ma - Maya'); break;
+                    case eVocabularyID.eModelFileType3ds: testVocabulary(vocabulary, '3ds - 3D Studio'); break;
+                    case eVocabularyID.eModelFileTypeptx: testVocabulary(vocabulary, 'ptx'); break;
+                    case eVocabularyID.eModelFileTypepts: testVocabulary(vocabulary, 'pts'); break;
+
+                    case eVocabularyID.eMetadataMetadataSourceBulkIngestion:    testVocabulary(vocabulary, 'Bulk Ingestion'); break;
+                    case eVocabularyID.eJobJobTypeCookBake:                     testVocabulary(vocabulary, 'Cook: bake'); break;
+                    case eVocabularyID.eJobJobTypeCookDecimateUnwrap:           testVocabulary(vocabulary, 'Cook: decimate-unwrap'); break;
+                    case eVocabularyID.eJobJobTypeCookDecimate:                 testVocabulary(vocabulary, 'Cook: decimate'); break;
+                    case eVocabularyID.eJobJobTypeCookGenerateUsdz:             testVocabulary(vocabulary, 'Cook: generate-usdz'); break;
+                    case eVocabularyID.eJobJobTypeCookGenerateWebGltf:          testVocabulary(vocabulary, 'Cook: generate-web-gltf'); break;
+                    case eVocabularyID.eJobJobTypeCookInspectMesh:              testVocabulary(vocabulary, 'Cook: inspect-mesh'); break;
+                    case eVocabularyID.eJobJobTypeCookSIArBackfillFix:          testVocabulary(vocabulary, 'Cook: si-ar-backfill-fix'); break;
+                    case eVocabularyID.eJobJobTypeCookSIGenerateDownloads:      testVocabulary(vocabulary, 'Cook: si-generate-downloads'); break;
+                    case eVocabularyID.eJobJobTypeCookSIOrientModelToSvx:       testVocabulary(vocabulary, 'Cook: si-orient-model-to-svx'); break;
+                    case eVocabularyID.eJobJobTypeCookSIPackratInspect:         testVocabulary(vocabulary, 'Cook: si-packrat-inspect'); break;
+                    case eVocabularyID.eJobJobTypeCookSIVoyagerAsset:           testVocabulary(vocabulary, 'Cook: si-voyager-asset'); break;
+                    case eVocabularyID.eJobJobTypeCookSIVoyagerScene:           testVocabulary(vocabulary, 'Cook: si-voyager-scene'); break;
+                    case eVocabularyID.eJobJobTypeCookUnwrap:                   testVocabulary(vocabulary, 'Cook: unwrap'); break;
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
@@ -171,6 +217,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularySetID.eMetadataMetadataSource:
                     case eVocabularySetID.eWorkflowStepWorkflowStepType:
                     case eVocabularySetID.eAssetAssetType:
+                    case eVocabularySetID.eJobJobType:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet)
@@ -338,6 +385,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'Unit CMS ID');
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierTypeActor, 'ORCID');
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierTypeActor, 'ISNI');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eMetadataMetadataSource, 'Bulk Ingestion');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Bulk Ingestion');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Photogrammetry');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Capture Data Set: Diconde');
@@ -354,7 +402,19 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Project Documentation');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Intermediary File');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'Other');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eMetadataMetadataSource, 'Bulk Ingestion');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: bake');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: decimate-unwrap');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: decimate');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: generate-usdz');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: generate-web-gltf');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: inspect-mesh');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-ar-backfill-fix');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-generate-downloads');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-orient-model-to-svx');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-packrat-inspect');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-voyager-asset');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-voyager-scene');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: unwrap');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
             await testVocabularyBySetAndTerm(eVocabularySetID.eNone, 'Other', false);
         });
@@ -378,6 +438,24 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testMapPhotogrammetryVariantType('camerajpg', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
             await testMapPhotogrammetryVariantType('camera', eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
             await testMapPhotogrammetryVariantType('FOOBARFAULTY', eVocabularyID.eNone);
+        });
+
+        test('Cache: VocabularyCache.mapModelFileByExtension ' + description, async () => {
+            await testMapModelFileByExtension('obj',  eVocabularyID.eModelFileTypeobj);
+            await testMapModelFileByExtension('ply',  eVocabularyID.eModelFileTypeply);
+            await testMapModelFileByExtension('stl',  eVocabularyID.eModelFileTypestl);
+            await testMapModelFileByExtension('glb' , eVocabularyID.eModelFileTypeglb);
+            await testMapModelFileByExtension('gltf', eVocabularyID.eModelFileTypegltf);
+            await testMapModelFileByExtension('usdz', eVocabularyID.eModelFileTypeusdz);
+            await testMapModelFileByExtension('x3d',  eVocabularyID.eModelFileTypex3d);
+            await testMapModelFileByExtension('wrl',  eVocabularyID.eModelFileTypewrl);
+            await testMapModelFileByExtension('dae',  eVocabularyID.eModelFileTypedae);
+            await testMapModelFileByExtension('fbx',  eVocabularyID.eModelFileTypefbx);
+            await testMapModelFileByExtension('ma',   eVocabularyID.eModelFileTypema);
+            await testMapModelFileByExtension('3ds',  eVocabularyID.eModelFileType3ds);
+            await testMapModelFileByExtension('ptx',  eVocabularyID.eModelFileTypeptx);
+            await testMapModelFileByExtension('pts',  eVocabularyID.eModelFileTypepts);
+            await testMapModelFileByExtension('FOOBARFAULTY', eVocabularyID.eNone);
         });
 
         test('Cache: VocabularyCache.vocabularyEnumToId and vocabularyIdToEnum ' + description, async () => {
@@ -442,5 +520,18 @@ async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: e
     expect(vocabObserved).toEqual(vocabExpected);
 }
 
+async function testMapModelFileByExtension(modelExtension: string, eVocabID: eVocabularyID): Promise<void> {
+    // LOG.logger.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`);
+    const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapModelFileByExtension(modelExtension);
+    const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
+    if (eVocabID != eVocabularyID.eNone) {
+        expect(vocabObserved).toBeTruthy();
+        expect(vocabExpected).toBeTruthy();
+    } else {
+        expect(vocabObserved).toBeFalsy();
+        expect(vocabExpected).toBeFalsy();
+    }
+    expect(vocabObserved).toEqual(vocabExpected);
+}
 
 export default vocabularyCacheTest;

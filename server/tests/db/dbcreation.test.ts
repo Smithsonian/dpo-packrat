@@ -46,8 +46,7 @@ let intermediaryFile: DBAPI.IntermediaryFile | null;
 let item: DBAPI.Item | null;
 let itemNulls: DBAPI.Item | null;
 let job: DBAPI.Job | null;
-let jobTask: DBAPI.JobTask | null;
-let jobTaskCook: DBAPI.JobTaskCook | null;
+let jobRun: DBAPI.JobRun | null;
 let metadata: DBAPI.Metadata | null;
 let metadataNull: DBAPI.Metadata | null;
 let model: DBAPI.Model | null;
@@ -546,7 +545,7 @@ describe('DB Creation Test Suite', () => {
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
-                StorageSize: 50,
+                StorageSize: BigInt(50),
                 StorageKeyStaging: UTIL.randomStorageKey('/test/asset/path/'),
                 Ingested: true,
                 BulkIngest: false,
@@ -564,7 +563,7 @@ describe('DB Creation Test Suite', () => {
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
-                StorageSize: 50,
+                StorageSize: BigInt(50),
                 StorageKeyStaging: '',
                 Ingested: false,
                 BulkIngest: true,
@@ -768,49 +767,32 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Job', async () => {
-        job = new DBAPI.Job({
-            Name: 'Test Job',
-            idJob: 0
-        });
-        expect(job).toBeTruthy();
-        if (job) {
-            expect(await job.create()).toBeTruthy();
-            expect(job.idJob).toBeGreaterThan(0);
-        }
-    });
-
-    test('DB Creation: JobTask', async () => {
-        if (job && vocabulary)
-            jobTask = new DBAPI.JobTask({
-                idJob: job.idJob,
+        if (vocabulary)
+            job = await UTIL.createJobTest({
                 idVJobType: vocabulary.idVocabulary,
-                State: 'Test Job State',
-                Step: 'Test Job State',
-                Error: 'Test Job Error',
-                Parameters: 'Test Job Parameters',
-                Report: 'Test Job Report',
-                idJobTask: 0
+                Name: 'Test Job',
+                Status: 0,
+                Frequency: '100',
+                idJob: 0
             });
-        expect(jobTask).toBeTruthy();
-        if (jobTask) {
-            expect(await jobTask.create()).toBeTruthy();
-            expect(jobTask.idJobTask).toBeGreaterThan(0);
-        }
+        expect(job).toBeTruthy();
     });
 
-    test('DB Creation: JobTaskCook', async () => {
-        if (jobTask)
-            jobTaskCook = new DBAPI.JobTaskCook({
-                idJobTask: jobTask.idJobTask,
-                JobID: 'Test JobID',
-                RecipeID: 'Test Recipe ID',
-                idJobTaskCook: 0
+    test('DB Creation: JobRun', async () => {
+        if (job)
+            jobRun = await UTIL.createJobRunTest({
+                idJob: job.idJob,
+                Status: 0,
+                Result: false,
+                DateStart: UTIL.nowCleansed(),
+                DateEnd: null,
+                Configuration: null,
+                Parameters: null,
+                Output: null,
+                Error: null,
+                idJobRun: 0
             });
-        expect(jobTaskCook).toBeTruthy();
-        if (jobTaskCook) {
-            expect(await jobTaskCook.create()).toBeTruthy();
-            expect(jobTaskCook.idJobTaskCook).toBeGreaterThan(0);
-        }
+        expect(jobRun).toBeTruthy();
     });
 
     test('DB Creation: Metadata', async () => {
@@ -1675,7 +1657,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
-                StorageSize: 50,
+                StorageSize: BigInt(50),
                 StorageKeyStaging: '',
                 Ingested: true,
                 BulkIngest: false,
@@ -1919,6 +1901,40 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(itemFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: Job', async () => {
+        let jobFetch: DBAPI.Job | null = null;
+        if (job) {
+            jobFetch = await DBAPI.Job.fetch(job.idJob);
+            if (jobFetch) {
+                expect(jobFetch).toMatchObject(job);
+                expect(job).toMatchObject(jobFetch);
+            }
+        }
+        expect(jobFetch).toBeTruthy();
+    });
+
+    test('DB Fetch: Job.fetchByType', async () => {
+        let jobFetch: DBAPI.Job[] | null = [];
+        if (job) {
+            jobFetch = await DBAPI.Job.fetchByType(job.idVJobType);
+            if (jobFetch)
+                expect(jobFetch).toEqual(expect.arrayContaining([job]));
+        }
+        expect(jobFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: JobRun', async () => {
+        let jobRunFetch: DBAPI.JobRun | null = null;
+        if (jobRun) {
+            jobRunFetch = await DBAPI.JobRun.fetch(jobRun.idJobRun);
+            if (jobRunFetch) {
+                expect(jobRunFetch).toMatchObject(jobRun);
+                expect(jobRun).toMatchObject(jobRunFetch);
+            }
+        }
+        expect(jobRunFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: License', async () => {
@@ -4466,7 +4482,7 @@ describe('DB Update Test Suite', () => {
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
-                StorageSize: 50,
+                StorageSize: BigInt(50),
                 StorageKeyStaging: '',
                 Ingested: true,
                 BulkIngest: false,
@@ -4811,35 +4827,17 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
-    test('DB Update: JobTask.update', async () => {
+    test('DB Update: JobRun.update', async () => {
         let bUpdated: boolean = false;
-        if (jobTask && vocabulary2) {
-            const updated: string = 'Updated Job State';
-            jobTask.State = updated;
-            jobTask.idVJobType = vocabulary2.idVocabulary;
-            bUpdated = await jobTask.update();
+        if (jobRun) {
+            const updated: string = 'Updated JobRun Error';
+            jobRun.Error = updated;
+            bUpdated = await jobRun.update();
 
-            const jobTaskFetch: DBAPI.JobTask | null = await DBAPI.JobTask.fetch(jobTask.idJobTask);
-            expect(jobTaskFetch).toBeTruthy();
-            if (jobTaskFetch) {
-                expect(jobTaskFetch.State).toBe(updated);
-                expect(jobTaskFetch.idVJobType).toBe(vocabulary2.idVocabulary);
-            }
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
-    test('DB Update: JobTaskCook.update', async () => {
-        let bUpdated: boolean = false;
-        if (jobTaskCook) {
-            const updated: string = 'Updated Job ID';
-            jobTaskCook.JobID = updated;
-            bUpdated = await jobTaskCook.update();
-
-            const jobTaskCookFetch: DBAPI.JobTaskCook | null = await DBAPI.JobTaskCook.fetch(jobTaskCook.idJobTaskCook);
-            expect(jobTaskCookFetch).toBeTruthy();
-            if (jobTaskCookFetch)
-                expect(jobTaskCookFetch.JobID).toBe(updated);
+            const jobRunFetch: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(jobRun.idJobRun);
+            expect(jobRunFetch).toBeTruthy();
+            if (jobRunFetch)
+                expect(jobRunFetch.Error).toBe(updated);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -5869,8 +5867,8 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Item.fetchMasterFromScenes([])).toBeNull();
         expect(await DBAPI.Item.fetchMasterFromIntermediaryFiles([])).toBeNull();
         expect(await DBAPI.Job.fetch(0)).toBeNull();
-        expect(await DBAPI.JobTask.fetch(0)).toBeNull();
-        expect(await DBAPI.JobTaskCook.fetch(0)).toBeNull();
+        expect(await DBAPI.Job.fetchByType(0)).toBeNull();
+        expect(await DBAPI.JobRun.fetch(0)).toBeNull();
         expect(await DBAPI.License.fetch(0)).toBeNull();
         expect(await DBAPI.LicenseAssignment.fetch(0)).toBeNull();
         expect(await DBAPI.LicenseAssignment.fetchFromLicense(0)).toBeNull();

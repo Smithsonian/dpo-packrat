@@ -43,7 +43,7 @@ export class WorkflowTemplate extends DBC.DBObject<WorkflowTemplateBase> impleme
             return null;
         try {
             return DBC.CopyObject<WorkflowTemplateBase, WorkflowTemplate>(
-                await DBC.DBConnection.prisma.workflowTemplate.findOne({ where: { idWorkflowTemplate, }, }), WorkflowTemplate);
+                await DBC.DBConnection.prisma.workflowTemplate.findUnique({ where: { idWorkflowTemplate, }, }), WorkflowTemplate);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowTemplate.fetch', error);
             return null;

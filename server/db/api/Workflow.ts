@@ -70,7 +70,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return null;
         try {
             return DBC.CopyObject<WorkflowBase, Workflow>(
-                await DBC.DBConnection.prisma.workflow.findOne({ where: { idWorkflow, }, }), Workflow);
+                await DBC.DBConnection.prisma.workflow.findUnique({ where: { idWorkflow, }, }), Workflow);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Workflow.fetch', error);
             return null;

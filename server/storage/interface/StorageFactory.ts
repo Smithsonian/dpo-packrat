@@ -1,7 +1,7 @@
 import { IStorage } from './IStorage';
 import { LocalStorage } from '../impl';
 import { IOResults } from '../../utils/helpers';
-import Config, { STORAGE_TYPE } from '../../config';
+import { Config, STORAGE_TYPE } from '../../config';
 import * as LOG from '../../utils/logger';
 
 export class StorageFactory {

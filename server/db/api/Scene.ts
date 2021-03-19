@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Scene as SceneBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { Scene as SceneBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -65,7 +65,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
         try {
             const { idScene } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idScene, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idScene, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.scene.fetchSystemObject', error);
             return null;
@@ -77,7 +77,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return null;
         try {
             return DBC.CopyObject<SceneBase, Scene>(
-                await DBC.DBConnection.prisma.scene.findOne({ where: { idScene, }, }), Scene);
+                await DBC.DBConnection.prisma.scene.findUnique({ where: { idScene, }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Scene.fetch', error);
             return null;
@@ -123,7 +123,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 JOIN SystemObject AS SOS ON (S.idScene = SOS.idScene)
                 JOIN SystemObjectXref AS SOX ON (SOS.idSystemObject = SOX.idSystemObjectDerived)
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
-                WHERE SOI.idItem IN (${join(idItem)})`, Scene);
+                WHERE SOI.idItem IN (${Prisma.join(idItem)})`, Scene);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.Scene.fetchDerivedFromItems', error);
             return null;
