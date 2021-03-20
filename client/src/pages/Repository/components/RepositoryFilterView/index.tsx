@@ -172,8 +172,8 @@ function RepositoryFilterView(): React.ReactElement {
                 {content}
                 <Box display='flex' flex={1} mt={2}>
                     <Box className={classes.selectContainer} width={300}>
-                        <FilterSelect multiple label='Repository Root Type' name='repositoryRootType' options={repositoryRootTypesOptions} />
-                        <FilterSelect multiple label='Objects To Display' name='objectsToDisplay' options={objectToDisplayOptions} />
+                        <FilterSelect multiple label='Top-Level Objects' name='repositoryRootType' options={repositoryRootTypesOptions} />
+                        <FilterSelect multiple label='Children Objects' name='objectsToDisplay' options={objectToDisplayOptions} />
                         <FilterSelect multiple label='Metadata To Display' name='metadataToDisplay' options={metadataToDisplayOptions} />
                     </Box>
 
