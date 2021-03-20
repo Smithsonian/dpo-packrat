@@ -12,7 +12,7 @@ afterAll(async done => {
 const SCRAPE_EDAN: boolean = false;
 
 describe('Collections: EdanCollection', () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(60000);
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
 
     if (!SCRAPE_EDAN) {

@@ -7,7 +7,6 @@ const mockPath = (type: CSVTypes) => join(__dirname, `../../mock/utils/parser/mo
 const mockPathJunk: string = join(__dirname, '../../mock/utils/parser/mock.junk.csv');
 /*
 afterAll(async done => {
-    jest.setTimeout(5000);
     await H.Helpers.sleep(2000);
     done();
 });

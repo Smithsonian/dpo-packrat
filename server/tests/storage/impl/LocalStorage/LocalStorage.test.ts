@@ -42,14 +42,12 @@ beforeAll(() => {
 afterAll(async done => {
     LOG.logger.info(`Removing test storage root from ${path.resolve(testStorageRoot)}`);
     await H.Helpers.removeDirectory(testStorageRoot, true);
-    // jest.setTimeout(3000);
     // await H.Helpers.sleep(2000);
     done();
 });
 
 describe('LocalStorage Init', () => {
     test('Object Hierarchy Test Setup', async() => {
-        jest.setTimeout(30000);
         await OHTS.initialize();
         await OHTS.wire();
         opInfo = {
