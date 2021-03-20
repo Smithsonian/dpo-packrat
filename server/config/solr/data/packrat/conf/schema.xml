@@ -116,6 +116,7 @@
     <!-- Hierarchy fields -->
     <field name="HierarchyParentID" type="pints" indexed="true" stored="true" />
     <field name="HierarchyChildrenID" type="pints" indexed="true" stored="true" />
+    <field name="HierarchyAncestorID" type="pints" indexed="true" stored="true" />
 
     <field name="HierarchyUnit" type="strings" indexed="true" stored="true" />
     <field name="HierarchyProject" type="strings" indexed="true" stored="true" />

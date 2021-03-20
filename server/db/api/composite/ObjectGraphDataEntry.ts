@@ -26,6 +26,7 @@ export class ObjectGraphDataEntryHierarchy {
 
     parents: number[] = [];     // array of SystemObject.idSystemObject
     children: number[] = [];    // array of SystemObject.idSystemObject
+    ancestors: number[] = [];   // array of SystemObject.idSystemObject
 
     units: SystemObjectIDType[] = [];
     projects: SystemObjectIDType[] = [];
@@ -139,6 +140,7 @@ export class ObjectGraphDataEntry {
 
         objectGraphDataEntryHierarchy.parents = [...this.parentMap.keys()];
         objectGraphDataEntryHierarchy.children = [...this.childMap.keys()];
+        objectGraphDataEntryHierarchy.ancestors = [...this.ancestorObjectMap.keys()];
 
         // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(this.parentMap.keys())} (${JSON.stringify(this.parentMap.size)})`);
         // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(objectGraphDataEntryHierarchy.parents)} -Children-> ${JSON.stringify(objectGraphDataEntryHierarchy.children)}`);

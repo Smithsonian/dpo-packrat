@@ -42,11 +42,15 @@ export class NavigationSolr implements NAV.INavigation {
         else
             SQ = SQ.q('*:*');
 
-        // idRoot: number;                         // idSystemObject of item for which we should get children; 0 means get everything
-        if (filter.idRoot) {
-            SQ = SQ.matchFilter('HierarchyParentID', filter.idRoot);
-            // objectsToDisplay: eSystemObjectType[];  // objects to display
-            SQ = await this.computeFilterParamFromSystemObjectType(SQ, filter.objectsToDisplay, 'CommonObjectType', '||');
+        // idRoot: number;                          // idSystemObject of item for which we should get children; 0 means get everything
+        if (filter.idRoot) {                        // objectsToDisplay: eSystemObjectType[];  // objects to display
+            // if we have no explicit object types to display, show the children
+            if (!filter.objectsToDisplay || filter.objectsToDisplay.length == 0)
+                SQ = SQ.matchFilter('HierarchyParentID', filter.idRoot);
+            else {  // if we have explicit object types to display, show all objects of the type specified that have idRoot as an ancestor
+                SQ = SQ.matchFilter('HierarchyAncestorID', filter.idRoot);
+                SQ = await this.computeFilterParamFromSystemObjectType(SQ, filter.objectsToDisplay, 'CommonObjectType', '||');
+            }
         } else {
             // objectTypes: eSystemObjectType[];       // empty array means give all appropriate children types
             const objectTypes: eSystemObjectType[] = filter.objectTypes;
