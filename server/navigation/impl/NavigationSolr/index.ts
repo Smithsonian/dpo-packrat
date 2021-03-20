@@ -1,2 +1,2 @@
 export * from './NavigationSolr';
-export * from './ReindexSolr';
+export * from './IndexSolr';

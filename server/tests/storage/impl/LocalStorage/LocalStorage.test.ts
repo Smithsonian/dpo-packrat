@@ -49,6 +49,7 @@ afterAll(async done => {
 
 describe('LocalStorage Init', () => {
     test('Object Hierarchy Test Setup', async() => {
+        jest.setTimeout(30000);
         await OHTS.initialize();
         await OHTS.wire();
         opInfo = {

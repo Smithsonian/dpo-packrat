@@ -26,6 +26,7 @@ export class ObjectGraphDataEntryHierarchy {
 
     parents: number[] = [];     // array of SystemObject.idSystemObject
     children: number[] = [];    // array of SystemObject.idSystemObject
+    ancestors: number[] = [];   // array of SystemObject.idSystemObject
 
     units: SystemObjectIDType[] = [];
     projects: SystemObjectIDType[] = [];
@@ -150,6 +151,9 @@ export class ObjectGraphDataEntry {
                 case eSystemObjectType.eSubject:    objectGraphDataEntryHierarchy.subjects.push(systemObjectIDType); break;
                 case eSystemObjectType.eItem:       objectGraphDataEntryHierarchy.items.push(systemObjectIDType); break;
             }
+            // Gather ancestors ... but don't add self as an ancestor!
+            if (systemObjectIDType.idSystemObject != this.systemObjectIDType.idSystemObject)
+                objectGraphDataEntryHierarchy.ancestors.push(systemObjectIDType.idSystemObject);
         }
 
         objectGraphDataEntryHierarchy.childrenObjectTypes = [...this.childrenObjectTypes.keys()];
