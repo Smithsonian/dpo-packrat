@@ -6,7 +6,7 @@ import * as UTIL from '../api';
 import * as LOG from '../../../utils/logger';
 import * as path from 'path';
 
-class ModelTestData {
+class ModelTestFile {
     testCase: string;
     fileName: string;
     directory: string;
@@ -22,7 +22,21 @@ class ModelTestData {
     }
 }
 
-const modelTestData: ModelTestData[] = [
+class ModelTestCase {
+    testCase: string;
+    model: DBAPI.Model;
+    modelName: string;
+    assetVersionIDs: number[];
+
+    constructor(testCase: string, model: DBAPI.Model, modelName: string, assetVersionID: number) {
+        this.testCase = testCase;
+        this.model = model;
+        this.modelName = modelName;
+        this.assetVersionIDs = [assetVersionID];
+    }
+}
+
+const modelTestFiles: ModelTestFile[] = [
     { testCase: 'fbx-stand-alone', fileName: 'eremotherium_laurillardi-150k-4096.fbx', directory: '', geometry: true, hash: '' },
     { testCase: 'fbx-with-support', fileName: 'eremotherium_laurillardi-150k-4096.fbx', directory: 'eremotherium_laurillardi-150k-4096-fbx', geometry: true, hash: '' },
     { testCase: 'fbx-with-support', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-fbx', geometry: false, hash: '' },
@@ -97,7 +111,7 @@ export class ModelTestSetup {
 
     storage:            STORE.IStorage | null = null;
     /* #endregion */
-    modelMap: Map<string, DBAPI.Model> = new Map<string, DBAPI.Model>(); // map of testcase name to model object
+    testCaseMap: Map<string, ModelTestCase> = new Map<string, ModelTestCase>(); // map of testcase name to ModelTestCase structure
 
     //** Returns null if initialize cannot locate test files.  Do not treat this as an error */
     async initialize(): Promise<boolean | null> {
@@ -124,7 +138,7 @@ export class ModelTestSetup {
             return false;
         }
 
-        for (const MTD of modelTestData) {
+        for (const MTD of modelTestFiles) {
             const fileExists: boolean = await this.testFileExistence(MTD);
             if (!fileExists) {
                 LOG.logger.info(`ModelTestSetup unable to locate file for ${JSON.stringify(MTD)}`);
@@ -153,19 +167,30 @@ export class ModelTestSetup {
                     idModelMetrics: 0,
                     idModel: 0
                 });
-                this.modelMap.set(MTD.testCase, model);
             } else {
-                model = this.modelMap.get(MTD.testCase);
-                if (!model) {
-                    LOG.logger.error(`ModelTesetSetup attempting to ingest non-model ${MTD.fileName} without model already created`);
+                const MTC: ModelTestCase | undefined = this.testCaseMap.get(MTD.testCase);
+                if (!MTC) {
+                    LOG.logger.error(`ModelTestSetup attempting to ingest non-model ${MTD.fileName} without model already created`);
                     return false;
                 }
+                model = MTC.model;
             }
 
             const { success, asset, assetVersion } = await this.ingestFile(MTD, model);
             if (!success) {
-                LOG.logger.error('ModelTesetSetup failed to ingest model');
+                LOG.logger.error('ModelTestSetup failed to ingest model');
                 return false;
+            }
+
+            // record test case data
+            if (assetVersion) {
+                let MTC: ModelTestCase | undefined = this.testCaseMap.get(MTD.testCase);
+                if (!MTC) {
+                    MTC = new ModelTestCase(MTD.testCase, model, MTD.fileName, assetVersion.idAssetVersion);
+                    this.testCaseMap.set(MTD.testCase, MTC);
+                } else {
+                    MTC.assetVersionIDs.push(assetVersion.idAssetVersion);
+                }
             }
 
             switch (MTD.testCase) {
@@ -253,7 +278,11 @@ export class ModelTestSetup {
         return true;
     }
 
-    async ingestFile(MTD: ModelTestData, model: DBAPI.Model): Promise<{ success: boolean, asset: DBAPI.Asset | null, assetVersion: DBAPI.AssetVersion | null}> {
+    getTestCase(testCase: string): ModelTestCase | undefined {
+        return this.testCaseMap.get(testCase);
+    }
+
+    private async ingestFile(MTD: ModelTestFile, model: DBAPI.Model): Promise<{ success: boolean, asset: DBAPI.Asset | null, assetVersion: DBAPI.AssetVersion | null}> {
         if (!this.userOwner || !this.vocabModel || !this.storage)
             return { success: false, asset: null, assetVersion: null };
 
@@ -292,11 +321,11 @@ export class ModelTestSetup {
         return { success: IAR.success, asset: comRes.assets[0] || null, assetVersion: comRes.assetVersions[0] || null };
     }
 
-    private computeFilePath(MTD: ModelTestData): string {
+    private computeFilePath(MTD: ModelTestFile): string {
         return path.join(__dirname, '../../mock/models', MTD.directory, MTD.fileName);
     }
 
-    private async testFileExistence(MTD: ModelTestData): Promise<boolean> {
+    private async testFileExistence(MTD: ModelTestFile): Promise<boolean> {
         const filePath: string = this.computeFilePath(MTD);
         const res: H.StatResults = await H.Helpers.stat(filePath);
         const success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
