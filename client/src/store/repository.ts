@@ -152,7 +152,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     resetRepositoryFilter: (): void => {
         const stateValues = {
-            repositoryRootType: [eSystemObjectType.eUnit],
+            repositoryRootType: [],
             objectsToDisplay: [],
             metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
             units: [],

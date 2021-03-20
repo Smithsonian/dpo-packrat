@@ -92,12 +92,13 @@ function Header(): React.ReactElement {
     const history = useHistory();
     const { pathname } = useLocation();
     const { user, logout } = useUserStore();
-    const [search, updateSearch, getFilterState, initializeTree, resetRepositoryFilter] = useRepositoryStore(state => [
+    const [search, updateSearch, getFilterState, initializeTree, resetRepositoryFilter, updateRepositoryFilter] = useRepositoryStore(state => [
         state.search,
         state.updateSearch,
         state.getFilterState,
         state.initializeTree,
-        state.resetRepositoryFilter
+        state.resetRepositoryFilter,
+        state.updateRepositoryFilter
     ]);
 
     const onLogout = async (): Promise<void> => {
@@ -120,7 +121,10 @@ function Header(): React.ReactElement {
     // Specific to search while in repository view
     const updateRepositorySearch = () => {
         const filterState = getFilterState();
-        const repositoryURL = generateRepositoryUrl(filterState);
+        filterState.repositoryRootType = [];
+        updateRepositoryFilter(filterState);
+        const updatedFilterState = getFilterState();
+        const repositoryURL = generateRepositoryUrl(updatedFilterState);
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
         history.push(route + repositoryURL);
         initializeTree();
