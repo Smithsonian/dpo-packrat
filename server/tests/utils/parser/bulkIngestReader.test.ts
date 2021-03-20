@@ -49,8 +49,7 @@ afterAll(async done => {
     Config.storage.rootStaging = rootStagingOrig;
     await H.Helpers.removeDirectory(rootRepositoryNew, true);
     await H.Helpers.removeDirectory(rootStagingNew, true);
-    jest.setTimeout(5000);
-    await H.Helpers.sleep(2000);
+    // await H.Helpers.sleep(2000);
     done();
 });
 

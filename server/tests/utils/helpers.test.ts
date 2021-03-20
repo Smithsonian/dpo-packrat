@@ -16,7 +16,6 @@ const RANDOM_FILE_SIZE: number = 10000;
 
 /*
 afterAll(async done => {
-    jest.setTimeout(5000);
     await H.Helpers.sleep(2000);
     done();
 });

@@ -28,7 +28,6 @@ beforeAll(() => {
 afterAll(async done => {
     LOG.logger.info(`Removing test storage root from ${path.resolve(testStorageRoot)}`);
     await H.Helpers.removeDirectory(testStorageRoot, true);
-    // jest.setTimeout(5000);
     // await H.Helpers.sleep(2000);
     done();
 });
@@ -142,7 +141,7 @@ describe('OCFL Object', () => {
     });
 
     test('OCFL OCFLRoot.ocflObject Existing 1', async () => {
-        jest.setTimeout(30000); // this is needed here, for some reason, when running in my container
+        jest.setTimeout(60000); // this is needed here, for some reason, when running in my container
         let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, false);  // Don't create if missing
         expect(initRes.success).toBeTruthy();
         await testValidate(initRes.ocflObject, 1, 'unmodified');

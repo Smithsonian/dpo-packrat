@@ -2,6 +2,7 @@ module.exports = {
     rootDir: '../',
     preset: 'ts-jest',
     testEnvironment: 'node',
+    testTimeout: 60000,
     // collectCoverage: true,
     testMatch: [
         // The complete test suite, on one line, to aid in quick commenting out
