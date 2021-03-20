@@ -5,14 +5,29 @@ import * as DBAPI from '../../../db';
 import { eSystemObjectType, ObjectGraphDataEntry } from '../../../db';
 import { SolrClient } from './SolrClient';
 
-export class ReindexSolr {
+export class IndexSolr {
     private objectGraphDatabase: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
     private hierarchyNameMap: Map<number, string> = new Map<number, string>(); // map of idSystemObject -> object name
     private static fullIndexUnderway: boolean = false;
 
+    private countUnit:                  number = 0;
+    private countProject:               number = 0;
+    private countSubject:               number = 0;
+    private countItem:                  number = 0;
+    private countCaptureData:           number = 0;
+    private countModel:                 number = 0;
+    private countScene:                 number = 0;
+    private countIntermediaryFile:      number = 0;
+    private countProjectDocumentation:  number = 0;
+    private countAsset:                 number = 0;
+    private countAssetVersion:          number = 0;
+    private countActor:                 number = 0;
+    private countStakeholder:           number = 0;
+    private countUnknown:               number = 0;
+
     async fullIndexProfiled(): Promise<boolean> {
         LOG.logger.info('****************************************');
-        LOG.logger.info('ReindexSolr.fullIndexProfiled() starting');
+        LOG.logger.info('IndexSolr.fullIndexProfiled() starting');
         return new Promise<boolean>((resolve) => {
             const inspector = require('inspector');
             const fs = require('fs');
@@ -21,19 +36,19 @@ export class ReindexSolr {
 
             session.post('Profiler.enable', async () => {
                 session.post('Profiler.start', async () => {
-                    LOG.logger.info('ReindexSolr.fullIndexProfiled() fullIndex() starting');
+                    LOG.logger.info('IndexSolr.fullIndexProfiled() fullIndex() starting');
                     const retValue: boolean = await this.fullIndex();
-                    LOG.logger.info('ReindexSolr.fullIndexProfiled() fullIndex() complete');
+                    LOG.logger.info('IndexSolr.fullIndexProfiled() fullIndex() complete');
                     resolve(retValue);
 
                     // some time later...
                     session.post('Profiler.stop', (err, { profile }) => {
                         // Write profile to disk, upload, etc.
                         if (!err) {
-                            LOG.logger.info('ReindexSolr.fullIndexProfiled() writing profile');
+                            LOG.logger.info('IndexSolr.fullIndexProfiled() writing profile');
                             fs.writeFileSync('./profile.cpuprofile', JSON.stringify(profile));
                         }
-                        LOG.logger.info('ReindexSolr.fullIndexProfiled() writing profile ending');
+                        LOG.logger.info('IndexSolr.fullIndexProfiled() writing profile ending');
                     });
                 });
             });
@@ -41,17 +56,17 @@ export class ReindexSolr {
     }
 
     async fullIndex(): Promise<boolean> {
-        if (ReindexSolr.fullIndexUnderway) {
-            LOG.logger.error('ReindexSolr.fullIndex() already underway; exiting this additional request early');
+        if (IndexSolr.fullIndexUnderway) {
+            LOG.logger.error('IndexSolr.fullIndex() already underway; exiting this additional request early');
             return false;
         }
 
         let retValue: boolean = false;
         try {
-            ReindexSolr.fullIndexUnderway = true;
+            IndexSolr.fullIndexUnderway = true;
             retValue = await this.fullIndexWorker();
         } finally {
-            ReindexSolr.fullIndexUnderway = false;
+            IndexSolr.fullIndexUnderway = false;
         }
         return retValue;
     }
@@ -61,22 +76,27 @@ export class ReindexSolr {
         // Compute full object graph for object
         const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAll, 32, this.objectGraphDatabase);
         if (!await OG.fetch()) {
-            LOG.logger.error('ReindexSolr.indexObject failed fetching ObjectGraph');
+            LOG.logger.error(`IndexSolr.indexObject failed fetching ObjectGraph for ${idSystemObject}`);
             return false;
         }
         const OGDE: ObjectGraphDataEntry | undefined = this.objectGraphDatabase.objectMap.get(idSystemObject);
         if (!OGDE) {
-            LOG.logger.error('ReindexSolr.indexObject failed fetching ObjectGraphDataEntry from ObjectGraphDatabase');
+            LOG.logger.error('IndexSolr.indexObject failed fetching ObjectGraphDataEntry from ObjectGraphDatabase');
             return false;
         }
 
         const doc: any = {};
         if (await this.handleObject(doc, OGDE)) {
             const solrClient: SolrClient = new SolrClient(null, null, null);
-            solrClient._client.add([doc], undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.indexObject adding record', err); else obj; });
-            solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.indexObject -> commit()', err); else obj; });
+            try {
+                solrClient._client.add([doc], undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.indexObject adding record', err); else obj; });
+                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.indexObject -> commit()', err); else obj; });
+            } catch (error) {
+                LOG.logger.error(`IndexSolr.indexObject ${idSystemObject} failed`, error);
+                return false;
+            }
         } else
-            LOG.logger.error('ReindexSolr.indexObject failed in handleObject');
+            LOG.logger.error('IndexSolr.indexObject failed in handleObject');
 
         return true;
     }
@@ -84,7 +104,7 @@ export class ReindexSolr {
     private async fullIndexWorker(): Promise<boolean> {
         const solrClient: SolrClient = new SolrClient(null, null, null);
         if (!(await this.objectGraphDatabase.fetch())) {
-            LOG.logger.error('ReindexSolr.fullIndex failed on ObjectGraphDatabase.fetch()');
+            LOG.logger.error('IndexSolr.fullIndex failed on ObjectGraphDatabase.fetch()');
             return false;
         }
 
@@ -96,22 +116,47 @@ export class ReindexSolr {
                 docs.push(doc);
 
                 if (docs.length >= 1000) {
-                    solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
-                    solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
+                    try {
+                        solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.fullIndex adding cached records', err); else obj; });
+                        solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.fullIndex -> commit()', err); else obj; });
+                    } catch (error) {
+                        LOG.logger.error('IndexSolr.fullIndexWorker failed', error);
+                        return false;
+                    }
                     documentCount += docs.length;
-                    LOG.logger.info(`ReindexSolr.fullIndex committed ${documentCount} total documents`);
+                    LOG.logger.info(`IndexSolr.fullIndex committed ${documentCount} total documents`);
                     docs = [];
                 }
             } else
-                LOG.logger.error('ReindexSolr.fullIndex failed in handleObject');
+                LOG.logger.error('IndexSolr.fullIndex failed in handleObject');
         }
 
         if (docs.length > 0) {
-            solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex adding cached records', err); else obj; });
-            solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('ReindexSolr.fullIndex -> commit()', err); else obj; });
+            try {
+                solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.fullIndex adding cached records', err); else obj; });
+                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.fullIndex -> commit()', err); else obj; });
+            } catch (error) {
+                LOG.logger.error('IndexSolr.fullIndexWorker failed', error);
+                return false;
+            }
             documentCount += docs.length;
-            LOG.logger.info(`ReindexSolr.fullIndex committed ${documentCount} total documents`);
         }
+
+        LOG.logger.info(`IndexSolr.fullIndex indexed units: ${this.countUnit}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed projects: ${this.countProject}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed subjects: ${this.countSubject}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed items: ${this.countItem}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed capture data: ${this.countCaptureData}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed models: ${this.countModel}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed scenes: ${this.countScene}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed intermediary files: ${this.countIntermediaryFile}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed project documentation: ${this.countProjectDocumentation}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed assets: ${this.countAsset}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed asset versions: ${this.countAssetVersion}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed actors: ${this.countActor}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed stakeholders: ${this.countStakeholder}`);
+        LOG.logger.info(`IndexSolr.fullIndex indexed unknown: ${this.countUnknown}`);
+        LOG.logger.info(`IndexSolr.fullIndex committed ${documentCount} total documents`);
         return true;
     }
 
@@ -150,6 +195,7 @@ export class ReindexSolr {
 
         doc.HierarchyParentID = OGDEH.parents.length == 0 ? [0] : OGDEH.parents;
         doc.HierarchyChildrenID = OGDEH.children.length == 0 ? [0] : OGDEH.children;
+        doc.HierarchyAncestorID = OGDEH.ancestors.length == 0 ? [0] : OGDEH.ancestors;
 
         let nameArray: string[] = [];
         let idArray: number[] = [];
@@ -282,30 +328,32 @@ export class ReindexSolr {
     private async handleUnit(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!unit) {
-            LOG.logger.error(`ReindexSolr.handleUnit failed to compute unit from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleUnit failed to compute unit from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
         doc.CommonName = unit.Name;
         doc.UnitAbbreviation = unit.Abbreviation;
         doc.UnitARKPrefix = unit.ARKPrefix;
+        this.countUnit++;
         return true;
     }
 
     private async handleProject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const project: DBAPI.Project | null = await DBAPI.Project.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!project) {
-            LOG.logger.error(`ReindexSolr.handleProject failed to compute project from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleProject failed to compute project from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
         doc.CommonName = project.Name;
         doc.CommonDescription = project.Description;
+        this.countProject++;
         return true;
     }
 
     private async handleSubject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const subject: DBAPI.Subject | null = await DBAPI.Subject.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!subject) {
-            LOG.logger.error(`ReindexSolr.handleSubject failed to compute subject from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleSubject failed to compute subject from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
 
@@ -315,24 +363,26 @@ export class ReindexSolr {
             if (ID)
                 doc.SubjectIdentifierPreferred = ID.IdentifierValue;
         }
+        this.countSubject++;
         return true;
     }
 
     private async handleItem(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const item: DBAPI.Item | null = await DBAPI.Item.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!item) {
-            LOG.logger.error(`ReindexSolr.handleItem failed to compute item from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleItem failed to compute item from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
         doc.CommonName = item.Name;
         doc.ItemEntireSubject = item.EntireSubject;
+        this.countItem++;
         return true;
     }
 
     private async handleCaptureData(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const captureData: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!captureData) {
-            LOG.logger.error(`ReindexSolr.handleCaptureData failed to compute capture data from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleCaptureData failed to compute capture data from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
         const captureDataPhotos: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(captureData.idCaptureData);
@@ -367,14 +417,14 @@ export class ReindexSolr {
             if (variantTypeMap.size > 0)
                 doc.CDVariantType = [...variantTypeMap.keys()];
         }
-
+        this.countCaptureData++;
         return true;
     }
 
     private async handleModel(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const modelConstellation: DBAPI.ModelConstellation | null = await DBAPI.ModelConstellation.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!modelConstellation) {
-            LOG.logger.error(`ReindexSolr.handleModel failed to compute ModelConstellation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleModel failed to compute ModelConstellation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
 
@@ -499,92 +549,99 @@ export class ReindexSolr {
         doc.ModelMetricsIsWatertight = [...modelMetricsIsWatertightMap.keys()];
 
         // TODO: should we turn multivalued metrics and bounding boxes into single valued attributes, and combine the multiple values in a meaningful way (e.g. add point and face counts, combine bounding boxes)
+        this.countModel++;
         return true;
     }
 
     private async handleScene(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!scene) {
-            LOG.logger.error(`ReindexSolr.handleScene failed to compute scene from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleScene failed to compute scene from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
         doc.CommonName = scene.Name;
         doc.SceneIsOriented = scene.IsOriented;
         doc.SceneHasBeenQCd = scene.HasBeenQCd;
+        this.countScene++;
         return true;
     }
 
     private async handleIntermediaryFile(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const intermediaryFile: DBAPI.IntermediaryFile | null = await DBAPI.IntermediaryFile.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!intermediaryFile) {
-            LOG.logger.error(`ReindexSolr.handleIntermediaryFile failed to compute intermediaryFile from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleIntermediaryFile failed to compute intermediaryFile from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
         doc.CommonName = `Intermediary File created ${intermediaryFile.DateCreated.toISOString()}`;
         doc.CommonDateCreated = intermediaryFile.DateCreated;
+        this.countIntermediaryFile++;
         return true;
     }
 
     private async handleProjectDocumentation(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const projectDocumentation: DBAPI.ProjectDocumentation | null = await DBAPI.ProjectDocumentation.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!projectDocumentation) {
-            LOG.logger.error(`ReindexSolr.handleProjectDocumentation failed to compute projectDocumentation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleProjectDocumentation failed to compute projectDocumentation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
         doc.CommonName = projectDocumentation.Name;
         doc.CommonDescription = projectDocumentation.Description;
+        this.countProjectDocumentation++;
         return true;
     }
 
     private async handleAsset(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!asset) {
-            LOG.logger.error(`ReindexSolr.handleAsset failed to compute asset from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleAsset failed to compute asset from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
         doc.CommonName = asset.FileName;
         doc.AssetFileName = asset.FileName;
         doc.AssetFilePath = asset.FilePath;
         doc.AssetType = await this.lookupVocabulary(asset.idVAssetType);
+        this.countAsset++;
         return true;
     }
 
     private async handleAssetVersion(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!assetVersion) {
-            LOG.logger.error(`ReindexSolr.handleAssetVersion failed to compute assetVersion from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleAssetVersion failed to compute assetVersion from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
 
         const user: DBAPI.User | null = await DBAPI.User.fetch(assetVersion.idUserCreator);
         if (!user) {
-            LOG.logger.error(`ReindexSolr.handleAssetVersion failed to compute idUserCreator from ${assetVersion.idUserCreator}`);
+            LOG.logger.error(`IndexSolr.handleAssetVersion failed to compute idUserCreator from ${assetVersion.idUserCreator}`);
             return false;
         }
         doc.CommonName = `Version ${assetVersion.Version}`;
         doc.AVUserCreator = user.Name;
         doc.AVStorageHash = assetVersion.StorageHash;
-        doc.AVStorageSize = assetVersion.StorageSize;
+        doc.AVStorageSize = Number(assetVersion.StorageSize);
         doc.AVIngested = assetVersion.Ingested;
         doc.AVBulkIngest = assetVersion.BulkIngest;
+        this.countAssetVersion++;
         return true;
     }
 
     private async handleActor(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const actor: DBAPI.Actor | null = await DBAPI.Actor.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!actor) {
-            LOG.logger.error(`ReindexSolr.handleActor failed to compute actor from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleActor failed to compute actor from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
         doc.CommonName = actor.IndividualName;
         doc.CommonOrganizationName = actor.OrganizationName;
+        this.countActor++;
         return true;
     }
 
     private async handleStakeholder(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const stakeholder: DBAPI.Stakeholder | null = await DBAPI.Stakeholder.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!stakeholder) {
-            LOG.logger.error(`ReindexSolr.handleStakeholder failed to compute stakeholder from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.logger.error(`IndexSolr.handleStakeholder failed to compute stakeholder from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
 
@@ -594,12 +651,14 @@ export class ReindexSolr {
         doc.StakeholderPhoneNumberMobile = stakeholder.PhoneNumberMobile;
         doc.StakeholderPhoneNumberOffice = stakeholder.PhoneNumberOffice;
         doc.StakeholderMailingAddress = stakeholder.MailingAddress;
+        this.countStakeholder++;
         return true;
     }
 
     private async handleUnknown(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
-        LOG.logger.error(`ReindexSolr.fullIndex called with unknown object type from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+        LOG.logger.error(`IndexSolr.fullIndex called with unknown object type from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
         doc.CommonName = `Unknown ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`;
+        this.countUnknown++;
         return false;
     }
 
