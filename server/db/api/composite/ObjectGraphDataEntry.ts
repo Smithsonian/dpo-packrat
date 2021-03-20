@@ -140,7 +140,6 @@ export class ObjectGraphDataEntry {
 
         objectGraphDataEntryHierarchy.parents = [...this.parentMap.keys()];
         objectGraphDataEntryHierarchy.children = [...this.childMap.keys()];
-        objectGraphDataEntryHierarchy.ancestors = [...this.ancestorObjectMap.keys()];
 
         // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(this.parentMap.keys())} (${JSON.stringify(this.parentMap.size)})`);
         // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(objectGraphDataEntryHierarchy.parents)} -Children-> ${JSON.stringify(objectGraphDataEntryHierarchy.children)}`);
@@ -152,6 +151,9 @@ export class ObjectGraphDataEntry {
                 case eSystemObjectType.eSubject:    objectGraphDataEntryHierarchy.subjects.push(systemObjectIDType); break;
                 case eSystemObjectType.eItem:       objectGraphDataEntryHierarchy.items.push(systemObjectIDType); break;
             }
+            // Gather ancestors ... but don't add self as an ancestor!
+            if (systemObjectIDType.idSystemObject != this.systemObjectIDType.idSystemObject)
+                objectGraphDataEntryHierarchy.ancestors.push(systemObjectIDType.idSystemObject);
         }
 
         objectGraphDataEntryHierarchy.childrenObjectTypes = [...this.childrenObjectTypes.keys()];
