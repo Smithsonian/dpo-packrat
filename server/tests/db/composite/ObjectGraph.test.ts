@@ -807,6 +807,14 @@ describe('DB Composite ObjectGraph All', () => {
         expect(OA.actor).toEqual(expect.arrayContaining([OHTS.actor1, OHTS.actor2]));
         expect(OA.stakeholder).toBeFalsy();
     });
+
+    /*
+    test.only('DB Composite ObjectGraphDatabase', async () => {
+        jest.setTimeout(60000000);
+        const OGDB: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
+        expect(await OGDB.fetch()).toBeTruthy();
+    });
+    */
 });
 
 // ************************************************************
