@@ -20,7 +20,7 @@ afterAll(async done => {
     done();
 });
 
-describe('Jobs NS Init', () => {
+describe('Job NS Init', () => {
     test('JobFactory.getInstance', async () => {
         jest.setTimeout(60000);
         jobEngine = await JobFactory.getInstance(JOB_TYPE.NODE_SCHEDULE);
@@ -32,7 +32,7 @@ describe('Jobs NS Init', () => {
     });
 });
 
-describe('Jobs NS Lifecycle', () => {
+describe('Job NS Lifecycle', () => {
     // create a set of test models matching JB's test data <-- this is a test object ... -> which has ingested asset versions
     // launch job by id and by type, for each of the test data
     // confirm job output matches expectations
@@ -56,13 +56,20 @@ describe('Jobs NS Lifecycle', () => {
         await testCreateByID(0, undefined, null, null, false);
         await testCreateByType(eVocabularyID.eNone, undefined, null, null, false);
     });
-
-    test('Navigation Children', async () => {
-
-        // Not yet implemented:
-    });
-
 });
+
+async function testCook(testCase: string, eJobType: eVocabularyID): Promise<boolean> {
+    const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
+    expect(assetVersionIDs).toBeTruthy();
+    const job: IJob | null = await testCreateByType(eJobType, assetVersionIDs, computeJobParameters(testCase, eJobType), null, true);
+    expect(job).toBeTruthy();
+    if (!job)
+        return false;
+
+    const res: H.IOResults = await job.startJob(new Date());
+    expect(res.success).toBeTruthy();
+    return res.success;
+}
 
 async function testCreateByID(idJob: number, idAssetVersions: number[] | undefined, parameters: any,
     schedule: string | null, expectSuccess: boolean = true): Promise<IJob | null> {
@@ -95,19 +102,6 @@ async function computeVocabularyDBID(eJobType: eVocabularyID): Promise<number | 
     return idVJobType;
 }
 
-async function testCook(testCase: string, eJobType: eVocabularyID): Promise<boolean> {
-    const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
-    expect(assetVersionIDs).toBeTruthy();
-    const job: IJob | null = await testCreateByType(eJobType, assetVersionIDs, computeJobParameters(testCase, eJobType), null, true);
-    expect(job).toBeTruthy();
-    if (!job)
-        return false;
-
-    const res: H.IOResults = await job.startJob(new Date());
-    expect(res.success).toBeTruthy();
-    return res.success;
-}
-
 function computeJobParameters(testCase: string, eJobType: eVocabularyID): any {
     let modelName: string | undefined = MTS?.getTestCase(testCase)?.modelName;
     expect(modelName).toBeTruthy();
@@ -116,7 +110,7 @@ function computeJobParameters(testCase: string, eJobType: eVocabularyID): any {
     switch (eJobType) {
         case eVocabularyID.eJobJobTypeCookSIPackratInspect: return new COOK.JobCookSIPackratInspectParameters(modelName);
         default:
-            LOG.logger.error(`JobsNS.test computeJobParameters: unexpected job type ${eVocabularyID[eJobType]}`);
+            LOG.logger.error(`JobNS.test computeJobParameters: unexpected job type ${eVocabularyID[eJobType]}`);
             expect(false).toBeTruthy();
     }
 }
