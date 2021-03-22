@@ -8,12 +8,12 @@ import * as DBAPI from '../../../db';
 // import * as H from '../../utils/helpers';
 
 export class JobCookSIPackratInspectParameters {
-    constructor(sourceMeshFile: string, sourceMaterialFiles: string | null = null) {
+    constructor(sourceMeshFile: string, sourceMaterialFiles: string | undefined = undefined) {
         this.sourceMeshFile = sourceMeshFile;
         this.sourceMaterialFiles = sourceMaterialFiles;
     }
     sourceMeshFile: string;
-    sourceMaterialFiles: string | null;
+    sourceMaterialFiles?: string | undefined;
 }
 
 export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectParameters> {

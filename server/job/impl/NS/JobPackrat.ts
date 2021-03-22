@@ -8,31 +8,31 @@ import * as NS from 'node-schedule';
 export abstract class JobPackrat implements JOB.IJob {
     protected _nsJob: NS.Job | null = null;
     protected _dbJobRun: DBAPI.JobRun;
+    protected _results: H.IOResults = { success: false,  error: 'Not Started' };
 
     constructor(dbJobRun: DBAPI.JobRun) {
         this._dbJobRun = dbJobRun;
     }
 
     // #region IJob interface
-    async startJob(fireDate: Date): Promise<H.IOResults> {
+    name(): string          { throw new Error('JobPackrat.name() called but is only implemented in derived classes'); }
+    configuration(): any    { throw new Error('JobPackrat.configuration() called but is only implemented in derived classes'); }
+    waitForCompletion(timeout: number): Promise<H.IOResults> { timeout; throw new Error('JobPackrat.waitForCompletion() called but is only implemented in derived classes'); }
+
+    async executeJob(fireDate: Date): Promise<H.IOResults> {
         await this.recordCreated();
-        const res: H.IOResults = await this.startJobWorker(fireDate);
-        if (!res.success)
-            await this.recordFailure(res.error);
-        return res;
+        this._results = await this.startJobWorker(fireDate);
+        if (!this._results.success)
+            await this.recordFailure(this._results.error);
+        return this._results;
     }
 
     async cancelJob(): Promise<H.IOResults> {
-        const res: H.IOResults = await this.cancelJobWorker();
-        await this.recordCancel(res.error);
-        return res;
-    }
-
-    name(): string {
-        throw new Error('JobPackrat.name() called but is only implemented in derived classes');
-    }
-    configuration(): any {
-        throw new Error('JobPackrat.configuration() called but is only implemented in derived classes');
+        if (this._nsJob)
+            this._nsJob.cancel();
+        this._results = await this.cancelJobWorker();
+        await this.recordCancel(this._results.error);
+        return this._results;
     }
     // #endregion
 
@@ -43,10 +43,6 @@ export abstract class JobPackrat implements JOB.IJob {
     // #endregion
 
     // #region node-scheduler interface
-    async nsJobCallback(fireDate: Date): Promise<void> {
-        await this.startJob(fireDate);
-    }
-
     setNSJob(nsJob: NS.Job): void {
         this._nsJob = nsJob;
     }
@@ -54,14 +50,18 @@ export abstract class JobPackrat implements JOB.IJob {
 
     // #region JobRun helper methods
     async recordCreated(): Promise<void> {
-        this._dbJobRun.DateStart = new Date();
-        this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
-        await this._dbJobRun.update();
+        if (this._dbJobRun.getStatus() == DBAPI.eJobRunStatus.eUnitialized) {
+            this._dbJobRun.DateStart = new Date();
+            this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
+            await this._dbJobRun.update();
+            LOG.logger.info(`JobPackrat [${this.name()}] Created`);
+        }
     }
 
     async recordWaiting(): Promise<void> {
         this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eWaiting);
         await this._dbJobRun.update();
+        LOG.logger.info(`JobPackrat [${this.name()}] Waiting`);
     }
 
     async recordStart(): Promise<void> {
@@ -69,6 +69,7 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.DateStart = new Date();
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eRunning);
             await this._dbJobRun.update();
+            LOG.logger.info(`JobPackrat [${this.name()}] Starting`);
         }
     }
 
@@ -77,7 +78,9 @@ export abstract class JobPackrat implements JOB.IJob {
         this._dbJobRun.Result = true;
         this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eDone);
         this._dbJobRun.Output = output;
+        LOG.logger.info(`JobPackrat [${this.name()}] Success`);
         await this._dbJobRun.update();
+        this._results = { success: true, error: '' };
     }
 
     async recordFailure(errorMsg: string): Promise<void> {
@@ -86,7 +89,8 @@ export abstract class JobPackrat implements JOB.IJob {
         this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eError);
         this._dbJobRun.Error = errorMsg;
         await this._dbJobRun.update();
-        LOG.logger.error(errorMsg);
+        LOG.logger.error(`JobPackrat [${this.name()}] Failure: ${errorMsg}`);
+        this._results = { success: false, error: errorMsg };
     }
 
     async recordCancel(errorMsg: string): Promise<void> {
@@ -94,9 +98,10 @@ export abstract class JobPackrat implements JOB.IJob {
         this._dbJobRun.Result = false;
         this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCancelled);
         if (errorMsg) {
-            LOG.logger.error(errorMsg);
+            LOG.logger.error(`JobPackrat [${this.name()}] Cancel: ${errorMsg}`);
             this._dbJobRun.Error = errorMsg;
-        }
+        } else
+            LOG.logger.error(`JobPackrat [${this.name()}] Cancel`);
         await this._dbJobRun.update();
     }
     // #endregion
