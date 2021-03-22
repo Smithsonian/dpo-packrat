@@ -138,7 +138,7 @@ export class JobEngine implements JOB.IJobEngine {
 
         if (frequency === '') { // empty frequency means run it once, now
             LOG.logger.info(`JobEngine.createJob running now ${job.name()}`);
-            await job.executeJob(new Date());
+            job.executeJob(new Date()); // do not use await here, so that we remain unblocked while the job starts
         } else {                 // non-empty frequency means run job on schedule
             const nsJob: NS.Job = NS.scheduleJob(job.name(), frequency, job.executeJob);
             job.setNSJob(nsJob);
