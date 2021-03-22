@@ -37,22 +37,22 @@ class ModelTestCase {
 }
 
 const modelTestFiles: ModelTestFile[] = [
-    { testCase: 'fbx-stand-alone', fileName: 'eremotherium_laurillardi-150k-4096.fbx', directory: '', geometry: true, hash: '' },
-    { testCase: 'fbx-with-support', fileName: 'eremotherium_laurillardi-150k-4096.fbx', directory: 'eremotherium_laurillardi-150k-4096-fbx', geometry: true, hash: '' },
-    { testCase: 'fbx-with-support', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-fbx', geometry: false, hash: '' },
-    { testCase: 'glb', fileName: 'eremotherium_laurillardi-150k-4096.glb', directory: '', geometry: true, hash: '' },
-    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096.obj', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: true, hash: '' },
-    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096.mtl', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: false, hash: '' },
-    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: false, hash: '' },
-    { testCase: 'ply', fileName: 'eremotherium_laurillardi-150k.ply', directory: '', geometry: true, hash: '' },
-    { testCase: 'stl', fileName: 'eremotherium_laurillardi-150k.stl', directory: '', geometry: true, hash: '' },
-    { testCase: 'usd', fileName: 'eremotherium_laurillardi-150k-4096-5.usdc', directory: 'eremotherium_laurillardi-150k-4096-usd', geometry: true, hash: '' },
-    { testCase: 'usd', fileName: 'baseColor-1.jpg', directory: 'eremotherium_laurillardi-150k-4096-usd/0', geometry: false, hash: '' },
-    { testCase: 'usdz', fileName: 'eremotherium_laurillardi-150k-4096.usdz', directory: '', geometry: true, hash: '' },
-    { testCase: 'wrl', fileName: 'eremotherium_laurillardi-150k-4096.x3d.wrl', directory: 'eremotherium_laurillardi-150k-4096-wrl', geometry: true, hash: '' },
-    { testCase: 'wrl', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-wrl', geometry: false, hash: '' },
-    { testCase: 'x3d', fileName: 'eremotherium_laurillardi-150k-4096.x3d', directory: 'eremotherium_laurillardi-150k-4096-x3d', geometry: true, hash: '' },
-    { testCase: 'x3d', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-x3d', geometry: false, hash: '' },
+    { testCase: 'fbx-stand-alone', fileName: 'eremotherium_laurillardi-150k-4096.fbx', directory: '', geometry: true, hash: 'd81595f6e42c9162ddc32c4f358affeda6f1eb14cb7838cf5477536401b764d7' },
+    { testCase: 'fbx-with-support', fileName: 'eremotherium_laurillardi-150k-4096.fbx', directory: 'eremotherium_laurillardi-150k-4096-fbx', geometry: true, hash: 'cfcd541913a122a8d8b415c9b5bd45818d7f483b9e683e6c2e0c557de876e694' },
+    { testCase: 'fbx-with-support', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-fbx', geometry: false, hash: '53a46d32ecc668cb07a2b7f9f8e197c14819db3354b021b551cbdd06f3b81488' },
+    { testCase: 'glb', fileName: 'eremotherium_laurillardi-150k-4096.glb', directory: '', geometry: true, hash: '08ddb4b90bace6ae9ef5c0b620f0e3f821c76cad89151d3c992dcd531ba4f498' },
+    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096.obj', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: true, hash: '7da41672c635249a622dcc4e96a8e01747de55b091586dc49a10b465e36ec12b' },
+    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096.mtl', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: false, hash: 'a1f7b4c19ee36d68ec3746f4ac9696738076c249f8426fafd87a5a45f3fd8f32' },
+    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: false, hash: '53a46d32ecc668cb07a2b7f9f8e197c14819db3354b021b551cbdd06f3b81488' },
+    { testCase: 'ply', fileName: 'eremotherium_laurillardi-150k.ply', directory: '', geometry: true, hash: 'd4825a2586cadb7ccbc40e8562dfb240d8b58669db1e06f4138d427ac6c14c15' },
+    { testCase: 'stl', fileName: 'eremotherium_laurillardi-150k.stl', directory: '', geometry: true, hash: '3984d9039384ba9881635a8c7503c75ffb333c2b27270f9beb87dfd0a26aa762' },
+    { testCase: 'usd', fileName: 'eremotherium_laurillardi-150k-4096-5.usdc', directory: 'eremotherium_laurillardi-150k-4096-usd', geometry: true, hash: 'd73a56f429da81d9ed3338e4edb468ba346be138e93697a4d886dbf63533bc7f' },
+    { testCase: 'usd', fileName: 'baseColor-1.jpg', directory: 'eremotherium_laurillardi-150k-4096-usd/0', geometry: false, hash: '53a46d32ecc668cb07a2b7f9f8e197c14819db3354b021b551cbdd06f3b81488' },
+    { testCase: 'usdz', fileName: 'eremotherium_laurillardi-150k-4096.usdz', directory: '', geometry: true, hash: 'ca689b07dc534f6e9f3dab7693bcdf894d65fca17f1fb6be34009ada3b6c5b8c' },
+    { testCase: 'wrl', fileName: 'eremotherium_laurillardi-150k-4096.x3d.wrl', directory: 'eremotherium_laurillardi-150k-4096-wrl', geometry: true, hash: '06192884a751101c02680babf6b676797867150c89a712ebaf83408f9769433b' },
+    { testCase: 'wrl', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-wrl', geometry: false, hash: '53a46d32ecc668cb07a2b7f9f8e197c14819db3354b021b551cbdd06f3b81488' },
+    { testCase: 'x3d', fileName: 'eremotherium_laurillardi-150k-4096.x3d', directory: 'eremotherium_laurillardi-150k-4096-x3d', geometry: true, hash: '3d87c1d33849bed8a048f5235368ba7e36e3b21b27303bb959842de9c665b673' },
+    { testCase: 'x3d', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-x3d', geometry: false, hash: '53a46d32ecc668cb07a2b7f9f8e197c14819db3354b021b551cbdd06f3b81488' },
 ];
 
 export class ModelTestSetup {
@@ -330,7 +330,19 @@ export class ModelTestSetup {
     private async testFileExistence(MTD: ModelTestFile): Promise<boolean> {
         const filePath: string = this.computeFilePath(MTD);
         const res: H.StatResults = await H.Helpers.stat(filePath);
-        const success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
+        let success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
+
+        if (MTD.hash) {
+            const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
+            if (!hashRes.success) {
+                LOG.logger.error(`ModelTestSetup.testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`);
+                success = false;
+            } else if (hashRes.hash != MTD.hash) {
+                LOG.logger.error(`ModelTestSetup.testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${MTD.hash}`);
+                success = false;
+            }
+        }
+
         LOG.logger.info(`ModelTestSetup.testFileExistience('${filePath}') = ${success}`);
         return success;
     }

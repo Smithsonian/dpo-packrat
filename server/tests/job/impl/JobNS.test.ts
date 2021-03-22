@@ -17,7 +17,7 @@ let MTS: TESTMODEL.ModelTestSetup | null = null;
 const JobSet: Set<IJob> = new Set<IJob>();
 
 afterAll(async done => {
-    // await H.Helpers.sleep(5000);
+    await H.Helpers.sleep(5000);
     done();
 });
 
@@ -28,8 +28,7 @@ describe('Job NS Init', () => {
         expect(jobEngine).toBeTruthy();
 
         MTS = new TESTMODEL.ModelTestSetup();
-        // modelTestAvailable = await MTS.initialize();
-        modelTestAvailable = await MTS.initialize('fbx-stand-alone');
+        modelTestAvailable = await MTS.initialize();
         expect(modelTestAvailable === null || modelTestAvailable).toBeTruthy(); // null means that model test files were not available, which is ok
     });
 });
@@ -42,7 +41,17 @@ describe('Job NS Cook Tests', () => {
     // test job cancellation
     test('IJob.Cook si-packrat-inspect', async () => {
         expect(await testCookExplicit('fbx-stand-alone', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
-        expect(await testCookImplicit('fbx-stand-alone', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
+        expect(await testCookImplicit('fbx-with-support', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
+        expect(await testCookExplicit('glb', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
+        expect(await testCookImplicit('obj', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
+        expect(await testCookExplicit('ply', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
+        expect(await testCookImplicit('stl', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
+        expect(await testCookImplicit('x3d', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
+
+        // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
+        // expect(await testCookExplicit('usd', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
+        // expect(await testCookImplicit('usdz', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
+        // expect(await testCookExplicit('wrl', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
     });
 
     test('IJob.Cook invalid job IDs', async () => {
