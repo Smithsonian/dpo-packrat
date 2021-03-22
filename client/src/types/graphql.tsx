@@ -2274,6 +2274,10 @@ export type CreateProjectMutation = (
     & { Project?: Maybe<(
       { __typename?: 'Project' }
       & Pick<Project, 'idProject'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -2306,6 +2310,10 @@ export type CreateUnitMutation = (
     & { Unit?: Maybe<(
       { __typename?: 'Unit' }
       & Pick<Unit, 'idUnit'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -2737,6 +2745,10 @@ export type GetProjectListQuery = (
     & { projects: Array<(
       { __typename?: 'Project' }
       & Pick<Project, 'idProject' | 'Name'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -2915,6 +2927,10 @@ export type GetProjectQuery = (
     & { Project?: Maybe<(
       { __typename?: 'Project' }
       & Pick<Project, 'idProject'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -2995,6 +3011,10 @@ export type GetUnitsFromNameSearchQuery = (
     & { Units: Array<(
       { __typename?: 'Unit' }
       & Pick<Unit, 'idUnit' | 'Name' | 'Abbreviation'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -3420,6 +3440,9 @@ export const CreateProjectDocument = gql`
   createProject(input: $input) {
     Project {
       idProject
+      SystemObject {
+        idSystemObject
+      }
     }
   }
 }
@@ -3488,6 +3511,9 @@ export const CreateUnitDocument = gql`
   createUnit(input: $input) {
     Unit {
       idUnit
+      SystemObject {
+        idSystemObject
+      }
     }
   }
 }
@@ -4465,6 +4491,9 @@ export const GetProjectListDocument = gql`
     projects {
       idProject
       Name
+      SystemObject {
+        idSystemObject
+      }
     }
   }
 }
@@ -4857,6 +4886,9 @@ export const GetProjectDocument = gql`
   getProject(input: $input) {
     Project {
       idProject
+      SystemObject {
+        idSystemObject
+      }
     }
   }
 }
@@ -5035,6 +5067,9 @@ export const GetUnitsFromNameSearchDocument = gql`
       idUnit
       Name
       Abbreviation
+      SystemObject {
+        idSystemObject
+      }
     }
   }
 }

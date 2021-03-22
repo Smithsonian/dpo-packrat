@@ -5,6 +5,9 @@ const createProject = gql`
         createProject(input: $input) {
             Project {
                 idProject
+                SystemObject {
+                    idSystemObject
+                }
             }
         }
     }

@@ -35,9 +35,9 @@ interface ObjectDetailsProps {
     disabled: boolean;
     publishedState: string;
     retired: boolean;
-    hideRetired: boolean;
-    originalFields: GetSystemObjectDetailsResult;
-    onRetiredUpdate: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
+    hideRetired?: boolean;
+    originalFields?: GetSystemObjectDetailsResult;
+    onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
 }
 
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
