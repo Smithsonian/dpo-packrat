@@ -47,7 +47,7 @@ function AdminSidebarMenuRow({ path }: { path: string }): React.ReactElement {
 
 function AdminSidebarMenu(): React.ReactElement {
     const classes = useStyles();
-    const adminRoutes = ['users'];
+    const adminRoutes = ['users', 'projects', 'units'];
 
     return (
         <Box className={classes.AdminSidebarMenuContainer}>

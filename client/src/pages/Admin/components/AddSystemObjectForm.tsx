@@ -7,19 +7,21 @@ This component is responsible for creating new SystemObjects and will handle the
     Projects
  */
 
-import { Box, Typography /*, Tab, TabProps, Tabs */ } from '@material-ui/core';
-import { fade, makeStyles /*, withStyles */ } from '@material-ui/core/styles';
-import React, { useState } from 'react';
+import { Box, Typography, Tab, TabProps, Tabs } from '@material-ui/core';
+import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
+import React, { Fragment, useState } from 'react';
 import { useParams } from 'react-router';
 import { DebounceInput } from 'react-debounce-input';
-// import { useHistory } from 'react-router-dom';
-// import { toast } from 'react-toastify';
-// import { LoadingButton } from '../../../../components';
-// createproject, createunit queries
-// import DetailsTab from '../../Repository/components/DetailsView/DetailsTab';
+import { useHistory } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { LoadingButton, InputField } from '../../../components';
+import Description from '../../Ingestion/components/Metadata/Photogrammetry/Description';
 import DetailsThumbnail from '../../Repository/components/DetailsView/DetailsThumbnail';
 import ObjectDetails from '../../Repository/components/DetailsView/ObjectDetails';
+import { CreateUnitDocument, CreateProjectDocument } from '../../../types/graphql';
+import { apolloClient } from '../../../graphql/index';
 import { toTitleCase } from '../../../constants/helperfunctions';
+import * as yup from 'yup';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -31,7 +33,6 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         marginBottom: 20,
         borderRadius: 10,
         overflowY: 'scroll',
-        // backgroundColor: 'brown',
         backgroundColor: palette.primary.light,
         [breakpoints.down('lg')]: {
             maxHeight: 'calc(100vh - 120px)',
@@ -60,6 +61,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
         backgroundColor: palette.background.paper,
         fontSize: '0.8em'
+    },
+    tabpanel: {
+        backgroundColor: fade(palette.primary.main, 0.25)
+    },
+    tab: {
+        backgroundColor: fade(palette.primary.main, 0.25)
     }
 }));
 
@@ -70,59 +77,174 @@ type ParamsProperties = {
 function AddSystemObjectForm(): React.ReactElement {
     const classes = useStyles();
     const params: ParamsProperties = useParams();
-    // const history = useHistory();
-    // const [isUpdatingData, setIsUpdatingData] = useState(false);
+    const history = useHistory();
+    const [tab] = useState(0);
+    const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [name, setName] = useState('');
-    // const [unitAbbreviation, setUnitAbbreviation] = useState('');
-    // const [unitARKPrefix, setUnitARKPrefix] = useState('');
-    // const [updatedData, setUpdatedData] = useState({});
+    const [abbreviation, setAbbreviation] = useState('');
+    const [ARKPrefix, setARKPrefix] = useState('');
+    const [description, setDescription] = useState('');
     const [systemObjectType] = useState(params.systemObjectType);
+    const [validNameInput, setValidNameInput] = useState<boolean | null>(null);
+    const [validAbbreviationInput, setValidAbbreviationInput] = useState<boolean | null>(null);
+
     const singularSystemObjectType = systemObjectType.slice(0, systemObjectType.length - 1);
 
-    console.log(systemObjectType);
+    // schema for validating the appropriate form fields
+    const schema = yup.object().shape({
+        name: yup.string().min(1),
+        abbreviation: yup.string().min(1)
+    });
 
     const onNameUpdate = ({ target }) => {
         setName(target.value);
     };
-    // const set
 
-    //  const setSystemObjectName = () => {
+    const onAbbreviationUpdate = ({ target }) => {
+        setAbbreviation(target.value);
+    };
 
-    //  }
+    const onARKPrefixUpdate = ({ target }) => {
+        setARKPrefix(target.value);
+    };
 
-    // const onUnitAbbreviationUpdate = ({ target }) => {
-    //     setUnitAbbreviation(target.value)
-    // }
+    const onDescriptionUpdate = ({ target }) => {
+        setDescription(target.value);
+    };
 
-    // const onUnitARKPrefixChange = () => {}
+    const validateFields = async (): Promise<boolean | void> => {
+        switch (systemObjectType) {
+            case 'units':
+                try {
+                    const isValidName = await schema.isValid({ name });
+                    setValidNameInput(isValidName);
+                    const isValidAbbreviation = await schema.isValid({ abbreviation });
+                    setValidAbbreviationInput(isValidAbbreviation);
+                    toast.warn(
+                        `Creation Failed. Please double-check your form inputs. The following input(s) need a valid value: ${isValidName ? '' : 'name'} ${
+                            isValidAbbreviation ? '' : 'abbreviation'
+                        }`
+                    );
+                    return isValidName && isValidAbbreviation;
+                } catch (error) {
+                    toast.warn(error);
+                } finally {
+                    setIsUpdatingData(false);
+                }
+                break;
+            case 'projects':
+                try {
+                    const isValidName = await schema.isValid({ name });
+                    setValidNameInput(isValidName);
+                    toast.warn(`Creation Failed. Please double-check your form inputs. The following input(s) need a valid value: ${isValidName ? '' : 'name'}`);
+                    return isValidName;
+                } catch (error) {
+                    toast.warn(error);
+                } finally {
+                    setIsUpdatingData(false);
+                }
+                break;
+        }
+    };
 
-    // const updateData = async (): Promise<void> => {
-    // const confirmed: boolean = global.confirm(`Are you sure you want to update data`);
-    // if (!confirmed) return;
+    const createUnit = async (): Promise<void> => {
+        const confirmed: boolean = global.confirm('Are you sure you want to create this entry?');
+        if (!confirmed) return;
 
-    // setIsUpdatingData(true);
-    // try {
-    //     // get idSystemObject from the create query and then push to that
-    //     // const { data } = graphqlquery for creating the data
+        console.log(validNameInput, validAbbreviationInput);
 
-    //     if (data?.updateObjectDetails?.success) {
-    //         toast.success('Object created successfully');
-    //     } else {
-    //         throw new Error('Create request returned success: false');
-    //     }
-    // } catch (error) {
-    //     toast.error('Failed to create object');
-    // } finally {
-    //     setIsUpdatingData(false);
-    //     if (data?success) {
-    //         history.push(/*repository */)
-    //     }
-    // }
-    // };
+        setIsUpdatingData(true);
+        const validUpdate = await validateFields();
+        if (!validUpdate) return;
+
+        let newUnitSystemObjectId;
+        try {
+            const { data } = await apolloClient.mutate({
+                mutation: CreateUnitDocument,
+                variables: {
+                    input: {
+                        Name: name,
+                        Abbreviation: abbreviation,
+                        ARKPrefix
+                    }
+                }
+            });
+            if (data?.createUnit) {
+                toast.success('Object created successfully');
+                newUnitSystemObjectId = data?.createUnit?.Unit?.SystemObject?.idSystemObject;
+            } else {
+                throw new Error('Create request returned success: false');
+            }
+        } catch (error) {
+            toast.error('Failed to create object');
+        } finally {
+            setIsUpdatingData(false);
+            if (newUnitSystemObjectId) {
+                history.push(`/repository/details/${newUnitSystemObjectId}`);
+            } else {
+                toast.error('Unable to retrieve new System Object Id');
+            }
+        }
+    };
+
+    const createProject = async (): Promise<void> => {
+        const confirmed: boolean = global.confirm('Are you sure you want to create this entry?');
+        if (!confirmed) return;
+        setIsUpdatingData(true);
+
+        const validUpdate = await validateFields();
+        if (!validUpdate) return;
+
+        let newUnitSystemObjectId;
+        try {
+            const { data } = await apolloClient.mutate({
+                mutation: CreateProjectDocument,
+                variables: {
+                    input: {
+                        Name: name,
+                        Description: description
+                    }
+                }
+            });
+            if (data?.createProject) {
+                toast.success('Project created successfully');
+                newUnitSystemObjectId = data?.createProject?.Project?.SystemObject?.idSystemObject;
+            } else {
+                throw new Error('Create request returned success: false');
+            }
+        } catch (error) {
+            toast.error('Failed to create project');
+        } finally {
+            setIsUpdatingData(false);
+            if (newUnitSystemObjectId) {
+                history.push(`/repository/details/${newUnitSystemObjectId}`);
+            } else {
+                toast.error('Unable to retrieve new System Object Id');
+            }
+        }
+    };
+
+    let formFields;
+    let createButtonBehavior;
+    switch (systemObjectType) {
+        case 'units':
+            formFields = (
+                <Fragment>
+                    <InputField viewMode required label='Abbreviation' value='' name='Abbreviation' onChange={onAbbreviationUpdate} />
+                    <InputField viewMode required label='ARKPrefix' value='' name='ARKPrefix' onChange={onARKPrefixUpdate} />
+                </Fragment>
+            );
+            createButtonBehavior = createUnit;
+            break;
+        case 'projects':
+            formFields = <Description value={''} onChange={onDescriptionUpdate} />;
+            createButtonBehavior = createProject;
+            break;
+    }
 
     return (
         <Box className={classes.container}>
-            <Box display='flex' flexDirection='row' justifyContent='center' mb={1}>
+            <Box display='flex' flexDirection='row' mb={1}>
                 <Box display='flex' mr={4}>
                     <Typography className={classes.header} variant='h5'>
                         {toTitleCase(singularSystemObjectType)}
@@ -135,36 +257,31 @@ function AddSystemObjectForm(): React.ReactElement {
             <Box display='flex' mt={2}>
                 <ObjectDetails publishedState={''} retired={false} disabled={true} hideRetired={true} />
             </Box>
-            {/* responsible for the box and thumbnail */}
             <Box display='flex'>
                 <Box display='flex' flex={1} flexDirection='column' mt={2}>
-                    {/* <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='primary' onChange={handleTabChange}>
-                        {tabs.map((tab: string, index: number) => (
-                            <StyledTab key={index} label={tab} />
-                        ))}
+                    <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='primary'>
+                        <StyledTab label={'Details'} />
                     </Tabs>
-                    {tabPanels} */}
+                    {formFields}
                 </Box>
                 <Box display='flex' flex={1} padding={2}>
                     <DetailsThumbnail />
                 </Box>
             </Box>
-            {/* <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
-                Update
-            </LoadingButton> */}
+            <LoadingButton className={classes.updateButton} onClick={createButtonBehavior} disableElevation loading={isUpdatingData}>
+                Create
+            </LoadingButton>
         </Box>
     );
 }
 
-// const StyledTab = withStyles(({ palette }) => ({
-//     root: {
-//         color: palette.background.paper,
-//         '&:focus': {
-//             opacity: 1
-//         }
-//     }
-// }))((props: TabProps) => <Tab disableRipple {...props} />);
+const StyledTab = withStyles(({ palette }) => ({
+    root: {
+        color: palette.background.paper,
+        '&:focus': {
+            opacity: 1
+        }
+    }
+}))((props: TabProps) => <Tab disableRipple {...props} />);
 
 export default AddSystemObjectForm;
-
-// export default function AdminAddSystemObjectForm() {}
