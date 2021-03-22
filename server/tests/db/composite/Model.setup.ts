@@ -114,7 +114,7 @@ export class ModelTestSetup {
     testCaseMap: Map<string, ModelTestCase> = new Map<string, ModelTestCase>(); // map of testcase name to ModelTestCase structure
 
     //** Returns null if initialize cannot locate test files.  Do not treat this as an error */
-    async initialize(): Promise<boolean | null> {
+    async initialize(testCase: string | null = null): Promise<boolean | null> {
         // let assigned: boolean = true;
         this.userOwner = await UTIL.createUserTest({ Name: 'Model Test', EmailAddress: 'modeltest@si.edu', SecurityID: 'Model Test', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0 });
         if (!this.userOwner) {
@@ -139,6 +139,8 @@ export class ModelTestSetup {
         }
 
         for (const MTD of modelTestFiles) {
+            if (testCase && MTD.testCase != testCase)
+                continue;
             const fileExists: boolean = await this.testFileExistence(MTD);
             if (!fileExists) {
                 LOG.logger.info(`ModelTestSetup unable to locate file for ${JSON.stringify(MTD)}`);

@@ -5,6 +5,8 @@ export interface IJob {
     name(): string;
     configuration(): any;
 
-    startJob(fireDate: Date): Promise<H.IOResults>;
+    executeJob(fireDate: Date): Promise<H.IOResults>;
     cancelJob(): Promise<H.IOResults>;
+
+    waitForCompletion(timeout: number): Promise<H.IOResults>;
 }
