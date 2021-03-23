@@ -93,6 +93,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eIdentifierIdentifierTypeARK: testVocabulary(vocabulary, 'ARK'); break;
                     case eVocabularyID.eIdentifierIdentifierTypeDOI: testVocabulary(vocabulary, 'DOI'); break;
                     case eVocabularyID.eIdentifierIdentifierTypeUnitCMSID: testVocabulary(vocabulary, 'Unit CMS ID'); break;
+
                     case eVocabularyID.eAssetAssetTypeBulkIngestion: testVocabulary(vocabulary, 'Bulk Ingestion'); break;
                     case eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry: testVocabulary(vocabulary, 'Capture Data Set: Photogrammetry'); break;
                     case eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde: testVocabulary(vocabulary, 'Capture Data Set: Diconde'); break;
@@ -109,18 +110,23 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eAssetAssetTypeProjectDocumentation: testVocabulary(vocabulary, 'Project Documentation'); break;
                     case eVocabularyID.eAssetAssetTypeIntermediaryFile: testVocabulary(vocabulary, 'Intermediary File'); break;
                     case eVocabularyID.eAssetAssetTypeOther: testVocabulary(vocabulary, 'Other'); break;
+
                     case eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry: testVocabulary(vocabulary, 'Photogrammetry'); break;
                     case eVocabularyID.eCaptureDataCaptureMethodCT: testVocabulary(vocabulary, 'CT'); break;
                     case eVocabularyID.eCaptureDataCaptureMethodStructuredLight: testVocabulary(vocabulary, 'Structured Light'); break;
                     case eVocabularyID.eCaptureDataCaptureMethodLaserLine: testVocabulary(vocabulary, 'Laser Line'); break;
                     case eVocabularyID.eCaptureDataCaptureMethodSphericalLaser: testVocabulary(vocabulary, 'Spherical Laser'); break;
+
                     case eVocabularyID.eCaptureDataFileVariantTypeRaw: testVocabulary(vocabulary, 'Raw'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeProcessed: testVocabulary(vocabulary, 'Processed'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeFromCamera: testVocabulary(vocabulary, 'From Camera'); break;
+
                     case eVocabularyID.eModelCreationMethodScanToMesh: testVocabulary(vocabulary, 'Scan To Mesh'); break;
                     case eVocabularyID.eModelCreationMethodCAD: testVocabulary(vocabulary, 'CAD'); break;
+
                     case eVocabularyID.eModelModalityPointCloud: testVocabulary(vocabulary, 'Point Cloud'); break;
                     case eVocabularyID.eModelModalityMesh: testVocabulary(vocabulary, 'Mesh'); break;
+
                     case eVocabularyID.eModelUnitsMicrometer: testVocabulary(vocabulary, 'Micrometer'); break;
                     case eVocabularyID.eModelUnitsMillimeter: testVocabulary(vocabulary, 'Millimeter'); break;
                     case eVocabularyID.eModelUnitsCentimeter: testVocabulary(vocabulary, 'Centimeter'); break;
@@ -131,10 +137,12 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eModelUnitsYard: testVocabulary(vocabulary, 'Yard'); break;
                     case eVocabularyID.eModelUnitsMile: testVocabulary(vocabulary, 'Mile'); break;
                     case eVocabularyID.eModelUnitsAstronomicalUnit: testVocabulary(vocabulary, 'Astronomical Unit'); break;
+
                     case eVocabularyID.eModelPurposeMaster: testVocabulary(vocabulary, 'Master'); break;
                     case eVocabularyID.eModelPurposeWebDelivery: testVocabulary(vocabulary, 'Web Delivery'); break;
                     case eVocabularyID.eModelPurposePrintDelivery: testVocabulary(vocabulary, 'Print Delivery'); break;
                     case eVocabularyID.eModelPurposeIntermediateProcessingStep: testVocabulary(vocabulary, 'Intermediate Processing Step'); break;
+
                     case eVocabularyID.eModelFileTypeobj: testVocabulary(vocabulary, 'obj - Alias Wavefront Object'); break;
                     case eVocabularyID.eModelFileTypeply: testVocabulary(vocabulary, 'ply - Stanford Polygon File Format'); break;
                     case eVocabularyID.eModelFileTypestl: testVocabulary(vocabulary, 'stl - StereoLithography'); break;
@@ -151,7 +159,21 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eModelFileTypeptx: testVocabulary(vocabulary, 'ptx'); break;
                     case eVocabularyID.eModelFileTypepts: testVocabulary(vocabulary, 'pts'); break;
 
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse: testVocabulary(vocabulary, 'Diffuse'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeNormalTangentSpace: testVocabulary(vocabulary, 'Normal: Tangent Space'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeNormalObjectSpace: testVocabulary(vocabulary, 'Normal: Object Space'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeAmbientOcclusion: testVocabulary(vocabulary, 'Ambient Occlusion'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeRoughness: testVocabulary(vocabulary, 'Roughness'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeMetalness: testVocabulary(vocabulary, 'Metalness'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeSpecular: testVocabulary(vocabulary, 'Specular'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeTransparency: testVocabulary(vocabulary, 'Transparency'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeBRDF: testVocabulary(vocabulary, 'BRDF'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeHoleFill: testVocabulary(vocabulary, 'Hole Fill'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeReflection: testVocabulary(vocabulary, 'Reflection'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeRefraction: testVocabulary(vocabulary, 'Refraction'); break;
+
                     case eVocabularyID.eMetadataMetadataSourceBulkIngestion:    testVocabulary(vocabulary, 'Bulk Ingestion'); break;
+
                     case eVocabularyID.eJobJobTypeCookBake:                     testVocabulary(vocabulary, 'Cook: bake'); break;
                     case eVocabularyID.eJobJobTypeCookDecimateUnwrap:           testVocabulary(vocabulary, 'Cook: decimate-unwrap'); break;
                     case eVocabularyID.eJobJobTypeCookDecimate:                 testVocabulary(vocabulary, 'Cook: decimate'); break;
@@ -165,6 +187,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eJobJobTypeCookSIVoyagerAsset:           testVocabulary(vocabulary, 'Cook: si-voyager-asset'); break;
                     case eVocabularyID.eJobJobTypeCookSIVoyagerScene:           testVocabulary(vocabulary, 'Cook: si-voyager-scene'); break;
                     case eVocabularyID.eJobJobTypeCookUnwrap:                   testVocabulary(vocabulary, 'Cook: unwrap'); break;
+
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
@@ -462,6 +485,50 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testMapModelFileByExtension('FOOBARFAULTY', eVocabularyID.eNone);
         });
 
+        test('Cache: VocabularyCache.mapModelChannelMaterialType ' + description, async () => {
+            await testMapModelChannelMaterialType('Diffuse',  eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('DiffuseTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('Diffuse color',  eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('Diffuse color',  eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('BaseTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('baseColorFactor [rgba]',  eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('baseColorTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('diffuseFactor',  eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('diffuseTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('diffuseColor',  eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('Normal: Tangent Space',  eVocabularyID.eModelMaterialChannelMaterialTypeNormalTangentSpace);
+            await testMapModelChannelMaterialType('Normal: Object Space',  eVocabularyID.eModelMaterialChannelMaterialTypeNormalObjectSpace);
+            await testMapModelChannelMaterialType('NormalTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeNormalObjectSpace);
+            await testMapModelChannelMaterialType('normalTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeNormalObjectSpace);
+            await testMapModelChannelMaterialType('Normal',  eVocabularyID.eModelMaterialChannelMaterialTypeNormalObjectSpace);
+            await testMapModelChannelMaterialType('Ambient Occlusion',  eVocabularyID.eModelMaterialChannelMaterialTypeAmbientOcclusion);
+            await testMapModelChannelMaterialType('AmbientTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeAmbientOcclusion);
+            await testMapModelChannelMaterialType('Ambient color',  eVocabularyID.eModelMaterialChannelMaterialTypeAmbientOcclusion);
+            await testMapModelChannelMaterialType('Ambient color',  eVocabularyID.eModelMaterialChannelMaterialTypeAmbientOcclusion);
+            await testMapModelChannelMaterialType('Roughness',  eVocabularyID.eModelMaterialChannelMaterialTypeRoughness);
+            await testMapModelChannelMaterialType('roughnessFactor',  eVocabularyID.eModelMaterialChannelMaterialTypeRoughness);
+            await testMapModelChannelMaterialType('Roughness',  eVocabularyID.eModelMaterialChannelMaterialTypeRoughness);
+            await testMapModelChannelMaterialType('Metalness',  eVocabularyID.eModelMaterialChannelMaterialTypeMetalness);
+            await testMapModelChannelMaterialType('metallicFactor',  eVocabularyID.eModelMaterialChannelMaterialTypeMetalness);
+            await testMapModelChannelMaterialType('metallicRoughnessTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeMetalness);
+            await testMapModelChannelMaterialType('Metallic',  eVocabularyID.eModelMaterialChannelMaterialTypeMetalness);
+            await testMapModelChannelMaterialType('Specular',  eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('SpecularTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('SpecularityTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('Specular color',  eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('Specular exponent',  eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('Specular color',  eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('specularFactor',  eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('specularGlossinessTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('specularColor',  eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('Transparency',  eVocabularyID.eModelMaterialChannelMaterialTypeTransparency);
+            await testMapModelChannelMaterialType('BRDF',  eVocabularyID.eModelMaterialChannelMaterialTypeBRDF);
+            await testMapModelChannelMaterialType('Hole Fill',  eVocabularyID.eModelMaterialChannelMaterialTypeHoleFill);
+            await testMapModelChannelMaterialType('Reflection',  eVocabularyID.eModelMaterialChannelMaterialTypeReflection);
+            await testMapModelChannelMaterialType('ReflectionTexture',  eVocabularyID.eModelMaterialChannelMaterialTypeReflection);
+            await testMapModelChannelMaterialType('Refraction',  eVocabularyID.eModelMaterialChannelMaterialTypeRefraction);
+        });
+
         test('Cache: VocabularyCache.vocabularyEnumToId and vocabularyIdToEnum ' + description, async () => {
             // iterate through all enums of eVocabularyID; for each:
             for (const sVocabID in eVocabularyID) {
@@ -527,6 +594,20 @@ async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: e
 async function testMapModelFileByExtension(modelExtension: string, eVocabID: eVocabularyID): Promise<void> {
     // LOG.logger.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`);
     const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapModelFileByExtension(modelExtension);
+    const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
+    if (eVocabID != eVocabularyID.eNone) {
+        expect(vocabObserved).toBeTruthy();
+        expect(vocabExpected).toBeTruthy();
+    } else {
+        expect(vocabObserved).toBeFalsy();
+        expect(vocabExpected).toBeFalsy();
+    }
+    expect(vocabObserved).toEqual(vocabExpected);
+}
+
+async function testMapModelChannelMaterialType(materialType: string, eVocabID: eVocabularyID): Promise<void> {
+    // LOG.logger.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`);
+    const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapModelChannelMaterialType(materialType);
     const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
     if (eVocabID != eVocabularyID.eNone) {
         expect(vocabObserved).toBeTruthy();
