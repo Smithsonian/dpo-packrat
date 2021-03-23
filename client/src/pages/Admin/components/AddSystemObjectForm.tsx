@@ -120,11 +120,13 @@ function AddSystemObjectForm(): React.ReactElement {
                     setValidNameInput(isValidName);
                     const isValidAbbreviation = await schema.isValid({ abbreviation });
                     setValidAbbreviationInput(isValidAbbreviation);
-                    toast.warn(
-                        `Creation Failed. Please double-check your form inputs. The following input(s) need a valid value: ${isValidName ? '' : 'name'} ${
-                            isValidAbbreviation ? '' : 'abbreviation'
-                        }`
-                    );
+                    if (!isValidName || !isValidAbbreviation) {
+                        toast.warn(
+                            `Creation Failed. Please double-check your form inputs. The following input(s) need a valid value: ${isValidName ? '' : 'name'} ${
+                                isValidAbbreviation ? '' : 'abbreviation'
+                            }`
+                        );
+                    }
                     return isValidName && isValidAbbreviation;
                 } catch (error) {
                     toast.warn(error);
@@ -136,7 +138,9 @@ function AddSystemObjectForm(): React.ReactElement {
                 try {
                     const isValidName = await schema.isValid({ name });
                     setValidNameInput(isValidName);
-                    toast.warn(`Creation Failed. Please double-check your form inputs. The following input(s) need a valid value: ${isValidName ? '' : 'name'}`);
+                    if (!isValidName) {
+                        toast.warn(`Creation Failed. Please double-check your form inputs. The following input(s) need a valid value: ${isValidName ? '' : 'name'}`);
+                    }
                     return isValidName;
                 } catch (error) {
                     toast.warn(error);
