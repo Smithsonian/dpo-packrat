@@ -95,6 +95,18 @@ export enum eVocabularyID {
     eModelFileType3ds,
     eModelFileTypeptx,
     eModelFileTypepts,
+    eModelMaterialChannelMaterialTypeDiffuse,
+    eModelMaterialChannelMaterialTypeNormalTangentSpace,
+    eModelMaterialChannelMaterialTypeNormalObjectSpace,
+    eModelMaterialChannelMaterialTypeAmbientOcclusion,
+    eModelMaterialChannelMaterialTypeRoughness,
+    eModelMaterialChannelMaterialTypeMetalness,
+    eModelMaterialChannelMaterialTypeSpecular,
+    eModelMaterialChannelMaterialTypeTransparency,
+    eModelMaterialChannelMaterialTypeBRDF,
+    eModelMaterialChannelMaterialTypeHoleFill,
+    eModelMaterialChannelMaterialTypeReflection,
+    eModelMaterialChannelMaterialTypeRefraction,
     eJobJobTypeCookBake,
     eJobJobTypeCookDecimateUnwrap,
     eJobJobTypeCookDecimate,
@@ -320,6 +332,23 @@ export class VocabularyCache {
                     }
                 } break;
 
+                case eVocabularySetID.eModelMaterialChannelMaterialType: {
+                    switch (vocabulary.Term) {
+                        case 'Diffuse':                 eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+                        case 'Normal: Tangent Space':   eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeNormalTangentSpace; break;
+                        case 'Normal: Object Space':    eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeNormalObjectSpace; break;
+                        case 'Ambient Occlusion':       eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeAmbientOcclusion; break;
+                        case 'Roughness':               eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeRoughness; break;
+                        case 'Metalness':               eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeMetalness; break;
+                        case 'Specular':                eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+                        case 'Transparency':            eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeTransparency; break;
+                        case 'BRDF':                    eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeBRDF; break;
+                        case 'Hole Fill':               eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeHoleFill; break;
+                        case 'Reflection':              eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeReflection; break;
+                        case 'Refraction':              eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeRefraction; break;
+                    }
+                } break;
+
                 case eVocabularySetID.eJobJobType: {
                     switch (vocabulary.Term) {
                         case 'Cook: bake':                      eVocabEnum = eVocabularyID.eJobJobTypeCookBake; break;
@@ -530,6 +559,53 @@ export class VocabularyCache {
                 return undefined;
         }
         // LOG.logger.info(`VocabularyCache.mapModelFileByExtension(${fileName}) = ${eVocabularyID[eVocabID]} using ext ${extension}`);
+        return await VocabularyCache.vocabularyByEnum(eVocabID);
+    }
+
+    static async mapModelChannelMaterialType(materialType: string): Promise<Vocabulary | undefined> {
+        let eVocabID: eVocabularyID;
+
+        switch (materialType.toLowerCase()) {
+            case 'diffuse': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+            case 'diffusetexture': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+            case 'diffuse color': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+            case 'basetexture': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+            case 'basecolorfactor [rgba]': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+            case 'basecolortexture': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+            case 'diffusefactor': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+            case 'diffusecolor': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+            case 'normal: tangent space': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeNormalTangentSpace; break;
+            case 'normal: object space': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeNormalObjectSpace; break;
+            case 'normaltexture': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeNormalObjectSpace; break;
+            case 'normal': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeNormalObjectSpace; break;
+            case 'ambient occlusion': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeAmbientOcclusion; break;
+            case 'ambienttexture': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeAmbientOcclusion; break;
+            case 'ambient color': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeAmbientOcclusion; break;
+            case 'roughness': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeRoughness; break;
+            case 'roughnessfactor': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeRoughness; break;
+            case 'metalness': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeMetalness; break;
+            case 'metallicfactor': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeMetalness; break;
+            case 'metallicroughnesstexture': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeMetalness; break;
+            case 'metallic': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeMetalness; break;
+            case 'specular': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+            case 'speculartexture': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+            case 'specularitytexture': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+            case 'specular color': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+            case 'specular exponent': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+            case 'specularfactor': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+            case 'specularglossinesstexture': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+            case 'specularcolor': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+            case 'transparency': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeTransparency; break;
+            case 'brdf': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeBRDF; break;
+            case 'hole fill': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeHoleFill; break;
+            case 'reflection': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeReflection; break;
+            case 'reflectiontexture': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeReflection; break;
+            case 'refraction': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeRefraction; break;
+            default:
+                // LOG.logger.info(`VocabularyCache.mapModelChannelMaterialType unrecognized ${materialType}`);
+                return undefined;
+        }
+        // LOG.logger.info(`VocabularyCache.mapModelChannelMaterialType(${materialType}) = ${eVocabularyID[eVocabID]}`);
         return await VocabularyCache.vocabularyByEnum(eVocabID);
     }
 
