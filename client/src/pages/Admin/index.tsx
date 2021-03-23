@@ -3,16 +3,20 @@
  *
  * This component renders Admin UI and all the sub-components
  * The structure is as follows:
+ *
  * Admin
  * - AdminSidebarMenu
  * - AdminUserForm
  * - AdminUsersView
  * -- AdminUsersFilter
  * -- AdminUsersList
- *
- * Current implementation has AdminUsersView make request for user
- * information and then pass the list + AdminUsersFilter terms down to
- * AdminUsersList.
+ * - AdminProjectsView
+ * -- AdminProjectsFilter
+ * -- AdminProjectsList
+ * - AdminUnitsView
+ * -- AdminUnitsFilter
+ * -- AdminUnitsList
+ * - AddSystemObjectForm
  *
  */
 import React from 'react';
