@@ -70,6 +70,8 @@ export class ObjectGraphTestSetup {
     /* #endregion */
 
     async initialize(): Promise<void> {
+        jest.setTimeout(60000);
+
         let assigned: boolean = true;
         this.v1 = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eIdentifierIdentifierTypeARK);
         expect(this.v1).toBeTruthy();

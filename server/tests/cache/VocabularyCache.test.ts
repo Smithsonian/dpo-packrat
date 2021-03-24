@@ -93,6 +93,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eIdentifierIdentifierTypeARK: testVocabulary(vocabulary, 'ARK'); break;
                     case eVocabularyID.eIdentifierIdentifierTypeDOI: testVocabulary(vocabulary, 'DOI'); break;
                     case eVocabularyID.eIdentifierIdentifierTypeUnitCMSID: testVocabulary(vocabulary, 'Unit CMS ID'); break;
+
                     case eVocabularyID.eAssetAssetTypeBulkIngestion: testVocabulary(vocabulary, 'Bulk Ingestion'); break;
                     case eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry: testVocabulary(vocabulary, 'Capture Data Set: Photogrammetry'); break;
                     case eVocabularyID.eAssetAssetTypeCaptureDataSetDiconde: testVocabulary(vocabulary, 'Capture Data Set: Diconde'); break;
@@ -109,18 +110,23 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eAssetAssetTypeProjectDocumentation: testVocabulary(vocabulary, 'Project Documentation'); break;
                     case eVocabularyID.eAssetAssetTypeIntermediaryFile: testVocabulary(vocabulary, 'Intermediary File'); break;
                     case eVocabularyID.eAssetAssetTypeOther: testVocabulary(vocabulary, 'Other'); break;
+
                     case eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry: testVocabulary(vocabulary, 'Photogrammetry'); break;
                     case eVocabularyID.eCaptureDataCaptureMethodCT: testVocabulary(vocabulary, 'CT'); break;
                     case eVocabularyID.eCaptureDataCaptureMethodStructuredLight: testVocabulary(vocabulary, 'Structured Light'); break;
                     case eVocabularyID.eCaptureDataCaptureMethodLaserLine: testVocabulary(vocabulary, 'Laser Line'); break;
                     case eVocabularyID.eCaptureDataCaptureMethodSphericalLaser: testVocabulary(vocabulary, 'Spherical Laser'); break;
+
                     case eVocabularyID.eCaptureDataFileVariantTypeRaw: testVocabulary(vocabulary, 'Raw'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeProcessed: testVocabulary(vocabulary, 'Processed'); break;
                     case eVocabularyID.eCaptureDataFileVariantTypeFromCamera: testVocabulary(vocabulary, 'From Camera'); break;
+
                     case eVocabularyID.eModelCreationMethodScanToMesh: testVocabulary(vocabulary, 'Scan To Mesh'); break;
                     case eVocabularyID.eModelCreationMethodCAD: testVocabulary(vocabulary, 'CAD'); break;
+
                     case eVocabularyID.eModelModalityPointCloud: testVocabulary(vocabulary, 'Point Cloud'); break;
                     case eVocabularyID.eModelModalityMesh: testVocabulary(vocabulary, 'Mesh'); break;
+
                     case eVocabularyID.eModelUnitsMicrometer: testVocabulary(vocabulary, 'Micrometer'); break;
                     case eVocabularyID.eModelUnitsMillimeter: testVocabulary(vocabulary, 'Millimeter'); break;
                     case eVocabularyID.eModelUnitsCentimeter: testVocabulary(vocabulary, 'Centimeter'); break;
@@ -131,15 +137,18 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eModelUnitsYard: testVocabulary(vocabulary, 'Yard'); break;
                     case eVocabularyID.eModelUnitsMile: testVocabulary(vocabulary, 'Mile'); break;
                     case eVocabularyID.eModelUnitsAstronomicalUnit: testVocabulary(vocabulary, 'Astronomical Unit'); break;
+
                     case eVocabularyID.eModelPurposeMaster: testVocabulary(vocabulary, 'Master'); break;
                     case eVocabularyID.eModelPurposeWebDelivery: testVocabulary(vocabulary, 'Web Delivery'); break;
                     case eVocabularyID.eModelPurposePrintDelivery: testVocabulary(vocabulary, 'Print Delivery'); break;
                     case eVocabularyID.eModelPurposeIntermediateProcessingStep: testVocabulary(vocabulary, 'Intermediate Processing Step'); break;
+
                     case eVocabularyID.eModelFileTypeobj: testVocabulary(vocabulary, 'obj - Alias Wavefront Object'); break;
                     case eVocabularyID.eModelFileTypeply: testVocabulary(vocabulary, 'ply - Stanford Polygon File Format'); break;
                     case eVocabularyID.eModelFileTypestl: testVocabulary(vocabulary, 'stl - StereoLithography'); break;
                     case eVocabularyID.eModelFileTypeglb: testVocabulary(vocabulary, 'glb - GL Transmission Format Binary'); break;
                     case eVocabularyID.eModelFileTypegltf: testVocabulary(vocabulary, 'gltf - GL Transmission Format'); break;
+                    case eVocabularyID.eModelFileTypeusd: testVocabulary(vocabulary, 'usd - Universal Scene Description'); break;
                     case eVocabularyID.eModelFileTypeusdz: testVocabulary(vocabulary, 'usdz - Universal Scene Description (zipped)'); break;
                     case eVocabularyID.eModelFileTypex3d: testVocabulary(vocabulary, 'x3d'); break;
                     case eVocabularyID.eModelFileTypewrl: testVocabulary(vocabulary, 'wrl - VRML'); break;
@@ -150,7 +159,24 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eModelFileTypeptx: testVocabulary(vocabulary, 'ptx'); break;
                     case eVocabularyID.eModelFileTypepts: testVocabulary(vocabulary, 'pts'); break;
 
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse: testVocabulary(vocabulary, 'Diffuse'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeSpecular: testVocabulary(vocabulary, 'Specular'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeAmbient: testVocabulary(vocabulary, 'Ambient'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeEmissive: testVocabulary(vocabulary, 'Emissive'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeBump: testVocabulary(vocabulary, 'Bump'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeNormal: testVocabulary(vocabulary, 'Normal'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeGlossiness: testVocabulary(vocabulary, 'Glossiness'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeOpacity: testVocabulary(vocabulary, 'Opacity'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeDisplacement: testVocabulary(vocabulary, 'Displacement'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeOcclusion: testVocabulary(vocabulary, 'Occlusion'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeReflection: testVocabulary(vocabulary, 'Reflection'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeMetalness: testVocabulary(vocabulary, 'Metalness'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeRoughness: testVocabulary(vocabulary, 'Roughness'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeNone: testVocabulary(vocabulary, 'None'); break;
+                    case eVocabularyID.eModelMaterialChannelMaterialTypeUnknown: testVocabulary(vocabulary, 'Unknown'); break;
+
                     case eVocabularyID.eMetadataMetadataSourceBulkIngestion:    testVocabulary(vocabulary, 'Bulk Ingestion'); break;
+
                     case eVocabularyID.eJobJobTypeCookBake:                     testVocabulary(vocabulary, 'Cook: bake'); break;
                     case eVocabularyID.eJobJobTypeCookDecimateUnwrap:           testVocabulary(vocabulary, 'Cook: decimate-unwrap'); break;
                     case eVocabularyID.eJobJobTypeCookDecimate:                 testVocabulary(vocabulary, 'Cook: decimate'); break;
@@ -164,6 +190,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eJobJobTypeCookSIVoyagerAsset:           testVocabulary(vocabulary, 'Cook: si-voyager-asset'); break;
                     case eVocabularyID.eJobJobTypeCookSIVoyagerScene:           testVocabulary(vocabulary, 'Cook: si-voyager-scene'); break;
                     case eVocabularyID.eJobJobTypeCookUnwrap:                   testVocabulary(vocabulary, 'Cook: unwrap'); break;
+
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
@@ -359,6 +386,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'stl - StereoLithography');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'glb - GL Transmission Format Binary');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'gltf - GL Transmission Format');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'usd - Universal Scene Description');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'usdz - Universal Scene Description (zipped)');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'x3d');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'wrl - VRML');
@@ -369,17 +397,20 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'ptx');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelFileType, 'pts');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Diffuse');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Normal: Tangent Space');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Normal: Object Space');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Ambient Occlusion');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Roughness');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Metalness');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Specular');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Transparency');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'BRDF');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Hole Fill');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Ambient');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Emissive');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Bump');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Normal');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Glossiness');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Opacity');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Displacement');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Occlusion');
             await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Reflection');
-            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Refraction');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Metalness');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Roughness');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'None');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eModelMaterialChannelMaterialType, 'Unknown');
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'ARK');
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'DOI');
             await testVocabularyBySetAndTerm(eVocabularySetID.eIdentifierIdentifierType, 'Unit CMS ID');
@@ -441,21 +472,42 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
         });
 
         test('Cache: VocabularyCache.mapModelFileByExtension ' + description, async () => {
-            await testMapModelFileByExtension('obj',  eVocabularyID.eModelFileTypeobj);
-            await testMapModelFileByExtension('ply',  eVocabularyID.eModelFileTypeply);
-            await testMapModelFileByExtension('stl',  eVocabularyID.eModelFileTypestl);
-            await testMapModelFileByExtension('glb' , eVocabularyID.eModelFileTypeglb);
-            await testMapModelFileByExtension('gltf', eVocabularyID.eModelFileTypegltf);
-            await testMapModelFileByExtension('usdz', eVocabularyID.eModelFileTypeusdz);
-            await testMapModelFileByExtension('x3d',  eVocabularyID.eModelFileTypex3d);
-            await testMapModelFileByExtension('wrl',  eVocabularyID.eModelFileTypewrl);
-            await testMapModelFileByExtension('dae',  eVocabularyID.eModelFileTypedae);
-            await testMapModelFileByExtension('fbx',  eVocabularyID.eModelFileTypefbx);
-            await testMapModelFileByExtension('ma',   eVocabularyID.eModelFileTypema);
-            await testMapModelFileByExtension('3ds',  eVocabularyID.eModelFileType3ds);
-            await testMapModelFileByExtension('ptx',  eVocabularyID.eModelFileTypeptx);
-            await testMapModelFileByExtension('pts',  eVocabularyID.eModelFileTypepts);
+            await testMapModelFileByExtension('.obj',  eVocabularyID.eModelFileTypeobj);
+            await testMapModelFileByExtension('.ply',  eVocabularyID.eModelFileTypeply);
+            await testMapModelFileByExtension('.stl',  eVocabularyID.eModelFileTypestl);
+            await testMapModelFileByExtension('.glb' , eVocabularyID.eModelFileTypeglb);
+            await testMapModelFileByExtension('.gltf', eVocabularyID.eModelFileTypegltf);
+            await testMapModelFileByExtension('.usda', eVocabularyID.eModelFileTypeusd);
+            await testMapModelFileByExtension('.usdc', eVocabularyID.eModelFileTypeusd);
+            await testMapModelFileByExtension('.usdz', eVocabularyID.eModelFileTypeusdz);
+            await testMapModelFileByExtension('.x3d',  eVocabularyID.eModelFileTypex3d);
+            await testMapModelFileByExtension('.wrl',  eVocabularyID.eModelFileTypewrl);
+            await testMapModelFileByExtension('.dae',  eVocabularyID.eModelFileTypedae);
+            await testMapModelFileByExtension('.fbx',  eVocabularyID.eModelFileTypefbx);
+            await testMapModelFileByExtension('.ma',   eVocabularyID.eModelFileTypema);
+            await testMapModelFileByExtension('.3ds',  eVocabularyID.eModelFileType3ds);
+            await testMapModelFileByExtension('.ptx',  eVocabularyID.eModelFileTypeptx);
+            await testMapModelFileByExtension('.pts',  eVocabularyID.eModelFileTypepts);
             await testMapModelFileByExtension('FOOBARFAULTY', eVocabularyID.eNone);
+        });
+
+        test('Cache: VocabularyCache.mapModelChannelMaterialType ' + description, async () => {
+            await testMapModelChannelMaterialType('diffuse',        eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
+            await testMapModelChannelMaterialType('specular',       eVocabularyID.eModelMaterialChannelMaterialTypeSpecular);
+            await testMapModelChannelMaterialType('ambient',        eVocabularyID.eModelMaterialChannelMaterialTypeAmbient);
+            await testMapModelChannelMaterialType('emissive',       eVocabularyID.eModelMaterialChannelMaterialTypeEmissive);
+            await testMapModelChannelMaterialType('bump',           eVocabularyID.eModelMaterialChannelMaterialTypeBump);
+            await testMapModelChannelMaterialType('normal',         eVocabularyID.eModelMaterialChannelMaterialTypeNormal);
+            await testMapModelChannelMaterialType('glossiness',     eVocabularyID.eModelMaterialChannelMaterialTypeGlossiness);
+            await testMapModelChannelMaterialType('opacity',        eVocabularyID.eModelMaterialChannelMaterialTypeOpacity);
+            await testMapModelChannelMaterialType('displacement',   eVocabularyID.eModelMaterialChannelMaterialTypeDisplacement);
+            await testMapModelChannelMaterialType('occlusion',      eVocabularyID.eModelMaterialChannelMaterialTypeOcclusion);
+            await testMapModelChannelMaterialType('reflection',     eVocabularyID.eModelMaterialChannelMaterialTypeReflection);
+            await testMapModelChannelMaterialType('metalness',      eVocabularyID.eModelMaterialChannelMaterialTypeMetalness);
+            await testMapModelChannelMaterialType('roughness',      eVocabularyID.eModelMaterialChannelMaterialTypeRoughness);
+            await testMapModelChannelMaterialType('none',           eVocabularyID.eModelMaterialChannelMaterialTypeNone);
+            await testMapModelChannelMaterialType('unknown',        eVocabularyID.eModelMaterialChannelMaterialTypeUnknown);
+            await testMapModelChannelMaterialType('FOOBARFAULTY',   eVocabularyID.eModelMaterialChannelMaterialTypeUnknown);
         });
 
         test('Cache: VocabularyCache.vocabularyEnumToId and vocabularyIdToEnum ' + description, async () => {
@@ -523,6 +575,20 @@ async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: e
 async function testMapModelFileByExtension(modelExtension: string, eVocabID: eVocabularyID): Promise<void> {
     // LOG.logger.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`);
     const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapModelFileByExtension(modelExtension);
+    const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
+    if (eVocabID != eVocabularyID.eNone) {
+        expect(vocabObserved).toBeTruthy();
+        expect(vocabExpected).toBeTruthy();
+    } else {
+        expect(vocabObserved).toBeFalsy();
+        expect(vocabExpected).toBeFalsy();
+    }
+    expect(vocabObserved).toEqual(vocabExpected);
+}
+
+async function testMapModelChannelMaterialType(materialType: string, eVocabID: eVocabularyID): Promise<void> {
+    // LOG.logger.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`);
+    const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapModelChannelMaterialType(materialType);
     const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
     if (eVocabID != eVocabularyID.eNone) {
         expect(vocabObserved).toBeTruthy();

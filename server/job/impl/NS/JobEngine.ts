@@ -110,7 +110,7 @@ export class JobEngine implements JOB.IJobEngine {
 
     private async createJobRunDBRecord(dbJob: DBAPI.Job, configuration: any, parameters: any): Promise<DBAPI.JobRun | null> {
         const dbJobRun: DBAPI.JobRun = new DBAPI.JobRun({
-            idJobRun: 0, idJob: dbJob.idJob, Status: DBAPI.eJobRunStatus.eCreated,
+            idJobRun: 0, idJob: dbJob.idJob, Status: DBAPI.eJobRunStatus.eUnitialized,
             Result: null, DateStart: null, DateEnd: null, Configuration: JSON.stringify(configuration),
             Parameters: JSON.stringify(parameters),
             Output: null, Error: null
@@ -136,14 +136,13 @@ export class JobEngine implements JOB.IJobEngine {
         if (frequency === null) // no frequency means just create the job
             return job;
 
-        let nsJob: NS.Job;
         if (frequency === '') { // empty frequency means run it once, now
-            const dtNow: Date = new Date();
-            nsJob = NS.scheduleJob(job.name(), { start: dtNow, end: dtNow, rule: '* * * * * *' }, job.nsJobCallback);
-        } else                  // non-empty frequency means run job on schedule
-            nsJob = NS.scheduleJob(job.name(), frequency, job.nsJobCallback);
-
-        job.setNSJob(nsJob);
+            LOG.logger.info(`JobEngine.createJob running now ${job.name()}`);
+            job.executeJob(new Date()); // do not use await here, so that we remain unblocked while the job starts
+        } else {                 // non-empty frequency means run job on schedule
+            const nsJob: NS.Job = NS.scheduleJob(job.name(), frequency, job.executeJob);
+            job.setNSJob(nsJob);
+        }
         return job;
     }
 

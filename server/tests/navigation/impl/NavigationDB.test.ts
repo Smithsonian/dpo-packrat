@@ -13,7 +13,6 @@ const metadataColumns: eMetadata[] = [eMetadata.eHierarchyUnit, eMetadata.eHiera
 LOG;
 
 afterAll(async done => {
-    // jest.setTimeout(3000);
     // await H.Helpers.sleep(2000);
     done();
 });

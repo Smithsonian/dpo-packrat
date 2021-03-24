@@ -8,7 +8,6 @@ import { getPackratTestFileSizeMap } from './parser/bagitReader.test';
 const mockPath: string = join(__dirname, '../mock/utils/zip/');
 /*
 afterAll(async done => {
-    jest.setTimeout(5000);
     await H.Helpers.sleep(2000);
     done();
 });
