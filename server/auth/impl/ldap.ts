@@ -1,5 +1,5 @@
 import { IAuth, VerifiedUser } from '../interface';
-import { Config } from '../config';
+import { Config } from '../../config';
 import ldap = require("ldapjs");
 
 class LDAPAuth implements IAuth {
@@ -16,7 +16,7 @@ class LDAPAuth implements IAuth {
       });
 
       //Step 2: Bind Packrat Service Account
-      let serviceBind: Promise<any> = new Promise<any>(function(resolve, reject)
+      let serviceBind: Promise<void> = new Promise<void>(function(resolve, reject)
       {
         client.bind('CN=' + serviceAccount + ',OU=Service Accounts,OU=Enterprise,DC=US,DC=SINET,DC=SI,DC=EDU', secret, (err: any): void =>
         {
@@ -26,7 +26,7 @@ class LDAPAuth implements IAuth {
           }
           else
           {
-            resolve(client);
+            resolve();
           }
         });
       });
@@ -38,7 +38,7 @@ class LDAPAuth implements IAuth {
         res = {user: null, error: err};
       });
 
-      serviceBind.then((client: any) => {
+      serviceBind.then(() => {
       });
 
       if(!failCheck)
@@ -63,6 +63,11 @@ class LDAPAuth implements IAuth {
       let searchPromise: Promise<any> = new Promise<any>(function(resolve, reject)
       {
         client.search("DC=US,DC=SINET,DC=SI,DC=EDU", opts, (err:any, res:any): void => {
+          if(err)
+          {
+              console.log(err.message);
+          }
+
           res.on('searchEntry', (entry: any) => {
             user = entry;
             searchComplete = true;
@@ -78,7 +83,7 @@ class LDAPAuth implements IAuth {
           {
             if(!searchComplete)
             {
-              reject("User not found");
+              reject("User not found: " + JSON.stringify(result));
             }
           });
         });
@@ -99,7 +104,7 @@ class LDAPAuth implements IAuth {
       });
 
       //Step 4: If user is found, bind on their credentials
-      let userBind: Promise<any> = new Promise<any>(function (resolve, reject)
+      let userBind: Promise<void> = new Promise<void>(function (resolve, reject)
       {
         client.bind(DN, password, (err:any): void => {
           if(err)
@@ -108,7 +113,7 @@ class LDAPAuth implements IAuth {
           }
           else
           {
-            resolve(client);
+            resolve();
           }
         });
       });
@@ -123,7 +128,7 @@ class LDAPAuth implements IAuth {
         return res;
       }
 
-      await userBind.then((client: any) => {
+      await userBind.then(() => {
         res = { user: user, error: null };
       });
 
