@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IAuth, VerifiedUser } from '../interface';
+import { IAuth, VerifyUserResult } from '../interface';
 import { Config, LDAPConfig } from '../../config';
-import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 import ldap = require('ldapjs');
 
 class LDAPAuth implements IAuth {
-    async verifyUser(email: string, password: string): Promise<VerifiedUser> {
+    async verifyUser(email: string, password: string): Promise<VerifyUserResult> {
         const ldapConfig: LDAPConfig = Config.auth.ldap;
-        let res: VerifiedUser = { user: null, error: null };
+        let res: VerifyUserResult = { success: false, error: null };
 
         //Step 1: Create a ldap client using server address
         const client = ldap.createClient({
@@ -35,7 +34,7 @@ class LDAPAuth implements IAuth {
 
         await serviceBind.catch((error: any) => {
             failCheck = false;
-            res = { user: null, error };
+            res = { success: false, error };
         });
 
         serviceBind.then(() => {});
@@ -60,7 +59,7 @@ class LDAPAuth implements IAuth {
         const searchPromise: Promise<any> = new Promise<any>(function (resolve, reject) {
             client.search(ldapConfig.DC, opts, (error: any, res: any): void => {
                 if (error)
-                    LOG.logger.error(`LDAPAuth.verifyUser search failed: ${JSON.stringify(error)}`);
+                    LOG.logger.error(`LDAPAuth.verifyUser unable to locate ${email}`);
 
                 res.on('searchEntry', (entry: any) => {
                     LOG.logger.info(`LDAPAuth.verifyUser search found user ${email}`);
@@ -84,7 +83,7 @@ class LDAPAuth implements IAuth {
 
         await searchPromise.catch((error: any) => {
             failCheck = false;
-            res = { user: null, error };
+            res = { success: false, error };
         });
 
         if (!failCheck) {
@@ -100,7 +99,7 @@ class LDAPAuth implements IAuth {
         const userBind: Promise<void> = new Promise<void>(function (resolve, reject) {
             client.bind(DN, password, (error: any): void => {
                 if (error) {
-                    LOG.logger.error(`LDAPAuth.verifyUser userBind failed: ${JSON.stringify(error)}`);
+                    LOG.logger.error(`LDAPAuth.verifyUser invalid password for ${email}`);
                     reject(error);
                 } else
                     resolve();
@@ -109,27 +108,15 @@ class LDAPAuth implements IAuth {
 
         await userBind.catch((error: any) => {
             failCheck = false;
-            res = { user: null, error };
+            res = { success: false, error };
         });
 
         if (!failCheck)
-            return { user: null, error: `Invalid password for ${email}` };
+            return { success: false, error: `Invalid password for ${email}` };
 
         await userBind.then(async () => {
-            const users: DBAPI.User[] | null = await DBAPI.User.fetchByEmail(email);
-            const user: DBAPI.User | null = (users && users.length == 1) ? users[0] : null;
-            if (!user) {
-                const error: string = `${email} is not a Packrat user`;
-                LOG.logger.error(`LDAPAuth.verifyUser: ${error}`);
-                res = { user: null, error };
-            } else if (!user.Active) {
-                const error: string = `${email} is not active in Packrat`;
-                LOG.logger.info(`LocalAuth.verifyUser: ${error}`);
-                res = { user: null, error };
-            } else {
-                LOG.logger.info(`LDAPAuth.verifyUser ${email} successfully authenticated`);
-                res = { user, error: null };
-            }
+            LOG.logger.info(`LDAPAuth.verifyUser valid LDAP login for ${email}`);
+            res = { success: true, error: null };
         });
 
         return res;

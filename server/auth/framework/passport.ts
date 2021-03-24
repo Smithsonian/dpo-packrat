@@ -2,16 +2,14 @@ import PassportLocal from 'passport-local';
 import passport from 'passport';
 import { User } from '../../db';
 import * as DBAPI from '../../db';
-import { AuthFactory, IAuth, VerifiedUser } from '../interface';
+import { AuthFactory, VerifiedUser } from '../interface';
 
 const options = {
     usernameField: 'email'
 };
 
 const verifyFunction = async (email: string, password: string, done) => {
-    const auth: IAuth = AuthFactory.getInstance();
-    const { user, error }: VerifiedUser = await auth.verifyUser(email, password);
-
+    const { user, error }: VerifiedUser = await AuthFactory.verifyUser(email, password);
     if (error) {
         done(error, null);
     } else {
