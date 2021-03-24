@@ -30,7 +30,11 @@ const getProjectListTest = (utils: TestSuiteUtils): void => {
                 if (projects) {
                     expect(projects.length).toBe(1);
                     expect(projects[0].Name).toEqual(randomName);
+                } else {
+                    fail('projectList retrieval failed in getProjectList.test');
                 }
+            } else {
+                fail('project creation failed in getProjectList.test');
             }
         });
     });
