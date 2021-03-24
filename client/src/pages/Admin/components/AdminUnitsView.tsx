@@ -170,14 +170,14 @@ function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSear
     return (
         <Box className={classes.AdminSearchFilterContainer}>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer}>
-                <TextField className={classes.searchFilter} placeholder='Search Project' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
+                <TextField className={classes.searchFilter} placeholder='Search Unit' type='search' value={searchFilter} id='searchFilter' onChange={handleSearchFilterChange} />
                 <Button className={classes.styledButton} style={{ right: '25px' }} onClick={searchUnits}>
                     Search
                 </Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/create/units'>
-                    <Button className={classes.styledButton}>Add Unit</Button>
+                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/create/units' target='_blank'>
+                    <Button className={classes.styledButton}>Create</Button>
                 </Link>
             </Box>
         </Box>

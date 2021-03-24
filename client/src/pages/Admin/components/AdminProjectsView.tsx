@@ -169,8 +169,8 @@ function AdminProjectsFilter({ queryProjectsByFilter }: { queryProjectsByFilter:
                 </Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/create/projects'>
-                    <Button className={classes.styledButton}>Add Project</Button>
+                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/create/projects' target='_blank'>
+                    <Button className={classes.styledButton}>Create</Button>
                 </Link>
             </Box>
         </Box>
