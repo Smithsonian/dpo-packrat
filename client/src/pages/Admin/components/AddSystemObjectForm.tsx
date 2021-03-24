@@ -7,17 +7,14 @@ This component is responsible for creating new SystemObjects and will handle the
     Projects
  */
 
-import { Box, Typography, Tab, TabProps, Tabs } from '@material-ui/core';
-import { fade, makeStyles, withStyles } from '@material-ui/core/styles';
+import { Box, Typography, FormControl, TextField, FormHelperText } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
 import React, { Fragment, useState } from 'react';
 import { useParams } from 'react-router';
 import { DebounceInput } from 'react-debounce-input';
 import { useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { LoadingButton, InputField } from '../../../components';
-import Description from '../../Ingestion/components/Metadata/Photogrammetry/Description';
-import DetailsThumbnail from '../../Repository/components/DetailsView/DetailsThumbnail';
-import ObjectDetails from '../../Repository/components/DetailsView/ObjectDetails';
+import { LoadingButton } from '../../../components';
 import { CreateUnitDocument, CreateProjectDocument } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
 import { toTitleCase } from '../../../constants/helperfunctions';
@@ -28,12 +25,11 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        maxHeight: 'calc(100vh - 140px)',
-        padding: 20,
-        marginBottom: 20,
-        borderRadius: 10,
+        maxHeight: 'calc(100vh - 60px)',
+        width: '1200px',
         overflowY: 'scroll',
-        backgroundColor: palette.primary.light,
+        marginLeft: '1%',
+        marginTop: '1%',
         [breakpoints.down('lg')]: {
             maxHeight: 'calc(100vh - 120px)',
             padding: 10
@@ -42,31 +38,50 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     updateButton: {
         height: 35,
         width: 100,
-        marginTop: 10,
+        marginTop: 30,
         color: palette.background.paper,
         [breakpoints.down('lg')]: {
             height: 30
         }
     },
-    header: {
-        color: palette.primary.dark
+    formContainer: {
+        width: '700px',
+        maxHeight: '90%',
+        borderRadius: 10,
+        padding: '10px 20px',
+        background: '#687DDB1A 0% 0% no-repeat padding-box;',
+        border: '1px solid #B7D2E5CC',
+        boxShadow: '0 0 0 15px #75B3DF',
+        marginTop: '2%',
+        marginLeft: '1%'
     },
-    name: {
-        minWidth: 180,
-        height: 20,
-        padding: '5px 8px',
-        borderRadius: 5,
-        marginRight: 20,
-        color: palette.primary.dark,
-        border: `1px solid ${fade(palette.primary.contrastText, 0.4)}`,
-        backgroundColor: palette.background.paper,
-        fontSize: '0.8em'
+    formRow: {
+        display: 'grid',
+        gridTemplateColumns: '30% 70%',
+        gridGap: '10px',
+        alignItems: 'center',
+        minHeight: '5%',
+        paddingTop: '10px',
+        paddingBottom: '10px',
+        '&:not(:last-child)': {
+            borderBottom: '1px solid #D8E5EE'
+        }
     },
-    tabpanel: {
-        backgroundColor: fade(palette.primary.main, 0.25)
+    formRowLabel: {
+        gridColumnStart: '1'
     },
-    tab: {
-        backgroundColor: fade(palette.primary.main, 0.25)
+    formRowInput: {
+        gridColumnStart: '2'
+    },
+    formField: {
+        backgroundColor: 'white',
+        borderRadius: '4px'
+    },
+    descriptionInput: {
+        backgroundColor: 'white',
+        borderRadius: '4px',
+        width: '80%',
+        minHeight: '100px'
     }
 }));
 
@@ -78,15 +93,14 @@ function AddSystemObjectForm(): React.ReactElement {
     const classes = useStyles();
     const params: ParamsProperties = useParams();
     const history = useHistory();
-    const [tab] = useState(0);
     const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [name, setName] = useState('');
     const [abbreviation, setAbbreviation] = useState('');
     const [ARKPrefix, setARKPrefix] = useState('');
     const [description, setDescription] = useState('');
     const [systemObjectType] = useState(params.systemObjectType);
-    const [validNameInput, setValidNameInput] = useState<boolean | null>(null);
-    const [validAbbreviationInput, setValidAbbreviationInput] = useState<boolean | null>(null);
+    const [validName, setValidName] = useState<boolean | null>(null);
+    const [validAbbreviation, setValidAbbreviation] = useState<boolean | null>(null);
 
     const singularSystemObjectType = systemObjectType.slice(0, systemObjectType.length - 1);
 
@@ -112,20 +126,17 @@ function AddSystemObjectForm(): React.ReactElement {
         setDescription(target.value);
     };
 
+    // Handles validation for the different system object types
     const validateFields = async (): Promise<boolean | void> => {
         switch (systemObjectType) {
             case 'units':
                 try {
                     const isValidName = await schema.isValid({ name });
-                    setValidNameInput(isValidName);
+                    setValidName(isValidName);
                     const isValidAbbreviation = await schema.isValid({ abbreviation });
-                    setValidAbbreviationInput(isValidAbbreviation);
+                    setValidAbbreviation(isValidAbbreviation);
                     if (!isValidName || !isValidAbbreviation) {
-                        toast.warn(
-                            `Creation Failed. Please double-check your form inputs. The following input(s) need a valid value: ${isValidName ? '' : 'name'} ${
-                                isValidAbbreviation ? '' : 'abbreviation'
-                            }`
-                        );
+                        toast.warn('Creation Failed: Please Address The Errors Above');
                     }
                     return isValidName && isValidAbbreviation;
                 } catch (error) {
@@ -137,9 +148,9 @@ function AddSystemObjectForm(): React.ReactElement {
             case 'projects':
                 try {
                     const isValidName = await schema.isValid({ name });
-                    setValidNameInput(isValidName);
+                    setValidName(isValidName);
                     if (!isValidName) {
-                        toast.warn(`Creation Failed. Please double-check your form inputs. The following input(s) need a valid value: ${isValidName ? '' : 'name'}`);
+                        toast.warn('Creation Failed: Please Address The Errors Above');
                     }
                     return isValidName;
                 } catch (error) {
@@ -154,8 +165,6 @@ function AddSystemObjectForm(): React.ReactElement {
     const createUnit = async (): Promise<void> => {
         const confirmed: boolean = global.confirm('Are you sure you want to create this entry?');
         if (!confirmed) return;
-
-        console.log(validNameInput, validAbbreviationInput);
 
         setIsUpdatingData(true);
         const validUpdate = await validateFields();
@@ -228,49 +237,125 @@ function AddSystemObjectForm(): React.ReactElement {
         }
     };
 
+    // Handles the logic for the viewable inputs on the form
     let formFields;
     let createButtonBehavior;
     switch (systemObjectType) {
         case 'units':
             formFields = (
                 <Fragment>
-                    <InputField viewMode required label='Abbreviation' value='' name='Abbreviation' onChange={onAbbreviationUpdate} />
-                    <InputField viewMode required label='ARKPrefix' value='' name='ARKPrefix' onChange={onARKPrefixUpdate} />
+                    <Box className={classes.formRow}>
+                        <Typography className={classes.formRowLabel}>Abbreviation</Typography>
+                        <FormControl variant='outlined'>
+                            {validAbbreviation !== false ? (
+                                <TextField
+                                    className={classes.formField}
+                                    style={{ width: '270px' }}
+                                    variant='outlined'
+                                    size='small'
+                                    value={abbreviation}
+                                    onChange={onAbbreviationUpdate}
+                                    InputLabelProps={{
+                                        shrink: true
+                                    }}
+                                />
+                            ) : (
+                                <React.Fragment>
+                                    <TextField
+                                        error
+                                        className={classes.formField}
+                                        style={{ width: '270px' }}
+                                        variant='outlined'
+                                        size='small'
+                                        value={abbreviation}
+                                        onChange={onAbbreviationUpdate}
+                                        InputLabelProps={{
+                                            shrink: true
+                                        }}
+                                    />
+                                    <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>
+                                </React.Fragment>
+                            )}
+                        </FormControl>
+                    </Box>
+                    <Box className={classes.formRow}>
+                        <Typography className={classes.formRowLabel}>ARKPrefix</Typography>
+                        <FormControl variant='outlined'>
+                            <TextField
+                                className={classes.formField}
+                                style={{ width: '270px' }}
+                                variant='outlined'
+                                size='small'
+                                value={ARKPrefix}
+                                onChange={onARKPrefixUpdate}
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                            />
+                        </FormControl>
+                    </Box>
                 </Fragment>
             );
             createButtonBehavior = createUnit;
             break;
         case 'projects':
-            formFields = <Description value={''} onChange={onDescriptionUpdate} />;
+            formFields = (
+                <Box className={classes.formRow}>
+                    <Typography className={classes.formRowLabel}>Description</Typography>
+                    <FormControl variant='outlined'>
+                        <DebounceInput
+                            element='textarea'
+                            value={description || ''}
+                            className={classes.descriptionInput}
+                            name='description'
+                            onChange={onDescriptionUpdate}
+                            debounceTimeout={400}
+                        />
+                    </FormControl>
+                </Box>
+            );
             createButtonBehavior = createProject;
             break;
     }
 
     return (
         <Box className={classes.container}>
-            <Box display='flex' flexDirection='row' mb={1}>
-                <Box display='flex' mr={4}>
-                    <Typography className={classes.header} variant='h5'>
-                        {toTitleCase(singularSystemObjectType)}
-                    </Typography>
+            <Box display='flex' flexDirection='column' className={classes.formContainer}>
+                <Box className={classes.formRow}>
+                    <Typography className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</Typography>
+                    <FormControl variant='outlined'>
+                        {validName !== false ? (
+                            <TextField
+                                className={classes.formField}
+                                style={{ width: '270px' }}
+                                variant='outlined'
+                                size='small'
+                                value={name}
+                                onChange={onNameUpdate}
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                            />
+                        ) : (
+                            <React.Fragment>
+                                <TextField
+                                    error
+                                    className={classes.formField}
+                                    style={{ width: '270px' }}
+                                    variant='outlined'
+                                    size='small'
+                                    value={name}
+                                    onChange={onNameUpdate}
+                                    InputLabelProps={{
+                                        shrink: true
+                                    }}
+                                />
+                                <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>
+                            </React.Fragment>
+                        )}
+                    </FormControl>
                 </Box>
-                <Box mr={4}>
-                    <DebounceInput element='input' value={name || ''} className={classes.name} name='name' onChange={onNameUpdate} debounceTimeout={400} />
-                </Box>
-            </Box>
-            <Box display='flex' mt={2}>
-                <ObjectDetails publishedState={''} retired={false} disabled={true} hideRetired={true} />
-            </Box>
-            <Box display='flex'>
-                <Box display='flex' flex={1} flexDirection='column' mt={2}>
-                    <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='primary'>
-                        <StyledTab label={'Details'} />
-                    </Tabs>
-                    {formFields}
-                </Box>
-                <Box display='flex' flex={1} padding={2}>
-                    <DetailsThumbnail />
-                </Box>
+                {formFields}
             </Box>
             <LoadingButton className={classes.updateButton} onClick={createButtonBehavior} disableElevation loading={isUpdatingData}>
                 Create
@@ -278,14 +363,5 @@ function AddSystemObjectForm(): React.ReactElement {
         </Box>
     );
 }
-
-const StyledTab = withStyles(({ palette }) => ({
-    root: {
-        color: palette.background.paper,
-        '&:focus': {
-            opacity: 1
-        }
-    }
-}))((props: TabProps) => <Tab disableRipple {...props} />);
 
 export default AddSystemObjectForm;

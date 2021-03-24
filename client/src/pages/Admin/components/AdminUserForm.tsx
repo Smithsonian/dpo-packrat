@@ -65,7 +65,9 @@ const useStyles = makeStyles({
         gridTemplateColumns: '40% 60%',
         gridGap: '10px',
         alignItems: 'center',
-        borderBottom: '1px solid #D8E5EE'
+        '&:not(:last-child)': {
+            borderBottom: '1px solid #D8E5EE'
+        }
     },
     AdminUserFormButtonGroup: {
         marginTop: '30px',
