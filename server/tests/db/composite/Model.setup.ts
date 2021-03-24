@@ -6,7 +6,7 @@ import * as UTIL from '../api';
 import * as LOG from '../../../utils/logger';
 import * as path from 'path';
 
-class ModelTestData {
+class ModelTestFile {
     testCase: string;
     fileName: string;
     directory: string;
@@ -22,24 +22,50 @@ class ModelTestData {
     }
 }
 
-const modelTestData: ModelTestData[] = [
-    { testCase: 'fbx-stand-alone', fileName: 'eremotherium_laurillardi-150k-4096.fbx', directory: '', geometry: true, hash: '' },
-    { testCase: 'fbx-with-support', fileName: 'eremotherium_laurillardi-150k-4096.fbx', directory: 'eremotherium_laurillardi-150k-4096-fbx', geometry: true, hash: '' },
-    { testCase: 'fbx-with-support', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-fbx', geometry: false, hash: '' },
-    { testCase: 'glb', fileName: 'eremotherium_laurillardi-150k-4096.glb', directory: '', geometry: true, hash: '' },
-    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096.obj', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: true, hash: '' },
-    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096.mtl', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: false, hash: '' },
-    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: false, hash: '' },
-    { testCase: 'ply', fileName: 'eremotherium_laurillardi-150k.ply', directory: '', geometry: true, hash: '' },
-    { testCase: 'stl', fileName: 'eremotherium_laurillardi-150k.stl', directory: '', geometry: true, hash: '' },
-    { testCase: 'usd', fileName: 'eremotherium_laurillardi-150k-4096-5.usdc', directory: 'eremotherium_laurillardi-150k-4096-usd', geometry: true, hash: '' },
-    { testCase: 'usd', fileName: 'baseColor-1.jpg', directory: 'eremotherium_laurillardi-150k-4096-usd/0', geometry: false, hash: '' },
-    { testCase: 'usdz', fileName: 'eremotherium_laurillardi-150k-4096.usdz', directory: '', geometry: true, hash: '' },
-    { testCase: 'wrl', fileName: 'eremotherium_laurillardi-150k-4096.x3d.wrl', directory: 'eremotherium_laurillardi-150k-4096-wrl', geometry: true, hash: '' },
-    { testCase: 'wrl', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-wrl', geometry: false, hash: '' },
-    { testCase: 'x3d', fileName: 'eremotherium_laurillardi-150k-4096.x3d', directory: 'eremotherium_laurillardi-150k-4096-x3d', geometry: true, hash: '' },
-    { testCase: 'x3d', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-x3d', geometry: false, hash: '' },
+class ModelTestCase {
+    testCase: string;
+    model: DBAPI.Model;
+    modelName: string;
+    assetVersionIDs: number[];
+    inspectJSON: string;
+
+    constructor(testCase: string, model: DBAPI.Model, modelName: string, assetVersionID: number, inspectJSON: string) {
+        this.testCase = testCase;
+        this.model = model;
+        this.modelName = modelName;
+        this.assetVersionIDs = [assetVersionID];
+        this.inspectJSON = inspectJSON;
+    }
+}
+
+const modelTestFiles: ModelTestFile[] = [
+    { testCase: 'fbx-stand-alone', fileName: 'eremotherium_laurillardi-150k-4096.fbx', directory: '', geometry: true, hash: 'd81595f6e42c9162ddc32c4f358affeda6f1eb14cb7838cf5477536401b764d7' },
+    { testCase: 'fbx-with-support', fileName: 'eremotherium_laurillardi-150k-4096.fbx', directory: 'eremotherium_laurillardi-150k-4096-fbx', geometry: true, hash: 'cfcd541913a122a8d8b415c9b5bd45818d7f483b9e683e6c2e0c557de876e694' },
+    { testCase: 'fbx-with-support', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-fbx', geometry: false, hash: '53a46d32ecc668cb07a2b7f9f8e197c14819db3354b021b551cbdd06f3b81488' },
+    { testCase: 'glb', fileName: 'eremotherium_laurillardi-150k-4096.glb', directory: '', geometry: true, hash: '08ddb4b90bace6ae9ef5c0b620f0e3f821c76cad89151d3c992dcd531ba4f498' },
+    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096.obj', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: true, hash: '7da41672c635249a622dcc4e96a8e01747de55b091586dc49a10b465e36ec12b' },
+    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096.mtl', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: false, hash: 'a1f7b4c19ee36d68ec3746f4ac9696738076c249f8426fafd87a5a45f3fd8f32' },
+    { testCase: 'obj', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-obj', geometry: false, hash: '53a46d32ecc668cb07a2b7f9f8e197c14819db3354b021b551cbdd06f3b81488' },
+    { testCase: 'ply', fileName: 'eremotherium_laurillardi-150k.ply', directory: '', geometry: true, hash: 'd4825a2586cadb7ccbc40e8562dfb240d8b58669db1e06f4138d427ac6c14c15' },
+    { testCase: 'stl', fileName: 'eremotherium_laurillardi-150k.stl', directory: '', geometry: true, hash: '3984d9039384ba9881635a8c7503c75ffb333c2b27270f9beb87dfd0a26aa762' },
+    { testCase: 'usd', fileName: 'eremotherium_laurillardi-150k-4096-5.usdc', directory: 'eremotherium_laurillardi-150k-4096-usd', geometry: true, hash: 'd73a56f429da81d9ed3338e4edb468ba346be138e93697a4d886dbf63533bc7f' },
+    { testCase: 'usd', fileName: 'baseColor-1.jpg', directory: 'eremotherium_laurillardi-150k-4096-usd/0', geometry: false, hash: '53a46d32ecc668cb07a2b7f9f8e197c14819db3354b021b551cbdd06f3b81488' },
+    { testCase: 'usdz', fileName: 'eremotherium_laurillardi-150k-4096.usdz', directory: '', geometry: true, hash: 'ca689b07dc534f6e9f3dab7693bcdf894d65fca17f1fb6be34009ada3b6c5b8c' },
+    { testCase: 'wrl', fileName: 'eremotherium_laurillardi-150k-4096.x3d.wrl', directory: 'eremotherium_laurillardi-150k-4096-wrl', geometry: true, hash: '06192884a751101c02680babf6b676797867150c89a712ebaf83408f9769433b' },
+    { testCase: 'wrl', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-wrl', geometry: false, hash: '53a46d32ecc668cb07a2b7f9f8e197c14819db3354b021b551cbdd06f3b81488' },
+    { testCase: 'x3d', fileName: 'eremotherium_laurillardi-150k-4096.x3d', directory: 'eremotherium_laurillardi-150k-4096-x3d', geometry: true, hash: '3d87c1d33849bed8a048f5235368ba7e36e3b21b27303bb959842de9c665b673' },
+    { testCase: 'x3d', fileName: 'eremotherium_laurillardi-150k-4096-diffuse.jpg', directory: 'eremotherium_laurillardi-150k-4096-x3d', geometry: false, hash: '53a46d32ecc668cb07a2b7f9f8e197c14819db3354b021b551cbdd06f3b81488' },
 ];
+
+const modelTestCaseInspectJSONMap: Map<string, string> = new Map<string, string>([
+    ['fbx-stand-alone', '{"success":true,"error":"","modelObjects":[{"idModelObject":1,"idModel":0,"idModelMetrics":1,"idModelMetricsOrig":1}],"modelMetrics":[{"idModelMetrics":1,"BoundingBoxP1X":-892.2620849609375,"BoundingBoxP1Y":-2167.86767578125,"BoundingBoxP1Z":-971.3925170898438,"BoundingBoxP2X":892.2653198242188,"BoundingBoxP2Y":2167.867919921875,"BoundingBoxP2Z":971.3912963867188,"CountPoint":104561,"CountFace":149999,"CountColorChannel":0,"CountTextureCoorinateChannel":1,"HasBones":false,"HasFaceNormals":true,"HasTangents":null,"HasTextureCoordinates":true,"HasVertexNormals":null,"HasVertexColor":false,"IsManifold":true,"IsWatertight":false}],"modelMaterials":[{"idModelMaterial":1,"idModelObject":1,"Name":"material_0"}],"modelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":1,"Scalar2":1,"Scalar3":1,"Scalar4":null,"idVMaterialTypeOrig":64,"idModelMaterialUVMapOrig":1},{"idModelMaterialChannel":2,"idModelMaterial":1,"idVMaterialType":65,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0.2,"Scalar2":0.2,"Scalar3":0.2,"Scalar4":null,"idVMaterialTypeOrig":65,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":3,"idModelMaterial":1,"idVMaterialType":66,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0.2,"Scalar2":0.2,"Scalar3":0.2,"Scalar4":null,"idVMaterialTypeOrig":66,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":4,"idModelMaterial":1,"idVMaterialType":67,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":0,"Scalar3":0,"Scalar4":null,"idVMaterialTypeOrig":67,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":5,"idModelMaterial":1,"idVMaterialType":70,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":20,"Scalar2":null,"Scalar3":null,"Scalar4":null,"idVMaterialTypeOrig":70,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":6,"idModelMaterial":1,"idVMaterialType":71,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":0,"Scalar3":0,"Scalar4":null,"idVMaterialTypeOrig":71,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":7,"idModelMaterial":1,"idVMaterialType":74,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":1,"Scalar2":null,"Scalar3":null,"Scalar4":null,"idVMaterialTypeOrig":74,"idModelMaterialUVMapOrig":null}],"uvMaps":{}}'],
+    ['fbx-with-support', '{"success":true,"error":"","modelObjects":[{"idModelObject":1,"idModel":0,"idModelMetrics":1,"idModelMetricsOrig":1}],"modelMetrics":[{"idModelMetrics":1,"BoundingBoxP1X":-892.2620849609375,"BoundingBoxP1Y":-2167.86767578125,"BoundingBoxP1Z":-971.3925170898438,"BoundingBoxP2X":892.2653198242188,"BoundingBoxP2Y":2167.867919921875,"BoundingBoxP2Z":971.3912963867188,"CountPoint":74796,"CountFace":149999,"CountColorChannel":0,"CountTextureCoorinateChannel":1,"HasBones":false,"HasFaceNormals":true,"HasTangents":null,"HasTextureCoordinates":true,"HasVertexNormals":null,"HasVertexColor":false,"IsManifold":false,"IsWatertight":false}],"modelMaterials":[{"idModelMaterial":1,"idModelObject":1,"Name":"material_0"}],"modelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":0.8,"Scalar2":0.8,"Scalar3":0.8,"Scalar4":null,"idVMaterialTypeOrig":64,"idModelMaterialUVMapOrig":1},{"idModelMaterialChannel":2,"idModelMaterial":1,"idVMaterialType":65,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0.8,"Scalar2":0.8,"Scalar3":0.8,"Scalar4":null,"idVMaterialTypeOrig":65,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":3,"idModelMaterial":1,"idVMaterialType":66,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":0,"Scalar3":0,"Scalar4":null,"idVMaterialTypeOrig":66,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":4,"idModelMaterial":1,"idVMaterialType":67,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":0,"Scalar3":0,"Scalar4":null,"idVMaterialTypeOrig":67,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":5,"idModelMaterial":1,"idVMaterialType":70,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":null,"Scalar3":null,"Scalar4":null,"idVMaterialTypeOrig":70,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":6,"idModelMaterial":1,"idVMaterialType":71,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":0,"Scalar3":0,"Scalar4":null,"idVMaterialTypeOrig":71,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":7,"idModelMaterial":1,"idVMaterialType":74,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":null,"Scalar3":null,"Scalar4":null,"idVMaterialTypeOrig":74,"idModelMaterialUVMapOrig":null}],"uvMaps":{}}'],
+    ['glb', '{"success":true,"error":"","modelObjects":[{"idModelObject":1,"idModel":0,"idModelMetrics":1,"idModelMetricsOrig":1}],"modelMetrics":[{"idModelMetrics":1,"BoundingBoxP1X":-892.2620849609375,"BoundingBoxP1Y":-2167.86767578125,"BoundingBoxP1Z":-971.3924560546875,"BoundingBoxP2X":892.2653198242188,"BoundingBoxP2Y":2167.867919921875,"BoundingBoxP2Z":971.3912353515625,"CountPoint":104561,"CountFace":149999,"CountColorChannel":0,"CountTextureCoorinateChannel":1,"HasBones":false,"HasFaceNormals":true,"HasTangents":null,"HasTextureCoordinates":true,"HasVertexNormals":null,"HasVertexColor":false,"IsManifold":true,"IsWatertight":false}],"modelMaterials":[{"idModelMaterial":1,"idModelObject":1,"Name":"material_0"}],"modelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":1,"Scalar2":1,"Scalar3":1,"Scalar4":1,"idVMaterialTypeOrig":64,"idModelMaterialUVMapOrig":1},{"idModelMaterialChannel":2,"idModelMaterial":1,"idVMaterialType":67,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":0,"Scalar3":0,"Scalar4":null,"idVMaterialTypeOrig":67,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":3,"idModelMaterial":1,"idVMaterialType":76,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":1,"Scalar2":null,"Scalar3":null,"Scalar4":null,"idVMaterialTypeOrig":76,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":4,"idModelMaterial":1,"idVMaterialType":75,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":null,"Scalar3":null,"Scalar4":null,"idVMaterialTypeOrig":75,"idModelMaterialUVMapOrig":null}],"uvMaps":{}}'],
+    ['obj', '{"success":true,"error":"","modelObjects":[{"idModelObject":1,"idModel":0,"idModelMetrics":1,"idModelMetricsOrig":1}],"modelMetrics":[{"idModelMetrics":1,"BoundingBoxP1X":-892.2620849609375,"BoundingBoxP1Y":-971.3923950195312,"BoundingBoxP1Z":-2167.867919921875,"BoundingBoxP2X":892.2653198242188,"BoundingBoxP2Y":971.3911743164062,"BoundingBoxP2Z":2167.86767578125,"CountPoint":74796,"CountFace":149999,"CountColorChannel":0,"CountTextureCoorinateChannel":1,"HasBones":false,"HasFaceNormals":true,"HasTangents":null,"HasTextureCoordinates":true,"HasVertexNormals":null,"HasVertexColor":false,"IsManifold":false,"IsWatertight":false}],"modelMaterials":[{"idModelMaterial":1,"idModelObject":1,"Name":"material_0"}],"modelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":0.6,"Scalar2":0.6,"Scalar3":0.6,"Scalar4":null,"idVMaterialTypeOrig":64,"idModelMaterialUVMapOrig":1},{"idModelMaterialChannel":2,"idModelMaterial":1,"idVMaterialType":65,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":0,"Scalar3":0,"Scalar4":null,"idVMaterialTypeOrig":65,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":3,"idModelMaterial":1,"idVMaterialType":66,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":0,"Scalar3":0,"Scalar4":null,"idVMaterialTypeOrig":66,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":4,"idModelMaterial":1,"idVMaterialType":67,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":0,"Scalar3":0,"Scalar4":null,"idVMaterialTypeOrig":67,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":5,"idModelMaterial":1,"idVMaterialType":70,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":0,"Scalar2":null,"Scalar3":null,"Scalar4":null,"idVMaterialTypeOrig":70,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":6,"idModelMaterial":1,"idVMaterialType":71,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":1,"Scalar2":1,"Scalar3":1,"Scalar4":null,"idVMaterialTypeOrig":71,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":7,"idModelMaterial":1,"idVMaterialType":74,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":null,"Scalar2":null,"Scalar3":null,"Scalar4":null,"idVMaterialTypeOrig":74,"idModelMaterialUVMapOrig":null}],"uvMaps":{}}'],
+    ['ply', '{"success":true,"error":"","modelObjects":[{"idModelObject":1,"idModel":0,"idModelMetrics":1,"idModelMetricsOrig":1}],"modelMetrics":[{"idModelMetrics":1,"BoundingBoxP1X":-892.2620849609375,"BoundingBoxP1Y":-971.3921508789062,"BoundingBoxP1Z":-2167.86767578125,"BoundingBoxP2X":892.2653198242188,"BoundingBoxP2Y":971.3909301757812,"BoundingBoxP2Z":2167.867431640625,"CountPoint":74796,"CountFace":149999,"CountColorChannel":1,"CountTextureCoorinateChannel":0,"HasBones":false,"HasFaceNormals":false,"HasTangents":null,"HasTextureCoordinates":false,"HasVertexNormals":null,"HasVertexColor":true,"IsManifold":false,"IsWatertight":false}],"modelMaterials":[{"idModelMaterial":1,"idModelObject":1,"Name":""}],"modelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":1,"Scalar2":1,"Scalar3":1,"Scalar4":1,"idVMaterialTypeOrig":64,"idModelMaterialUVMapOrig":1},{"idModelMaterialChannel":2,"idModelMaterial":1,"idVMaterialType":65,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":1,"Scalar2":1,"Scalar3":1,"Scalar4":1,"idVMaterialTypeOrig":65,"idModelMaterialUVMapOrig":null},{"idModelMaterialChannel":3,"idModelMaterial":1,"idVMaterialType":66,"MaterialTypeOther":null,"idModelMaterialUVMap":null,"ChannelPosition":null,"ChannelWidth":null,"Scalar1":1,"Scalar2":1,"Scalar3":1,"Scalar4":1,"idVMaterialTypeOrig":66,"idModelMaterialUVMapOrig":null}],"uvMaps":{}}'],
+    ['stl', '{"success":true,"error":"","modelObjects":[{"idModelObject":1,"idModel":0,"idModelMetrics":1,"idModelMetricsOrig":1}],"modelMetrics":[{"idModelMetrics":1,"BoundingBoxP1X":-892.2620849609375,"BoundingBoxP1Y":-971.3921508789062,"BoundingBoxP1Z":-2167.86767578125,"BoundingBoxP2X":892.2653198242188,"BoundingBoxP2Y":971.3909301757812,"BoundingBoxP2Z":2167.867431640625,"CountPoint":74796,"CountFace":149999,"CountColorChannel":0,"CountTextureCoorinateChannel":0,"HasBones":false,"HasFaceNormals":false,"HasTangents":null,"HasTextureCoordinates":false,"HasVertexNormals":null,"HasVertexColor":false,"IsManifold":false,"IsWatertight":false}],"modelMaterials":null,"modelMaterialChannels":null,"uvMaps":{}}'],
+    ['x3d', '{"success":true,"error":"","modelObjects":[],"modelMetrics":[],"modelMaterials":[{"idModelMaterial":1,"idModelObject":0,"Name":""}],"modelMaterialChannels":[{"idModelMaterialChannel":1,"idModelMaterial":1,"idVMaterialType":64,"MaterialTypeOther":null,"idModelMaterialUVMap":1,"ChannelPosition":0,"ChannelWidth":3,"Scalar1":null,"Scalar2":null,"Scalar3":null,"Scalar4":null,"idVMaterialTypeOrig":64,"idModelMaterialUVMapOrig":1}],"uvMaps":{}}'],
+]);
 
 export class ModelTestSetup {
     /* #region Variable Declarations */
@@ -97,9 +123,10 @@ export class ModelTestSetup {
 
     storage:            STORE.IStorage | null = null;
     /* #endregion */
+    testCaseMap: Map<string, ModelTestCase> = new Map<string, ModelTestCase>(); // map of testcase name to ModelTestCase structure
 
     //** Returns null if initialize cannot locate test files.  Do not treat this as an error */
-    async initialize(): Promise<boolean | null> {
+    async initialize(testCase: string | null = null): Promise<boolean | null> {
         // let assigned: boolean = true;
         this.userOwner = await UTIL.createUserTest({ Name: 'Model Test', EmailAddress: 'modeltest@si.edu', SecurityID: 'Model Test', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0 });
         if (!this.userOwner) {
@@ -123,37 +150,62 @@ export class ModelTestSetup {
             return false;
         }
 
-        for (const MTD of modelTestData) {
+        for (const MTD of modelTestFiles) {
+            if (testCase && MTD.testCase != testCase)
+                continue;
             const fileExists: boolean = await this.testFileExistence(MTD);
             if (!fileExists) {
                 LOG.logger.info(`ModelTestSetup unable to locate file for ${JSON.stringify(MTD)}`);
                 return null;
             }
 
-            const vocabMFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(MTD.fileName);
-            if (!vocabMFileType) {
-                LOG.logger.error('ModelTestSetup failed to fetch Model file type Vocabulary');
-                return false;
-            }
+            let model: DBAPI.Model | null | undefined = undefined;
 
-            const model: DBAPI.Model | null = await UTIL.createModelTest({
-                Name: MTD.fileName,
-                DateCreated: UTIL.nowCleansed(),
-                idVCreationMethod: this.vocabMCreation.idVocabulary,
-                Master: true, Authoritative: true,
-                idVModality: this.vocabMModality.idVocabulary,
-                idVUnits: this.vocabMUnits.idVocabulary,
-                idVPurpose: this.vocabMPurpose.idVocabulary,
-                idVFileType: vocabMFileType.idVocabulary,
-                idAssetThumbnail: null,
-                idModelMetrics: 0,
-                idModel: 0
-            });
+            if (MTD.geometry) {
+                const vocabMFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(MTD.fileName);
+                if (!vocabMFileType) {
+                    LOG.logger.error('ModelTestSetup failed to fetch Model file type Vocabulary');
+                    return false;
+                }
+
+                model = await UTIL.createModelTest({
+                    Name: MTD.fileName,
+                    DateCreated: UTIL.nowCleansed(),
+                    idVCreationMethod: this.vocabMCreation.idVocabulary,
+                    Master: true, Authoritative: true,
+                    idVModality: this.vocabMModality.idVocabulary,
+                    idVUnits: this.vocabMUnits.idVocabulary,
+                    idVPurpose: this.vocabMPurpose.idVocabulary,
+                    idVFileType: vocabMFileType.idVocabulary,
+                    idAssetThumbnail: null,
+                    idModelMetrics: 0,
+                    idModel: 0
+                });
+            } else {
+                const MTC: ModelTestCase | undefined = this.testCaseMap.get(MTD.testCase);
+                if (!MTC) {
+                    LOG.logger.error(`ModelTestSetup attempting to ingest non-model ${MTD.fileName} without model already created`);
+                    return false;
+                }
+                model = MTC.model;
+            }
 
             const { success, asset, assetVersion } = await this.ingestFile(MTD, model);
             if (!success) {
-                LOG.logger.error('ModelTesetSetup failed to ingest model');
+                LOG.logger.error('ModelTestSetup failed to ingest model');
                 return false;
+            }
+
+            // record test case data
+            if (assetVersion) {
+                let MTC: ModelTestCase | undefined = this.testCaseMap.get(MTD.testCase);
+                if (!MTC) {
+                    const inspectJSON: string | undefined = modelTestCaseInspectJSONMap.get(MTD.testCase) || '';
+                    MTC = new ModelTestCase(MTD.testCase, model, MTD.fileName, assetVersion.idAssetVersion, inspectJSON);
+                    this.testCaseMap.set(MTD.testCase, MTC);
+                } else {
+                    MTC.assetVersionIDs.push(assetVersion.idAssetVersion);
+                }
             }
 
             switch (MTD.testCase) {
@@ -241,7 +293,11 @@ export class ModelTestSetup {
         return true;
     }
 
-    async ingestFile(MTD: ModelTestData, model: DBAPI.Model): Promise<{ success: boolean, asset: DBAPI.Asset | null, assetVersion: DBAPI.AssetVersion | null}> {
+    getTestCase(testCase: string): ModelTestCase | undefined {
+        return this.testCaseMap.get(testCase);
+    }
+
+    private async ingestFile(MTD: ModelTestFile, model: DBAPI.Model): Promise<{ success: boolean, asset: DBAPI.Asset | null, assetVersion: DBAPI.AssetVersion | null}> {
         if (!this.userOwner || !this.vocabModel || !this.storage)
             return { success: false, asset: null, assetVersion: null };
 
@@ -280,15 +336,27 @@ export class ModelTestSetup {
         return { success: IAR.success, asset: comRes.assets[0] || null, assetVersion: comRes.assetVersions[0] || null };
     }
 
-    private computeFilePath(MTD: ModelTestData): string {
-        return path.join('../../mock/models', MTD.directory, MTD.fileName);
+    private computeFilePath(MTD: ModelTestFile): string {
+        return path.join(__dirname, '../../mock/models', MTD.directory, MTD.fileName);
     }
 
-    private async testFileExistence(MTD: ModelTestData): Promise<boolean> {
+    private async testFileExistence(MTD: ModelTestFile): Promise<boolean> {
         const filePath: string = this.computeFilePath(MTD);
         const res: H.StatResults = await H.Helpers.stat(filePath);
-        const success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
-        LOG.logger.info(`ModelTestSetup.testFileExistience(${filePath}) = ${success}`);
+        let success: boolean = res.success && (res.stat !== null) && res.stat.isFile();
+
+        if (MTD.hash) {
+            const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
+            if (!hashRes.success) {
+                LOG.logger.error(`ModelTestSetup.testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`);
+                success = false;
+            } else if (hashRes.hash != MTD.hash) {
+                LOG.logger.error(`ModelTestSetup.testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${MTD.hash}`);
+                success = false;
+            }
+        }
+
+        LOG.logger.info(`ModelTestSetup.testFileExistience('${filePath}') = ${success}`);
         return success;
     }
 }

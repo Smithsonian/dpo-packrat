@@ -85,6 +85,7 @@ export enum eVocabularyID {
     eModelFileTypestl,
     eModelFileTypeglb,
     eModelFileTypegltf,
+    eModelFileTypeusd,
     eModelFileTypeusdz,
     eModelFileTypex3d,
     eModelFileTypewrl,
@@ -94,6 +95,21 @@ export enum eVocabularyID {
     eModelFileType3ds,
     eModelFileTypeptx,
     eModelFileTypepts,
+    eModelMaterialChannelMaterialTypeDiffuse,
+    eModelMaterialChannelMaterialTypeSpecular,
+    eModelMaterialChannelMaterialTypeAmbient,
+    eModelMaterialChannelMaterialTypeEmissive,
+    eModelMaterialChannelMaterialTypeBump,
+    eModelMaterialChannelMaterialTypeNormal,
+    eModelMaterialChannelMaterialTypeGlossiness,
+    eModelMaterialChannelMaterialTypeOpacity,
+    eModelMaterialChannelMaterialTypeDisplacement,
+    eModelMaterialChannelMaterialTypeOcclusion,
+    eModelMaterialChannelMaterialTypeReflection,
+    eModelMaterialChannelMaterialTypeMetalness,
+    eModelMaterialChannelMaterialTypeRoughness,
+    eModelMaterialChannelMaterialTypeNone,
+    eModelMaterialChannelMaterialTypeUnknown,
     eJobJobTypeCookBake,
     eJobJobTypeCookDecimateUnwrap,
     eJobJobTypeCookDecimate,
@@ -306,6 +322,7 @@ export class VocabularyCache {
                         case 'stl - StereoLithography':                     eVocabEnum = eVocabularyID.eModelFileTypestl; break;
                         case 'glb - GL Transmission Format Binary':         eVocabEnum = eVocabularyID.eModelFileTypeglb; break;
                         case 'gltf - GL Transmission Format':               eVocabEnum = eVocabularyID.eModelFileTypegltf; break;
+                        case 'usd - Universal Scene Description':           eVocabEnum = eVocabularyID.eModelFileTypeusd; break;
                         case 'usdz - Universal Scene Description (zipped)': eVocabEnum = eVocabularyID.eModelFileTypeusdz; break;
                         case 'x3d':                                         eVocabEnum = eVocabularyID.eModelFileTypex3d; break;
                         case 'wrl - VRML':                                  eVocabEnum = eVocabularyID.eModelFileTypewrl; break;
@@ -315,6 +332,26 @@ export class VocabularyCache {
                         case '3ds - 3D Studio':                             eVocabEnum = eVocabularyID.eModelFileType3ds; break;
                         case 'ptx':                                         eVocabEnum = eVocabularyID.eModelFileTypeptx; break;
                         case 'pts':                                         eVocabEnum = eVocabularyID.eModelFileTypepts; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eModelMaterialChannelMaterialType: {
+                    switch (vocabulary.Term) {
+                        case 'Diffuse':         eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+                        case 'Specular':        eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+                        case 'Ambient':         eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeAmbient; break;
+                        case 'Emissive':        eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeEmissive; break;
+                        case 'Bump':            eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeBump; break;
+                        case 'Normal':          eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeNormal; break;
+                        case 'Glossiness':      eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeGlossiness; break;
+                        case 'Opacity':         eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeOpacity; break;
+                        case 'Displacement':    eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeDisplacement; break;
+                        case 'Occlusion':       eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeOcclusion; break;
+                        case 'Reflection':      eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeReflection; break;
+                        case 'Metalness':       eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeMetalness; break;
+                        case 'Roughness':       eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeRoughness; break;
+                        case 'None':            eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeNone; break;
+                        case 'Unknown':         eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeUnknown; break;
                     }
                 } break;
 
@@ -507,21 +544,50 @@ export class VocabularyCache {
         const extension: string = path.extname(fileName).toLowerCase() || fileName.toLowerCase();
 
         switch (extension) {
-            case 'obj':  eVocabID = eVocabularyID.eModelFileTypeobj; break;
-            case 'ply':  eVocabID = eVocabularyID.eModelFileTypeply; break;
-            case 'stl':  eVocabID = eVocabularyID.eModelFileTypestl; break;
-            case 'glb':  eVocabID = eVocabularyID.eModelFileTypeglb; break;
-            case 'gltf': eVocabID = eVocabularyID.eModelFileTypegltf; break;
-            case 'usdz': eVocabID = eVocabularyID.eModelFileTypeusdz; break;
-            case 'x3d':  eVocabID = eVocabularyID.eModelFileTypex3d; break;
-            case 'wrl':  eVocabID = eVocabularyID.eModelFileTypewrl; break;
-            case 'dae':  eVocabID = eVocabularyID.eModelFileTypedae; break;
-            case 'fbx':  eVocabID = eVocabularyID.eModelFileTypefbx; break;
-            case 'ma':   eVocabID = eVocabularyID.eModelFileTypema; break;
-            case '3ds':  eVocabID = eVocabularyID.eModelFileType3ds; break;
-            case 'ptx':  eVocabID = eVocabularyID.eModelFileTypeptx; break;
-            case 'pts':  eVocabID = eVocabularyID.eModelFileTypepts; break;
-            default: return undefined;
+            case '.obj':  eVocabID = eVocabularyID.eModelFileTypeobj; break;
+            case '.ply':  eVocabID = eVocabularyID.eModelFileTypeply; break;
+            case '.stl':  eVocabID = eVocabularyID.eModelFileTypestl; break;
+            case '.glb':  eVocabID = eVocabularyID.eModelFileTypeglb; break;
+            case '.gltf': eVocabID = eVocabularyID.eModelFileTypegltf; break;
+            case '.usda': eVocabID = eVocabularyID.eModelFileTypeusd; break;
+            case '.usdc': eVocabID = eVocabularyID.eModelFileTypeusd; break;
+            case '.usdz': eVocabID = eVocabularyID.eModelFileTypeusdz; break;
+            case '.x3d':  eVocabID = eVocabularyID.eModelFileTypex3d; break;
+            case '.wrl':  eVocabID = eVocabularyID.eModelFileTypewrl; break;
+            case '.dae':  eVocabID = eVocabularyID.eModelFileTypedae; break;
+            case '.fbx':  eVocabID = eVocabularyID.eModelFileTypefbx; break;
+            case '.ma':   eVocabID = eVocabularyID.eModelFileTypema; break;
+            case '.3ds':  eVocabID = eVocabularyID.eModelFileType3ds; break;
+            case '.ptx':  eVocabID = eVocabularyID.eModelFileTypeptx; break;
+            case '.pts':  eVocabID = eVocabularyID.eModelFileTypepts; break;
+            default:
+                // LOG.logger.info(`VocabularyCache.mapModelFileByExtension(${fileName}) using unrecognized ext ${extension}`);
+                return undefined;
+        }
+        // LOG.logger.info(`VocabularyCache.mapModelFileByExtension(${fileName}) = ${eVocabularyID[eVocabID]} using ext ${extension}`);
+        return await VocabularyCache.vocabularyByEnum(eVocabID);
+    }
+
+    static async mapModelChannelMaterialType(materialType: string): Promise<Vocabulary | undefined> {
+        let eVocabID: eVocabularyID;
+
+        switch (materialType.toLowerCase()) {
+            case 'diffuse': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+            case 'specular': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+            case 'ambient': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeAmbient; break;
+            case 'emissive': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeEmissive; break;
+            case 'bump': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeBump; break;
+            case 'normal': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeNormal; break;
+            case 'glossiness': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeGlossiness; break;
+            case 'opacity': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeOpacity; break;
+            case 'displacement': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDisplacement; break;
+            case 'occlusion': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeOcclusion; break;
+            case 'reflection': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeReflection; break;
+            case 'metalness': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeMetalness; break;
+            case 'roughness': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeRoughness; break;
+            case 'none': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeNone; break;
+            case 'unknown': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeUnknown; break;
+            default: eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeUnknown; break;
         }
         return await VocabularyCache.vocabularyByEnum(eVocabID);
     }

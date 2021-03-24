@@ -8,7 +8,6 @@ const mockPathZip: string = join(__dirname, '../../mock/utils/zip/');
 const mockPathDir: string = join(__dirname, '../../mock/utils/bagit/');
 /*
 afterAll(async done => {
-    jest.setTimeout(5000);
     await H.Helpers.sleep(2000);
     done();
 });
