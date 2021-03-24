@@ -13,20 +13,6 @@ import { toTitleCase } from '../../../constants/helperfunctions';
 import * as yup from 'yup';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
-    container: {
-        display: 'flex',
-        flex: 1,
-        flexDirection: 'column',
-        maxHeight: 'calc(100vh - 60px)',
-        width: '1200px',
-        overflowY: 'scroll',
-        marginLeft: '1%',
-        marginTop: '1%',
-        [breakpoints.down('lg')]: {
-            maxHeight: 'calc(100vh - 120px)',
-            padding: 10
-        }
-    },
     updateButton: {
         height: 35,
         width: 100,
@@ -78,6 +64,7 @@ function AddUnitForm(): React.ReactElement {
     const [name, setName] = useState('');
     const [abbreviation, setAbbreviation] = useState('');
     const [ARKPrefix, setARKPrefix] = useState('');
+
     // these are the states referenced when rendering error inputs after failed validation
     const [validName, setValidName] = useState<boolean | null>(null);
     const [validAbbreviation, setValidAbbreviation] = useState<boolean | null>(null);
