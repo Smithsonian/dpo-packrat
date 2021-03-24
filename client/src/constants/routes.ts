@@ -60,7 +60,8 @@ export const ADMIN_ROUTES_TYPE = {
     USER: 'user',
     PROJECTS: 'projects',
     UNITS: 'units',
-    CREATESYSTEMOBJECT: 'create/:systemObjectType',
+    CREATEPROJECT: 'projects/create',
+    CREATEUNIT: 'units/create'
 };
 
 export const ADMIN_ROUTE = {

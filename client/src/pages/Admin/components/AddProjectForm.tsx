@@ -14,6 +14,20 @@ import { toTitleCase } from '../../../constants/helperfunctions';
 import * as yup from 'yup';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
+    container: {
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'column',
+        maxHeight: 'calc(100vh - 60px)',
+        width: '1200px',
+        overflowY: 'scroll',
+        marginLeft: '1%',
+        marginTop: '1%',
+        [breakpoints.down('lg')]: {
+            maxHeight: 'calc(100vh - 120px)',
+            padding: 10
+        }
+    },
     updateButton: {
         height: 35,
         width: 100,
@@ -64,7 +78,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     }
 }));
 
-function AddUnitForm(): React.ReactElement {
+function AddProjectForm(): React.ReactElement {
     const classes = useStyles();
     const history = useHistory();
     const [isUpdatingData, setIsUpdatingData] = useState(false);
@@ -106,14 +120,12 @@ function AddUnitForm(): React.ReactElement {
     };
 
     const createProject = async (): Promise<void> => {
-        const confirmed: boolean = global.confirm('Are you sure you want to create this entry?');
-        if (!confirmed) return;
         setIsUpdatingData(true);
 
         const validUpdate = await validateFields();
         if (!validUpdate) return;
 
-        let newUnitSystemObjectId;
+        let newProjectSystemObjectId;
         try {
             const { data } = await apolloClient.mutate({
                 mutation: CreateProjectDocument,
@@ -126,7 +138,7 @@ function AddUnitForm(): React.ReactElement {
             });
             if (data?.createProject) {
                 toast.success('Project created successfully');
-                newUnitSystemObjectId = data?.createProject?.Project?.SystemObject?.idSystemObject;
+                newProjectSystemObjectId = data?.createProject?.Project?.SystemObject?.idSystemObject;
             } else {
                 throw new Error('Create request returned success: false');
             }
@@ -134,8 +146,8 @@ function AddUnitForm(): React.ReactElement {
             toast.error('Failed to create project');
         } finally {
             setIsUpdatingData(false);
-            if (newUnitSystemObjectId) {
-                history.push(`/repository/details/${newUnitSystemObjectId}`);
+            if (newProjectSystemObjectId) {
+                history.push(`/repository/details/${newProjectSystemObjectId}`);
             } else {
                 toast.error('Unable to retrieve new System Object Id');
             }
@@ -143,7 +155,7 @@ function AddUnitForm(): React.ReactElement {
     };
 
     return (
-        <React.Fragment>
+        <Box className={classes.container}>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
                     <Typography className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</Typography>
@@ -196,8 +208,8 @@ function AddUnitForm(): React.ReactElement {
             <LoadingButton className={classes.updateButton} onClick={createProject} disableElevation loading={isUpdatingData}>
                 Create
             </LoadingButton>
-        </React.Fragment>
+        </Box>
     );
 }
 
-export default AddUnitForm;
+export default AddProjectForm;

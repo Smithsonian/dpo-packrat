@@ -21,21 +21,16 @@ const getProjectListTest = (utils: TestSuiteUtils): void => {
             };
 
             const project = new DBAPI.Project(projectArgs);
-            if (await project.create()) {
-                const input: GetProjectListInput = {
-                    search: randomName
-                };
-                const { projects }: GetProjectListResult = await graphQLApi.getProjectList(input);
+            expect(await project.create()).toBeTruthy();
 
-                if (projects) {
-                    expect(projects.length).toBe(1);
-                    expect(projects[0].Name).toEqual(randomName);
-                } else {
-                    fail('projectList retrieval failed in getProjectList.test');
-                }
-            } else {
-                fail('project creation failed in getProjectList.test');
-            }
+            const input: GetProjectListInput = {
+                search: randomName
+            };
+
+            const { projects }: GetProjectListResult = await graphQLApi.getProjectList(input);
+            expect(projects).toBeTruthy();
+            expect(projects.length).toBe(1);
+            expect(projects[0].Name).toEqual(randomName);
         });
     });
 };

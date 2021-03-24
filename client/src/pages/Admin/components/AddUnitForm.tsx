@@ -13,6 +13,20 @@ import { toTitleCase } from '../../../constants/helperfunctions';
 import * as yup from 'yup';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
+    container: {
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'column',
+        maxHeight: 'calc(100vh - 60px)',
+        width: '1200px',
+        overflowY: 'scroll',
+        marginLeft: '1%',
+        marginTop: '1%',
+        [breakpoints.down('lg')]: {
+            maxHeight: 'calc(100vh - 120px)',
+            padding: 10
+        }
+    },
     updateButton: {
         height: 35,
         width: 100,
@@ -108,9 +122,6 @@ function AddUnitForm(): React.ReactElement {
     };
 
     const createUnit = async (): Promise<void> => {
-        const confirmed: boolean = global.confirm('Are you sure you want to create this entry?');
-        if (!confirmed) return;
-
         setIsUpdatingData(true);
         const validUpdate = await validateFields();
         if (!validUpdate) return;
@@ -146,7 +157,7 @@ function AddUnitForm(): React.ReactElement {
     };
 
     return (
-        <React.Fragment>
+        <Box className={classes.container}>
             <Box display='flex' flexDirection='column' className={classes.formContainer}>
                 <Box className={classes.formRow}>
                     <Typography className={classes.formRowLabel}>{toTitleCase(singularSystemObjectType)} Name</Typography>
@@ -236,7 +247,7 @@ function AddUnitForm(): React.ReactElement {
             <LoadingButton className={classes.updateButton} onClick={createUnit} disableElevation loading={isUpdatingData}>
                 Create
             </LoadingButton>
-        </React.Fragment>
+        </Box>
     );
 }
 

@@ -176,7 +176,7 @@ function AdminUnitsFilter({ queryUnitsByFilter }: { queryUnitsByFilter: (newSear
                 </Button>
             </Box>
             <Box className={classes.AdminUsersSearchFilterSettingsContainer2}>
-                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/create/units' target='_blank'>
+                <Link style={{ textDecoration: 'none', color: '#F5F6FA' }} to='/admin/units/create' target='_blank'>
                     <Button className={classes.styledButton}>Create</Button>
                 </Link>
             </Box>
