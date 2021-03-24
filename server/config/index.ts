@@ -5,7 +5,7 @@
  */
 enum AUTH_TYPE {
     LOCAL = 'local',
-    LDAP = 'ldapauth'
+    LDAP = 'ldap'
 }
 
 enum COLLECTION_TYPE {
@@ -26,6 +26,14 @@ enum STORAGE_TYPE {
     LOCAL = 'local'
 }
 
+export interface LDAPConfig {
+    server: string;
+    password: string;
+    CN: string;
+    OU: string;
+    DC: string;
+}
+
 type ConfigType = {
     auth: {
         type: AUTH_TYPE;
@@ -33,12 +41,7 @@ type ConfigType = {
             maxAge: number;
             checkPeriod: number;
         };
-    },
-    ldap:
-    {
-      server: string;
-      serviceAccount: string;
-      password: string;
+        ldap: LDAPConfig;
     },
     collection: {
         type: COLLECTION_TYPE;
@@ -70,17 +73,18 @@ const oneDayInSeconds = 24 * 60 * 60; // 24hrs in seconds
 
 const Config: ConfigType = {
     auth: {
-        type: process.env.AUTH_TYPE == "LDAP" ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
+        type: process.env.AUTH_TYPE == 'LDAP' ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
         session: {
             maxAge: oneDayInSeconds * 1000, // expiration time = 24 hours, in milliseconds
             checkPeriod: oneDayInSeconds    // prune expired entries every 24 hours
-        }
-    },
-    ldap:
-    {
-      server: process.env.LDAP_SERVER ? process.env.LDAP_SERVER : "",
-      serviceAccount: process.env.LDAP_SERVICE_USER ? process.env.LDAP_SERVICE_USER : "",
-      password: process.env.LDAP_PASSWORD ? process.env.LDAP_PASSWORD : ""
+        },
+        ldap: {
+            server: process.env.LDAP_SERVER ? process.env.LDAP_SERVER : 'ldap://160.111.103.197:389',
+            password: process.env.LDAP_PASSWORD ? process.env.LDAP_PASSWORD : '',
+            CN: process.env.LDAP_CN ? process.env.LDAP_CN : 'CN=PackratAuthUser',
+            OU: process.env.LDAP_OU ? process.env.LDAP_OU : 'OU=Service Accounts,OU=Enterprise',
+            DC: process.env.LDAP_DC ? process.env.LDAP_DC : 'DC=US,DC=SINET,DC=SI,DC=EDU',
+        },
     },
     collection: {
         type: COLLECTION_TYPE.EDAN,
