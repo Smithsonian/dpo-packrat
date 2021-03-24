@@ -31,7 +31,11 @@ const getUnitsFromNameSearchTest = (utils: TestSuiteUtils): void => {
                 if (Units) {
                     expect(Units.length).toEqual(1);
                     expect(Units[0].Name).toEqual(randomName);
+                } else {
+                    fail('unitList retrieval failed in getUnitsFromNameSearch.test');
                 }
+            } else {
+                fail('unit creation failed in getUnitsFromNameSearch.test');
             }
         });
     });

@@ -43,7 +43,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
 
 function AdminSidebarMenuRow({ path, selected }: { path: string; selected: boolean }): React.ReactElement {
     const classes = useStyles();
-    console.log(path, selected);
+
     return (
         <Link style={{ textDecoration: 'none', color: '#0093EE' }} to={`/admin/${path}`}>
             <MenuItem className={classes.AdminSidebarMenuRow} selected={selected}>
