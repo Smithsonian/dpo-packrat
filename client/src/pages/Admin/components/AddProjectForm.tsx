@@ -14,20 +14,6 @@ import { toTitleCase } from '../../../constants/helperfunctions';
 import * as yup from 'yup';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
-    container: {
-        display: 'flex',
-        flex: 1,
-        flexDirection: 'column',
-        maxHeight: 'calc(100vh - 60px)',
-        width: '1200px',
-        overflowY: 'scroll',
-        marginLeft: '1%',
-        marginTop: '1%',
-        [breakpoints.down('lg')]: {
-            maxHeight: 'calc(100vh - 120px)',
-            padding: 10
-        }
-    },
     updateButton: {
         height: 35,
         width: 100,
