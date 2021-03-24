@@ -11,10 +11,22 @@ import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as TESTMODEL from '../../db/composite/Model.setup';
 
+class JobData {
+    dbJobRun: DBAPI.JobRun;
+    eJobType: eVocabularyID;
+    testCase: string;
+    constructor(dbJobRun: DBAPI.JobRun, eJobType: eVocabularyID, testCase: string) {
+        this.dbJobRun = dbJobRun;
+        this.eJobType = eJobType;
+        this.testCase = testCase;
+    }
+}
+
 let jobEngine: IJobEngine | null = null;
 let modelTestAvailable: boolean | null = null;
 let MTS: TESTMODEL.ModelTestSetup | null = null;
 const JobSet: Set<IJob> = new Set<IJob>();
+const JobDataMap: Map<number, JobData> = new Map<number, JobData>();
 
 afterAll(async done => {
     await H.Helpers.sleep(5000);
@@ -39,20 +51,18 @@ describe('Job NS Cook Tests', () => {
     // confirm job output matches expectations
     // confirm DB job and jobrun are created and in correct state
     // test job cancellation
-    test('IJob.Cook si-packrat-inspect', async () => {
-        expect(await testCookExplicit('fbx-stand-alone', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
-        expect(await testCookImplicit('fbx-with-support', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
-        expect(await testCookExplicit('glb', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
-        expect(await testCookImplicit('obj', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
-        expect(await testCookExplicit('ply', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
-        expect(await testCookImplicit('stl', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
-        expect(await testCookImplicit('x3d', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
+    testCookExplicit('fbx-stand-alone', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    testCookImplicit('fbx-with-support', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    testCookExplicit('glb', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    testCookImplicit('obj', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    testCookExplicit('ply', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    testCookImplicit('stl', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    testCookImplicit('x3d', eVocabularyID.eJobJobTypeCookSIPackratInspect);
 
-        // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
-        // expect(await testCookExplicit('usd', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
-        // expect(await testCookImplicit('usdz', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
-        // expect(await testCookExplicit('wrl', eVocabularyID.eJobJobTypeCookSIPackratInspect)).toBeTruthy();
-    });
+    // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
+    // testCookExplicit('usd', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    // testCookImplicit('usdz', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    // testCookExplicit('wrl', eVocabularyID.eJobJobTypeCookSIPackratInspect);
 
     test('IJob.Cook invalid job IDs', async () => {
         // expected failures:
@@ -69,50 +79,94 @@ describe('Job NS Cook Tests', () => {
         for (const res of resultsArray)
             expect(res.success).toBeTruthy();
     });
+
+    test('IJob.Cook Job Results', async() => {
+        for (const job of JobSet) {
+            const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
+            expect(dbJobRun).toBeTruthy();
+            if (!dbJobRun)
+                continue;
+            expect(dbJobRun.Result).toBeTruthy();
+
+            const jobData: JobData | undefined = JobDataMap.get(dbJobRun.idJobRun);
+            expect(jobData).toBeTruthy();
+            if (!jobData)
+                continue;
+
+            const output: string | null = dbJobRun.Output;
+
+            switch (jobData.eJobType) {
+                case eVocabularyID.eJobJobTypeCookSIPackratInspect: {
+                    expect(output).toBeTruthy();
+                    const JCOutput: COOK.JobCookSIPackratInspectOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''));
+                    expect(JCOutput.success).toBeTruthy();
+
+                    const inspectJSON: string | undefined = MTS?.getTestCase(jobData.testCase)?.inspectJSON;
+                    expect(inspectJSON).toBeTruthy();
+                    expect(inspectJSON).toEqual(JSON.stringify(JCOutput));
+
+                    LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JSON.stringify(JCOutput)}`);
+                } break;
+
+                default:
+                    LOG.logger.error(`JobNS.test results encountered Unexpected Job Type: ${jobData.eJobType ? eVocabularyID[jobData.eJobType] : 'undefined'}`);
+                    expect(false).toBeTruthy();
+                    break;
+            }
+        }
+    });
 });
 
-async function testCookExplicit(testCase: string, eJobType: eVocabularyID): Promise<boolean> {
-    LOG.logger.info(`JobNS.test testCook('${testCase}): ${eVocabularyID[eJobType]} explicit IJob.executeJob`);
-    const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
-    expect(assetVersionIDs).toBeTruthy();
-    const parameters: any = computeJobParameters(testCase, eJobType);
-    expect(parameters).toBeTruthy();
+function testCookExplicit(testCase: string, eJobType: eVocabularyID): void {
+    test(`IJob.Cook ${eVocabularyID[eJobType]} ${testCase} Explicit`, async () => {
+        LOG.logger.info(`JobNS.test testCook('${testCase}): ${eVocabularyID[eJobType]} explicit IJob.executeJob`);
+        const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
+        expect(assetVersionIDs).toBeTruthy();
+        const parameters: any = computeJobParameters(testCase, eJobType);
+        expect(parameters).toBeTruthy();
 
-    const job: IJob | null = await testCreateByType(eJobType, assetVersionIDs, parameters, null, true);
-    expect(job).toBeTruthy();
-    if (!job)
-        return false;
+        const job: IJob | null = await testCreateByType(eJobType, assetVersionIDs, parameters, null, true);
+        expect(job).toBeTruthy();
+        if (!job)
+            return;
 
-    JobSet.add(job);
-    /*
-    const res: H.IOResults = await job.executeJob(new Date());
-    expect(res.success).toBeTruthy();
-    return res.success;
-    */
-    job.executeJob(new Date()); // don't use await ... instead, the main loop will wait for completion of all jobs
-    return true;
+        job.executeJob(new Date()); // don't use await ... instead, the main loop will wait for completion of all jobs
+
+        await recordJob(job, eJobType, testCase);
+    });
 }
 
-async function testCookImplicit(testCase: string, eJobType: eVocabularyID): Promise<boolean> {
-    LOG.logger.info(`JobNS.test testCook('${testCase}): ${eVocabularyID[eJobType]} implicit IJob.executeJob`);
-    const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
-    expect(assetVersionIDs).toBeTruthy();
-    const parameters: any = computeJobParameters(testCase, eJobType);
-    expect(parameters).toBeTruthy();
+function testCookImplicit(testCase: string, eJobType: eVocabularyID): void {
+    test(`IJob.Cook ${eVocabularyID[eJobType]} ${testCase} Implicit`, async () => {
+        LOG.logger.info(`JobNS.test testCook('${testCase}): ${eVocabularyID[eJobType]} implicit IJob.executeJob`);
+        const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
+        expect(assetVersionIDs).toBeTruthy();
+        const parameters: any = computeJobParameters(testCase, eJobType);
+        expect(parameters).toBeTruthy();
 
-    const idVJobType: number | undefined = await computeVocabularyDBID(eVocabularyID.eJobJobTypeCookSIPackratInspect);
-    const dbJobs: DBAPI.Job[] | null = await DBAPI.Job.fetchByType(idVJobType || 0);
-    expect(dbJobs).toBeTruthy();
-    if (!dbJobs || dbJobs.length != 1)
-        return false;
-    const idJob: number = dbJobs[0].idJob;
-    const job: IJob | null = await testCreateByID(idJob, assetVersionIDs, parameters, '', true); // schedule === '' -> run now
-    expect(job).toBeTruthy();
-    if (!job)
-        return false;
+        const idVJobType: number | undefined = await computeVocabularyDBID(eJobType);
+        const dbJobs: DBAPI.Job[] | null = await DBAPI.Job.fetchByType(idVJobType || 0);
+        expect(dbJobs).toBeTruthy();
+        if (!dbJobs || dbJobs.length != 1)
+            return;
+        const idJob: number = dbJobs[0].idJob;
+        const job: IJob | null = await testCreateByID(idJob, assetVersionIDs, parameters, '', true); // schedule === '' -> run now
+        expect(job).toBeTruthy();
+        if (!job)
+            return;
 
+        await recordJob(job, eJobType, testCase);
+    });
+}
+
+async function recordJob(job: IJob, eJobType: eVocabularyID, testCase: string): Promise<void> {
     JobSet.add(job);
-    return true;
+
+    const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
+    expect(dbJobRun).toBeTruthy();
+    expect(dbJobRun?.idJobRun).toBeTruthy();
+    if (dbJobRun && dbJobRun.idJobRun)
+        JobDataMap.set(dbJobRun.idJobRun, new JobData(dbJobRun, eJobType, testCase));
 }
 
 async function testCreateByID(idJob: number, idAssetVersions: number[] | undefined, parameters: any,

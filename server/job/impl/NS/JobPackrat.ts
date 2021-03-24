@@ -34,6 +34,10 @@ export abstract class JobPackrat implements JOB.IJob {
         await this.recordCancel(this._results.error);
         return this._results;
     }
+
+    async dbJobRun(): Promise<DBAPI.JobRun | null> {
+        return this._dbJobRun;
+    }
     // #endregion
 
     // #region JobPackrat interface
