@@ -33,7 +33,7 @@ afterAll(async done => {
     done();
 });
 
-describe('Job NS Init', () => {
+describe('JobNS Init', () => {
     test('JobFactory.getInstance', async () => {
         jest.setTimeout(350000);
         jobEngine = await JobFactory.getInstance(JOB_TYPE.NODE_SCHEDULE);
@@ -45,7 +45,11 @@ describe('Job NS Init', () => {
     });
 });
 
-describe('Job NS Cook Tests', () => {
+describe('JobNS Cook Tests', () => {
+    if (!modelTestAvailable) {
+        LOG.logger.info('JobNS Skipping Cook Tests, missing test models');
+        return;
+    }
     // create a set of test models matching JB's test data <-- this is a test object ... -> which has ingested asset versions
     // launch job by id and by type, for each of the test data
     // confirm job output matches expectations
