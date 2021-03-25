@@ -2,124 +2,114 @@
 import { IAuth, VerifyUserResult } from '../interface';
 import { Config, LDAPConfig } from '../../config';
 import * as LOG from '../../utils/logger';
-import ldap = require('ldapjs');
+import * as LDAP from 'ldapjs';
+
+type UserSearchResult = {
+    success: boolean;
+    error: string | null;
+    DN: string | null;
+};
 
 class LDAPAuth implements IAuth {
     async verifyUser(email: string, password: string): Promise<VerifyUserResult> {
         const ldapConfig: LDAPConfig = Config.auth.ldap;
-        let res: VerifyUserResult = { success: false, error: null };
 
-        //Step 1: Create a ldap client using server address
-        const client = ldap.createClient({
+        // Step 1: Create a ldap client using server address
+        const client: LDAP.Client = LDAP.createClient({
             url: ldapConfig.server
         });
 
-        //Step 2: Bind Packrat Service Account
-        const serviceBind: Promise<void> = new Promise<void>(function (resolve, reject) {
-            let ldapBind: string = ldapConfig.CN;
-            if (ldapBind)
-                ldapBind += `,${ldapConfig.OU}`;
-            if (ldapBind)
-                ldapBind += `,${ldapConfig.DC}`;
-            client.bind(ldapBind, ldapConfig.password, (error: any): void => {
-                if (error) {
-                    LOG.logger.error(`LDAPAuth.verifyUser serviceBind failed: ${JSON.stringify(error)}`);
-                    reject(error);
+        // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
+        client.on('error', error=> { LOG.logger.error('LDAPAuth.verifyUser', error); });
+
+        // Step 2: Bind Packrat Service Account
+        const res: VerifyUserResult = await this.bindService(client, ldapConfig);
+        if (!res.success)
+            return res;
+
+        // Step 3: Search for passed user by email
+        const resUserSearch: UserSearchResult = await this.searchForUser(client, ldapConfig, email);
+        if (!resUserSearch.success|| !resUserSearch.DN)
+            return resUserSearch;
+
+        //Step 4: If user is found, bind on their credentials
+        return await this.bindUser(client, resUserSearch.DN, email, password);
+    }
+
+    private async bindService(client: LDAP.Client, ldapConfig: LDAPConfig): Promise<VerifyUserResult> {
+        let ldapBind: string = ldapConfig.CN;
+        if (ldapBind)
+            ldapBind += `,${ldapConfig.OU}`;
+        if (ldapBind)
+            ldapBind += `,${ldapConfig.DC}`;
+        return new Promise<VerifyUserResult>(function(resolve) {
+            client.bind(ldapBind, ldapConfig.password, (err: any): void => {
+                if (err) {
+                    LOG.logger.error(`LDAPAuth.bindService failed: ${JSON.stringify(err)}`);
+                    resolve({ success: false, error: 'Unable to connect to LDAP server' });
                 } else
-                    resolve();
+                    resolve({ success: true, error: '' });
             });
         });
+    }
 
-        let failCheck: boolean = true;
-
-        await serviceBind.catch((error: any) => {
-            failCheck = false;
-            res = { success: false, error };
-        });
-
-        serviceBind.then(() => {});
-
-        if (!failCheck) {
-            return res;
-        }
-
-        //LDAP Search Options
-        const opts = {
-            filter: '(mail=' + email + ')', // (Searches on mail value)
+    private async searchForUser(client: LDAP.Client, ldapConfig: LDAPConfig, email: string): Promise<UserSearchResult> {
+        // LDAP Search Options
+        const searchOptions: LDAP.SearchOptions = {
             scope: 'sub',
+            filter: '(mail=' + email + ')', // (Searches on mail value)
+            attributes: ['cn'] ,// return cn value
+            sizeLimit: 1, // return only one result
             paged: true,
-            sizeLimit: 1, //return only one result
-            attributes: ['cn'] //return cn value
         };
 
-        let DN: string = ''; // DN used to bind user
         let searchComplete: boolean = false;
 
-        //Step 3: Search for passed user by email
-        const searchPromise: Promise<any> = new Promise<any>(function (resolve, reject) {
-            client.search(ldapConfig.DC, opts, (error: any, res: any): void => {
-                if (error)
-                    LOG.logger.error(`LDAPAuth.verifyUser unable to locate ${email}`);
+        return new Promise<UserSearchResult>(function(resolve) {
+            client.search(ldapConfig.DC, searchOptions, (err: any, res: LDAP.SearchCallbackResponse): void => {
+                if (err) {
+                    const error: string = `Unable to locate ${email}`;
+                    LOG.logger.error(`LDAPAuth.searchForUser ${error}`);
+                    resolve({ success: false, error, DN: null });
+                }
 
                 res.on('searchEntry', (entry: any) => {
-                    LOG.logger.info(`LDAPAuth.verifyUser search found user ${email}`);
+                    LOG.logger.info(`LDAPAuth.searchForUser found ${email}: ${JSON.stringify(entry.objectName)}`);
                     searchComplete = true;
-                    resolve(entry.objectName);
+                    resolve({ success: true, error: '', DN: entry.objectName });
                 });
 
-                res.on('error', (error: any) => {
-                    LOG.logger.error(`LDAPAuth.verifyUser search failed: ${JSON.stringify(error)}`);
-                    reject(error);
+                res.on('error', (err: any) => {
+                    err;
+                    const error: string = `Unable to locate ${email}`;
+                    LOG.logger.error(`LDAPAuth.searchForUser ${error}`);
+                    resolve({ success: false, error, DN: null });
                 });
 
                 res.on('end', (result: any) => {
                     if (!searchComplete) {
-                        LOG.logger.error(`LDAPAuth.verifyUser search failed: ${JSON.stringify(result)}`);
-                        reject(`User not found: ${email}`);
+                        result;
+                        const error: string = `Unable to locate ${email}`;
+                        LOG.logger.error(`LDAPAuth.searchForUser ${error}`);
+                        resolve({ success: false, error, DN: null });
                     }
                 });
             });
         });
+    }
 
-        await searchPromise.catch((error: any) => {
-            failCheck = false;
-            res = { success: false, error };
-        });
-
-        if (!failCheck) {
-            return res;
-        }
-
-        await searchPromise.then((response: any) => {
-            DN = response;
-            LOG.logger.info(`LDAPAuth.verifyUser userBind: ${JSON.stringify(DN)}`);
-        });
-
-        //Step 4: If user is found, bind on their credentials
-        const userBind: Promise<void> = new Promise<void>(function (resolve, reject) {
-            client.bind(DN, password, (error: any): void => {
-                if (error) {
-                    LOG.logger.error(`LDAPAuth.verifyUser invalid password for ${email}`);
-                    reject(error);
+    private async bindUser(client: LDAP.Client, DN: string, email: string, password: string): Promise<VerifyUserResult> {
+        return new Promise<VerifyUserResult>(function(resolve) {
+            client.bind(DN, password, (err: any): void => {
+                if (err) {
+                    err;
+                    const error: string = `Invalid password for ${email}`;
+                    LOG.logger.error(`LDAPAuth.bindUser ${error}`);
+                    resolve({ success: false, error });
                 } else
-                    resolve();
+                    resolve({ success: true, error: '' });
             });
         });
-
-        await userBind.catch((error: any) => {
-            failCheck = false;
-            res = { success: false, error };
-        });
-
-        if (!failCheck)
-            return { success: false, error: `Invalid password for ${email}` };
-
-        await userBind.then(async () => {
-            LOG.logger.info(`LDAPAuth.verifyUser valid LDAP login for ${email}`);
-            res = { success: true, error: null };
-        });
-
-        return res;
     }
 }
 
