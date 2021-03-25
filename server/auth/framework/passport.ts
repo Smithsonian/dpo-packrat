@@ -1,6 +1,5 @@
 import PassportLocal from 'passport-local';
 import passport from 'passport';
-import { User } from '../../db';
 import * as DBAPI from '../../db';
 import { AuthFactory, VerifiedUser } from '../interface';
 
@@ -21,13 +20,14 @@ const Strategy = new PassportLocal.Strategy(options, verifyFunction);
 
 passport.use(Strategy);
 
-passport.serializeUser((user: User, done) => {
-    if (!user) return done('Invalid user');
+passport.serializeUser((user: DBAPI.User, done) => {
+    if (!user)
+        return done('Invalid user');
     done(null, user.idUser);
 });
 
 passport.deserializeUser(async (id: number, done) => {
-    const user = await DBAPI.User.fetch(id);
+    const user: DBAPI.User | null = await DBAPI.User.fetch(id);
     done(null, user);
 });
 
