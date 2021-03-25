@@ -1,12 +1,10 @@
-import { User } from '../../db';
-
-type VerifiedUser = {
-    user: User | null;
+export type VerifyUserResult = {
+    success: boolean;
     error: string | null;
 };
 
-interface IAuth {
-    verifyUser: (email: string, password: string) => Promise<VerifiedUser>;
+export interface IAuth {
+    verifyUser: (email: string, password: string) => Promise<VerifyUserResult>;
 }
 
-export { IAuth as default, VerifiedUser };
+export { IAuth as default };
