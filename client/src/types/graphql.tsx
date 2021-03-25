@@ -42,12 +42,14 @@ export type Query = {
   getObjectsForItem: GetObjectsForItemResult;
   getProject: GetProjectResult;
   getProjectDocumentation: GetProjectDocumentationResult;
+  getProjectList: GetProjectListResult;
   getScene: GetSceneResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
+  getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
   getVersionsForSystemObject: GetVersionsForSystemObjectResult;
@@ -163,6 +165,11 @@ export type QueryGetProjectDocumentationArgs = {
 };
 
 
+export type QueryGetProjectListArgs = {
+  input: GetProjectListInput;
+};
+
+
 export type QueryGetSceneArgs = {
   input: GetSceneInput;
 };
@@ -190,6 +197,11 @@ export type QueryGetSystemObjectDetailsArgs = {
 
 export type QueryGetUnitArgs = {
   input: GetUnitInput;
+};
+
+
+export type QueryGetUnitsFromNameSearchArgs = {
+  input: GetUnitsFromNameSearchInput;
 };
 
 
@@ -1571,6 +1583,15 @@ export type GetVersionsForSystemObjectResult = {
   versions: Array<DetailVersion>;
 };
 
+export type GetProjectListResult = {
+  __typename?: 'GetProjectListResult';
+  projects: Array<Project>;
+};
+
+export type GetProjectListInput = {
+  search: Scalars['String'];
+};
+
 export type SystemObject = {
   __typename?: 'SystemObject';
   idSystemObject: Scalars['Int'];
@@ -1808,6 +1829,15 @@ export type GetItemInput = {
 export type GetItemResult = {
   __typename?: 'GetItemResult';
   Item?: Maybe<Item>;
+};
+
+export type GetUnitsFromNameSearchResult = {
+  __typename?: 'GetUnitsFromNameSearchResult';
+  Units: Array<Unit>;
+};
+
+export type GetUnitsFromNameSearchInput = {
+  search: Scalars['String'];
 };
 
 export type Unit = {
@@ -2249,6 +2279,10 @@ export type CreateProjectMutation = (
     & { Project?: Maybe<(
       { __typename?: 'Project' }
       & Pick<Project, 'idProject'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -2281,6 +2315,10 @@ export type CreateUnitMutation = (
     & { Unit?: Maybe<(
       { __typename?: 'Unit' }
       & Pick<Unit, 'idUnit'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -2700,6 +2738,26 @@ export type GetDetailsTabDataForObjectQuery = (
   ) }
 );
 
+export type GetProjectListQueryVariables = Exact<{
+  input: GetProjectListInput;
+}>;
+
+
+export type GetProjectListQuery = (
+  { __typename?: 'Query' }
+  & { getProjectList: (
+    { __typename?: 'GetProjectListResult' }
+    & { projects: Array<(
+      { __typename?: 'Project' }
+      & Pick<Project, 'idProject' | 'Name'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
+    )> }
+  ) }
+);
+
 export type GetSourceObjectIdentiferQueryVariables = Exact<{
   input: GetSourceObjectIdentiferInput;
 }>;
@@ -2874,6 +2932,10 @@ export type GetProjectQuery = (
     & { Project?: Maybe<(
       { __typename?: 'Project' }
       & Pick<Project, 'idProject'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -2938,6 +3000,26 @@ export type GetUnitQuery = (
     & { Unit?: Maybe<(
       { __typename?: 'Unit' }
       & Pick<Unit, 'idUnit'>
+    )> }
+  ) }
+);
+
+export type GetUnitsFromNameSearchQueryVariables = Exact<{
+  input: GetUnitsFromNameSearchInput;
+}>;
+
+
+export type GetUnitsFromNameSearchQuery = (
+  { __typename?: 'Query' }
+  & { getUnitsFromNameSearch: (
+    { __typename?: 'GetUnitsFromNameSearchResult' }
+    & { Units: Array<(
+      { __typename?: 'Unit' }
+      & Pick<Unit, 'idUnit' | 'Name' | 'Abbreviation'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -3372,6 +3454,9 @@ export const CreateProjectDocument = gql`
   createProject(input: $input) {
     Project {
       idProject
+      SystemObject {
+        idSystemObject
+      }
     }
   }
 }
@@ -3442,6 +3527,9 @@ export const CreateUnitDocument = gql`
   createUnit(input: $input) {
     Unit {
       idUnit
+      SystemObject {
+        idSystemObject
+      }
     }
   }
 }
@@ -4450,6 +4538,45 @@ export function useGetDetailsTabDataForObjectLazyQuery(baseOptions?: Apollo.Lazy
 export type GetDetailsTabDataForObjectQueryHookResult = ReturnType<typeof useGetDetailsTabDataForObjectQuery>;
 export type GetDetailsTabDataForObjectLazyQueryHookResult = ReturnType<typeof useGetDetailsTabDataForObjectLazyQuery>;
 export type GetDetailsTabDataForObjectQueryResult = Apollo.QueryResult<GetDetailsTabDataForObjectQuery, GetDetailsTabDataForObjectQueryVariables>;
+export const GetProjectListDocument = gql`
+    query getProjectList($input: GetProjectListInput!) {
+  getProjectList(input: $input) {
+    projects {
+      idProject
+      Name
+      SystemObject {
+        idSystemObject
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetProjectListQuery__
+ *
+ * To run a query within a React component, call `useGetProjectListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetProjectListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetProjectListQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetProjectListQuery(baseOptions?: Apollo.QueryHookOptions<GetProjectListQuery, GetProjectListQueryVariables>) {
+        return Apollo.useQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, baseOptions);
+      }
+export function useGetProjectListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetProjectListQuery, GetProjectListQueryVariables>) {
+          return Apollo.useLazyQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, baseOptions);
+        }
+export type GetProjectListQueryHookResult = ReturnType<typeof useGetProjectListQuery>;
+export type GetProjectListLazyQueryHookResult = ReturnType<typeof useGetProjectListLazyQuery>;
+export type GetProjectListQueryResult = Apollo.QueryResult<GetProjectListQuery, GetProjectListQueryVariables>;
 export const GetSourceObjectIdentiferDocument = gql`
     query getSourceObjectIdentifer($input: GetSourceObjectIdentiferInput!) {
   getSourceObjectIdentifer(input: $input) {
@@ -4828,6 +4955,9 @@ export const GetProjectDocument = gql`
   getProject(input: $input) {
     Project {
       idProject
+      SystemObject {
+        idSystemObject
+      }
     }
   }
 }
@@ -5009,6 +5139,46 @@ export function useGetUnitLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ge
 export type GetUnitQueryHookResult = ReturnType<typeof useGetUnitQuery>;
 export type GetUnitLazyQueryHookResult = ReturnType<typeof useGetUnitLazyQuery>;
 export type GetUnitQueryResult = Apollo.QueryResult<GetUnitQuery, GetUnitQueryVariables>;
+export const GetUnitsFromNameSearchDocument = gql`
+    query getUnitsFromNameSearch($input: GetUnitsFromNameSearchInput!) {
+  getUnitsFromNameSearch(input: $input) {
+    Units {
+      idUnit
+      Name
+      Abbreviation
+      SystemObject {
+        idSystemObject
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetUnitsFromNameSearchQuery__
+ *
+ * To run a query within a React component, call `useGetUnitsFromNameSearchQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetUnitsFromNameSearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetUnitsFromNameSearchQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetUnitsFromNameSearchQuery(baseOptions?: Apollo.QueryHookOptions<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>) {
+        return Apollo.useQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, baseOptions);
+      }
+export function useGetUnitsFromNameSearchLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>) {
+          return Apollo.useLazyQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, baseOptions);
+        }
+export type GetUnitsFromNameSearchQueryHookResult = ReturnType<typeof useGetUnitsFromNameSearchQuery>;
+export type GetUnitsFromNameSearchLazyQueryHookResult = ReturnType<typeof useGetUnitsFromNameSearchLazyQuery>;
+export type GetUnitsFromNameSearchQueryResult = Apollo.QueryResult<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>;
 export const SearchIngestionSubjectsDocument = gql`
     query searchIngestionSubjects($input: SearchIngestionSubjectsInput!) {
   searchIngestionSubjects(input: $input) {

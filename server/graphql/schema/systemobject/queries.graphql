@@ -6,6 +6,7 @@ type Query {
     getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
     getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
     getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
+    getProjectList(input: GetProjectListInput!): GetProjectListResult!
 }
 
 input GetDetailsTabDataForObjectInput {
@@ -89,14 +90,14 @@ type ModelDetailFields {
     countFace: Int
     countColorChannel: Int
     countTextureCoorinateChannel: Int
-	hasBones: Boolean
-	hasFaceNormals: Boolean
-	hasTangents: Boolean
-	hasTextureCoordinates: Boolean
-	hasVertexNormals: Boolean
-	hasVertexColor: Boolean
-	isManifold: Boolean
-	isWatertight: Boolean
+    hasBones: Boolean
+    hasFaceNormals: Boolean
+    hasTangents: Boolean
+    hasTextureCoordinates: Boolean
+    hasVertexNormals: Boolean
+    hasVertexColor: Boolean
+    isManifold: Boolean
+    isWatertight: Boolean
 }
 
 type SceneDetailFields {
@@ -230,4 +231,12 @@ input GetVersionsForSystemObjectInput {
 
 type GetVersionsForSystemObjectResult {
     versions: [DetailVersion!]!
+}
+
+type GetProjectListResult {
+    projects: [Project!]!
+}
+
+input GetProjectListInput {
+    search: String!
 }

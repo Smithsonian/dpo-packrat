@@ -22,12 +22,14 @@ type Query {
   getObjectsForItem(input: GetObjectsForItemInput!): GetObjectsForItemResult!
   getProject(input: GetProjectInput!): GetProjectResult!
   getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
+  getProjectList(input: GetProjectListInput!): GetProjectListResult!
   getScene(input: GetSceneInput!): GetSceneResult!
   getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
   getSubject(input: GetSubjectInput!): GetSubjectResult!
   getSubjectsForUnit(input: GetSubjectsForUnitInput!): GetSubjectsForUnitResult!
   getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
   getUnit(input: GetUnitInput!): GetUnitResult!
+  getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput!): GetUnitsFromNameSearchResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
   getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
@@ -1224,6 +1226,14 @@ type GetVersionsForSystemObjectResult {
   versions: [DetailVersion!]!
 }
 
+type GetProjectListResult {
+  projects: [Project!]!
+}
+
+input GetProjectListInput {
+  search: String!
+}
+
 type SystemObject {
   idSystemObject: Int!
   Retired: Boolean!
@@ -1441,6 +1451,14 @@ input GetItemInput {
 
 type GetItemResult {
   Item: Item
+}
+
+type GetUnitsFromNameSearchResult {
+  Units: [Unit!]!
+}
+
+input GetUnitsFromNameSearchInput {
+  search: String!
 }
 
 type Unit {

@@ -123,7 +123,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
 
     static async fetchFromNameSearch(search: string): Promise<Unit[] | null> {
         if (!search)
-            return null;
+            return this.fetchAll();
         try {
             return DBC.CopyArray<UnitBase, Unit>(
                 await DBC.DBConnection.prisma.unit.findMany({ where: { OR: [
