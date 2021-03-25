@@ -15,7 +15,6 @@ import { generateRepositoryUrl } from '../../utils/repository';
 import { Selectors } from '../../config';
 import { HOME_ROUTES, resolveRoute, ROUTES } from '../../constants';
 import { useRepositoryStore, useUserStore } from '../../store';
-import { eMetadata, eSystemObjectType } from '../../types/server';
 import { Colors } from '../../theme';
 
 const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => ({
@@ -135,19 +134,6 @@ function Header(): React.ReactElement {
     const onSearch = (): void => {
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
         resetRepositoryFilter();
-        document.cookie = `filterSelections=${JSON.stringify({
-            repositoryRootType: [eSystemObjectType.eUnit],
-            objectsToDisplay: [],
-            metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
-            units: [],
-            projects: [],
-            has: [],
-            missing: [],
-            captureMethod: [],
-            variantType: [],
-            modelPurpose: [],
-            modelFileType: []
-        })}`;
         history.push(route);
     };
 
