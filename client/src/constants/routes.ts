@@ -57,7 +57,11 @@ export const ADMIN_EDIT_USER = {
 export const ADMIN_ROUTES_TYPE = {
     USERS: 'users',
     EDIT: ADMIN_EDIT_USER,
-    USER: 'user'
+    USER: 'user',
+    PROJECTS: 'projects',
+    UNITS: 'units',
+    CREATEPROJECT: 'projects/create',
+    CREATEUNIT: 'units/create'
 };
 
 export const ADMIN_ROUTE = {

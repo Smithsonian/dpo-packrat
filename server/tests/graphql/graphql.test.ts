@@ -29,6 +29,8 @@ import getProjectDocumentationTest from './queries/unit/getProjectDocumentation.
 import getIntermediaryFileTest from './queries/scene/getIntermediaryFile.test';
 import getSourceObjectIdentiferTest from './queries/systemobject/getSourceObjectIdentifer.test';
 import getSystemObjectDetailsTest from './queries/systemobject/getSystemObjectDetails.test';
+import getProjectListTest from './queries/project/getProjectList.test';
+import getUnitsFromNameSearchTest from './queries/unit/getUnitsFromNameSearch.test';
 
 /* Mutations */
 import createCaptureDataTest from './mutations/capturedata/createCaptureData.test';
@@ -77,6 +79,8 @@ describe('GraphQL Test Suite', () => {
     getIntermediaryFileTest(utils);
     getSourceObjectIdentiferTest(utils);
     getSystemObjectDetailsTest(utils);
+    getProjectListTest(utils);
+    getUnitsFromNameSearchTest(utils);
 
     // Mutations
     createCaptureDataTest(utils);

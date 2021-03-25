@@ -10,6 +10,7 @@ type Query {
     getProjectDocumentation(input: GetProjectDocumentationInput!): GetProjectDocumentationResult!
     getSubject(input: GetSubjectInput!): GetSubjectResult!
     getItem(input: GetItemInput!): GetItemResult!
+    getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput!): GetUnitsFromNameSearchResult!
 }
 
 input GetSubjectsForUnitInput {
@@ -112,4 +113,12 @@ input GetItemInput {
 
 type GetItemResult {
     Item: Item
+}
+
+type GetUnitsFromNameSearchResult {
+    Units: [Unit!]!
+}
+
+input GetUnitsFromNameSearchInput {
+    search: String!
 }

@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * DetailsHeader
  *
@@ -26,7 +28,7 @@ const useStyles = makeStyles(({ palette }) => ({
         marginRight: 20,
         color: palette.primary.dark,
         border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
-        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
+        backgroundColor: (updated: boolean) => (updated ? palette.secondary.light : palette.background.paper),
         fontSize: '0.8em'
     }
 }));
@@ -54,18 +56,12 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
                 <title>{title}</title>
             </Helmet>
             <Box display='flex' mr={4}>
-                <Typography className={classes.header} variant='h5'>{getTermForSystemObjectType(objectType)}</Typography>
+                <Typography className={classes.header} variant='h5'>
+                    {getTermForSystemObjectType(objectType)}
+                </Typography>
             </Box>
             <Box mr={4}>
-                <DebounceInput
-                    element='input'
-                    disabled={disabled}
-                    value={name || ''}
-                    className={classes.name}
-                    name='name'
-                    onChange={onNameUpdate}
-                    debounceTimeout={400}
-                />
+                <DebounceInput element='input' disabled={disabled} value={name || ''} className={classes.name} name='name' onChange={onNameUpdate} debounceTimeout={400} />
             </Box>
             <Box display='flex' flex={1} justifyContent='flex-end'>
                 {!!path.length && <BreadcrumbsView highlighted items={path} />}

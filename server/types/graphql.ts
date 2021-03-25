@@ -39,12 +39,14 @@ export type Query = {
   getObjectsForItem: GetObjectsForItemResult;
   getProject: GetProjectResult;
   getProjectDocumentation: GetProjectDocumentationResult;
+  getProjectList: GetProjectListResult;
   getScene: GetSceneResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
   getSystemObjectDetails: GetSystemObjectDetailsResult;
   getUnit: GetUnitResult;
+  getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
   getVersionsForSystemObject: GetVersionsForSystemObjectResult;
@@ -160,6 +162,11 @@ export type QueryGetProjectDocumentationArgs = {
 };
 
 
+export type QueryGetProjectListArgs = {
+  input: GetProjectListInput;
+};
+
+
 export type QueryGetSceneArgs = {
   input: GetSceneInput;
 };
@@ -187,6 +194,11 @@ export type QueryGetSystemObjectDetailsArgs = {
 
 export type QueryGetUnitArgs = {
   input: GetUnitInput;
+};
+
+
+export type QueryGetUnitsFromNameSearchArgs = {
+  input: GetUnitsFromNameSearchInput;
 };
 
 
@@ -1568,6 +1580,15 @@ export type GetVersionsForSystemObjectResult = {
   versions: Array<DetailVersion>;
 };
 
+export type GetProjectListResult = {
+  __typename?: 'GetProjectListResult';
+  projects: Array<Project>;
+};
+
+export type GetProjectListInput = {
+  search: Scalars['String'];
+};
+
 export type SystemObject = {
   __typename?: 'SystemObject';
   idSystemObject: Scalars['Int'];
@@ -1805,6 +1826,15 @@ export type GetItemInput = {
 export type GetItemResult = {
   __typename?: 'GetItemResult';
   Item?: Maybe<Item>;
+};
+
+export type GetUnitsFromNameSearchResult = {
+  __typename?: 'GetUnitsFromNameSearchResult';
+  Units: Array<Unit>;
+};
+
+export type GetUnitsFromNameSearchInput = {
+  search: Scalars['String'];
 };
 
 export type Unit = {

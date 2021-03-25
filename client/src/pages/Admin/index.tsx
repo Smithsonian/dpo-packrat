@@ -3,16 +3,21 @@
  *
  * This component renders Admin UI and all the sub-components
  * The structure is as follows:
+ *
  * Admin
  * - AdminSidebarMenu
  * - AdminUserForm
  * - AdminUsersView
  * -- AdminUsersFilter
  * -- AdminUsersList
- *
- * Current implementation has AdminUsersView make request for user
- * information and then pass the list + AdminUsersFilter terms down to
- * AdminUsersList.
+ * - AdminProjectsView
+ * -- AdminProjectsFilter
+ * -- AdminProjectsList
+ * - AdminUnitsView
+ * -- AdminUnitsFilter
+ * -- AdminUnitsList
+ * - AddProjectForm
+ * - AddUnitForm
  *
  */
 import React from 'react';
@@ -24,6 +29,10 @@ import { Redirect } from 'react-router';
 import AdminUsersView from './components/AdminUsersView';
 import AdminUserForm from './components/AdminUserForm';
 import AdminSidebarMenu from './components/AdminSidebarMenu';
+import AdminProjectsView from './components/AdminProjectsView';
+import AdminUnitsView from './components/AdminUnitsView';
+import AddUnitForm from './components/AddUnitForm';
+import AddProjectForm from './components/AddProjectForm';
 
 const useStyles = makeStyles({
     AdminPageContainer: {
@@ -50,6 +59,14 @@ function Admin(): React.ReactElement {
                     <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.USER)}>
                         <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_EDIT_USER.USER)} component={AdminUserForm} />
                     </PrivateRoute>
+                    <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.PROJECTS)}>
+                        <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.CREATEPROJECT)} component={AddProjectForm} />
+                    </PrivateRoute>
+                    <PrivateRoute path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTES_TYPE.UNITS)}>
+                        <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.CREATEUNIT)} component={AddUnitForm} />
+                    </PrivateRoute>
+                    <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.PROJECTS)} component={AdminProjectsView} />
+                    <PrivateRoute exact path={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.UNITS)} component={AdminUnitsView} />
                 </PrivateRoute>
             </Box>
         </React.Fragment>
