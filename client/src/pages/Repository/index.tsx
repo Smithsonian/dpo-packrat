@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+
 /**
  * Repository
  *
@@ -36,6 +37,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
 
 export type RepositoryFilter = {
     search: string;
+    enteredSearch: string;
     repositoryRootType: eSystemObjectType[];
     objectsToDisplay: eSystemObjectType[];
     metadataToDisplay: eMetadata[];
@@ -71,6 +73,7 @@ function TreeViewPage(): React.ReactElement {
     const location = useLocation();
     const {
         search,
+        enteredSearch,
         repositoryRootType,
         objectsToDisplay,
         metadataToDisplay,
@@ -90,6 +93,7 @@ function TreeViewPage(): React.ReactElement {
     const filterState: RepositoryFilter = React.useMemo(
         () => ({
             search,
+            enteredSearch,
             repositoryRootType,
             objectsToDisplay,
             metadataToDisplay,
@@ -102,10 +106,10 @@ function TreeViewPage(): React.ReactElement {
             modelPurpose,
             modelFileType
         }),
-        [search, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
+        [search, enteredSearch, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
     );
 
-    const resetFilterSelectionsCookie = () => {
+    const setDefaultFilterSelectionsCookie = () => {
         document.cookie = `filterSelections=${JSON.stringify({
             repositoryRootType: [eSystemObjectType.eUnit],
             objectsToDisplay: [],
@@ -121,19 +125,20 @@ function TreeViewPage(): React.ReactElement {
         })}`;
     };
 
+    /* 
+        Sets up a default cookie if no filterSelection cookie exists.
+        If a filterSelection cookie exists, component will read that 
+        and generate URL and state based on cookie.
+    */
     let cookieFilterSelections;
-    let cookie: string = document?.cookie;
-    if (cookie.length) {
-        cookieFilterSelections = cookie.split(';');
-        cookieFilterSelections = cookieFilterSelections.find(row => row.trim().startsWith('filterSelections'));
-        if (cookieFilterSelections) {
-            cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
-        } else {
-            resetFilterSelectionsCookie();
+    (function setRepositoryViewCookies() {
+        if (!document.cookie.length || document.cookie.indexOf('filterSelections') === -1) {
+            setDefaultFilterSelectionsCookie();
         }
-    } else {
-        resetFilterSelectionsCookie();
-    }
+        cookieFilterSelections = document.cookie.split(';');
+        cookieFilterSelections = cookieFilterSelections.find(entry => entry.trim().startsWith('filterSelections'));
+        cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
+    })();
 
     const initialFilterState = Object.keys(queries).length ? queries : cookieFilterSelections;
 
