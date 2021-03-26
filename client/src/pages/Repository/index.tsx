@@ -147,7 +147,6 @@ function TreeViewPage(): React.ReactElement {
         updateRepositoryFilter(initialFilterState);
     }, [updateRepositoryFilter]);
 
-    // generateRepositoryUrl should take in the keyword string instead of
     useEffect(() => {
         const newRepositoryFilterState: any = {
             search,

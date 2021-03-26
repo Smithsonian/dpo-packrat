@@ -45,8 +45,8 @@ export const treeRootKey: string = 'root';
 
 export const useRepositoryStore = create<RepositoryStore>((set: SetState<RepositoryStore>, get: GetState<RepositoryStore>) => ({
     isExpanded: true,
-    search: '',
     // keyword is the text within input. search is the actual term used for searching
+    search: '',
     keyword: '',
     tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
     loading: true,
@@ -179,7 +179,6 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         };
 
         set(stateValues);
-        //new feature;
         setCookieToState();
     },
     getFilterState: (): RepositoryFilter => {
