@@ -37,7 +37,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
 
 export type RepositoryFilter = {
     search: string;
-    enteredSearch: string;
+    keyword: string;
     repositoryRootType: eSystemObjectType[];
     objectsToDisplay: eSystemObjectType[];
     metadataToDisplay: eMetadata[];
@@ -73,7 +73,7 @@ function TreeViewPage(): React.ReactElement {
     const location = useLocation();
     const {
         search,
-        enteredSearch,
+        keyword,
         repositoryRootType,
         objectsToDisplay,
         metadataToDisplay,
@@ -93,7 +93,7 @@ function TreeViewPage(): React.ReactElement {
     const filterState: RepositoryFilter = React.useMemo(
         () => ({
             search,
-            enteredSearch,
+            keyword,
             repositoryRootType,
             objectsToDisplay,
             metadataToDisplay,
@@ -106,7 +106,7 @@ function TreeViewPage(): React.ReactElement {
             modelPurpose,
             modelFileType
         }),
-        [search, enteredSearch, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
+        [search, keyword, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
     );
 
     const setDefaultFilterSelectionsCookie = () => {
@@ -146,8 +146,24 @@ function TreeViewPage(): React.ReactElement {
         updateRepositoryFilter(initialFilterState);
     }, [updateRepositoryFilter]);
 
+    // generateRepositoryUrl should take in the keyword string instead of
     useEffect(() => {
-        const route = generateRepositoryUrl(filterState) || generateRepositoryUrl(cookieFilterSelections);
+        const newRepositoryFilterState: any = {
+            search,
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        };
+
+        const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
         history.push(route);
     }, [history, filterState]);
 
