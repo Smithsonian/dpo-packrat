@@ -96,8 +96,10 @@ type ModelDetailFields {
     hasTextureCoordinates: Boolean
     hasVertexNormals: Boolean
     hasVertexColor: Boolean
-    isManifold: Boolean
+    isTwoManifoldUnbounded: Boolean
+    isTwoManifoldBounded: Boolean
     isWatertight: Boolean
+    selfIntersecting: Boolean
 }
 
 type SceneDetailFields {

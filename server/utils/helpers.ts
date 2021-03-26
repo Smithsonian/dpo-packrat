@@ -423,4 +423,16 @@ export class Helpers {
         const year = date.getFullYear();
         return year + '-' + month + '-' + dayOfMonth;
     }
+
+    static safeNumber(value: any): number | null {
+        if (value == null)
+            return null;
+        return parseInt(value);
+    }
+
+    static safeBoolean(value: any): boolean | null {
+        if (value == null)
+            return null;
+        return value ? true : false;
+    }
 }

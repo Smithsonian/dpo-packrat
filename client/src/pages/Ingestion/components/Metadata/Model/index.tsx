@@ -247,10 +247,13 @@ function Model(props: ModelProps): React.ReactElement {
                             name='faceCount'
                             onChange={setIdField}
                         />
+                        <CheckboxField name='isTwoManifoldUnbounded' label='Is Two Manifold Unbounded?' value={model.isTwoManifoldUnbounded} onChange={setCheckboxField} />
+                        <CheckboxField name='isTwoManifoldBounded' label='Is Two Manifold Bounded?' value={model.isTwoManifoldBounded} onChange={setCheckboxField} />
                         <CheckboxField name='isWatertight' label='Is Watertight?' value={model.isWatertight} onChange={setCheckboxField} />
                         <CheckboxField name='hasNormals' label='Has Normals?' value={model.hasNormals} onChange={setCheckboxField} />
                         <CheckboxField name='hasVertexColor' label='Has Vertex Color?' value={model.hasVertexColor} onChange={setCheckboxField} />
                         <CheckboxField name='hasUVSpace' label='Has UV Space?' value={model.hasUVSpace} onChange={setCheckboxField} />
+                        <CheckboxField name='selfIntersecting' label='Self Intersecting?' value={model.selfIntersecting} onChange={setCheckboxField} />
                         <BoundingBoxInput
                             boundingBoxP1X={model.boundingBoxP1X}
                             boundingBoxP1Y={model.boundingBoxP1Y}

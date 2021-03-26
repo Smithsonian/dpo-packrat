@@ -140,8 +140,10 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 HasTextureCoordinates: JCStat.hasTexCoords,
                 HasVertexNormals: JCStat.hasVertexNormals,
                 HasVertexColor: JCStat.hasVertexColors,
-                IsManifold: JCStat.isTwoManifoldBounded || JCStat.isTwoManifoldUnbounded,
+                IsTwoManifoldUnbounded: JCStat.isTwoManifoldUnbounded,
+                IsTwoManifoldBounded: JCStat.isTwoManifoldBounded,
                 IsWatertight: JCStat.isWatertight,
+                SelfIntersecting: JCStat.selfIntersecting,
             });
 
             JCOutput.modelObjects.push(new DBAPI.ModelObject({
@@ -168,26 +170,56 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
                 if (material.channels && isArray(material.channels)) {
                     for (const channel of material.channels) {
+                        let materialType: string | null = null;
+                        let materialTypeV: DBAPI.Vocabulary | undefined = undefined;
+                        let UVMapEmbedded: boolean = false;
+                        let materialUri: string | null = null;
+                        let scalars: number[] | null | undefined = null;
+                        const AddAttributes: string[] = [];
 
-                        const materialType: string | null = maybeString(channel?.type);
-                        const materialTypeV: DBAPI.Vocabulary | undefined = materialType
-                            ? await CACHE.VocabularyCache.mapModelChannelMaterialType(materialType) : undefined;
+                        // iterate across object properties, extract those of interest; stuff the rest in AdditionalAttributes
+                        for (const [key, value] of Object.entries(channel)) {
+                            // LOG.logger.info(`JobCookSIPackratInspect.extract channel ${key}: ${JSON.stringify(value)}`);
+                            switch (key) {
+                                case 'type':
+                                    materialType = maybeString(value);
+                                    materialTypeV = materialType ? await CACHE.VocabularyCache.mapModelChannelMaterialType(materialType) : undefined;
+                                    break;
 
-                        const materialUri: string | null = maybeString(channel?.uri);
-                        const materialValue: string | null = maybeString(channel?.value); // preferred over color
-                        const materialColor: string | null = maybeString(channel?.color);
-                        let scalars: number[] | null | undefined = materialValue
-                            ? materialValue.replace(/ /g, '').split(',').map(x => +x)
-                            : materialColor?.replace(/ /g, '').split(',').map(x => +x);
-                        if (!scalars) {
-                            if (typeof(channel?.value) === 'number')
-                                scalars = [channel.value];
-                            else if (typeof(channel?.color) === 'number')
-                                scalars = [channel.color];
+                                case 'uri':
+                                    materialUri = maybeString(value);
+                                    if (materialUri) {
+                                        // detect and handle UV Maps embedded in the geometry file:
+                                        if (materialUri.toLowerCase().startsWith('embedded*')) {
+                                            materialUri = null;
+                                            UVMapEmbedded = true;
+                                        } else
+                                            JCOutput.uvMaps.set(++idModelMaterialUVMap, materialUri);
+                                    }
+                                    break;
+
+                                case 'value': {
+                                    const materialValue: string | null = maybeString(value);
+                                    scalars = materialValue?.replace(/ /g, '').split(',').map(x => +x);
+                                    if (!scalars) {
+                                        if (typeof(channel?.value) === 'number')
+                                            scalars = [channel.value];
+                                    }
+                                }   break;
+
+                                default:
+                                    AddAttributes.push(`${key}: ${JSON.stringify(value)}`);
+                                    break;
+                            }
                         }
 
-                        if (materialUri)
-                            JCOutput.uvMaps.set(++idModelMaterialUVMap, materialUri);
+                        let AdditionalAttributes: string | null = null;
+                        if (AddAttributes.length > 0) {
+                            AdditionalAttributes = '{ ';
+                            for (const attribute of AddAttributes)
+                                AdditionalAttributes += `${attribute},`;
+                            AdditionalAttributes += ' }';
+                        }
 
                         idModelMaterialChannel++;
                         // TODO: deal with ChannelPosition and ChannelWidth once Cook's si-packrat-inspect can handle multi-channel textures
@@ -197,12 +229,14 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                             idVMaterialType: materialTypeV ? materialTypeV.idVocabulary : null,
                             MaterialTypeOther: materialTypeV ? null : materialType,
                             idModelMaterialUVMap: materialUri ? idModelMaterialUVMap : null,
+                            UVMapEmbedded,
                             ChannelPosition: materialUri ? 0 : null,
                             ChannelWidth: materialUri ? 3 : null,
                             Scalar1: (scalars && scalars.length >= 1) ? scalars[0] : null,
                             Scalar2: (scalars && scalars.length >= 2) ? scalars[1] : null,
                             Scalar3: (scalars && scalars.length >= 3) ? scalars[2] : null,
                             Scalar4: (scalars && scalars.length >= 4) ? scalars[3] : null,
+                            AdditionalAttributes
                         });
 
                         if (!JCOutput.modelMaterialChannels)

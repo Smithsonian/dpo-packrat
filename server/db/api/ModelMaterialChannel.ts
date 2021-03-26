@@ -3,6 +3,7 @@ import { ModelMaterialChannel as ModelMaterialChannelBase, Prisma } from '@prism
 import { ModelMaterial } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 
 export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase> implements ModelMaterialChannelBase {
     idModelMaterialChannel!: number;
@@ -10,12 +11,14 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
     idVMaterialType!: number | null;
     MaterialTypeOther!: string | null;
     idModelMaterialUVMap!: number | null;
+    UVMapEmbedded!: boolean | null;
     ChannelPosition!: number | null;
     ChannelWidth!: number | null;
     Scalar1!: number | null;
     Scalar2!: number | null;
     Scalar3!: number | null;
     Scalar4!: number | null;
+    AdditionalAttributes!: string | null;
 
     private idVMaterialTypeOrig!: number | null;
     private idModelMaterialUVMapOrig!: number | null;
@@ -31,23 +34,26 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idModelMaterial, idVMaterialType, MaterialTypeOther, idModelMaterialUVMap, ChannelPosition, ChannelWidth,
-                Scalar1, Scalar2, Scalar3, Scalar4 } = this;
+            const { idModelMaterial, idVMaterialType, MaterialTypeOther, idModelMaterialUVMap, UVMapEmbedded, ChannelPosition, ChannelWidth,
+                Scalar1, Scalar2, Scalar3, Scalar4, AdditionalAttributes } = this;
             ({ idModelMaterialChannel: this.idModelMaterialChannel, idModelMaterial: this.idModelMaterial, idVMaterialType: this.idVMaterialType,
-                MaterialTypeOther: this.MaterialTypeOther, idModelMaterialUVMap: this.idModelMaterialUVMap, ChannelPosition: this.ChannelPosition,
-                ChannelWidth: this.ChannelWidth, Scalar1: this.Scalar1, Scalar2: this.Scalar2, Scalar3: this.Scalar3, Scalar4: this.Scalar4 } =
+                MaterialTypeOther: this.MaterialTypeOther, idModelMaterialUVMap: this.idModelMaterialUVMap, UVMapEmbedded: this.UVMapEmbedded,
+                ChannelPosition: this.ChannelPosition, ChannelWidth: this.ChannelWidth, Scalar1: this.Scalar1, Scalar2: this.Scalar2,
+                Scalar3: this.Scalar3, Scalar4: this.Scalar4, AdditionalAttributes: this.AdditionalAttributes } =
                 await DBC.DBConnection.prisma.modelMaterialChannel.create({
                     data: {
                         ModelMaterial:              { connect: { idModelMaterial }, },
                         Vocabulary:                 idVMaterialType ? { connect: { idVocabulary: idVMaterialType }, } : undefined,
                         MaterialTypeOther,
                         ModelMaterialUVMap:         idModelMaterialUVMap ? { connect: { idModelMaterialUVMap }, } : undefined,
+                        UVMapEmbedded,
                         ChannelPosition,
                         ChannelWidth,
                         Scalar1,
                         Scalar2,
                         Scalar3,
                         Scalar4,
+                        AdditionalAttributes,
                     },
                 }));
             return true;
@@ -59,8 +65,8 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idModelMaterialChannel, idModelMaterial, idVMaterialType, MaterialTypeOther, idModelMaterialUVMap, ChannelPosition, ChannelWidth,
-                Scalar1, Scalar2, Scalar3, Scalar4, idVMaterialTypeOrig, idModelMaterialUVMapOrig } = this;
+            const { idModelMaterialChannel, idModelMaterial, idVMaterialType, MaterialTypeOther, idModelMaterialUVMap, UVMapEmbedded, ChannelPosition, ChannelWidth,
+                Scalar1, Scalar2, Scalar3, Scalar4, AdditionalAttributes, idVMaterialTypeOrig, idModelMaterialUVMapOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.modelMaterialChannel.update({
                 where: { idModelMaterialChannel, },
                 data: {
@@ -68,12 +74,14 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                     Vocabulary:                 idVMaterialType ? { connect: { idVocabulary: idVMaterialType }, } : idVMaterialTypeOrig ? { disconnect: true, } : undefined,
                     MaterialTypeOther,
                     ModelMaterialUVMap:         idModelMaterialUVMap ? { connect: { idModelMaterialUVMap }, } : idModelMaterialUVMapOrig ? { disconnect: true, } : undefined,
+                    UVMapEmbedded,
                     ChannelPosition,
                     ChannelWidth,
                     Scalar1,
                     Scalar2,
                     Scalar3,
                     Scalar4,
+                    AdditionalAttributes,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -115,13 +123,33 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             for (const modelMaterial of modelMaterials)
                 idModelMaterials.push(modelMaterial.idModelMaterial);
 
-            return DBC.CopyArray<ModelMaterialChannelBase, ModelMaterialChannel>(
+            const modelMaterialChannelBaseList: ModelMaterialChannelBase[] | null =
+            // return DBC.CopyArray<ModelMaterialChannelBase, ModelMaterialChannel>(
                 await DBC.DBConnection.prisma.$queryRaw<ModelMaterialChannel[]>`
                 SELECT DISTINCT *
                 FROM ModelMaterialChannel
-                WHERE idModelMaterial IN (${Prisma.join(idModelMaterials)})`,
-                ModelMaterialChannel
-            );
+                WHERE idModelMaterial IN (${Prisma.join(idModelMaterials)})`; // , ModelMaterialChannel);
+
+            const modelMaterialChannelList: ModelMaterialChannel[] = [];
+            for (const modelMaterialChannelBase of modelMaterialChannelBaseList) {
+                const modelMaterialChannel = new ModelMaterialChannel({
+                    idModelMaterialChannel: modelMaterialChannelBase.idModelMaterialChannel,
+                    idModelMaterial: modelMaterialChannelBase.idModelMaterial,
+                    idVMaterialType: H.Helpers.safeNumber(modelMaterialChannelBase.idVMaterialType),
+                    MaterialTypeOther: modelMaterialChannelBase.MaterialTypeOther,
+                    idModelMaterialUVMap: H.Helpers.safeNumber(modelMaterialChannelBase.idModelMaterialUVMap),
+                    UVMapEmbedded: H.Helpers.safeBoolean(modelMaterialChannelBase.UVMapEmbedded),
+                    ChannelPosition: H.Helpers.safeNumber(modelMaterialChannelBase.ChannelPosition),
+                    ChannelWidth: H.Helpers.safeNumber(modelMaterialChannelBase.ChannelWidth),
+                    Scalar1: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar1),
+                    Scalar2: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar2),
+                    Scalar3: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar3),
+                    Scalar4: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar4),
+                    AdditionalAttributes: modelMaterialChannelBase.AdditionalAttributes,
+                });
+                modelMaterialChannelList.push(modelMaterialChannel);
+            }
+            return modelMaterialChannelList;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterials', error);
             return null;

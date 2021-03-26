@@ -499,7 +499,10 @@ export type IngestModel = {
   metalness?: Maybe<Scalars['Int']>;
   pointCount?: Maybe<Scalars['Int']>;
   faceCount?: Maybe<Scalars['Int']>;
+  isTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
+  isTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
   isWatertight?: Maybe<Scalars['Boolean']>;
+  selfIntersecting?: Maybe<Scalars['Boolean']>;
   hasNormals?: Maybe<Scalars['Boolean']>;
   hasVertexColor?: Maybe<Scalars['Boolean']>;
   hasUVSpace?: Maybe<Scalars['Boolean']>;
@@ -815,7 +818,10 @@ export type IngestModelInput = {
   metalness?: Maybe<Scalars['Int']>;
   pointCount?: Maybe<Scalars['Int']>;
   faceCount?: Maybe<Scalars['Int']>;
+  isTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
+  isTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
   isWatertight?: Maybe<Scalars['Boolean']>;
+  selfIntersecting?: Maybe<Scalars['Boolean']>;
   hasNormals?: Maybe<Scalars['Boolean']>;
   hasVertexColor?: Maybe<Scalars['Boolean']>;
   hasUVSpace?: Maybe<Scalars['Boolean']>;
@@ -918,6 +924,16 @@ export type CreateModelInput = {
   idVFileType: Scalars['Int'];
   Master: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
+  CountAnimations?: Maybe<Scalars['Int']>;
+  CountCameras?: Maybe<Scalars['Int']>;
+  CountFaces?: Maybe<Scalars['Int']>;
+  CountLights?: Maybe<Scalars['Int']>;
+  CountMaterials?: Maybe<Scalars['Int']>;
+  CountMeshes?: Maybe<Scalars['Int']>;
+  CountVertices?: Maybe<Scalars['Int']>;
+  CountEmbeddedTextures?: Maybe<Scalars['Int']>;
+  CountLinkedTextures?: Maybe<Scalars['Int']>;
+  FileEncoding?: Maybe<Scalars['String']>;
 };
 
 export type CreateModelResult = {
@@ -947,7 +963,6 @@ export type Model = {
   idVUnits: Scalars['Int'];
   idVFileType: Scalars['Int'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
-  idModelMetrics?: Maybe<Scalars['Int']>;
   ModelConstellation?: Maybe<ModelConstellation>;
   VCreationMethod?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
@@ -955,7 +970,6 @@ export type Model = {
   VUnits?: Maybe<Vocabulary>;
   VFileType?: Maybe<Vocabulary>;
   AssetThumbnail?: Maybe<Asset>;
-  ModelMetrics?: Maybe<ModelMetrics>;
   ModelObject?: Maybe<Array<Maybe<ModelObject>>>;
   ModelProcessingAction?: Maybe<Array<Maybe<ModelProcessingAction>>>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
@@ -1017,8 +1031,10 @@ export type ModelMetrics = {
   HasTextureCoordinates?: Maybe<Scalars['Boolean']>;
   HasVertexNormals?: Maybe<Scalars['Boolean']>;
   HasVertexColor?: Maybe<Scalars['Boolean']>;
-  IsManifold?: Maybe<Scalars['Boolean']>;
+  IsTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
+  IsTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
   IsWatertight?: Maybe<Scalars['Boolean']>;
+  SelfIntersecting?: Maybe<Scalars['Boolean']>;
 };
 
 export type ModelObject = {
@@ -1076,8 +1092,7 @@ export type ModelConstellation = {
   ModelMaterials?: Maybe<Array<Maybe<ModelMaterial>>>;
   ModelMaterialChannels?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
   ModelMaterialUVMaps?: Maybe<Array<Maybe<ModelMaterialUvMap>>>;
-  ModelMetric?: Maybe<ModelMetrics>;
-  ModelObjectMetrics?: Maybe<Array<Maybe<ModelMetrics>>>;
+  ModelMetrics?: Maybe<Array<Maybe<ModelMetrics>>>;
 };
 
 export type PaginationInput = {
@@ -1264,7 +1279,10 @@ export type ModelDetailFieldsInput = {
   metalness?: Maybe<Scalars['Int']>;
   pointCount?: Maybe<Scalars['Int']>;
   faceCount?: Maybe<Scalars['Int']>;
+  isTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
+  isTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
   isWatertight?: Maybe<Scalars['Boolean']>;
+  selfIntersecting?: Maybe<Scalars['Boolean']>;
   hasNormals?: Maybe<Scalars['Boolean']>;
   hasVertexColor?: Maybe<Scalars['Boolean']>;
   hasUVSpace?: Maybe<Scalars['Boolean']>;
@@ -1429,8 +1447,10 @@ export type ModelDetailFields = {
   hasTextureCoordinates?: Maybe<Scalars['Boolean']>;
   hasVertexNormals?: Maybe<Scalars['Boolean']>;
   hasVertexColor?: Maybe<Scalars['Boolean']>;
-  isManifold?: Maybe<Scalars['Boolean']>;
+  isTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
+  isTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
   isWatertight?: Maybe<Scalars['Boolean']>;
+  selfIntersecting?: Maybe<Scalars['Boolean']>;
 };
 
 export type SceneDetailFields = {
@@ -2453,7 +2473,7 @@ export type GetAssetVersionsDetailsQuery = (
         )> }
       )>, Model?: Maybe<(
         { __typename?: 'IngestModel' }
-        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory' | 'roughness' | 'metalness' | 'pointCount' | 'faceCount' | 'isWatertight' | 'hasNormals' | 'hasVertexColor' | 'hasUVSpace' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z'>
+        & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory' | 'roughness' | 'metalness' | 'pointCount' | 'faceCount' | 'isTwoManifoldUnbounded' | 'isTwoManifoldBounded' | 'isWatertight' | 'selfIntersecting' | 'hasNormals' | 'hasVertexColor' | 'hasUVSpace' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
           & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
@@ -2708,7 +2728,7 @@ export type GetDetailsTabDataForObjectQuery = (
       )> }
     )>, Model?: Maybe<(
       { __typename?: 'ModelDetailFields' }
-      & Pick<ModelDetailFields, 'size' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'modelFileType' | 'dateCaptured' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z' | 'countPoint' | 'countFace' | 'countColorChannel' | 'countTextureCoorinateChannel' | 'hasBones' | 'hasFaceNormals' | 'hasTangents' | 'hasTextureCoordinates' | 'hasVertexNormals' | 'hasVertexColor' | 'isManifold' | 'isWatertight'>
+      & Pick<ModelDetailFields, 'size' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'modelFileType' | 'dateCaptured' | 'boundingBoxP1X' | 'boundingBoxP1Y' | 'boundingBoxP1Z' | 'boundingBoxP2X' | 'boundingBoxP2Y' | 'boundingBoxP2Z' | 'countPoint' | 'countFace' | 'countColorChannel' | 'countTextureCoorinateChannel' | 'hasBones' | 'hasFaceNormals' | 'hasTangents' | 'hasTextureCoordinates' | 'hasVertexNormals' | 'hasVertexColor' | 'isTwoManifoldUnbounded' | 'isTwoManifoldBounded' | 'isWatertight' | 'selfIntersecting'>
       & { uvMaps: Array<(
         { __typename?: 'IngestUVMap' }
         & Pick<IngestUvMap, 'name' | 'edgeLength' | 'mapType'>
@@ -3857,7 +3877,10 @@ export const GetAssetVersionsDetailsDocument = gql`
         metalness
         pointCount
         faceCount
+        isTwoManifoldUnbounded
+        isTwoManifoldBounded
         isWatertight
+        selfIntersecting
         hasNormals
         hasVertexColor
         hasUVSpace
@@ -4469,8 +4492,10 @@ export const GetDetailsTabDataForObjectDocument = gql`
       hasTextureCoordinates
       hasVertexNormals
       hasVertexColor
-      isManifold
+      isTwoManifoldUnbounded
+      isTwoManifoldBounded
       isWatertight
+      selfIntersecting
     }
     Scene {
       Links
@@ -4568,11 +4593,13 @@ export const GetProjectListDocument = gql`
  *   },
  * });
  */
-export function useGetProjectListQuery(baseOptions?: Apollo.QueryHookOptions<GetProjectListQuery, GetProjectListQueryVariables>) {
-        return Apollo.useQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, baseOptions);
+export function useGetProjectListQuery(baseOptions: Apollo.QueryHookOptions<GetProjectListQuery, GetProjectListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, options);
       }
 export function useGetProjectListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetProjectListQuery, GetProjectListQueryVariables>) {
-          return Apollo.useLazyQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, baseOptions);
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, options);
         }
 export type GetProjectListQueryHookResult = ReturnType<typeof useGetProjectListQuery>;
 export type GetProjectListLazyQueryHookResult = ReturnType<typeof useGetProjectListLazyQuery>;
@@ -5170,11 +5197,13 @@ export const GetUnitsFromNameSearchDocument = gql`
  *   },
  * });
  */
-export function useGetUnitsFromNameSearchQuery(baseOptions?: Apollo.QueryHookOptions<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>) {
-        return Apollo.useQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, baseOptions);
+export function useGetUnitsFromNameSearchQuery(baseOptions: Apollo.QueryHookOptions<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, options);
       }
 export function useGetUnitsFromNameSearchLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>) {
-          return Apollo.useLazyQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, baseOptions);
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, options);
         }
 export type GetUnitsFromNameSearchQueryHookResult = ReturnType<typeof useGetUnitsFromNameSearchQuery>;
 export type GetUnitsFromNameSearchLazyQueryHookResult = ReturnType<typeof useGetUnitsFromNameSearchLazyQuery>;

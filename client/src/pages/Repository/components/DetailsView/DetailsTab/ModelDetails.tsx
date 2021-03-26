@@ -67,8 +67,10 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 hasTextureCoordinates: Model?.hasTextureCoordinates,
                 hasVertexNormals: Model?.hasVertexNormals,
                 hasVertexColor: Model?.hasVertexColor,
-                isManifold: Model?.isManifold,
+                isTwoManifoldUnbounded: Model?.isTwoManifoldUnbounded,
+                isTwoManifoldBounded: Model?.isTwoManifoldBounded,
                 isWatertight: Model?.isWatertight,
+                selfIntersecting: Model?.selfIntersecting,
             });
         }
     }, [data, loading]);
@@ -323,6 +325,24 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <CheckboxField
                     viewMode
+                    updated={isFieldUpdated(details, modelData, 'isTwoManifoldUnbounded')}
+                    disabled={disabled}
+                    name='isTwoManifoldUnbounded'
+                    label='Is Two Manifold Unbounded?'
+                    value={details?.isTwoManifoldUnbounded ?? false}
+                    onChange={setCheckboxField}
+                />
+                <CheckboxField
+                    viewMode
+                    updated={isFieldUpdated(details, modelData, 'isTwoManifoldBounded')}
+                    disabled={disabled}
+                    name='isTwoManifoldBounded'
+                    label='Is Two Manifold Bounded?'
+                    value={details?.isTwoManifoldBounded ?? false}
+                    onChange={setCheckboxField}
+                />
+                <CheckboxField
+                    viewMode
                     updated={isFieldUpdated(details, modelData, 'isWatertight')}
                     disabled={disabled}
                     name='isWatertight'
@@ -332,11 +352,11 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                 />
                 <CheckboxField
                     viewMode
-                    updated={isFieldUpdated(details, modelData, 'isManifold')}
+                    updated={isFieldUpdated(details, modelData, 'selfIntersecting')}
                     disabled={disabled}
-                    name='isManifold'
-                    label='Is Manifold?'
-                    value={details?.isManifold ?? false}
+                    name='selfIntersecting'
+                    label='Self Intersecting?'
+                    value={details?.selfIntersecting ?? false}
                     onChange={setCheckboxField}
                 />
                 <BoundingBoxInput
