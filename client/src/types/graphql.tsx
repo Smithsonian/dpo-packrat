@@ -1931,6 +1931,8 @@ export type CreateUserInput = {
   Name: Scalars['String'];
   EmailAddress: Scalars['String'];
   SecurityID?: Maybe<Scalars['String']>;
+  WorkflowNotificationTime?: Maybe<Scalars['DateTime']>;
+  EmailSettings?: Maybe<Scalars['Int']>;
 };
 
 export type CreateUserResult = {
@@ -2334,7 +2336,7 @@ export type CreateUserMutation = (
     { __typename?: 'CreateUserResult' }
     & { User?: Maybe<(
       { __typename?: 'User' }
-      & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated'>
+      & Pick<User, 'idUser' | 'Name' | 'Active' | 'DateActivated' | 'WorkflowNotificationTime' | 'EmailSettings'>
     )> }
   ) }
 );
@@ -3568,6 +3570,8 @@ export const CreateUserDocument = gql`
       Name
       Active
       DateActivated
+      WorkflowNotificationTime
+      EmailSettings
     }
   }
 }
@@ -4568,11 +4572,13 @@ export const GetProjectListDocument = gql`
  *   },
  * });
  */
-export function useGetProjectListQuery(baseOptions?: Apollo.QueryHookOptions<GetProjectListQuery, GetProjectListQueryVariables>) {
-        return Apollo.useQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, baseOptions);
+export function useGetProjectListQuery(baseOptions: Apollo.QueryHookOptions<GetProjectListQuery, GetProjectListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, options);
       }
 export function useGetProjectListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetProjectListQuery, GetProjectListQueryVariables>) {
-          return Apollo.useLazyQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, baseOptions);
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetProjectListQuery, GetProjectListQueryVariables>(GetProjectListDocument, options);
         }
 export type GetProjectListQueryHookResult = ReturnType<typeof useGetProjectListQuery>;
 export type GetProjectListLazyQueryHookResult = ReturnType<typeof useGetProjectListLazyQuery>;
@@ -5170,11 +5176,13 @@ export const GetUnitsFromNameSearchDocument = gql`
  *   },
  * });
  */
-export function useGetUnitsFromNameSearchQuery(baseOptions?: Apollo.QueryHookOptions<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>) {
-        return Apollo.useQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, baseOptions);
+export function useGetUnitsFromNameSearchQuery(baseOptions: Apollo.QueryHookOptions<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, options);
       }
 export function useGetUnitsFromNameSearchLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>) {
-          return Apollo.useLazyQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, baseOptions);
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetUnitsFromNameSearchQuery, GetUnitsFromNameSearchQueryVariables>(GetUnitsFromNameSearchDocument, options);
         }
 export type GetUnitsFromNameSearchQueryHookResult = ReturnType<typeof useGetUnitsFromNameSearchQuery>;
 export type GetUnitsFromNameSearchLazyQueryHookResult = ReturnType<typeof useGetUnitsFromNameSearchLazyQuery>;

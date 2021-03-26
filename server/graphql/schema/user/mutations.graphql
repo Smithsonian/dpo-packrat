@@ -9,6 +9,8 @@ input CreateUserInput {
     Name: String!
     EmailAddress: String!
     SecurityID: String
+    WorkflowNotificationTime: DateTime
+    EmailSettings: Int
 }
 
 type CreateUserResult {
