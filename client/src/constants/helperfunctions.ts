@@ -6,7 +6,7 @@ export function toTitleCase(str: string): string {
 
 export function formatISOToHoursMinutes(time: string): string {
     const newTime = new Date(time);
-    let hours = String(newTime.getHours());
+    let hours = String(newTime.getHours() + 1);
     let minutes = String(newTime.getMinutes());
     if (Number(hours) < 10) {
         hours = '0' + hours;

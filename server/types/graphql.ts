@@ -1928,6 +1928,8 @@ export type CreateUserInput = {
   Name: Scalars['String'];
   EmailAddress: Scalars['String'];
   SecurityID?: Maybe<Scalars['String']>;
+  WorkflowNotificationTime?: Maybe<Scalars['DateTime']>;
+  EmailSettings?: Maybe<Scalars['Int']>;
 };
 
 export type CreateUserResult = {
