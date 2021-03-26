@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Repository
@@ -125,9 +126,9 @@ function TreeViewPage(): React.ReactElement {
         })}`;
     };
 
-    /* 
+    /*
         Sets up a default cookie if no filterSelection cookie exists.
-        If a filterSelection cookie exists, component will read that 
+        If a filterSelection cookie exists, component will read that
         and generate URL and state based on cookie.
     */
     let cookieFilterSelections;

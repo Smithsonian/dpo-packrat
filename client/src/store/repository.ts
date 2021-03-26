@@ -230,7 +230,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelPurpose,
             modelFileType
         } = getFilterState();
-        let currentFilterState = {
+        const currentFilterState = {
             repositoryRootType,
             objectsToDisplay,
             metadataToDisplay,
