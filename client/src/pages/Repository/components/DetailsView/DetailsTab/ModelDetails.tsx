@@ -328,7 +328,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                     updated={isFieldUpdated(details, modelData, 'isTwoManifoldUnbounded')}
                     disabled={disabled}
                     name='isTwoManifoldUnbounded'
-                    label='Is Two Manifold Unbounded?'
+                    label='Manifold (Closed)'
                     value={details?.isTwoManifoldUnbounded ?? false}
                     onChange={setCheckboxField}
                 />
@@ -337,7 +337,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                     updated={isFieldUpdated(details, modelData, 'isTwoManifoldBounded')}
                     disabled={disabled}
                     name='isTwoManifoldBounded'
-                    label='Is Two Manifold Bounded?'
+                    label='Manifold (Open)'
                     value={details?.isTwoManifoldBounded ?? false}
                     onChange={setCheckboxField}
                 />
