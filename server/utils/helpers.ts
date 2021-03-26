@@ -407,6 +407,7 @@ export class Helpers {
         });
     }
 
+    /** dateString is in UTC by default, unless otherwise specified in the string itself */
     static convertStringToDate(dateString: string): Date | null {
         try {
             const date: Date = new Date(dateString);
@@ -417,10 +418,15 @@ export class Helpers {
         }
     }
 
-    static convertDateToYYYYMMDD(date: Date): string {
-        const dayOfMonth = ('0' + date.getDate()).slice(-2);
-        const month = ('0' + (date.getMonth() + 1)).slice(-2);
-        const year = date.getFullYear();
-        return year + '-' + month + '-' + dayOfMonth;
+    static safeNumber(value: any): number | null {
+        if (value == null)
+            return null;
+        return parseFloat(value);
+    }
+
+    static safeBoolean(value: any): boolean | null {
+        if (value == null)
+            return null;
+        return value ? true : false;
     }
 }

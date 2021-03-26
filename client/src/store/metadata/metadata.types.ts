@@ -107,6 +107,9 @@ export type ModelFields = {
     metalness: number | null;
     pointCount: number | null;
     faceCount: number | null;
+    isTwoManifoldUnbounded: boolean | null;
+    isTwoManifoldBounded: boolean | null;
+    selfIntersecting: boolean | null;
     isWatertight: boolean | null;
     hasNormals: boolean | null;
     hasVertexColor: boolean | null;

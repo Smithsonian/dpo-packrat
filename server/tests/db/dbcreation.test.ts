@@ -11,6 +11,7 @@ afterAll(async done => {
     done();
 });
 
+// #region Variables
 let accessAction: DBAPI.AccessAction | null;
 let accessAction2: DBAPI.AccessAction | null;
 let accessContext: DBAPI.AccessContext | null;
@@ -119,7 +120,7 @@ let workflowStep: DBAPI.WorkflowStep | null;
 let workflowStepSystemObjectXref: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowStepSystemObjectXref2: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowTemplate: DBAPI.WorkflowTemplate | null;
-
+// #endregion
 // *******************************************************************
 // DB Creation Test Suite
 // *******************************************************************
@@ -836,7 +837,8 @@ describe('DB Creation Test Suite', () => {
         modelMetrics = await UTIL.createModelMetricsTest({
             BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
             CountPoint: 100, CountFace: 50, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: true, HasFaceNormals: false,
-            HasTangents: true, HasTextureCoordinates: false, HasVertexNormals: true, HasVertexColor: false, IsManifold: true, IsWatertight: false,
+            HasTangents: true, HasTextureCoordinates: false, HasVertexNormals: true, HasVertexColor: false, IsTwoManifoldUnbounded: true,
+            IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
             idModelMetrics: 0
         });
         expect(modelMetrics).toBeTruthy();
@@ -844,7 +846,8 @@ describe('DB Creation Test Suite', () => {
         modelMetrics2 = await UTIL.createModelMetricsTest({
             BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 2, BoundingBoxP2Y: 2, BoundingBoxP2Z: 2,
             CountPoint: null, CountFace: null, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: false, HasFaceNormals: false,
-            HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: false, HasVertexColor: true, IsManifold: false, IsWatertight: false,
+            HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: false, HasVertexColor: true, IsTwoManifoldUnbounded: false,
+            IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
             idModelMetrics: 0
         });
         expect(modelMetrics2).toBeTruthy();
@@ -863,7 +866,8 @@ describe('DB Creation Test Suite', () => {
                 idVPurpose: vocabulary.idVocabulary,
                 idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: assetThumbnail.idAsset,
-                idModelMetrics: modelMetrics.idModelMetrics,
+                CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY',
                 idModel: 0
             });
         expect(model).toBeTruthy();
@@ -882,7 +886,8 @@ describe('DB Creation Test Suite', () => {
                 idVPurpose: vocabulary.idVocabulary,
                 idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: null,
-                idModelMetrics: null,
+                CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY',
                 idModel: 0
             });
         expect(modelNulls).toBeTruthy();
@@ -943,12 +948,14 @@ describe('DB Creation Test Suite', () => {
                 idVMaterialType: vocabulary.idVocabulary,
                 MaterialTypeOther: 'Model Material Type',
                 idModelMaterialUVMap: modelMaterialUVMap.idModelMaterialUVMap,
+                UVMapEmbedded: false,
                 ChannelPosition: 0,
                 ChannelWidth: 1,
                 Scalar1: null,
                 Scalar2: null,
                 Scalar3: null,
                 Scalar4: null,
+                AdditionalAttributes: null,
                 idModelMaterialChannel: 0
             });
         expect(modelMaterialChannel).toBeTruthy();
@@ -959,12 +966,14 @@ describe('DB Creation Test Suite', () => {
                 idVMaterialType: null,
                 MaterialTypeOther: 'Model Material Type',
                 idModelMaterialUVMap: null,
+                UVMapEmbedded: false,
                 ChannelPosition: 0,
                 ChannelWidth: 1,
                 Scalar1: null,
                 Scalar2: null,
                 Scalar3: null,
                 Scalar4: null,
+                AdditionalAttributes: null,
                 idModelMaterialChannel: 0
             });
         expect(modelMaterialChannelNulls).toBeTruthy();
@@ -3837,6 +3846,42 @@ describe('DB Fetch Special Test Suite', () => {
         expect(itemFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Job.convertJobStatusToEnum', async () => {
+        expect(DBAPI.Job.convertJobStatusToEnum(-1)).toEqual(DBAPI.eJobStatus.eInactive);
+        expect(DBAPI.Job.convertJobStatusToEnum(0)).toEqual(DBAPI.eJobStatus.eInactive);
+        expect(DBAPI.Job.convertJobStatusToEnum(1)).toEqual(DBAPI.eJobStatus.eActive);
+        expect(DBAPI.Job.convertJobStatusToEnum(2)).toEqual(DBAPI.eJobStatus.eTest);
+
+        expect(job).toBeTruthy();
+        if (job) {
+            expect(job.getStatus()).toEqual(DBAPI.eJobStatus.eInactive);
+            job.setStatus(DBAPI.eJobStatus.eActive);
+            expect(job.getStatus()).toEqual(DBAPI.eJobStatus.eActive);
+            expect(job.Status).toEqual(1);
+            job.setStatus(DBAPI.eJobStatus.eInactive);
+        }
+    });
+
+    test('DB Fetch Special: JobRun.convertJobRunStatusToEnum', async () => {
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(-1)).toEqual(DBAPI.eJobRunStatus.eUnitialized);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(0)).toEqual(DBAPI.eJobRunStatus.eUnitialized);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(1)).toEqual(DBAPI.eJobRunStatus.eCreated);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(2)).toEqual(DBAPI.eJobRunStatus.eRunning);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(3)).toEqual(DBAPI.eJobRunStatus.eWaiting);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(4)).toEqual(DBAPI.eJobRunStatus.eDone);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(5)).toEqual(DBAPI.eJobRunStatus.eError);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(6)).toEqual(DBAPI.eJobRunStatus.eCancelled);
+
+        expect(jobRun).toBeTruthy();
+        if (jobRun) {
+            expect(jobRun.getStatus()).toEqual(DBAPI.eJobRunStatus.eUnitialized);
+            jobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
+            expect(jobRun.getStatus()).toEqual(DBAPI.eJobRunStatus.eCreated);
+            expect(jobRun.Status).toEqual(1);
+            jobRun.setStatus(DBAPI.eJobRunStatus.eUnitialized);
+        }
+    });
+
     test('DB Fetch Special: Model.fetchAll', async () => {
         let modelFetch: DBAPI.Model[] | null = null;
         if (model && modelNulls) {
@@ -3873,9 +3918,7 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(modelConstellation1.modelMaterials).toEqual(expect.arrayContaining([modelMaterial]));
                 expect(modelConstellation1.modelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel]));
                 expect(modelConstellation1.modelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
-                if (modelMetrics)
-                    expect(modelConstellation1.modelMetric).toEqual(modelMetrics);
-                expect(modelConstellation1.modelObjectMetrics).toEqual(expect.arrayContaining([modelMetrics]));
+                expect(modelConstellation1.modelMetrics).toEqual(expect.arrayContaining([modelMetrics]));
             }
         }
         expect(modelConstellation1).toBeTruthy();
@@ -3888,8 +3931,7 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(modelConstellation2.modelMaterials).toBeFalsy();
                 expect(modelConstellation2.modelMaterialChannels).toBeFalsy();
                 expect(modelConstellation2.modelMaterialUVMaps).toEqual([]);
-                expect(modelConstellation2.modelMetric).toBeFalsy();
-                expect(modelConstellation2.modelObjectMetrics).toBeFalsy();
+                expect(modelConstellation2.modelMetrics).toBeFalsy();
             }
         }
         expect(modelConstellation2).toBeTruthy();
@@ -4999,14 +5041,12 @@ describe('DB Update Test Suite', () => {
             expect(SOOld).toBeTruthy();
 
             modelNulls.idAssetThumbnail = assetThumbnail.idAsset;
-            modelNulls.idModelMetrics = modelMetrics.idModelMetrics;
             bUpdated = await modelNulls.update();
 
             const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
             expect(modelFetch).toBeTruthy();
             if (modelFetch) {
                 expect(modelFetch.idAssetThumbnail).toBe(assetThumbnail.idAsset);
-                expect(modelFetch.idModelMetrics).toBe(modelMetrics.idModelMetrics);
 
                 const SONew: DBAPI.SystemObject | null = await modelFetch.fetchSystemObject();
                 expect(SONew).toBeTruthy();
@@ -5021,14 +5061,12 @@ describe('DB Update Test Suite', () => {
         let bUpdated: boolean = false;
         if (modelNulls) {
             modelNulls.idAssetThumbnail = null;
-            modelNulls.idModelMetrics = null;
             bUpdated = await modelNulls.update();
 
             const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
             expect(modelFetch).toBeTruthy();
             if (modelFetch) {
                 expect(modelFetch.idAssetThumbnail).toBeNull();
-                expect(modelFetch.idModelMetrics).toBeNull();
             }
         }
         expect(bUpdated).toBeTruthy();

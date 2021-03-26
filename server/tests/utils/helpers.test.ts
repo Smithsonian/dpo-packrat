@@ -318,6 +318,39 @@ describe('Utils: Helpers', () => {
         date = H.Helpers.convertStringToDate('foobar');
         expect(date).toBeFalsy();
     });
+
+    test('Utils: Helpers.safeNumber', async () => {
+        const nullVal: null = null;
+        const numVal: number = 3.14;
+        const strVal: string = 'string';
+        const boolVal: boolean = false;
+        const objVal = {
+            foo: 'abba',
+            bar: 'dabba'
+        };
+        expect(H.Helpers.safeNumber(nullVal)).toBeNull();
+        expect(H.Helpers.safeNumber(numVal)).toEqual(numVal);
+        expect(H.Helpers.safeNumber(strVal)).toBeNaN();
+        expect(H.Helpers.safeNumber(boolVal)).toBeNaN();
+        expect(H.Helpers.safeNumber(objVal)).toBeNaN();
+    });
+
+    test('Utils: Helpers.safeBoolean', async () => {
+        const nullVal: null = null;
+        const numVal: number = 3.14;
+        const strVal: string = 'string';
+        const boolVal: boolean = false;
+        const objVal = {
+            foo: 'abba',
+            bar: 'dabba'
+        };
+        expect(H.Helpers.safeBoolean(nullVal)).toBeNull();
+        expect(H.Helpers.safeBoolean(numVal)).toBeTruthy();
+        expect(H.Helpers.safeBoolean(strVal)).toBeTruthy();
+        expect(H.Helpers.safeBoolean(boolVal)).toBeFalsy();
+        expect(H.Helpers.safeBoolean(true)).toBeTruthy();
+        expect(H.Helpers.safeBoolean(objVal)).toBeTruthy();
+    });
 });
 
 /*

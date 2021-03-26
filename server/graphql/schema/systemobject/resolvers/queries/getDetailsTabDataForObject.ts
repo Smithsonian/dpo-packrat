@@ -224,28 +224,30 @@ async function getModelDetailFields(idModel: number): Promise<ModelDetailFields>
     }
 
     // TODO: fetch Material Channels, etc.
-    const modelMetrics = modelConstellation.modelMetric;
-    if (modelMetrics) {
+    const ModelMetrics = (modelConstellation.modelMetrics && modelConstellation.modelMetrics.length > 0) ? modelConstellation.modelMetrics[0] : null;
+    if (ModelMetrics) {
         fields = {
             ...fields,
-            boundingBoxP1X: modelMetrics.BoundingBoxP1X,
-            boundingBoxP1Y: modelMetrics.BoundingBoxP1Y,
-            boundingBoxP1Z: modelMetrics.BoundingBoxP1Z,
-            boundingBoxP2X: modelMetrics.BoundingBoxP2X,
-            boundingBoxP2Y: modelMetrics.BoundingBoxP2Y,
-            boundingBoxP2Z: modelMetrics.BoundingBoxP2Z,
-            countPoint: modelMetrics.CountPoint,
-            countFace: modelMetrics.CountFace,
-            countColorChannel: modelMetrics.CountColorChannel,
-            countTextureCoorinateChannel: modelMetrics.CountTextureCoorinateChannel,
-            hasBones: modelMetrics.HasBones,
-            hasFaceNormals: modelMetrics.HasFaceNormals,
-            hasTangents: modelMetrics.HasTangents,
-            hasTextureCoordinates: modelMetrics.HasTextureCoordinates,
-            hasVertexNormals: modelMetrics.HasVertexNormals,
-            hasVertexColor: modelMetrics.HasVertexColor,
-            isManifold: modelMetrics.IsManifold,
-            isWatertight: modelMetrics.IsWatertight,
+            boundingBoxP1X: ModelMetrics.BoundingBoxP1X,
+            boundingBoxP1Y: ModelMetrics.BoundingBoxP1Y,
+            boundingBoxP1Z: ModelMetrics.BoundingBoxP1Z,
+            boundingBoxP2X: ModelMetrics.BoundingBoxP2X,
+            boundingBoxP2Y: ModelMetrics.BoundingBoxP2Y,
+            boundingBoxP2Z: ModelMetrics.BoundingBoxP2Z,
+            countPoint: ModelMetrics.CountPoint,
+            countFace: ModelMetrics.CountFace,
+            countColorChannel: ModelMetrics.CountColorChannel,
+            countTextureCoorinateChannel: ModelMetrics.CountTextureCoorinateChannel,
+            hasBones: ModelMetrics.HasBones,
+            hasFaceNormals: ModelMetrics.HasFaceNormals,
+            hasTangents: ModelMetrics.HasTangents,
+            hasTextureCoordinates: ModelMetrics.HasTextureCoordinates,
+            hasVertexNormals: ModelMetrics.HasVertexNormals,
+            hasVertexColor: ModelMetrics.HasVertexColor,
+            isTwoManifoldUnbounded: ModelMetrics.IsTwoManifoldUnbounded,
+            isTwoManifoldBounded: ModelMetrics.IsTwoManifoldBounded,
+            isWatertight: ModelMetrics.IsWatertight,
+            selfIntersecting: ModelMetrics.SelfIntersecting,
         };
     }
 

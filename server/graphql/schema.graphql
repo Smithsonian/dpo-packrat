@@ -209,7 +209,10 @@ type IngestModel {
   metalness: Int
   pointCount: Int
   faceCount: Int
+  isTwoManifoldUnbounded: Boolean
+  isTwoManifoldBounded: Boolean
   isWatertight: Boolean
+  selfIntersecting: Boolean
   hasNormals: Boolean
   hasVertexColor: Boolean
   hasUVSpace: Boolean
@@ -507,7 +510,10 @@ input IngestModelInput {
   metalness: Int
   pointCount: Int
   faceCount: Int
+  isTwoManifoldUnbounded: Boolean
+  isTwoManifoldBounded: Boolean
   isWatertight: Boolean
+  selfIntersecting: Boolean
   hasNormals: Boolean
   hasVertexColor: Boolean
   hasUVSpace: Boolean
@@ -605,6 +611,16 @@ input CreateModelInput {
   idVFileType: Int!
   Master: Boolean!
   idAssetThumbnail: Int
+  CountAnimations: Int
+  CountCameras: Int
+  CountFaces: Int
+  CountLights: Int
+  CountMaterials: Int
+  CountMeshes: Int
+  CountVertices: Int
+  CountEmbeddedTextures: Int
+  CountLinkedTextures: Int
+  FileEncoding: String
 }
 
 type CreateModelResult {
@@ -631,7 +647,6 @@ type Model {
   idVUnits: Int!
   idVFileType: Int!
   idAssetThumbnail: Int
-  idModelMetrics: Int
   ModelConstellation: ModelConstellation
   VCreationMethod: Vocabulary
   VModality: Vocabulary
@@ -639,7 +654,6 @@ type Model {
   VUnits: Vocabulary
   VFileType: Vocabulary
   AssetThumbnail: Asset
-  ModelMetrics: ModelMetrics
   ModelObject: [ModelObject]
   ModelProcessingAction: [ModelProcessingAction]
   ModelSceneXref: [ModelSceneXref]
@@ -697,8 +711,10 @@ type ModelMetrics {
   HasTextureCoordinates: Boolean
   HasVertexNormals: Boolean
   HasVertexColor: Boolean
-  IsManifold: Boolean
+  IsTwoManifoldUnbounded: Boolean
+  IsTwoManifoldBounded: Boolean
   IsWatertight: Boolean
+  SelfIntersecting: Boolean
 }
 
 type ModelObject {
@@ -751,8 +767,7 @@ type ModelConstellation {
   ModelMaterials: [ModelMaterial]
   ModelMaterialChannels: [ModelMaterialChannel]
   ModelMaterialUVMaps: [ModelMaterialUVMap]
-  ModelMetric: ModelMetrics
-  ModelObjectMetrics: [ModelMetrics]
+  ModelMetrics: [ModelMetrics]
 }
 
 input PaginationInput {
@@ -930,7 +945,10 @@ input ModelDetailFieldsInput {
   metalness: Int
   pointCount: Int
   faceCount: Int
+  isTwoManifoldUnbounded: Boolean
+  isTwoManifoldBounded: Boolean
   isWatertight: Boolean
+  selfIntersecting: Boolean
   hasNormals: Boolean
   hasVertexColor: Boolean
   hasUVSpace: Boolean
@@ -1088,8 +1106,10 @@ type ModelDetailFields {
   hasTextureCoordinates: Boolean
   hasVertexNormals: Boolean
   hasVertexColor: Boolean
-  isManifold: Boolean
+  isTwoManifoldUnbounded: Boolean
+  isTwoManifoldBounded: Boolean
   isWatertight: Boolean
+  selfIntersecting: Boolean
 }
 
 type SceneDetailFields {

@@ -73,7 +73,10 @@ const getAssetVersionsDetails = gql`
                     metalness
                     pointCount
                     faceCount
+                    isTwoManifoldUnbounded
+                    isTwoManifoldBounded
                     isWatertight
+                    selfIntersecting
                     hasNormals
                     hasVertexColor
                     hasUVSpace

@@ -10,20 +10,18 @@ export class ModelConstellation {
     modelMaterials: ModelMaterial[] | null;
     modelMaterialChannels: ModelMaterialChannel[] | null;
     modelMaterialUVMaps: ModelMaterialUVMap[] | null;
-    modelMetric: ModelMetrics | null;
-    modelObjectMetrics: ModelMetrics[] | null;
+    modelMetrics: ModelMetrics[] | null;
 
     constructor(model: Model,
         modelObjects: ModelObject[] | null, modelMaterials: ModelMaterial[] | null,
         modelMaterialChannels: ModelMaterialChannel[] | null, modelMaterialUVMaps: ModelMaterialUVMap[] | null,
-        modelMetric: ModelMetrics | null, modelObjectMetrics: ModelMetrics[] | null) {
+        ModelMetrics: ModelMetrics[] | null) {
         this.model = model;
         this.modelObjects = modelObjects;
         this.modelMaterials = modelMaterials;
         this.modelMaterialChannels = modelMaterialChannels;
         this.modelMaterialUVMaps = modelMaterialUVMaps;
-        this.modelMetric = modelMetric;
-        this.modelObjectMetrics = modelObjectMetrics;
+        this.modelMetrics = ModelMetrics;
     }
 
     static async fetch(idModel: number): Promise<ModelConstellation | null> {
@@ -37,11 +35,9 @@ export class ModelConstellation {
         const modelMaterials: ModelMaterial[] | null = await ModelMaterial.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
         const modelMaterialChannels: ModelMaterialChannel[] | null = await ModelMaterialChannel.fetchFromModelMaterials(modelMaterials || []);
         const modelMaterialUVMaps: ModelMaterialUVMap[] | null = await ModelMaterialUVMap.fetchFromModel(idModel);
-        const modelMetric: ModelMetrics | null = model.idModelMetrics ? await ModelMetrics.fetch(model.idModelMetrics) : null;
-        const modelObjectMetrics: ModelMetrics[] | null = await ModelMetrics.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
+        const modelMetrics: ModelMetrics[] | null = await ModelMetrics.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
 
-        return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels,
-            modelMaterialUVMaps, modelMetric, modelObjectMetrics);
+        return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels, modelMaterialUVMaps, modelMetrics);
     }
 }
 
@@ -57,10 +53,18 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     idVUnits!: number;
     idVFileType!: number;
     idAssetThumbnail!: number | null;
-    idModelMetrics!: number | null;
+    CountAnimations!: number | null;
+    CountCameras!: number | null;
+    CountFaces!: number | null;
+    CountLights!: number | null;
+    CountMaterials!: number | null;
+    CountMeshes!: number | null;
+    CountVertices!: number | null;
+    CountEmbeddedTextures!: number | null;
+    CountLinkedTextures!: number | null;
+    FileEncoding!: string | null;
 
     private idAssetThumbnailOrig!: number | null;
-    private idModelMetricsOrig!: number | null;
 
     constructor(input: ModelBase) {
         super(input);
@@ -68,17 +72,20 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
     protected updateCachedValues(): void {
         this.idAssetThumbnailOrig = this.idAssetThumbnail;
-        this.idModelMetricsOrig = this.idModelMetrics;
     }
 
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name, DateCreated, Master, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
-                idVFileType, idAssetThumbnail, idModelMetrics } = this;
+                idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
+                CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding } = this;
             ({ idModel: this.idModel, Name: this.Name, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
-                Master: this.Master, Authoritative: this.Authoritative, idVModality: this.idVModality,
-                idVUnits: this.idVUnits, idVPurpose: this.idVPurpose, idVFileType: this.idVFileType,
-                idAssetThumbnail: this.idAssetThumbnail, idModelMetrics: this.idModelMetrics } =
+                Master: this.Master, Authoritative: this.Authoritative, idVModality: this.idVModality, idVUnits: this.idVUnits,
+                idVPurpose: this.idVPurpose, idVFileType: this.idVFileType, idAssetThumbnail: this.idAssetThumbnail,
+                CountAnimations: this.CountAnimations, CountCameras: this.CountCameras, CountFaces: this.CountFaces,
+                CountLights: this.CountLights, CountMaterials: this.CountMaterials, CountMeshes: this.CountMeshes,
+                CountVertices: this.CountVertices, CountEmbeddedTextures: this.CountEmbeddedTextures, CountLinkedTextures: this.CountLinkedTextures,
+                FileEncoding: this.FileEncoding } =
                 await DBC.DBConnection.prisma.model.create({
                     data: {
                         Name,
@@ -91,7 +98,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                         Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
                         Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
                         Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : undefined,
-                        ModelMetrics:                                   idModelMetrics ? { connect: { idModelMetrics }, } : undefined,
+                        CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding,
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
@@ -105,7 +112,8 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idModel, Name, DateCreated, Master, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
-                idVFileType, idAssetThumbnail, idModelMetrics, idAssetThumbnailOrig, idModelMetricsOrig } = this;
+                idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes,
+                CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, idAssetThumbnailOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
                 where: { idModel, },
                 data: {
@@ -118,8 +126,8 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                     Vocabulary_Model_idVUnitsToVocabulary:          { connect: { idVocabulary: idVUnits }, },
                     Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
                     Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
+                    CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding,
                     Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
-                    ModelMetrics:                                   idModelMetrics ? { connect: { idModelMetrics }, } : idModelMetricsOrig ? { disconnect: true, } : undefined,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
