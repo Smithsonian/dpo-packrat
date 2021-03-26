@@ -7,7 +7,9 @@ const createUser = gql`
                 idUser
                 Name
                 Active
-                DateActivated
+                DateActivated,
+                WorkflowNotificationTime,
+                EmailSettings
             }
         }
     }

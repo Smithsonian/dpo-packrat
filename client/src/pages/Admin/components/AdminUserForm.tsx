@@ -157,7 +157,6 @@ function AdminUserForm(): React.ReactElement {
             return validNameResponse && validEmailResponse;
         } catch (error) {
             toast.warn(error);
-            console.log('error', error);
         }
     };
 
@@ -197,12 +196,14 @@ function AdminUserForm(): React.ReactElement {
             toast.warn('Creation Failed. Please be sure to include a name and email');
             return;
         }
+
         const creating = await apolloClient.mutate({
             mutation: CreateUserDocument,
             variables: {
                 input: {
                     EmailAddress: email,
-                    Name: name
+                    Name: name,
+                    EmailSettings: workflowNotificationType
                 }
             }
         });
@@ -360,28 +361,52 @@ function AdminUserForm(): React.ReactElement {
                 </Box>
                 <Box className={classes.AdminUserFormRow}>
                     <p className={classes.AdminUserFormRowLabel}>Workflow Notification Time</p>
-                    <FormControl variant='outlined'>
-                        <TextField
-                            className={classes.formField}
-                            style={{ width: '160px' }}
-                            type='time'
-                            size='small'
-                            variant='outlined'
-                            value={workflowNotificationTime}
-                            inputProps={{
-                                step: 300
-                            }}
-                            InputLabelProps={{
-                                shrink: true
-                            }}
-                            onChange={e => {
-                                console.log('e.target.value', e.target.value);
-                                if (e.target.value) {
-                                    setWorkflowNotificationTime(e.target.value);
-                                }
-                            }}
-                        />
-                    </FormControl>
+                    {workflowNotificationType === 0 ? (
+                        <FormControl variant='outlined'>
+                            <TextField
+                                className={classes.formField}
+                                style={{ width: '160px' }}
+                                type='time'
+                                size='small'
+                                variant='outlined'
+                                value={workflowNotificationTime}
+                                inputProps={{
+                                    step: 300
+                                }}
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                                onChange={e => {
+                                    if (e.target.value) {
+                                        setWorkflowNotificationTime(e.target.value);
+                                    }
+                                }}
+                            />
+                        </FormControl>
+                    ) : (
+                        <FormControl variant='outlined'>
+                            <TextField
+                                disabled
+                                className={classes.formField}
+                                style={{ width: '160px' }}
+                                type='time'
+                                size='small'
+                                variant='outlined'
+                                value={workflowNotificationTime}
+                                inputProps={{
+                                    step: 300
+                                }}
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                                onChange={e => {
+                                    if (e.target.value) {
+                                        setWorkflowNotificationTime(e.target.value);
+                                    }
+                                }}
+                            />
+                        </FormControl>
+                    )}
                 </Box>
             </Box>
             <Box className={classes.AdminUserFormButtonGroup}>
