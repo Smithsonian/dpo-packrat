@@ -92,13 +92,14 @@ function Header(): React.ReactElement {
     const history = useHistory();
     const { pathname } = useLocation();
     const { user, logout } = useUserStore();
-    const [search, updateSearch, getFilterState, initializeTree, resetRepositoryFilter, updateRepositoryFilter] = useRepositoryStore(state => [
-        state.search,
+    const [keyword, updateSearch, getFilterState, initializeTree, resetRepositoryFilter, updateRepositoryFilter, resetKeywordSearch] = useRepositoryStore(state => [
+        state.keyword,
         state.updateSearch,
         state.getFilterState,
         state.initializeTree,
         state.resetRepositoryFilter,
-        state.updateRepositoryFilter
+        state.updateRepositoryFilter,
+        state.resetKeywordSearch
     ]);
 
     const onLogout = async (): Promise<void> => {
@@ -141,6 +142,11 @@ function Header(): React.ReactElement {
         history.push(route);
     };
 
+    const clearSearchAndUpdateRepositorySearch = () => {
+        resetKeywordSearch();
+        updateRepositorySearch();
+    };
+
     return (
         <Box className={classes.container}>
             <Box display='flex' alignItems='center'>
@@ -162,7 +168,7 @@ function Header(): React.ReactElement {
                         element='input'
                         className={classes.search}
                         name='search'
-                        value={search}
+                        value={keyword}
                         onChange={({ target }) => updateSearch(target.value)}
                         onKeyPress={e => {
                             if (e.key === 'Enter') {
@@ -178,7 +184,7 @@ function Header(): React.ReactElement {
                         element='input'
                         className={classes.search}
                         name='search'
-                        value={search}
+                        value={keyword}
                         onChange={({ target }) => updateSearch(target.value)}
                         onKeyPress={e => {
                             if (e.key === 'Enter') {
@@ -192,17 +198,31 @@ function Header(): React.ReactElement {
                 )}
             </Box>
             {isRepository ? (
-                <NavOption onClick={updateRepositorySearch}>
-                    <Button variant='outlined' className={classes.searchRepositoryButton}>
-                        Search
-                    </Button>
-                </NavOption>
+                <React.Fragment>
+                    <NavOption onClick={updateRepositorySearch}>
+                        <Button variant='outlined' className={classes.searchRepositoryButton}>
+                            Search
+                        </Button>
+                    </NavOption>
+                    <NavOption onClick={clearSearchAndUpdateRepositorySearch}>
+                        <Button variant='outlined' className={classes.searchRepositoryButton}>
+                            Clear
+                        </Button>
+                    </NavOption>
+                </React.Fragment>
             ) : (
-                <NavOption onClick={onSearch}>
-                    <Button variant='outlined' className={classes.searchRepositoryButton}>
-                        Search
-                    </Button>
-                </NavOption>
+                <React.Fragment>
+                    <NavOption onClick={onSearch}>
+                        <Button variant='outlined' className={classes.searchRepositoryButton}>
+                            Search
+                        </Button>
+                    </NavOption>
+                    <NavOption onClick={resetKeywordSearch}>
+                        <Button variant='outlined' className={classes.searchRepositoryButton}>
+                            Clear
+                        </Button>
+                    </NavOption>
+                </React.Fragment>
             )}
 
             <Box className={classes.navOptionsContainer}>
