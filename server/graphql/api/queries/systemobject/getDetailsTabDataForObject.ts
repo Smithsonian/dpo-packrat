@@ -86,8 +86,10 @@ const getDetailsTabDataForObject = gql`
                 hasTextureCoordinates
                 hasVertexNormals
                 hasVertexColor
-                isManifold
+                isTwoManifoldUnbounded
+                isTwoManifoldBounded
                 isWatertight
+                selfIntersecting
             }
             Scene {
                 Links

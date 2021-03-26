@@ -226,7 +226,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         dateCaptured,
                         size,
                         modelFileType,
-                        // roughness, metalness, pointCount, faceCount, isWatertight, hasNormals, hasVertexColor, hasUVSpace, boundingBoxP1X, boundingBoxP1Y, boundingBoxP1Z, boundingBoxP2X, boundingBoxP2Y, boundingBoxP2Z
+                        // roughness, metalness, pointCount, faceCount, isTwoManifoldUnbounded, isTwoManifoldBounded, selfIntersecting, hasNormals, hasVertexColor, hasUVSpace, boundingBoxP1X, boundingBoxP1Y, boundingBoxP1Z, boundingBoxP2X, boundingBoxP2Y, boundingBoxP2Z
                     } = data.Model;
 
                     if (master) Model.Master = master;
@@ -248,8 +248,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                     /*
                     // TODO: do we want to update the asset name and metrics?  I don't think so...
-                    const modelMetrics = await DBAPI.ModelMetrics.fetch(Model.idModelMetrics);
-                    if (modelMetrics) {
+                    const ModelMetrics = await DBAPI.ModelMetrics.fetch(Model.idModelMetrics);
+                    if (ModelMetrics) {
                         const Asset = await DBAPI.Asset.fetch(MGF.idAsset);
                         if (Asset) {
                             Asset.FileName = data.Name;
@@ -260,7 +260,10 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         MGF.Metalness = maybe<number>(metalness);
                         MGF.PointCount = maybe<number>(pointCount);
                         MGF.FaceCount = maybe<number>(faceCount);
+                        MGF.IsTwoManifoldUnbounded = maybe<boolean>(isTwoManifoldUnbounded);
+                        MGF.IsTwoManifoldBounded = maybe<boolean>(isTwoManifoldBounded);
                         MGF.IsWatertight = maybe<boolean>(isWatertight);
+                        MGF.SelfIntersecting = maybe<boolean>(selfIntersecting);
                         MGF.HasNormals = maybe<boolean>(hasNormals);
                         MGF.HasVertexColor = maybe<boolean>(hasVertexColor);
                         MGF.HasUVSpace = maybe<boolean>(hasUVSpace);

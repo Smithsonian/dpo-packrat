@@ -14,6 +14,16 @@ input CreateModelInput {
     idVFileType: Int!
     Master: Boolean!
     idAssetThumbnail: Int
+    CountAnimations: Int
+    CountCameras: Int
+    CountFaces: Int
+    CountLights: Int
+    CountMaterials: Int
+    CountMeshes: Int
+    CountVertices: Int
+    CountEmbeddedTextures: Int
+    CountLinkedTextures: Int
+    FileEncoding: String
 }
 
 type CreateModelResult {

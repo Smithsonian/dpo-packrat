@@ -362,9 +362,17 @@ model Model {
   idVPurpose                                     Int
   idVFileType                                    Int
   idAssetThumbnail                               Int?
-  idModelMetrics                                 Int?
+  CountAnimations                                Int?
+  CountCameras                                   Int?
+  CountFaces                                     Int?
+  CountLights                                    Int?
+  CountMaterials                                 Int?
+  CountMeshes                                    Int?
+  CountVertices                                  Int?
+  CountEmbeddedTextures                          Int?
+  CountLinkedTextures                            Int?
+  FileEncoding                                   String?                 @mariasql.VarChar(40)
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset])
-  ModelMetrics                                   ModelMetrics?           @relation(fields: [idModelMetrics], references: [idModelMetrics])
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary              @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary])
   Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary              @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary])
   Vocabulary_Model_idVModalityToVocabulary       Vocabulary              @relation("Model_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary])
@@ -377,7 +385,6 @@ model Model {
   SystemObject                                   SystemObject?
 
   @@index([idAssetThumbnail], name: "fk_model_asset1")
-  @@index([idModelMetrics], name: "fk_model_modelmetrics1")
   @@index([idVCreationMethod], name: "fk_model_vocabulary1")
   @@index([idVModality], name: "fk_model_vocabulary2")
   @@index([idVUnits], name: "fk_model_vocabulary3")
@@ -401,12 +408,14 @@ model ModelMaterialChannel {
   idVMaterialType        Int?
   MaterialTypeOther      String?             @mariasql.VarChar(255)
   idModelMaterialUVMap   Int?
+  UVMapEmbedded          Boolean?
   ChannelPosition        Int?
   ChannelWidth           Int?
   Scalar1                Float?
   Scalar2                Float?
   Scalar3                Float?
   Scalar4                Float?
+  AdditionalAttributes   String?             @mariasql.Text
   ModelMaterial          ModelMaterial       @relation(fields: [idModelMaterial], references: [idModelMaterial])
   ModelMaterialUVMap     ModelMaterialUVMap? @relation(fields: [idModelMaterialUVMap], references: [idModelMaterialUVMap])
   Vocabulary             Vocabulary?         @relation(fields: [idVMaterialType], references: [idVocabulary])
@@ -447,9 +456,10 @@ model ModelMetrics {
   HasTextureCoordinates        Boolean?
   HasVertexNormals             Boolean?
   HasVertexColor               Boolean?
-  IsManifold                   Boolean?
+  IsTwoManifoldUnbounded       Boolean?
+  IsTwoManifoldBounded         Boolean?
   IsWatertight                 Boolean?
-  Model                        Model[]
+  SelfIntersecting             Boolean?
   ModelObject                  ModelObject[]
 }
 

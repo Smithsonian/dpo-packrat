@@ -427,24 +427,38 @@ export class IndexSolr {
             LOG.logger.error(`IndexSolr.handleModel failed to compute ModelConstellation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
+        const model: DBAPI.Model = modelConstellation.model;
 
-        doc.CommonName = modelConstellation.model.Name;
-        doc.CommonDateCreated = modelConstellation.model.DateCreated;
+        doc.CommonName = model.Name;
+        doc.CommonDateCreated = model.DateCreated;
 
-        doc.ModelCreationMethod = await this.computeVocabulary(modelConstellation.model.idVCreationMethod);
-        doc.ModelMaster = modelConstellation.model.Master;
-        doc.ModelAuthoritative = modelConstellation.model.Authoritative;
-        doc.ModelModality = await this.computeVocabulary(modelConstellation.model.idVModality);
-        doc.ModelUnits = await this.computeVocabulary(modelConstellation.model.idVUnits);
-        doc.ModelPurpose = await this.computeVocabulary(modelConstellation.model.idVPurpose);
-        doc.ModelFileType = await this.computeVocabulary(modelConstellation.model.idVFileType);
+        doc.ModelCreationMethod = await this.computeVocabulary(model.idVCreationMethod);
+        doc.ModelMaster = model.Master;
+        doc.ModelAuthoritative = model.Authoritative;
+        doc.ModelModality = await this.computeVocabulary(model.idVModality);
+        doc.ModelUnits = await this.computeVocabulary(model.idVUnits);
+        doc.ModelPurpose = await this.computeVocabulary(model.idVPurpose);
+        doc.ModelFileType = await this.computeVocabulary(model.idVFileType);
+
+        doc.ModelCountAnimations = model.CountAnimations;
+        doc.ModelCountCameras = model.CountCameras;
+        doc.ModelCountFaces = model.CountFaces;
+        doc.ModelCountLights = model.CountLights;
+        doc.ModelCountMaterials = model.CountMaterials;
+        doc.ModelCountMeshes = model.CountMeshes;
+        doc.ModelCountVertices = model.CountVertices;
+        doc.ModelCountEmbeddedTextures = model.CountEmbeddedTextures;
+        doc.ModelCountLinkedTextures = model.CountLinkedTextures;
+        doc.ModelFileEncoding = model.FileEncoding;
 
         const modelMaterialNameMap: Map<string, boolean> = new Map<string, boolean>();
         const modelMaterialChannelTypeMap: Map<string, boolean> = new Map<string, boolean>();
         const modelMaterialChannelTypeOtherMap: Map<string, boolean> = new Map<string, boolean>();
+        const modelMaterialChannelUVMapEmbeddedMap: Map<boolean, boolean> = new Map<boolean, boolean>();
         const modelMaterialChannelPositionMap: Map<number, boolean> = new Map<number, boolean>();
         const modelMaterialChannelWidthMap: Map<number, boolean> = new Map<number, boolean>();
         const modelMaterialChannelValuesMap: Map<string, boolean> = new Map<string, boolean>();
+        const modelMaterialChannelAdditionalAttributesMap: Map<string, boolean> = new Map<string, boolean>();
         const modelMaterialUVMapEdgeLengthMap: Map<number, boolean> = new Map<number, boolean>();
         const modelMetricsBoundingBoxP1XMap: Map<number, boolean> = new Map<number, boolean>();
         const modelMetricsBoundingBoxP1YMap: Map<number, boolean> = new Map<number, boolean>();
@@ -462,8 +476,10 @@ export class IndexSolr {
         const modelMetricsHasTextureCoordinatesMap: Map<boolean, boolean> = new Map<boolean, boolean>();
         const modelMetricsHasVertexNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
         const modelMetricsHasVertexColorMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMetricsIsManifoldMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMetricsIsTwoManifoldUnboundedMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMetricsIsTwoManifoldBoundedMap: Map<boolean, boolean> = new Map<boolean, boolean>();
         const modelMetricsIsWatertightMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelMetricsSelfIntersectingMap: Map<boolean, boolean> = new Map<boolean, boolean>();
 
         if (modelConstellation.modelMaterials) {
             for (const modelMaterial of modelConstellation.modelMaterials) {
@@ -480,6 +496,7 @@ export class IndexSolr {
                         modelMaterialChannelTypeMap.set(materialType, true);
                 }
                 if (modelMaterialChannel.MaterialTypeOther) modelMaterialChannelTypeOtherMap.set(modelMaterialChannel.MaterialTypeOther, true);
+                if (modelMaterialChannel.UVMapEmbedded !== null) modelMaterialChannelUVMapEmbeddedMap.set(modelMaterialChannel.UVMapEmbedded, true);
                 if (modelMaterialChannel.ChannelPosition) modelMaterialChannelPositionMap.set(modelMaterialChannel.ChannelPosition, true);
                 if (modelMaterialChannel.ChannelWidth) modelMaterialChannelWidthMap.set(modelMaterialChannel.ChannelWidth, true);
 
@@ -488,6 +505,8 @@ export class IndexSolr {
                 if (channelValue.indexOf(',') >= 0)
                     channelValue = `(${channelValue})`;
                 if (channelValue) modelMaterialChannelValuesMap.set(channelValue, true);
+
+                if (modelMaterialChannel.AdditionalAttributes) modelMaterialChannelAdditionalAttributesMap.set(modelMaterialChannel.AdditionalAttributes, true);
             }
         }
 
@@ -497,10 +516,8 @@ export class IndexSolr {
         }
 
         const modelMetricsList: DBAPI.ModelMetrics[] = [];
-        if (modelConstellation.modelMetric)
-            modelMetricsList.push(modelConstellation.modelMetric);
-        if (modelConstellation.modelObjectMetrics)
-            modelMetricsList.push(...modelConstellation.modelObjectMetrics);
+        if (modelConstellation.modelMetrics)
+            modelMetricsList.push(...modelConstellation.modelMetrics);
         for (const modelMetrics of modelMetricsList) {
             if (modelMetrics.BoundingBoxP1X) modelMetricsBoundingBoxP1XMap.set(modelMetrics.BoundingBoxP1X, true);
             if (modelMetrics.BoundingBoxP1Y) modelMetricsBoundingBoxP1YMap.set(modelMetrics.BoundingBoxP1Y, true);
@@ -518,16 +535,20 @@ export class IndexSolr {
             if (modelMetrics.HasTextureCoordinates) modelMetricsHasTextureCoordinatesMap.set(modelMetrics.HasTextureCoordinates, true);
             if (modelMetrics.HasVertexNormals) modelMetricsHasVertexNormalsMap.set(modelMetrics.HasVertexNormals, true);
             if (modelMetrics.HasVertexColor) modelMetricsHasVertexColorMap.set(modelMetrics.HasVertexColor, true);
-            if (modelMetrics.IsManifold) modelMetricsIsManifoldMap.set(modelMetrics.IsManifold, true);
+            if (modelMetrics.IsTwoManifoldUnbounded) modelMetricsIsTwoManifoldUnboundedMap.set(modelMetrics.IsTwoManifoldUnbounded, true);
+            if (modelMetrics.IsTwoManifoldBounded) modelMetricsIsTwoManifoldBoundedMap.set(modelMetrics.IsTwoManifoldBounded, true);
             if (modelMetrics.IsWatertight) modelMetricsIsWatertightMap.set(modelMetrics.IsWatertight, true);
+            if (modelMetrics.SelfIntersecting) modelMetricsSelfIntersectingMap.set(modelMetrics.SelfIntersecting, true);
 
         }
         doc.ModelMaterialName = [...modelMaterialNameMap.keys()];
         doc.ModelMaterialChannelType = [...modelMaterialChannelTypeMap.keys()];
         doc.ModelMaterialChannelTypeOther = [...modelMaterialChannelTypeOtherMap.keys()];
+        doc.ModelMaterialChannelUVMapEmbedded = [...modelMaterialChannelUVMapEmbeddedMap.keys()];
         doc.ModelMaterialChannelPosition = [...modelMaterialChannelPositionMap.keys()];
         doc.ModelMaterialChannelWidth = [...modelMaterialChannelWidthMap.keys()];
         doc.ModelMaterialChannelValues = [...modelMaterialChannelValuesMap.keys()];
+        doc.ModelMaterialChannelAdditionalAttributes = [...modelMaterialChannelAdditionalAttributesMap.keys()];
         doc.ModelMaterialUVMapEdgeLength = [...modelMaterialUVMapEdgeLengthMap.keys()];
         doc.ModelMetricsBoundingBoxP1X = [...modelMetricsBoundingBoxP1XMap.keys()];
         doc.ModelMetricsBoundingBoxP1Y = [...modelMetricsBoundingBoxP1YMap.keys()];
@@ -545,8 +566,10 @@ export class IndexSolr {
         doc.ModelMetricsHasTextureCoordinates = [...modelMetricsHasTextureCoordinatesMap.keys()];
         doc.ModelMetricsHasVertexNormals = [...modelMetricsHasVertexNormalsMap.keys()];
         doc.ModelMetricsHasVertexColor = [...modelMetricsHasVertexColorMap.keys()];
-        doc.ModelMetricsIsManifold = [...modelMetricsIsManifoldMap.keys()];
+        doc.MetricsIsTwoManifoldUnbounded = [...modelMetricsIsTwoManifoldUnboundedMap.keys()];
+        doc.MetricsIsTwoManifoldBounded = [...modelMetricsIsTwoManifoldBoundedMap.keys()];
         doc.ModelMetricsIsWatertight = [...modelMetricsIsWatertightMap.keys()];
+        doc.ModelMetricsSelfIntersecting = [...modelMetricsSelfIntersectingMap.keys()];
 
         // TODO: should we turn multivalued metrics and bounding boxes into single valued attributes, and combine the multiple values in a meaningful way (e.g. add point and face counts, combine bounding boxes)
         this.countModel++;
