@@ -165,7 +165,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     resetRepositoryFilter: (): void => {
         const { setCookieToState } = get();
         const stateValues = {
-            repositoryRootType: [],
+            repositoryRootType: [eSystemObjectType.eUnit],
             objectsToDisplay: [],
             metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
             units: [],
