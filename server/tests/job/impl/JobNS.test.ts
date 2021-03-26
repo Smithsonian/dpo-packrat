@@ -24,12 +24,12 @@ class JobData {
 
 let jobEngine: IJobEngine | null = null;
 let modelTestAvailable: boolean | null = null;
-let MTS: TESTMODEL.ModelTestSetup | null = null;
+let MTS: TESTMODEL.ModelTestSetup | null = new TESTMODEL.ModelTestSetup();
 const JobSet: Set<IJob> = new Set<IJob>();
 const JobDataMap: Map<number, JobData> = new Map<number, JobData>();
 
 afterAll(async done => {
-    await H.Helpers.sleep(5000);
+    await H.Helpers.sleep(10000);
     done();
 });
 
@@ -42,19 +42,12 @@ describe('JobNS Init', () => {
         MTS = new TESTMODEL.ModelTestSetup();
         modelTestAvailable = await MTS.initialize();
         expect(modelTestAvailable === null || modelTestAvailable).toBeTruthy(); // null means that model test files were not available, which is ok
+        if (!modelTestAvailable)
+            LOG.logger.info('JobNS Skipping Cook Tests, missing test models');
     });
 });
 
 describe('JobNS Cook Tests', () => {
-    if (!modelTestAvailable) {
-        LOG.logger.info('JobNS Skipping Cook Tests, missing test models');
-        return;
-    }
-    // create a set of test models matching JB's test data <-- this is a test object ... -> which has ingested asset versions
-    // launch job by id and by type, for each of the test data
-    // confirm job output matches expectations
-    // confirm DB job and jobrun are created and in correct state
-    // test job cancellation
     testCookExplicit('fbx-stand-alone', eVocabularyID.eJobJobTypeCookSIPackratInspect);
     testCookImplicit('fbx-with-support', eVocabularyID.eJobJobTypeCookSIPackratInspect);
     testCookExplicit('glb', eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -67,7 +60,7 @@ describe('JobNS Cook Tests', () => {
     // testCookExplicit('usd', eVocabularyID.eJobJobTypeCookSIPackratInspect);
     // testCookImplicit('usdz', eVocabularyID.eJobJobTypeCookSIPackratInspect);
     // testCookExplicit('wrl', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-
+    // TODO: test job cancellation
     test('IJob.Cook invalid job IDs', async () => {
         // expected failures:
         expect(await testCreateByID(0, undefined, null, null, false)).toBeFalsy();
@@ -79,12 +72,17 @@ describe('JobNS Cook Tests', () => {
         for (const job of JobSet)
             jobFinalizationList.push(job.waitForCompletion(300000));
 
+        LOG.logger.info(`JobNS Cook awaiting job completion of ${JobSet.size} jobs`);
         const resultsArray = await Promise.all(jobFinalizationList);
         for (const res of resultsArray)
             expect(res.success).toBeTruthy();
+        LOG.logger.info(`JobNS Cook received job completion of ${resultsArray.length} jobs`);
     });
 
     test('IJob.Cook Job Results', async() => {
+        if (!modelTestAvailable)
+            return;
+
         for (const job of JobSet) {
             const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
             expect(dbJobRun).toBeTruthy();
@@ -105,11 +103,14 @@ describe('JobNS Cook Tests', () => {
                     const JCOutput: COOK.JobCookSIPackratInspectOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''));
                     expect(JCOutput.success).toBeTruthy();
 
+                    const JCOutputStr: string = JSON.stringify(JCOutput, (key, value) => {
+                        key; return (value instanceof Map) ? [...value] : value;
+                    });
+                    LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`);
+
                     const inspectJSON: string | undefined = MTS?.getTestCase(jobData.testCase)?.inspectJSON;
                     expect(inspectJSON).toBeTruthy();
-                    expect(inspectJSON).toEqual(JSON.stringify(JCOutput));
-
-                    LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JSON.stringify(JCOutput)}`);
+                    expect(inspectJSON).toEqual(JCOutputStr);
                 } break;
 
                 default:
@@ -123,6 +124,9 @@ describe('JobNS Cook Tests', () => {
 
 function testCookExplicit(testCase: string, eJobType: eVocabularyID): void {
     test(`IJob.Cook ${eVocabularyID[eJobType]} ${testCase} Explicit`, async () => {
+        if (!modelTestAvailable)
+            return;
+
         LOG.logger.info(`JobNS.test testCook('${testCase}): ${eVocabularyID[eJobType]} explicit IJob.executeJob`);
         const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
         expect(assetVersionIDs).toBeTruthy();
@@ -142,6 +146,9 @@ function testCookExplicit(testCase: string, eJobType: eVocabularyID): void {
 
 function testCookImplicit(testCase: string, eJobType: eVocabularyID): void {
     test(`IJob.Cook ${eVocabularyID[eJobType]} ${testCase} Implicit`, async () => {
+        if (!modelTestAvailable)
+            return;
+
         LOG.logger.info(`JobNS.test testCook('${testCase}): ${eVocabularyID[eJobType]} implicit IJob.executeJob`);
         const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
         expect(assetVersionIDs).toBeTruthy();
@@ -164,6 +171,7 @@ function testCookImplicit(testCase: string, eJobType: eVocabularyID): void {
 }
 
 async function recordJob(job: IJob, eJobType: eVocabularyID, testCase: string): Promise<void> {
+    LOG.logger.info(`JobNS.recordJob ${testCase}  ${eVocabularyID[eJobType]}: ${JSON.stringify(job)}`);
     JobSet.add(job);
 
     const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();

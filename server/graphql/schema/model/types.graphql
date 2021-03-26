@@ -12,7 +12,6 @@ type Model {
     idVUnits: Int!
     idVFileType: Int!
     idAssetThumbnail: Int
-    idModelMetrics: Int
     ModelConstellation: ModelConstellation
     VCreationMethod: Vocabulary
     VModality: Vocabulary
@@ -20,7 +19,6 @@ type Model {
     VUnits: Vocabulary
     VFileType: Vocabulary
     AssetThumbnail: Asset
-    ModelMetrics: ModelMetrics
     ModelObject: [ModelObject]
     ModelProcessingAction: [ModelProcessingAction]
     ModelSceneXref: [ModelSceneXref]
@@ -78,8 +76,10 @@ type ModelMetrics {
     HasTextureCoordinates: Boolean
     HasVertexNormals: Boolean
     HasVertexColor: Boolean
-    IsManifold: Boolean
+    IsTwoManifoldUnbounded: Boolean
+    IsTwoManifoldBounded: Boolean
     IsWatertight: Boolean
+    SelfIntersecting: Boolean
 }
 
 type ModelObject {
@@ -132,6 +132,5 @@ type ModelConstellation {
     ModelMaterials: [ModelMaterial]
     ModelMaterialChannels: [ModelMaterialChannel]
     ModelMaterialUVMaps: [ModelMaterialUVMap]
-    ModelMetric: ModelMetrics
-    ModelObjectMetrics: [ModelMetrics]
+    ModelMetrics: [ModelMetrics]
 }

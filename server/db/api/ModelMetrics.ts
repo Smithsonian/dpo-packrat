@@ -3,6 +3,7 @@ import { ModelMetrics as ModelMetricsBase, Prisma } from '@prisma/client';
 import { ModelObject } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 
 export class ModelMetrics extends DBC.DBObject<ModelMetricsBase> implements ModelMetricsBase {
     idModelMetrics!: number;
@@ -22,8 +23,10 @@ export class ModelMetrics extends DBC.DBObject<ModelMetricsBase> implements Mode
     HasTextureCoordinates!: boolean | null;
     HasVertexNormals!: boolean | null;
     HasVertexColor!: boolean | null;
-    IsManifold!: boolean | null;
+    IsTwoManifoldUnbounded!: boolean | null;
+    IsTwoManifoldBounded!: boolean | null;
     IsWatertight!: boolean | null;
+    SelfIntersecting!: boolean | null;
 
     constructor(input: ModelMetricsBase) {
         super(input);
@@ -31,22 +34,24 @@ export class ModelMetrics extends DBC.DBObject<ModelMetricsBase> implements Mode
 
     protected updateCachedValues(): void { }
 
-    // BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z, CountPoint, CountFace, CountColorChannel, CountTextureCoorinateChannel, HasBones, HasFaceNormals, HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsManifold, IsWatertight
+    // BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z, CountPoint, CountFace, CountColorChannel, CountTextureCoorinateChannel, HasBones, HasFaceNormals, HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, isTwoManifoldUnbounded, IsWatertight
     protected async createWorker(): Promise<boolean> {
         try {
             const { BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z, CountPoint,
                 CountFace, CountColorChannel, CountTextureCoorinateChannel, HasBones, HasFaceNormals, HasTangents, HasTextureCoordinates,
-                HasVertexNormals, HasVertexColor, IsManifold, IsWatertight } = this;
+                HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded, IsTwoManifoldBounded, IsWatertight, SelfIntersecting } = this;
             ({ idModelMetrics: this.idModelMetrics, BoundingBoxP1X: this.BoundingBoxP1X, BoundingBoxP1Y: this.BoundingBoxP1Y, BoundingBoxP1Z: this.BoundingBoxP1Z,
                 BoundingBoxP2X: this.BoundingBoxP2X, BoundingBoxP2Y: this.BoundingBoxP2Y, BoundingBoxP2Z: this.BoundingBoxP2Z,
                 CountPoint: this.CountPoint, CountFace: this.CountFace, CountColorChannel: this.CountColorChannel,
                 CountTextureCoorinateChannel: this.CountTextureCoorinateChannel, HasBones: this.HasBones, HasFaceNormals: this.HasFaceNormals,
                 HasTangents: this.HasTangents, HasTextureCoordinates: this.HasTextureCoordinates, HasVertexNormals: this.HasVertexNormals,
-                HasVertexColor: this.HasVertexColor, IsManifold: this.IsManifold, IsWatertight: this.IsWatertight } =
+                HasVertexColor: this.HasVertexColor, IsTwoManifoldUnbounded: this.IsTwoManifoldUnbounded, IsTwoManifoldBounded: this.IsTwoManifoldBounded,
+                IsWatertight: this.IsWatertight, SelfIntersecting: this.SelfIntersecting } =
                 await DBC.DBConnection.prisma.modelMetrics.create({
                     data: { BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
                         CountPoint, CountFace, CountColorChannel, CountTextureCoorinateChannel, HasBones, HasFaceNormals,
-                        HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsManifold, IsWatertight
+                        HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded,
+                        IsTwoManifoldBounded, IsWatertight, SelfIntersecting
                     },
                 }));
             return true;
@@ -60,12 +65,14 @@ export class ModelMetrics extends DBC.DBObject<ModelMetricsBase> implements Mode
         try {
             const { idModelMetrics, BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
                 CountPoint, CountFace, CountColorChannel, CountTextureCoorinateChannel, HasBones, HasFaceNormals, HasTangents,
-                HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsManifold, IsWatertight } = this;
+                HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded, IsTwoManifoldBounded,
+                IsWatertight, SelfIntersecting } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.modelMetrics.update({
                 where: { idModelMetrics, },
                 data: { BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
                     CountPoint, CountFace, CountColorChannel, CountTextureCoorinateChannel, HasBones, HasFaceNormals,
-                    HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsManifold, IsWatertight
+                    HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded,
+                    IsTwoManifoldBounded, IsWatertight, SelfIntersecting
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -85,18 +92,6 @@ export class ModelMetrics extends DBC.DBObject<ModelMetricsBase> implements Mode
             LOG.logger.error('DBAPI.ModelMetrics.fetch', error);
             return null;
         }
-    }
-
-    static safeNumber(value: any): number | null {
-        if (value == null)
-            return null;
-        return parseInt(value);
-    }
-
-    static safeBoolean(value: any): boolean | null {
-        if (value == null)
-            return null;
-        return value ? true : false;
     }
 
     static async fetchFromModelObjects(modelObjects: ModelObject[]): Promise<ModelMetrics[] | null> {
@@ -119,24 +114,26 @@ export class ModelMetrics extends DBC.DBObject<ModelMetricsBase> implements Mode
             for (const modelMetricsBase of modelMetricsBaseList) {
                 const modelMetrics = new ModelMetrics({
                     idModelMetrics: modelMetricsBase.idModelMetrics,
-                    BoundingBoxP1X: ModelMetrics.safeNumber(modelMetricsBase.BoundingBoxP1X),
-                    BoundingBoxP1Y: ModelMetrics.safeNumber(modelMetricsBase.BoundingBoxP1Y),
-                    BoundingBoxP1Z: ModelMetrics.safeNumber(modelMetricsBase.BoundingBoxP1Z),
-                    BoundingBoxP2X: ModelMetrics.safeNumber(modelMetricsBase.BoundingBoxP2X),
-                    BoundingBoxP2Y: ModelMetrics.safeNumber(modelMetricsBase.BoundingBoxP2Y),
-                    BoundingBoxP2Z: ModelMetrics.safeNumber(modelMetricsBase.BoundingBoxP2Z),
-                    CountPoint: ModelMetrics.safeNumber(modelMetricsBase.CountPoint),
-                    CountFace: ModelMetrics.safeNumber(modelMetricsBase.CountFace),
-                    CountColorChannel: ModelMetrics.safeNumber(modelMetricsBase.CountColorChannel),
-                    CountTextureCoorinateChannel: ModelMetrics.safeNumber(modelMetricsBase.CountTextureCoorinateChannel),
-                    HasBones: ModelMetrics.safeBoolean(modelMetricsBase.HasBones),
-                    HasFaceNormals: ModelMetrics.safeBoolean(modelMetricsBase.HasFaceNormals),
-                    HasTangents: ModelMetrics.safeBoolean(modelMetricsBase.HasTangents),
-                    HasTextureCoordinates: ModelMetrics.safeBoolean(modelMetricsBase.HasTextureCoordinates),
-                    HasVertexNormals: ModelMetrics.safeBoolean(modelMetricsBase.HasVertexNormals),
-                    HasVertexColor: ModelMetrics.safeBoolean(modelMetricsBase.HasVertexColor),
-                    IsManifold: ModelMetrics.safeBoolean(modelMetricsBase.IsManifold),
-                    IsWatertight: ModelMetrics.safeBoolean(modelMetricsBase.IsWatertight),
+                    BoundingBoxP1X: H.Helpers.safeNumber(modelMetricsBase.BoundingBoxP1X),
+                    BoundingBoxP1Y: H.Helpers.safeNumber(modelMetricsBase.BoundingBoxP1Y),
+                    BoundingBoxP1Z: H.Helpers.safeNumber(modelMetricsBase.BoundingBoxP1Z),
+                    BoundingBoxP2X: H.Helpers.safeNumber(modelMetricsBase.BoundingBoxP2X),
+                    BoundingBoxP2Y: H.Helpers.safeNumber(modelMetricsBase.BoundingBoxP2Y),
+                    BoundingBoxP2Z: H.Helpers.safeNumber(modelMetricsBase.BoundingBoxP2Z),
+                    CountPoint: H.Helpers.safeNumber(modelMetricsBase.CountPoint),
+                    CountFace: H.Helpers.safeNumber(modelMetricsBase.CountFace),
+                    CountColorChannel: H.Helpers.safeNumber(modelMetricsBase.CountColorChannel),
+                    CountTextureCoorinateChannel: H.Helpers.safeNumber(modelMetricsBase.CountTextureCoorinateChannel),
+                    HasBones: H.Helpers.safeBoolean(modelMetricsBase.HasBones),
+                    HasFaceNormals: H.Helpers.safeBoolean(modelMetricsBase.HasFaceNormals),
+                    HasTangents: H.Helpers.safeBoolean(modelMetricsBase.HasTangents),
+                    HasTextureCoordinates: H.Helpers.safeBoolean(modelMetricsBase.HasTextureCoordinates),
+                    HasVertexNormals: H.Helpers.safeBoolean(modelMetricsBase.HasVertexNormals),
+                    HasVertexColor: H.Helpers.safeBoolean(modelMetricsBase.HasVertexColor),
+                    IsTwoManifoldUnbounded: H.Helpers.safeBoolean(modelMetricsBase.IsTwoManifoldUnbounded),
+                    IsTwoManifoldBounded: H.Helpers.safeBoolean(modelMetricsBase.IsTwoManifoldBounded),
+                    IsWatertight: H.Helpers.safeBoolean(modelMetricsBase.IsWatertight),
+                    SelfIntersecting: H.Helpers.safeBoolean(modelMetricsBase.SelfIntersecting),
                 });
                 modelMetricsList.push(modelMetrics);
             }

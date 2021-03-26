@@ -81,7 +81,10 @@ input ModelDetailFieldsInput {
     metalness: Int
     pointCount: Int
     faceCount: Int
+    isTwoManifoldUnbounded: Boolean
+    isTwoManifoldBounded: Boolean
     isWatertight: Boolean
+    selfIntersecting: Boolean
     hasNormals: Boolean
     hasVertexColor: Boolean
     hasUVSpace: Boolean

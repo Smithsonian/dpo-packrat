@@ -78,26 +78,27 @@ export abstract class JobPackrat implements JOB.IJob {
     }
 
     async recordSuccess(output: string): Promise<void> {
+        this._results = { success: true, error: '' };   // do this before we await this._dbJobRun.update()
         this._dbJobRun.DateEnd = new Date();
         this._dbJobRun.Result = true;
         this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eDone);
         this._dbJobRun.Output = output;
         LOG.logger.info(`JobPackrat [${this.name()}] Success`);
         await this._dbJobRun.update();
-        this._results = { success: true, error: '' };
     }
 
     async recordFailure(errorMsg: string): Promise<void> {
+        this._results = { success: false, error: errorMsg }; // do this before we await this._dbJobRun.update()
         this._dbJobRun.DateEnd = new Date();
         this._dbJobRun.Result = false;
         this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eError);
         this._dbJobRun.Error = errorMsg;
         await this._dbJobRun.update();
         LOG.logger.error(`JobPackrat [${this.name()}] Failure: ${errorMsg}`);
-        this._results = { success: false, error: errorMsg };
     }
 
     async recordCancel(errorMsg: string): Promise<void> {
+        this._results = { success: false, error: 'Job Cancelled' }; // do this before we await this._dbJobRun.update()
         this._dbJobRun.DateEnd = new Date();
         this._dbJobRun.Result = false;
         this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCancelled);

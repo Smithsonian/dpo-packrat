@@ -264,7 +264,16 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `idVPurpose` int(11) NOT NULL,
   `idVFileType` int(11) NOT NULL,
   `idAssetThumbnail` int(11) DEFAULT NULL,
-  `idModelMetrics` int(11) NULL,
+	`CountAnimations` int (11) NULL,
+	`CountCameras` int (11) NULL,
+	`CountFaces` int (11) NULL,
+	`CountLights` int (11) NULL,
+	`CountMaterials` int (11) NULL,
+	`CountMeshes` int (11) NULL,
+	`CountVertices` int (11) NULL,
+	`CountEmbeddedTextures` int (11) NULL,
+	`CountLinkedTextures` int (11) NULL,
+	`FileEncoding` varchar(40) NULL,
   PRIMARY KEY (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -282,12 +291,14 @@ CREATE TABLE IF NOT EXISTS `ModelMaterialChannel` (
   `idVMaterialType` int(11) NULL,
   `MaterialTypeOther` varchar(255) NULL,
   `idModelMaterialUVMap` int(11) NULL,
+  `UVMapEmbedded` boolean DEFAULT NULL,
   `ChannelPosition` int(11) NULL,
   `ChannelWidth` int(11) NULL,
   `Scalar1` double DEFAULT NULL,
   `Scalar2` double DEFAULT NULL,
   `Scalar3` double DEFAULT NULL,
   `Scalar4` double DEFAULT NULL,
+  `AdditionalAttributes` text NULL,
   PRIMARY KEY (`idModelMaterialChannel`),
   KEY `ModelMaterialChannel_idModelMaterial` (`idModelMaterial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
@@ -320,8 +331,10 @@ CREATE TABLE IF NOT EXISTS `ModelMetrics` (
   `HasTextureCoordinates` boolean DEFAULT NULL,
   `HasVertexNormals` boolean DEFAULT NULL,
   `HasVertexColor` boolean DEFAULT NULL,
-  `IsManifold` boolean DEFAULT NULL,
+  `IsTwoManifoldUnbounded` boolean DEFAULT NULL,
+  `IsTwoManifoldBounded` boolean DEFAULT NULL,
   `IsWatertight` boolean DEFAULT NULL,
+  `SelfIntersecting` boolean DEFAULT NULL,
   PRIMARY KEY (`idModelMetrics`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -840,11 +853,6 @@ ADD CONSTRAINT `fk_model_vocabulary5`
 ADD CONSTRAINT `fk_model_asset1`
   FOREIGN KEY (`idAssetThumbnail`)
   REFERENCES `Asset` (`idAsset`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_model_modelmetrics1`
-  FOREIGN KEY (`idModelMetrics`)
-  REFERENCES `ModelMetrics` (`idModelMetrics`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

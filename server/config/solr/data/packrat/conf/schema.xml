@@ -56,13 +56,26 @@
     <field name="ModelUnits" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="ModelPurpose" type="string" indexed="true" stored="true" multiValued="false" />
     <field name="ModelFileType" type="strings" indexed="true" stored="true" />
+    <field name="ModelCountAnimations" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelCountCameras" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelCountFaces" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelCountLights" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelCountMaterials" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelCountMeshes" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelCountVertices" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelCountEmbeddedTextures" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelCountLinkedTextures" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="ModelFileEncoding" type="string" indexed="true" stored="true" multiValued="false" />
 
     <field name="ModelMaterialName" type="strings" indexed="true" stored="true" />
     <field name="ModelMaterialChannelType" type="strings" indexed="true" stored="true" />
     <field name="ModelMaterialChannelTypeOther" type="strings" indexed="true" stored="true" />
+    <field name="ModelMaterialChannelUVMapEmbedded" type="booleans" indexed="true" stored="true"/>
+
     <field name="ModelMaterialChannelPosition" type="pints" indexed="true" stored="true" />
     <field name="ModelMaterialChannelWidth" type="pints" indexed="true" stored="true" />
     <field name="ModelMaterialChannelValues" type="strings" indexed="true" stored="true" />
+    <field name="ModelMaterialChannelAdditionalAttributes" type="strings" indexed="true" stored="true" />
 
     <field name="ModelMaterialUVMapEdgeLength" type="pints" indexed="true" stored="true" />
 
@@ -82,8 +95,10 @@
     <field name="ModelMetricsHasTextureCoordinates" type="booleans" indexed="true" stored="true"/>
     <field name="ModelMetricsHasVertexNormals" type="booleans" indexed="true" stored="true"/>
     <field name="ModelMetricsHasVertexColor" type="booleans" indexed="true" stored="true"/>
-    <field name="ModelMetricsIsManifold" type="booleans" indexed="true" stored="true"/>
+    <field name="MetricsIsTwoManifoldUnbounded" type="booleans" indexed="true" stored="true"/>
+    <field name="MetricsIsTwoManifoldBounded" type="booleans" indexed="true" stored="true"/>
     <field name="ModelMetricsIsWatertight" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelMetricsSelfIntersecting" type="booleans" indexed="true" stored="true"/>
     
     <!-- Scene fields -->
     <field name="SceneIsOriented" type="boolean" indexed="true" stored="true" multiValued="false" />
@@ -140,11 +155,11 @@
 	
     <!-- It is very expensive to index everything twice. -->
     <!-- <copyField source="*" dest="_text_"/> -->
-    <copyField source="CommonName" dest="_text_"/> -->
-    <copyField source="CommonDescription" dest="_text_"/> -->
-    <copyField source="CommonIdentifier" dest="_text_"/> -->
-    <copyField source="CommonOrganizationName" dest="_text_"/> -->
-    <copyField source="AssetFileName" dest="_text_"/> -->
+    <copyField source="CommonName" dest="_text_"/>
+    <copyField source="CommonDescription" dest="_text_"/>
+    <copyField source="CommonIdentifier" dest="_text_"/>
+    <copyField source="CommonOrganizationName" dest="_text_"/>
+    <copyField source="AssetFileName" dest="_text_"/>
 
     <!-- Dynamic field definitions allow using convention over configuration
        for fields via the specification of patterns to match field names.
