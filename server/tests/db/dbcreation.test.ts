@@ -11,6 +11,7 @@ afterAll(async done => {
     done();
 });
 
+// #region Variables
 let accessAction: DBAPI.AccessAction | null;
 let accessAction2: DBAPI.AccessAction | null;
 let accessContext: DBAPI.AccessContext | null;
@@ -119,7 +120,7 @@ let workflowStep: DBAPI.WorkflowStep | null;
 let workflowStepSystemObjectXref: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowStepSystemObjectXref2: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowTemplate: DBAPI.WorkflowTemplate | null;
-
+// #endregion
 // *******************************************************************
 // DB Creation Test Suite
 // *******************************************************************
@@ -3843,6 +3844,42 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(itemFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Job.convertJobStatusToEnum', async () => {
+        expect(DBAPI.Job.convertJobStatusToEnum(-1)).toEqual(DBAPI.eJobStatus.eInactive);
+        expect(DBAPI.Job.convertJobStatusToEnum(0)).toEqual(DBAPI.eJobStatus.eInactive);
+        expect(DBAPI.Job.convertJobStatusToEnum(1)).toEqual(DBAPI.eJobStatus.eActive);
+        expect(DBAPI.Job.convertJobStatusToEnum(2)).toEqual(DBAPI.eJobStatus.eTest);
+
+        expect(job).toBeTruthy();
+        if (job) {
+            expect(job.getStatus()).toEqual(DBAPI.eJobStatus.eInactive);
+            job.setStatus(DBAPI.eJobStatus.eActive);
+            expect(job.getStatus()).toEqual(DBAPI.eJobStatus.eActive);
+            expect(job.Status).toEqual(1);
+            job.setStatus(DBAPI.eJobStatus.eInactive);
+        }
+    });
+
+    test('DB Fetch Special: JobRun.convertJobRunStatusToEnum', async () => {
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(-1)).toEqual(DBAPI.eJobRunStatus.eUnitialized);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(0)).toEqual(DBAPI.eJobRunStatus.eUnitialized);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(1)).toEqual(DBAPI.eJobRunStatus.eCreated);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(2)).toEqual(DBAPI.eJobRunStatus.eRunning);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(3)).toEqual(DBAPI.eJobRunStatus.eWaiting);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(4)).toEqual(DBAPI.eJobRunStatus.eDone);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(5)).toEqual(DBAPI.eJobRunStatus.eError);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(6)).toEqual(DBAPI.eJobRunStatus.eCancelled);
+
+        expect(jobRun).toBeTruthy();
+        if (jobRun) {
+            expect(jobRun.getStatus()).toEqual(DBAPI.eJobRunStatus.eUnitialized);
+            jobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
+            expect(jobRun.getStatus()).toEqual(DBAPI.eJobRunStatus.eCreated);
+            expect(jobRun.Status).toEqual(1);
+            jobRun.setStatus(DBAPI.eJobRunStatus.eUnitialized);
+        }
     });
 
     test('DB Fetch Special: Model.fetchAll', async () => {
