@@ -122,6 +122,7 @@ function Header(): React.ReactElement {
     const updateRepositorySearch = () => {
         const filterState = getFilterState();
         filterState.repositoryRootType = [];
+        filterState.search = filterState.keyword;
         updateRepositoryFilter(filterState);
         const updatedFilterState = getFilterState();
         const repositoryURL = generateRepositoryUrl(updatedFilterState);
@@ -134,6 +135,9 @@ function Header(): React.ReactElement {
     const onSearch = (): void => {
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
         resetRepositoryFilter();
+        const filterState = getFilterState();
+        filterState.search = filterState.keyword;
+        updateRepositoryFilter(filterState);
         history.push(route);
     };
 

@@ -1,4 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Repository
  *
@@ -36,6 +38,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
 
 export type RepositoryFilter = {
     search: string;
+    keyword: string;
     repositoryRootType: eSystemObjectType[];
     objectsToDisplay: eSystemObjectType[];
     metadataToDisplay: eMetadata[];
@@ -71,6 +74,7 @@ function TreeViewPage(): React.ReactElement {
     const location = useLocation();
     const {
         search,
+        keyword,
         repositoryRootType,
         objectsToDisplay,
         metadataToDisplay,
@@ -90,6 +94,7 @@ function TreeViewPage(): React.ReactElement {
     const filterState: RepositoryFilter = React.useMemo(
         () => ({
             search,
+            keyword,
             repositoryRootType,
             objectsToDisplay,
             metadataToDisplay,
@@ -102,19 +107,65 @@ function TreeViewPage(): React.ReactElement {
             modelPurpose,
             modelFileType
         }),
-        [search, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
+        [search, keyword, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
     );
 
-    const initialFilterState = Object.keys(queries).length ? queries : filterState;
+    const setDefaultFilterSelectionsCookie = () => {
+        document.cookie = `filterSelections=${JSON.stringify({
+            repositoryRootType: [eSystemObjectType.eUnit],
+            objectsToDisplay: [],
+            metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
+            units: [],
+            projects: [],
+            has: [],
+            missing: [],
+            captureMethod: [],
+            variantType: [],
+            modelPurpose: [],
+            modelFileType: []
+        })}`;
+    };
+
+    /*
+        Sets up a default cookie if no filterSelection cookie exists.
+        If a filterSelection cookie exists, component will read that
+        and generate URL and state based on cookie.
+    */
+    let cookieFilterSelections;
+    (function setRepositoryViewCookies() {
+        if (!document.cookie.length || document.cookie.indexOf('filterSelections') === -1) {
+            setDefaultFilterSelectionsCookie();
+        }
+        cookieFilterSelections = document.cookie.split(';');
+        cookieFilterSelections = cookieFilterSelections.find(entry => entry.trim().startsWith('filterSelections'));
+        cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
+    })();
+
+    const initialFilterState = Object.keys(queries).length ? queries : cookieFilterSelections;
 
     useEffect(() => {
         updateRepositoryFilter(initialFilterState);
     }, [updateRepositoryFilter]);
 
     useEffect(() => {
-        const route = generateRepositoryUrl(filterState);
+        const newRepositoryFilterState: any = {
+            search,
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        };
+
+        const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
         history.push(route);
-    }, [history]);
+    }, [history, filterState]);
 
     return (
         <React.Fragment>
