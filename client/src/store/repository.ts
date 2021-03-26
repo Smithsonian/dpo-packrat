@@ -184,8 +184,6 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     resetKeywordSearch: (): void => {
         set({ keyword: '', search: '' });
-        const { keyword, search } = get();
-        console.log(keyword, search);
     },
     getFilterState: (): RepositoryFilter => {
         const {

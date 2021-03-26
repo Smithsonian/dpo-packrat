@@ -79,7 +79,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         transition: 'all 250ms ease-in',
         cursor: 'pointer'
     },
-    searchRepositoryButton: {
+    headerButton: {
         color: 'white',
         width: '90px',
         height: '30px',
@@ -120,7 +120,7 @@ function Header(): React.ReactElement {
     const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
 
     // Specific to search while in repository view
-    const updateRepositorySearch = () => {
+    const updateRepositorySearch = (): void => {
         const filterState = getFilterState();
         filterState.repositoryRootType = [];
         filterState.search = filterState.keyword;
@@ -142,7 +142,8 @@ function Header(): React.ReactElement {
         history.push(route);
     };
 
-    const clearSearchAndUpdateRepositorySearch = () => {
+    // Filter and keyword clear when in Repository
+    const clearSearchAndUpdateRepositorySearch = (): void => {
         resetKeywordSearch();
         updateRepositorySearch();
     };
@@ -200,12 +201,12 @@ function Header(): React.ReactElement {
             {isRepository ? (
                 <React.Fragment>
                     <NavOption onClick={updateRepositorySearch}>
-                        <Button variant='outlined' className={classes.searchRepositoryButton}>
+                        <Button variant='outlined' className={classes.headerButton}>
                             Search
                         </Button>
                     </NavOption>
                     <NavOption onClick={clearSearchAndUpdateRepositorySearch}>
-                        <Button variant='outlined' className={classes.searchRepositoryButton}>
+                        <Button variant='outlined' className={classes.headerButton}>
                             Clear
                         </Button>
                     </NavOption>
@@ -213,12 +214,12 @@ function Header(): React.ReactElement {
             ) : (
                 <React.Fragment>
                     <NavOption onClick={onSearch}>
-                        <Button variant='outlined' className={classes.searchRepositoryButton}>
+                        <Button variant='outlined' className={classes.headerButton}>
                             Search
                         </Button>
                     </NavOption>
                     <NavOption onClick={resetKeywordSearch}>
-                        <Button variant='outlined' className={classes.searchRepositoryButton}>
+                        <Button variant='outlined' className={classes.headerButton}>
                             Clear
                         </Button>
                     </NavOption>
