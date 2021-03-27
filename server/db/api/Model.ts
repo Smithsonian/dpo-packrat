@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { Model as ModelBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
-import { ModelObject, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap, ModelMetrics, SystemObject, SystemObjectBased } from '..';
+import { ModelObject, ModelObjectModelMaterialXref, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap, ModelMetrics, SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -11,17 +11,19 @@ export class ModelConstellation {
     modelMaterialChannels: ModelMaterialChannel[] | null;
     modelMaterialUVMaps: ModelMaterialUVMap[] | null;
     modelMetrics: ModelMetrics[] | null;
+    modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null;
 
     constructor(model: Model,
         modelObjects: ModelObject[] | null, modelMaterials: ModelMaterial[] | null,
         modelMaterialChannels: ModelMaterialChannel[] | null, modelMaterialUVMaps: ModelMaterialUVMap[] | null,
-        ModelMetrics: ModelMetrics[] | null) {
+        modelMetrics: ModelMetrics[] | null, modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null) {
         this.model = model;
         this.modelObjects = modelObjects;
         this.modelMaterials = modelMaterials;
         this.modelMaterialChannels = modelMaterialChannels;
         this.modelMaterialUVMaps = modelMaterialUVMaps;
-        this.modelMetrics = ModelMetrics;
+        this.modelMetrics = modelMetrics;
+        this.modelObjectModelMaterialXref = modelObjectModelMaterialXref;
     }
 
     static async fetch(idModel: number): Promise<ModelConstellation | null> {
@@ -36,8 +38,9 @@ export class ModelConstellation {
         const modelMaterialChannels: ModelMaterialChannel[] | null = await ModelMaterialChannel.fetchFromModelMaterials(modelMaterials || []);
         const modelMaterialUVMaps: ModelMaterialUVMap[] | null = await ModelMaterialUVMap.fetchFromModel(idModel);
         const modelMetrics: ModelMetrics[] | null = await ModelMetrics.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
+        const modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null = await ModelObjectModelMaterialXref.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
 
-        return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels, modelMaterialUVMaps, modelMetrics);
+        return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels, modelMaterialUVMaps, modelMetrics, modelObjectModelMaterialXref);
     }
 }
 
