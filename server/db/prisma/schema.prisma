@@ -393,13 +393,10 @@ model Model {
 }
 
 model ModelMaterial {
-  idModelMaterial      Int                    @id @default(autoincrement())
-  idModelObject        Int
-  Name                 String?                @mariasql.VarChar(255)
-  ModelObject          ModelObject            @relation(fields: [idModelObject], references: [idModelObject])
-  ModelMaterialChannel ModelMaterialChannel[]
-
-  @@index([idModelObject], name: "Model_idModelObject")
+  idModelMaterial               Int                    @id @default(autoincrement())
+  Name                          String?                @mariasql.VarChar(255)
+  ModelMaterialChannel          ModelMaterialChannel[]
+  ModelObjectModelMaterialXref  ModelObjectModelMaterialXref[]
 }
 
 model ModelMaterialChannel {
@@ -464,15 +461,26 @@ model ModelMetrics {
 }
 
 model ModelObject {
-  idModelObject  Int             @id @default(autoincrement())
-  idModel        Int
-  idModelMetrics Int?
-  Model          Model           @relation(fields: [idModel], references: [idModel])
-  ModelMetrics   ModelMetrics?   @relation(fields: [idModelMetrics], references: [idModelMetrics])
-  ModelMaterial  ModelMaterial[]
+  idModelObject                 Int                           @id @default(autoincrement())
+  idModel                       Int
+  idModelMetrics                Int?
+  Model                         Model                         @relation(fields: [idModel], references: [idModel])
+  ModelMetrics                  ModelMetrics?                 @relation(fields: [idModelMetrics], references: [idModelMetrics])
+  ModelObjectModelMaterialXref  ModelObjectModelMaterialXref[]
 
   @@index([idModel], name: "ModelObject_idModel")
   @@index([idModelMetrics], name: "fk_modelobject_modelmetrics1")
+}
+
+model ModelObjectModelMaterialXref {
+  idModelObjectModelMaterialXref  Int             @id @default(autoincrement())
+  idModelObject                   Int
+  idModelMaterial                 Int
+  ModelObject                     ModelObject     @relation(fields: [idModelObject], references: [idModelObject])
+  ModelMaterial                   ModelMaterial   @relation(fields: [idModelMaterial], references: [idModelMaterial])
+
+  @@index([idModelObject], name: "ModelObjectModelMaterialXref_idModelObject")
+  @@index([idModelMaterial], name: "ModelObjectModelMaterialXref_idModelMaterial")
 }
 
 model ModelProcessingAction {
