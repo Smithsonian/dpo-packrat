@@ -61,6 +61,8 @@ let modelMetrics2: DBAPI.ModelMetrics | null;
 let modelObject: DBAPI.ModelObject | null;
 let modelObject2: DBAPI.ModelObject | null;
 let modelObject3: DBAPI.ModelObject | null;
+let modelObjectModelMaterialXref1: DBAPI.ModelObjectModelMaterialXref | null;
+let modelObjectModelMaterialXref2: DBAPI.ModelObjectModelMaterialXref | null;
 let modelProcessingAction: DBAPI.ModelProcessingAction | null;
 let modelProcessingActionStep: DBAPI.ModelProcessingActionStep | null;
 let modelSceneXref: DBAPI.ModelSceneXref | null;
@@ -921,13 +923,30 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: ModelMaterial', async () => {
-        if (modelObject)
-            modelMaterial = await UTIL.createModelMaterialTest({
-                idModelObject: modelObject.idModelObject,
-                Name: 'Test ModelMaterial',
-                idModelMaterial: 0
-            });
+        modelMaterial = await UTIL.createModelMaterialTest({
+            Name: 'Test ModelMaterial',
+            idModelMaterial: 0
+        });
         expect(modelMaterial).toBeTruthy();
+    });
+
+    test('DB Creation: ModelObjectModelMaterialXref', async () => {
+        if (modelMaterial) {
+            if (modelObject)
+                modelObjectModelMaterialXref1 = await UTIL.createModelObjectModelMaterialXrefTest({
+                    idModelObject: modelObject.idModelObject,
+                    idModelMaterial: modelMaterial.idModelMaterial,
+                    idModelObjectModelMaterialXref: 0
+                });
+            if (modelObject2)
+                modelObjectModelMaterialXref2 = await UTIL.createModelObjectModelMaterialXrefTest({
+                    idModelObject: modelObject2.idModelObject,
+                    idModelMaterial: modelMaterial.idModelMaterial,
+                    idModelObjectModelMaterialXref: 0
+                });
+        }
+        expect(modelObjectModelMaterialXref1).toBeTruthy();
+        expect(modelObjectModelMaterialXref2).toBeTruthy();
     });
 
     test('DB Creation: ModelMaterialUVMap', async () => {
@@ -2109,6 +2128,18 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(modelObjectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: ModelObjectModelMaterialXref', async () => {
+        let modelObjectModelMaterialXrefFetch: DBAPI.ModelObjectModelMaterialXref | null = null;
+        if (modelObjectModelMaterialXref1) {
+            modelObjectModelMaterialXrefFetch = await DBAPI.ModelObjectModelMaterialXref.fetch(modelObjectModelMaterialXref1.idModelObjectModelMaterialXref);
+            if (modelObjectModelMaterialXrefFetch) {
+                expect(modelObjectModelMaterialXrefFetch).toMatchObject(modelObjectModelMaterialXref1);
+                expect(modelObjectModelMaterialXref1).toMatchObject(modelObjectModelMaterialXrefFetch);
+            }
+        }
+        expect(modelObjectModelMaterialXrefFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: ModelProcessingAction', async () => {
@@ -3919,6 +3950,7 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(modelConstellation1.modelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel]));
                 expect(modelConstellation1.modelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
                 expect(modelConstellation1.modelMetrics).toEqual(expect.arrayContaining([modelMetrics]));
+                expect(modelConstellation1.modelObjectModelMaterialXref).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1, modelObjectModelMaterialXref2]));
             }
         }
         expect(modelConstellation1).toBeTruthy();
@@ -3932,6 +3964,7 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(modelConstellation2.modelMaterialChannels).toBeFalsy();
                 expect(modelConstellation2.modelMaterialUVMaps).toEqual([]);
                 expect(modelConstellation2.modelMetrics).toBeFalsy();
+                expect(modelConstellation2.modelObjectModelMaterialXref).toBeFalsy();
             }
         }
         expect(modelConstellation2).toBeTruthy();
@@ -4019,6 +4052,54 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(modelObjects).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelObjectModelMaterialXref.fetchFromModelObject', async () => {
+        let modelObjectModelMaterialXrefs: DBAPI.ModelObjectModelMaterialXref[] | null = null;
+        if (modelObject) {
+            modelObjectModelMaterialXrefs = await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObject(modelObject.idModelObject);
+            if (modelObjectModelMaterialXrefs) {
+                expect(modelObjectModelMaterialXrefs.length).toEqual(1);
+                expect(modelObjectModelMaterialXrefs).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1]));
+            }
+        }
+        expect(modelObjectModelMaterialXrefs).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelObjectModelMaterialXref.fetchFromModelObjects', async () => {
+        let modelObjectModelMaterialXrefs: DBAPI.ModelObjectModelMaterialXref[] | null = null;
+        if (modelObject) {
+            modelObjectModelMaterialXrefs = await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObjects([modelObject]);
+            if (modelObjectModelMaterialXrefs) {
+                expect(modelObjectModelMaterialXrefs.length).toEqual(1);
+                expect(modelObjectModelMaterialXrefs).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1]));
+            }
+        }
+        expect(modelObjectModelMaterialXrefs).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelObjectModelMaterialXref.fetchFromModelMaterial', async () => {
+        let modelObjectModelMaterialXrefs: DBAPI.ModelObjectModelMaterialXref[] | null = null;
+        if (modelMaterial) {
+            modelObjectModelMaterialXrefs = await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterial(modelMaterial.idModelMaterial);
+            if (modelObjectModelMaterialXrefs) {
+                expect(modelObjectModelMaterialXrefs.length).toEqual(2);
+                expect(modelObjectModelMaterialXrefs).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1, modelObjectModelMaterialXref2]));
+            }
+        }
+        expect(modelObjectModelMaterialXrefs).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelObjectModelMaterialXref.fetchFromModelMaterials', async () => {
+        let modelObjectModelMaterialXrefs: DBAPI.ModelObjectModelMaterialXref[] | null = null;
+        if (modelMaterial) {
+            modelObjectModelMaterialXrefs = await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterials([modelMaterial]);
+            if (modelObjectModelMaterialXrefs) {
+                expect(modelObjectModelMaterialXrefs.length).toEqual(2);
+                expect(modelObjectModelMaterialXrefs).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1, modelObjectModelMaterialXref2]));
+            }
+        }
+        expect(modelObjectModelMaterialXrefs).toBeTruthy();
     });
 
     test('DB Fetch Special: Project.fetchMasterFromSubjects', async () => {
@@ -5222,6 +5303,21 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: ModelObjectModelMaterialXref.update', async () => {
+        let bUpdated: boolean = false;
+        if (modelObjectModelMaterialXref1 && modelObject2) {
+            modelObjectModelMaterialXref1.idModelObject = modelObject2.idModelObject;
+            bUpdated = await modelObjectModelMaterialXref1.update();
+
+            const modelObjectModelMaterialXrefFetch: DBAPI.ModelObjectModelMaterialXref | null =
+                await DBAPI.ModelObjectModelMaterialXref.fetch(modelObjectModelMaterialXref1.idModelObjectModelMaterialXref);
+            expect(modelObjectModelMaterialXrefFetch).toBeTruthy();
+            if (modelObjectModelMaterialXrefFetch)
+                expect(modelObjectModelMaterialXrefFetch.idModelObject).toBe(modelObject2.idModelObject);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: ModelProcessingAction.update', async () => {
         let bUpdated: boolean = false;
         if (modelProcessingAction) {
@@ -5950,6 +6046,11 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ModelMetrics.fetchFromModelObjects([])).toBeNull();
         expect(await DBAPI.ModelObject.fetch(0)).toBeNull();
         expect(await DBAPI.ModelObject.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObject(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObjects([])).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterial(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterials([])).toBeNull();
         expect(await DBAPI.ModelConstellation.fetch(0)).toBeNull();
         expect(await DBAPI.ModelProcessingAction.fetch(0)).toBeNull();
         expect(await DBAPI.ModelProcessingAction.fetchFromModel(0)).toBeNull();

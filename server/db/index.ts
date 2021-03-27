@@ -33,6 +33,7 @@ export * from './api/ModelMaterialChannel';
 export * from './api/ModelMaterialUVMap';
 export * from './api/ModelMetrics';
 export * from './api/ModelObject';
+export * from './api/ModelObjectModelMaterialXref';
 export * from './api/ModelProcessingAction';
 export * from './api/ModelProcessingActionStep';
 export * from './api/ModelSceneXref';
