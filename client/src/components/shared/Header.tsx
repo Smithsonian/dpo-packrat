@@ -79,7 +79,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         transition: 'all 250ms ease-in',
         cursor: 'pointer'
     },
-    searchRepositoryButton: {
+    headerButton: {
         color: 'white',
         width: '90px',
         height: '30px',
@@ -92,13 +92,14 @@ function Header(): React.ReactElement {
     const history = useHistory();
     const { pathname } = useLocation();
     const { user, logout } = useUserStore();
-    const [search, updateSearch, getFilterState, initializeTree, resetRepositoryFilter, updateRepositoryFilter] = useRepositoryStore(state => [
-        state.search,
+    const [keyword, updateSearch, getFilterState, initializeTree, resetRepositoryFilter, updateRepositoryFilter, resetKeywordSearch] = useRepositoryStore(state => [
+        state.keyword,
         state.updateSearch,
         state.getFilterState,
         state.initializeTree,
         state.resetRepositoryFilter,
-        state.updateRepositoryFilter
+        state.updateRepositoryFilter,
+        state.resetKeywordSearch
     ]);
 
     const onLogout = async (): Promise<void> => {
@@ -119,7 +120,7 @@ function Header(): React.ReactElement {
     const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
 
     // Specific to search while in repository view
-    const updateRepositorySearch = () => {
+    const updateRepositorySearch = (): void => {
         const filterState = getFilterState();
         filterState.repositoryRootType = [];
         filterState.search = filterState.keyword;
@@ -139,6 +140,12 @@ function Header(): React.ReactElement {
         filterState.search = filterState.keyword;
         updateRepositoryFilter(filterState);
         history.push(route);
+    };
+
+    // Filter and keyword clear when in Repository
+    const clearSearchAndUpdateRepositorySearch = (): void => {
+        resetKeywordSearch();
+        updateRepositorySearch();
     };
 
     return (
@@ -162,7 +169,7 @@ function Header(): React.ReactElement {
                         element='input'
                         className={classes.search}
                         name='search'
-                        value={search}
+                        value={keyword}
                         onChange={({ target }) => updateSearch(target.value)}
                         onKeyPress={e => {
                             if (e.key === 'Enter') {
@@ -178,7 +185,7 @@ function Header(): React.ReactElement {
                         element='input'
                         className={classes.search}
                         name='search'
-                        value={search}
+                        value={keyword}
                         onChange={({ target }) => updateSearch(target.value)}
                         onKeyPress={e => {
                             if (e.key === 'Enter') {
@@ -192,17 +199,31 @@ function Header(): React.ReactElement {
                 )}
             </Box>
             {isRepository ? (
-                <NavOption onClick={updateRepositorySearch}>
-                    <Button variant='outlined' className={classes.searchRepositoryButton}>
-                        Search
-                    </Button>
-                </NavOption>
+                <React.Fragment>
+                    <NavOption onClick={updateRepositorySearch}>
+                        <Button variant='outlined' className={classes.headerButton}>
+                            Search
+                        </Button>
+                    </NavOption>
+                    <NavOption onClick={clearSearchAndUpdateRepositorySearch}>
+                        <Button variant='outlined' className={classes.headerButton}>
+                            Clear
+                        </Button>
+                    </NavOption>
+                </React.Fragment>
             ) : (
-                <NavOption onClick={onSearch}>
-                    <Button variant='outlined' className={classes.searchRepositoryButton}>
-                        Search
-                    </Button>
-                </NavOption>
+                <React.Fragment>
+                    <NavOption onClick={onSearch}>
+                        <Button variant='outlined' className={classes.headerButton}>
+                            Search
+                        </Button>
+                    </NavOption>
+                    <NavOption onClick={resetKeywordSearch}>
+                        <Button variant='outlined' className={classes.headerButton}>
+                            Clear
+                        </Button>
+                    </NavOption>
+                </React.Fragment>
             )}
 
             <Box className={classes.navOptionsContainer}>

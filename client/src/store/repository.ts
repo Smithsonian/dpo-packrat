@@ -35,6 +35,7 @@ type RepositoryStore = {
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
     updateFilterValue: (name: string, value: number | number[] | Date) => void;
     resetRepositoryFilter: () => void;
+    resetKeywordSearch: () => void;
     initializeTree: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
     updateRepositoryFilter: (filter: RepositoryFilter) => void;
@@ -180,6 +181,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
 
         set(stateValues);
         setCookieToState();
+    },
+    resetKeywordSearch: (): void => {
+        set({ keyword: '', search: '' });
     },
     getFilterState: (): RepositoryFilter => {
         const {
