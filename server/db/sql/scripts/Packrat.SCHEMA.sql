@@ -279,10 +279,8 @@ CREATE TABLE IF NOT EXISTS `Model` (
 
 CREATE TABLE IF NOT EXISTS `ModelMaterial` (
   `idModelMaterial` int(11) NOT NULL AUTO_INCREMENT,
-  `idModelObject` int(11) NOT NULL,
   `Name` varchar(255) NULL,
-  PRIMARY KEY (`idModelMaterial`),
-  KEY `Model_idModelObject` (`idModelObject`)
+  PRIMARY KEY (`idModelMaterial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `ModelMaterialChannel` (
@@ -344,6 +342,15 @@ CREATE TABLE IF NOT EXISTS `ModelObject` (
   `idModelMetrics` int(11) NULL,
   PRIMARY KEY (`idModelObject`),
   KEY `ModelObject_idModel` (`idModel`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `ModelObjectModelMaterialXref` (
+  `idModelObjectModelMaterialXref` int(11) NOT NULL AUTO_INCREMENT,
+  `idModelObject` int(11) NOT NULL,
+  `idModelMaterial` int(11) NOT NULL,
+  PRIMARY KEY (`idModelObjectModelMaterialXref`),
+  KEY `ModelObjectModelMaterialXref_idModelObject` (`idModelObject`),
+  KEY `ModelObjectModelMaterialXref_idModelMaterial` (`idModelMaterial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `ModelProcessingAction` (
@@ -856,13 +863,6 @@ ADD CONSTRAINT `fk_model_asset1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `ModelMaterial` 
-ADD CONSTRAINT `fk_modelmaterial_modelobject1`
-  FOREIGN KEY (`idModelObject`)
-  REFERENCES `ModelObject` (`idModelObject`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
 ALTER TABLE `ModelMaterialChannel` 
 ADD CONSTRAINT `fk_modelmaterialchannel_modelmaterial1`
   FOREIGN KEY (`idModelMaterial`)
@@ -901,6 +901,18 @@ ADD CONSTRAINT `fk_modelobject_model1`
 ADD CONSTRAINT `fk_modelobject_modelmetrics1`
   FOREIGN KEY (`idModelMetrics`)
   REFERENCES `ModelMetrics` (`idModelMetrics`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `ModelObjectModelMaterialXref` 
+ADD CONSTRAINT `fk_modelobjectmodelmaterialxref_modelobject1`
+  FOREIGN KEY (`idModelObject`)
+  REFERENCES `ModelObject` (`idModelObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_modelobjectmodelmaterialxref_modelmaterial1`
+  FOREIGN KEY (`idModelMaterial`)
+  REFERENCES `ModelMaterial` (`idModelMaterial`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

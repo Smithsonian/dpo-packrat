@@ -86,6 +86,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
     modelMetrics: DBAPI.ModelMetrics[] = [];
     modelMaterials: DBAPI.ModelMaterial[] | null = null;
     modelMaterialChannels: DBAPI.ModelMaterialChannel[] | null = null;
+    modelObjectModelMaterialXref: DBAPI.ModelObjectModelMaterialXref[] | null = null;
     uvMaps: Map<number, string> = new Map<number, string>();    // map of 'fake' idModelMaterialUVMap (referenced in modelMaterialChannels) to URI of UV Map
     // modelMaterialUVMaps: DBAPI.ModelMaterialUVMap[] | null = null;
 
@@ -97,6 +98,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         const inspection: any = mergeReport?.result?.inspection;
         const meshes: any[] | undefined = inspection?.meshes;
         const materials: any[] | undefined = inspection?.scene?.materials;
+        const materialCount: number = materials ? materials.length : 0;
         if (!meshes) {
             JCOutput.success = false;
             JCOutput.error = 'Job output is missing mesh detail';
@@ -108,6 +110,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let idModelMaterial: number = 0;
         let idModelMaterialUVMap: number = 0;
         let idModelMaterialChannel: number = 0;
+        let idModelObjectModelMaterialXref: number = 0;
 
         for (const mesh of meshes) {
             idModelObject++;
@@ -152,7 +155,32 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 idModelMetrics
             }));
 
+            // ModelMetrics
             JCOutput.modelMetrics.push(modelMetric);
+
+            // ModelObjectModelMaterialXref
+            if (JCStat.materialIndex) {
+                for (const materialIndex of JCStat.materialIndex) { // 0-based index
+                    // validate materialIndex for our material array
+                    if ((materialIndex + 1) > materialCount) {
+                        JCOutput.success = false;
+                        JCOutput.error = `Invalid materialIndex ${materialIndex}`;
+                        LOG.logger.error(`JobCookSIPackratInspectOutput.extract: ${JCOutput.error}`);
+                        continue;
+                    }
+
+                    idModelObjectModelMaterialXref++;
+                    const modelObjectModelMaterialXref: DBAPI.ModelObjectModelMaterialXref = new DBAPI.ModelObjectModelMaterialXref({
+                        idModelObjectModelMaterialXref,
+                        idModelObject,
+                        idModelMaterial: materialIndex + 1, // idModelMaterial, the idModelMaterial is 1 more than the index into our material array
+                    });
+
+                    if (!JCOutput.modelObjectModelMaterialXref)
+                        JCOutput.modelObjectModelMaterialXref = [];
+                    JCOutput.modelObjectModelMaterialXref.push(modelObjectModelMaterialXref);
+                }
+            }
         }
 
         if (materials) {
@@ -160,7 +188,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 idModelMaterial++;
                 const modelMaterial: DBAPI.ModelMaterial = new DBAPI.ModelMaterial({
                     idModelMaterial,
-                    idModelObject,
                     Name: material?.name,
                 });
 
