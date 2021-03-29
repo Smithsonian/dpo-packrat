@@ -1734,14 +1734,15 @@ type JobRun {
 
 type Workflow {
   idWorkflow: Int!
-  DateInitiated: DateTime!
-  DateUpdated: DateTime!
   idWorkflowTemplate: Int!
   idProject: Int
   idUserInitiator: Int
+  DateInitiated: DateTime!
+  DateUpdated: DateTime!
+  Parameters: String
+  WorkflowTemplate: WorkflowTemplate
   Project: Project
   UserInitiator: User
-  WorkflowTemplate: WorkflowTemplate
   WorkflowStep: [WorkflowStep]
 }
 

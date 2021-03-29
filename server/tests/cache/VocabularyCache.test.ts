@@ -191,6 +191,8 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eJobJobTypeCookSIVoyagerScene:           testVocabulary(vocabulary, 'Cook: si-voyager-scene'); break;
                     case eVocabularyID.eJobJobTypeCookUnwrap:                   testVocabulary(vocabulary, 'Cook: unwrap'); break;
 
+                    case eVocabularyID.eWorkflowTypeCookJob:                    testVocabulary(vocabulary, 'Cook Job'); break;
+
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
@@ -245,6 +247,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularySetID.eWorkflowStepWorkflowStepType:
                     case eVocabularySetID.eAssetAssetType:
                     case eVocabularySetID.eJobJobType:
+                    case eVocabularySetID.eWorkflowType:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet)
@@ -446,6 +449,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-voyager-asset');
             await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-voyager-scene');
             await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: unwrap');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowType, 'Cook Job');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
             await testVocabularyBySetAndTerm(eVocabularySetID.eNone, 'Other', false);
         });
@@ -544,6 +548,7 @@ function vocabularyCacheTestClearFlush(): void {
 }
 
 function testVocabulary(vocabulary: DB.Vocabulary | undefined, termExpected: string): void {
+    // LOG.logger.info(`VocabularyCacheTest testVocabulary ${termExpected} ${JSON.stringify(vocabulary)}`);
     expect(vocabulary).toBeTruthy();
     /* istanbul ignore else */
     if (vocabulary)

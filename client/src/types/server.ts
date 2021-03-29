@@ -20,6 +20,7 @@ export enum eVocabularySetID {
     eWorkflowStepWorkflowStepType,
     eAssetAssetType,
     eJobJobType,
+    eWorkflowType,
     eNone = -1
 }
 
@@ -97,6 +98,7 @@ export enum eVocabularyID {
     eJobJobTypeCookSIVoyagerAsset,
     eJobJobTypeCookSIVoyagerScene,
     eJobJobTypeCookUnwrap,
+    eWorkflowTypeCookJob,
     eNone = -1
 }
 
