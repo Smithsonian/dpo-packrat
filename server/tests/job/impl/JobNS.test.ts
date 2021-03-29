@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { IJob, IJobEngine, JobFactory } from '../../../job/interface';
+import { IJob, IJobEngine, JobFactory, JobCreationParameters } from '../../../job/interface';
 import { JOB_TYPE } from '../../../config';
 import { eVocabularyID } from '../../../cache';
 
@@ -63,8 +63,7 @@ describe('JobNS Cook Tests', () => {
     // TODO: test job cancellation
     test('IJob.Cook invalid job IDs', async () => {
         // expected failures:
-        expect(await testCreateByID(0, undefined, null, null, false)).toBeFalsy();
-        expect(await testCreateByType(eVocabularyID.eNone, undefined, null, null, false)).toBeFalsy();
+        expect(await testCreate(0, eVocabularyID.eNone, undefined, null, null, false)).toBeFalsy();
     });
 
     test('IJob.Cook Job Completion', async() => {
@@ -133,7 +132,7 @@ function testCookExplicit(testCase: string, eJobType: eVocabularyID): void {
         const parameters: any = computeJobParameters(testCase, eJobType);
         expect(parameters).toBeTruthy();
 
-        const job: IJob | null = await testCreateByType(eJobType, assetVersionIDs, parameters, null, true);
+        const job: IJob | null = await testCreate(null, eJobType, assetVersionIDs, parameters, null, true);
         expect(job).toBeTruthy();
         if (!job)
             return;
@@ -161,7 +160,7 @@ function testCookImplicit(testCase: string, eJobType: eVocabularyID): void {
         if (!dbJobs || dbJobs.length != 1)
             return;
         const idJob: number = dbJobs[0].idJob;
-        const job: IJob | null = await testCreateByID(idJob, assetVersionIDs, parameters, '', true); // schedule === '' -> run now
+        const job: IJob | null = await testCreate(idJob, null, assetVersionIDs, parameters, '', true); // frequency === '' -> run now
         expect(job).toBeTruthy();
         if (!job)
             return;
@@ -181,23 +180,19 @@ async function recordJob(job: IJob, eJobType: eVocabularyID, testCase: string): 
         JobDataMap.set(dbJobRun.idJobRun, new JobData(dbJobRun, eJobType, testCase));
 }
 
-async function testCreateByID(idJob: number, idAssetVersions: number[] | undefined, parameters: any,
-    schedule: string | null, expectSuccess: boolean = true): Promise<IJob | null> {
+async function testCreate(idJob: number | null, eJobType: eVocabularyID | null, idAssetVersions: number[] | undefined, parameters: any,
+    frequency: string | null, expectSuccess: boolean = true): Promise<IJob | null> {
     expect(jobEngine).toBeTruthy(); if (!jobEngine) return null;
 
-    const job: IJob | null = await jobEngine.createByID(idJob, idAssetVersions || null, parameters, schedule);
-    if (expectSuccess)
-        expect(job).toBeTruthy();
-    else
-        expect(job).toBeFalsy();
-    return job;
-}
+    const JPC: JobCreationParameters = {
+        idJob,
+        eJobType,
+        idAssetVersions: idAssetVersions || null,
+        parameters,
+        frequency
+    };
 
-async function testCreateByType(eJobType: eVocabularyID, idAssetVersions: number[] | undefined, parameters: any,
-    schedule: string | null, expectSuccess: boolean = true): Promise<IJob | null> {
-    expect(jobEngine).toBeTruthy(); if (!jobEngine) return null;
-
-    const job: IJob | null = await jobEngine.createByType(eJobType, idAssetVersions || null, parameters, schedule);
+    const job: IJob | null = await jobEngine.create(JPC);
     if (expectSuccess)
         expect(job).toBeTruthy();
     else
