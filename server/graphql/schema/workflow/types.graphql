@@ -15,6 +15,7 @@ type Workflow {
 
 type WorkflowStep {
     idWorkflowStep: Int!
+    # JobRun: JobRun
     DateCreated: DateTime!
     idUserOwner: Int!
     idVWorkflowStepType: Int!

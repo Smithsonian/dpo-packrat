@@ -6,6 +6,7 @@ import * as LOG from '../../utils/logger';
 
 export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements WorkflowStepBase {
     idWorkflowStep!: number;
+    idJobRun!: number | null;
     DateCompleted!: Date | null;
     DateCreated!: Date;
     idUserOwner!: number;
@@ -13,20 +14,25 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
     idWorkflow!: number;
     State!: number;
 
+    idJobRunOrig!: number | null;
+
     constructor(input: WorkflowStepBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    protected updateCachedValues(): void {
+        this.idJobRunOrig = this.idJobRun;
+    }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { DateCompleted, DateCreated, idUserOwner, idVWorkflowStepType, idWorkflow, State } = this;
+            const { idJobRun, DateCompleted, DateCreated, idUserOwner, idVWorkflowStepType, idWorkflow, State } = this;
             ({ idWorkflowStep: this.idWorkflowStep, DateCompleted: this.DateCompleted, DateCreated: this.DateCreated,
                 idUserOwner: this.idUserOwner, idVWorkflowStepType: this.idVWorkflowStepType,
                 idWorkflow: this.idWorkflow, State: this.State } =
                 await DBC.DBConnection.prisma.workflowStep.create({
                     data: {
+                        JobRun:             idJobRun ? { connect: { idJobRun }, } : undefined,
                         Workflow:           { connect: { idWorkflow }, },
                         User:               { connect: { idUser: idUserOwner }, },
                         Vocabulary:         { connect: { idVocabulary: idVWorkflowStepType }, },
@@ -44,10 +50,11 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idWorkflowStep, DateCompleted, DateCreated, idUserOwner, idVWorkflowStepType, idWorkflow, State } = this;
+            const { idWorkflowStep, idJobRun, DateCompleted, DateCreated, idUserOwner, idVWorkflowStepType, idWorkflow, State, idJobRunOrig } = this;
             return await DBC.DBConnection.prisma.workflowStep.update({
                 where: { idWorkflowStep, },
                 data: {
+                    JobRun:             idJobRun ? { connect: { idJobRun }, } : idJobRunOrig ? { disconnect: true, } : undefined,
                     Workflow:           { connect: { idWorkflow }, },
                     User:               { connect: { idUser: idUserOwner }, },
                     Vocabulary:         { connect: { idVocabulary: idVWorkflowStepType }, },

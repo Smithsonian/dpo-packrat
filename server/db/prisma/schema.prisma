@@ -290,17 +290,18 @@ model Job {
 }
 
 model JobRun {
-  idJobRun      Int       @id @default(autoincrement())
+  idJobRun      Int            @id @default(autoincrement())
   idJob         Int
   Status        Int
   Result        Boolean?
-  DateStart     DateTime? @mariasql.DateTime(0)
-  DateEnd       DateTime? @mariasql.DateTime(0)
-  Configuration String?   @mariasql.Text
-  Parameters    String?   @mariasql.Text
-  Output        String?   @mariasql.Text
-  Error         String?   @mariasql.Text
-  Job           Job       @relation(fields: [idJob], references: [idJob])
+  DateStart     DateTime?      @mariasql.DateTime(0)
+  DateEnd       DateTime?      @mariasql.DateTime(0)
+  Configuration String?        @mariasql.Text
+  Parameters    String?        @mariasql.Text
+  Output        String?        @mariasql.Text
+  Error         String?        @mariasql.Text
+  Job           Job            @relation(fields: [idJob], references: [idJob])
+  WorkflowStep  WorkflowStep[]
 
   @@index([Status], name: "JobRun_Status")
   @@index([idJob], name: "JobRun_idJob")
@@ -393,10 +394,10 @@ model Model {
 }
 
 model ModelMaterial {
-  idModelMaterial               Int                    @id @default(autoincrement())
-  Name                          String?                @mariasql.VarChar(255)
-  ModelMaterialChannel          ModelMaterialChannel[]
-  ModelObjectModelMaterialXref  ModelObjectModelMaterialXref[]
+  idModelMaterial              Int                            @id @default(autoincrement())
+  Name                         String?                        @mariasql.VarChar(255)
+  ModelMaterialChannel         ModelMaterialChannel[]
+  ModelObjectModelMaterialXref ModelObjectModelMaterialXref[]
 }
 
 model ModelMaterialChannel {
@@ -461,26 +462,26 @@ model ModelMetrics {
 }
 
 model ModelObject {
-  idModelObject                 Int                           @id @default(autoincrement())
-  idModel                       Int
-  idModelMetrics                Int?
-  Model                         Model                         @relation(fields: [idModel], references: [idModel])
-  ModelMetrics                  ModelMetrics?                 @relation(fields: [idModelMetrics], references: [idModelMetrics])
-  ModelObjectModelMaterialXref  ModelObjectModelMaterialXref[]
+  idModelObject                Int                            @id @default(autoincrement())
+  idModel                      Int
+  idModelMetrics               Int?
+  Model                        Model                          @relation(fields: [idModel], references: [idModel])
+  ModelMetrics                 ModelMetrics?                  @relation(fields: [idModelMetrics], references: [idModelMetrics])
+  ModelObjectModelMaterialXref ModelObjectModelMaterialXref[]
 
   @@index([idModel], name: "ModelObject_idModel")
   @@index([idModelMetrics], name: "fk_modelobject_modelmetrics1")
 }
 
 model ModelObjectModelMaterialXref {
-  idModelObjectModelMaterialXref  Int             @id @default(autoincrement())
-  idModelObject                   Int
-  idModelMaterial                 Int
-  ModelObject                     ModelObject     @relation(fields: [idModelObject], references: [idModelObject])
-  ModelMaterial                   ModelMaterial   @relation(fields: [idModelMaterial], references: [idModelMaterial])
+  idModelObjectModelMaterialXref Int           @id @default(autoincrement())
+  idModelObject                  Int
+  idModelMaterial                Int
+  ModelMaterial                  ModelMaterial @relation(fields: [idModelMaterial], references: [idModelMaterial])
+  ModelObject                    ModelObject   @relation(fields: [idModelObject], references: [idModelObject])
 
-  @@index([idModelObject], name: "ModelObjectModelMaterialXref_idModelObject")
   @@index([idModelMaterial], name: "ModelObjectModelMaterialXref_idModelMaterial")
+  @@index([idModelObject], name: "ModelObjectModelMaterialXref_idModelObject")
 }
 
 model ModelProcessingAction {
@@ -789,17 +790,20 @@ model Workflow {
 model WorkflowStep {
   idWorkflowStep               Int                            @id @default(autoincrement())
   idWorkflow                   Int
+  idJobRun                     Int?
   idUserOwner                  Int
   idVWorkflowStepType          Int
   State                        Int
   DateCreated                  DateTime                       @mariasql.DateTime(0)
   DateCompleted                DateTime?                      @mariasql.DateTime(0)
+  JobRun                       JobRun?                        @relation(fields: [idJobRun], references: [idJobRun])
   User                         User                           @relation(fields: [idUserOwner], references: [idUser])
   Vocabulary                   Vocabulary                     @relation(fields: [idVWorkflowStepType], references: [idVocabulary])
   Workflow                     Workflow                       @relation(fields: [idWorkflow], references: [idWorkflow])
   WorkflowStepSystemObjectXref WorkflowStepSystemObjectXref[]
 
   @@index([State, idWorkflow], name: "WorkflowStep_State_idWorkflow")
+  @@index([idJobRun], name: "WorkflowStep_idJobRun")
   @@index([idUserOwner], name: "WorkflowStep_idUserOwner")
   @@index([idWorkflow, DateCompleted], name: "WorkflowStep_idWorkflow_DateCompleted")
   @@index([idWorkflow, DateCreated], name: "WorkflowStep_idWorkflow_DateCreated")

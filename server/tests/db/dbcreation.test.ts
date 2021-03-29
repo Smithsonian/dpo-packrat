@@ -119,6 +119,7 @@ let vocabularySet: DBAPI.VocabularySet | null;
 let workflow: DBAPI.Workflow | null;
 let workflowNulls: DBAPI.Workflow | null;
 let workflowStep: DBAPI.WorkflowStep | null;
+let workflowStepNulls: DBAPI.WorkflowStep | null;
 let workflowStepSystemObjectXref: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowStepSystemObjectXref2: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowTemplate: DBAPI.WorkflowTemplate | null;
@@ -1329,9 +1330,10 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: WorkflowStep', async () => {
-        if (workflow && userActive && vocabulary)
+        if (workflow && userActive && vocabulary && jobRun)
             workflowStep = await UTIL.createWorkflowStepTest({
                 idWorkflow: workflow.idWorkflow,
+                idJobRun: jobRun.idJobRun,
                 idUserOwner: userActive.idUser,
                 idVWorkflowStepType: vocabulary.idVocabulary,
                 State: 0,
@@ -1343,6 +1345,23 @@ describe('DB Creation Test Suite', () => {
         if (workflowStep) {
             expect(await workflowStep.create()).toBeTruthy();
             expect(workflowStep.idWorkflowStep).toBeGreaterThan(0);
+        }
+
+        if (workflow && userActive && vocabulary)
+            workflowStepNulls = await UTIL.createWorkflowStepTest({
+                idWorkflow: workflow.idWorkflow,
+                idJobRun: null,
+                idUserOwner: userActive.idUser,
+                idVWorkflowStepType: vocabulary.idVocabulary,
+                State: 0,
+                DateCreated: UTIL.nowCleansed(),
+                DateCompleted: UTIL.nowCleansed(),
+                idWorkflowStep: 0
+            });
+        expect(workflowStepNulls).toBeTruthy();
+        if (workflowStepNulls) {
+            expect(await workflowStepNulls.create()).toBeTruthy();
+            expect(workflowStepNulls.idWorkflowStep).toBeGreaterThan(0);
         }
     });
 
@@ -5891,6 +5910,35 @@ describe('DB Update Test Suite', () => {
             expect(workflowStepFetch).toBeTruthy();
             if (workflowStepFetch)
                 expect(workflowStepFetch.idWorkflow).toBe(workflowNulls.idWorkflow);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: WorkflowStep.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (workflowStep) {
+            workflowStep.idJobRun = null;
+            bUpdated = await workflowStep.update();
+
+            const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
+            expect(workflowStepFetch).toBeTruthy();
+            if (workflowStepFetch)
+                expect(workflowStepFetch.idJobRun).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: WorkflowStep.update when null', async () => {
+        let bUpdated: boolean = false;
+        if (workflowStep) {
+            const dateUpdated: Date = UTIL.nowCleansed();
+            workflowStep.DateCompleted = dateUpdated;
+            bUpdated = await workflowStep.update();
+
+            const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
+            expect(workflowStepFetch).toBeTruthy();
+            if (workflowStepFetch)
+                expect(workflowStepFetch.DateCompleted).toEqual(dateUpdated);
         }
         expect(bUpdated).toBeTruthy();
     });
