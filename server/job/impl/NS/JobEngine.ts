@@ -24,33 +24,42 @@ export class JobEngine implements JOB.IJobEngine {
     private jobMap: Map<number, JobData> = new Map<number, JobData>();  // map from JobRun.idJobRun to JobData
 
     // #region IJobEngine interface
-    async createByID(idJob: number, idAssetVersions: number[] | null,
-        parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
-        const dbJob: DBAPI.Job | null = await DBAPI.Job.fetch(idJob);
-        if (!dbJob) {
-            LOG.logger.error(`JobEngine.createByID unable to fetch Job with ID ${idJob}`);
-            return null;
+    async create(jobParams: JOB.JobCreationParameters): Promise<JOB.IJob | null> {
+        const idJob: number | null = jobParams.idJob;
+        let eJobType: CACHE.eVocabularyID | null = jobParams.eJobType;
+        const idAssetVersions: number[] | null = jobParams.idAssetVersions;
+        const parameters: any = jobParams.parameters;
+        const frequency: string | null = jobParams.frequency;
+
+        if (idJob) {
+            // look up job type
+            const dbJob: DBAPI.Job | null = await DBAPI.Job.fetch(idJob);
+            if (!dbJob) {
+                LOG.logger.error(`JobEngine.create unable to fetch Job with ID ${idJob}`);
+                return null;
+            }
+            const eJobType2: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(dbJob.idVJobType);
+            if (!eJobType2) {
+                LOG.logger.error(`JobEngine.createByID unable to fetch Job type from ${JSON.stringify(dbJob)}`);
+                return null;
+            }
+
+            if (eJobType === null)
+                eJobType = eJobType2;
+            else if (eJobType != eJobType2) {
+                LOG.logger.error(`JobEngine.create called with contradictory idJob (job type ${CACHE.eVocabularyID[eJobType2]}) vs. job type ${CACHE.eVocabularyID[eJobType]}`);
+                return null;
+            }
         }
 
-        const eJobType: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(dbJob.idVJobType);
         if (!eJobType) {
-            LOG.logger.error(`JobEngine.createByID unable to fetch Job type from ${JSON.stringify(dbJob)}`);
+            LOG.logger.error('JobEngine.create called with null values for idJob and eJobType');
             return null;
         }
 
-        return await this.createByWorker(dbJob, eJobType, idAssetVersions, parameters, frequency);
-    }
-
-    async createByType(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null,
-        parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
         const dbJob: DBAPI.Job | null = await this.createJobDBRecord(eJobType, frequency);
         if (!dbJob)
             return null;
-        return await this.createByWorker(dbJob, eJobType, idAssetVersions, parameters, frequency);
-    }
-
-    private async createByWorker(dbJob: DBAPI.Job, eJobType: CACHE.eVocabularyID,
-        idAssetVersions: number[] | null, parameters: any, frequency: string | null): Promise<JOB.IJob | null> {
 
         const dbJobRun: DBAPI.JobRun | null = await this.createJobRunDBRecord(dbJob, null, parameters);
         if (!dbJobRun) {
