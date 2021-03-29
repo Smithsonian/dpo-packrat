@@ -1709,6 +1709,29 @@ type GetWorkflowResult {
   Workflow: Workflow
 }
 
+type Job {
+  idJob: Int!
+  idVJobType: Int!
+  Name: String!
+  Status: Int
+  Frequency: String
+  VJobType: Vocabulary
+}
+
+type JobRun {
+  idJobRun: Int!
+  idJob: Int!
+  Status: Int!
+  Result: Boolean
+  DateStart: DateTime
+  DateEnd: DateTime
+  Configuration: String
+  Parameters: String
+  Output: String
+  Error: String
+  Job: Job
+}
+
 type Workflow {
   idWorkflow: Int!
   DateInitiated: DateTime!
@@ -1724,6 +1747,7 @@ type Workflow {
 
 type WorkflowStep {
   idWorkflowStep: Int!
+  JobRun: JobRun
   DateCreated: DateTime!
   idUserOwner: Int!
   idVWorkflowStepType: Int!

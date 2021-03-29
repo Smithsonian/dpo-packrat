@@ -2110,6 +2110,31 @@ export type GetWorkflowResult = {
   Workflow?: Maybe<Workflow>;
 };
 
+export type Job = {
+  __typename?: 'Job';
+  idJob: Scalars['Int'];
+  idVJobType: Scalars['Int'];
+  Name: Scalars['String'];
+  Status?: Maybe<Scalars['Int']>;
+  Frequency?: Maybe<Scalars['String']>;
+  VJobType?: Maybe<Vocabulary>;
+};
+
+export type JobRun = {
+  __typename?: 'JobRun';
+  idJobRun: Scalars['Int'];
+  idJob: Scalars['Int'];
+  Status: Scalars['Int'];
+  Result?: Maybe<Scalars['Boolean']>;
+  DateStart?: Maybe<Scalars['DateTime']>;
+  DateEnd?: Maybe<Scalars['DateTime']>;
+  Configuration?: Maybe<Scalars['String']>;
+  Parameters?: Maybe<Scalars['String']>;
+  Output?: Maybe<Scalars['String']>;
+  Error?: Maybe<Scalars['String']>;
+  Job?: Maybe<Job>;
+};
+
 export type Workflow = {
   __typename?: 'Workflow';
   idWorkflow: Scalars['Int'];
@@ -2127,6 +2152,7 @@ export type Workflow = {
 export type WorkflowStep = {
   __typename?: 'WorkflowStep';
   idWorkflowStep: Scalars['Int'];
+  JobRun?: Maybe<JobRun>;
   DateCreated: Scalars['DateTime'];
   idUserOwner: Scalars['Int'];
   idVWorkflowStepType: Scalars['Int'];
