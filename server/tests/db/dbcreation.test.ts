@@ -357,10 +357,11 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: WorkflowTemplate', async () => {
-        workflowTemplate = await UTIL.createWorkflowTemplateTest({
-            Name: 'Test Workflow Template',
-            idWorkflowTemplate: 0
-        });
+        if (vocabulary)
+            workflowTemplate = await UTIL.createWorkflowTemplateTest({
+                idVWorkflowType: vocabulary.idVocabulary,
+                idWorkflowTemplate: 0
+            });
         expect(workflowTemplate).toBeTruthy();
     });
 
@@ -1303,6 +1304,7 @@ describe('DB Creation Test Suite', () => {
                 idUserInitiator: userActive.idUser,
                 DateInitiated: UTIL.nowCleansed(),
                 DateUpdated: UTIL.nowCleansed(),
+                Parameters: null,
                 idWorkflow: 0
             });
         expect(workflow).toBeTruthy();
@@ -1320,6 +1322,7 @@ describe('DB Creation Test Suite', () => {
                 idUserInitiator: null,
                 DateInitiated: UTIL.nowCleansed(),
                 DateUpdated: UTIL.nowCleansed(),
+                Parameters: null,
                 idWorkflow: 0
             });
         expect(workflowNulls).toBeTruthy();
@@ -5960,15 +5963,15 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: WorkflowTemplate.update', async () => {
         let bUpdated: boolean = false;
-        if (workflowTemplate) {
-            const updatedName: string = 'Updated Test Workflow Template Name';
-            workflowTemplate.Name   = updatedName;
+        if (workflowTemplate && vocabulary2) {
+            const updatedID: number = vocabulary2.idVocabulary;
+            workflowTemplate.idVWorkflowType = updatedID;
             bUpdated = await workflowTemplate.update();
 
             const workflowTemplateFetch: DBAPI.WorkflowTemplate | null = await DBAPI.WorkflowTemplate.fetch(workflowTemplate.idWorkflowTemplate);
             expect(workflowTemplateFetch).toBeTruthy();
             if (workflowTemplateFetch)
-                expect(workflowTemplateFetch.Name).toBe(updatedName);
+                expect(workflowTemplateFetch.idVWorkflowType).toBe(updatedID);
         }
         expect(bUpdated).toBeTruthy();
     });

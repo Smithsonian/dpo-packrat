@@ -555,6 +555,7 @@ CREATE TABLE IF NOT EXISTS `Workflow` (
   `idUserInitiator` int(11) DEFAULT NULL,
   `DateInitiated` datetime NOT NULL,
   `DateUpdated` datetime NOT NULL,
+  `Parameters` text NULL,
   PRIMARY KEY (`idWorkflow`),
   KEY `Workflow_idProject` (`idProject`),
   KEY `Workflow_idUserInitiator` (`idUserInitiator`)
@@ -589,7 +590,7 @@ CREATE TABLE IF NOT EXISTS `WorkflowStepSystemObjectXref` (
 
 CREATE TABLE IF NOT EXISTS `WorkflowTemplate` (
   `idWorkflowTemplate` int(11) NOT NULL AUTO_INCREMENT,
-  `Name` varchar(255) NOT NULL,
+  `idVWorkflowType` int(11) NOT NULL,
   PRIMARY KEY (`idWorkflowTemplate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -1157,5 +1158,12 @@ ADD CONSTRAINT `fk_workflowstepsystemobjectxref_workflowstep1`
 ADD CONSTRAINT `fk_workflowstepsystemobjectxref_systemobject1`
   FOREIGN KEY (`idSystemObject`)
   REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `WorkflowTemplate` 
+ADD CONSTRAINT `fk_workflowtemplate_vocabulary1`
+  FOREIGN KEY (`idVWorkflowType`)
+  REFERENCES `Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;

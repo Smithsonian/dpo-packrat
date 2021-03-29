@@ -5,7 +5,7 @@ import * as LOG from '../../utils/logger';
 
 export class WorkflowTemplate extends DBC.DBObject<WorkflowTemplateBase> implements WorkflowTemplateBase {
     idWorkflowTemplate!: number;
-    Name!: string;
+    idVWorkflowType!: number;
 
     constructor(input: WorkflowTemplateBase) {
         super(input);
@@ -15,9 +15,11 @@ export class WorkflowTemplate extends DBC.DBObject<WorkflowTemplateBase> impleme
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name } = this;
-            ({ idWorkflowTemplate: this.idWorkflowTemplate, Name: this.Name } =
-                await DBC.DBConnection.prisma.workflowTemplate.create({ data: { Name, } }));
+            const { idVWorkflowType } = this;
+            ({ idWorkflowTemplate: this.idWorkflowTemplate, idVWorkflowType: this.idVWorkflowType } =
+                await DBC.DBConnection.prisma.workflowTemplate.create({
+                    data: { Vocabulary: { connect: { idVocabulary: idVWorkflowType }, }, }
+                }));
             return true;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowTemplate.create', error);
@@ -27,10 +29,10 @@ export class WorkflowTemplate extends DBC.DBObject<WorkflowTemplateBase> impleme
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idWorkflowTemplate, Name } = this;
+            const { idWorkflowTemplate, idVWorkflowType } = this;
             return await DBC.DBConnection.prisma.workflowTemplate.update({
                 where: { idWorkflowTemplate, },
-                data: { Name, },
+                data: { Vocabulary: { connect: { idVocabulary: idVWorkflowType }, }, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.WorkflowTemplate.update', error);

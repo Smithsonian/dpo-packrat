@@ -30,6 +30,7 @@ export enum eVocabularySetID {
     eWorkflowStepWorkflowStepType,
     eAssetAssetType,
     eJobJobType,
+    eWorkflowType,
     eNone = -1
 }
 
@@ -123,6 +124,7 @@ export enum eVocabularyID {
     eJobJobTypeCookSIVoyagerAsset,
     eJobJobTypeCookSIVoyagerScene,
     eJobJobTypeCookUnwrap,
+    eWorkflowTypeCookJob,
     eNone = -1
 }
 
@@ -202,6 +204,7 @@ export class VocabularyCache {
                 case 'WorkflowStep.WorkflowStepType':           eVocabSetEnum = eVocabularySetID.eWorkflowStepWorkflowStepType; break;
                 case 'Asset.AssetType':                         eVocabSetEnum = eVocabularySetID.eAssetAssetType; break;
                 case 'Job.JobType':                             eVocabSetEnum = eVocabularySetID.eJobJobType; break;
+                case 'Workflow.Type':                           eVocabSetEnum = eVocabularySetID.eWorkflowType; break;
             }
 
             /* istanbul ignore else */
@@ -372,6 +375,12 @@ export class VocabularyCache {
                         case 'Cook: unwrap':                    eVocabEnum = eVocabularyID.eJobJobTypeCookUnwrap; break;
                     }
                 } break;
+
+                case eVocabularySetID.eWorkflowType: {
+                    switch (vocabulary.Term) {
+                        case 'Cook Job':                 eVocabEnum = eVocabularyID.eWorkflowTypeCookJob; break;
+                    }
+                }
             }
 
             if (eVocabEnum != eVocabularyID.eNone) {

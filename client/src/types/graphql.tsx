@@ -2138,14 +2138,15 @@ export type JobRun = {
 export type Workflow = {
   __typename?: 'Workflow';
   idWorkflow: Scalars['Int'];
-  DateInitiated: Scalars['DateTime'];
-  DateUpdated: Scalars['DateTime'];
   idWorkflowTemplate: Scalars['Int'];
   idProject?: Maybe<Scalars['Int']>;
   idUserInitiator?: Maybe<Scalars['Int']>;
+  DateInitiated: Scalars['DateTime'];
+  DateUpdated: Scalars['DateTime'];
+  Parameters?: Maybe<Scalars['String']>;
+  WorkflowTemplate?: Maybe<WorkflowTemplate>;
   Project?: Maybe<Project>;
   UserInitiator?: Maybe<User>;
-  WorkflowTemplate?: Maybe<WorkflowTemplate>;
   WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 

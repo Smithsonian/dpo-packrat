@@ -759,6 +759,7 @@ model Vocabulary {
   ModelMaterialChannel                                                     ModelMaterialChannel[]
   ModelProcessingActionStep                                                ModelProcessingActionStep[]
   WorkflowStep                                                             WorkflowStep[]
+  WorkflowTemplate                                                         WorkflowTemplate[]
 
   @@index([idVocabularySet, SortOrder], name: "Vocabulary_idVocabulySet_SortOrder")
 }
@@ -777,6 +778,7 @@ model Workflow {
   idUserInitiator    Int?
   DateInitiated      DateTime         @mariasql.DateTime(0)
   DateUpdated        DateTime         @mariasql.DateTime(0)
+  Parameters         String?          @mariasql.Text
   Project            Project?         @relation(fields: [idProject], references: [idProject])
   User               User?            @relation(fields: [idUserInitiator], references: [idUser])
   WorkflowTemplate   WorkflowTemplate @relation(fields: [idWorkflowTemplate], references: [idWorkflowTemplate])
@@ -824,6 +826,9 @@ model WorkflowStepSystemObjectXref {
 
 model WorkflowTemplate {
   idWorkflowTemplate Int        @id @default(autoincrement())
-  Name               String     @mariasql.VarChar(255)
+  idVWorkflowType    Int
+  Vocabulary         Vocabulary @relation(fields: [idVWorkflowType], references: [idVocabulary])
   Workflow           Workflow[]
+
+  @@index([idVWorkflowType], name: "fk_workflowtemplate_vocabulary1")
 }
