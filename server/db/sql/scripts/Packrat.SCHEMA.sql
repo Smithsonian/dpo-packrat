@@ -563,6 +563,7 @@ CREATE TABLE IF NOT EXISTS `Workflow` (
 CREATE TABLE IF NOT EXISTS `WorkflowStep` (
   `idWorkflowStep` int(11) NOT NULL AUTO_INCREMENT,
   `idWorkflow` int(11) NOT NULL,
+  `idJobRun` int(11) NULL,
   `idUserOwner` int(11) NOT NULL,
   `idVWorkflowStepType` int(11) NOT NULL,
   `State` int(11) NOT NULL,
@@ -572,6 +573,7 @@ CREATE TABLE IF NOT EXISTS `WorkflowStep` (
   KEY `WorkflowStep_idWorkflow_DateCreated` (`idWorkflow`,`DateCreated`),
   KEY `WorkflowStep_idWorkflow_DateCompleted` (`idWorkflow`,`DateCompleted`),
   KEY `WorkflowStep_idUserOwner` (`idUserOwner`),
+  KEY `WorkflowStep_idJobRun` (`idJobRun`),
   KEY `WorkflowStep_State_idWorkflow` (`State`,`idWorkflow`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -1138,6 +1140,11 @@ ADD CONSTRAINT `fk_workflowstep_user1`
 ADD CONSTRAINT `fk_workflowstep_vocabulary1`
   FOREIGN KEY (`idVWorkflowStepType`)
   REFERENCES `Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_workflowstep_jobrun1`
+  FOREIGN KEY (`idJobRun`)
+  REFERENCES `JobRun` (`idJobRun`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
