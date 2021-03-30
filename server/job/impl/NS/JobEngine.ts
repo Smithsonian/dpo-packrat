@@ -27,13 +27,14 @@ export class JobEngine implements JOB.IJobEngine {
     async create(jobParams: JOB.JobCreationParameters): Promise<JOB.IJob | null> {
         const idJob: number | null = jobParams.idJob;
         let eJobType: CACHE.eVocabularyID | null = jobParams.eJobType;
+        let dbJob: DBAPI.Job | null = null;
         const idAssetVersions: number[] | null = jobParams.idAssetVersions;
         const parameters: any = jobParams.parameters;
         const frequency: string | null = jobParams.frequency;
 
         if (idJob) {
             // look up job type
-            const dbJob: DBAPI.Job | null = await DBAPI.Job.fetch(idJob);
+            dbJob = await DBAPI.Job.fetch(idJob);
             if (!dbJob) {
                 LOG.logger.error(`JobEngine.create unable to fetch Job with ID ${idJob}`);
                 return null;
@@ -50,16 +51,16 @@ export class JobEngine implements JOB.IJobEngine {
                 LOG.logger.error(`JobEngine.create called with contradictory idJob (job type ${CACHE.eVocabularyID[eJobType2]}) vs. job type ${CACHE.eVocabularyID[eJobType]}`);
                 return null;
             }
-        }
+        } else {
+            if (!eJobType) {
+                LOG.logger.error('JobEngine.create called with null values for idJob and eJobType');
+                return null;
+            }
 
-        if (!eJobType) {
-            LOG.logger.error('JobEngine.create called with null values for idJob and eJobType');
-            return null;
+            dbJob = await this.createJobDBRecord(eJobType, frequency);
+            if (!dbJob)
+                return null;
         }
-
-        const dbJob: DBAPI.Job | null = await this.createJobDBRecord(eJobType, frequency);
-        if (!dbJob)
-            return null;
 
         const dbJobRun: DBAPI.JobRun | null = await this.createJobRunDBRecord(dbJob, null, parameters);
         if (!dbJobRun) {
@@ -157,7 +158,14 @@ export class JobEngine implements JOB.IJobEngine {
 
     private createJobWorker(eJobType: CACHE.eVocabularyID, idAssetVersions: number[] | null, parameters: any, dbJobRun: DBAPI.JobRun): JobPackrat | null {
         switch (eJobType) {
-            case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect: return new COOK.JobCookSIPackratInspect(idAssetVersions, parameters, dbJobRun);
+            case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect:
+                // confirm that parameters is of type JobCookSIPackratInspectParameters
+                if (parameters instanceof COOK.JobCookSIPackratInspectParameters)
+                    return new COOK.JobCookSIPackratInspect(idAssetVersions, parameters, dbJobRun);
+                else {
+                    LOG.logger.error(`JobEngine.createJobWorker called with parameters not of type JobCookSIPackratInspect: ${JSON.stringify(parameters)}`);
+                    return null;
+                }
             default:
                 LOG.logger.error(`JobEngine.createJobWorker unknown job type ${CACHE.eVocabularyID[eJobType]}`);
                 return null;

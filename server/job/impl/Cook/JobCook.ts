@@ -223,9 +223,10 @@ export abstract class JobCook<T> extends JobPackrat {
             };
             const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
             const res: H.IOResults = await H.Helpers.writeStreamToStream(RSR.readStream, WS);
+            WS.end();
 
             if (!res.success) {
-                const error = `JobCook.stageFiles unable to transmit file ${RSR.fileName} for asset version ${idAssetVersion}: ${RSR.error}`;
+                const error = `JobCook.stageFiles unable to transmit file ${RSR.fileName} for asset version ${idAssetVersion}: ${res.error}`;
                 LOG.logger.error(error);
                 return { success: false, error };
             } else
