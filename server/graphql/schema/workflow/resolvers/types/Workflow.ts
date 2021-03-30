@@ -5,8 +5,8 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 
 const Workflow = {
-    WorkflowTemplate: async (parent: Parent): Promise<DBAPI.WorkflowTemplate | null> => {
-        return await DBAPI.WorkflowTemplate.fetch(parent.idWorkflowTemplate);
+    VWorkflowType: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVWorkflowType);
     },
     Project: async (parent: Parent): Promise<DBAPI.Project | null> => {
         return await DBAPI.Project.fetch(parent.idProject);

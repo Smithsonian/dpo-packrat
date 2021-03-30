@@ -25,13 +25,13 @@ type JobRun {
 
 type Workflow {
     idWorkflow: Int!
-    idWorkflowTemplate: Int!
+    idVWorkflowType: Int!
     idProject: Int
     idUserInitiator: Int
     DateInitiated: DateTime!
     DateUpdated: DateTime!
     Parameters: String
-    WorkflowTemplate: WorkflowTemplate
+    VWorkflowType: Vocabulary
     Project: Project
     UserInitiator: User
     WorkflowStep: [WorkflowStep]
@@ -59,10 +59,4 @@ type WorkflowStepSystemObjectXref {
     Input: Boolean!
     SystemObject: SystemObject
     WorkflowStep: WorkflowStep
-}
-
-type WorkflowTemplate {
-    idWorkflowTemplate: Int!
-    Name: String!
-    Workflow: [Workflow]
 }

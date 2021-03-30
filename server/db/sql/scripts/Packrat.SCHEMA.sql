@@ -550,7 +550,7 @@ CREATE TABLE IF NOT EXISTS `VocabularySet` (
 
 CREATE TABLE IF NOT EXISTS `Workflow` (
   `idWorkflow` int(11) NOT NULL AUTO_INCREMENT,
-  `idWorkflowTemplate` int(11) NOT NULL,
+  `idVWorkflowType` int(11) NOT NULL,
   `idProject` int(11) DEFAULT NULL,
   `idUserInitiator` int(11) DEFAULT NULL,
   `DateInitiated` datetime NOT NULL,
@@ -586,12 +586,6 @@ CREATE TABLE IF NOT EXISTS `WorkflowStepSystemObjectXref` (
   PRIMARY KEY (`idWorkflowStepSystemObjectXref`),
   KEY `WorkflowStepSystemObjectXref_idWorkflowStep_Input` (`idWorkflowStep`,`Input`),
   KEY `WorkflowStepSystemObjectXref_idSystemObject_Input` (`idSystemObject`,`Input`)
-) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
-
-CREATE TABLE IF NOT EXISTS `WorkflowTemplate` (
-  `idWorkflowTemplate` int(11) NOT NULL AUTO_INCREMENT,
-  `idVWorkflowType` int(11) NOT NULL,
-  PRIMARY KEY (`idWorkflowTemplate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 -- Foreign Keys
@@ -1111,11 +1105,6 @@ ADD CONSTRAINT `fk_vocabulary_vocabularyset1`
   ON UPDATE NO ACTION;
 
 ALTER TABLE `Workflow` 
-ADD CONSTRAINT `fk_workflow_workflowtemplate1`
-  FOREIGN KEY (`idWorkflowTemplate`)
-  REFERENCES `WorkflowTemplate` (`idWorkflowTemplate`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_workflow_project1`
   FOREIGN KEY (`idProject`)
   REFERENCES `Project` (`idProject`)
@@ -1124,6 +1113,11 @@ ADD CONSTRAINT `fk_workflow_project1`
 ADD CONSTRAINT `fk_workflow_user1`
   FOREIGN KEY (`idUserInitiator`)
   REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_workflow_vocabulary1`
+  FOREIGN KEY (`idVWorkflowType`)
+  REFERENCES `Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
@@ -1158,12 +1152,5 @@ ADD CONSTRAINT `fk_workflowstepsystemobjectxref_workflowstep1`
 ADD CONSTRAINT `fk_workflowstepsystemobjectxref_systemobject1`
   FOREIGN KEY (`idSystemObject`)
   REFERENCES `SystemObject` (`idSystemObject`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `WorkflowTemplate` 
-ADD CONSTRAINT `fk_workflowtemplate_vocabulary1`
-  FOREIGN KEY (`idVWorkflowType`)
-  REFERENCES `Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;

@@ -1277,8 +1277,6 @@ INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term,
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-scene';
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: unwrap';
 
-INSERT INTO WorkFlowTemplate (idVWorkflowType) SELECT idVocabulary FROM Vocabulary WHERE Term = 'Cook Job';
-
 -- Entries for Test code
 INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELECT 'ITEM_GUID_1', @idVocabARK, idSystemObject FROM SystemObject WHERE idItem = (SELECT idItem FROM Item WHERE NAME = '401524 turtle scute');
 INSERT INTO Identifier (IdentifierValue, idVIdentifierType, idSystemObject) SELECT 'ITEM_GUID_2', @idVocabARK, idSystemObject FROM SystemObject WHERE idItem = (SELECT idItem FROM Item WHERE NAME = '401524 turtle scute');

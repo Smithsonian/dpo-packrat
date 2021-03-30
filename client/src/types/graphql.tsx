@@ -2138,13 +2138,13 @@ export type JobRun = {
 export type Workflow = {
   __typename?: 'Workflow';
   idWorkflow: Scalars['Int'];
-  idWorkflowTemplate: Scalars['Int'];
+  idVWorkflowType: Scalars['Int'];
   idProject?: Maybe<Scalars['Int']>;
   idUserInitiator?: Maybe<Scalars['Int']>;
   DateInitiated: Scalars['DateTime'];
   DateUpdated: Scalars['DateTime'];
   Parameters?: Maybe<Scalars['String']>;
-  WorkflowTemplate?: Maybe<WorkflowTemplate>;
+  VWorkflowType?: Maybe<Vocabulary>;
   Project?: Maybe<Project>;
   UserInitiator?: Maybe<User>;
   WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
@@ -2174,13 +2174,6 @@ export type WorkflowStepSystemObjectXref = {
   Input: Scalars['Boolean'];
   SystemObject?: Maybe<SystemObject>;
   WorkflowStep?: Maybe<WorkflowStep>;
-};
-
-export type WorkflowTemplate = {
-  __typename?: 'WorkflowTemplate';
-  idWorkflowTemplate: Scalars['Int'];
-  Name: Scalars['String'];
-  Workflow?: Maybe<Array<Maybe<Workflow>>>;
 };
 
 export type DiscardUploadedAssetVersionsMutationVariables = Exact<{
