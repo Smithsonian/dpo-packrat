@@ -3,7 +3,6 @@ import * as DB from '../../db';
 import * as H from '../../utils/helpers';
 import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
 // import * as LOG from '../../utils/logger';
-
 /*
 afterAll(async done => {
     await H.Helpers.sleep(4000);
@@ -534,6 +533,38 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             }
             expect(await VocabularyCache.vocabularyEnumToId(eVocabularyID.eNone)).toBeFalsy();
             expect(await VocabularyCache.vocabularyIdToEnum(0)).toBeFalsy();
+        });
+
+        test('Cache: VocabularyCache.vocabularySetEnumToId and vocabularySetIdToEnum' + description, async () => {
+            // iterate through all enums of eVocabularySetID; for each:
+            for (const sVocabSetID in eVocabularySetID) {
+                if (!isNaN(Number(sVocabSetID)))
+                    continue;
+                // LOG.logger.info(`VocabularyCache.vocabularySetEnumToId of ${sVocabSetID}`);
+                const eVocabSetID: eVocabularySetID = (<any>eVocabularySetID)[sVocabSetID];
+                const vocabularySet: DB.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
+                const vocabSetID: number | undefined = await VocabularyCache.vocabularySetEnumToId(eVocabSetID);
+
+                if (eVocabSetID != eVocabularySetID.eNone) {
+                    expect(vocabularySet).toBeTruthy();
+                    expect(vocabSetID).toBeTruthy();
+                } else {
+                    expect(vocabularySet).toBeFalsy();
+                    expect(vocabSetID).toBeFalsy();
+                    continue;
+                }
+
+                if (!vocabularySet)
+                    continue;
+                expect(vocabularySet.idVocabularySet).toEqual(vocabSetID);
+
+                // LOG.logger.info(`VocabularyCache.vocabularySetIdToEnum of ${vocabularySet.idVocabularySet}`);
+                // fetches the VocabularySet.idVocabularySet for a given vocabulary set enum
+                // static async vocabularySetIdToEnum(idVocabularySet: number): Promise<eVocabularySetID | undefined> {
+                const eVocabSetIDFetch: eVocabularySetID | undefined = await VocabularyCache.vocabularySetIdToEnum(vocabularySet.idVocabularySet);
+                expect(eVocabSetIDFetch).not.toBeUndefined();
+                expect(eVocabSetIDFetch).toEqual(eVocabSetID);
+            }
         });
     });
 }

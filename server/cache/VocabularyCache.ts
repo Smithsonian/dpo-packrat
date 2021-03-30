@@ -455,6 +455,14 @@ export class VocabularyCache {
         return this.vocabIDEnumMap.get(idVocabulary);
     }
 
+    private vocabularySetEnumToIdInternal(eVocabSetID: eVocabularySetID): number | undefined {
+        return this.vocabSetEnumIDMap.get(eVocabSetID);
+    }
+
+    private vocabularySetIdToEnumInternal(idVocabularySet: number): eVocabularySetID | undefined {
+        return this.vocabSetIDEnumMap.get(idVocabularySet);
+    }
+
     // **************************
     // Public Interface
     // **************************
@@ -521,6 +529,16 @@ export class VocabularyCache {
     /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. Note that not all vocabulary are represented by eVocabularyID entries. */
     static async vocabularyIdToEnum(idVocabulary: number): Promise<eVocabularyID | undefined> {
         return (await this.getInstance()).vocabularyIdToEnumInternal(idVocabulary);
+    }
+
+    /** fetches the VocabularySet.idVocabularySet for a given vocabulary set enum. */
+    static async vocabularySetEnumToId(eVocabSetID: eVocabularySetID): Promise<number | undefined> {
+        return (await this.getInstance()).vocabularySetEnumToIdInternal(eVocabSetID);
+    }
+
+    /** fetches the VocabularySet.idVocabularySet for a given vocabulary set enum */
+    static async vocabularySetIdToEnum(idVocabularySet: number): Promise<eVocabularySetID | undefined> {
+        return (await this.getInstance()).vocabularySetIdToEnumInternal(idVocabularySet);
     }
 
     static async mapPhotogrammetryVariantType(variantType: string): Promise<Vocabulary | undefined> {
