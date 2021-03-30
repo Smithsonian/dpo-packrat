@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, no-constant-condition */
 
 import { IJob, IJobEngine, JobFactory, JobCreationParameters } from '../../../job/interface';
 import { JOB_TYPE } from '../../../config';
@@ -27,6 +27,7 @@ let modelTestAvailable: boolean | null = null;
 let MTS: TESTMODEL.ModelTestSetup | null = new TESTMODEL.ModelTestSetup();
 const JobSet: Set<IJob> = new Set<IJob>();
 const JobDataMap: Map<number, JobData> = new Map<number, JobData>();
+const testTimeout: number = 6000000;
 
 afterAll(async done => {
     await H.Helpers.sleep(10000);
@@ -35,7 +36,7 @@ afterAll(async done => {
 
 describe('JobNS Init', () => {
     test('JobFactory.getInstance', async () => {
-        jest.setTimeout(350000);
+        jest.setTimeout(testTimeout);
         jobEngine = await JobFactory.getInstance(JOB_TYPE.NODE_SCHEDULE);
         expect(jobEngine).toBeTruthy();
 
@@ -48,14 +49,16 @@ describe('JobNS Init', () => {
 });
 
 describe('JobNS Cook Tests', () => {
-    testCookExplicit('fbx-stand-alone', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-    testCookImplicit('fbx-with-support', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-    testCookExplicit('glb', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-    testCookImplicit('obj', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-    testCookExplicit('ply', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-    testCookImplicit('stl', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-    testCookImplicit('x3d', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-
+    jest.setTimeout(testTimeout);
+    for (let nSet = 0; nSet <= 0; nSet++) {
+        testCookExplicit('fbx-stand-alone', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('fbx-with-support', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('glb', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('obj', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('ply', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('stl', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('x3d', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    }
     // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
     // testCookExplicit('usd', eVocabularyID.eJobJobTypeCookSIPackratInspect);
     // testCookImplicit('usdz', eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -67,9 +70,10 @@ describe('JobNS Cook Tests', () => {
     });
 
     test('IJob.Cook Job Completion', async() => {
+        jest.setTimeout(testTimeout);
         const jobFinalizationList: Promise<H.IOResults>[] = [];
         for (const job of JobSet)
-            jobFinalizationList.push(job.waitForCompletion(300000));
+            jobFinalizationList.push(job.waitForCompletion(testTimeout));
 
         LOG.logger.info(`JobNS Cook awaiting job completion of ${JobSet.size} jobs`);
         const resultsArray = await Promise.all(jobFinalizationList);
@@ -79,6 +83,7 @@ describe('JobNS Cook Tests', () => {
     });
 
     test('IJob.Cook Job Results', async() => {
+        jest.setTimeout(testTimeout);
         if (!modelTestAvailable)
             return;
 
@@ -126,7 +131,7 @@ function testCookExplicit(testCase: string, eJobType: eVocabularyID): void {
         if (!modelTestAvailable)
             return;
 
-        LOG.logger.info(`JobNS.test testCook('${testCase}): ${eVocabularyID[eJobType]} explicit IJob.executeJob`);
+        LOG.logger.info(`JobNS.test testCook(${testCase}): ${eVocabularyID[eJobType]} explicit IJob.executeJob`);
         const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
         expect(assetVersionIDs).toBeTruthy();
         const parameters: any = computeJobParameters(testCase, eJobType);
@@ -148,7 +153,7 @@ function testCookImplicit(testCase: string, eJobType: eVocabularyID): void {
         if (!modelTestAvailable)
             return;
 
-        LOG.logger.info(`JobNS.test testCook('${testCase}): ${eVocabularyID[eJobType]} implicit IJob.executeJob`);
+        LOG.logger.info(`JobNS.test testCook(${testCase}): ${eVocabularyID[eJobType]} implicit IJob.executeJob`);
         const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
         expect(assetVersionIDs).toBeTruthy();
         const parameters: any = computeJobParameters(testCase, eJobType);
