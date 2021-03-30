@@ -758,8 +758,8 @@ model Vocabulary {
   Model_Model_idVUnitsToVocabulary                                         Model[]                     @relation("Model_idVUnitsToVocabulary")
   ModelMaterialChannel                                                     ModelMaterialChannel[]
   ModelProcessingActionStep                                                ModelProcessingActionStep[]
+  Workflow                                                                 Workflow[]
   WorkflowStep                                                             WorkflowStep[]
-  WorkflowTemplate                                                         WorkflowTemplate[]
 
   @@index([idVocabularySet, SortOrder], name: "Vocabulary_idVocabulySet_SortOrder")
 }
@@ -772,21 +772,21 @@ model VocabularySet {
 }
 
 model Workflow {
-  idWorkflow         Int              @id @default(autoincrement())
-  idWorkflowTemplate Int
-  idProject          Int?
-  idUserInitiator    Int?
-  DateInitiated      DateTime         @mariasql.DateTime(0)
-  DateUpdated        DateTime         @mariasql.DateTime(0)
-  Parameters         String?          @mariasql.Text
-  Project            Project?         @relation(fields: [idProject], references: [idProject])
-  User               User?            @relation(fields: [idUserInitiator], references: [idUser])
-  WorkflowTemplate   WorkflowTemplate @relation(fields: [idWorkflowTemplate], references: [idWorkflowTemplate])
-  WorkflowStep       WorkflowStep[]
+  idWorkflow      Int            @id @default(autoincrement())
+  idVWorkflowType Int
+  idProject       Int?
+  idUserInitiator Int?
+  DateInitiated   DateTime       @mariasql.DateTime(0)
+  DateUpdated     DateTime       @mariasql.DateTime(0)
+  Parameters      String?        @mariasql.Text
+  Project         Project?       @relation(fields: [idProject], references: [idProject])
+  User            User?          @relation(fields: [idUserInitiator], references: [idUser])
+  Vocabulary      Vocabulary     @relation(fields: [idVWorkflowType], references: [idVocabulary])
+  WorkflowStep    WorkflowStep[]
 
   @@index([idProject], name: "Workflow_idProject")
   @@index([idUserInitiator], name: "Workflow_idUserInitiator")
-  @@index([idWorkflowTemplate], name: "fk_workflow_workflowtemplate1")
+  @@index([idVWorkflowType], name: "fk_workflow_vocabulary1")
 }
 
 model WorkflowStep {
@@ -822,13 +822,4 @@ model WorkflowStepSystemObjectXref {
 
   @@index([idSystemObject, Input], name: "WorkflowStepSystemObjectXref_idSystemObject_Input")
   @@index([idWorkflowStep, Input], name: "WorkflowStepSystemObjectXref_idWorkflowStep_Input")
-}
-
-model WorkflowTemplate {
-  idWorkflowTemplate Int        @id @default(autoincrement())
-  idVWorkflowType    Int
-  Vocabulary         Vocabulary @relation(fields: [idVWorkflowType], references: [idVocabulary])
-  Workflow           Workflow[]
-
-  @@index([idVWorkflowType], name: "fk_workflowtemplate_vocabulary1")
 }

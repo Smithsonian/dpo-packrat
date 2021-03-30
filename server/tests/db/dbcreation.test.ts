@@ -2,9 +2,11 @@ import * as DBAPI from '../../db';
 import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
 import * as UTIL from './api';
-import { VocabularyCache, eVocabularyID } from '../../cache';
+// import * as H from '../../utils/helpers';
+import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
 
 afterAll(async done => {
+    // await H.Helpers.sleep(4000);
     await DBC.DBConnection.disconnect();
     await DBC.DBConnection.disconnect(); // second time to test disconnecting after already being disconnected!
     LOG.getRequestLogger(); // added for full test coverage!
@@ -115,6 +117,7 @@ let userPersonalizationSystemObject: DBAPI.UserPersonalizationSystemObject | nul
 let userPersonalizationUrl: DBAPI.UserPersonalizationUrl | null;
 let vocabulary: DBAPI.Vocabulary | null;
 let vocabulary2: DBAPI.Vocabulary | null;
+let vocabularyWorkflowType: DBAPI.Vocabulary | null;
 let vocabularySet: DBAPI.VocabularySet | null;
 let workflow: DBAPI.Workflow | null;
 let workflowNulls: DBAPI.Workflow | null;
@@ -122,7 +125,6 @@ let workflowStep: DBAPI.WorkflowStep | null;
 let workflowStepNulls: DBAPI.WorkflowStep | null;
 let workflowStepSystemObjectXref: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowStepSystemObjectXref2: DBAPI.WorkflowStepSystemObjectXref | null;
-let workflowTemplate: DBAPI.WorkflowTemplate | null;
 // #endregion
 // *******************************************************************
 // DB Creation Test Suite
@@ -168,6 +170,29 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary2) {
             expect(await vocabulary2.create()).toBeTruthy();
             expect(vocabulary2.idVocabulary).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Fetch/Creation: Vocabulary WorkflowType', async () => {
+        const idVocabularySet: number | undefined = await VocabularyCache.vocabularySetEnumToId(eVocabularySetID.eWorkflowType);
+        const vocabularyEntries: DBAPI.Vocabulary[] | undefined = idVocabularySet ? await VocabularyCache.vocabularySetEntries(idVocabularySet) : undefined;
+        let createVocab: boolean = false;
+        if (vocabularyEntries && vocabularyEntries.length > 0)
+            vocabularyWorkflowType = vocabularyEntries[0];
+        else if (idVocabularySet) {
+            vocabularyWorkflowType = new DBAPI.Vocabulary({
+                idVocabularySet,
+                SortOrder: 0,
+                Term: 'Test Vocabulary Workflow Type',
+                idVocabulary: 0
+            });
+            createVocab = true;
+        }
+        expect(vocabularyWorkflowType).toBeTruthy();
+        if (vocabularyWorkflowType) {
+            if (createVocab)
+                expect(await vocabularyWorkflowType.create()).toBeTruthy();
+            expect(vocabularyWorkflowType.idVocabulary).toBeGreaterThan(0);
         }
     });
 
@@ -354,15 +379,6 @@ describe('DB Creation Test Suite', () => {
                 idSubject: 0
             });
         expect(subjectNulls).toBeTruthy();
-    });
-
-    test('DB Creation: WorkflowTemplate', async () => {
-        if (vocabulary)
-            workflowTemplate = await UTIL.createWorkflowTemplateTest({
-                idVWorkflowType: vocabulary.idVocabulary,
-                idWorkflowTemplate: 0
-            });
-        expect(workflowTemplate).toBeTruthy();
     });
 
     test('DB Creation: Scene', async () => {
@@ -1297,9 +1313,9 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Workflow', async () => {
-        if (workflowTemplate && project && userActive)
+        if (vocabularyWorkflowType && project && userActive)
             workflow = await UTIL.createWorkflowTest({
-                idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
+                idVWorkflowType: vocabularyWorkflowType.idVocabulary,
                 idProject: project.idProject,
                 idUserInitiator: userActive.idUser,
                 DateInitiated: UTIL.nowCleansed(),
@@ -1315,9 +1331,9 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Workflow With Nulls', async () => {
-        if (workflowTemplate)
+        if (vocabularyWorkflowType)
             workflowNulls = await UTIL.createWorkflowTest({
-                idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
+                idVWorkflowType: vocabularyWorkflowType.idVocabulary,
                 idProject: null,
                 idUserInitiator: null,
                 DateInitiated: UTIL.nowCleansed(),
@@ -2582,17 +2598,27 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(workflowFetch).toBeTruthy();
     });
 
-    test('DB Fetch Workflow: Workflow.fetchFromWorkflowTemplate', async () => {
+    test('DB Fetch Workflow: Workflow.fetchFromWorkflowType', async () => {
         let workflowFetch: DBAPI.Workflow[] | null = null;
-        if (workflowTemplate) {
-            workflowFetch = await DBAPI.Workflow.fetchFromWorkflowTemplate(workflowTemplate.idWorkflowTemplate);
-            if (workflowFetch) {
-                if (workflow) {
-                    expect(workflowFetch).toEqual(expect.arrayContaining([workflow]));
+        if (vocabularyWorkflowType) {
+            LOG.logger.info(`DB Fetch Workflow fetching from workflow vocab ${JSON.stringify(vocabularyWorkflowType)}`);
+            const eVocabEnum: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(vocabularyWorkflowType.idVocabulary);
+            expect(eVocabEnum).toBeTruthy();
+
+            if (eVocabEnum) {
+                workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabEnum);
+                if (workflowFetch) {
+                    if (workflow && workflowNulls)
+                        expect(workflowFetch).toEqual(expect.arrayContaining([workflow, workflowNulls]));
                 }
             }
         }
         expect(workflowFetch).toBeTruthy();
+
+        workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabularyID.eAssetAssetTypeModel);
+        expect(workflowFetch).toBeFalsy();
+        workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabularyID.eNone);
+        expect(workflowFetch).toBeFalsy();
     });
 
     test('DB Fetch By ID: WorkflowStep', async () => {
@@ -2652,18 +2678,6 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(workflowStepSystemObjectXrefFetch).toBeTruthy();
-    });
-
-    test('DB Fetch By ID: WorkflowTemplate', async () => {
-        let workflowTemplateFetch: DBAPI.WorkflowTemplate | null = null;
-        if (workflowTemplate) {
-            workflowTemplateFetch = await DBAPI.WorkflowTemplate.fetch(workflowTemplate.idWorkflowTemplate);
-            if (workflowTemplateFetch) {
-                expect(workflowTemplateFetch).toMatchObject(workflowTemplate);
-                expect(workflowTemplate).toMatchObject(workflowTemplateFetch);
-            }
-        }
-        expect(workflowTemplateFetch).toBeTruthy();
     });
 });
 
@@ -5961,21 +5975,6 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
-    test('DB Update: WorkflowTemplate.update', async () => {
-        let bUpdated: boolean = false;
-        if (workflowTemplate && vocabulary2) {
-            const updatedID: number = vocabulary2.idVocabulary;
-            workflowTemplate.idVWorkflowType = updatedID;
-            bUpdated = await workflowTemplate.update();
-
-            const workflowTemplateFetch: DBAPI.WorkflowTemplate | null = await DBAPI.WorkflowTemplate.fetch(workflowTemplate.idWorkflowTemplate);
-            expect(workflowTemplateFetch).toBeTruthy();
-            if (workflowTemplateFetch)
-                expect(workflowTemplateFetch.idVWorkflowType).toBe(updatedID);
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
     /*
     // This test code shows a potential issue with how Prisma handles updating of optional foreign key relationships
     // To use prisma correctly, we need to know the state of the object in the database so that the DB API method calls
@@ -6201,13 +6200,13 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Workflow.fetch(0)).toBeNull();
         expect(await DBAPI.Workflow.fetchFromProject(0)).toBeNull();
         expect(await DBAPI.Workflow.fetchFromUser(0)).toBeNull();
-        expect(await DBAPI.Workflow.fetchFromWorkflowTemplate(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetchFromWorkflowType(0)).toBeNull();
         expect(await DBAPI.WorkflowStep.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowStep.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.WorkflowStep.fetchFromWorkflow(0)).toBeNull();
         expect(await DBAPI.WorkflowStepSystemObjectXref.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep(0)).toBeNull();
-        expect(await DBAPI.WorkflowTemplate.fetch(0)).toBeNull();
+
 
         const SO: DBAPI.SystemObject = new DBAPI.SystemObject({
             idActor: 0,

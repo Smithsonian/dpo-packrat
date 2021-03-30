@@ -566,6 +566,25 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 expect(eVocabSetIDFetch).toEqual(eVocabSetID);
             }
         });
+
+        test('Cache: VocabularyCache.isVocabularyInSet ' + description, async () => {
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eCaptureDataFileVariantTypeRaw, eVocabularySetID.eCaptureDataFileVariantType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelCreationMethodScanToMesh, eVocabularySetID.eModelCreationMethod)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelModalityPointCloud, eVocabularySetID.eModelModality)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelUnitsMicrometer, eVocabularySetID.eModelUnits)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelPurposeMaster, eVocabularySetID.eModelPurpose)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelFileTypeobj, eVocabularySetID.eModelFileType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse, eVocabularySetID.eModelMaterialChannelMaterialType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eIdentifierIdentifierTypeARK, eVocabularySetID.eIdentifierIdentifierType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eMetadataMetadataSourceBulkIngestion, eVocabularySetID.eMetadataMetadataSource)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eAssetAssetTypeBulkIngestion, eVocabularySetID.eAssetAssetType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eJobJobTypeCookBake, eVocabularySetID.eJobJobType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eWorkflowType)).toBeTruthy();
+
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eNone, eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eNone)).toBeFalsy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
+        });
     });
 }
 
