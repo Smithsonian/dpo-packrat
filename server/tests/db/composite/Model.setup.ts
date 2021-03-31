@@ -204,9 +204,8 @@ export class ModelTestSetup {
                     const inspectJSON: string | undefined = modelTestCaseInspectJSONMap.get(MTD.testCase) || '';
                     MTC = new ModelTestCase(MTD.testCase, model, MTD.fileName, assetVersion.idAssetVersion, inspectJSON);
                     this.testCaseMap.set(MTD.testCase, MTC);
-                } else {
+                } else
                     MTC.assetVersionIDs.push(assetVersion.idAssetVersion);
-                }
             }
 
             switch (MTD.testCase) {

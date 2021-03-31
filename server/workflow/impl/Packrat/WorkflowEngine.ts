@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as WF from '../../interface';
-// import { JobPackrat } from './JobPackrat';
+import { WorkflowJob } from './WorkflowJob';
 // import * as COOK from '../Cook';
-// import * as LOG from '../../../utils/logger';
+import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 // import * as DBAPI from '../../../db';
 
@@ -16,6 +16,15 @@ export interface WorkflowParameters {
 }
 */
 
+/*
+// Usage:
+const workflowEngine: WF.IWorkflowEngine | null = WF.WorkflowFactory.getInstance();
+if (!workflowEngine) {
+    LOG.logger.error(`WorkflowEngine.create failed, no WorkflowFactory instance`);
+    return null;
+}
+workflowEngine.create(workflowParams)
+*/
 export class WorkflowEngine implements WF.IWorkflowEngine {
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
         // create database objects to support workflow:
@@ -25,12 +34,20 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         //
         // Create IWorkflow implementor
         // IWorkflow.start()
+        let workflow: WF.IWorkflow | null = null;
+
+        let startResults: boolean = false;
         switch (workflowParams.eWorkflowType) {
-            case CACHE.eVocabularyID.eWorkflowTypeCookJob: {
+            case CACHE.eVocabularyID.eWorkflowTypeCookJob:
+                workflow = new WorkflowJob();
+                startResults = await workflow.start(workflowParams);
                 break;
-            } break;
         }
-        return null;
+        if (!startResults) {
+            LOG.logger.error(`WorkflowEngine.create failed to start workflow ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`);
+            return null;
+        }
+        return workflow;
     }
 
     /*
