@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-constant-condition */
 
-import { IJob, IJobEngine, JobFactory, JobCreationParameters } from '../../../job/interface';
 import { JOB_TYPE } from '../../../config';
-import { eVocabularyID } from '../../../cache';
 
+import * as JOB from '../../../job/interface';
 import * as COOK from '../../../job/impl/Cook';
+import * as WF from '../../../workflow/interface';
+import * as WFP from '../../../workflow/impl/Packrat';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
@@ -13,21 +14,28 @@ import * as TESTMODEL from '../../db/composite/Model.setup';
 
 class JobData {
     dbJobRun: DBAPI.JobRun;
-    eJobType: eVocabularyID;
+    eJobType: CACHE.eVocabularyID;
     testCase: string;
-    constructor(dbJobRun: DBAPI.JobRun, eJobType: eVocabularyID, testCase: string) {
+    constructor(dbJobRun: DBAPI.JobRun, eJobType: CACHE.eVocabularyID, testCase: string) {
         this.dbJobRun = dbJobRun;
         this.eJobType = eJobType;
         this.testCase = testCase;
     }
 }
 
-let jobEngine: IJobEngine | null = null;
+const testTimeout: number = 12000000;
+const jobSets: number = 0;
+const workflowSets: number = 1;
+
+let jobEngine: JOB.IJobEngine | null = null;
+const JobSet: Set<JOB.IJob> = new Set<JOB.IJob>();
+const JobDataMap: Map<number, JobData> = new Map<number, JobData>();
+
+let workflowEngine: WF.IWorkflowEngine | null = null;
+const WorkflowSet: Set<WF.IWorkflow> = new Set<WF.IWorkflow>();
+
 let modelTestAvailable: boolean | null = null;
 let MTS: TESTMODEL.ModelTestSetup | null = new TESTMODEL.ModelTestSetup();
-const JobSet: Set<IJob> = new Set<IJob>();
-const JobDataMap: Map<number, JobData> = new Map<number, JobData>();
-const testTimeout: number = 6000000;
 
 afterAll(async done => {
     await H.Helpers.sleep(10000);
@@ -37,36 +45,43 @@ afterAll(async done => {
 describe('JobNS Init', () => {
     test('JobFactory.getInstance', async () => {
         jest.setTimeout(testTimeout);
-        jobEngine = await JobFactory.getInstance(JOB_TYPE.NODE_SCHEDULE);
+        jobEngine = await JOB.JobFactory.getInstance(JOB_TYPE.NODE_SCHEDULE);
         expect(jobEngine).toBeTruthy();
+    });
 
+    test('WorkflowFactory.getInstance', async () => {
+        workflowEngine = await WF.WorkflowFactory.getInstance();
+        expect(workflowEngine).toBeTruthy();
+    });
+
+    test('Model Test Cases', async () => {
         MTS = new TESTMODEL.ModelTestSetup();
         modelTestAvailable = await MTS.initialize();
         expect(modelTestAvailable === null || modelTestAvailable).toBeTruthy(); // null means that model test files were not available, which is ok
         if (!modelTestAvailable)
-            LOG.logger.info('JobNS Skipping Cook Tests, missing test models');
+            LOG.logger.info('JobNS Skipping Cook Job and Workflow Tests, missing test models');
     });
 });
 
 describe('JobNS Cook Tests', () => {
     jest.setTimeout(testTimeout);
-    for (let nSet = 0; nSet < 1; nSet++) {
-        testCookExplicit('fbx-stand-alone', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookImplicit('fbx-with-support', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookExplicit('glb', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookImplicit('obj', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookExplicit('ply', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookImplicit('stl', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testCookImplicit('x3d', eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    for (let nSet = 0; nSet < jobSets; nSet++) {
+        testCookExplicit('fbx-stand-alone', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('fbx-with-support', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('glb', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('obj', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookExplicit('ply', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('stl', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testCookImplicit('x3d', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
+        // testCookExplicit('usd', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // testCookImplicit('usdz', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // testCookExplicit('wrl', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
     }
-    // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
-    // testCookExplicit('usd', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-    // testCookImplicit('usdz', eVocabularyID.eJobJobTypeCookSIPackratInspect);
-    // testCookExplicit('wrl', eVocabularyID.eJobJobTypeCookSIPackratInspect);
     // TODO: test job cancellation
     test('IJob.Cook invalid job IDs', async () => {
         // expected failures:
-        expect(await testCreate(0, eVocabularyID.eNone, undefined, null, null, false)).toBeFalsy();
+        expect(await testCreateJob(0, CACHE.eVocabularyID.eNone, undefined, null, null, false)).toBeFalsy();
     });
 
     test('IJob.Cook Job Completion', async() => {
@@ -106,7 +121,7 @@ describe('JobNS Cook Tests', () => {
             const output: string | null = dbJobRun.Output;
 
             switch (jobData.eJobType) {
-                case eVocabularyID.eJobJobTypeCookSIPackratInspect: {
+                case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect: {
                     expect(output).toBeTruthy();
                     const JCOutput: COOK.JobCookSIPackratInspectOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''));
                     expect(JCOutput.success).toBeTruthy();
@@ -122,7 +137,7 @@ describe('JobNS Cook Tests', () => {
                 } break;
 
                 default:
-                    LOG.logger.error(`JobNS.test results encountered Unexpected Job Type: ${jobData.eJobType ? eVocabularyID[jobData.eJobType] : 'undefined'}`);
+                    LOG.logger.error(`JobNS.test results encountered Unexpected Job Type: ${jobData.eJobType ? CACHE.eVocabularyID[jobData.eJobType] : 'undefined'}`);
                     expect(false).toBeTruthy();
                     break;
             }
@@ -130,18 +145,53 @@ describe('JobNS Cook Tests', () => {
     });
 });
 
-function testCookExplicit(testCase: string, eJobType: eVocabularyID): void {
-    test(`IJob.Cook ${eVocabularyID[eJobType]} ${testCase} Explicit`, async () => {
+describe('JobNS IWorkflow Tests', () => {
+    jest.setTimeout(testTimeout);
+    for (let nSet = 0; nSet < workflowSets; nSet++) {
+        testWorkflow('fbx-stand-alone', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('fbx-with-support', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('glb', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('obj', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('ply', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('stl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('x3d', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
+        // testWorkflow('usd', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // testWorkflow('usdz', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // testWorkflow('wrl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    }
+
+    test('JobNS IWorkflow Completion', async() => {
+        jest.setTimeout(testTimeout);
+        const wfFinalizationList: Promise<H.IOResults>[] = [];
+        for (const WF of WorkflowSet)
+            wfFinalizationList.push(WF.waitForCompletion(testTimeout));
+
+        LOG.logger.info(`JobNS IWorkflow Completion awaiting completion of ${WorkflowSet.size} workflows`);
+        try {
+            const resultsArray = await Promise.all(wfFinalizationList);
+            for (const res of resultsArray)
+                expect(res.success).toBeTruthy();
+            LOG.logger.info(`JobNS IWorkflow Completion received completion of ${resultsArray.length} workflows`);
+        } catch (error) {
+            LOG.logger.error('JobNS IWorkflow Completion failed', error);
+        }
+    });
+});
+
+// #region JobNS Utils
+function testCookExplicit(testCase: string, eJobType: CACHE.eVocabularyID): void {
+    test(`IJob.Cook ${CACHE.eVocabularyID[eJobType]} ${testCase} Explicit`, async () => {
         if (!modelTestAvailable)
             return;
 
-        LOG.logger.info(`JobNS.test testCook(${testCase}): ${eVocabularyID[eJobType]} explicit IJob.executeJob`);
+        LOG.logger.info(`JobNS.test testCook(${testCase}): ${CACHE.eVocabularyID[eJobType]} explicit IJob.executeJob`);
         const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
         expect(assetVersionIDs).toBeTruthy();
         const parameters: any = computeJobParameters(testCase, eJobType);
         expect(parameters).toBeTruthy();
 
-        const job: IJob | null = await testCreate(null, eJobType, assetVersionIDs, parameters, null, true);
+        const job: JOB.IJob | null = await testCreateJob(null, eJobType, assetVersionIDs, parameters, null, true);
         expect(job).toBeTruthy();
         if (!job)
             return;
@@ -152,12 +202,12 @@ function testCookExplicit(testCase: string, eJobType: eVocabularyID): void {
     });
 }
 
-function testCookImplicit(testCase: string, eJobType: eVocabularyID): void {
-    test(`IJob.Cook ${eVocabularyID[eJobType]} ${testCase} Implicit`, async () => {
+function testCookImplicit(testCase: string, eJobType: CACHE.eVocabularyID): void {
+    test(`IJob.Cook ${CACHE.eVocabularyID[eJobType]} ${testCase} Implicit`, async () => {
         if (!modelTestAvailable)
             return;
 
-        LOG.logger.info(`JobNS.test testCook(${testCase}): ${eVocabularyID[eJobType]} implicit IJob.executeJob`);
+        LOG.logger.info(`JobNS.test testCook(${testCase}): ${CACHE.eVocabularyID[eJobType]} implicit IJob.executeJob`);
         const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
         expect(assetVersionIDs).toBeTruthy();
         const parameters: any = computeJobParameters(testCase, eJobType);
@@ -169,7 +219,7 @@ function testCookImplicit(testCase: string, eJobType: eVocabularyID): void {
         if (!dbJobs || dbJobs.length != 1)
             return;
         const idJob: number = dbJobs[0].idJob;
-        const job: IJob | null = await testCreate(idJob, null, assetVersionIDs, parameters, '', true); // frequency === '' -> run now
+        const job: JOB.IJob | null = await testCreateJob(idJob, null, assetVersionIDs, parameters, '', true); // frequency === '' -> run now
         expect(job).toBeTruthy();
         if (!job)
             return;
@@ -178,7 +228,7 @@ function testCookImplicit(testCase: string, eJobType: eVocabularyID): void {
     });
 }
 
-async function recordJob(job: IJob, eJobType: eVocabularyID, testCase: string): Promise<void> {
+async function recordJob(job: JOB.IJob, eJobType: CACHE.eVocabularyID, testCase: string): Promise<void> {
     JobSet.add(job);
 
     const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
@@ -188,11 +238,11 @@ async function recordJob(job: IJob, eJobType: eVocabularyID, testCase: string): 
         JobDataMap.set(dbJobRun.idJobRun, new JobData(dbJobRun, eJobType, testCase));
 }
 
-async function testCreate(idJob: number | null, eJobType: eVocabularyID | null, idAssetVersions: number[] | undefined, parameters: any,
-    frequency: string | null, expectSuccess: boolean = true): Promise<IJob | null> {
+async function testCreateJob(idJob: number | null, eJobType: CACHE.eVocabularyID | null, idAssetVersions: number[] | undefined, parameters: any,
+    frequency: string | null, expectSuccess: boolean = true): Promise<JOB.IJob | null> {
     expect(jobEngine).toBeTruthy(); if (!jobEngine) return null;
 
-    const JPC: JobCreationParameters = {
+    const JPC: JOB.JobCreationParameters = {
         idJob,
         eJobType,
         idAssetVersions: idAssetVersions || null,
@@ -200,7 +250,7 @@ async function testCreate(idJob: number | null, eJobType: eVocabularyID | null, 
         frequency
     };
 
-    const job: IJob | null = await jobEngine.create(JPC);
+    const job: JOB.IJob | null = await jobEngine.create(JPC);
     if (expectSuccess)
         expect(job).toBeTruthy();
     else
@@ -208,22 +258,70 @@ async function testCreate(idJob: number | null, eJobType: eVocabularyID | null, 
     return job;
 }
 
-async function computeVocabularyDBID(eJobType: eVocabularyID): Promise<number | undefined> {
+async function computeVocabularyDBID(eJobType: CACHE.eVocabularyID): Promise<number | undefined> {
     const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eJobType);
     if (!idVJobType)
         LOG.logger.error(`computeVocabularyDBID unable to fetch Job type from ${CACHE.eVocabularyID[eJobType]}`);
     return idVJobType;
 }
 
-function computeJobParameters(testCase: string, eJobType: eVocabularyID): any {
+function computeJobParameters(testCase: string, eJobType: CACHE.eVocabularyID): any {
     let modelName: string | undefined = MTS?.getTestCase(testCase)?.modelName;
     expect(modelName).toBeTruthy();
     modelName = modelName || '';
 
     switch (eJobType) {
-        case eVocabularyID.eJobJobTypeCookSIPackratInspect: return new COOK.JobCookSIPackratInspectParameters(modelName);
+        case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect: return new COOK.JobCookSIPackratInspectParameters(modelName);
         default:
-            LOG.logger.error(`JobNS.test computeJobParameters: unexpected job type ${eVocabularyID[eJobType]}`);
+            LOG.logger.error(`JobNS.test computeJobParameters: unexpected job type ${CACHE.eVocabularyID[eJobType]}`);
             expect(false).toBeTruthy();
     }
 }
+// #endregion
+
+// #region Workflow Utils
+function testWorkflow(testCase: string, eWorkflowType: CACHE.eVocabularyID, eJobType: CACHE.eVocabularyID): void {
+    test(`JobNS IWorkflow ${CACHE.eVocabularyID[eWorkflowType]} ${CACHE.eVocabularyID[eJobType]} ${testCase}`, async () => {
+        if (!modelTestAvailable || !workflowEngine)
+            return;
+
+        LOG.logger.info(`JobNS.test IWorkflow(${testCase}): ${CACHE.eVocabularyID[eWorkflowType]} ${CACHE.eVocabularyID[eJobType]}`);
+        const idSystemObject: number[] | null = (await MTS?.getTestCase(testCase)?.computeSystemObjectIDs()) || null;
+        expect(idSystemObject).toBeTruthy();
+
+        const parameters: any = computeWorkflowParameters(testCase, eWorkflowType, eJobType);
+        expect(parameters).toBeTruthy();
+
+        const WFP: WF.WorkflowParameters = {
+            eWorkflowType,
+            idSystemObject,
+            idProject: null,
+            idUserInitiator: null,
+            parameters,
+        };
+
+        const workflow: WF.IWorkflow | null = await workflowEngine.create(WFP);
+        expect(workflow).toBeTruthy();
+        if (!workflow)
+            return;
+
+        await recordWorkflow(workflow, eWorkflowType, testCase);
+    });
+}
+
+async function recordWorkflow(workflow: WF.IWorkflow, eWorkflowType: CACHE.eVocabularyID, testCase: string): Promise<void> {
+    eWorkflowType;
+    testCase;
+    WorkflowSet.add(workflow);
+}
+
+function computeWorkflowParameters(testCase: string, eWorkflowType: CACHE.eVocabularyID, eJobType: CACHE.eVocabularyID): any {
+    switch (eWorkflowType) {
+        case CACHE.eVocabularyID.eWorkflowTypeCookJob:
+            return new WFP.WorkflowJobParameters(eJobType, computeJobParameters(testCase, eJobType));
+        default:
+            LOG.logger.error(`JobNS.test computeWorkflowParameters: unexpected workflow type ${CACHE.eVocabularyID[eWorkflowType]}`);
+            expect(false).toBeTruthy();
+    }
+}
+// #endregion

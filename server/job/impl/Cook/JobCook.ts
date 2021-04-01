@@ -94,7 +94,7 @@ export abstract class JobCook<T> extends JobPackrat {
         const startTime: Date = new Date();
         let pollNumber: number = 0;
         while (true) {
-            // poll for completion every 15 seconds:
+            // poll for completion every CookRetryDelay milleseconds:
             switch (this._dbJobRun.getStatus()) {
                 case DBAPI.eJobRunStatus.eDone:
                 case DBAPI.eJobRunStatus.eCancelled:
@@ -131,8 +131,8 @@ export abstract class JobCook<T> extends JobPackrat {
         let res: H.IOResults = { success: false, error: '' };
 
         let requestUrl: string = Config.job.cookServerUrl + 'job';
+        LOG.logger.info(`JobCook [${this.name()}] creating job: ${requestUrl}`);
         while (requestCount++ < CookRequestRetryCount) {
-            LOG.logger.info(`JobCook [${this.name()}] creating job: ${requestUrl}`);
             try {
                 axiosResponse = await axios.post(requestUrl, jobCookPostBody);
                 if (axiosResponse?.status === 201)
@@ -144,12 +144,11 @@ export abstract class JobCook<T> extends JobPackrat {
                     ? { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(error)}` }
                     : { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
             }
-            if (requestCount === CookRequestRetryCount)
+            if (requestCount === CookRequestRetryCount) {
+                LOG.logger.error(`${res.error} Retries Failed`);
                 return res;
-            else {
-                LOG.logger.error(`${res.error} Retrying`);
+            } else
                 await H.Helpers.sleep(CookRetryDelay);
-            }
         }
 
         // stage files
@@ -161,8 +160,8 @@ export abstract class JobCook<T> extends JobPackrat {
         requestCount = 0;
         res = { success: false, error: '' };
         requestUrl = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
+        LOG.logger.info(`JobCook [${this.name()}] running job: ${requestUrl}`);
         while (requestCount++ < CookRequestRetryCount) {
-            LOG.logger.info(`JobCook [${this.name()}] running job: ${requestUrl}`);
             try {
                 const axiosResponse = await axios.patch(requestUrl);
                 if (axiosResponse.status === 202)
@@ -171,12 +170,11 @@ export abstract class JobCook<T> extends JobPackrat {
             } catch (error) {
                 res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(error)}` };
             }
-            if (requestCount === CookRequestRetryCount)
+            if (requestCount === CookRequestRetryCount) {
+                LOG.logger.error(`${res.error} Retries Failed`);
                 return res;
-            else {
-                LOG.logger.error(`${res.error} Retrying`);
+            } else
                 await H.Helpers.sleep(CookRetryDelay);
-            }
         }
         LOG.logger.info(`JobCook [${this.name()}] running`);
         return this.waitForCompletionWorker(0, true);
@@ -199,12 +197,11 @@ export abstract class JobCook<T> extends JobPackrat {
             if (res.success)
                 break;
             else {
-                if (requestCount === CookRequestRetryCount)
+                if (requestCount === CookRequestRetryCount) {
+                    LOG.logger.error(`${res.error} Retries Failed`);
                     return res;
-                else {
-                    LOG.logger.error(`${res.error} Retrying`);
+                } else
                     await H.Helpers.sleep(CookRetryDelay);
-                }
             }
         }
 
@@ -286,7 +283,7 @@ export abstract class JobCook<T> extends JobPackrat {
                             return { success: baseName === RSR.fileName, error: '' };
                         } catch (error) {
                             LOG.logger.error('JobCook.stageFiles stat', error);
-                            await H.Helpers.sleep(CookRetryDelay); // sleep for 3 seconds before retrying
+                            await H.Helpers.sleep(CookRetryDelay); // sleep for CookRetryDelay ms before retrying
                         }
                     }
                     return { success: false, error: `Unable to verify existence of staged file ${RSR.fileName}` };

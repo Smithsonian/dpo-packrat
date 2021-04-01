@@ -7,17 +7,21 @@ import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 
 export class WorkflowEngine implements WF.IWorkflowEngine {
+    private workflowParameterMap: Map<number, WF.WorkflowParameters> = new Map<number, WF.WorkflowParameters>();
+
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
         const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
         if (!WFC)
             return null;
 
-        const workflow: WF.IWorkflow | null = this.fetchWorkflowImpl(workflowParams.eWorkflowType, WFC);
+        if (WFC.workflow)
+            this.workflowParameterMap.set(WFC.workflow.idWorkflow, workflowParams);
+        const workflow: WF.IWorkflow | null = await this.fetchWorkflowImpl(workflowParams, WFC);
         if (!workflow) {
             LOG.logger.error(`WorkflowEngine.create failed to fetch workflow implementation ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`);
             return null;
         }
-        const startResults: H.IOResults = await workflow.start(workflowParams);
+        const startResults: H.IOResults = await workflow.start();
         if (!startResults) {
             LOG.logger.error(`WorkflowEngine.create failed to start workflow ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`);
             return null;
@@ -36,8 +40,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return false;
 
         for (const workflowStep of workflowSteps) {
-            await this.updateWorkflowStepFromJobRun(workflowStep, jobRun); // don't fail on update failures
-
             const WFC: DBAPI.WorkflowConstellation | null = await DBAPI.WorkflowConstellation.fetch(workflowStep.idWorkflow);
             if (!WFC || !WFC.workflow) {
                 LOG.logger.error(`WorkflowEngine.jobUpdated (${idJobRun}) skipping orphan workflow step ${JSON.stringify(workflowStep)}`);
@@ -49,7 +51,13 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             if (!eWorkflowType)
                 continue;
 
-            const workflow: WF.IWorkflow | null = this.fetchWorkflowImpl(eWorkflowType, WFC);
+            const workflowParams: WF.WorkflowParameters | undefined = this.workflowParameterMap.get(WFC.workflow.idWorkflow);
+            if (!workflowParams) {
+                LOG.logger.error(`WorkflowEngine.jobUpdated(${idJobRun}) unable to retrieve workflow params for ${JSON.stringify(WFC.workflow)}`);
+                continue;
+            }
+
+            const workflow: WF.IWorkflow | null = await this.fetchWorkflowImpl(workflowParams, WFC);
             if (!workflow)
                 continue;
 
@@ -148,51 +156,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return WFC;
     }
 
-    private async updateWorkflowStepFromJobRun(workflowStep: DBAPI.WorkflowStep, jobRun: DBAPI.JobRun): Promise<boolean> {
-        // update workflowStep based on job run data
-        const eWorkflowStepStateOrig: DBAPI.eWorkflowStepState = workflowStep.getState();
-        let eWorkflowStepState: DBAPI.eWorkflowStepState = eWorkflowStepStateOrig;
-        const dateCompletedOrig: Date | null = workflowStep.DateCompleted;
-        let dateCompleted: Date | null = dateCompletedOrig;
-        let updateNeeded: boolean = false;
-
-        switch (jobRun.getStatus()) {
-            case DBAPI.eJobRunStatus.eUnitialized:
-            case DBAPI.eJobRunStatus.eCreated:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eCreated;
-                break;
-            case DBAPI.eJobRunStatus.eRunning:
-            case DBAPI.eJobRunStatus.eWaiting:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eStarted;
-                break;
-            case DBAPI.eJobRunStatus.eDone:
-            case DBAPI.eJobRunStatus.eError:
-            case DBAPI.eJobRunStatus.eCancelled:
-                eWorkflowStepState = DBAPI.eWorkflowStepState.eFinished;
-                dateCompleted = new Date();
-                break;
+    private async fetchWorkflowImpl(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WF.IWorkflow | null> {
+        switch (workflowParams.eWorkflowType) {
+            case CACHE.eVocabularyID.eWorkflowTypeCookJob: return await WorkflowJob.constructWorkflowJob(workflowParams, WFC);
         }
-
-        if (eWorkflowStepState != eWorkflowStepStateOrig) {
-            workflowStep.setState(eWorkflowStepState);
-            updateNeeded = true;
-        }
-
-        if (dateCompleted != dateCompletedOrig) {
-            workflowStep.DateCompleted = dateCompleted;
-            updateNeeded = true;
-        }
-
-        return (updateNeeded) ? await workflowStep.update() : true;
-    }
-
-    private fetchWorkflowImpl(eWorkflowType: CACHE.eVocabularyID, WFC: DBAPI.WorkflowConstellation): WF.IWorkflow | null {
-        let workflow: WF.IWorkflow | null = null;
-        switch (eWorkflowType) {
-            case CACHE.eVocabularyID.eWorkflowTypeCookJob:
-                workflow = new WorkflowJob(WFC);
-                break;
-        }
-        return workflow;
+        return null;
     }
 }
