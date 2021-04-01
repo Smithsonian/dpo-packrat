@@ -7,20 +7,20 @@ import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 
 export class WorkflowEngine implements WF.IWorkflowEngine {
-    private workflowParameterMap: Map<number, WF.WorkflowParameters> = new Map<number, WF.WorkflowParameters>();
+    private workflowMap: Map<number, WF.IWorkflow> = new Map<number, WF.IWorkflow>();
 
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
         const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
         if (!WFC)
             return null;
 
-        if (WFC.workflow)
-            this.workflowParameterMap.set(WFC.workflow.idWorkflow, workflowParams);
         const workflow: WF.IWorkflow | null = await this.fetchWorkflowImpl(workflowParams, WFC);
         if (!workflow) {
             LOG.logger.error(`WorkflowEngine.create failed to fetch workflow implementation ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`);
             return null;
         }
+        if (WFC.workflow)
+            this.workflowMap.set(WFC.workflow.idWorkflow, workflow);
         const startResults: H.IOResults = await workflow.start();
         if (!startResults) {
             LOG.logger.error(`WorkflowEngine.create failed to start workflow ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`);
@@ -39,6 +39,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if (!workflowSteps)
             return false;
 
+        let result: boolean = true;
         for (const workflowStep of workflowSteps) {
             const WFC: DBAPI.WorkflowConstellation | null = await DBAPI.WorkflowConstellation.fetch(workflowStep.idWorkflow);
             if (!WFC || !WFC.workflow) {
@@ -46,24 +47,19 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 continue;
             }
 
-            // instantiate IWorkflow based on DB record, and forward updated event
-            const eWorkflowType: CACHE.eVocabularyID | undefined = await this.computeWorkflowTypeEnumFromID(WFC.workflow.idVWorkflowType);
-            if (!eWorkflowType)
-                continue;
-
-            const workflowParams: WF.WorkflowParameters | undefined = this.workflowParameterMap.get(WFC.workflow.idWorkflow);
-            if (!workflowParams) {
-                LOG.logger.error(`WorkflowEngine.jobUpdated(${idJobRun}) unable to retrieve workflow params for ${JSON.stringify(WFC.workflow)}`);
+            // lookup workflow object and forward "updated" event
+            const workflow: WF.IWorkflow | undefined = this.workflowMap.get(WFC.workflow.idWorkflow);
+            if (!workflow) {
+                LOG.logger.error(`WorkflowEngine.jobUpdated(${idJobRun}) unable to locate workflow ${WFC.workflow.idWorkflow}`);
                 continue;
             }
 
-            const workflow: WF.IWorkflow | null = await this.fetchWorkflowImpl(workflowParams, WFC);
-            if (!workflow)
-                continue;
-
-            await workflow.update(workflowStep, jobRun);
+            const updateRes: WF.WorkflowUpdateResults = await workflow.update(workflowStep, jobRun);
+            if (updateRes.workflowComplete)
+                this.workflowMap.delete(WFC.workflow.idWorkflow);
+            result = updateRes.success && result;
         }
-        return true;
+        return result;
     }
 
     private async computeWorkflowTypeFromEnum(eVocabEnum: CACHE.eVocabularyID): Promise<number | undefined> {
@@ -79,6 +75,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return idVWorkflowType;
     }
 
+    /*
     private async computeWorkflowTypeEnumFromID(idVWorkflowType: number): Promise<CACHE.eVocabularyID | undefined> {
         const eVocabEnum: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVWorkflowType);
         if (!eVocabEnum) {
@@ -91,7 +88,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
         return eVocabEnum;
     }
-
+    */
     private async createDBObjects(workflowParams: WF.WorkflowParameters): Promise<DBAPI.WorkflowConstellation | null> {
         const WFC: DBAPI.WorkflowConstellation = new DBAPI.WorkflowConstellation();
         // *****************************************************
