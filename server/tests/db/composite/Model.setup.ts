@@ -26,8 +26,9 @@ class ModelTestCase {
     testCase: string;
     model: DBAPI.Model;
     modelName: string;
-    assetVersionIDs: number[];
     inspectJSON: string;
+    assetVersionIDs: number[];
+    private systemObjectIDs: number[] | null = null;
 
     constructor(testCase: string, model: DBAPI.Model, modelName: string, assetVersionID: number, inspectJSON: string) {
         this.testCase = testCase;
@@ -35,6 +36,18 @@ class ModelTestCase {
         this.modelName = modelName;
         this.assetVersionIDs = [assetVersionID];
         this.inspectJSON = inspectJSON;
+    }
+
+    async computeSystemObjectIDs(): Promise<number[]> {
+        if (!this.systemObjectIDs) {
+            this.systemObjectIDs = [];
+            for (const idAssetVersion of this.assetVersionIDs) {
+                const SO: DBAPI.SystemObject | null = await DBAPI.SystemObjectAssetVersion.fetchFromAssetVersionID(idAssetVersion);
+                if (SO)
+                    this.systemObjectIDs.push(SO.idSystemObject);
+            }
+        }
+        return this.systemObjectIDs;
     }
 }
 
