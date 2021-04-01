@@ -5,36 +5,57 @@
  */
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState } from 'react';
-import { AssetIdentifiers, CheckboxField, DateInputField, FieldType, InputField, SelectField } from '../../../../../components';
-import { StateIdentifier, StateRelatedObject, useMetadataStore, useVocabularyStore } from '../../../../../store';
+import React, { useState, useEffect } from 'react';
+import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow } from '../../../../../components';
+import { StateIdentifier, StateRelatedObject, /*useSubjectStore,*/ useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { RelatedObjectType } from '../../../../../types/graphql';
-import { eVocabularySetID } from '../../../../../types/server';
+import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
-import BoundingBoxInput from './BoundingBoxInput';
+// import BoundingBoxInput from './BoundingBoxInput';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
-import UVContents from './UVContents';
+import ObjectMeshTable from './ObjectMeshTable';
+// import UVContents from './UVContents';
+import AssetFilesTable from './AssetFilesTable';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         marginTop: 20
     },
     notRequiredFields: {
         display: 'flex',
-        flex: 1,
+        // flex: 1,
+        // width: 'auto',
         flexDirection: 'column',
         marginLeft: 30,
         borderRadius: 5,
-        backgroundColor: palette.secondary.light
+        backgroundColor: palette.secondary.light,
+        width: '35%',
+        '& > *': {
+            height: '20px',
+            borderBottom: '0.5px solid #D8E5EE',
+            borderTop: '0.5px solid #D8E5EE'
+            // width: '280px'
+        }
     },
-    noteText: {
-        marginTop: 10,
-        fontSize: '0.8em',
-        fontWeight: typography.fontWeightLight,
-        fontStyle: 'italic',
-        textAlign: 'center'
+    dataEntry: {
+        '& > *': {
+            height: '20px',
+            borderBottom: '0.5px solid #D8E5EE',
+            borderTop: '0.5px solid #D8E5EE'
+        },
+        width: '35%'
+    },
+    objectMeshTable: {
+        display: 'flex',
+        borderRadius: 5,
+        padding: 10,
+        backgroundColor: palette.primary.light,
+        // width: 'auto'
+        width: '73%'
+        // justifyContent: 'space-evenly'
+        // alignSelf: 'center'
     }
 }));
 
@@ -49,7 +70,8 @@ function Model(props: ModelProps): React.ReactElement {
     const { model } = metadata;
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
-
+    const [setDefaultIngestionFilters] = useRepositoryStore(state => [state.setDefaultIngestionFilters]);
+    // const [subjects] = useSubjectStore(state => [state.subjects]);
     const [modalOpen, setModalOpen] = useState(false);
 
     const errors = getFieldErrors(metadata);
@@ -74,7 +96,6 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, idFieldValue, MetadataType.model);
     };
 
-
     const setDateField = (name: string, value?: string | null): void => {
         if (value) {
             const date = new Date(value);
@@ -82,19 +103,117 @@ function Model(props: ModelProps): React.ReactElement {
         }
     };
 
-    const updateUVMapsVariant = (uvMapId: number, mapType: number) => {
-        const { uvMaps } = model;
-        const updatedUVMaps = uvMaps.map(uvMap => {
-            if (uvMapId === uvMap.id) {
-                return {
-                    ...uvMap,
-                    mapType
-                };
+    interface ObjectMesh {
+        materialTypes: MaterialInfo[];
+        pointCount: number;
+        faceCount: number;
+        colorChannelCount: number;
+        textureCoordChannelCount: number;
+        hasBones: boolean | null;
+        hasFaceNormals: boolean | null;
+        hasTangents: boolean | null;
+        hasTextureCoordinates: boolean | null;
+        hasVertexNormals: boolean | null;
+        hasVertexColor: boolean | null;
+        manifoldClosed: boolean | null;
+        manifoldOpen: boolean | null;
+        isWatertight: boolean | null;
+        selfIntersecting: boolean | null;
+        boundingValues: number[];
+    }
+
+    interface MaterialInfo {
+        materialName: string;
+        type: MaterialType[];
+    }
+
+    interface MaterialType {
+        typeName: string;
+        source: string;
+        value: string;
+        additional: string;
+    }
+
+    const sampleObjectMesh: ObjectMesh = {
+        materialTypes: [
+            {
+                materialName: 'material1',
+                type: [
+                    {
+                        typeName: 'diffuse1',
+                        source: 'armstrong1.jpg',
+                        value: '1.0',
+                        additional: 'ior:1'
+                    },
+                    {
+                        typeName: 'occlusion2',
+                        source: 'armstrong2.jpg',
+                        value: '2.0',
+                        additional: ''
+                    }
+                ]
+            },
+            {
+                materialName: 'material2',
+                type: [
+                    {
+                        typeName: 'diffuse2',
+                        source: 'garden.jpg',
+                        value: '3.0',
+                        additional: 'more info'
+                    }
+                ]
             }
-            return uvMap;
-        });
-        updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
+        ],
+        pointCount: 4,
+        faceCount: 4,
+        colorChannelCount: 5,
+        textureCoordChannelCount: 2,
+        hasBones: true,
+        hasFaceNormals: true,
+        hasTangents: true,
+        hasTextureCoordinates: null,
+        hasVertexNormals: true,
+        hasVertexColor: null,
+        manifoldClosed: true,
+        manifoldOpen: false,
+        isWatertight: true,
+        selfIntersecting: false,
+        boundingValues: [6, 1, 2, 3, 4, 5]
     };
+
+    const sampleAssetFiles = [
+        {
+            assetName: 'armstrong.obj',
+            assetType: 'geometry'
+        },
+        {
+            assetName: 'ArmstrongBump.jpg',
+            assetType: 'Texture: bump'
+        },
+        {
+            assetName: 'another1.jpg',
+            assetType: 'something'
+        }
+    ];
+
+    // const updateUVMapsVariant = (uvMapId: number, mapType: number) => {
+    //     const { uvMaps } = model;
+    //     const updatedUVMaps = uvMaps.map(uvMap => {
+    //         if (uvMapId === uvMap.id) {
+    //             return {
+    //                 ...uvMap,
+    //                 mapType
+    //             };
+    //         }
+    //         return uvMap;
+    //     });
+    //     updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
+    // };
+
+    useEffect(() => {
+        setDefaultIngestionFilters(eSystemObjectType.eModel, '134-33-44');
+    }, [setDefaultIngestionFilters]);
 
     const openSourceObjectModal = () => {
         setModalOpen(true);
@@ -115,8 +234,6 @@ function Model(props: ModelProps): React.ReactElement {
         onModalClose();
     };
 
-    const noteLabelProps = { style: { fontStyle: 'italic' } };
-    const noteFieldProps = { alignItems: 'center', style: { paddingBottom: 0 } };
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
@@ -131,16 +248,21 @@ function Model(props: ModelProps): React.ReactElement {
                     onRemoveIdentifer={onIdentifersChange}
                 />
                 <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                {/* Start of data-entry form */}
                 <Box display='flex' flexDirection='row' mt={1}>
-                    <Box display='flex' flex={1} flexDirection='column'>
-                        <FieldType
-                            error={errors.model.dateCaptured}
-                            required
-                            label='Date Captured'
-                            direction='row'
-                            containerProps={rowFieldProps}
-                        >
+                    <Box display='flex' flexDirection='column' className={classes.dataEntry} mr={2}>
+                        <InputField required type='string' label='Name' value={'placeholder'} name='name' onChange={() => console.log('string')} />
+
+                        <FieldType error={errors.model.dateCaptured} required label='Date Captured' direction='row' containerProps={rowFieldProps}>
                             <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
+                        </FieldType>
+
+                        <FieldType required label='Master Model' direction='row' containerProps={rowFieldProps}>
+                            <Checkbox name='master' checked={model.master} color='primary' onChange={setCheckboxField} />
+                        </FieldType>
+
+                        <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
+                            <Checkbox name='authoritative' checked={model.authoritative} color='primary' onChange={setCheckboxField} />
                         </FieldType>
 
                         <SelectField
@@ -152,25 +274,6 @@ function Model(props: ModelProps): React.ReactElement {
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelCreationMethod)}
                         />
-
-                        <FieldType required label='Master' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='master'
-                                checked={model.master}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
-                        <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='authoritative'
-                                checked={model.authoritative}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
                         <SelectField
                             required
                             label='Modality'
@@ -210,60 +313,29 @@ function Model(props: ModelProps): React.ReactElement {
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelFileType)}
                         />
-                        <UVContents
-                            initialEntry={getInitialEntry(eVocabularySetID.eModelMaterialChannelMaterialType)}
-                            uvMaps={model.uvMaps}
-                            options={getEntries(eVocabularySetID.eModelMaterialChannelMaterialType)}
-                            onUpdate={updateUVMapsVariant}
-                        />
                     </Box>
+                    {/* End of data-entry form */}
+                    {/* Start of model-level metrics form */}
                     <Box className={classes.notRequiredFields}>
-                        <FieldType required={false} label='(These values may be updated by Cook during ingestion)' labelProps={noteLabelProps} containerProps={noteFieldProps} />
-                        <InputField
-                            type='number'
-                            label='Roughness'
-                            value={model.roughness}
-                            name='roughness'
-                            onChange={setIdField}
-                        />
-                        <InputField
-                            type='number'
-                            label='Metalness'
-                            value={model.metalness}
-                            name='metalness'
-                            onChange={setIdField}
-                        />
-                        <InputField
-                            type='number'
-                            label='Point Count'
-                            value={model.pointCount}
-                            name='pointCount'
-                            onChange={setIdField}
-                        />
-                        <InputField
-                            type='number'
-                            label='Face Count'
-                            value={model.faceCount}
-                            name='faceCount'
-                            onChange={setIdField}
-                        />
-                        <CheckboxField name='isTwoManifoldUnbounded' label='Is Two Manifold Unbounded?' value={model.isTwoManifoldUnbounded} onChange={setCheckboxField} />
-                        <CheckboxField name='isTwoManifoldBounded' label='Is Two Manifold Bounded?' value={model.isTwoManifoldBounded} onChange={setCheckboxField} />
-                        <CheckboxField name='isWatertight' label='Is Watertight?' value={model.isWatertight} onChange={setCheckboxField} />
-                        <CheckboxField name='hasNormals' label='Has Normals?' value={model.hasNormals} onChange={setCheckboxField} />
-                        <CheckboxField name='hasVertexColor' label='Has Vertex Color?' value={model.hasVertexColor} onChange={setCheckboxField} />
-                        <CheckboxField name='hasUVSpace' label='Has UV Space?' value={model.hasUVSpace} onChange={setCheckboxField} />
-                        <CheckboxField name='selfIntersecting' label='Self Intersecting?' value={model.selfIntersecting} onChange={setCheckboxField} />
-                        <BoundingBoxInput
-                            boundingBoxP1X={model.boundingBoxP1X}
-                            boundingBoxP1Y={model.boundingBoxP1Y}
-                            boundingBoxP1Z={model.boundingBoxP1Z}
-                            boundingBoxP2X={model.boundingBoxP2X}
-                            boundingBoxP2Y={model.boundingBoxP2Y}
-                            boundingBoxP2Z={model.boundingBoxP2Z}
-                            onChange={setIdField}
-                        />
+                        <ReadOnlyRow label='Point Count' value={77} />
+                        <ReadOnlyRow label='Face Count' value={2} />
+                        <ReadOnlyRow label='Animation Count' value={2} />
+                        <ReadOnlyRow label='Camera Count' value={2} />
+                        <ReadOnlyRow label='Light Count' value={2} />
+                        <ReadOnlyRow label='Material Count' value={2} />
+                        <ReadOnlyRow label='Mesh Count' value={2} />
+                        <ReadOnlyRow label='Embedded Texture Count' value={2} />
+                        <ReadOnlyRow label='Linked Texture Count' value={2} />
+                        <ReadOnlyRow label='File Encoding' value={'Binary'} />
                     </Box>
+                    {/* End of  model-level metrics form */}
+                </Box>
+                {/* start of object/mesh table */}
+                {/* Start of asset files table */}
+                <AssetFilesTable files={sampleAssetFiles} />
+                {/* End of asset files table */}
+                <Box display='flex' flexDirection='row' mt={1} className={classes.objectMeshTable}>
+                    <ObjectMeshTable material={sampleObjectMesh} />
                 </Box>
             </Box>
             <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={model.sourceObjects} />
@@ -272,3 +344,37 @@ function Model(props: ModelProps): React.ReactElement {
 }
 
 export default Model;
+
+{
+    /* <UVContents
+    initialEntry={getInitialEntry(eVocabularySetID.eModelMaterialChannelMaterialType)}
+    uvMaps={model.uvMaps}
+    options={getEntries(eVocabularySetID.eModelMaterialChannelMaterialType)}
+    onUpdate={updateUVMapsVariant}
+/> */
+}
+
+{
+    /* <InputField disabled type='number' label='Roughness' value={model.roughness} name='roughness' onChange={setIdField} />
+<InputField disabled type='number' label='Metalness' value={model.metalness} name='metalness' onChange={setIdField} /> */
+}
+
+{
+    /* <CheckboxField name='isTwoManifoldUnbounded' label='Is Two Manifold Unbounded?' value={model.isTwoManifoldUnbounded} onChange={setCheckboxField} />
+<CheckboxField name='isTwoManifoldBounded' label='Is Two Manifold Bounded?' value={model.isTwoManifoldBounded} onChange={setCheckboxField} />
+<CheckboxField name='isWatertight' label='Is Watertight?' value={model.isWatertight} onChange={setCheckboxField} />
+<CheckboxField name='hasNormals' label='Has Normals?' value={model.hasNormals} onChange={setCheckboxField} />
+<CheckboxField name='hasVertexColor' label='Has Vertex Color?' value={model.hasVertexColor} onChange={setCheckboxField} />
+<CheckboxField name='hasUVSpace' label='Has UV Space?' value={model.hasUVSpace} onChange={setCheckboxField} />
+<CheckboxField name='selfIntersecting' label='Self Intersecting?' value={model.selfIntersecting} onChange={setCheckboxField} />
+<BoundingBoxInput
+    disabled
+    boundingBoxP1X={model.boundingBoxP1X}
+    boundingBoxP1Y={model.boundingBoxP1Y}
+    boundingBoxP1Z={model.boundingBoxP1Z}
+    boundingBoxP2X={model.boundingBoxP2X}
+    boundingBoxP2Y={model.boundingBoxP2Y}
+    boundingBoxP2Z={model.boundingBoxP2Z}
+    onChange={setIdField}
+/> */
+}
