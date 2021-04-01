@@ -381,28 +381,15 @@ export class Helpers {
     // static writeStreamCounter: number = 0;
     static async writeStreamToStream(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream, waitOnEnd: boolean = false): Promise<IOResults> {
         try {
-            // const writeStreamCounter: number = ++Helpers.writeStreamCounter;
-            // LOG.logger.info(`Helpers.writeStreamToStream ${writeStreamCounter} piping`);
             readStream.pipe(writeStream);
             return new Promise<IOResults>((resolve) => {
+                /* istanbul ignore else */
                 if (!waitOnEnd) {
-                    writeStream.on('finish', () => {
-                        // LOG.logger.info(`Helpers.writeStreamToStream ${writeStreamCounter} finish`);
-                        resolve({ success: true, error: '' });
-                    }); /* istanbul ignore next */
-                    writeStream.on('end', () => {
-                        // LOG.logger.info(`Helpers.writeStreamToStream ${writeStreamCounter} end`);
-                        resolve({ success: true, error: '' });
-                    }); /* istanbul ignore next */
+                    writeStream.on('finish', () => { resolve({ success: true, error: '' }); }); /* istanbul ignore next */
+                    writeStream.on('end', () => { resolve({ success: true, error: '' }); }); /* istanbul ignore next */
                 } else {
-                    // writeStream.on('finish', () => {
-                    //     LOG.logger.info(`Helpers.writeStreamToStream ${writeStreamCounter} finish`);
-                    // }); /* istanbul ignore next */
-                    writeStream.on('end', () => {
-                        // LOG.logger.info(`Helpers.writeStreamToStream ${writeStreamCounter} end`);
-                        resolve({ success: true, error: '' });
-                    }); /* istanbul ignore next */
-                }
+                    writeStream.on('end', () => { resolve({ success: true, error: '' }); });
+                } /* istanbul ignore next */
                 writeStream.on('error', () => { resolve({ success: false, error: 'Unknown stream error' }); });
             });
         } catch (error) /* istanbul ignore next */ {

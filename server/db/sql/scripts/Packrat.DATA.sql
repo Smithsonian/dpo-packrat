@@ -137,6 +137,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 11, 'Cook:
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 12, 'Cook: si-voyager-scene');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 13, 'Cook: unwrap');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 14, 'Cook Job');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 1, 'Start');
 
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary 
 WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');

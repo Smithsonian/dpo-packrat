@@ -12,4 +12,5 @@ export interface WorkflowParameters {
 
 export interface IWorkflowEngine {
     create(workflowParams: WorkflowParameters): Promise<IWorkflow | null>;
+    jobUpdated(idJobRun: number): Promise<boolean>;
 }

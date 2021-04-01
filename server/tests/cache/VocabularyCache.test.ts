@@ -192,6 +192,8 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
                     case eVocabularyID.eWorkflowTypeCookJob:                    testVocabulary(vocabulary, 'Cook Job'); break;
 
+                    case eVocabularyID.eWorkflowStepTypeStart:                  testVocabulary(vocabulary, 'Start'); break;
+
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
@@ -449,6 +451,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-voyager-scene');
             await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: unwrap');
             await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowType, 'Cook Job');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowStepWorkflowStepType, 'Start');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
             await testVocabularyBySetAndTerm(eVocabularySetID.eNone, 'Other', false);
         });
@@ -580,6 +583,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eAssetAssetTypeBulkIngestion, eVocabularySetID.eAssetAssetType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eJobJobTypeCookBake, eVocabularySetID.eJobJobType)).toBeTruthy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eWorkflowType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowStepTypeStart, eVocabularySetID.eWorkflowStepWorkflowStepType)).toBeTruthy();
 
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eNone, eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
             expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eNone)).toBeFalsy();

@@ -13,7 +13,9 @@ import { Writable } from 'stream';
 import axios, { AxiosResponse } from 'axios';
 import { Semaphore } from 'async-mutex';
 
-const CookWebDAVSimultaneousTransfers: number = 7;
+const CookWebDAVSimultaneousTransfers: number = 2;
+const CookRequestRetryCount: number = 3;
+const CookRetryDelay: number = 5000;
 
 class JobCookConfiguration {
     clientId: string;
@@ -114,7 +116,7 @@ export abstract class JobCook<T> extends JobPackrat {
             if ((timeout > 0) &&
                 ((new Date().getTime() - startTime.getTime()) >= timeout))
                 return { success: false, error: 'timeout expired' };
-            await this.delay(5000);
+            await H.Helpers.sleep(CookRetryDelay);
         }
     }
     // #endregion
@@ -125,34 +127,56 @@ export abstract class JobCook<T> extends JobPackrat {
         // Create job via POST to /job
         const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, this.getParameters(), eJobCookPriority.eNormal);
         let axiosResponse: AxiosResponse<any> | null = null;
+        let requestCount: number = 0;
+        let res: H.IOResults = { success: false, error: '' };
+
         let requestUrl: string = Config.job.cookServerUrl + 'job';
-        LOG.logger.info(`JobCook [${this.name()}] creating job: ${requestUrl}`);
-        try {
-            axiosResponse = await axios.post(requestUrl, jobCookPostBody);
-            if (axiosResponse?.status !== 201)
-                return { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed: ${JSON.stringify(axiosResponse)}` };
-        } catch (error) {
-            const message: string | null = error.message;
-            if (message && message.indexOf('getaddrinfo ENOTFOUND'))
-                return { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(error)}` };
-            else
-                return { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
+        while (requestCount++ < CookRequestRetryCount) {
+            LOG.logger.info(`JobCook [${this.name()}] creating job: ${requestUrl}`);
+            try {
+                axiosResponse = await axios.post(requestUrl, jobCookPostBody);
+                if (axiosResponse?.status === 201)
+                    break; // success, continue
+                res = { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed: ${JSON.stringify(axiosResponse)}` };
+            } catch (error) {
+                const message: string | null = error.message;
+                res = (message && message.indexOf('getaddrinfo ENOTFOUND'))
+                    ? { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(error)}` }
+                    : { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
+            }
+            if (requestCount === CookRequestRetryCount)
+                return res;
+            else {
+                LOG.logger.error(`${res.error} Retrying`);
+                await H.Helpers.sleep(CookRetryDelay);
+            }
         }
 
         // stage files
-        const res: H.IOResults = await this.stageFiles();
+        res = await this.stageFiles();
         if (!res.success)
             return res;
 
         // Initiate job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/run
+        requestCount = 0;
+        res = { success: false, error: '' };
         requestUrl = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
-        LOG.logger.info(`JobCook [${this.name()}] running job: ${requestUrl}`);
-        try {
-            const axiosResponse = await axios.patch(requestUrl);
-            if (axiosResponse.status !== 202)
-                return { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
-        } catch (error) {
-            return { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(error)}` };
+        while (requestCount++ < CookRequestRetryCount) {
+            LOG.logger.info(`JobCook [${this.name()}] running job: ${requestUrl}`);
+            try {
+                const axiosResponse = await axios.patch(requestUrl);
+                if (axiosResponse.status === 202)
+                    break; // success, continue
+                res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
+            } catch (error) {
+                res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(error)}` };
+            }
+            if (requestCount === CookRequestRetryCount)
+                return res;
+            else {
+                LOG.logger.error(`${res.error} Retrying`);
+                await H.Helpers.sleep(CookRetryDelay);
+            }
         }
         LOG.logger.info(`JobCook [${this.name()}] running`);
         return this.waitForCompletionWorker(0, true);
@@ -160,14 +184,28 @@ export abstract class JobCook<T> extends JobPackrat {
 
     async cancelJobWorker(): Promise<H.IOResults> {
         // Cancel job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/cancel
+        let requestCount: number = 0;
+        let res: H.IOResults = { success: false, error: '' };
         const requestUrl: string = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/cancel`;
         LOG.logger.info(`JobCook [${this.name()}] cancelling job: ${requestUrl}`);
-        try {
-            const axiosResponse = await axios.patch(requestUrl);
-            if (axiosResponse.status !== 200)
-                return { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
-        } catch (error) {
-            return { success: false, error: `JobCook [${this.name()}] patch ${requestUrl}: ${JSON.stringify(error)}` };
+        while (requestCount++ < CookRequestRetryCount) {
+            try {
+                const axiosResponse = await axios.patch(requestUrl);
+                if (axiosResponse.status !== 200)
+                    res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
+            } catch (error) {
+                res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl}: ${JSON.stringify(error)}` };
+            }
+            if (res.success)
+                break;
+            else {
+                if (requestCount === CookRequestRetryCount)
+                    return res;
+                else {
+                    LOG.logger.error(`${res.error} Retrying`);
+                    await H.Helpers.sleep(CookRetryDelay);
+                }
+            }
         }
 
         LOG.logger.info(`JobCook [${this.name()}] cancelled`);
@@ -248,7 +286,7 @@ export abstract class JobCook<T> extends JobPackrat {
                             return { success: baseName === RSR.fileName, error: '' };
                         } catch (error) {
                             LOG.logger.error('JobCook.stageFiles stat', error);
-                            H.Helpers.sleep(3000); // sleep for 3 seconds before retrying
+                            await H.Helpers.sleep(CookRetryDelay); // sleep for 3 seconds before retrying
                         }
                     }
                     return { success: false, error: `Unable to verify existence of staged file ${RSR.fileName}` };
@@ -261,9 +299,5 @@ export abstract class JobCook<T> extends JobPackrat {
                 resOuter = resInner;
         }
         return resOuter;
-    }
-
-    async delay(ms: number): Promise<void> {
-        return new Promise<void>(resolve => setTimeout(resolve, ms));
     }
 }
