@@ -11,11 +11,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions } from 'webdav';
 import { Writable } from 'stream';
 import axios, { AxiosResponse } from 'axios';
-import { Semaphore } from 'async-mutex';
+import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
 
 const CookWebDAVSimultaneousTransfers: number = 2;
 const CookRequestRetryCount: number = 3;
 const CookRetryDelay: number = 5000;
+const CookTimeout: number = 36000000; // ten hours
 
 class JobCookConfiguration {
     clientId: string;
@@ -65,6 +66,9 @@ class JobCookPostBody<T> {
 export abstract class JobCook<T> extends JobPackrat {
     private _configuration: JobCookConfiguration;
     private _idAssetVersions: number[] | null;
+    private completionMutexes: MutexInterface[] = [];
+    private complete: boolean = false;
+
     private static _stagingSempaphore = new Semaphore(CookWebDAVSimultaneousTransfers);
 
     protected abstract getParameters(): T;
@@ -86,38 +90,58 @@ export abstract class JobCook<T> extends JobPackrat {
         return this._configuration;
     }
 
-    async waitForCompletion(timeout: number): Promise<H.IOResults> {
-        return this.waitForCompletionWorker(timeout, false);
+    signalCompletion() {
+        this.complete = true;
+        for (const mutex of this.completionMutexes)
+            mutex.cancel();
     }
 
-    private async waitForCompletionWorker(timeout: number, performPolling: boolean): Promise<H.IOResults> {
-        const startTime: Date = new Date();
-        let pollNumber: number = 0;
-        while (true) {
-            // poll for completion every CookRetryDelay milleseconds:
-            switch (this._dbJobRun.getStatus()) {
-                case DBAPI.eJobRunStatus.eDone:
-                case DBAPI.eJobRunStatus.eCancelled:
-                case DBAPI.eJobRunStatus.eError:
-                    return this._results;
-            }
+    async waitForCompletion(timeout: number): Promise<H.IOResults> {
+        if (this.complete)
+            return { success: true, error: '' };
+        const waitMutex: MutexInterface = withTimeout(new Mutex(), timeout);
+        this.completionMutexes.push(waitMutex);
 
-            // multiple callers may be waiting on completion ... but only one needs to poll Cook
-            if (performPolling) {
-                await this.pollingCallback(++pollNumber);
-                switch (this._dbJobRun.getStatus()) {
-                    case DBAPI.eJobRunStatus.eDone:
-                    case DBAPI.eJobRunStatus.eCancelled:
-                    case DBAPI.eJobRunStatus.eError:
-                        return this._results;
-                }
-            }
-
-            if ((timeout > 0) &&
-                ((new Date().getTime() - startTime.getTime()) >= timeout))
-                return { success: false, error: 'timeout expired' };
-            await H.Helpers.sleep(CookRetryDelay);
+        const releaseOuter = await waitMutex.acquire();     // first acquire should succeed
+        try {
+            const releaseInner = await waitMutex.acquire(); // second acquire should wait
+            releaseInner();
+        } catch (error) {
+            if (error === E_CANCELED)                   // we're done
+                return { success: true, error: '' };
+            else if (error === E_TIMEOUT)               // we timed out
+                return { success: false, error: `JobCook.waitForCompletion timed out after ${timeout}ms` };
+            else
+                return { success: false, error: `JobCook.waitForCompletion failure: ${JSON.stringify(error)}` };
+        } finally {
+            releaseOuter();
         }
+        return { success: true, error: '' };
+    }
+
+    private async pollingLoop(timeout: number): Promise<H.IOResults> {
+        try {
+            const startTime: Date = new Date();
+            let pollNumber: number = 0;
+            let polling: boolean = true;
+            while (polling) {
+                // poll for completion every CookRetryDelay milleseconds:
+                polling = !await this.pollingCallback(++pollNumber);
+                if (!polling)
+                    return this._results;
+
+                if ((timeout > 0) &&
+                    ((new Date().getTime() - startTime.getTime()) >= timeout))
+                    return { success: false, error: 'timeout expired' };
+                await H.Helpers.sleep(CookRetryDelay);
+            }
+        } catch (error) {
+            LOG.logger.error('JobCook.pollingLoop', error);
+            return this._results;
+        } finally {
+            this.signalCompletion();
+        }
+        return this._results;
     }
     // #endregion
 
@@ -177,7 +201,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 await H.Helpers.sleep(CookRetryDelay);
         }
         LOG.logger.info(`JobCook [${this.name()}] running`);
-        return this.waitForCompletionWorker(0, true);
+        return this.pollingLoop(CookTimeout);
     }
 
     async cancelJobWorker(): Promise<H.IOResults> {
@@ -209,7 +233,8 @@ export abstract class JobCook<T> extends JobPackrat {
         return { success: true, error: '' };
     }
 
-    private async pollingCallback(pollNumber: number): Promise<void> {
+    // returns true if polling indicates we're done; false if polling should continue
+    private async pollingCallback(pollNumber: number): Promise<boolean> {
         // LOG.logger.info(`JobCook [${this.name()}] polling [${pollNumber}]`);
         // poll server for status update
         // Get job report via GET to /clients/<CLIENTID>/jobs/<JOBID>/report
@@ -220,7 +245,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 // only log errors after first attempt, as job creation may not be complete on Cook server
                 if (pollNumber > 1)
                     LOG.logger.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${JSON.stringify(axiosResponse)}`);
-                return;
+                return false;
             }
 
             // look for completion in 'state' member, via value of 'done', 'error', or 'cancelled'; update eJobRunStatus and terminate polling job
@@ -230,15 +255,16 @@ export abstract class JobCook<T> extends JobPackrat {
                 case 'created':     await this.recordCreated();                                 break;
                 case 'waiting':     await this.recordWaiting();                                 break;
                 case 'running':     await this.recordStart();                                   break;
-                case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));    break;
-                case 'error':       await this.recordFailure(cookJobReport['error']);           break;
-                case 'cancelled':   await this.recordCancel(cookJobReport['error']);            break;
+                case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));    return true;
+                case 'error':       await this.recordFailure(cookJobReport['error']);           return true;
+                case 'cancelled':   await this.recordCancel(cookJobReport['error']);            return true;
             }
         } catch (error) {
             // only log errors after first attempt, as job creation may not be complete on Cook server
             if (pollNumber > 1)
                 LOG.logger.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${JSON.stringify(error)}`);
         }
+        return false;
     }
 
     protected async stageFiles(): Promise<H.IOResults> {

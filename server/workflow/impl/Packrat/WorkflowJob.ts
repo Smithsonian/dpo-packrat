@@ -27,6 +27,7 @@ export class WorkflowJob implements WF.IWorkflow {
     private workflowJobParameters: WorkflowJobParameters | null = null;
     private idAssetVersions: number[] | null = null;
     private completionMutexes: MutexInterface[] = [];
+    private complete: boolean = false;
 
     static async constructWorkflowJob(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowJob | null> {
         const workflowJob: WorkflowJob = new WorkflowJob(workflowParams, WFC);
@@ -150,8 +151,7 @@ export class WorkflowJob implements WF.IWorkflow {
 
         if (workflowComplete) {
             LOG.logger.info(`WorkflowJob.update RELEASING ${this.completionMutexes.length} WAITERS ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
-            for (const mutex of this.completionMutexes)
-                mutex.cancel();
+            this.signalCompletion();
         } else
             LOG.logger.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
         // LOG.logger.error(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${JSON.stringify(jobRun)} - ${JSON.stringify(workflowStep)}`, new Error());
@@ -159,25 +159,15 @@ export class WorkflowJob implements WF.IWorkflow {
         return (result) ? { success: true, workflowComplete, error: '' } : { success: false, workflowComplete, error: 'Database Error' };
     }
 
-    /*
-    private async computeWorkflowStatus(): Promise<DBAPI.eWorkflowStepState> {
-        if (!this.workflowData || !this.workflowData.workflowStep || this.workflowData.workflowStep.length == 0)
-            return DBAPI.eWorkflowStepState.eFinished;
-
-        const idWorkflowStep: number = this.workflowData.workflowStep[this.workflowData.workflowStep.length - 1].idWorkflowStep;
-        const workflowStep: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(idWorkflowStep);
-        if (!workflowStep) {
-            LOG.logger.error(`WorkflowJob.computeWorklowStatus unable to fetch workflow step for ${idWorkflowStep}`);
-            return DBAPI.eWorkflowStepState.eFinished;
-        }
-        this.workflowData.workflowStep[this.workflowData.workflowStep.length - 1] = workflowStep;
-
-        const eWorkflowStepState: DBAPI.eWorkflowStepState = workflowStep.getState();
-        return eWorkflowStepState;
+    signalCompletion() {
+        this.complete = true;
+        for (const mutex of this.completionMutexes)
+            mutex.cancel();
     }
-    */
 
     async waitForCompletion(timeout: number): Promise<H.IOResults> {
+        if (this.complete)
+            return { success: true, error: '' };
         const waitMutex: MutexInterface = withTimeout(new Mutex(), timeout);
         this.completionMutexes.push(waitMutex);
 
