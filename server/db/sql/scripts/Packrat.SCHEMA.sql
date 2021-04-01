@@ -565,7 +565,7 @@ CREATE TABLE IF NOT EXISTS `WorkflowStep` (
   `idWorkflowStep` int(11) NOT NULL AUTO_INCREMENT,
   `idWorkflow` int(11) NOT NULL,
   `idJobRun` int(11) NULL,
-  `idUserOwner` int(11) NOT NULL,
+  `idUserOwner` int(11) NULL,
   `idVWorkflowStepType` int(11) NOT NULL,
   `State` int(11) NOT NULL,
   `DateCreated` datetime NOT NULL,

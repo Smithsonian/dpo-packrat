@@ -1,8 +1,37 @@
 /* eslint-disable camelcase */
 import { Workflow as WorkflowBase } from '@prisma/client';
+import { WorkflowStep, WorkflowStepSystemObjectXref } from '..';
 import * as DBC from '../connection';
 import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
+
+export class WorkflowConstellation {
+    workflow: Workflow | null = null;
+    workflowStep: WorkflowStep[] | null = null;
+    workflowStepXref: WorkflowStepSystemObjectXref[] | null = null;
+
+    static async fetch(idWorkflow: number): Promise<WorkflowConstellation | null> {
+        const WFC: WorkflowConstellation = new WorkflowConstellation();
+        WFC.workflow = await Workflow.fetch(idWorkflow);
+        if (!WFC.workflow) {
+            LOG.logger.error(`WorkflowConstellation.fetch failed to retrieve Workflow ${idWorkflow}`);
+            return null;
+        }
+
+        WFC.workflowStep = await WorkflowStep.fetchFromWorkflow(idWorkflow); /* istanbul ignore next */
+        if (!WFC.workflowStep) {
+            LOG.logger.error(`WorkflowConstellation.fetch failed to retrieve WorkflowSteps from workflow ${idWorkflow}`);
+            return null;
+        }
+
+        WFC.workflowStepXref = await WorkflowStepSystemObjectXref.fetchFromWorkflow(idWorkflow); /* istanbul ignore next */
+        if (!WFC.workflowStepXref) {
+            LOG.logger.error(`WorkflowConstellation.fetch failed to retrieve WorkflowStepSystemObjectXrefs from workflow ${idWorkflow}`);
+            return null;
+        }
+        return WFC;
+    }
+}
 
 export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase {
     idWorkflow!: number;

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as JOB from '../../interface';
 import * as DBAPI from '../../../db';
+import * as WF from '../../../workflow/interface';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import * as NS from 'node-schedule';
@@ -52,28 +53,40 @@ export abstract class JobPackrat implements JOB.IJob {
     }
     // #endregion
 
+    private async updateWorkflowEngine(): Promise<boolean> {
+        const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+        if (!workflowEngine) {
+            LOG.logger.error('JobPackrat.updateWorkflowEngine failed, no WorkflowFactory instance');
+            return false;
+        }
+        return workflowEngine.jobUpdated(this._dbJobRun.idJobRun);
+    }
+
     // #region JobRun helper methods
     async recordCreated(): Promise<void> {
         if (this._dbJobRun.getStatus() == DBAPI.eJobRunStatus.eUnitialized) {
             this._dbJobRun.DateStart = new Date();
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
-            await this._dbJobRun.update();
             LOG.logger.info(`JobPackrat [${this.name()}] Created`);
+            await this._dbJobRun.update();
+            this.updateWorkflowEngine(); // don't block
         }
     }
 
     async recordWaiting(): Promise<void> {
         this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eWaiting);
-        await this._dbJobRun.update();
         LOG.logger.info(`JobPackrat [${this.name()}] Waiting`);
+        await this._dbJobRun.update();
+        this.updateWorkflowEngine(); // don't block
     }
 
     async recordStart(): Promise<void> {
         if (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eRunning) {
             this._dbJobRun.DateStart = new Date();
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eRunning);
-            await this._dbJobRun.update();
             LOG.logger.info(`JobPackrat [${this.name()}] Starting`);
+            await this._dbJobRun.update();
+            this.updateWorkflowEngine(); // don't block
         }
     }
 
@@ -85,6 +98,7 @@ export abstract class JobPackrat implements JOB.IJob {
         this._dbJobRun.Output = output;
         LOG.logger.info(`JobPackrat [${this.name()}] Success`);
         await this._dbJobRun.update();
+        this.updateWorkflowEngine(); // don't block
     }
 
     async recordFailure(errorMsg: string): Promise<void> {
@@ -93,8 +107,9 @@ export abstract class JobPackrat implements JOB.IJob {
         this._dbJobRun.Result = false;
         this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eError);
         this._dbJobRun.Error = errorMsg;
-        await this._dbJobRun.update();
         LOG.logger.error(`JobPackrat [${this.name()}] Failure: ${errorMsg}`);
+        await this._dbJobRun.update();
+        this.updateWorkflowEngine(); // don't block
     }
 
     async recordCancel(errorMsg: string): Promise<void> {
@@ -108,6 +123,7 @@ export abstract class JobPackrat implements JOB.IJob {
         } else
             LOG.logger.error(`JobPackrat [${this.name()}] Cancel`);
         await this._dbJobRun.update();
+        this.updateWorkflowEngine(); // don't block
     }
     // #endregion
 }

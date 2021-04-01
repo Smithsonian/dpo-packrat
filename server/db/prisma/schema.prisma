@@ -793,13 +793,13 @@ model WorkflowStep {
   idWorkflowStep               Int                            @id @default(autoincrement())
   idWorkflow                   Int
   idJobRun                     Int?
-  idUserOwner                  Int
+  idUserOwner                  Int?
   idVWorkflowStepType          Int
   State                        Int
   DateCreated                  DateTime                       @mariasql.DateTime(0)
   DateCompleted                DateTime?                      @mariasql.DateTime(0)
   JobRun                       JobRun?                        @relation(fields: [idJobRun], references: [idJobRun])
-  User                         User                           @relation(fields: [idUserOwner], references: [idUser])
+  User                         User?                          @relation(fields: [idUserOwner], references: [idUser])
   Vocabulary                   Vocabulary                     @relation(fields: [idVWorkflowStepType], references: [idVocabulary])
   Workflow                     Workflow                       @relation(fields: [idWorkflow], references: [idWorkflow])
   WorkflowStepSystemObjectXref WorkflowStepSystemObjectXref[]

@@ -125,6 +125,7 @@ export enum eVocabularyID {
     eJobJobTypeCookSIVoyagerScene,
     eJobJobTypeCookUnwrap,
     eWorkflowTypeCookJob,
+    eWorkflowStepTypeStart,
     eNone = -1
 }
 
@@ -380,7 +381,13 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Cook Job':                 eVocabEnum = eVocabularyID.eWorkflowTypeCookJob; break;
                     }
-                }
+                } break;
+
+                case eVocabularySetID.eWorkflowStepWorkflowStepType: {
+                    switch (vocabulary.Term) {
+                        case 'Start':                       eVocabEnum = eVocabularyID.eWorkflowStepTypeStart; break;
+                    }
+                } break;
             }
 
             if (eVocabEnum != eVocabularyID.eNone) {
