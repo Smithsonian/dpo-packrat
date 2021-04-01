@@ -24,7 +24,7 @@ class JobData {
 }
 
 const testTimeout: number = 12000000;
-const jobSets: number = 0;
+const jobSets: number = 1;
 const workflowSets: number = 1;
 
 let jobEngine: JOB.IJobEngine | null = null;
@@ -63,7 +63,7 @@ describe('JobNS Init', () => {
     });
 });
 
-describe('JobNS Cook Tests', () => {
+describe('JobNS Cook Test Setup', () => {
     jest.setTimeout(testTimeout);
     for (let nSet = 0; nSet < jobSets; nSet++) {
         testCookExplicit('fbx-stand-alone', CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -83,7 +83,26 @@ describe('JobNS Cook Tests', () => {
         // expected failures:
         expect(await testCreateJob(0, CACHE.eVocabularyID.eNone, undefined, null, null, false)).toBeFalsy();
     });
+});
 
+describe('JobNS IWorkflow Test Setup', () => {
+    jest.setTimeout(testTimeout);
+    for (let nSet = 0; nSet < workflowSets; nSet++) {
+        testWorkflow('fbx-stand-alone', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('fbx-with-support', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('glb', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('obj', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('ply', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('stl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        testWorkflow('x3d', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
+        // testWorkflow('usd', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // testWorkflow('usdz', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        // testWorkflow('wrl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+    }
+});
+
+describe('JobNS Cook Test Completion', () => {
     test('IJob.Cook Job Completion', async() => {
         jest.setTimeout(testTimeout);
         const jobFinalizationList: Promise<H.IOResults>[] = [];
@@ -145,22 +164,7 @@ describe('JobNS Cook Tests', () => {
     });
 });
 
-describe('JobNS IWorkflow Tests', () => {
-    jest.setTimeout(testTimeout);
-    for (let nSet = 0; nSet < workflowSets; nSet++) {
-        testWorkflow('fbx-stand-alone', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testWorkflow('fbx-with-support', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testWorkflow('glb', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testWorkflow('obj', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testWorkflow('ply', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testWorkflow('stl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        testWorkflow('x3d', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // Not yet supported by cook's si-packrat-inspect, as of 2021-03-22
-        // testWorkflow('usd', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // testWorkflow('usdz', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        // testWorkflow('wrl', CACHE.eVocabularyID.eWorkflowTypeCookJob, CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-    }
-
+describe('JobNS IWorkflow Completion', () => {
     test('JobNS IWorkflow Completion', async() => {
         jest.setTimeout(testTimeout);
         const wfFinalizationList: Promise<H.IOResults>[] = [];
