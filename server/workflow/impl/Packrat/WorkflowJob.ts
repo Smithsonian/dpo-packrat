@@ -6,8 +6,7 @@ import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
-
-const WorkflowJobRetryDelay: number = 5000;
+import { Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
 
 export class WorkflowJobParameters {
     eCookJob: CACHE.eVocabularyID;
@@ -27,6 +26,7 @@ export class WorkflowJob implements WF.IWorkflow {
     private workflowData: DBAPI.WorkflowConstellation;
     private workflowJobParameters: WorkflowJobParameters | null = null;
     private idAssetVersions: number[] | null = null;
+    private completionMutexes: MutexInterface[] = [];
 
     static async constructWorkflowJob(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowJob | null> {
         const workflowJob: WorkflowJob = new WorkflowJob(workflowParams, WFC);
@@ -96,19 +96,18 @@ export class WorkflowJob implements WF.IWorkflow {
         return { success: true, error: '' };
     }
 
-    async update(workflowStep: DBAPI.WorkflowStep, jobRun: DBAPI.JobRun): Promise<H.IOResults> {
+    async update(workflowStep: DBAPI.WorkflowStep, jobRun: DBAPI.JobRun): Promise<WF.WorkflowUpdateResults> {
         // update workflowStep based on job run data
         const eWorkflowStepStateOrig: DBAPI.eWorkflowStepState = workflowStep.getState();
         if (eWorkflowStepStateOrig == DBAPI.eWorkflowStepState.eFinished) {
             LOG.logger.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} Already Completed`);
-            return { success: true, error: '' }; // job is already done
+            return { success: true, workflowComplete: true, error: '' }; // job is already done
         }
 
         let eWorkflowStepState: DBAPI.eWorkflowStepState = eWorkflowStepStateOrig;
-        const dateCompletedOrig: Date | null = workflowStep.DateCompleted;
-        let dateCompleted: Date | null = dateCompletedOrig;
+        let dateCompleted: Date | null = null;
         let updateWFSNeeded: boolean = false;
-        let updateWFNeeded: boolean = false;
+        let workflowComplete: boolean = false;
 
         switch (jobRun.getStatus()) {
             case DBAPI.eJobRunStatus.eUnitialized:
@@ -126,21 +125,19 @@ export class WorkflowJob implements WF.IWorkflow {
                 dateCompleted = new Date();
                 break;
         }
-        LOG.logger.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
-        // LOG.logger.error(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${JSON.stringify(jobRun)} - ${JSON.stringify(workflowStep)}`, new Error());
 
         if (eWorkflowStepState != eWorkflowStepStateOrig) {
             workflowStep.setState(eWorkflowStepState);
             updateWFSNeeded = true;
         }
 
-        if (dateCompleted != dateCompletedOrig) {
+        if (dateCompleted) {
             workflowStep.DateCompleted = dateCompleted;
             updateWFSNeeded = true;
 
-            if (this.workflowData.workflow && dateCompleted) {
+            if (this.workflowData.workflow) {
                 this.workflowData.workflow.DateUpdated = dateCompleted;
-                updateWFNeeded = true;
+                workflowComplete = true;
             }
         }
 
@@ -148,12 +145,21 @@ export class WorkflowJob implements WF.IWorkflow {
 
         if (updateWFSNeeded)
             result = await workflowStep.update() && result;
-        if (updateWFNeeded && this.workflowData.workflow)
+        if (workflowComplete && this.workflowData.workflow)
             result = await this.workflowData.workflow.update() && result;
 
-        return (result) ? { success: true, error: '' } : { success: false, error: 'Database Error' };
+        if (workflowComplete) {
+            LOG.logger.info(`WorkflowJob.update RELEASING ${this.completionMutexes.length} WAITERS ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
+            for (const mutex of this.completionMutexes)
+                mutex.cancel();
+        } else
+            LOG.logger.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
+        // LOG.logger.error(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${JSON.stringify(jobRun)} - ${JSON.stringify(workflowStep)}`, new Error());
+
+        return (result) ? { success: true, workflowComplete, error: '' } : { success: false, workflowComplete, error: 'Database Error' };
     }
 
+    /*
     private async computeWorkflowStatus(): Promise<DBAPI.eWorkflowStepState> {
         if (!this.workflowData || !this.workflowData.workflowStep || this.workflowData.workflowStep.length == 0)
             return DBAPI.eWorkflowStepState.eFinished;
@@ -169,25 +175,27 @@ export class WorkflowJob implements WF.IWorkflow {
         const eWorkflowStepState: DBAPI.eWorkflowStepState = workflowStep.getState();
         return eWorkflowStepState;
     }
+    */
 
     async waitForCompletion(timeout: number): Promise<H.IOResults> {
-        const startTime: Date = new Date();
-        let pollNumber: number = 0;
-        while (true) {
-            // poll for completion every WorkflowJobRetryDelay milleseconds:
-            ++pollNumber;
-            const eWorkflowStepState: DBAPI.eWorkflowStepState = await this.computeWorkflowStatus();
-            LOG.logger.info(`WorkflowJob.waitForCompletion polling [${pollNumber}] for ${JSON.stringify(this.workflowJobParameters)}: ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
-            switch (eWorkflowStepState) {
-                case DBAPI.eWorkflowStepState.eFinished:
-                    return { success: true, error: '' };
-            }
+        const waitMutex: MutexInterface = withTimeout(new Mutex(), timeout);
+        this.completionMutexes.push(waitMutex);
 
-            if ((timeout > 0) &&
-                ((new Date().getTime() - startTime.getTime()) >= timeout))
-                return { success: false, error: 'timeout expired' };
-            await H.Helpers.sleep(WorkflowJobRetryDelay);
+        const releaseOuter = await waitMutex.acquire();     // first acquire should succeed
+        try {
+            const releaseInner = await waitMutex.acquire(); // second acquire should wait
+            releaseInner();
+        } catch (error) {
+            if (error === E_CANCELED)                   // we're done
+                return { success: true, error: '' };
+            else if (error === E_TIMEOUT)               // we timed out
+                return { success: false, error: `WorkflowJob.waitForCompletion timed out after ${timeout}ms` };
+            else
+                return { success: false, error: `WorkflowJob.waitForCompletion failure: ${JSON.stringify(error)}` };
+        } finally {
+            releaseOuter();
         }
+        return { success: true, error: '' };
     }
 
     async extractParameters(): Promise<H.IOResults> {
