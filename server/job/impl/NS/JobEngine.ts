@@ -81,7 +81,16 @@ export class JobEngine implements JOB.IJobEngine {
         }
 
         this.jobMap.set(dbJobRun.idJobRun, new JobData(job, dbJob, dbJobRun));
+        LOG.logger.info(`JobEngine.create [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`);
         return job;
+    }
+
+    async jobCompleted(job: JOB.IJob): Promise<void> {
+        const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
+        if (dbJobRun) {
+            this.jobMap.delete(dbJobRun.idJobRun);
+            LOG.logger.info(`JobEngine.jobCompleted [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`);
+        }
     }
     // #endregion
 
@@ -161,7 +170,7 @@ export class JobEngine implements JOB.IJobEngine {
             case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect:
                 // confirm that parameters is of type JobCookSIPackratInspectParameters
                 if (parameters instanceof COOK.JobCookSIPackratInspectParameters)
-                    return new COOK.JobCookSIPackratInspect(idAssetVersions, parameters, dbJobRun);
+                    return new COOK.JobCookSIPackratInspect(this, idAssetVersions, parameters, dbJobRun);
                 else {
                     LOG.logger.error(`JobEngine.createJobWorker called with parameters not of type JobCookSIPackratInspect: ${JSON.stringify(parameters)}`);
                     return null;

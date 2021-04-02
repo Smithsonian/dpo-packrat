@@ -7,11 +7,13 @@ import * as H from '../../../utils/helpers';
 import * as NS from 'node-schedule';
 
 export abstract class JobPackrat implements JOB.IJob {
-    protected _nsJob: NS.Job | null = null;
+    protected _jobEngine: JOB.IJobEngine;
     protected _dbJobRun: DBAPI.JobRun;
+    protected _nsJob: NS.Job | null = null;
     protected _results: H.IOResults = { success: false,  error: 'Not Started' };
 
-    constructor(dbJobRun: DBAPI.JobRun) {
+    constructor(jobEngine: JOB.IJobEngine, dbJobRun: DBAPI.JobRun) {
+        this._jobEngine = jobEngine;
         this._dbJobRun = dbJobRun;
     }
 
@@ -53,13 +55,21 @@ export abstract class JobPackrat implements JOB.IJob {
     }
     // #endregion
 
-    private async updateWorkflowEngine(): Promise<boolean> {
-        const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
-        if (!workflowEngine) {
-            LOG.logger.error('JobPackrat.updateWorkflowEngine failed, no WorkflowFactory instance');
-            return false;
+    private async updateEngines(updateWorkflowEngine: boolean, sendJobCompletion: boolean = false): Promise<boolean> {
+        let res: boolean = true;
+        if (updateWorkflowEngine) {
+            const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+            if (!workflowEngine) {
+                LOG.logger.error('JobPackrat.updateWorkflowEngine failed, no WorkflowFactory instance');
+                return false;
+            }
+            res = workflowEngine.jobUpdated(this._dbJobRun.idJobRun) && res;
         }
-        return workflowEngine.jobUpdated(this._dbJobRun.idJobRun);
+
+        if (sendJobCompletion)
+            await this._jobEngine.jobCompleted(this);
+
+        return res;
     }
 
     // #region JobPackrat helper methods
@@ -70,7 +80,7 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.DateStart = new Date();
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
             await this._dbJobRun.update();
-            this.updateWorkflowEngine(); // don't block
+            this.updateEngines(true); // don't block
         }
     }
 
@@ -80,7 +90,7 @@ export abstract class JobPackrat implements JOB.IJob {
             LOG.logger.info(`JobPackrat [${this.name()}] Waiting`);
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eWaiting);
             await this._dbJobRun.update();
-            this.updateWorkflowEngine(); // don't block
+            this.updateEngines(true); // don't block
         }
     }
 
@@ -91,7 +101,7 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.DateStart = new Date();
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eRunning);
             await this._dbJobRun.update();
-            this.updateWorkflowEngine(); // don't block
+            this.updateEngines(true); // don't block
         }
     }
 
@@ -105,7 +115,7 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eDone);
             this._dbJobRun.Output = output;
             await this._dbJobRun.update();
-            this.updateWorkflowEngine(); // don't block
+            this.updateEngines(true, true); // don't block
         }
     }
 
@@ -119,7 +129,7 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eError);
             this._dbJobRun.Error = errorMsg;
             await this._dbJobRun.update();
-            this.updateWorkflowEngine(); // don't block
+            this.updateEngines(true, true); // don't block
         }
     }
 
@@ -137,7 +147,7 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.Result = false;
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCancelled);
             await this._dbJobRun.update();
-            this.updateWorkflowEngine(); // don't block
+            this.updateEngines(true, true); // don't block
         }
     }
     // #endregion

@@ -188,6 +188,10 @@ export class WorkflowJob implements WF.IWorkflow {
         return { success: true, error: '' };
     }
 
+    async workflowConstellation(): Promise<DBAPI.WorkflowConstellation | null> {
+        return this.workflowData;
+    }
+
     async extractParameters(): Promise<H.IOResults> {
         // confirm that this.workflowParams.parameters is valid
         if (!(this.workflowParams.parameters instanceof WorkflowJobParameters)) {
