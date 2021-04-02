@@ -74,4 +74,33 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
             return null;
         }
     }
+
+    static async fetchFromWorkflow(idWorkflow: number): Promise<WorkflowStepSystemObjectXref[] | null> {
+        if (!idWorkflow)
+            return null;
+        try {
+            const resWSX: WorkflowStepSystemObjectXref[] = [];
+            const WSX: WorkflowStepSystemObjectXrefBase[] | null = // DBC.CopyArray<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
+                await DBC.DBConnection.prisma.$queryRaw<WorkflowStepSystemObjectXref[]>`
+                SELECT WX.*
+                FROM WorkflowStepSystemObjectXref AS WX
+                JOIN WorkflowStep AS WS ON (WX.idWorkflowStep = WS.idWorkflowStep)
+                WHERE WS.idWorkflow = ${idWorkflow}`; //, WorkflowStepSystemObjectXref);
+            /* istanbul ignore else */
+            if (WSX) {
+                for (const xref of WSX) {
+                    resWSX.push(new WorkflowStepSystemObjectXref({
+                        idWorkflowStepSystemObjectXref: xref.idWorkflowStepSystemObjectXref,
+                        idSystemObject: xref.idSystemObject,
+                        idWorkflowStep: xref.idWorkflowStep,
+                        Input: xref.Input ? true : false
+                    }));
+                }
+            }
+            return resWSX;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow', error);
+            return null;
+        }
+    }
 }

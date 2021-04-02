@@ -29,6 +29,7 @@ DROP TABLE IF EXISTS `ModelMaterialChannel`;
 DROP TABLE IF EXISTS `ModelMaterialUVMap`;
 DROP TABLE IF EXISTS `ModelMetrics`;
 DROP TABLE IF EXISTS `ModelObject`;
+DROP TABLE IF EXISTS `ModelObjectModelMaterialXref`;
 DROP TABLE IF EXISTS `ModelProcessingAction`;
 DROP TABLE IF EXISTS `ModelProcessingActionStep`;
 DROP TABLE IF EXISTS `ModelSceneXref`;
@@ -50,7 +51,6 @@ DROP TABLE IF EXISTS `VocabularySet`;
 DROP TABLE IF EXISTS `Workflow`;
 DROP TABLE IF EXISTS `WorkflowStep`;
 DROP TABLE IF EXISTS `WorkflowStepSystemObjectXref`;
-DROP TABLE IF EXISTS `WorkflowTemplate`;
 SET foreign_key_checks = 1;
 
 DROP PROCEDURE IF EXISTS AssetVersionCreate;

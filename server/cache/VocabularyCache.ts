@@ -30,6 +30,7 @@ export enum eVocabularySetID {
     eWorkflowStepWorkflowStepType,
     eAssetAssetType,
     eJobJobType,
+    eWorkflowType,
     eNone = -1
 }
 
@@ -123,6 +124,8 @@ export enum eVocabularyID {
     eJobJobTypeCookSIVoyagerAsset,
     eJobJobTypeCookSIVoyagerScene,
     eJobJobTypeCookUnwrap,
+    eWorkflowTypeCookJob,
+    eWorkflowStepTypeStart,
     eNone = -1
 }
 
@@ -202,6 +205,7 @@ export class VocabularyCache {
                 case 'WorkflowStep.WorkflowStepType':           eVocabSetEnum = eVocabularySetID.eWorkflowStepWorkflowStepType; break;
                 case 'Asset.AssetType':                         eVocabSetEnum = eVocabularySetID.eAssetAssetType; break;
                 case 'Job.JobType':                             eVocabSetEnum = eVocabularySetID.eJobJobType; break;
+                case 'Workflow.Type':                           eVocabSetEnum = eVocabularySetID.eWorkflowType; break;
             }
 
             /* istanbul ignore else */
@@ -372,6 +376,18 @@ export class VocabularyCache {
                         case 'Cook: unwrap':                    eVocabEnum = eVocabularyID.eJobJobTypeCookUnwrap; break;
                     }
                 } break;
+
+                case eVocabularySetID.eWorkflowType: {
+                    switch (vocabulary.Term) {
+                        case 'Cook Job':                 eVocabEnum = eVocabularyID.eWorkflowTypeCookJob; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eWorkflowStepWorkflowStepType: {
+                    switch (vocabulary.Term) {
+                        case 'Start':                       eVocabEnum = eVocabularyID.eWorkflowStepTypeStart; break;
+                    }
+                } break;
             }
 
             if (eVocabEnum != eVocabularyID.eNone) {
@@ -446,6 +462,35 @@ export class VocabularyCache {
         return this.vocabIDEnumMap.get(idVocabulary);
     }
 
+    private vocabularySetEnumToIdInternal(eVocabSetID: eVocabularySetID): number | undefined {
+        return this.vocabSetEnumIDMap.get(eVocabSetID);
+    }
+
+    private vocabularySetIdToEnumInternal(idVocabularySet: number): eVocabularySetID | undefined {
+        return this.vocabSetIDEnumMap.get(idVocabularySet);
+    }
+
+    private isVocabularyInSetInternal(eVocabEnum: eVocabularyID, eVocabSetEnum: eVocabularySetID): boolean {
+        const vocab: Vocabulary | undefined = this.vocabularyByEnumInternal(eVocabEnum);
+        if (!vocab) {
+            // LOG.logger.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 1`);
+            return false;
+        }
+
+        const vocabSet: VocabularySet | undefined = this.vocabularySetByEnumInternal(eVocabSetEnum);
+        if (!vocabSet) {
+            // LOG.logger.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 2`);
+            return false;
+        }
+
+        if (vocabSet.idVocabularySet === vocab.idVocabularySet) {
+            // LOG.logger.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: true`);
+            return true;
+        }
+        // LOG.logger.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 3`);
+        return false;
+    }
+
     // **************************
     // Public Interface
     // **************************
@@ -512,6 +557,21 @@ export class VocabularyCache {
     /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. Note that not all vocabulary are represented by eVocabularyID entries. */
     static async vocabularyIdToEnum(idVocabulary: number): Promise<eVocabularyID | undefined> {
         return (await this.getInstance()).vocabularyIdToEnumInternal(idVocabulary);
+    }
+
+    /** fetches the VocabularySet.idVocabularySet for a given vocabulary set enum. */
+    static async vocabularySetEnumToId(eVocabSetID: eVocabularySetID): Promise<number | undefined> {
+        return (await this.getInstance()).vocabularySetEnumToIdInternal(eVocabSetID);
+    }
+
+    /** fetches the VocabularySet.idVocabularySet for a given vocabulary set enum */
+    static async vocabularySetIdToEnum(idVocabularySet: number): Promise<eVocabularySetID | undefined> {
+        return (await this.getInstance()).vocabularySetIdToEnumInternal(idVocabularySet);
+    }
+
+    /** fetches the VocabularySet.idVocabularySet for a given vocabulary set enum */
+    static async isVocabularyInSet(eVocabEnum: eVocabularyID, eVocabSetEnum: eVocabularySetID): Promise<boolean> {
+        return (await this.getInstance()).isVocabularyInSetInternal(eVocabEnum, eVocabSetEnum);
     }
 
     static async mapPhotogrammetryVariantType(variantType: string): Promise<Vocabulary | undefined> {

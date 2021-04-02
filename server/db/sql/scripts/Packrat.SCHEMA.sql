@@ -550,11 +550,12 @@ CREATE TABLE IF NOT EXISTS `VocabularySet` (
 
 CREATE TABLE IF NOT EXISTS `Workflow` (
   `idWorkflow` int(11) NOT NULL AUTO_INCREMENT,
-  `idWorkflowTemplate` int(11) NOT NULL,
+  `idVWorkflowType` int(11) NOT NULL,
   `idProject` int(11) DEFAULT NULL,
   `idUserInitiator` int(11) DEFAULT NULL,
   `DateInitiated` datetime NOT NULL,
   `DateUpdated` datetime NOT NULL,
+  `Parameters` text NULL,
   PRIMARY KEY (`idWorkflow`),
   KEY `Workflow_idProject` (`idProject`),
   KEY `Workflow_idUserInitiator` (`idUserInitiator`)
@@ -563,7 +564,8 @@ CREATE TABLE IF NOT EXISTS `Workflow` (
 CREATE TABLE IF NOT EXISTS `WorkflowStep` (
   `idWorkflowStep` int(11) NOT NULL AUTO_INCREMENT,
   `idWorkflow` int(11) NOT NULL,
-  `idUserOwner` int(11) NOT NULL,
+  `idJobRun` int(11) NULL,
+  `idUserOwner` int(11) NULL,
   `idVWorkflowStepType` int(11) NOT NULL,
   `State` int(11) NOT NULL,
   `DateCreated` datetime NOT NULL,
@@ -572,6 +574,7 @@ CREATE TABLE IF NOT EXISTS `WorkflowStep` (
   KEY `WorkflowStep_idWorkflow_DateCreated` (`idWorkflow`,`DateCreated`),
   KEY `WorkflowStep_idWorkflow_DateCompleted` (`idWorkflow`,`DateCompleted`),
   KEY `WorkflowStep_idUserOwner` (`idUserOwner`),
+  KEY `WorkflowStep_idJobRun` (`idJobRun`),
   KEY `WorkflowStep_State_idWorkflow` (`State`,`idWorkflow`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -583,12 +586,6 @@ CREATE TABLE IF NOT EXISTS `WorkflowStepSystemObjectXref` (
   PRIMARY KEY (`idWorkflowStepSystemObjectXref`),
   KEY `WorkflowStepSystemObjectXref_idWorkflowStep_Input` (`idWorkflowStep`,`Input`),
   KEY `WorkflowStepSystemObjectXref_idSystemObject_Input` (`idSystemObject`,`Input`)
-) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
-
-CREATE TABLE IF NOT EXISTS `WorkflowTemplate` (
-  `idWorkflowTemplate` int(11) NOT NULL AUTO_INCREMENT,
-  `Name` varchar(255) NOT NULL,
-  PRIMARY KEY (`idWorkflowTemplate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 -- Foreign Keys
@@ -1108,11 +1105,6 @@ ADD CONSTRAINT `fk_vocabulary_vocabularyset1`
   ON UPDATE NO ACTION;
 
 ALTER TABLE `Workflow` 
-ADD CONSTRAINT `fk_workflow_workflowtemplate1`
-  FOREIGN KEY (`idWorkflowTemplate`)
-  REFERENCES `WorkflowTemplate` (`idWorkflowTemplate`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_workflow_project1`
   FOREIGN KEY (`idProject`)
   REFERENCES `Project` (`idProject`)
@@ -1121,6 +1113,11 @@ ADD CONSTRAINT `fk_workflow_project1`
 ADD CONSTRAINT `fk_workflow_user1`
   FOREIGN KEY (`idUserInitiator`)
   REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_workflow_vocabulary1`
+  FOREIGN KEY (`idVWorkflowType`)
+  REFERENCES `Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
@@ -1138,6 +1135,11 @@ ADD CONSTRAINT `fk_workflowstep_user1`
 ADD CONSTRAINT `fk_workflowstep_vocabulary1`
   FOREIGN KEY (`idVWorkflowStepType`)
   REFERENCES `Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_workflowstep_jobrun1`
+  FOREIGN KEY (`idJobRun`)
+  REFERENCES `JobRun` (`idJobRun`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   

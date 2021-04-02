@@ -2,9 +2,11 @@ import * as DBAPI from '../../db';
 import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
 import * as UTIL from './api';
-import { VocabularyCache, eVocabularyID } from '../../cache';
+// import * as H from '../../utils/helpers';
+import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
 
 afterAll(async done => {
+    // await H.Helpers.sleep(4000);
     await DBC.DBConnection.disconnect();
     await DBC.DBConnection.disconnect(); // second time to test disconnecting after already being disconnected!
     LOG.getRequestLogger(); // added for full test coverage!
@@ -115,13 +117,14 @@ let userPersonalizationSystemObject: DBAPI.UserPersonalizationSystemObject | nul
 let userPersonalizationUrl: DBAPI.UserPersonalizationUrl | null;
 let vocabulary: DBAPI.Vocabulary | null;
 let vocabulary2: DBAPI.Vocabulary | null;
+let vocabularyWorkflowType: DBAPI.Vocabulary | null;
 let vocabularySet: DBAPI.VocabularySet | null;
 let workflow: DBAPI.Workflow | null;
 let workflowNulls: DBAPI.Workflow | null;
 let workflowStep: DBAPI.WorkflowStep | null;
+let workflowStepNulls: DBAPI.WorkflowStep | null;
 let workflowStepSystemObjectXref: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowStepSystemObjectXref2: DBAPI.WorkflowStepSystemObjectXref | null;
-let workflowTemplate: DBAPI.WorkflowTemplate | null;
 // #endregion
 // *******************************************************************
 // DB Creation Test Suite
@@ -167,6 +170,29 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary2) {
             expect(await vocabulary2.create()).toBeTruthy();
             expect(vocabulary2.idVocabulary).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Fetch/Creation: Vocabulary WorkflowType', async () => {
+        const idVocabularySet: number | undefined = await VocabularyCache.vocabularySetEnumToId(eVocabularySetID.eWorkflowType);
+        const vocabularyEntries: DBAPI.Vocabulary[] | undefined = idVocabularySet ? await VocabularyCache.vocabularySetEntries(idVocabularySet) : undefined;
+        let createVocab: boolean = false;
+        if (vocabularyEntries && vocabularyEntries.length > 0)
+            vocabularyWorkflowType = vocabularyEntries[0];
+        else if (idVocabularySet) {
+            vocabularyWorkflowType = new DBAPI.Vocabulary({
+                idVocabularySet,
+                SortOrder: 0,
+                Term: 'Test Vocabulary Workflow Type',
+                idVocabulary: 0
+            });
+            createVocab = true;
+        }
+        expect(vocabularyWorkflowType).toBeTruthy();
+        if (vocabularyWorkflowType) {
+            if (createVocab)
+                expect(await vocabularyWorkflowType.create()).toBeTruthy();
+            expect(vocabularyWorkflowType.idVocabulary).toBeGreaterThan(0);
         }
     });
 
@@ -353,14 +379,6 @@ describe('DB Creation Test Suite', () => {
                 idSubject: 0
             });
         expect(subjectNulls).toBeTruthy();
-    });
-
-    test('DB Creation: WorkflowTemplate', async () => {
-        workflowTemplate = await UTIL.createWorkflowTemplateTest({
-            Name: 'Test Workflow Template',
-            idWorkflowTemplate: 0
-        });
-        expect(workflowTemplate).toBeTruthy();
     });
 
     test('DB Creation: Scene', async () => {
@@ -1295,13 +1313,14 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Workflow', async () => {
-        if (workflowTemplate && project && userActive)
+        if (vocabularyWorkflowType && project && userActive)
             workflow = await UTIL.createWorkflowTest({
-                idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
+                idVWorkflowType: vocabularyWorkflowType.idVocabulary,
                 idProject: project.idProject,
                 idUserInitiator: userActive.idUser,
                 DateInitiated: UTIL.nowCleansed(),
                 DateUpdated: UTIL.nowCleansed(),
+                Parameters: null,
                 idWorkflow: 0
             });
         expect(workflow).toBeTruthy();
@@ -1312,13 +1331,14 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Workflow With Nulls', async () => {
-        if (workflowTemplate)
+        if (vocabularyWorkflowType)
             workflowNulls = await UTIL.createWorkflowTest({
-                idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
+                idVWorkflowType: vocabularyWorkflowType.idVocabulary,
                 idProject: null,
                 idUserInitiator: null,
                 DateInitiated: UTIL.nowCleansed(),
                 DateUpdated: UTIL.nowCleansed(),
+                Parameters: null,
                 idWorkflow: 0
             });
         expect(workflowNulls).toBeTruthy();
@@ -1329,9 +1349,10 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: WorkflowStep', async () => {
-        if (workflow && userActive && vocabulary)
+        if (workflow && userActive && vocabulary && jobRun)
             workflowStep = await UTIL.createWorkflowStepTest({
                 idWorkflow: workflow.idWorkflow,
+                idJobRun: jobRun.idJobRun,
                 idUserOwner: userActive.idUser,
                 idVWorkflowStepType: vocabulary.idVocabulary,
                 State: 0,
@@ -1343,6 +1364,23 @@ describe('DB Creation Test Suite', () => {
         if (workflowStep) {
             expect(await workflowStep.create()).toBeTruthy();
             expect(workflowStep.idWorkflowStep).toBeGreaterThan(0);
+        }
+
+        if (workflow && vocabulary)
+            workflowStepNulls = await UTIL.createWorkflowStepTest({
+                idWorkflow: workflow.idWorkflow,
+                idJobRun: null,
+                idUserOwner: null,
+                idVWorkflowStepType: vocabulary.idVocabulary,
+                State: 0,
+                DateCreated: UTIL.nowCleansed(),
+                DateCompleted: UTIL.nowCleansed(),
+                idWorkflowStep: 0
+            });
+        expect(workflowStepNulls).toBeTruthy();
+        if (workflowStepNulls) {
+            expect(await workflowStepNulls.create()).toBeTruthy();
+            expect(workflowStepNulls.idWorkflowStep).toBeGreaterThan(0);
         }
     });
 
@@ -1364,7 +1402,7 @@ describe('DB Creation Test Suite', () => {
             workflowStepSystemObjectXref2 = new DBAPI.WorkflowStepSystemObjectXref({
                 idWorkflowStep: workflowStep.idWorkflowStep,
                 idSystemObject: systemObjectSubject.idSystemObject,
-                Input: false,
+                Input: true,
                 idWorkflowStepSystemObjectXref: 0
             });
         expect(workflowStepSystemObjectXref2).toBeTruthy();
@@ -2560,17 +2598,27 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(workflowFetch).toBeTruthy();
     });
 
-    test('DB Fetch Workflow: Workflow.fetchFromWorkflowTemplate', async () => {
+    test('DB Fetch Workflow: Workflow.fetchFromWorkflowType', async () => {
         let workflowFetch: DBAPI.Workflow[] | null = null;
-        if (workflowTemplate) {
-            workflowFetch = await DBAPI.Workflow.fetchFromWorkflowTemplate(workflowTemplate.idWorkflowTemplate);
-            if (workflowFetch) {
-                if (workflow) {
-                    expect(workflowFetch).toEqual(expect.arrayContaining([workflow]));
+        if (vocabularyWorkflowType) {
+            LOG.logger.info(`DB Fetch Workflow fetching from workflow vocab ${JSON.stringify(vocabularyWorkflowType)}`);
+            const eVocabEnum: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(vocabularyWorkflowType.idVocabulary);
+            expect(eVocabEnum).toBeTruthy();
+
+            if (eVocabEnum) {
+                workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabEnum);
+                if (workflowFetch) {
+                    if (workflow && workflowNulls)
+                        expect(workflowFetch).toEqual(expect.arrayContaining([workflow, workflowNulls]));
                 }
             }
         }
         expect(workflowFetch).toBeTruthy();
+
+        workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabularyID.eAssetAssetTypeModel);
+        expect(workflowFetch).toBeFalsy();
+        workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabularyID.eNone);
+        expect(workflowFetch).toBeFalsy();
     });
 
     test('DB Fetch By ID: WorkflowStep', async () => {
@@ -2607,6 +2655,17 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(workflowStepFetch).toBeTruthy();
     });
 
+    test('DB Fetch WorkflowStep: WorkflowStep.fetchFromJobRun', async () => {
+        let workflowStepFetch: DBAPI.WorkflowStep[] | null = null;
+        if (jobRun) {
+            workflowStepFetch = await DBAPI.WorkflowStep.fetchFromJobRun(jobRun.idJobRun);
+            if (workflowStepFetch) {
+                expect(workflowStepFetch).toEqual(expect.arrayContaining([workflowStep]));
+            }
+        }
+        expect(workflowStepFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: WorkflowStepSystemObjectXref', async () => {
         let workflowStepSystemObjectXrefFetch: DBAPI.WorkflowStepSystemObjectXref | null = null;
         if (workflowStepSystemObjectXref) {
@@ -2632,16 +2691,17 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(workflowStepSystemObjectXrefFetch).toBeTruthy();
     });
 
-    test('DB Fetch By ID: WorkflowTemplate', async () => {
-        let workflowTemplateFetch: DBAPI.WorkflowTemplate | null = null;
-        if (workflowTemplate) {
-            workflowTemplateFetch = await DBAPI.WorkflowTemplate.fetch(workflowTemplate.idWorkflowTemplate);
-            if (workflowTemplateFetch) {
-                expect(workflowTemplateFetch).toMatchObject(workflowTemplate);
-                expect(workflowTemplate).toMatchObject(workflowTemplateFetch);
+    test('DB Fetch WorkflowStepSystemObjectXref: WorkflowStepSystemObjectXref.fetchFromWorkflow', async () => {
+        let workflowStepSystemObjectXrefFetch: DBAPI.WorkflowStepSystemObjectXref[] | null = null;
+        if (workflowStep) {
+            workflowStepSystemObjectXrefFetch = await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow(workflowStep.idWorkflow);
+            if (workflowStepSystemObjectXrefFetch) {
+                if (workflowStepSystemObjectXref) {
+                    expect(workflowStepSystemObjectXrefFetch).toEqual(expect.arrayContaining([workflowStepSystemObjectXref, workflowStepSystemObjectXref2]));
+                }
             }
         }
-        expect(workflowTemplateFetch).toBeTruthy();
+        expect(workflowStepSystemObjectXrefFetch).toBeTruthy();
     });
 });
 
@@ -4142,7 +4202,7 @@ describe('DB Fetch Special Test Suite', () => {
         expect(projectFetch).toBeTruthy();
     });
 
-    test('DB Fetch Project: Project.fetchFromSubjectsUnits', async () => {
+    test('DB Fetch Special: Project.fetchFromSubjectsUnits', async () => {
         let projectFetch: DBAPI.Project[] | null = null;
         if (subject && subjectNulls) {
             projectFetch = await DBAPI.Project.fetchDerivedFromSubjectsUnits([subject.idSubject, subjectNulls.idSubject]);
@@ -4152,7 +4212,7 @@ describe('DB Fetch Special Test Suite', () => {
         expect(projectFetch).toBeTruthy();
     });
 
-    test('DB Fetch Project: Project.fetchProjectList', async () => {
+    test('DB Fetch Special: Project.fetchProjectList', async () => {
         let projectFetch: DBAPI.Project[] | null = null;
         if (project) {
             projectFetch = await DBAPI.Project.fetchProjectList('Test Project');
@@ -4162,7 +4222,7 @@ describe('DB Fetch Special Test Suite', () => {
         expect(projectFetch).toBeTruthy();
     });
 
-    test('DB Fetch Project: Project.fetchProjectList with empty string', async () => {
+    test('DB Fetch Special: Project.fetchProjectList with empty string', async () => {
         let projectFetch: DBAPI.Project[] | null = null;
         if (project) {
             projectFetch = await DBAPI.Project.fetchProjectList('');
@@ -4359,6 +4419,19 @@ describe('DB Fetch Special Test Suite', () => {
             if (userFetchArray)
                 expect(userFetchArray.length).toEqual(0);
         }
+    });
+
+    test('DB Fetch Special: WorkflowConstellation', async () => {
+        let WFC: DBAPI.WorkflowConstellation | null = null;
+        if (workflow) {
+            WFC = await DBAPI.WorkflowConstellation.fetch(workflow.idWorkflow);
+            if (WFC) {
+                expect(WFC.workflow).toEqual(workflow);
+                expect(WFC.workflowStep).toEqual(expect.arrayContaining([workflowStep, workflowStepNulls]));
+                expect(WFC.workflowStepXref).toEqual(expect.arrayContaining([workflowStepSystemObjectXref, workflowStepSystemObjectXref2]));
+            }
+        }
+        expect(WFC).toBeTruthy();
     });
 });
 
@@ -5885,12 +5958,62 @@ describe('DB Update Test Suite', () => {
         let bUpdated: boolean = false;
         if (workflowStep && workflowNulls) {
             workflowStep.idWorkflow = workflowNulls.idWorkflow;
+
+            workflowStep.setState(DBAPI.eWorkflowStepState.eCreated);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowStepState.eCreated);
+
+            workflowStep.setState(DBAPI.eWorkflowStepState.eStarted);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowStepState.eStarted);
+
+            workflowStep.setState(DBAPI.eWorkflowStepState.eFinished);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowStepState.eFinished);
+
             bUpdated = await workflowStep.update();
 
             const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
             expect(workflowStepFetch).toBeTruthy();
             if (workflowStepFetch)
                 expect(workflowStepFetch.idWorkflow).toBe(workflowNulls.idWorkflow);
+
+            expect(DBAPI.WorkflowStep.stateValueToEnum(-1)).toEqual(DBAPI.eWorkflowStepState.eCreated);
+            expect(DBAPI.WorkflowStep.stateValueToEnum(0)).toEqual(DBAPI.eWorkflowStepState.eCreated);
+            expect(DBAPI.WorkflowStep.stateValueToEnum(1)).toEqual(DBAPI.eWorkflowStepState.eStarted);
+            expect(DBAPI.WorkflowStep.stateValueToEnum(2)).toEqual(DBAPI.eWorkflowStepState.eFinished);
+            expect(DBAPI.WorkflowStep.stateEnumToValue(DBAPI.eWorkflowStepState.eCreated)).toEqual(0);
+            expect(DBAPI.WorkflowStep.stateEnumToValue(DBAPI.eWorkflowStepState.eStarted)).toEqual(1);
+            expect(DBAPI.WorkflowStep.stateEnumToValue(DBAPI.eWorkflowStepState.eFinished)).toEqual(2);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: WorkflowStep.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (workflowStep) {
+            workflowStep.idJobRun = null;
+            workflowStep.idUserOwner = null;
+            bUpdated = await workflowStep.update();
+
+            const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
+            expect(workflowStepFetch).toBeTruthy();
+            if (workflowStepFetch) {
+                expect(workflowStepFetch.idJobRun).toBeNull();
+                expect(workflowStepFetch.idUserOwner).toBeNull();
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: WorkflowStep.update when null', async () => {
+        let bUpdated: boolean = false;
+        if (workflowStep) {
+            const dateUpdated: Date = UTIL.nowCleansed();
+            workflowStep.DateCompleted = dateUpdated;
+            bUpdated = await workflowStep.update();
+
+            const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
+            expect(workflowStepFetch).toBeTruthy();
+            if (workflowStepFetch)
+                expect(workflowStepFetch.DateCompleted).toEqual(dateUpdated);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -5906,21 +6029,6 @@ describe('DB Update Test Suite', () => {
             expect(workflowStepSystemObjectXrefFetch).toBeTruthy();
             if (workflowStepSystemObjectXrefFetch)
                 expect(workflowStepSystemObjectXrefFetch.Input).toBe(updatedInput);
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
-    test('DB Update: WorkflowTemplate.update', async () => {
-        let bUpdated: boolean = false;
-        if (workflowTemplate) {
-            const updatedName: string = 'Updated Test Workflow Template Name';
-            workflowTemplate.Name   = updatedName;
-            bUpdated = await workflowTemplate.update();
-
-            const workflowTemplateFetch: DBAPI.WorkflowTemplate | null = await DBAPI.WorkflowTemplate.fetch(workflowTemplate.idWorkflowTemplate);
-            expect(workflowTemplateFetch).toBeTruthy();
-            if (workflowTemplateFetch)
-                expect(workflowTemplateFetch.Name).toBe(updatedName);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -6150,13 +6258,16 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Workflow.fetch(0)).toBeNull();
         expect(await DBAPI.Workflow.fetchFromProject(0)).toBeNull();
         expect(await DBAPI.Workflow.fetchFromUser(0)).toBeNull();
-        expect(await DBAPI.Workflow.fetchFromWorkflowTemplate(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetchFromWorkflowType(0)).toBeNull();
+        expect(await DBAPI.WorkflowConstellation.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowStep.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowStep.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.WorkflowStep.fetchFromWorkflow(0)).toBeNull();
+        expect(await DBAPI.WorkflowStep.fetchFromJobRun(0)).toBeNull();
         expect(await DBAPI.WorkflowStepSystemObjectXref.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep(0)).toBeNull();
-        expect(await DBAPI.WorkflowTemplate.fetch(0)).toBeNull();
+        expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow(0)).toBeNull();
+        expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow(-1)).toEqual([]);
 
         const SO: DBAPI.SystemObject = new DBAPI.SystemObject({
             idActor: 0,

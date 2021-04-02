@@ -112,4 +112,4 @@ build
 
 ### Custom ###
 server/var
-server/tests/mock/models/eremotherium_laurillardi*
+server/tests/mock/models/**/eremotherium_laurillardi*

@@ -3,7 +3,6 @@ import * as DB from '../../db';
 import * as H from '../../utils/helpers';
 import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
 // import * as LOG from '../../utils/logger';
-
 /*
 afterAll(async done => {
     await H.Helpers.sleep(4000);
@@ -191,6 +190,10 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularyID.eJobJobTypeCookSIVoyagerScene:           testVocabulary(vocabulary, 'Cook: si-voyager-scene'); break;
                     case eVocabularyID.eJobJobTypeCookUnwrap:                   testVocabulary(vocabulary, 'Cook: unwrap'); break;
 
+                    case eVocabularyID.eWorkflowTypeCookJob:                    testVocabulary(vocabulary, 'Cook Job'); break;
+
+                    case eVocabularyID.eWorkflowStepTypeStart:                  testVocabulary(vocabulary, 'Start'); break;
+
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
@@ -245,6 +248,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularySetID.eWorkflowStepWorkflowStepType:
                     case eVocabularySetID.eAssetAssetType:
                     case eVocabularySetID.eJobJobType:
+                    case eVocabularySetID.eWorkflowType:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet)
@@ -446,6 +450,8 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-voyager-asset');
             await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: si-voyager-scene');
             await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: unwrap');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowType, 'Cook Job');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowStepWorkflowStepType, 'Start');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
             await testVocabularyBySetAndTerm(eVocabularySetID.eNone, 'Other', false);
         });
@@ -531,6 +537,58 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             expect(await VocabularyCache.vocabularyEnumToId(eVocabularyID.eNone)).toBeFalsy();
             expect(await VocabularyCache.vocabularyIdToEnum(0)).toBeFalsy();
         });
+
+        test('Cache: VocabularyCache.vocabularySetEnumToId and vocabularySetIdToEnum' + description, async () => {
+            // iterate through all enums of eVocabularySetID; for each:
+            for (const sVocabSetID in eVocabularySetID) {
+                if (!isNaN(Number(sVocabSetID)))
+                    continue;
+                // LOG.logger.info(`VocabularyCache.vocabularySetEnumToId of ${sVocabSetID}`);
+                const eVocabSetID: eVocabularySetID = (<any>eVocabularySetID)[sVocabSetID];
+                const vocabularySet: DB.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
+                const vocabSetID: number | undefined = await VocabularyCache.vocabularySetEnumToId(eVocabSetID);
+
+                if (eVocabSetID != eVocabularySetID.eNone) {
+                    expect(vocabularySet).toBeTruthy();
+                    expect(vocabSetID).toBeTruthy();
+                } else {
+                    expect(vocabularySet).toBeFalsy();
+                    expect(vocabSetID).toBeFalsy();
+                    continue;
+                }
+
+                if (!vocabularySet)
+                    continue;
+                expect(vocabularySet.idVocabularySet).toEqual(vocabSetID);
+
+                // LOG.logger.info(`VocabularyCache.vocabularySetIdToEnum of ${vocabularySet.idVocabularySet}`);
+                // fetches the VocabularySet.idVocabularySet for a given vocabulary set enum
+                // static async vocabularySetIdToEnum(idVocabularySet: number): Promise<eVocabularySetID | undefined> {
+                const eVocabSetIDFetch: eVocabularySetID | undefined = await VocabularyCache.vocabularySetIdToEnum(vocabularySet.idVocabularySet);
+                expect(eVocabSetIDFetch).not.toBeUndefined();
+                expect(eVocabSetIDFetch).toEqual(eVocabSetID);
+            }
+        });
+
+        test('Cache: VocabularyCache.isVocabularyInSet ' + description, async () => {
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eCaptureDataFileVariantTypeRaw, eVocabularySetID.eCaptureDataFileVariantType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelCreationMethodScanToMesh, eVocabularySetID.eModelCreationMethod)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelModalityPointCloud, eVocabularySetID.eModelModality)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelUnitsMicrometer, eVocabularySetID.eModelUnits)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelPurposeMaster, eVocabularySetID.eModelPurpose)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelFileTypeobj, eVocabularySetID.eModelFileType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse, eVocabularySetID.eModelMaterialChannelMaterialType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eIdentifierIdentifierTypeARK, eVocabularySetID.eIdentifierIdentifierType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eMetadataMetadataSourceBulkIngestion, eVocabularySetID.eMetadataMetadataSource)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eAssetAssetTypeBulkIngestion, eVocabularySetID.eAssetAssetType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eJobJobTypeCookBake, eVocabularySetID.eJobJobType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eWorkflowType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowStepTypeStart, eVocabularySetID.eWorkflowStepWorkflowStepType)).toBeTruthy();
+
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eNone, eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eNone)).toBeFalsy();
+            expect(await VocabularyCache.isVocabularyInSet(eVocabularyID.eWorkflowTypeCookJob, eVocabularySetID.eMetadataMetadataSource)).toBeFalsy();
+        });
     });
 }
 
@@ -544,6 +602,7 @@ function vocabularyCacheTestClearFlush(): void {
 }
 
 function testVocabulary(vocabulary: DB.Vocabulary | undefined, termExpected: string): void {
+    // LOG.logger.info(`VocabularyCacheTest testVocabulary ${termExpected} ${JSON.stringify(vocabulary)}`);
     expect(vocabulary).toBeTruthy();
     /* istanbul ignore else */
     if (vocabulary)
