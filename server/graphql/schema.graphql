@@ -1709,21 +1709,46 @@ type GetWorkflowResult {
   Workflow: Workflow
 }
 
+type Job {
+  idJob: Int!
+  idVJobType: Int!
+  Name: String!
+  Status: Int
+  Frequency: String
+  VJobType: Vocabulary
+}
+
+type JobRun {
+  idJobRun: Int!
+  idJob: Int!
+  Status: Int!
+  Result: Boolean
+  DateStart: DateTime
+  DateEnd: DateTime
+  Configuration: String
+  Parameters: String
+  Output: String
+  Error: String
+  Job: Job
+}
+
 type Workflow {
   idWorkflow: Int!
-  DateInitiated: DateTime!
-  DateUpdated: DateTime!
-  idWorkflowTemplate: Int!
+  idVWorkflowType: Int!
   idProject: Int
   idUserInitiator: Int
+  DateInitiated: DateTime!
+  DateUpdated: DateTime!
+  Parameters: String
+  VWorkflowType: Vocabulary
   Project: Project
   UserInitiator: User
-  WorkflowTemplate: WorkflowTemplate
   WorkflowStep: [WorkflowStep]
 }
 
 type WorkflowStep {
   idWorkflowStep: Int!
+  JobRun: JobRun
   DateCreated: DateTime!
   idUserOwner: Int!
   idVWorkflowStepType: Int!
@@ -1743,10 +1768,4 @@ type WorkflowStepSystemObjectXref {
   Input: Boolean!
   SystemObject: SystemObject
   WorkflowStep: WorkflowStep
-}
-
-type WorkflowTemplate {
-  idWorkflowTemplate: Int!
-  Name: String!
-  Workflow: [Workflow]
 }

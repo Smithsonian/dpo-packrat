@@ -3,27 +3,31 @@
  *
  * Organize and export server config here by extending from .env
  */
-enum AUTH_TYPE {
+export enum AUTH_TYPE {
     LOCAL = 'local',
     LDAP = 'ldap'
 }
 
-enum COLLECTION_TYPE {
+export enum COLLECTION_TYPE {
     EDAN = 'edan'
 }
 
-enum JOB_TYPE {
+export enum JOB_TYPE {
     NODE_SCHEDULE = 'node-schedule'
 }
 
-enum NAVIGATION_TYPE {
+export enum NAVIGATION_TYPE {
     DEFAULT,
     DB = 'db',
     SOLR = 'solr'
 }
 
-enum STORAGE_TYPE {
+export enum STORAGE_TYPE {
     LOCAL = 'local'
+}
+
+export enum WORKFLOW_TYPE {
+    PACKRAT = 'packrat'
 }
 
 export interface LDAPConfig {
@@ -34,7 +38,7 @@ export interface LDAPConfig {
     DC: string;
 }
 
-type ConfigType = {
+export type ConfigType = {
     auth: {
         type: AUTH_TYPE;
         session: {
@@ -67,11 +71,14 @@ type ConfigType = {
         rootRepository: string;
         rootStaging: string; // this should be local storage (not NAS or cloud)
     },
+    workflow: {
+        type: WORKFLOW_TYPE;
+    },
 };
 
 const oneDayInSeconds = 24 * 60 * 60; // 24hrs in seconds
 
-const Config: ConfigType = {
+export const Config: ConfigType = {
     auth: {
         type: process.env.AUTH_TYPE == 'LDAP' ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
         session: {
@@ -110,6 +117,7 @@ const Config: ConfigType = {
         rootRepository: process.env.OCFL_STORAGE_ROOT ? process.env.OCFL_STORAGE_ROOT : /* istanbul ignore next */ './var/Storage/Repository',
         rootStaging: process.env.OCFL_STAGING_ROOT ? process.env.OCFL_STAGING_ROOT : /* istanbul ignore next */ './var/Storage/Staging'
     },
+    workflow: {
+        type: WORKFLOW_TYPE.PACKRAT,
+    }
 };
-
-export { Config, AUTH_TYPE, COLLECTION_TYPE, JOB_TYPE, NAVIGATION_TYPE, STORAGE_TYPE };

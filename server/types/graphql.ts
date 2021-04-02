@@ -2107,23 +2107,50 @@ export type GetWorkflowResult = {
   Workflow?: Maybe<Workflow>;
 };
 
+export type Job = {
+  __typename?: 'Job';
+  idJob: Scalars['Int'];
+  idVJobType: Scalars['Int'];
+  Name: Scalars['String'];
+  Status?: Maybe<Scalars['Int']>;
+  Frequency?: Maybe<Scalars['String']>;
+  VJobType?: Maybe<Vocabulary>;
+};
+
+export type JobRun = {
+  __typename?: 'JobRun';
+  idJobRun: Scalars['Int'];
+  idJob: Scalars['Int'];
+  Status: Scalars['Int'];
+  Result?: Maybe<Scalars['Boolean']>;
+  DateStart?: Maybe<Scalars['DateTime']>;
+  DateEnd?: Maybe<Scalars['DateTime']>;
+  Configuration?: Maybe<Scalars['String']>;
+  Parameters?: Maybe<Scalars['String']>;
+  Output?: Maybe<Scalars['String']>;
+  Error?: Maybe<Scalars['String']>;
+  Job?: Maybe<Job>;
+};
+
 export type Workflow = {
   __typename?: 'Workflow';
   idWorkflow: Scalars['Int'];
-  DateInitiated: Scalars['DateTime'];
-  DateUpdated: Scalars['DateTime'];
-  idWorkflowTemplate: Scalars['Int'];
+  idVWorkflowType: Scalars['Int'];
   idProject?: Maybe<Scalars['Int']>;
   idUserInitiator?: Maybe<Scalars['Int']>;
+  DateInitiated: Scalars['DateTime'];
+  DateUpdated: Scalars['DateTime'];
+  Parameters?: Maybe<Scalars['String']>;
+  VWorkflowType?: Maybe<Vocabulary>;
   Project?: Maybe<Project>;
   UserInitiator?: Maybe<User>;
-  WorkflowTemplate?: Maybe<WorkflowTemplate>;
   WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
 };
 
 export type WorkflowStep = {
   __typename?: 'WorkflowStep';
   idWorkflowStep: Scalars['Int'];
+  JobRun?: Maybe<JobRun>;
   DateCreated: Scalars['DateTime'];
   idUserOwner: Scalars['Int'];
   idVWorkflowStepType: Scalars['Int'];
@@ -2144,11 +2171,4 @@ export type WorkflowStepSystemObjectXref = {
   Input: Scalars['Boolean'];
   SystemObject?: Maybe<SystemObject>;
   WorkflowStep?: Maybe<WorkflowStep>;
-};
-
-export type WorkflowTemplate = {
-  __typename?: 'WorkflowTemplate';
-  idWorkflowTemplate: Scalars['Int'];
-  Name: Scalars['String'];
-  Workflow?: Maybe<Array<Maybe<Workflow>>>;
 };

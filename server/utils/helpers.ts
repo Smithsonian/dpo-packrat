@@ -378,12 +378,19 @@ export class Helpers {
         }
     }
 
-    static async writeStreamToStream(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream): Promise<IOResults> {
+    // static writeStreamCounter: number = 0;
+    static async writeStreamToStream(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream, waitOnEnd: boolean = false): Promise<IOResults> {
         try {
             readStream.pipe(writeStream);
             return new Promise<IOResults>((resolve) => {
-                writeStream.on('finish', () => { resolve({ success: true, error: '' }); }); /* istanbul ignore next */
-                writeStream.on('error', () => { resolve({ success: false, error: '' }); });
+                /* istanbul ignore else */
+                if (!waitOnEnd) {
+                    writeStream.on('finish', () => { resolve({ success: true, error: '' }); }); /* istanbul ignore next */
+                    writeStream.on('end', () => { resolve({ success: true, error: '' }); }); /* istanbul ignore next */
+                } else {
+                    writeStream.on('end', () => { resolve({ success: true, error: '' }); });
+                } /* istanbul ignore next */
+                writeStream.on('error', () => { resolve({ success: false, error: 'Unknown stream error' }); });
             });
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.writeStreamToStream', error);
