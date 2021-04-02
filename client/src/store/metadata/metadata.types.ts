@@ -91,6 +91,7 @@ export type StateUVMap = {
 };
 
 export type ModelFields = {
+    name: string;
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     uvMaps: StateUVMap[];
