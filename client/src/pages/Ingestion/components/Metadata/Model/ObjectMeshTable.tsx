@@ -85,54 +85,6 @@ const useStyles = makeStyles(({ palette }) => ({
 //     additional: string;
 // }
 
-// Data shape:
-//     {
-//         point: int,
-//         face: int,
-//         animation: int,
-//         camera: int,
-//         light: int,
-//         material: int,
-//         mesh: int,
-//         embeddedTexture: int,
-//         linkedTexture: int,
-//         filedEncoding: string/enum,
-//         materials: [
-//             {
-//                 name: string,
-//                 materialTypes: [
-//                     {
-//                         type: string,
-//                         source: string/file,
-//                         value: string,
-//                         additional: string
-//                     }, {
-//                         type: string,
-//                         source: string/file,
-//                         value: string,
-//                         additional: string
-//                     }
-//                 ]
-//             },
-//             {
-//                 name: string,
-//                 materialTypes: [
-//                     {
-//                         type: string,
-//                         source: string/file,
-//                         value: string,
-//                         additional: string
-//                     }, {
-//                         type: string,
-//                         source: string/file,
-//                         value: string,
-//                         additional: string
-//                     }
-//                 ]
-//             }
-//         ]
-//     }
-
 function interpretTrinary(truthyOrNull: boolean | null) {
     if (truthyOrNull === null) return 'Unknown';
     if (truthyOrNull === false) return 'No';

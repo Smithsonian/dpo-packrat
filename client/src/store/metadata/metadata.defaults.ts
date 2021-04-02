@@ -92,6 +92,7 @@ const sourceObjectSchema = yup.object().shape({
 });
 
 export const defaultModelFields: ModelFields = {
+    name: '',
     systemCreated: true,
     identifiers: [],
     uvMaps: [],
