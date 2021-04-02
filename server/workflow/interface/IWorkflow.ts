@@ -12,4 +12,5 @@ export interface IWorkflow {
     start(): Promise<H.IOResults>;                                                                      // intended to be called by the IWorkflowEngine
     update(workflowStep: DBAPI.WorkflowStep, jobRun: DBAPI.JobRun): Promise<WorkflowUpdateResults>;     // intended to be called by the IWorkflowEngine
     waitForCompletion(timeout: number): Promise<H.IOResults>;
+    workflowConstellation(): Promise<DBAPI.WorkflowConstellation | null>;
 }

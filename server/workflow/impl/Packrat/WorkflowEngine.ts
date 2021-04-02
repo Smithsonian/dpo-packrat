@@ -10,6 +10,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     private workflowMap: Map<number, WF.IWorkflow> = new Map<number, WF.IWorkflow>();
 
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
+        LOG.logger.info(`WorkflowEngine.create workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`);
         const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
         if (!WFC)
             return null;
@@ -26,6 +27,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             LOG.logger.error(`WorkflowEngine.create failed to start workflow ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`);
             return null;
         }
+        LOG.logger.info(`WorkflowEngine.created workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`);
         return workflow;
     }
 
@@ -55,14 +57,16 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             }
 
             const updateRes: WF.WorkflowUpdateResults = await workflow.update(workflowStep, jobRun);
-            if (updateRes.workflowComplete)
+            if (updateRes.workflowComplete) {
                 this.workflowMap.delete(WFC.workflow.idWorkflow);
+                LOG.logger.info(`WorkflowEngine.jobUpdated completed workflow [${this.workflowMap.size}]: ${idJobRun}`);
+            }
             result = updateRes.success && result;
         }
         return result;
     }
 
-    private async computeWorkflowTypeFromEnum(eVocabEnum: CACHE.eVocabularyID): Promise<number | undefined> {
+    static async computeWorkflowTypeFromEnum(eVocabEnum: CACHE.eVocabularyID): Promise<number | undefined> {
         const idVWorkflowType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eVocabEnum);
         if (!idVWorkflowType) {
             LOG.logger.error(`WorkflowEngine.computeWorkflowTypeFromEnum called with invalid workflow type ${CACHE.eVocabularyID[eVocabEnum]}`);
@@ -75,8 +79,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return idVWorkflowType;
     }
 
-    /*
-    private async computeWorkflowTypeEnumFromID(idVWorkflowType: number): Promise<CACHE.eVocabularyID | undefined> {
+    static async computeWorkflowTypeEnumFromID(idVWorkflowType: number): Promise<CACHE.eVocabularyID | undefined> {
         const eVocabEnum: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVWorkflowType);
         if (!eVocabEnum) {
             LOG.logger.error(`WorkflowEngine.computeWorkflowTypeEnumFromID called with invalid workflow type ${idVWorkflowType}`);
@@ -88,12 +91,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
         return eVocabEnum;
     }
-    */
+
     private async createDBObjects(workflowParams: WF.WorkflowParameters): Promise<DBAPI.WorkflowConstellation | null> {
         const WFC: DBAPI.WorkflowConstellation = new DBAPI.WorkflowConstellation();
         // *****************************************************
         // Workflow
-        const idVWorkflowType: number | undefined = await this.computeWorkflowTypeFromEnum(workflowParams.eWorkflowType);
+        const idVWorkflowType: number | undefined = await WorkflowEngine.computeWorkflowTypeFromEnum(workflowParams.eWorkflowType);
         if (!idVWorkflowType)
             return null;
         const dtNow: Date = new Date();

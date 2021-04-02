@@ -3,6 +3,7 @@ import { JobCook } from './JobCook';
 import { CookRecipe } from './CookRecipe';
 import { Config } from '../../../config';
 
+import * as JOB from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
@@ -82,6 +83,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
     // future persisting.  That being said, the IDs need to be set to 0 before being inserted, and then patched
     // up in related objects. Use the helper method, persist(), to write this constellation of objects to the
     // database with proper IDs
+    model: DBAPI.Model | null = null;
     modelObjects: DBAPI.ModelObject[] = [];
     modelMetrics: DBAPI.ModelMetrics[] = [];
     modelMaterials: DBAPI.ModelMaterial[] | null = null;
@@ -99,18 +101,48 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         const meshes: any[] | undefined = inspection?.meshes;
         const materials: any[] | undefined = inspection?.scene?.materials;
         const materialCount: number = materials ? materials.length : 0;
+        const modelStats: any | undefined = inspection?.scene?.statistics;
+
         if (!meshes) {
             JCOutput.success = false;
             JCOutput.error = 'Job output is missing mesh detail';
             return JCOutput;
         }
 
+        let idModel: number = 0;
         let idModelObject: number = 0;
         let idModelMetrics: number = 0;
         let idModelMaterial: number = 0;
         let idModelMaterialUVMap: number = 0;
         let idModelMaterialChannel: number = 0;
         let idModelObjectModelMaterialXref: number = 0;
+
+        if (modelStats) {
+            idModel++;
+            JCOutput.model = new DBAPI.Model({
+                Name: '',
+                Master: true,
+                Authoritative: true,
+                DateCreated: new Date(),
+                idVCreationMethod: 0,
+                idVModality: 0,
+                idVUnits: 0,
+                idVPurpose: 0,
+                idVFileType: 0,
+                idAssetThumbnail: null,
+                CountAnimations: maybe<number>(modelStats?.numAnimations),
+                CountCameras: maybe<number>(modelStats?.numCameras),
+                CountFaces: maybe<number>(modelStats?.numFaces),
+                CountLights: maybe<number>(modelStats?.numLights),
+                CountMaterials: maybe<number>(modelStats?.numMaterials),
+                CountMeshes: maybe<number>(modelStats?.numMeshes),
+                CountVertices: maybe<number>(modelStats?.numVertices),
+                CountEmbeddedTextures: maybe<number>(modelStats?.numEmbeddedTextures),
+                CountLinkedTextures: maybe<number>(modelStats?.numLinkedTextures),
+                FileEncoding: maybe<string>(modelStats?.fileEncoding),
+                idModel
+            });
+        }
 
         for (const mesh of meshes) {
             idModelObject++;
@@ -151,7 +183,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
             JCOutput.modelObjects.push(new DBAPI.ModelObject({
                 idModelObject,
-                idModel: 0,
+                idModel,
                 idModelMetrics
             }));
 
@@ -280,8 +312,9 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectParameters> {
     private parameters: JobCookSIPackratInspectParameters;
 
-    constructor(idAssetVersions: number[] | null, parameters: JobCookSIPackratInspectParameters, dbJobRun: DBAPI.JobRun) {
-        super(Config.job.cookClientId, 'si-packrat-inspect',
+    constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null,
+        parameters: JobCookSIPackratInspectParameters, dbJobRun: DBAPI.JobRun) {
+        super(jobEngine, Config.job.cookClientId, 'si-packrat-inspect',
             CookRecipe.getCookRecipeID('si-packrat-inspect', 'bb602690-76c9-11eb-9439-0242ac130002'),
             null, idAssetVersions, dbJobRun);
         this.parameters = parameters;

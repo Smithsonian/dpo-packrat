@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types, no-constant-condition */
+import * as JOB from '../../interface';
 import { JobPackrat } from  '../NS/JobPackrat';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
@@ -74,9 +75,10 @@ export abstract class JobCook<T> extends JobPackrat {
     protected abstract getParameters(): T;
 
     // null jobId means create a new one
-    constructor(clientId: string, jobName: string, recipeId: string, jobId: string | null,
+    constructor(jobEngine: JOB.IJobEngine, clientId: string, jobName: string,
+        recipeId: string, jobId: string | null,
         idAssetVersions: number[] | null, dbJobRun: DBAPI.JobRun) {
-        super(dbJobRun);
+        super(jobEngine, dbJobRun);
         this._configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId, dbJobRun);
         this._idAssetVersions = idAssetVersions;
     }

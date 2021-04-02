@@ -26,6 +26,7 @@ class JobData {
 const testTimeout: number = 12000000;
 const jobSets: number = 1;
 const workflowSets: number = 1;
+const normalizedCreationDate: Date = new Date('2021-04-01T00:00:00.000Z'); // 4/1/2021 Keep this date in sync with Model.setup.ts modelTestCaseInspectJSONMap
 
 let jobEngine: JOB.IJobEngine | null = null;
 const JobSet: Set<JOB.IJob> = new Set<JOB.IJob>();
@@ -127,39 +128,7 @@ describe('JobNS Cook Test Completion', () => {
 
         for (const job of JobSet) {
             const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
-            expect(dbJobRun).toBeTruthy();
-            if (!dbJobRun)
-                continue;
-            expect(dbJobRun.Result).toBeTruthy();
-
-            const jobData: JobData | undefined = JobDataMap.get(dbJobRun.idJobRun);
-            expect(jobData).toBeTruthy();
-            if (!jobData)
-                continue;
-
-            const output: string | null = dbJobRun.Output;
-
-            switch (jobData.eJobType) {
-                case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect: {
-                    expect(output).toBeTruthy();
-                    const JCOutput: COOK.JobCookSIPackratInspectOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''));
-                    expect(JCOutput.success).toBeTruthy();
-
-                    const JCOutputStr: string = JSON.stringify(JCOutput, (key, value) => {
-                        key; return (value instanceof Map) ? [...value] : value;
-                    });
-                    // LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`);
-
-                    const inspectJSON: string | undefined = MTS?.getTestCase(jobData.testCase)?.inspectJSON;
-                    expect(inspectJSON).toBeTruthy();
-                    expect(inspectJSON).toEqual(JCOutputStr);
-                } break;
-
-                default:
-                    LOG.logger.error(`JobNS.test results encountered Unexpected Job Type: ${jobData.eJobType ? CACHE.eVocabularyID[jobData.eJobType] : 'undefined'}`);
-                    expect(false).toBeTruthy();
-                    break;
-            }
+            expect(await validateJobOutput(dbJobRun)).toBeTruthy();
         }
     });
 });
@@ -179,6 +148,42 @@ describe('JobNS IWorkflow Completion', () => {
             LOG.logger.info(`JobNS IWorkflow Completion received completion of ${resultsArray.length} workflows`);
         } catch (error) {
             LOG.logger.error('JobNS IWorkflow Completion failed', error);
+        }
+    });
+
+    test('JobNS IWorkflow Job Results', async() => {
+        jest.setTimeout(testTimeout);
+        if (!modelTestAvailable)
+            return;
+
+        for (const workflow of WorkflowSet) {
+            const workflowConstellation: DBAPI.WorkflowConstellation | null = await workflow.workflowConstellation();
+            expect(workflowConstellation).toBeTruthy();
+            expect(workflowConstellation?.workflow).toBeTruthy();
+            if (!workflowConstellation?.workflow)
+                continue;
+
+            const eWorkflowType: CACHE.eVocabularyID | undefined =
+                await WFP.WorkflowEngine.computeWorkflowTypeEnumFromID(workflowConstellation.workflow.idVWorkflowType);
+            expect(eWorkflowType).toBeTruthy();
+            switch (eWorkflowType) {
+                case CACHE.eVocabularyID.eWorkflowTypeCookJob: {
+                    expect(workflowConstellation.workflowStep).toBeTruthy();
+                    if (!workflowConstellation.workflowStep)
+                        continue;
+                    expect(workflowConstellation.workflowStep.length).toEqual(1);   // only one workflow step expected for this workflow type
+                    if (workflowConstellation.workflowStep.length != 1)
+                        continue;
+                    expect(workflowConstellation.workflowStep[0].idJobRun).toBeTruthy();
+                    const dbJobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(workflowConstellation.workflowStep[0].idJobRun || 0);
+                    expect(await validateJobOutput(dbJobRun)).toBeTruthy();
+                } break;
+
+                default:
+                    LOG.logger.error(`JobNS IWorkflow Job Results encountered Unexpected Workflow Type: ${eWorkflowType ? CACHE.eVocabularyID[eWorkflowType] : 'undefined'}`);
+                    expect(false).toBeTruthy();
+                    break;
+            }
         }
     });
 });
@@ -269,6 +274,13 @@ async function computeVocabularyDBID(eJobType: CACHE.eVocabularyID): Promise<num
     return idVJobType;
 }
 
+async function computeVocabularyDBEnum(idVJobType: number): Promise<CACHE.eVocabularyID | undefined> {
+    const eJobType: number | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVJobType);
+    if (!eJobType)
+        LOG.logger.error(`computeVocabularyDBEnum unable to fetch Job enum from ${idVJobType}`);
+    return eJobType;
+}
+
 function computeJobParameters(testCase: string, eJobType: CACHE.eVocabularyID): any {
     let modelName: string | undefined = MTS?.getTestCase(testCase)?.modelName;
     expect(modelName).toBeTruthy();
@@ -281,6 +293,51 @@ function computeJobParameters(testCase: string, eJobType: CACHE.eVocabularyID): 
             expect(false).toBeTruthy();
     }
 }
+
+async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean> {
+    expect(dbJobRun).toBeTruthy();
+    if (!dbJobRun)
+        return false;
+    expect(dbJobRun.Result).toBeTruthy();
+
+    const jobData: JobData | undefined = JobDataMap.get(dbJobRun.idJobRun);
+    expect(jobData).toBeTruthy();
+    if (!jobData)
+        return false;
+
+    const output: string | null = dbJobRun.Output;
+
+    switch (jobData.eJobType) {
+        case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect: {
+            expect(output).toBeTruthy();
+            const JCOutput: COOK.JobCookSIPackratInspectOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''));
+            expect(JCOutput.success).toBeTruthy();
+
+            normalizeOutput(JCOutput);
+
+            const JCOutputStr: string = JSON.stringify(JCOutput, (key, value) => {
+                key; return (value instanceof Map) ? [...value] : value;
+            });
+            // LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`);
+
+            const inspectJSON: string | undefined = MTS?.getTestCase(jobData.testCase)?.inspectJSON;
+            expect(inspectJSON).toBeTruthy();
+            expect(JCOutputStr).toEqual(inspectJSON);
+            return JCOutputStr === inspectJSON;
+        }
+
+        default:
+            LOG.logger.error(`JobNS validateJobOutput encountered Unexpected Job Type: ${jobData.eJobType ? CACHE.eVocabularyID[jobData.eJobType] : 'undefined'}`);
+            expect(false).toBeTruthy();
+            return false;
+    }
+}
+
+function normalizeOutput(JCOutput: COOK.JobCookSIPackratInspectOutput): void {
+    if (JCOutput.model)
+        JCOutput.model.DateCreated = normalizedCreationDate;
+}
+
 // #endregion
 
 // #region Workflow Utils
@@ -314,6 +371,36 @@ function testWorkflow(testCase: string, eWorkflowType: CACHE.eVocabularyID, eJob
 }
 
 async function recordWorkflow(workflow: WF.IWorkflow, eWorkflowType: CACHE.eVocabularyID, testCase: string): Promise<void> {
+    const WC: DBAPI.WorkflowConstellation | null = await workflow.workflowConstellation();
+    expect(WC).toBeTruthy();
+    if (!WC)
+        return;
+
+    if (!WC.workflowStep)
+        return;
+
+    for (const WS of WC.workflowStep) {
+        if (!WS.idJobRun)
+            continue;
+
+        const dbJobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(WS.idJobRun);
+        expect(dbJobRun).toBeTruthy();
+        if (!dbJobRun)
+            continue;
+
+        const dbJob: DBAPI.Job | null = await DBAPI.Job.fetch(dbJobRun.idJob);
+        expect(dbJob).toBeTruthy();
+        if (!dbJob)
+            continue;
+
+        const eJobType: CACHE.eVocabularyID | undefined = await computeVocabularyDBEnum(dbJob.idVJobType);
+        expect(eJobType).toBeTruthy();
+        if (!eJobType)
+            continue;
+
+        JobDataMap.set(dbJobRun.idJobRun, new JobData(dbJobRun, eJobType, testCase));
+    }
+
     eWorkflowType;
     testCase;
     WorkflowSet.add(workflow);
