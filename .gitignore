@@ -113,3 +113,4 @@ build
 ### Custom ###
 server/var
 server/tests/mock/models/**/eremotherium_laurillardi*
+server/config/solr/data/packrat/data

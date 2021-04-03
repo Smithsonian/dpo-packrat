@@ -6,7 +6,7 @@
 
 <schema name="packrat-config" version="1.6">
     <!-- SystemObject fields -->
-    <field name="idSystemObject" type="string" indexed="true" stored="true" required="true" multiValued="false" />
+    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
     <field name="CommonRetired" type="boolean" indexed="true" stored="true" />
     <!-- Describes the object represented by this system object, e.g. "Unit", "Project", "CaptureData", "Model", etc. -->
   	<field name="CommonObjectType" type="string" indexed="true" stored="true" required="true" multiValued="false" />
@@ -151,7 +151,7 @@
     <!-- "Plumbling" fields: needed by the system -->
     <!-- docValues are enabled by default for long type so we don't need to index the version field  -->
     <field name="_version_" type="plong" indexed="false" stored="false"/>
-    <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>
+    <field name="_text_" type="text_en" indexed="true" stored="false" multiValued="true"/>
 	
     <!-- It is very expensive to index everything twice. -->
     <!-- <copyField source="*" dest="_text_"/> -->
@@ -161,47 +161,10 @@
     <copyField source="CommonOrganizationName" dest="_text_"/>
     <copyField source="AssetFileName" dest="_text_"/>
 
-    <!-- Dynamic field definitions allow using convention over configuration
-       for fields via the specification of patterns to match field names.
-       EXAMPLE:  name="*_i" will match any field ending in _i (like myid_i, z_i)
-       RESTRICTION: the glob-like pattern in the name attribute must have a "*" only at the start or the end.  -->
-   
-    <dynamicField name="*_i"  type="pint"    indexed="true"  stored="true"/>
-    <dynamicField name="*_is" type="pints"    indexed="true"  stored="true"/>
-    <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" />
-    <dynamicField name="*_ss" type="strings"  indexed="true"  stored="true"/>
-    <dynamicField name="*_l"  type="plong"   indexed="true"  stored="true"/>
-    <dynamicField name="*_ls" type="plongs"   indexed="true"  stored="true"/>
-    <dynamicField name="*_t" type="text_general" indexed="true" stored="true" multiValued="false"/>
-    <dynamicField name="*_txt" type="text_general" indexed="true" stored="true"/>
-    <dynamicField name="*_b"  type="boolean" indexed="true" stored="true"/>
-    <dynamicField name="*_bs" type="booleans" indexed="true" stored="true"/>
-    <dynamicField name="*_f"  type="pfloat"  indexed="true"  stored="true"/>
-    <dynamicField name="*_fs" type="pfloats"  indexed="true"  stored="true"/>
-    <dynamicField name="*_d"  type="pdouble" indexed="true"  stored="true"/>
-    <dynamicField name="*_ds" type="pdoubles" indexed="true"  stored="true"/>
-    <dynamicField name="random_*" type="random"/>
-    <dynamicField name="ignored_*" type="ignored"/>
-
-    <!-- Type used for data-driven schema, to add a string copy for each text field -->
-    <dynamicField name="*_str" type="strings" stored="false" docValues="true" indexed="false" useDocValuesAsStored="false"/>
-
-    <dynamicField name="*_dt"  type="pdate"    indexed="true"  stored="true"/>
-    <dynamicField name="*_dts" type="pdate"    indexed="true"  stored="true" multiValued="true"/>
-    <dynamicField name="*_p"  type="location" indexed="true" stored="true"/>
-    <dynamicField name="*_srpt"  type="location_rpt" indexed="true" stored="true"/>
-
-    <!-- payloaded dynamic fields -->
-    <dynamicField name="*_dpf" type="delimited_payloads_float" indexed="true"  stored="true"/>
-    <dynamicField name="*_dpi" type="delimited_payloads_int" indexed="true"  stored="true"/>
-    <dynamicField name="*_dps" type="delimited_payloads_string" indexed="true"  stored="true"/>
-
-    <dynamicField name="attr_*" type="text_general" indexed="true" stored="true" multiValued="true"/>
-
     <!-- Field to use to determine and enforce document uniqueness.
       Unless this field is marked with required="false", it will be a required field
     -->
-    <uniqueKey>idSystemObject</uniqueKey>
+    <uniqueKey>id</uniqueKey>
 
     <!-- The StrField type is not analyzed, but indexed/stored verbatim. -->
     <fieldType name="string" class="solr.StrField" sortMissingLast="true" docValues="true" />
@@ -284,7 +247,6 @@
     -->
 
     <!-- A text field that only splits on whitespace for exact matching of words -->
-    <dynamicField name="*_ws" type="text_ws"  indexed="true"  stored="true"/>
     <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
       <analyzer>
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
@@ -324,8 +286,6 @@
          is that it takes up more space on disk; which is why it's not used in place of TextField
          for every fieldType in this _default schema.
 	  -->
-    <dynamicField name="*_t_sort" type="text_gen_sort" indexed="true" stored="true" multiValued="false"/>
-    <dynamicField name="*_txt_sort" type="text_gen_sort" indexed="true" stored="true"/>
     <fieldType name="text_gen_sort" class="solr.SortableTextField" positionIncrementGap="100" multiValued="true">
       <analyzer type="index">
         <tokenizer class="solr.StandardTokenizerFactory"/>
@@ -343,7 +303,6 @@
     <!-- A text field with defaults appropriate for English: it tokenizes with StandardTokenizer,
          removes English stop words (stopwords.txt), down cases, protects words from protwords.txt, and
          finally applies Porter's stemming.  The query time analyzer also applies synonyms from synonyms.txt. -->
-    <dynamicField name="*_txt_en" type="text_en"  indexed="true"  stored="true"/>
     <fieldType name="text_en" class="solr.TextField" positionIncrementGap="100">
       <analyzer type="index">
         <tokenizer class="solr.StandardTokenizerFactory"/>
@@ -391,7 +350,6 @@
          cases will work, for example query "wi fi" will match
          document "WiFi" or "wi-fi".
     -->
-    <dynamicField name="*_txt_en_split" type="text_en_splitting"  indexed="true"  stored="true"/>
     <fieldType name="text_en_splitting" class="solr.TextField" positionIncrementGap="100" autoGeneratePhraseQueries="true">
       <analyzer type="index">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
@@ -426,7 +384,6 @@
 
     <!-- Less flexible matching, but less false matches.  Probably not ideal for product names,
          but may be good for SKUs.  Can insert dashes in the wrong place and still match. -->
-    <dynamicField name="*_txt_en_split_tight" type="text_en_splitting_tight"  indexed="true"  stored="true"/>
     <fieldType name="text_en_splitting_tight" class="solr.TextField" positionIncrementGap="100" autoGeneratePhraseQueries="true">
       <analyzer type="index">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
@@ -458,7 +415,6 @@
     <!-- Just like text_general except it reverses the characters of
 	       each token, to enable more efficient leading wildcard queries.
     -->
-    <dynamicField name="*_txt_rev" type="text_general_rev"  indexed="true"  stored="true"/>
     <fieldType name="text_general_rev" class="solr.TextField" positionIncrementGap="100">
       <analyzer type="index">
         <tokenizer class="solr.StandardTokenizerFactory"/>
@@ -475,7 +431,6 @@
       </analyzer>
     </fieldType>
 
-    <dynamicField name="*_phon_en" type="phonetic_en"  indexed="true"  stored="true"/>
     <fieldType name="phonetic_en" stored="false" indexed="true" class="solr.TextField" >
       <analyzer>
         <tokenizer class="solr.StandardTokenizerFactory"/>
@@ -484,7 +439,6 @@
     </fieldType>
 
     <!-- lowercases the entire field value, keeping it as a single token.  -->
-    <dynamicField name="*_s_lower" type="lowercase"  indexed="true"  stored="true"/>
     <fieldType name="lowercase" class="solr.TextField" positionIncrementGap="100">
       <analyzer>
         <tokenizer class="solr.KeywordTokenizerFactory"/>
@@ -496,7 +450,6 @@
       Example of using PathHierarchyTokenizerFactory at index time, so
       queries for paths match documents at that path, or in descendent paths
     -->
-    <dynamicField name="*_descendent_path" type="descendent_path"  indexed="true"  stored="true"/>
     <fieldType name="descendent_path" class="solr.TextField">
       <analyzer type="index">
         <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/" />
@@ -510,7 +463,6 @@
       Example of using PathHierarchyTokenizerFactory at query time, so
       queries for paths match documents at that path, or in ancestor paths
     -->
-    <dynamicField name="*_ancestor_path" type="ancestor_path"  indexed="true"  stored="true"/>
     <fieldType name="ancestor_path" class="solr.TextField">
       <analyzer type="index">
         <tokenizer class="solr.KeywordTokenizerFactory" />
@@ -531,7 +483,6 @@
       The subFields are an implementation detail of the fieldType, and end
       users normally should not need to know about them.
      -->
-    <dynamicField name="*_point" type="point"  indexed="true"  stored="true"/>
     <fieldType name="point" class="solr.PointType" dimension="2" subFieldSuffix="_d"/>
 
     <!-- A specialized field for geospatial search filters and distance sorting. -->

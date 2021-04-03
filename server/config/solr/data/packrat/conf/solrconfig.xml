@@ -593,6 +593,7 @@
       -->
     <useColdSearcher>false</useColdSearcher>
 
+    <slowQueryThresholdMillis>1000</slowQueryThresholdMillis>
   </query>
 
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
