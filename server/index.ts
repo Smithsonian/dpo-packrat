@@ -7,7 +7,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
-import { serverOptions } from './graphql';
+import { ApolloServerOptions } from './graphql';
 import * as LOG from './utils/logger';
 import bodyParser from 'body-parser';
 import { passport, authCorsConfig, authSession, AuthRouter } from './auth';
@@ -20,6 +20,7 @@ LOG.logger.info('Packrat Server Initialized');
 
 const app = express();
 const PORT = 4000;
+let requestNumber: number = 0;
 
 app.use(cors(authCorsConfig));
 app.use(bodyParser.json());
@@ -30,8 +31,26 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/auth', AuthRouter);
+app.use('/graphql', (req, _res, next) => {
+    const log: LOG.Logger = LOG.getRequestLogger();
+    // log.info(`GQL ${++requestNumber}: ${req.body.query} ${JSON.stringify(req.body.variables)}`);
+    // log.info(`GQL ${++requestNumber}: ${req.body.query}`);
+    // log.info(`GQL ${++requestNumber}: ${JSON.stringify(req.body.variables)}`);
+    // log.info(`GQL ${++requestNumber}: ${JSON.stringify(req.body)}`);
 
-const server = new ApolloServer(serverOptions);
+    // extract first line of query string
+    // e.g. query = '{\n  getAssetVersionsDetails(input: {idAssetVersions: [101]}) {\n...'
+    const query: string = req.body.query;
+    let start: number = query.indexOf('{\n');
+    if (start > -1)
+        start += 2; // skip two spaces found after {\n
+    const end: number = query.indexOf('{\n', start + 1);
+    const queryTrim: string = (start > -1 && end > -1) ? query.substring(start + 1, end) : '';
+    log.info(`GQL ${++requestNumber}: ${queryTrim}${JSON.stringify(req.body.variables)}`);
+    return next();
+});
+
+const server = new ApolloServer(ApolloServerOptions);
 server.applyMiddleware({ app, cors: false });
 
 if (process.env.NODE_ENV !== 'test') {

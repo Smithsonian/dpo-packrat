@@ -22,6 +22,8 @@ import {
     GetLicenseResult,
     GetModelInput,
     GetModelResult,
+    GetModelConstellationInput,
+    GetModelConstellationResult,
     GetSceneInput,
     GetSceneResult,
     GetUnitInput,
@@ -122,6 +124,7 @@ import getCaptureData from './queries/capturedata/getCaptureData';
 import getCaptureDataPhoto from './queries/capturedata/getCaptureDataPhoto';
 import getLicense from './queries/license/getLicense';
 import getModel from './queries/model/getModel';
+import getModelConstellation from './queries/model/getModelConstellation';
 import getScene from './queries/scene/getScene';
 import getUnit from './queries/unit/getUnit';
 import getProject from './queries/unit/getProject';
@@ -182,6 +185,7 @@ const allQueries = {
     getCaptureDataPhoto,
     getLicense,
     getModel,
+    getModelConstellation,
     getScene,
     getUnit,
     getProject,
@@ -360,6 +364,16 @@ class GraphQLApi {
 
     async getModel(input: GetModelInput, context?: Context): Promise<GetModelResult> {
         const operationName = 'getModel';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getModelConstellation(input: GetModelConstellationInput, context?: Context): Promise<GetModelConstellationResult> {
+        const operationName = 'getModelConstellation';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

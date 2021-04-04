@@ -427,7 +427,7 @@ export class IndexSolr {
             LOG.logger.error(`IndexSolr.handleModel failed to compute ModelConstellation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
-        const model: DBAPI.Model = modelConstellation.model;
+        const model: DBAPI.Model = modelConstellation.Model;
 
         doc.CommonName = model.Name;
         doc.CommonDateCreated = model.DateCreated;
@@ -481,15 +481,15 @@ export class IndexSolr {
         const modelMetricsIsWatertightMap: Map<boolean, boolean> = new Map<boolean, boolean>();
         const modelMetricsSelfIntersectingMap: Map<boolean, boolean> = new Map<boolean, boolean>();
 
-        if (modelConstellation.modelMaterials) {
-            for (const modelMaterial of modelConstellation.modelMaterials) {
+        if (modelConstellation.ModelMaterials) {
+            for (const modelMaterial of modelConstellation.ModelMaterials) {
                 if (modelMaterial.Name)
                     modelMaterialNameMap.set(modelMaterial.Name, true);
             }
         }
 
-        if (modelConstellation.modelMaterialChannels) {
-            for (const modelMaterialChannel of modelConstellation.modelMaterialChannels) {
+        if (modelConstellation.ModelMaterialChannels) {
+            for (const modelMaterialChannel of modelConstellation.ModelMaterialChannels) {
                 if (modelMaterialChannel.idVMaterialType) {
                     const materialType = await this.computeVocabulary(modelMaterialChannel.idVMaterialType);
                     if (materialType)
@@ -510,14 +510,14 @@ export class IndexSolr {
             }
         }
 
-        if (modelConstellation.modelMaterialUVMaps) {
-            for (const modelMaterialUVMap of modelConstellation.modelMaterialUVMaps)
+        if (modelConstellation.ModelMaterialUVMaps) {
+            for (const modelMaterialUVMap of modelConstellation.ModelMaterialUVMaps)
                 modelMaterialUVMapEdgeLengthMap.set(modelMaterialUVMap.UVMapEdgeLength, true);
         }
 
         const modelMetricsList: DBAPI.ModelMetrics[] = [];
-        if (modelConstellation.modelMetrics)
-            modelMetricsList.push(...modelConstellation.modelMetrics);
+        if (modelConstellation.ModelMetrics)
+            modelMetricsList.push(...modelConstellation.ModelMetrics);
         for (const modelMetrics of modelMetricsList) {
             if (modelMetrics.BoundingBoxP1X) modelMetricsBoundingBoxP1XMap.set(modelMetrics.BoundingBoxP1X, true);
             if (modelMetrics.BoundingBoxP1Y) modelMetricsBoundingBoxP1YMap.set(modelMetrics.BoundingBoxP1Y, true);

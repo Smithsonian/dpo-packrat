@@ -5,25 +5,25 @@ import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
 export class ModelConstellation {
-    model: Model;
-    modelObjects: ModelObject[] | null;
-    modelMaterials: ModelMaterial[] | null;
-    modelMaterialChannels: ModelMaterialChannel[] | null;
-    modelMaterialUVMaps: ModelMaterialUVMap[] | null;
-    modelMetrics: ModelMetrics[] | null;
-    modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null;
+    Model: Model;
+    ModelObjects: ModelObject[] | null;
+    ModelMaterials: ModelMaterial[] | null;
+    ModelMaterialChannels: ModelMaterialChannel[] | null;
+    ModelMaterialUVMaps: ModelMaterialUVMap[] | null;
+    ModelMetrics: ModelMetrics[] | null;
+    ModelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null;
 
     constructor(model: Model,
         modelObjects: ModelObject[] | null, modelMaterials: ModelMaterial[] | null,
         modelMaterialChannels: ModelMaterialChannel[] | null, modelMaterialUVMaps: ModelMaterialUVMap[] | null,
         modelMetrics: ModelMetrics[] | null, modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null) {
-        this.model = model;
-        this.modelObjects = modelObjects;
-        this.modelMaterials = modelMaterials;
-        this.modelMaterialChannels = modelMaterialChannels;
-        this.modelMaterialUVMaps = modelMaterialUVMaps;
-        this.modelMetrics = modelMetrics;
-        this.modelObjectModelMaterialXref = modelObjectModelMaterialXref;
+        this.Model = model;
+        this.ModelObjects = modelObjects;
+        this.ModelMaterials = modelMaterials;
+        this.ModelMaterialChannels = modelMaterialChannels;
+        this.ModelMaterialUVMaps = modelMaterialUVMaps;
+        this.ModelMetrics = modelMetrics;
+        this.ModelObjectModelMaterialXref = modelObjectModelMaterialXref;
     }
 
     static async fetch(idModel: number): Promise<ModelConstellation | null> {
