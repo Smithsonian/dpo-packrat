@@ -38,6 +38,7 @@ export type Query = {
   getItemsForSubject: GetItemsForSubjectResult;
   getLicense: GetLicenseResult;
   getModel: GetModelResult;
+  getModelConstellation: GetModelConstellationResult;
   getObjectChildren: GetObjectChildrenResult;
   getObjectsForItem: GetObjectsForItemResult;
   getProject: GetProjectResult;
@@ -142,6 +143,11 @@ export type QueryGetLicenseArgs = {
 
 export type QueryGetModelArgs = {
   input: GetModelInput;
+};
+
+
+export type QueryGetModelConstellationArgs = {
+  input: GetModelConstellationInput;
 };
 
 
@@ -950,6 +956,15 @@ export type GetModelResult = {
   Model?: Maybe<Model>;
 };
 
+export type GetModelConstellationInput = {
+  idModel: Scalars['Int'];
+};
+
+export type GetModelConstellationResult = {
+  __typename?: 'GetModelConstellationResult';
+  ModelConstellation?: Maybe<ModelConstellation>;
+};
+
 export type Model = {
   __typename?: 'Model';
   idModel: Scalars['Int'];
@@ -979,9 +994,8 @@ export type Model = {
 export type ModelMaterial = {
   __typename?: 'ModelMaterial';
   idModelMaterial: Scalars['Int'];
-  idModelObject: Scalars['Int'];
   Name?: Maybe<Scalars['String']>;
-  ModelObject: ModelObject;
+  ModelMaterialChannel?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
 };
 
 export type ModelMaterialChannel = {
@@ -997,7 +1011,7 @@ export type ModelMaterialChannel = {
   Scalar2?: Maybe<Scalars['Float']>;
   Scalar3?: Maybe<Scalars['Float']>;
   Scalar4?: Maybe<Scalars['Float']>;
-  ModelMaterial: ModelMaterial;
+  ModelMaterial?: Maybe<ModelMaterial>;
   VMaterialType?: Maybe<Vocabulary>;
   ModelMaterialUVMap?: Maybe<ModelMaterialUvMap>;
 };
@@ -1008,8 +1022,8 @@ export type ModelMaterialUvMap = {
   idModel: Scalars['Int'];
   idAsset: Scalars['Int'];
   UVMapEdgeLength: Scalars['Int'];
-  Model: Model;
-  Asset: Asset;
+  Model?: Maybe<Model>;
+  Asset?: Maybe<Asset>;
 };
 
 export type ModelMetrics = {
@@ -1042,7 +1056,7 @@ export type ModelObject = {
   idModelObject: Scalars['Int'];
   idModel: Scalars['Int'];
   idModelMetrics?: Maybe<Scalars['Int']>;
-  Model: Model;
+  Model?: Maybe<Model>;
   ModelMetrics?: Maybe<ModelMetrics>;
 };
 
@@ -1085,14 +1099,21 @@ export type ModelSceneXref = {
   Scene?: Maybe<Scene>;
 };
 
+export type ModelAsset = {
+  __typename?: 'ModelAsset';
+  AssetName: Scalars['String'];
+  AssetType: Scalars['String'];
+};
+
 export type ModelConstellation = {
   __typename?: 'ModelConstellation';
   Model: Model;
-  ModelObjects?: Maybe<Array<Maybe<ModelObject>>>;
-  ModelMaterials?: Maybe<Array<Maybe<ModelMaterial>>>;
-  ModelMaterialChannels?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
-  ModelMaterialUVMaps?: Maybe<Array<Maybe<ModelMaterialUvMap>>>;
-  ModelMetrics?: Maybe<Array<Maybe<ModelMetrics>>>;
+  ModelObjects?: Maybe<Array<ModelObject>>;
+  ModelMaterials?: Maybe<Array<ModelMaterial>>;
+  ModelMaterialChannels?: Maybe<Array<ModelMaterialChannel>>;
+  ModelMaterialUVMaps?: Maybe<Array<ModelMaterialUvMap>>;
+  ModelMetrics?: Maybe<Array<ModelMetrics>>;
+  ModelAssets?: Maybe<Array<ModelAsset>>;
 };
 
 export type PaginationInput = {
@@ -2626,6 +2647,43 @@ export type GetModelQuery = (
     & { Model?: Maybe<(
       { __typename?: 'Model' }
       & Pick<Model, 'idModel'>
+    )> }
+  ) }
+);
+
+export type GetModelConstellationQueryVariables = Exact<{
+  input: GetModelConstellationInput;
+}>;
+
+
+export type GetModelConstellationQuery = (
+  { __typename?: 'Query' }
+  & { getModelConstellation: (
+    { __typename?: 'GetModelConstellationResult' }
+    & { ModelConstellation?: Maybe<(
+      { __typename?: 'ModelConstellation' }
+      & { Model: (
+        { __typename?: 'Model' }
+        & Pick<Model, 'idModel'>
+      ), ModelObjects?: Maybe<Array<(
+        { __typename?: 'ModelObject' }
+        & Pick<ModelObject, 'idModelObject'>
+      )>>, ModelMaterials?: Maybe<Array<(
+        { __typename?: 'ModelMaterial' }
+        & Pick<ModelMaterial, 'idModelMaterial'>
+      )>>, ModelMaterialChannels?: Maybe<Array<(
+        { __typename?: 'ModelMaterialChannel' }
+        & Pick<ModelMaterialChannel, 'idModelMaterialChannel'>
+      )>>, ModelMaterialUVMaps?: Maybe<Array<(
+        { __typename?: 'ModelMaterialUVMap' }
+        & Pick<ModelMaterialUvMap, 'idModelMaterialUVMap'>
+      )>>, ModelMetrics?: Maybe<Array<(
+        { __typename?: 'ModelMetrics' }
+        & Pick<ModelMetrics, 'idModelMetrics'>
+      )>>, ModelAssets?: Maybe<Array<(
+        { __typename?: 'ModelAsset' }
+        & Pick<ModelAsset, 'AssetName' | 'AssetType'>
+      )>> }
     )> }
   ) }
 );
@@ -4222,6 +4280,64 @@ export function useGetModelLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetModelQueryHookResult = ReturnType<typeof useGetModelQuery>;
 export type GetModelLazyQueryHookResult = ReturnType<typeof useGetModelLazyQuery>;
 export type GetModelQueryResult = Apollo.QueryResult<GetModelQuery, GetModelQueryVariables>;
+export const GetModelConstellationDocument = gql`
+    query getModelConstellation($input: GetModelConstellationInput!) {
+  getModelConstellation(input: $input) {
+    ModelConstellation {
+      Model {
+        idModel
+      }
+      ModelObjects {
+        idModelObject
+      }
+      ModelMaterials {
+        idModelMaterial
+      }
+      ModelMaterialChannels {
+        idModelMaterialChannel
+      }
+      ModelMaterialUVMaps {
+        idModelMaterialUVMap
+      }
+      ModelMetrics {
+        idModelMetrics
+      }
+      ModelAssets {
+        AssetName
+        AssetType
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetModelConstellationQuery__
+ *
+ * To run a query within a React component, call `useGetModelConstellationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetModelConstellationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetModelConstellationQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetModelConstellationQuery(baseOptions: Apollo.QueryHookOptions<GetModelConstellationQuery, GetModelConstellationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetModelConstellationQuery, GetModelConstellationQueryVariables>(GetModelConstellationDocument, options);
+      }
+export function useGetModelConstellationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetModelConstellationQuery, GetModelConstellationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetModelConstellationQuery, GetModelConstellationQueryVariables>(GetModelConstellationDocument, options);
+        }
+export type GetModelConstellationQueryHookResult = ReturnType<typeof useGetModelConstellationQuery>;
+export type GetModelConstellationLazyQueryHookResult = ReturnType<typeof useGetModelConstellationLazyQuery>;
+export type GetModelConstellationQueryResult = Apollo.QueryResult<GetModelConstellationQuery, GetModelConstellationQueryVariables>;
 export const GetFilterViewDataDocument = gql`
     query getFilterViewData {
   getFilterViewData {

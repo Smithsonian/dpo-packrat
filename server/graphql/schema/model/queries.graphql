@@ -1,5 +1,6 @@
 type Query {
     getModel(input: GetModelInput!): GetModelResult!
+    getModelConstellation(input: GetModelConstellationInput!): GetModelConstellationResult!
 }
 
 input GetModelInput {
@@ -8,4 +9,12 @@ input GetModelInput {
 
 type GetModelResult {
     Model: Model    
+}
+
+input GetModelConstellationInput {
+    idModel: Int!
+}
+
+type GetModelConstellationResult {
+    ModelConstellation: ModelConstellation
 }

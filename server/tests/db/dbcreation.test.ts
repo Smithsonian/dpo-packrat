@@ -4004,13 +4004,13 @@ describe('DB Fetch Special Test Suite', () => {
         if (model) {
             modelConstellation1 = await DBAPI.ModelConstellation.fetch(model.idModel);
             if (modelConstellation1) {
-                expect(modelConstellation1.model).toEqual(model);
-                expect(modelConstellation1.modelObjects).toEqual(expect.arrayContaining([modelObject]));
-                expect(modelConstellation1.modelMaterials).toEqual(expect.arrayContaining([modelMaterial]));
-                expect(modelConstellation1.modelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel]));
-                expect(modelConstellation1.modelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
-                expect(modelConstellation1.modelMetrics).toEqual(expect.arrayContaining([modelMetrics]));
-                expect(modelConstellation1.modelObjectModelMaterialXref).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1, modelObjectModelMaterialXref2]));
+                expect(modelConstellation1.Model).toEqual(model);
+                expect(modelConstellation1.ModelObjects).toEqual(expect.arrayContaining([modelObject]));
+                expect(modelConstellation1.ModelMaterials).toEqual(expect.arrayContaining([modelMaterial]));
+                expect(modelConstellation1.ModelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel]));
+                expect(modelConstellation1.ModelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
+                expect(modelConstellation1.ModelMetrics).toEqual(expect.arrayContaining([modelMetrics]));
+                expect(modelConstellation1.ModelObjectModelMaterialXref).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1, modelObjectModelMaterialXref2]));
             }
         }
         expect(modelConstellation1).toBeTruthy();
@@ -4018,13 +4018,13 @@ describe('DB Fetch Special Test Suite', () => {
         if (modelNulls) {
             modelConstellation2 = await DBAPI.ModelConstellation.fetch(modelNulls.idModel);
             if (modelConstellation2) {
-                expect(modelConstellation2.model).toEqual(modelNulls);
-                expect(modelConstellation2.modelObjects).toEqual([]);
-                expect(modelConstellation2.modelMaterials).toBeFalsy();
-                expect(modelConstellation2.modelMaterialChannels).toBeFalsy();
-                expect(modelConstellation2.modelMaterialUVMaps).toEqual([]);
-                expect(modelConstellation2.modelMetrics).toBeFalsy();
-                expect(modelConstellation2.modelObjectModelMaterialXref).toBeFalsy();
+                expect(modelConstellation2.Model).toEqual(modelNulls);
+                expect(modelConstellation2.ModelObjects).toEqual([]);
+                expect(modelConstellation2.ModelMaterials).toBeFalsy();
+                expect(modelConstellation2.ModelMaterialChannels).toBeFalsy();
+                expect(modelConstellation2.ModelMaterialUVMaps).toEqual([]);
+                expect(modelConstellation2.ModelMetrics).toBeFalsy();
+                expect(modelConstellation2.ModelObjectModelMaterialXref).toBeFalsy();
             }
         }
         expect(modelConstellation2).toBeTruthy();

@@ -12,6 +12,7 @@ import getCaptureDataTest from './queries/capturedata/getCaptureData.test';
 import getCaptureDataPhotoTest from './queries/capturedata/getCaptureDataPhoto.test';
 import getLicenseTest from './queries/license/getLicense.test';
 import getModelTest from './queries/model/getModel.test';
+import getModelConstellationTest from './queries/model/getModelConstellation.test';
 import getSceneTest from './queries/scene/getScene.test';
 import getUnitTest from './queries/unit/getUnit.test';
 import getVocabularyTest from './queries/vocabulary/getVocabulary.test';
@@ -59,6 +60,7 @@ describe('GraphQL Test Suite', () => {
     getCaptureDataPhotoTest(utils);
     getLicenseTest(utils);
     getModelTest(utils);
+    getModelConstellationTest(utils);
     getSceneTest(utils);
     getUnitTest(utils);
     getUserTest(utils);

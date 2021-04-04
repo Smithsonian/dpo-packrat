@@ -35,6 +35,7 @@ export type Query = {
   getItemsForSubject: GetItemsForSubjectResult;
   getLicense: GetLicenseResult;
   getModel: GetModelResult;
+  getModelConstellation: GetModelConstellationResult;
   getObjectChildren: GetObjectChildrenResult;
   getObjectsForItem: GetObjectsForItemResult;
   getProject: GetProjectResult;
@@ -139,6 +140,11 @@ export type QueryGetLicenseArgs = {
 
 export type QueryGetModelArgs = {
   input: GetModelInput;
+};
+
+
+export type QueryGetModelConstellationArgs = {
+  input: GetModelConstellationInput;
 };
 
 
@@ -947,6 +953,15 @@ export type GetModelResult = {
   Model?: Maybe<Model>;
 };
 
+export type GetModelConstellationInput = {
+  idModel: Scalars['Int'];
+};
+
+export type GetModelConstellationResult = {
+  __typename?: 'GetModelConstellationResult';
+  ModelConstellation?: Maybe<ModelConstellation>;
+};
+
 export type Model = {
   __typename?: 'Model';
   idModel: Scalars['Int'];
@@ -976,9 +991,8 @@ export type Model = {
 export type ModelMaterial = {
   __typename?: 'ModelMaterial';
   idModelMaterial: Scalars['Int'];
-  idModelObject: Scalars['Int'];
   Name?: Maybe<Scalars['String']>;
-  ModelObject: ModelObject;
+  ModelMaterialChannel?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
 };
 
 export type ModelMaterialChannel = {
@@ -994,7 +1008,7 @@ export type ModelMaterialChannel = {
   Scalar2?: Maybe<Scalars['Float']>;
   Scalar3?: Maybe<Scalars['Float']>;
   Scalar4?: Maybe<Scalars['Float']>;
-  ModelMaterial: ModelMaterial;
+  ModelMaterial?: Maybe<ModelMaterial>;
   VMaterialType?: Maybe<Vocabulary>;
   ModelMaterialUVMap?: Maybe<ModelMaterialUvMap>;
 };
@@ -1005,8 +1019,8 @@ export type ModelMaterialUvMap = {
   idModel: Scalars['Int'];
   idAsset: Scalars['Int'];
   UVMapEdgeLength: Scalars['Int'];
-  Model: Model;
-  Asset: Asset;
+  Model?: Maybe<Model>;
+  Asset?: Maybe<Asset>;
 };
 
 export type ModelMetrics = {
@@ -1039,7 +1053,7 @@ export type ModelObject = {
   idModelObject: Scalars['Int'];
   idModel: Scalars['Int'];
   idModelMetrics?: Maybe<Scalars['Int']>;
-  Model: Model;
+  Model?: Maybe<Model>;
   ModelMetrics?: Maybe<ModelMetrics>;
 };
 
@@ -1082,14 +1096,21 @@ export type ModelSceneXref = {
   Scene?: Maybe<Scene>;
 };
 
+export type ModelAsset = {
+  __typename?: 'ModelAsset';
+  AssetName: Scalars['String'];
+  AssetType: Scalars['String'];
+};
+
 export type ModelConstellation = {
   __typename?: 'ModelConstellation';
   Model: Model;
-  ModelObjects?: Maybe<Array<Maybe<ModelObject>>>;
-  ModelMaterials?: Maybe<Array<Maybe<ModelMaterial>>>;
-  ModelMaterialChannels?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
-  ModelMaterialUVMaps?: Maybe<Array<Maybe<ModelMaterialUvMap>>>;
-  ModelMetrics?: Maybe<Array<Maybe<ModelMetrics>>>;
+  ModelObjects?: Maybe<Array<ModelObject>>;
+  ModelMaterials?: Maybe<Array<ModelMaterial>>;
+  ModelMaterialChannels?: Maybe<Array<ModelMaterialChannel>>;
+  ModelMaterialUVMaps?: Maybe<Array<ModelMaterialUvMap>>;
+  ModelMetrics?: Maybe<Array<ModelMetrics>>;
+  ModelAssets?: Maybe<Array<ModelAsset>>;
 };
 
 export type PaginationInput = {

@@ -18,6 +18,7 @@ type Query {
   getItemsForSubject(input: GetItemsForSubjectInput!): GetItemsForSubjectResult!
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
+  getModelConstellation(input: GetModelConstellationInput!): GetModelConstellationResult!
   getObjectChildren(input: GetObjectChildrenInput!): GetObjectChildrenResult!
   getObjectsForItem(input: GetObjectsForItemInput!): GetObjectsForItemResult!
   getProject(input: GetProjectInput!): GetProjectResult!
@@ -635,6 +636,14 @@ type GetModelResult {
   Model: Model
 }
 
+input GetModelConstellationInput {
+  idModel: Int!
+}
+
+type GetModelConstellationResult {
+  ModelConstellation: ModelConstellation
+}
+
 type Model {
   idModel: Int!
   Name: String!
@@ -662,9 +671,8 @@ type Model {
 
 type ModelMaterial {
   idModelMaterial: Int!
-  idModelObject: Int!
   Name: String
-  ModelObject: ModelObject!
+  ModelMaterialChannel: [ModelMaterialChannel]
 }
 
 type ModelMaterialChannel {
@@ -679,7 +687,7 @@ type ModelMaterialChannel {
   Scalar2: Float
   Scalar3: Float
   Scalar4: Float
-  ModelMaterial: ModelMaterial!
+  ModelMaterial: ModelMaterial
   VMaterialType: Vocabulary
   ModelMaterialUVMap: ModelMaterialUVMap
 }
@@ -689,8 +697,8 @@ type ModelMaterialUVMap {
   idModel: Int!
   idAsset: Int!
   UVMapEdgeLength: Int!
-  Model: Model!
-  Asset: Asset!
+  Model: Model
+  Asset: Asset
 }
 
 type ModelMetrics {
@@ -721,7 +729,7 @@ type ModelObject {
   idModelObject: Int!
   idModel: Int!
   idModelMetrics: Int
-  Model: Model!
+  Model: Model
   ModelMetrics: ModelMetrics
 }
 
@@ -761,13 +769,19 @@ type ModelSceneXref {
   Scene: Scene
 }
 
+type ModelAsset {
+  AssetName: String!
+  AssetType: String!
+}
+
 type ModelConstellation {
   Model: Model!
-  ModelObjects: [ModelObject]
-  ModelMaterials: [ModelMaterial]
-  ModelMaterialChannels: [ModelMaterialChannel]
-  ModelMaterialUVMaps: [ModelMaterialUVMap]
-  ModelMetrics: [ModelMetrics]
+  ModelObjects: [ModelObject!]
+  ModelMaterials: [ModelMaterial!]
+  ModelMaterialChannels: [ModelMaterialChannel!]
+  ModelMaterialUVMaps: [ModelMaterialUVMap!]
+  ModelMetrics: [ModelMetrics!]
+  ModelAssets: [ModelAsset!]
 }
 
 input PaginationInput {

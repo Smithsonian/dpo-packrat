@@ -198,7 +198,7 @@ async function getModelDetailFields(idModel: number): Promise<ModelDetailFields>
     if (!modelConstellation)
         return fields;
 
-    const model = modelConstellation.model;
+    const model = modelConstellation.Model;
     fields = {
         ...fields,
         master: model?.Master,
@@ -224,7 +224,7 @@ async function getModelDetailFields(idModel: number): Promise<ModelDetailFields>
     }
 
     // TODO: fetch Material Channels, etc.
-    const ModelMetrics = (modelConstellation.modelMetrics && modelConstellation.modelMetrics.length > 0) ? modelConstellation.modelMetrics[0] : null;
+    const ModelMetrics = (modelConstellation.ModelMetrics && modelConstellation.ModelMetrics.length > 0) ? modelConstellation.ModelMetrics[0] : null;
     if (ModelMetrics) {
         fields = {
             ...fields,
