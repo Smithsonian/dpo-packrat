@@ -27,7 +27,6 @@ DROP TABLE IF EXISTS `Model`;
 DROP TABLE IF EXISTS `ModelMaterial`;
 DROP TABLE IF EXISTS `ModelMaterialChannel`;
 DROP TABLE IF EXISTS `ModelMaterialUVMap`;
-DROP TABLE IF EXISTS `ModelMetrics`;
 DROP TABLE IF EXISTS `ModelObject`;
 DROP TABLE IF EXISTS `ModelObjectModelMaterialXref`;
 DROP TABLE IF EXISTS `ModelProcessingAction`;

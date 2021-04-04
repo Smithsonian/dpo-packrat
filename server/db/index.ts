@@ -31,7 +31,6 @@ export * from './api/Model';
 export * from './api/ModelMaterial';
 export * from './api/ModelMaterialChannel';
 export * from './api/ModelMaterialUVMap';
-export * from './api/ModelMetrics';
 export * from './api/ModelObject';
 export * from './api/ModelObjectModelMaterialXref';
 export * from './api/ModelProcessingAction';

@@ -6,26 +6,53 @@ import * as LOG from '../../utils/logger';
 export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelObjectBase {
     idModelObject!: number;
     idModel!: number;
-    idModelMetrics!: number | null;
-
-    private idModelMetricsOrig!: number | null;
+    BoundingBoxP1X!: number | null;
+    BoundingBoxP1Y!: number | null;
+    BoundingBoxP1Z!: number | null;
+    BoundingBoxP2X!: number | null;
+    BoundingBoxP2Y!: number | null;
+    BoundingBoxP2Z!: number | null;
+    CountPoint!: number | null;
+    CountFace!: number | null;
+    CountColorChannel!: number | null;
+    CountTextureCoorinateChannel!: number | null;
+    HasBones!: boolean | null;
+    HasFaceNormals!: boolean | null;
+    HasTangents!: boolean | null;
+    HasTextureCoordinates!: boolean | null;
+    HasVertexNormals!: boolean | null;
+    HasVertexColor!: boolean | null;
+    IsTwoManifoldUnbounded!: boolean | null;
+    IsTwoManifoldBounded!: boolean | null;
+    IsWatertight!: boolean | null;
+    SelfIntersecting!: boolean | null;
 
     constructor(input: ModelObjectBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idModelMetricsOrig = this.idModelMetrics;
-    }
+    protected updateCachedValues(): void { }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idModel, idModelMetrics } = this;
-            ({ idModelObject: this.idModelObject, idModel: this.idModel, idModelMetrics: this.idModelMetrics } =
+            const { idModel, BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z, CountPoint,
+                CountFace, CountColorChannel, CountTextureCoorinateChannel, HasBones, HasFaceNormals, HasTangents, HasTextureCoordinates,
+                HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded, IsTwoManifoldBounded, IsWatertight, SelfIntersecting } = this;
+            ({ idModelObject: this.idModelObject, idModel: this.idModel,
+                BoundingBoxP1X: this.BoundingBoxP1X, BoundingBoxP1Y: this.BoundingBoxP1Y, BoundingBoxP1Z: this.BoundingBoxP1Z,
+                BoundingBoxP2X: this.BoundingBoxP2X, BoundingBoxP2Y: this.BoundingBoxP2Y, BoundingBoxP2Z: this.BoundingBoxP2Z,
+                CountPoint: this.CountPoint, CountFace: this.CountFace, CountColorChannel: this.CountColorChannel,
+                CountTextureCoorinateChannel: this.CountTextureCoorinateChannel, HasBones: this.HasBones, HasFaceNormals: this.HasFaceNormals,
+                HasTangents: this.HasTangents, HasTextureCoordinates: this.HasTextureCoordinates, HasVertexNormals: this.HasVertexNormals,
+                HasVertexColor: this.HasVertexColor, IsTwoManifoldUnbounded: this.IsTwoManifoldUnbounded, IsTwoManifoldBounded: this.IsTwoManifoldBounded,
+                IsWatertight: this.IsWatertight, SelfIntersecting: this.SelfIntersecting } =
                 await DBC.DBConnection.prisma.modelObject.create({
                     data: {
                         Model:              { connect: { idModel }, },
-                        ModelMetrics:       idModelMetrics ? { connect: { idModelMetrics }, } : undefined,
+                        BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
+                        CountPoint, CountFace, CountColorChannel, CountTextureCoorinateChannel, HasBones, HasFaceNormals,
+                        HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded,
+                        IsTwoManifoldBounded, IsWatertight, SelfIntersecting
                     },
                 }));
             return true;
@@ -37,12 +64,18 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idModelObject, idModel, idModelMetrics, idModelMetricsOrig } = this;
+            const { idModelObject, idModel, BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y,
+                BoundingBoxP2Z,CountPoint, CountFace, CountColorChannel, CountTextureCoorinateChannel, HasBones, HasFaceNormals,
+                HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded, IsTwoManifoldBounded,
+                IsWatertight, SelfIntersecting } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.modelObject.update({
                 where: { idModelObject, },
                 data: {
                     Model:              { connect: { idModel }, },
-                    ModelMetrics:       idModelMetrics ? { connect: { idModelMetrics }, } : idModelMetricsOrig ? { disconnect: true, } : undefined,
+                    BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
+                    CountPoint, CountFace, CountColorChannel, CountTextureCoorinateChannel, HasBones, HasFaceNormals,
+                    HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded,
+                    IsTwoManifoldBounded, IsWatertight, SelfIntersecting
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

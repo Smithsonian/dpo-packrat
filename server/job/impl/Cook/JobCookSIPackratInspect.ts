@@ -85,7 +85,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
     // database with proper IDs
     model: DBAPI.Model | null = null;
     modelObjects: DBAPI.ModelObject[] = [];
-    modelMetrics: DBAPI.ModelMetrics[] = [];
     modelMaterials: DBAPI.ModelMaterial[] | null = null;
     modelMaterialChannels: DBAPI.ModelMaterialChannel[] | null = null;
     modelObjectModelMaterialXref: DBAPI.ModelObjectModelMaterialXref[] | null = null;
@@ -111,7 +110,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
         let idModel: number = 0;
         let idModelObject: number = 0;
-        let idModelMetrics: number = 0;
         let idModelMaterial: number = 0;
         let idModelMaterialUVMap: number = 0;
         let idModelMaterialChannel: number = 0;
@@ -152,13 +150,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 continue;
             }
 
-            idModelMetrics++;
             const boundingBox: any = mesh.geometry?.boundingBox;
             const JCBoundingBox: JobCookBoundingBox | null = JobCookBoundingBox.extract(boundingBox);
             const JCStat: JobCookStatistics = JobCookStatistics.extract(statistics);
             // TODO: Verify types; deal with booleans vs 'false' / 'true'
-            const modelMetric: DBAPI.ModelMetrics = new DBAPI.ModelMetrics({
-                idModelMetrics,
+            JCOutput.modelObjects.push(new DBAPI.ModelObject({
+                idModelObject,
+                idModel,
                 BoundingBoxP1X: JCBoundingBox ? JCBoundingBox.min[0] : null,
                 BoundingBoxP1Y: JCBoundingBox ? JCBoundingBox.min[1] : null,
                 BoundingBoxP1Z: JCBoundingBox ? JCBoundingBox.min[2] : null,
@@ -179,16 +177,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 IsTwoManifoldBounded: JCStat.isTwoManifoldBounded,
                 IsWatertight: JCStat.isWatertight,
                 SelfIntersecting: JCStat.selfIntersecting,
-            });
-
-            JCOutput.modelObjects.push(new DBAPI.ModelObject({
-                idModelObject,
-                idModel,
-                idModelMetrics
             }));
-
-            // ModelMetrics
-            JCOutput.modelMetrics.push(modelMetric);
 
             // ModelObjectModelMaterialXref
             if (JCStat.materialIndex) {

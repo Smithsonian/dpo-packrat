@@ -247,34 +247,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     }
 
                     /*
-                    // TODO: do we want to update the asset name and metrics?  I don't think so...
-                    const ModelMetrics = await DBAPI.ModelMetrics.fetch(Model.idModelMetrics);
-                    if (ModelMetrics) {
-                        const Asset = await DBAPI.Asset.fetch(MGF.idAsset);
-                        if (Asset) {
-                            Asset.FileName = data.Name;
-                            await Asset.update();
-                        }
-
-                        MGF.Roughness = maybe<number>(roughness);
-                        MGF.Metalness = maybe<number>(metalness);
-                        MGF.PointCount = maybe<number>(pointCount);
-                        MGF.FaceCount = maybe<number>(faceCount);
-                        MGF.IsTwoManifoldUnbounded = maybe<boolean>(isTwoManifoldUnbounded);
-                        MGF.IsTwoManifoldBounded = maybe<boolean>(isTwoManifoldBounded);
-                        MGF.IsWatertight = maybe<boolean>(isWatertight);
-                        MGF.SelfIntersecting = maybe<boolean>(selfIntersecting);
-                        MGF.HasNormals = maybe<boolean>(hasNormals);
-                        MGF.HasVertexColor = maybe<boolean>(hasVertexColor);
-                        MGF.HasUVSpace = maybe<boolean>(hasUVSpace);
-                        MGF.BoundingBoxP1X = maybe<number>(boundingBoxP1X);
-                        MGF.BoundingBoxP1Y = maybe<number>(boundingBoxP1Y);
-                        MGF.BoundingBoxP1Z = maybe<number>(boundingBoxP1Z);
-                        MGF.BoundingBoxP2X = maybe<number>(boundingBoxP2X);
-                        MGF.BoundingBoxP2Y = maybe<number>(boundingBoxP2Y);
-                        MGF.BoundingBoxP2Z = maybe<number>(boundingBoxP2Z);
-
-                        await MGF.update();
+                    // TODO: do we want to update the asset name?  I don't think so...
+                    // Look up asset using SystemObjectXref, with idSystemObjectMaster = Model's system object ID
+                    const Asset = await DBAPI.Asset.fetch(MGF.idAsset);
+                    if (Asset) {
+                        Asset.FileName = data.Name;
+                        await Asset.update();
                     }
                     */
                     await Model.update();

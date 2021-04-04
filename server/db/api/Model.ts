@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { Model as ModelBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
-import { ModelObject, ModelObjectModelMaterialXref, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap, ModelMetrics, SystemObject, SystemObjectBased } from '..';
+import { ModelObject, ModelObjectModelMaterialXref, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap, SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
@@ -10,19 +10,17 @@ export class ModelConstellation {
     ModelMaterials: ModelMaterial[] | null;
     ModelMaterialChannels: ModelMaterialChannel[] | null;
     ModelMaterialUVMaps: ModelMaterialUVMap[] | null;
-    ModelMetrics: ModelMetrics[] | null;
     ModelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null;
 
     constructor(model: Model,
         modelObjects: ModelObject[] | null, modelMaterials: ModelMaterial[] | null,
         modelMaterialChannels: ModelMaterialChannel[] | null, modelMaterialUVMaps: ModelMaterialUVMap[] | null,
-        modelMetrics: ModelMetrics[] | null, modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null) {
+        modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null) {
         this.Model = model;
         this.ModelObjects = modelObjects;
         this.ModelMaterials = modelMaterials;
         this.ModelMaterialChannels = modelMaterialChannels;
         this.ModelMaterialUVMaps = modelMaterialUVMaps;
-        this.ModelMetrics = modelMetrics;
         this.ModelObjectModelMaterialXref = modelObjectModelMaterialXref;
     }
 
@@ -37,10 +35,9 @@ export class ModelConstellation {
         const modelMaterials: ModelMaterial[] | null = await ModelMaterial.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
         const modelMaterialChannels: ModelMaterialChannel[] | null = await ModelMaterialChannel.fetchFromModelMaterials(modelMaterials || []);
         const modelMaterialUVMaps: ModelMaterialUVMap[] | null = await ModelMaterialUVMap.fetchFromModel(idModel);
-        const modelMetrics: ModelMetrics[] | null = await ModelMetrics.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
         const modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null = await ModelObjectModelMaterialXref.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
 
-        return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels, modelMaterialUVMaps, modelMetrics, modelObjectModelMaterialXref);
+        return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels, modelMaterialUVMaps, modelObjectModelMaterialXref);
     }
 }
 

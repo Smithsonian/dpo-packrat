@@ -224,30 +224,30 @@ async function getModelDetailFields(idModel: number): Promise<ModelDetailFields>
     }
 
     // TODO: fetch Material Channels, etc.
-    const ModelMetrics = (modelConstellation.ModelMetrics && modelConstellation.ModelMetrics.length > 0) ? modelConstellation.ModelMetrics[0] : null;
-    if (ModelMetrics) {
+    const ModelObject = (modelConstellation.ModelObjects && modelConstellation.ModelObjects.length > 0) ? modelConstellation.ModelObjects[0] : null;
+    if (ModelObject) {
         fields = {
             ...fields,
-            boundingBoxP1X: ModelMetrics.BoundingBoxP1X,
-            boundingBoxP1Y: ModelMetrics.BoundingBoxP1Y,
-            boundingBoxP1Z: ModelMetrics.BoundingBoxP1Z,
-            boundingBoxP2X: ModelMetrics.BoundingBoxP2X,
-            boundingBoxP2Y: ModelMetrics.BoundingBoxP2Y,
-            boundingBoxP2Z: ModelMetrics.BoundingBoxP2Z,
-            countPoint: ModelMetrics.CountPoint,
-            countFace: ModelMetrics.CountFace,
-            countColorChannel: ModelMetrics.CountColorChannel,
-            countTextureCoorinateChannel: ModelMetrics.CountTextureCoorinateChannel,
-            hasBones: ModelMetrics.HasBones,
-            hasFaceNormals: ModelMetrics.HasFaceNormals,
-            hasTangents: ModelMetrics.HasTangents,
-            hasTextureCoordinates: ModelMetrics.HasTextureCoordinates,
-            hasVertexNormals: ModelMetrics.HasVertexNormals,
-            hasVertexColor: ModelMetrics.HasVertexColor,
-            isTwoManifoldUnbounded: ModelMetrics.IsTwoManifoldUnbounded,
-            isTwoManifoldBounded: ModelMetrics.IsTwoManifoldBounded,
-            isWatertight: ModelMetrics.IsWatertight,
-            selfIntersecting: ModelMetrics.SelfIntersecting,
+            boundingBoxP1X: ModelObject.BoundingBoxP1X,
+            boundingBoxP1Y: ModelObject.BoundingBoxP1Y,
+            boundingBoxP1Z: ModelObject.BoundingBoxP1Z,
+            boundingBoxP2X: ModelObject.BoundingBoxP2X,
+            boundingBoxP2Y: ModelObject.BoundingBoxP2Y,
+            boundingBoxP2Z: ModelObject.BoundingBoxP2Z,
+            countPoint: ModelObject.CountPoint,
+            countFace: ModelObject.CountFace,
+            countColorChannel: ModelObject.CountColorChannel,
+            countTextureCoorinateChannel: ModelObject.CountTextureCoorinateChannel,
+            hasBones: ModelObject.HasBones,
+            hasFaceNormals: ModelObject.HasFaceNormals,
+            hasTangents: ModelObject.HasTangents,
+            hasTextureCoordinates: ModelObject.HasTextureCoordinates,
+            hasVertexNormals: ModelObject.HasVertexNormals,
+            hasVertexColor: ModelObject.HasVertexColor,
+            isTwoManifoldUnbounded: ModelObject.IsTwoManifoldUnbounded,
+            isTwoManifoldBounded: ModelObject.IsTwoManifoldBounded,
+            isWatertight: ModelObject.IsWatertight,
+            selfIntersecting: ModelObject.SelfIntersecting,
         };
     }
 

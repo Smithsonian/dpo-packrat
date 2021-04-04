@@ -19,9 +19,6 @@ const getModelConstellation = gql`
                 ModelMaterialUVMaps {
                     idModelMaterialUVMap
                 }
-                ModelMetrics {
-                    idModelMetrics
-                }
                 ModelAssets {
                     AssetName
                     AssetType

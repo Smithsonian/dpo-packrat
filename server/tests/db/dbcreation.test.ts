@@ -58,8 +58,6 @@ let modelMaterial: DBAPI.ModelMaterial | null;
 let modelMaterialChannel: DBAPI.ModelMaterialChannel | null;
 let modelMaterialChannelNulls: DBAPI.ModelMaterialChannel | null;
 let modelMaterialUVMap: DBAPI.ModelMaterialUVMap | null;
-let modelMetrics: DBAPI.ModelMetrics | null;
-let modelMetrics2: DBAPI.ModelMetrics | null;
 let modelObject: DBAPI.ModelObject | null;
 let modelObject2: DBAPI.ModelObject | null;
 let modelObject3: DBAPI.ModelObject | null;
@@ -853,28 +851,8 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
-    test('DB Creation: ModelMetrics', async () => {
-        modelMetrics = await UTIL.createModelMetricsTest({
-            BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
-            CountPoint: 100, CountFace: 50, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: true, HasFaceNormals: false,
-            HasTangents: true, HasTextureCoordinates: false, HasVertexNormals: true, HasVertexColor: false, IsTwoManifoldUnbounded: true,
-            IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
-            idModelMetrics: 0
-        });
-        expect(modelMetrics).toBeTruthy();
-
-        modelMetrics2 = await UTIL.createModelMetricsTest({
-            BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 2, BoundingBoxP2Y: 2, BoundingBoxP2Z: 2,
-            CountPoint: null, CountFace: null, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: false, HasFaceNormals: false,
-            HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: false, HasVertexColor: true, IsTwoManifoldUnbounded: false,
-            IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
-            idModelMetrics: 0
-        });
-        expect(modelMetrics2).toBeTruthy();
-    });
-
     test('DB Creation: Model', async () => {
-        if (vocabulary && assetThumbnail && modelMetrics)
+        if (vocabulary && assetThumbnail)
             model = await UTIL.createModelTest({
                 Name: 'Test Model',
                 Master: true,
@@ -914,18 +892,24 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: ModelObject', async () => {
-        if (model && modelMetrics)
+        if (model)
             modelObject = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
-                idModelMetrics: modelMetrics.idModelMetrics,
+                BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
+                CountPoint: 100, CountFace: 50, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: true, HasFaceNormals: false,
+                HasTangents: true, HasTextureCoordinates: false, HasVertexNormals: true, HasVertexColor: false, IsTwoManifoldUnbounded: true,
+                IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
                 idModelObject: 0
             });
         expect(modelObject).toBeTruthy();
 
-        if (model && modelMetrics2)
+        if (model)
             modelObject2 = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
-                idModelMetrics: modelMetrics2.idModelMetrics,
+                BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 2, BoundingBoxP2Y: 2, BoundingBoxP2Z: 2,
+                CountPoint: null, CountFace: null, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: false, HasFaceNormals: false,
+                HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: false, HasVertexColor: true, IsTwoManifoldUnbounded: false,
+                IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
                 idModelObject: 0
             });
         expect(modelObject2).toBeTruthy();
@@ -933,7 +917,10 @@ describe('DB Creation Test Suite', () => {
         if (model)
             modelObject3 = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
-                idModelMetrics: 0,
+                BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null, BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
+                CountPoint: null, CountFace: null, CountColorChannel: null, CountTextureCoorinateChannel: null, HasBones: null, HasFaceNormals: null,
+                HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: null, HasVertexColor: null, IsTwoManifoldUnbounded: null,
+                IsTwoManifoldBounded: null, IsWatertight: null, SelfIntersecting: null,
                 idModelObject: 0
             });
         expect(modelObject3).toBeTruthy();
@@ -2142,18 +2129,6 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(modelMaterialUVMapFetch).toBeTruthy();
-    });
-
-    test('DB Fetch By ID: ModelMetrics', async () => {
-        let modelMetricsFetch: DBAPI.ModelMetrics | null = null;
-        if (modelMetrics) {
-            modelMetricsFetch = await DBAPI.ModelMetrics.fetch(modelMetrics.idModelMetrics);
-            if (modelMetricsFetch) {
-                expect(modelMetricsFetch).toMatchObject(modelMetrics);
-                expect(modelMetrics).toMatchObject(modelMetricsFetch);
-            }
-        }
-        expect(modelMetricsFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: ModelObject', async () => {
@@ -4009,7 +3984,6 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(modelConstellation1.ModelMaterials).toEqual(expect.arrayContaining([modelMaterial]));
                 expect(modelConstellation1.ModelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel]));
                 expect(modelConstellation1.ModelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
-                expect(modelConstellation1.ModelMetrics).toEqual(expect.arrayContaining([modelMetrics]));
                 expect(modelConstellation1.ModelObjectModelMaterialXref).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1, modelObjectModelMaterialXref2]));
             }
         }
@@ -4023,7 +3997,6 @@ describe('DB Fetch Special Test Suite', () => {
                 expect(modelConstellation2.ModelMaterials).toBeFalsy();
                 expect(modelConstellation2.ModelMaterialChannels).toBeFalsy();
                 expect(modelConstellation2.ModelMaterialUVMaps).toEqual([]);
-                expect(modelConstellation2.ModelMetrics).toBeFalsy();
                 expect(modelConstellation2.ModelObjectModelMaterialXref).toBeFalsy();
             }
         }
@@ -4088,18 +4061,6 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(modelMaterialUVMaps).toBeTruthy();
-    });
-
-    test('DB Fetch Special: ModelMetrics.fetchFromModelObjects', async () => {
-        let modelMetricsList: DBAPI.ModelMetrics[] | null = null;
-        if (modelObject) {
-            modelMetricsList = await DBAPI.ModelMetrics.fetchFromModelObjects([modelObject]);
-            if (modelMetricsList) {
-                expect(modelMetricsList.length).toEqual(1);
-                expect(modelMetricsList).toEqual(expect.arrayContaining([modelMetrics]));
-            }
-        }
-        expect(modelMetricsList).toBeTruthy();
     });
 
     test('DB Fetch Special: ModelObject.fetchFromModel', async () => {
@@ -5190,7 +5151,7 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: Model.update', async () => {
         let bUpdated: boolean = false;
-        if (modelNulls && assetThumbnail && modelMetrics) {
+        if (modelNulls && assetThumbnail) {
             const SOOld: DBAPI.SystemObject | null = await modelNulls.fetchSystemObject();
             expect(SOOld).toBeTruthy();
 
@@ -5319,59 +5280,18 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
-    test('DB Update: ModelMetrics.update', async () => {
-        let bUpdated: boolean = false;
-        if (modelMetrics) {
-            const updated: number = 369;
-            modelMetrics.CountFace = updated;
-            bUpdated = await modelMetrics.update();
-
-            const modelMetricsFetch: DBAPI.ModelMetrics | null = await DBAPI.ModelMetrics.fetch(modelMetrics.idModelMetrics);
-            expect(modelMetricsFetch).toBeTruthy();
-            if (modelMetricsFetch)
-                expect(modelMetricsFetch.CountFace).toBe(updated);
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
     test('DB Update: ModelObject.update', async () => {
         let bUpdated: boolean = false;
-        if (modelObject && modelMetrics2) {
-            modelObject.idModelMetrics = modelMetrics2.idModelMetrics;
-            bUpdated = await modelObject.update();
-
-            const modelObjectFetch: DBAPI.ModelObject | null = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
-            expect(modelObjectFetch).toBeTruthy();
-            if (modelObjectFetch)
-                expect(modelObjectFetch.idModelMetrics).toBe(modelMetrics2.idModelMetrics);
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
-    test('DB Update: ModelObject.update disconnect', async () => {
-        let bUpdated: boolean = false;
         if (modelObject) {
-            modelObject.idModelMetrics = null;
+            const updated: number = 369;
+            modelObject.CountFace = updated;
+
             bUpdated = await modelObject.update();
 
             const modelObjectFetch: DBAPI.ModelObject | null = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
             expect(modelObjectFetch).toBeTruthy();
             if (modelObjectFetch)
-                expect(modelObjectFetch.idModelMetrics).toBeNull();
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
-    test('DB Update: ModelObject.update disconnect null', async () => {
-        let bUpdated: boolean = false;
-        if (modelObject) {
-            expect(modelObject.idModelMetrics).toBeNull();
-            bUpdated = await modelObject.update();
-
-            const modelObjectFetch: DBAPI.ModelObject | null = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
-            expect(modelObjectFetch).toBeTruthy();
-            if (modelObjectFetch)
-                expect(modelObjectFetch.idModelMetrics).toBeNull();
+                expect(modelObjectFetch.CountFace).toEqual(updated);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -6150,8 +6070,6 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ModelMaterialUVMap.fetch(0)).toBeNull();
         expect(await DBAPI.ModelMaterialUVMap.fetchFromModel(0)).toBeNull();
         expect(await DBAPI.ModelMaterialUVMap.fetchFromModels([])).toBeNull();
-        expect(await DBAPI.ModelMetrics.fetch(0)).toBeNull();
-        expect(await DBAPI.ModelMetrics.fetchFromModelObjects([])).toBeNull();
         expect(await DBAPI.ModelObject.fetch(0)).toBeNull();
         expect(await DBAPI.ModelObject.fetchFromModel(0)).toBeNull();
         expect(await DBAPI.ModelObjectModelMaterialXref.fetch(0)).toBeNull();
