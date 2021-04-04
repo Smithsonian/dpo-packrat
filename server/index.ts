@@ -33,10 +33,6 @@ app.use(passport.session());
 app.use('/auth', AuthRouter);
 app.use('/graphql', (req, _res, next) => {
     const log: LOG.Logger = LOG.getRequestLogger();
-    // log.info(`GQL ${++requestNumber}: ${req.body.query} ${JSON.stringify(req.body.variables)}`);
-    // log.info(`GQL ${++requestNumber}: ${req.body.query}`);
-    // log.info(`GQL ${++requestNumber}: ${JSON.stringify(req.body.variables)}`);
-    // log.info(`GQL ${++requestNumber}: ${JSON.stringify(req.body)}`);
 
     // extract first line of query string
     // e.g. query = '{\n  getAssetVersionsDetails(input: {idAssetVersions: [101]}) {\n...'
