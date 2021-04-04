@@ -436,8 +436,9 @@ model ModelMaterialUVMap {
   @@index([idModel], name: "ModelUVMapFile_idModel")
 }
 
-model ModelMetrics {
-  idModelMetrics               Int           @id @default(autoincrement())
+model ModelObject {
+  idModelObject                Int                            @id @default(autoincrement())
+  idModel                      Int
   BoundingBoxP1X               Float?
   BoundingBoxP1Y               Float?
   BoundingBoxP1Z               Float?
@@ -458,19 +459,11 @@ model ModelMetrics {
   IsTwoManifoldBounded         Boolean?
   IsWatertight                 Boolean?
   SelfIntersecting             Boolean?
-  ModelObject                  ModelObject[]
-}
 
-model ModelObject {
-  idModelObject                Int                            @id @default(autoincrement())
-  idModel                      Int
-  idModelMetrics               Int?
   Model                        Model                          @relation(fields: [idModel], references: [idModel])
-  ModelMetrics                 ModelMetrics?                  @relation(fields: [idModelMetrics], references: [idModelMetrics])
   ModelObjectModelMaterialXref ModelObjectModelMaterialXref[]
 
   @@index([idModel], name: "ModelObject_idModel")
-  @@index([idModelMetrics], name: "fk_modelobject_modelmetrics1")
 }
 
 model ModelObjectModelMaterialXref {

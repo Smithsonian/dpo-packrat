@@ -1026,9 +1026,10 @@ export type ModelMaterialUvMap = {
   Asset?: Maybe<Asset>;
 };
 
-export type ModelMetrics = {
-  __typename?: 'ModelMetrics';
-  idModelMetrics: Scalars['Int'];
+export type ModelObject = {
+  __typename?: 'ModelObject';
+  idModelObject: Scalars['Int'];
+  idModel: Scalars['Int'];
   BoundingBoxP1X?: Maybe<Scalars['Float']>;
   BoundingBoxP1Y?: Maybe<Scalars['Float']>;
   BoundingBoxP1Z?: Maybe<Scalars['Float']>;
@@ -1049,15 +1050,7 @@ export type ModelMetrics = {
   IsTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
   IsWatertight?: Maybe<Scalars['Boolean']>;
   SelfIntersecting?: Maybe<Scalars['Boolean']>;
-};
-
-export type ModelObject = {
-  __typename?: 'ModelObject';
-  idModelObject: Scalars['Int'];
-  idModel: Scalars['Int'];
-  idModelMetrics?: Maybe<Scalars['Int']>;
   Model?: Maybe<Model>;
-  ModelMetrics?: Maybe<ModelMetrics>;
 };
 
 export type ModelProcessingAction = {
@@ -1112,7 +1105,6 @@ export type ModelConstellation = {
   ModelMaterials?: Maybe<Array<ModelMaterial>>;
   ModelMaterialChannels?: Maybe<Array<ModelMaterialChannel>>;
   ModelMaterialUVMaps?: Maybe<Array<ModelMaterialUvMap>>;
-  ModelMetrics?: Maybe<Array<ModelMetrics>>;
   ModelAssets?: Maybe<Array<ModelAsset>>;
 };
 
@@ -2677,9 +2669,6 @@ export type GetModelConstellationQuery = (
       )>>, ModelMaterialUVMaps?: Maybe<Array<(
         { __typename?: 'ModelMaterialUVMap' }
         & Pick<ModelMaterialUvMap, 'idModelMaterialUVMap'>
-      )>>, ModelMetrics?: Maybe<Array<(
-        { __typename?: 'ModelMetrics' }
-        & Pick<ModelMetrics, 'idModelMetrics'>
       )>>, ModelAssets?: Maybe<Array<(
         { __typename?: 'ModelAsset' }
         & Pick<ModelAsset, 'AssetName' | 'AssetType'>
@@ -4298,9 +4287,6 @@ export const GetModelConstellationDocument = gql`
       }
       ModelMaterialUVMaps {
         idModelMaterialUVMap
-      }
-      ModelMetrics {
-        idModelMetrics
       }
       ModelAssets {
         AssetName

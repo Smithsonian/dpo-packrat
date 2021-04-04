@@ -318,11 +318,12 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
             const JCOutputStr: string = JSON.stringify(JCOutput, (key, value) => {
                 key; return (value instanceof Map) ? [...value] : value;
             });
-            // LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`);
 
             const inspectJSON: string | undefined = MTS?.getTestCase(jobData.testCase)?.inspectJSON;
             expect(inspectJSON).toBeTruthy();
             expect(JCOutputStr).toEqual(inspectJSON);
+            if (JCOutputStr !== inspectJSON)
+                LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`);
             return JCOutputStr === inspectJSON;
         }
 

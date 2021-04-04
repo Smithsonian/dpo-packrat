@@ -57,8 +57,9 @@ type ModelMaterialUVMap {
     Asset: Asset
 }
 
-type ModelMetrics {
-    idModelMetrics: Int!
+type ModelObject {
+    idModelObject: Int!
+    idModel: Int!
     BoundingBoxP1X: Float
     BoundingBoxP1Y: Float
     BoundingBoxP1Z: Float
@@ -79,14 +80,7 @@ type ModelMetrics {
     IsTwoManifoldBounded: Boolean
     IsWatertight: Boolean
     SelfIntersecting: Boolean
-}
-
-type ModelObject {
-    idModelObject: Int!
-    idModel: Int!
-    idModelMetrics: Int
     Model: Model
-    ModelMetrics: ModelMetrics
 }
 
 type ModelProcessingAction {
@@ -136,6 +130,5 @@ type ModelConstellation {
     ModelMaterials: [ModelMaterial!]
     ModelMaterialChannels: [ModelMaterialChannel!]
     ModelMaterialUVMaps: [ModelMaterialUVMap!]
-    ModelMetrics: [ModelMetrics!]
     ModelAssets: [ModelAsset!]
 }
