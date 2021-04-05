@@ -978,6 +978,16 @@ export type Model = {
   idVUnits: Scalars['Int'];
   idVFileType: Scalars['Int'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
+  CountAnimations?: Maybe<Scalars['Int']>;
+  CountCameras?: Maybe<Scalars['Int']>;
+  CountFaces?: Maybe<Scalars['Int']>;
+  CountLights?: Maybe<Scalars['Int']>;
+  CountMaterials?: Maybe<Scalars['Int']>;
+  CountMeshes?: Maybe<Scalars['Int']>;
+  CountVertices?: Maybe<Scalars['Int']>;
+  CountEmbeddedTextures?: Maybe<Scalars['Int']>;
+  CountLinkedTextures?: Maybe<Scalars['Int']>;
+  FileEncoding?: Maybe<Scalars['String']>;
   ModelConstellation?: Maybe<ModelConstellation>;
   VCreationMethod?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
@@ -1020,9 +1030,13 @@ export type ModelMaterialChannel = {
   Scalar2?: Maybe<Scalars['Float']>;
   Scalar3?: Maybe<Scalars['Float']>;
   Scalar4?: Maybe<Scalars['Float']>;
+  AdditionalAttributes?: Maybe<Scalars['String']>;
   ModelMaterial?: Maybe<ModelMaterial>;
   VMaterialType?: Maybe<Vocabulary>;
   ModelMaterialUVMap?: Maybe<ModelMaterialUvMap>;
+  Type?: Maybe<Scalars['String']>;
+  Source?: Maybe<Scalars['String']>;
+  Value?: Maybe<Scalars['String']>;
 };
 
 export type ModelMaterialUvMap = {

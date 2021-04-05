@@ -316,7 +316,12 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
             normalizeOutput(JCOutput);
 
             const JCOutputStr: string = JSON.stringify(JCOutput, (key, value) => {
-                key; return (value instanceof Map) ? [...value] : value;
+                key;
+                if (typeof value === 'bigint')
+                    return value.toString();
+                if (value instanceof Map)
+                    return [...value];
+                return value;
             });
 
             const inspectJSON: string | undefined = MTS?.getTestCase(jobData.testCase)?.inspectJSON;
@@ -335,8 +340,8 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
 }
 
 function normalizeOutput(JCOutput: COOK.JobCookSIPackratInspectOutput): void {
-    if (JCOutput.model)
-        JCOutput.model.DateCreated = normalizedCreationDate;
+    if (JCOutput.modelConstellation && JCOutput.modelConstellation.Model)
+        JCOutput.modelConstellation.Model.DateCreated = normalizedCreationDate;
 }
 
 // #endregion

@@ -656,6 +656,16 @@ type Model {
   idVUnits: Int!
   idVFileType: Int!
   idAssetThumbnail: Int
+  CountAnimations: Int
+  CountCameras: Int
+  CountFaces: Int
+  CountLights: Int
+  CountMaterials: Int
+  CountMeshes: Int
+  CountVertices: Int
+  CountEmbeddedTextures: Int
+  CountLinkedTextures: Int
+  FileEncoding: String
   ModelConstellation: ModelConstellation
   VCreationMethod: Vocabulary
   VModality: Vocabulary
@@ -695,9 +705,13 @@ type ModelMaterialChannel {
   Scalar2: Float
   Scalar3: Float
   Scalar4: Float
+  AdditionalAttributes: String
   ModelMaterial: ModelMaterial
   VMaterialType: Vocabulary
   ModelMaterialUVMap: ModelMaterialUVMap
+  Type: String
+  Source: String
+  Value: String
 }
 
 type ModelMaterialUVMap {
