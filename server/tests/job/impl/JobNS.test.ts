@@ -340,10 +340,15 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
 }
 
 function normalizeOutput(JCOutput: COOK.JobCookSIPackratInspectOutput): void {
-    if (JCOutput.modelConstellation && JCOutput.modelConstellation.Model)
-        JCOutput.modelConstellation.Model.DateCreated = normalizedCreationDate;
+    if (JCOutput.modelConstellation) {
+        if (JCOutput.modelConstellation.Model)
+            JCOutput.modelConstellation.Model.DateCreated = normalizedCreationDate;
+        if (JCOutput.modelConstellation.ModelAssets) {
+            for (const modelAsset of JCOutput.modelConstellation.ModelAssets)
+                modelAsset.AssetVersion.DateCreated = normalizedCreationDate;
+        }
+    }
 }
-
 // #endregion
 
 // #region Workflow Utils
