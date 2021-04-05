@@ -41,6 +41,7 @@ type RepositoryStore = {
     updateRepositoryFilter: (filter: RepositoryFilter) => void;
     setCookieToState: () => void;
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: string) => void;
+    getChildrenForIngestion: (idRoot: number) => void;
 };
 
 export const treeRootKey: string = 'root';
@@ -83,7 +84,6 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         const { getFilterState } = get();
         const filter = getFilterState();
         const { data, error } = await getObjectChildrenForRoot(filter);
-
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;
@@ -253,16 +253,31 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};max-age=630700000`;
     },
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: string): void => {
-        const { resetKeywordSearch, resetRepositoryFilter, getChildren /*, initializeTree */ } = get();
+        const { resetKeywordSearch, resetRepositoryFilter /*, initializeTree */, getChildrenForIngestion } = get();
         resetKeywordSearch();
         resetRepositoryFilter(false);
-
+        const { idSystemObject } = parseRepositoryTreeNodeId(idRoot);
+        console.log('idRoot', idRoot, 'idSystemObject', idSystemObject);
         switch (systemObjectType) {
             case eSystemObjectType.eModel:
                 set({ repositoryRootType: [], objectsToDisplay: [eSystemObjectType.eModel] });
                 // initializeTree();
-                getChildren(idRoot);
+                getChildrenForIngestion(idSystemObject);
                 break;
+        }
+    },
+    getChildrenForIngestion: async (idSystemObject: number): Promise<void> => {
+        const { getFilterState } = get();
+        const filter = getFilterState();
+        console.log(filter);
+        const { data, error } = await getObjectChildrenForRoot(filter, idSystemObject);
+        console.log('id', idSystemObject, 'data', data);
+        if (data && !error) {
+            const { getObjectChildren } = data;
+            const { entries } = getObjectChildren;
+            const entry: [string, NavigationResultEntry[]] = [treeRootKey, entries];
+            const updatedTree = new Map([entry]);
+            set({ tree: updatedTree, loading: false });
         }
     }
 }));
