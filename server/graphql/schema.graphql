@@ -669,6 +669,14 @@ type Model {
   SystemObject: SystemObject
 }
 
+type ModelObjectModelMaterialXref {
+  idModelObjectModelMaterialXref: Int!
+  idModelObject: Int!
+  idModelMaterial: Int!
+  ModelObject: ModelObject
+  ModelMaterial: ModelMaterial
+}
+
 type ModelMaterial {
   idModelMaterial: Int!
   Name: String
@@ -776,6 +784,7 @@ type ModelConstellation {
   ModelMaterials: [ModelMaterial!]
   ModelMaterialChannels: [ModelMaterialChannel!]
   ModelMaterialUVMaps: [ModelMaterialUVMap!]
+  ModelObjectModelMaterialXref: [ModelObjectModelMaterialXref!]
   ModelAssets: [ModelAsset!]
 }
 
