@@ -32,11 +32,12 @@ app.use(passport.session());
 
 app.use('/auth', AuthRouter);
 app.use('/graphql', (req, _res, next) => {
-    const log: LOG.Logger = LOG.getRequestLogger();
-
     // extract first line of query string
     // e.g. query = '{\n  getAssetVersionsDetails(input: {idAssetVersions: [101]}) {\n...'
-    const query: string = req.body.query;
+    const query: string | undefined = req.body.query;
+    if (!query)
+        return next();
+    const log: LOG.Logger = LOG.getRequestLogger();
     let start: number = query.indexOf('{\n');
     if (start > -1)
         start += 2; // skip two spaces found after {\n

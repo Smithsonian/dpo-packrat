@@ -120,6 +120,8 @@ type ModelSceneXref {
 }
 
 type ModelAsset {
+    Asset: Asset!
+    AssetVersion: AssetVersion!
     AssetName: String!
     AssetType: String!
 }

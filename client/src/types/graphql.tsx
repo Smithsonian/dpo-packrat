@@ -1094,6 +1094,8 @@ export type ModelSceneXref = {
 
 export type ModelAsset = {
   __typename?: 'ModelAsset';
+  Asset: Asset;
+  AssetVersion: AssetVersion;
   AssetName: Scalars['String'];
   AssetType: Scalars['String'];
 };
