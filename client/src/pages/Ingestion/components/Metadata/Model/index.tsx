@@ -7,12 +7,11 @@ import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow } from '../../../../../components';
-import { StateIdentifier, StateRelatedObject, /*useSubjectStore,*/ useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
+import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { RelatedObjectType } from '../../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
-// import BoundingBoxInput from './BoundingBoxInput';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';
@@ -65,7 +64,7 @@ function Model(props: ModelProps): React.ReactElement {
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
     const [setDefaultIngestionFilters] = useRepositoryStore(state => [state.setDefaultIngestionFilters]);
-    // const [subjects] = useSubjectStore(state => [state.subjects]);
+    const [subjects] = useSubjectStore(state => [state.subjects]);
     const [modalOpen, setModalOpen] = useState(false);
 
     const errors = getFieldErrors(metadata);
@@ -211,7 +210,7 @@ function Model(props: ModelProps): React.ReactElement {
     // };
 
     useEffect(() => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, '134-33-44');
+        setDefaultIngestionFilters(eSystemObjectType.eModel, '11-33-44');
     }, [setDefaultIngestionFilters]);
 
     const openSourceObjectModal = () => {
@@ -234,6 +233,8 @@ function Model(props: ModelProps): React.ReactElement {
     };
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
+
+    console.log(subjects);
 
     return (
         <React.Fragment>

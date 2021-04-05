@@ -42,8 +42,8 @@ function AssetFilesTable({ files }): React.ReactElement {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {files.map(row => (
-                        <TableRow className={classes.tableRow}>
+                    {files.map((row, ind) => (
+                        <TableRow className={classes.tableRow} key={ind}>
                             <TableCell>
                                 <DescriptionIcon />
                             </TableCell>

@@ -8,12 +8,13 @@ import { RepositoryFilter } from '..';
 import { apolloClient } from '../../../graphql';
 import { GetObjectChildrenDocument, GetObjectChildrenQuery } from '../../../types/graphql';
 
-function getObjectChildrenForRoot(filter: RepositoryFilter): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
+function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
     return apolloClient.query({
         query: GetObjectChildrenDocument,
+        fetchPolicy: "network-only",
         variables: {
             input: {
-                idRoot: 0,
+                idRoot: idSystemObject,
                 objectTypes: filter.repositoryRootType,
                 metadataColumns: filter.metadataToDisplay,
                 objectsToDisplay: filter.objectsToDisplay,
@@ -34,6 +35,7 @@ function getObjectChildrenForRoot(filter: RepositoryFilter): Promise<ApolloQuery
 function getObjectChildren(idRoot: number, filter: RepositoryFilter): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
     return apolloClient.query({
         query: GetObjectChildrenDocument,
+        fetchPolicy: "network-only",
         variables: {
             input: {
                 idRoot,
