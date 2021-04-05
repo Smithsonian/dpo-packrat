@@ -186,7 +186,7 @@ export class IndexSolr {
     private async extractCommonFields(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<void> {
         const OGDEH: DBAPI.ObjectGraphDataEntryHierarchy = objectGraphDataEntry.extractHierarchy();
 
-        doc.idSystemObject = OGDEH.idSystemObject;
+        doc.id = OGDEH.idSystemObject;
         doc.CommonRetired = OGDEH.retired;
         doc.CommonObjectType = DBAPI.SystemObjectTypeToName(OGDEH.eObjectType);
         doc.CommonOTNumber = OGDEH.eObjectType;
