@@ -31,6 +31,7 @@
     "build:prod": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
     "clean": "rm -rf node_modules/ build/",
     "generate": "graphql-codegen --config ./graphql/codegen.yml && npx prisma db pull --schema=./db/prisma/schema.prisma && npx prisma generate --schema=./db/prisma/schema.prisma",
+    "generate:graphql": "npx graphql-codegen --config ./graphql/codegen.yml",
     "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
     "postinstall": "cd .. && yarn generate:server:prisma && cd server",
     "test": "jest --passWithNoTests --detectOpenHandles --forceExit --config tests/jest.config.js",
