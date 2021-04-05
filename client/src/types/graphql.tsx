@@ -991,6 +991,15 @@ export type Model = {
   SystemObject?: Maybe<SystemObject>;
 };
 
+export type ModelObjectModelMaterialXref = {
+  __typename?: 'ModelObjectModelMaterialXref';
+  idModelObjectModelMaterialXref: Scalars['Int'];
+  idModelObject: Scalars['Int'];
+  idModelMaterial: Scalars['Int'];
+  ModelObject?: Maybe<ModelObject>;
+  ModelMaterial?: Maybe<ModelMaterial>;
+};
+
 export type ModelMaterial = {
   __typename?: 'ModelMaterial';
   idModelMaterial: Scalars['Int'];
@@ -1107,6 +1116,7 @@ export type ModelConstellation = {
   ModelMaterials?: Maybe<Array<ModelMaterial>>;
   ModelMaterialChannels?: Maybe<Array<ModelMaterialChannel>>;
   ModelMaterialUVMaps?: Maybe<Array<ModelMaterialUvMap>>;
+  ModelObjectModelMaterialXref?: Maybe<Array<ModelObjectModelMaterialXref>>;
   ModelAssets?: Maybe<Array<ModelAsset>>;
 };
 

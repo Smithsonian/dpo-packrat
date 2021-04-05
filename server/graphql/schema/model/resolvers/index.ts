@@ -3,6 +3,7 @@ import ModelMaterial from './types/ModelMaterial';
 import ModelMaterialChannel from './types/ModelMaterialChannel';
 import ModelMaterialUVMap from './types/ModelMaterialUVMap';
 import ModelObject from './types/ModelObject';
+import ModelObjectModelMaterialXref from './types/ModelObjectModelMaterialXref';
 import ModelProcessingAction from './types/ModelProcessingAction';
 import ModelProcessingActionStep from './types/ModelProcessingActionStep';
 import getModel from './queries/getModel';
@@ -22,6 +23,7 @@ const resolvers = {
     ModelMaterialChannel,
     ModelMaterialUVMap,
     ModelObject,
+    ModelObjectModelMaterialXref,
     ModelProcessingAction,
     ModelProcessingActionStep,
 };
