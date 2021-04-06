@@ -9,7 +9,9 @@ import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as H from '../../../utils/helpers';
 import { maybe, maybeString } from '../../../utils/types';
+
 import { isArray } from 'lodash';
+import * as path from 'path';
 
 export class JobCookSIPackratInspectParameters {
     constructor(sourceMeshFile: string, sourceMaterialFiles: string | undefined = undefined) {
@@ -75,6 +77,17 @@ export class JobCookStatistics {
     }
 }
 
+function stringifyMap(data: any): string {
+    return JSON.stringify(data, (key, value) => {
+        key;
+        if (typeof value === 'bigint')
+            return value.toString();
+        if (value instanceof Map)
+            return [...value];
+        return value;
+    });
+}
+
 export class JobCookSIPackratInspectOutput implements H.IOResults {
     success: boolean = true;
     error: string = '';
@@ -84,6 +97,175 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
     // up in related objects. Use the helper method, persist(), to write this constellation of objects to the
     // database with proper IDs
     modelConstellation: DBAPI.ModelConstellation | null = null;
+
+    /** Persists subobjects found in JobCookSIPackratInspectOutput's ModelConstellation.
+     * @param idModel If idModel > 0, we update that model; otherwise we create one
+     * @param assetMap Map of asset filename -> idAsset; assets referenced but missing in this map will cause an error
+     */
+    async persist(idModel: number, assetMap: Map<string, number>): Promise<H.IOResults> {
+        if (!this.modelConstellation || !this.modelConstellation.Model || !this.modelConstellation.ModelObjects) {
+            const error: string = 'Invalid JobCookSIPackratInspectOutput';
+            LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+            return { success: false, error };
+        }
+
+        const modelSource: DBAPI.Model = this.modelConstellation.Model;
+        const modelObjectIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
+        const modelMaterialIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
+        const modelMaterialUVMapIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
+        const assetIDMap: Map<number, number> = new Map<number, number>(); // map of fake id -> real id
+
+        // map and validate assets:
+        if (this.modelConstellation.ModelAssets) {
+            for (const modelAsset of this.modelConstellation.ModelAssets) {
+                let mappedId: number | undefined = assetMap.get(modelAsset.Asset.FileName);
+                if (!mappedId) { // try again, with just filename
+                    LOG.logger.info(`Missing ${modelAsset.Asset.FileName}; trying again with ${path.basename(modelAsset.Asset.FileName)}`);
+                    mappedId = assetMap.get(path.basename(modelAsset.Asset.FileName));
+                }
+                if (!mappedId) {
+                    const error: string = `Missing ${modelAsset.Asset.FileName} from assetMap ${stringifyMap(assetMap)}`;
+                    LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                    return { success: false, error };
+                }
+                assetIDMap.set(modelAsset.Asset.idAsset, mappedId);
+            }
+        }
+
+        // Persist model.  If we're given a model id, retrieve that model, populate metrics, and persist it; otherwise create one
+        if (idModel) {
+            const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
+            if (!model) {
+                const error: string = `Failed to fetch model ${idModel}`;
+                LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                return { success: false, error };
+            }
+
+            if (modelSource.CountAnimations)
+                model.CountAnimations = modelSource.CountAnimations;
+            if (modelSource.CountCameras)
+                model.CountCameras = modelSource.CountCameras;
+            if (modelSource.CountFaces)
+                model.CountFaces = modelSource.CountFaces;
+            if (modelSource.CountLights)
+                model.CountLights = modelSource.CountLights;
+            if (modelSource.CountMaterials)
+                model.CountMaterials = modelSource.CountMaterials;
+            if (modelSource.CountMeshes)
+                model.CountMeshes = modelSource.CountMeshes;
+            if (modelSource.CountVertices)
+                model.CountVertices = modelSource.CountVertices;
+            if (modelSource.CountEmbeddedTextures)
+                model.CountEmbeddedTextures = modelSource.CountEmbeddedTextures;
+            if (modelSource.CountLinkedTextures)
+                model.CountLinkedTextures = modelSource.CountLinkedTextures;
+            if (modelSource.FileEncoding)
+                model.FileEncoding = modelSource.FileEncoding;
+
+            if (!await model.update())
+                return { success: false, error: 'Model.update() failed' };
+            this.modelConstellation.Model = model;
+        } else {
+            this.modelConstellation.Model.idModel = 0;  // reset to ensure auto-increment kicks in
+            if (!await this.modelConstellation.Model.create())
+                return { success: false, error: 'Model.create() failed' };
+        }
+
+        // Persist ModelObjects
+        for (const modelObject of this.modelConstellation.ModelObjects) {
+            const fakeId: number = modelObject.idModelObject;
+            modelObject.idModelObject = 0;
+            modelObject.idModel = this.modelConstellation.Model.idModel;
+            if (!await modelObject.create())
+                return { success: false, error: 'ModelObject.create() failed' };
+            modelObjectIDMap.set(fakeId, modelObject.idModelObject);
+        }
+
+        // Persist ModelMaterials
+        if (this.modelConstellation.ModelMaterials) {
+            for (const modelMaterial of this.modelConstellation.ModelMaterials) {
+                const fakeId: number = modelMaterial.idModelMaterial;
+                modelMaterial.idModelMaterial = 0;
+                if (!await modelMaterial.create())
+                    return { success: false, error: 'ModelMaterial.create() failed' };
+                modelMaterialIDMap.set(fakeId, modelMaterial.idModelMaterial);
+            }
+        }
+
+        // Persist ModelMaterialUVMaps
+        if (this.modelConstellation.ModelMaterialUVMaps) {
+            for (const modelMaterialUVMap of this.modelConstellation.ModelMaterialUVMaps) {
+                const mappedAssetId: number | undefined = assetIDMap.get(modelMaterialUVMap.idAsset);
+                if (!mappedAssetId) {
+                    const error: string = `Missing ${modelMaterialUVMap.idAsset} from asset ID Map`;
+                    LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                    return { success: false, error };
+                }
+
+                const fakeId: number = modelMaterialUVMap.idModelMaterialUVMap;
+                modelMaterialUVMap.idModelMaterialUVMap = 0;
+                modelMaterialUVMap.idModel = this.modelConstellation.Model.idModel;
+                modelMaterialUVMap.idAsset = mappedAssetId;
+                if (!await modelMaterialUVMap.create())
+                    return { success: false, error: 'ModelMaterialUVMap.create() failed' };
+                modelMaterialUVMapIDMap.set(fakeId, modelMaterialUVMap.idModelMaterialUVMap);
+            }
+        }
+
+        // Persist ModelMaterialChannels
+        if (this.modelConstellation.ModelMaterialChannels) {
+            for (const modelMaterialChannel of this.modelConstellation.ModelMaterialChannels) {
+                const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelMaterialChannel.idModelMaterial);
+                if (!mappedModelMaterialId) {
+                    const error: string = `Missing ${modelMaterialChannel.idModelMaterial} from model material ID map`;
+                    LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                    return { success: false, error };
+                }
+
+                let mappedModelMaterialUVMapId: number | null | undefined = null;
+                if (modelMaterialChannel.idModelMaterialUVMap) {
+                    mappedModelMaterialUVMapId = modelMaterialUVMapIDMap.get(modelMaterialChannel.idModelMaterialUVMap);
+                    if (!mappedModelMaterialUVMapId) {
+                        const error: string = `Missing ${modelMaterialChannel.idModelMaterialUVMap} from model material UV ID map`;
+                        LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                        return { success: false, error };
+                    }
+                }
+
+                modelMaterialChannel.idModelMaterialChannel = 0;
+                modelMaterialChannel.idModelMaterial = mappedModelMaterialId;
+                modelMaterialChannel.idModelMaterialUVMap = mappedModelMaterialUVMapId;
+                if (!await modelMaterialChannel.create())
+                    return { success: false, error: 'ModelMaterialChannel.create() failed' };
+            }
+        }
+
+        // Persist ModelObjectModelMaterialXrefs
+        if (this.modelConstellation.ModelObjectModelMaterialXref) {
+            for (const modelObjectModelMaterialXref of this.modelConstellation.ModelObjectModelMaterialXref) {
+                const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelObjectModelMaterialXref.idModelMaterial);
+                if (!mappedModelMaterialId) {
+                    const error: string = `Missing ${modelObjectModelMaterialXref.idModelMaterial} from model material ID map`;
+                    LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                    return { success: false, error };
+                }
+
+                const mappedModelObjectId: number | undefined = modelObjectIDMap.get(modelObjectModelMaterialXref.idModelObject);
+                if (!mappedModelObjectId) {
+                    const error: string = `Missing ${modelObjectModelMaterialXref.idModelObject} from model object ID map`;
+                    LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                    return { success: false, error };
+                }
+
+                modelObjectModelMaterialXref.idModelObjectModelMaterialXref = 0;
+                modelObjectModelMaterialXref.idModelMaterial = mappedModelMaterialId;
+                modelObjectModelMaterialXref.idModelObject = mappedModelObjectId;
+                if (!await modelObjectModelMaterialXref.create())
+                    return { success: false, error: 'ModelObjectModelMaterialXref.create() failed' };
+            }
+        }
+        return { success: true, error: '' };
+    }
 
     static async extract(output: any): Promise<JobCookSIPackratInspectOutput> {
         const JCOutput: JobCookSIPackratInspectOutput = new JobCookSIPackratInspectOutput();

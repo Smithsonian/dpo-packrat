@@ -22,26 +22,43 @@ class ModelTestFile {
     }
 }
 
-class ModelTestCase {
+export class ModelTestCase {
     testCase: string;
     model: DBAPI.Model;
     modelName: string;
     inspectJSON: string;
-    assetVersionIDs: number[];
+    assetVersions: DBAPI.AssetVersion[];
     private systemObjectIDs: number[] | null = null;
 
-    constructor(testCase: string, model: DBAPI.Model, modelName: string, assetVersionID: number, inspectJSON: string) {
+    constructor(testCase: string, model: DBAPI.Model, modelName: string, assetVersion: DBAPI.AssetVersion, inspectJSON: string) {
         this.testCase = testCase;
         this.model = model;
         this.modelName = modelName;
-        this.assetVersionIDs = [assetVersionID];
+        this.assetVersions = [assetVersion];
         this.inspectJSON = inspectJSON;
+    }
+
+    assetVersionIDs(): number[] {
+        const retValue: number[] = [];
+        for (const assetVersion of this.assetVersions)
+            retValue.push(assetVersion.idAssetVersion);
+        return retValue;
+    }
+
+    assetFileNameMap(): Map<string, number> {
+        const retValue: Map<string, number> = new Map<string, number>();
+        for (const assetVersion of this.assetVersions) {
+            LOG.logger.info(`ModelTestCase.assetFileNameMap [${assetVersion.FileName}, ${assetVersion.idAssetVersion}]`);
+            retValue.set(assetVersion.FileName, assetVersion.idAsset);
+        }
+        return retValue;
     }
 
     async computeSystemObjectIDs(): Promise<number[]> {
         if (!this.systemObjectIDs) {
             this.systemObjectIDs = [];
-            for (const idAssetVersion of this.assetVersionIDs) {
+            for (const assetVersion of this.assetVersions) {
+                const idAssetVersion = assetVersion.idAssetVersion;
                 const SO: DBAPI.SystemObject | null = await DBAPI.SystemObjectAssetVersion.fetchFromAssetVersionID(idAssetVersion);
                 if (SO)
                     this.systemObjectIDs.push(SO.idSystemObject);
@@ -217,10 +234,10 @@ export class ModelTestSetup {
                 let MTC: ModelTestCase | undefined = this.testCaseMap.get(MTD.testCase);
                 if (!MTC) {
                     const inspectJSON: string | undefined = modelTestCaseInspectJSONMap.get(MTD.testCase) || '';
-                    MTC = new ModelTestCase(MTD.testCase, model, MTD.fileName, assetVersion.idAssetVersion, inspectJSON);
+                    MTC = new ModelTestCase(MTD.testCase, model, MTD.fileName, assetVersion, inspectJSON);
                     this.testCaseMap.set(MTD.testCase, MTC);
                 } else
-                    MTC.assetVersionIDs.push(assetVersion.idAssetVersion);
+                    MTC.assetVersions.push(assetVersion);
             }
 
             switch (MTD.testCase) {
