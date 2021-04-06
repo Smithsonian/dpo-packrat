@@ -436,4 +436,14 @@ export class Helpers {
             return null;
         return value ? true : false;
     }
+
+    /** Stringifies Maps and BigInts */
+    static stringifyCallbackCustom(key: any, value: any): any {
+        key;
+        if (typeof value === 'bigint')
+            return value.toString();
+        if (value instanceof Map)
+            return [...value];
+        return value;
+    }
 }

@@ -351,6 +351,28 @@ describe('Utils: Helpers', () => {
         expect(H.Helpers.safeBoolean(true)).toBeTruthy();
         expect(H.Helpers.safeBoolean(objVal)).toBeTruthy();
     });
+
+    test('Utils: Helpers.stringifyCallbackCustom', async () => {
+        type testType = {
+            map: Map<number, number>,
+            bigint: BigInt,
+            string: string,
+            number: number,
+            boolean: boolean,
+        };
+
+        const testData: testType = {
+            map: new Map<number, number>(),
+            bigint: BigInt(999999999999999),
+            string: 'string',
+            number: 50,
+            boolean: false
+        };
+
+        const output: string = JSON.stringify(testData, H.Helpers.stringifyCallbackCustom);
+        LOG.logger.info(`output: ${output}`);
+        expect(output).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false}');
+    });
 });
 
 /*
