@@ -314,14 +314,7 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
 
             normalizeOutput(JCOutput);
 
-            const JCOutputStr: string = JSON.stringify(JCOutput, (key, value) => {
-                key;
-                if (typeof value === 'bigint')
-                    return value.toString();
-                if (value instanceof Map)
-                    return [...value];
-                return value;
-            });
+            const JCOutputStr: string = JSON.stringify(JCOutput, H.Helpers.stringifyCallbackCustom);
 
             const MTC: TESTMODEL.ModelTestCase | undefined = MTS.getTestCase(jobData.testCase);
             expect(MTC).toBeTruthy();
@@ -337,14 +330,16 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
                 LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`);
 
             // Test persistence of data
-            const res: H.IOResults = await JCOutput.persist(MTC.model.idModel, MTC.assetFileNameMap());
+            const assetFileNameMap: Map<string, number> = MTC.assetFileNameMap();
+            const res: H.IOResults = await JCOutput.persist(MTC.model.idModel, assetFileNameMap);
             if (!res.success)
-                LOG.logger.error(res.error);
+                LOG.logger.error(`JobNS Persisting ${MTC.testCase} FAILED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyCallbackCustom)}: ${res.error}`);
             else {
                 // expect(res.success).toBeTruthy();
                 expect(JCOutput.modelConstellation).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model?.idModel).toBeTruthy();
+                LOG.logger.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyCallbackCustom)}`);
             }
             return JCOutputStr === inspectJSON;
         }

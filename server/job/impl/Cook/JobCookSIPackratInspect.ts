@@ -77,17 +77,6 @@ export class JobCookStatistics {
     }
 }
 
-function stringifyMap(data: any): string {
-    return JSON.stringify(data, (key, value) => {
-        key;
-        if (typeof value === 'bigint')
-            return value.toString();
-        if (value instanceof Map)
-            return [...value];
-        return value;
-    });
-}
-
 export class JobCookSIPackratInspectOutput implements H.IOResults {
     success: boolean = true;
     error: string = '';
@@ -119,14 +108,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         if (this.modelConstellation.ModelAssets) {
             for (const modelAsset of this.modelConstellation.ModelAssets) {
                 let mappedId: number | undefined = assetMap.get(modelAsset.Asset.FileName);
-                if (!mappedId) { // try again, with just filename
-                    LOG.logger.info(`Missing ${modelAsset.Asset.FileName}; trying again with ${path.basename(modelAsset.Asset.FileName)}`);
+                if (!mappedId) // try again, with just filename
                     mappedId = assetMap.get(path.basename(modelAsset.Asset.FileName));
-                }
                 if (!mappedId) {
-                    const error: string = `Missing ${modelAsset.Asset.FileName} from assetMap ${stringifyMap(assetMap)}`;
+                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.stringifyCallbackCustom)}`;
                     LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
-                    return { success: false, error };
+                    // return { success: false, error };
+                    continue;
                 }
                 assetIDMap.set(modelAsset.Asset.idAsset, mappedId);
             }
@@ -199,7 +187,8 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (!mappedAssetId) {
                     const error: string = `Missing ${modelMaterialUVMap.idAsset} from asset ID Map`;
                     LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
-                    return { success: false, error };
+                    // return { success: false, error };
+                    continue;
                 }
 
                 const fakeId: number = modelMaterialUVMap.idModelMaterialUVMap;
@@ -219,7 +208,8 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (!mappedModelMaterialId) {
                     const error: string = `Missing ${modelMaterialChannel.idModelMaterial} from model material ID map`;
                     LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
-                    return { success: false, error };
+                    // return { success: false, error };
+                    continue;
                 }
 
                 let mappedModelMaterialUVMapId: number | null | undefined = null;
@@ -228,7 +218,8 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     if (!mappedModelMaterialUVMapId) {
                         const error: string = `Missing ${modelMaterialChannel.idModelMaterialUVMap} from model material UV ID map`;
                         LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
-                        return { success: false, error };
+                        // return { success: false, error };
+                        continue;
                     }
                 }
 
@@ -247,14 +238,16 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (!mappedModelMaterialId) {
                     const error: string = `Missing ${modelObjectModelMaterialXref.idModelMaterial} from model material ID map`;
                     LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
-                    return { success: false, error };
+                    // return { success: false, error };
+                    continue;
                 }
 
                 const mappedModelObjectId: number | undefined = modelObjectIDMap.get(modelObjectModelMaterialXref.idModelObject);
                 if (!mappedModelObjectId) {
                     const error: string = `Missing ${modelObjectModelMaterialXref.idModelObject} from model object ID map`;
                     LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
-                    return { success: false, error };
+                    // return { success: false, error };
+                    continue;
                 }
 
                 modelObjectModelMaterialXref.idModelObjectModelMaterialXref = 0;
