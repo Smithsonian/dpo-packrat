@@ -2,7 +2,7 @@
 # Input validation
 if [[ $1 != "server" &&
       $1 != "client" &&
-      $1 != "solr" ]]
+      $1 != "solr" &&
       $1 != "db" ]]
 then
   echo "Usage:   packsh.sh (server|client|solr|db) (dev|prod)"
