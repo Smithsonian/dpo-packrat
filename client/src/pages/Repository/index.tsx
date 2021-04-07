@@ -145,7 +145,7 @@ function TreeViewPage(): React.ReactElement {
 
     useEffect(() => {
         updateRepositoryFilter(initialFilterState);
-    }, [updateRepositoryFilter]);
+    }, [updateRepositoryFilter, location.search]);
 
     useEffect(() => {
         const newRepositoryFilterState: any = {
