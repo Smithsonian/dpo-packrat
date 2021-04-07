@@ -19,6 +19,7 @@ type Query {
   getLicense(input: GetLicenseInput!): GetLicenseResult!
   getModel(input: GetModelInput!): GetModelResult!
   getModelConstellation(input: GetModelConstellationInput!): GetModelConstellationResult!
+  getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput!): GetModelConstellationForAssetVersionResult!
   getObjectChildren(input: GetObjectChildrenInput!): GetObjectChildrenResult!
   getObjectsForItem(input: GetObjectsForItemInput!): GetObjectsForItemResult!
   getProject(input: GetProjectInput!): GetProjectResult!
@@ -290,6 +291,15 @@ type AssetVersionContent {
 
 type GetContentsForAssetVersionsResult {
   AssetVersionContent: [AssetVersionContent!]!
+}
+
+input GetModelConstellationForAssetVersionInput {
+  idAssetVersion: Int!
+}
+
+type GetModelConstellationForAssetVersionResult {
+  idAssetVersion: Int!
+  ModelConstellation: ModelConstellation
 }
 
 scalar BigInt

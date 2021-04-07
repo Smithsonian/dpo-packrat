@@ -36,6 +36,7 @@ export type Query = {
   getLicense: GetLicenseResult;
   getModel: GetModelResult;
   getModelConstellation: GetModelConstellationResult;
+  getModelConstellationForAssetVersion: GetModelConstellationForAssetVersionResult;
   getObjectChildren: GetObjectChildrenResult;
   getObjectsForItem: GetObjectsForItemResult;
   getProject: GetProjectResult;
@@ -145,6 +146,11 @@ export type QueryGetModelArgs = {
 
 export type QueryGetModelConstellationArgs = {
   input: GetModelConstellationInput;
+};
+
+
+export type QueryGetModelConstellationForAssetVersionArgs = {
+  input: GetModelConstellationForAssetVersionInput;
 };
 
 
@@ -590,6 +596,16 @@ export type AssetVersionContent = {
 export type GetContentsForAssetVersionsResult = {
   __typename?: 'GetContentsForAssetVersionsResult';
   AssetVersionContent: Array<AssetVersionContent>;
+};
+
+export type GetModelConstellationForAssetVersionInput = {
+  idAssetVersion: Scalars['Int'];
+};
+
+export type GetModelConstellationForAssetVersionResult = {
+  __typename?: 'GetModelConstellationForAssetVersionResult';
+  idAssetVersion: Scalars['Int'];
+  ModelConstellation?: Maybe<ModelConstellation>;
 };
 
 

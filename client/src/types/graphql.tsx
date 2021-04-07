@@ -39,6 +39,7 @@ export type Query = {
   getLicense: GetLicenseResult;
   getModel: GetModelResult;
   getModelConstellation: GetModelConstellationResult;
+  getModelConstellationForAssetVersion: GetModelConstellationForAssetVersionResult;
   getObjectChildren: GetObjectChildrenResult;
   getObjectsForItem: GetObjectsForItemResult;
   getProject: GetProjectResult;
@@ -148,6 +149,11 @@ export type QueryGetModelArgs = {
 
 export type QueryGetModelConstellationArgs = {
   input: GetModelConstellationInput;
+};
+
+
+export type QueryGetModelConstellationForAssetVersionArgs = {
+  input: GetModelConstellationForAssetVersionInput;
 };
 
 
@@ -593,6 +599,16 @@ export type AssetVersionContent = {
 export type GetContentsForAssetVersionsResult = {
   __typename?: 'GetContentsForAssetVersionsResult';
   AssetVersionContent: Array<AssetVersionContent>;
+};
+
+export type GetModelConstellationForAssetVersionInput = {
+  idAssetVersion: Scalars['Int'];
+};
+
+export type GetModelConstellationForAssetVersionResult = {
+  __typename?: 'GetModelConstellationForAssetVersionResult';
+  idAssetVersion: Scalars['Int'];
+  ModelConstellation?: Maybe<ModelConstellation>;
 };
 
 
@@ -2570,6 +2586,26 @@ export type GetContentsForAssetVersionsQuery = (
   ) }
 );
 
+export type GetModelConstellationForAssetVersionQueryVariables = Exact<{
+  input: GetModelConstellationForAssetVersionInput;
+}>;
+
+
+export type GetModelConstellationForAssetVersionQuery = (
+  { __typename?: 'Query' }
+  & { getModelConstellationForAssetVersion: (
+    { __typename?: 'GetModelConstellationForAssetVersionResult' }
+    & Pick<GetModelConstellationForAssetVersionResult, 'idAssetVersion'>
+    & { ModelConstellation?: Maybe<(
+      { __typename?: 'ModelConstellation' }
+      & { Model: (
+        { __typename?: 'Model' }
+        & Pick<Model, 'idModel'>
+      ) }
+    )> }
+  ) }
+);
+
 export type GetUploadedAssetVersionQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -2682,22 +2718,49 @@ export type GetModelConstellationQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel'>
+        & Pick<Model, 'idModel' | 'Name' | 'DateCreated' | 'Master' | 'Authoritative' | 'idAssetThumbnail' | 'CountAnimations' | 'CountCameras' | 'CountFaces' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountVertices' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding'>
+        & { VCreationMethod?: Maybe<(
+          { __typename?: 'Vocabulary' }
+          & Pick<Vocabulary, 'Term'>
+        )>, VModality?: Maybe<(
+          { __typename?: 'Vocabulary' }
+          & Pick<Vocabulary, 'Term'>
+        )>, VPurpose?: Maybe<(
+          { __typename?: 'Vocabulary' }
+          & Pick<Vocabulary, 'Term'>
+        )>, VUnits?: Maybe<(
+          { __typename?: 'Vocabulary' }
+          & Pick<Vocabulary, 'Term'>
+        )>, VFileType?: Maybe<(
+          { __typename?: 'Vocabulary' }
+          & Pick<Vocabulary, 'Term'>
+        )> }
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
-        & Pick<ModelObject, 'idModelObject'>
+        & Pick<ModelObject, 'idModelObject' | 'idModel' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountPoint' | 'CountFace' | 'CountColorChannel' | 'CountTextureCoorinateChannel' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
       )>>, ModelMaterials?: Maybe<Array<(
         { __typename?: 'ModelMaterial' }
-        & Pick<ModelMaterial, 'idModelMaterial'>
+        & Pick<ModelMaterial, 'idModelMaterial' | 'Name'>
       )>>, ModelMaterialChannels?: Maybe<Array<(
         { __typename?: 'ModelMaterialChannel' }
-        & Pick<ModelMaterialChannel, 'idModelMaterialChannel'>
+        & Pick<ModelMaterialChannel, 'idModelMaterialChannel' | 'idModelMaterial' | 'Type' | 'Source' | 'Value' | 'MaterialTypeOther' | 'idModelMaterialUVMap' | 'ChannelPosition' | 'ChannelWidth' | 'Scalar1' | 'Scalar2' | 'Scalar3' | 'Scalar4' | 'AdditionalAttributes'>
+        & { VMaterialType?: Maybe<(
+          { __typename?: 'Vocabulary' }
+          & Pick<Vocabulary, 'Term'>
+        )> }
       )>>, ModelMaterialUVMaps?: Maybe<Array<(
         { __typename?: 'ModelMaterialUVMap' }
-        & Pick<ModelMaterialUvMap, 'idModelMaterialUVMap'>
+        & Pick<ModelMaterialUvMap, 'idModelMaterialUVMap' | 'idModel' | 'idAsset' | 'UVMapEdgeLength'>
+      )>>, ModelObjectModelMaterialXref?: Maybe<Array<(
+        { __typename?: 'ModelObjectModelMaterialXref' }
+        & Pick<ModelObjectModelMaterialXref, 'idModelObject' | 'idModelMaterial'>
       )>>, ModelAssets?: Maybe<Array<(
         { __typename?: 'ModelAsset' }
         & Pick<ModelAsset, 'AssetName' | 'AssetType'>
+        & { AssetVersion: (
+          { __typename?: 'AssetVersion' }
+          & Pick<AssetVersion, 'idAsset' | 'idAssetVersion' | 'FileName'>
+        ) }
       )>> }
     )> }
   ) }
@@ -4066,6 +4129,46 @@ export function useGetContentsForAssetVersionsLazyQuery(baseOptions?: Apollo.Laz
 export type GetContentsForAssetVersionsQueryHookResult = ReturnType<typeof useGetContentsForAssetVersionsQuery>;
 export type GetContentsForAssetVersionsLazyQueryHookResult = ReturnType<typeof useGetContentsForAssetVersionsLazyQuery>;
 export type GetContentsForAssetVersionsQueryResult = Apollo.QueryResult<GetContentsForAssetVersionsQuery, GetContentsForAssetVersionsQueryVariables>;
+export const GetModelConstellationForAssetVersionDocument = gql`
+    query getModelConstellationForAssetVersion($input: GetModelConstellationForAssetVersionInput!) {
+  getModelConstellationForAssetVersion(input: $input) {
+    idAssetVersion
+    ModelConstellation {
+      Model {
+        idModel
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetModelConstellationForAssetVersionQuery__
+ *
+ * To run a query within a React component, call `useGetModelConstellationForAssetVersionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetModelConstellationForAssetVersionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetModelConstellationForAssetVersionQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetModelConstellationForAssetVersionQuery(baseOptions: Apollo.QueryHookOptions<GetModelConstellationForAssetVersionQuery, GetModelConstellationForAssetVersionQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetModelConstellationForAssetVersionQuery, GetModelConstellationForAssetVersionQueryVariables>(GetModelConstellationForAssetVersionDocument, options);
+      }
+export function useGetModelConstellationForAssetVersionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetModelConstellationForAssetVersionQuery, GetModelConstellationForAssetVersionQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetModelConstellationForAssetVersionQuery, GetModelConstellationForAssetVersionQueryVariables>(GetModelConstellationForAssetVersionDocument, options);
+        }
+export type GetModelConstellationForAssetVersionQueryHookResult = ReturnType<typeof useGetModelConstellationForAssetVersionQuery>;
+export type GetModelConstellationForAssetVersionLazyQueryHookResult = ReturnType<typeof useGetModelConstellationForAssetVersionLazyQuery>;
+export type GetModelConstellationForAssetVersionQueryResult = Apollo.QueryResult<GetModelConstellationForAssetVersionQuery, GetModelConstellationForAssetVersionQueryVariables>;
 export const GetUploadedAssetVersionDocument = gql`
     query getUploadedAssetVersion {
   getUploadedAssetVersion {
@@ -4301,22 +4404,102 @@ export const GetModelConstellationDocument = gql`
     ModelConstellation {
       Model {
         idModel
+        Name
+        DateCreated
+        Master
+        Authoritative
+        VCreationMethod {
+          Term
+        }
+        VModality {
+          Term
+        }
+        VPurpose {
+          Term
+        }
+        VUnits {
+          Term
+        }
+        VFileType {
+          Term
+        }
+        idAssetThumbnail
+        CountAnimations
+        CountCameras
+        CountFaces
+        CountLights
+        CountMaterials
+        CountMeshes
+        CountVertices
+        CountEmbeddedTextures
+        CountLinkedTextures
+        FileEncoding
       }
       ModelObjects {
         idModelObject
+        idModel
+        BoundingBoxP1X
+        BoundingBoxP1Y
+        BoundingBoxP1Z
+        BoundingBoxP2X
+        BoundingBoxP2Y
+        BoundingBoxP2Z
+        CountPoint
+        CountFace
+        CountColorChannel
+        CountTextureCoorinateChannel
+        HasBones
+        HasFaceNormals
+        HasTangents
+        HasTextureCoordinates
+        HasVertexNormals
+        HasVertexColor
+        IsTwoManifoldUnbounded
+        IsTwoManifoldBounded
+        IsWatertight
+        SelfIntersecting
       }
       ModelMaterials {
         idModelMaterial
+        Name
       }
       ModelMaterialChannels {
         idModelMaterialChannel
+        idModelMaterial
+        Type
+        Source
+        Value
+        VMaterialType {
+          Term
+        }
+        MaterialTypeOther
+        idModelMaterialUVMap
+        ChannelPosition
+        ChannelWidth
+        Scalar1
+        Scalar2
+        Scalar3
+        Scalar4
+        AdditionalAttributes
       }
       ModelMaterialUVMaps {
         idModelMaterialUVMap
+        idModel
+        idAsset
+        UVMapEdgeLength
+      }
+      ModelObjectModelMaterialXref {
+        idModelObject
+        idModelMaterial
       }
       ModelAssets {
         AssetName
         AssetType
+        AssetVersion {
+          idAsset
+          idAssetVersion
+          FileName
+        }
       }
     }
   }

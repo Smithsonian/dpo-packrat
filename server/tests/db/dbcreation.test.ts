@@ -1,4 +1,5 @@
 import * as DBAPI from '../../db';
+import * as CACHE from '../../cache';
 import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
 import * as UTIL from './api';
@@ -815,6 +816,19 @@ describe('DB Creation Test Suite', () => {
                 idJobRun: 0
             });
         expect(jobRun).toBeTruthy();
+
+        expect(DBAPI.JobRun.constructFromPrisma({
+            idJob: 0,
+            Status: 0,
+            Result: false,
+            DateStart: UTIL.nowCleansed(),
+            DateEnd: null,
+            Configuration: null,
+            Parameters: null,
+            Output: null,
+            Error: null,
+            idJobRun: 0
+        })).toBeTruthy();
     });
 
     test('DB Creation: Metadata', async () => {
@@ -1042,6 +1056,14 @@ describe('DB Creation Test Suite', () => {
                 idModelMaterialChannel: 0
             });
         expect(modelMaterialChannelNulls).toBeTruthy();
+    });
+
+    test('DB Creation: ModelAsset', async () => {
+        if (assetThumbnail && assetVersion) {
+            expect(new DBAPI.ModelAsset(assetThumbnail, assetVersion, true, null)).toBeTruthy();
+            expect(new DBAPI.ModelAsset(assetThumbnail, assetVersion, false, ['diffuse', 'emmisive'])).toBeTruthy();
+            expect(new DBAPI.ModelAsset(assetThumbnail, assetVersion, false, null)).toBeTruthy();
+        }
     });
 
     test('DB Creation: ModelProcessingAction', async () => {
@@ -3999,6 +4021,27 @@ describe('DB Fetch Special Test Suite', () => {
         }
     });
 
+    test('DB Fetch Special: JobRun.fetchMatching', async () => {
+        const jobRuns1: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eJobRunStatus.eDone, true, [0]);
+        expect(jobRuns1).toBeTruthy();
+        if (jobRuns1)
+            expect(jobRuns1.length).toBeFalsy();
+        const jobRuns2: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eJobRunStatus.eDone, true, null);
+        expect(jobRuns2).toBeTruthy();
+        if (jobRuns2)
+            expect(jobRuns2.length).toBeFalsy();
+
+
+        // find JobCook results
+        const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        expect(idVJobType).toBeTruthy();
+        if (idVJobType) {
+            // The following will return a row if the JobNS test has run and successfully completed testing of packrat-cook integration.
+            // We cannot rely on this test having been run, so for now, we don't validate the result
+            await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eJobRunStatus.eDone, true, null);
+        }
+    });
+
     test('DB Fetch Special: Model.fetchAll', async () => {
         let modelFetch: DBAPI.Model[] | null = null;
         if (model && modelNulls) {
@@ -4063,6 +4106,22 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(modelConstellation2).toBeTruthy();
+    });
+
+
+    test('DB Fetch Special: ModelAsset', async () => {
+        let modelAsset: DBAPI.ModelAsset | null = null;
+        if (assetVersion)
+            modelAsset = await DBAPI.ModelAsset.fetch(assetVersion);
+        expect(modelAsset).toBeTruthy();
+        if (modelAsset) {
+            expect(modelAsset.Asset).toBeTruthy();
+            if (assetThumbnail)
+                expect(modelAsset.Asset).toMatchObject(assetThumbnail);
+            expect(modelAsset.AssetVersion).toBeTruthy();
+            if (assetVersion)
+                expect(modelAsset.AssetVersion).toMatchObject(assetVersion);
+        }
     });
 
     test('DB Fetch Special: ModelMaterial.fetchFromModelObjects', async () => {
@@ -6138,6 +6197,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Job.fetch(0)).toBeNull();
         expect(await DBAPI.Job.fetchByType(0)).toBeNull();
         expect(await DBAPI.JobRun.fetch(0)).toBeNull();
+        expect(await DBAPI.JobRun.fetchMatching(0, 0, 0, true, null)).toBeNull();
         expect(await DBAPI.License.fetch(0)).toBeNull();
         expect(await DBAPI.LicenseAssignment.fetch(0)).toBeNull();
         expect(await DBAPI.LicenseAssignment.fetchFromLicense(0)).toBeNull();
@@ -6149,6 +6209,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Model.fetch(0)).toBeNull();
         expect(await DBAPI.Model.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.Model.fetchDerivedFromItems([])).toBeNull();
+        expect(await DBAPI.ModelConstellation.fetch(0)).toBeNull();
         expect(await DBAPI.ModelMaterial.fetch(0)).toBeNull();
         expect(await DBAPI.ModelMaterial.fetchFromModelObjects([])).toBeNull();
         expect(await DBAPI.ModelMaterialChannel.fetch(0)).toBeNull();
@@ -6166,7 +6227,6 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObjects([])).toBeNull();
         expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterial(0)).toBeNull();
         expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterials([])).toBeNull();
-        expect(await DBAPI.ModelConstellation.fetch(0)).toBeNull();
         expect(await DBAPI.ModelProcessingAction.fetch(0)).toBeNull();
         expect(await DBAPI.ModelProcessingAction.fetchFromModel(0)).toBeNull();
         expect(await DBAPI.ModelProcessingActionStep.fetch(0)).toBeNull();
