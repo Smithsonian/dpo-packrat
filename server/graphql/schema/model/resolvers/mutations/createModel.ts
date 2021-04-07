@@ -30,7 +30,6 @@ export default async function createModel(_: Parent, args: MutationCreateModelAr
         CountLinkedTextures: CountLinkedTextures || null,
         FileEncoding: FileEncoding || null,
         DateCreated: new Date(),
-        idModelMetrics: 0
     };
 
     const Model = new DBAPI.Model(modelArgs);

@@ -427,7 +427,7 @@ export class IndexSolr {
             LOG.logger.error(`IndexSolr.handleModel failed to compute ModelConstellation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
             return false;
         }
-        const model: DBAPI.Model = modelConstellation.model;
+        const model: DBAPI.Model = modelConstellation.Model;
 
         doc.CommonName = model.Name;
         doc.CommonDateCreated = model.DateCreated;
@@ -460,36 +460,36 @@ export class IndexSolr {
         const modelMaterialChannelValuesMap: Map<string, boolean> = new Map<string, boolean>();
         const modelMaterialChannelAdditionalAttributesMap: Map<string, boolean> = new Map<string, boolean>();
         const modelMaterialUVMapEdgeLengthMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsBoundingBoxP1XMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsBoundingBoxP1YMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsBoundingBoxP1ZMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsBoundingBoxP2XMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsBoundingBoxP2YMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsBoundingBoxP2ZMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsCountPointMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsCountFaceMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsCountColorChannelMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsCountTextureCoorinateChannelMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelMetricsHasBonesMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMetricsHasFaceNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMetricsHasTangentsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMetricsHasTextureCoordinatesMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMetricsHasVertexNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMetricsHasVertexColorMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMetricsIsTwoManifoldUnboundedMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMetricsIsTwoManifoldBoundedMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMetricsIsWatertightMap: Map<boolean, boolean> = new Map<boolean, boolean>();
-        const modelMetricsSelfIntersectingMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelObjectBoundingBoxP1XMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectBoundingBoxP1YMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectBoundingBoxP1ZMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectBoundingBoxP2XMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectBoundingBoxP2YMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectBoundingBoxP2ZMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectCountPointMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectCountFaceMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectCountColorChannelMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectCountTextureCoorinateChannelMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectHasBonesMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelObjectHasFaceNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelObjectHasTangentsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelObjectHasTextureCoordinatesMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelObjectHasVertexNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelObjectHasVertexColorMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelObjectIsTwoManifoldUnboundedMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelObjectIsTwoManifoldBoundedMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelObjectIsWatertightMap: Map<boolean, boolean> = new Map<boolean, boolean>();
+        const modelObjectSelfIntersectingMap: Map<boolean, boolean> = new Map<boolean, boolean>();
 
-        if (modelConstellation.modelMaterials) {
-            for (const modelMaterial of modelConstellation.modelMaterials) {
+        if (modelConstellation.ModelMaterials) {
+            for (const modelMaterial of modelConstellation.ModelMaterials) {
                 if (modelMaterial.Name)
                     modelMaterialNameMap.set(modelMaterial.Name, true);
             }
         }
 
-        if (modelConstellation.modelMaterialChannels) {
-            for (const modelMaterialChannel of modelConstellation.modelMaterialChannels) {
+        if (modelConstellation.ModelMaterialChannels) {
+            for (const modelMaterialChannel of modelConstellation.ModelMaterialChannels) {
                 if (modelMaterialChannel.idVMaterialType) {
                     const materialType = await this.computeVocabulary(modelMaterialChannel.idVMaterialType);
                     if (materialType)
@@ -510,35 +510,35 @@ export class IndexSolr {
             }
         }
 
-        if (modelConstellation.modelMaterialUVMaps) {
-            for (const modelMaterialUVMap of modelConstellation.modelMaterialUVMaps)
+        if (modelConstellation.ModelMaterialUVMaps) {
+            for (const modelMaterialUVMap of modelConstellation.ModelMaterialUVMaps)
                 modelMaterialUVMapEdgeLengthMap.set(modelMaterialUVMap.UVMapEdgeLength, true);
         }
 
-        const modelMetricsList: DBAPI.ModelMetrics[] = [];
-        if (modelConstellation.modelMetrics)
-            modelMetricsList.push(...modelConstellation.modelMetrics);
-        for (const modelMetrics of modelMetricsList) {
-            if (modelMetrics.BoundingBoxP1X) modelMetricsBoundingBoxP1XMap.set(modelMetrics.BoundingBoxP1X, true);
-            if (modelMetrics.BoundingBoxP1Y) modelMetricsBoundingBoxP1YMap.set(modelMetrics.BoundingBoxP1Y, true);
-            if (modelMetrics.BoundingBoxP1Z) modelMetricsBoundingBoxP1ZMap.set(modelMetrics.BoundingBoxP1Z, true);
-            if (modelMetrics.BoundingBoxP2X) modelMetricsBoundingBoxP2XMap.set(modelMetrics.BoundingBoxP2X, true);
-            if (modelMetrics.BoundingBoxP2Y) modelMetricsBoundingBoxP2YMap.set(modelMetrics.BoundingBoxP2Y, true);
-            if (modelMetrics.BoundingBoxP2Z) modelMetricsBoundingBoxP2ZMap.set(modelMetrics.BoundingBoxP2Z, true);
-            if (modelMetrics.CountPoint) modelMetricsCountPointMap.set(modelMetrics.CountPoint, true);
-            if (modelMetrics.CountFace) modelMetricsCountFaceMap.set(modelMetrics.CountFace, true);
-            if (modelMetrics.CountColorChannel) modelMetricsCountColorChannelMap.set(modelMetrics.CountColorChannel, true);
-            if (modelMetrics.CountTextureCoorinateChannel) modelMetricsCountTextureCoorinateChannelMap.set(modelMetrics.CountTextureCoorinateChannel, true);
-            if (modelMetrics.HasBones) modelMetricsHasBonesMap.set(modelMetrics.HasBones, true);
-            if (modelMetrics.HasFaceNormals) modelMetricsHasFaceNormalsMap.set(modelMetrics.HasFaceNormals, true);
-            if (modelMetrics.HasTangents) modelMetricsHasTangentsMap.set(modelMetrics.HasTangents, true);
-            if (modelMetrics.HasTextureCoordinates) modelMetricsHasTextureCoordinatesMap.set(modelMetrics.HasTextureCoordinates, true);
-            if (modelMetrics.HasVertexNormals) modelMetricsHasVertexNormalsMap.set(modelMetrics.HasVertexNormals, true);
-            if (modelMetrics.HasVertexColor) modelMetricsHasVertexColorMap.set(modelMetrics.HasVertexColor, true);
-            if (modelMetrics.IsTwoManifoldUnbounded) modelMetricsIsTwoManifoldUnboundedMap.set(modelMetrics.IsTwoManifoldUnbounded, true);
-            if (modelMetrics.IsTwoManifoldBounded) modelMetricsIsTwoManifoldBoundedMap.set(modelMetrics.IsTwoManifoldBounded, true);
-            if (modelMetrics.IsWatertight) modelMetricsIsWatertightMap.set(modelMetrics.IsWatertight, true);
-            if (modelMetrics.SelfIntersecting) modelMetricsSelfIntersectingMap.set(modelMetrics.SelfIntersecting, true);
+        const modelObjectsList: DBAPI.ModelObject[] = [];
+        if (modelConstellation.ModelObjects)
+            modelObjectsList.push(...modelConstellation.ModelObjects);
+        for (const modelObject of modelObjectsList) {
+            if (modelObject.BoundingBoxP1X) modelObjectBoundingBoxP1XMap.set(modelObject.BoundingBoxP1X, true);
+            if (modelObject.BoundingBoxP1Y) modelObjectBoundingBoxP1YMap.set(modelObject.BoundingBoxP1Y, true);
+            if (modelObject.BoundingBoxP1Z) modelObjectBoundingBoxP1ZMap.set(modelObject.BoundingBoxP1Z, true);
+            if (modelObject.BoundingBoxP2X) modelObjectBoundingBoxP2XMap.set(modelObject.BoundingBoxP2X, true);
+            if (modelObject.BoundingBoxP2Y) modelObjectBoundingBoxP2YMap.set(modelObject.BoundingBoxP2Y, true);
+            if (modelObject.BoundingBoxP2Z) modelObjectBoundingBoxP2ZMap.set(modelObject.BoundingBoxP2Z, true);
+            if (modelObject.CountPoint) modelObjectCountPointMap.set(modelObject.CountPoint, true);
+            if (modelObject.CountFace) modelObjectCountFaceMap.set(modelObject.CountFace, true);
+            if (modelObject.CountColorChannel) modelObjectCountColorChannelMap.set(modelObject.CountColorChannel, true);
+            if (modelObject.CountTextureCoorinateChannel) modelObjectCountTextureCoorinateChannelMap.set(modelObject.CountTextureCoorinateChannel, true);
+            if (modelObject.HasBones) modelObjectHasBonesMap.set(modelObject.HasBones, true);
+            if (modelObject.HasFaceNormals) modelObjectHasFaceNormalsMap.set(modelObject.HasFaceNormals, true);
+            if (modelObject.HasTangents) modelObjectHasTangentsMap.set(modelObject.HasTangents, true);
+            if (modelObject.HasTextureCoordinates) modelObjectHasTextureCoordinatesMap.set(modelObject.HasTextureCoordinates, true);
+            if (modelObject.HasVertexNormals) modelObjectHasVertexNormalsMap.set(modelObject.HasVertexNormals, true);
+            if (modelObject.HasVertexColor) modelObjectHasVertexColorMap.set(modelObject.HasVertexColor, true);
+            if (modelObject.IsTwoManifoldUnbounded) modelObjectIsTwoManifoldUnboundedMap.set(modelObject.IsTwoManifoldUnbounded, true);
+            if (modelObject.IsTwoManifoldBounded) modelObjectIsTwoManifoldBoundedMap.set(modelObject.IsTwoManifoldBounded, true);
+            if (modelObject.IsWatertight) modelObjectIsWatertightMap.set(modelObject.IsWatertight, true);
+            if (modelObject.SelfIntersecting) modelObjectSelfIntersectingMap.set(modelObject.SelfIntersecting, true);
 
         }
         doc.ModelMaterialName = [...modelMaterialNameMap.keys()];
@@ -550,26 +550,26 @@ export class IndexSolr {
         doc.ModelMaterialChannelValues = [...modelMaterialChannelValuesMap.keys()];
         doc.ModelMaterialChannelAdditionalAttributes = [...modelMaterialChannelAdditionalAttributesMap.keys()];
         doc.ModelMaterialUVMapEdgeLength = [...modelMaterialUVMapEdgeLengthMap.keys()];
-        doc.ModelMetricsBoundingBoxP1X = [...modelMetricsBoundingBoxP1XMap.keys()];
-        doc.ModelMetricsBoundingBoxP1Y = [...modelMetricsBoundingBoxP1YMap.keys()];
-        doc.ModelMetricsBoundingBoxP1Z = [...modelMetricsBoundingBoxP1ZMap.keys()];
-        doc.ModelMetricsBoundingBoxP2X = [...modelMetricsBoundingBoxP2XMap.keys()];
-        doc.ModelMetricsBoundingBoxP2Y = [...modelMetricsBoundingBoxP2YMap.keys()];
-        doc.ModelMetricsBoundingBoxP2Z = [...modelMetricsBoundingBoxP2ZMap.keys()];
-        doc.ModelMetricsCountPoint = [...modelMetricsCountPointMap.keys()];
-        doc.ModelMetricsCountFace = [...modelMetricsCountFaceMap.keys()];
-        doc.ModelMetricsCountColorChannel = [...modelMetricsCountColorChannelMap.keys()];
-        doc.ModelMetricsCountTextureCoorinateChannel = [...modelMetricsCountTextureCoorinateChannelMap.keys()];
-        doc.ModelMetricsHasBones = [...modelMetricsHasBonesMap.keys()];
-        doc.ModelMetricsHasFaceNormals = [...modelMetricsHasFaceNormalsMap.keys()];
-        doc.ModelMetricsHasTangents = [...modelMetricsHasTangentsMap.keys()];
-        doc.ModelMetricsHasTextureCoordinates = [...modelMetricsHasTextureCoordinatesMap.keys()];
-        doc.ModelMetricsHasVertexNormals = [...modelMetricsHasVertexNormalsMap.keys()];
-        doc.ModelMetricsHasVertexColor = [...modelMetricsHasVertexColorMap.keys()];
-        doc.MetricsIsTwoManifoldUnbounded = [...modelMetricsIsTwoManifoldUnboundedMap.keys()];
-        doc.MetricsIsTwoManifoldBounded = [...modelMetricsIsTwoManifoldBoundedMap.keys()];
-        doc.ModelMetricsIsWatertight = [...modelMetricsIsWatertightMap.keys()];
-        doc.ModelMetricsSelfIntersecting = [...modelMetricsSelfIntersectingMap.keys()];
+        doc.ModelObjectBoundingBoxP1X = [...modelObjectBoundingBoxP1XMap.keys()];
+        doc.ModelObjectBoundingBoxP1Y = [...modelObjectBoundingBoxP1YMap.keys()];
+        doc.ModelObjectBoundingBoxP1Z = [...modelObjectBoundingBoxP1ZMap.keys()];
+        doc.ModelObjectBoundingBoxP2X = [...modelObjectBoundingBoxP2XMap.keys()];
+        doc.ModelObjectBoundingBoxP2Y = [...modelObjectBoundingBoxP2YMap.keys()];
+        doc.ModelObjectBoundingBoxP2Z = [...modelObjectBoundingBoxP2ZMap.keys()];
+        doc.ModelObjectCountPoint = [...modelObjectCountPointMap.keys()];
+        doc.ModelObjectCountFace = [...modelObjectCountFaceMap.keys()];
+        doc.ModelObjectCountColorChannel = [...modelObjectCountColorChannelMap.keys()];
+        doc.ModelObjectCountTextureCoorinateChannel = [...modelObjectCountTextureCoorinateChannelMap.keys()];
+        doc.ModelObjectHasBones = [...modelObjectHasBonesMap.keys()];
+        doc.ModelObjectHasFaceNormals = [...modelObjectHasFaceNormalsMap.keys()];
+        doc.ModelObjectHasTangents = [...modelObjectHasTangentsMap.keys()];
+        doc.ModelObjectHasTextureCoordinates = [...modelObjectHasTextureCoordinatesMap.keys()];
+        doc.ModelObjectHasVertexNormals = [...modelObjectHasVertexNormalsMap.keys()];
+        doc.ModelObjectHasVertexColor = [...modelObjectHasVertexColorMap.keys()];
+        doc.ModelObjectIsTwoManifoldUnbounded = [...modelObjectIsTwoManifoldUnboundedMap.keys()];
+        doc.ModelObjectIsTwoManifoldBounded = [...modelObjectIsTwoManifoldBoundedMap.keys()];
+        doc.ModelObjectIsWatertight = [...modelObjectIsWatertightMap.keys()];
+        doc.ModelObjectSelfIntersecting = [...modelObjectSelfIntersectingMap.keys()];
 
         // TODO: should we turn multivalued metrics and bounding boxes into single valued attributes, and combine the multiple values in a meaningful way (e.g. add point and face counts, combine bounding boxes)
         this.countModel++;

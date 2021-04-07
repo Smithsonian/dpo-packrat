@@ -79,26 +79,26 @@
 
     <field name="ModelMaterialUVMapEdgeLength" type="pints" indexed="true" stored="true" />
 
-    <field name="ModelMetricsBoundingBoxP1X" type="pdoubles" indexed="true" stored="true"/>
-    <field name="ModelMetricsBoundingBoxP1Y" type="pdoubles" indexed="true" stored="true"/>
-    <field name="ModelMetricsBoundingBoxP1Z" type="pdoubles" indexed="true" stored="true"/>
-    <field name="ModelMetricsBoundingBoxP2X" type="pdoubles" indexed="true" stored="true"/>
-    <field name="ModelMetricsBoundingBoxP2Y" type="pdoubles" indexed="true" stored="true"/>
-    <field name="ModelMetricsBoundingBoxP2Z" type="pdoubles" indexed="true" stored="true"/>
-    <field name="ModelMetricsCountPoint" type="pdoubles" indexed="true" stored="true"/>
-    <field name="ModelMetricsCountFace" type="pdoubles" indexed="true" stored="true"/>
-    <field name="ModelMetricsCountColorChannel" type="pdoubles" indexed="true" stored="true"/>
-    <field name="ModelMetricsCountTextureCoorinateChannel" type="pdoubles" indexed="true" stored="true"/>
-    <field name="ModelMetricsHasBones" type="booleans" indexed="true" stored="true"/>
-    <field name="ModelMetricsHasFaceNormals" type="booleans" indexed="true" stored="true"/>
-    <field name="ModelMetricsHasTangents" type="booleans" indexed="true" stored="true"/>
-    <field name="ModelMetricsHasTextureCoordinates" type="booleans" indexed="true" stored="true"/>
-    <field name="ModelMetricsHasVertexNormals" type="booleans" indexed="true" stored="true"/>
-    <field name="ModelMetricsHasVertexColor" type="booleans" indexed="true" stored="true"/>
-    <field name="MetricsIsTwoManifoldUnbounded" type="booleans" indexed="true" stored="true"/>
-    <field name="MetricsIsTwoManifoldBounded" type="booleans" indexed="true" stored="true"/>
-    <field name="ModelMetricsIsWatertight" type="booleans" indexed="true" stored="true"/>
-    <field name="ModelMetricsSelfIntersecting" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelObjectBoundingBoxP1X" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectBoundingBoxP1Y" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectBoundingBoxP1Z" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectBoundingBoxP2X" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectBoundingBoxP2Y" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectBoundingBoxP2Z" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectCountPoint" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectCountFace" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectCountColorChannel" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectCountTextureCoorinateChannel" type="pdoubles" indexed="true" stored="true"/>
+    <field name="ModelObjectHasBones" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelObjectHasFaceNormals" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelObjectHasTangents" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelObjectHasTextureCoordinates" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelObjectHasVertexNormals" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelObjectHasVertexColor" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelObjectIsTwoManifoldUnbounded" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelObjectIsTwoManifoldBounded" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelObjectIsWatertight" type="booleans" indexed="true" stored="true"/>
+    <field name="ModelObjectSelfIntersecting" type="booleans" indexed="true" stored="true"/>
     
     <!-- Scene fields -->
     <field name="SceneIsOriented" type="boolean" indexed="true" stored="true" multiValued="false" />

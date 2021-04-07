@@ -1,29 +1,72 @@
 /* eslint-disable camelcase */
 import { Model as ModelBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
-import { ModelObject, ModelObjectModelMaterialXref, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap, ModelMetrics, SystemObject, SystemObjectBased } from '..';
+import { Asset, AssetVersion, ModelObject, ModelObjectModelMaterialXref, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap, SystemObject, SystemObjectBased, Vocabulary } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as CACHE from '../../cache';
+
+export class ModelAsset {
+    Asset: Asset;
+    AssetVersion: AssetVersion;
+    AssetName: string;
+    AssetType: string;
+
+    constructor(asset: Asset, assetVersion: AssetVersion, isModel: boolean, channelList: string[] | null) {
+        this.Asset = asset;
+        this.AssetVersion = assetVersion;
+        this.AssetName = asset.FileName;
+        this.AssetType = (isModel) ? 'Model' : 'Texture Map' + (channelList ? ` ${channelList.sort().join(', ')}` : '');
+    }
+
+    static async fetch(assetVersion: AssetVersion): Promise<ModelAsset | null> {
+        const asset: Asset | null = await Asset.fetch(assetVersion.idAsset); /* istanbul ignore next */
+        if (!asset) {
+            LOG.logger.error(`ModelAsset.fetch(${JSON.stringify(assetVersion)}) failed`);
+            return null;
+        }
+        const uvMaps: ModelMaterialUVMap[] | null = await ModelMaterialUVMap.fetchFromAsset(assetVersion.idAsset);
+        const isModel: boolean = (uvMaps === null || uvMaps.length === 0); // if we have no maps, then this asset is for the model/geometry
+        const channelList: string[] = []; /* istanbul ignore else */
+        if (uvMaps) {
+            for (const uvMap of uvMaps) {
+                const uvChannels: ModelMaterialChannel[] | null = await ModelMaterialChannel.fetchFromModelMaterialUVMap(uvMap.idModelMaterialUVMap); /* istanbul ignore else */
+                if (uvChannels) {
+                    for (const uvChannel of uvChannels) {
+                        const VMaterialType: Vocabulary | undefined = uvChannel.idVMaterialType
+                            ? await CACHE.VocabularyCache.vocabulary(uvChannel.idVMaterialType) : /* istanbul ignore next */ undefined;  /* istanbul ignore else */
+                        if (VMaterialType)
+                            channelList.push(VMaterialType.Term);
+                        else if (uvChannel.MaterialTypeOther)
+                            channelList.push(uvChannel.MaterialTypeOther);
+                    }
+                }
+            }
+        }
+
+        return new ModelAsset(asset, assetVersion, isModel, channelList.length > 0 ? channelList : null);
+    }
+}
 
 export class ModelConstellation {
-    model: Model;
-    modelObjects: ModelObject[] | null;
-    modelMaterials: ModelMaterial[] | null;
-    modelMaterialChannels: ModelMaterialChannel[] | null;
-    modelMaterialUVMaps: ModelMaterialUVMap[] | null;
-    modelMetrics: ModelMetrics[] | null;
-    modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null;
+    Model: Model;
+    ModelObjects: ModelObject[] | null;
+    ModelMaterials: ModelMaterial[] | null;
+    ModelMaterialChannels: ModelMaterialChannel[] | null;
+    ModelMaterialUVMaps: ModelMaterialUVMap[] | null;
+    ModelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null;
+    ModelAssets: ModelAsset[] | null;
 
     constructor(model: Model,
         modelObjects: ModelObject[] | null, modelMaterials: ModelMaterial[] | null,
         modelMaterialChannels: ModelMaterialChannel[] | null, modelMaterialUVMaps: ModelMaterialUVMap[] | null,
-        modelMetrics: ModelMetrics[] | null, modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null) {
-        this.model = model;
-        this.modelObjects = modelObjects;
-        this.modelMaterials = modelMaterials;
-        this.modelMaterialChannels = modelMaterialChannels;
-        this.modelMaterialUVMaps = modelMaterialUVMaps;
-        this.modelMetrics = modelMetrics;
-        this.modelObjectModelMaterialXref = modelObjectModelMaterialXref;
+        modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null, modelAsset: ModelAsset[] | null) {
+        this.Model = model;
+        this.ModelObjects = modelObjects;
+        this.ModelMaterials = modelMaterials;
+        this.ModelMaterialChannels = modelMaterialChannels;
+        this.ModelMaterialUVMaps = modelMaterialUVMaps;
+        this.ModelObjectModelMaterialXref = modelObjectModelMaterialXref;
+        this.ModelAssets = modelAsset;
     }
 
     static async fetch(idModel: number): Promise<ModelConstellation | null> {
@@ -37,10 +80,21 @@ export class ModelConstellation {
         const modelMaterials: ModelMaterial[] | null = await ModelMaterial.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
         const modelMaterialChannels: ModelMaterialChannel[] | null = await ModelMaterialChannel.fetchFromModelMaterials(modelMaterials || []);
         const modelMaterialUVMaps: ModelMaterialUVMap[] | null = await ModelMaterialUVMap.fetchFromModel(idModel);
-        const modelMetrics: ModelMetrics[] | null = await ModelMetrics.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
         const modelObjectModelMaterialXref: ModelObjectModelMaterialXref[] | null = await ModelObjectModelMaterialXref.fetchFromModelObjects(modelObjects || /* istanbul ignore next */ []);
 
-        return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels, modelMaterialUVMaps, modelMetrics, modelObjectModelMaterialXref);
+        const modelAssets: ModelAsset[] = [];
+        const SO: SystemObject | null = await model.fetchSystemObject();
+        const assetVersions: AssetVersion[] | null = SO ? await AssetVersion.fetchFromSystemObject(SO.idSystemObject) : /* istanbul ignore next */ null;
+        if (assetVersions) {
+            for (const assetVersion of assetVersions) {
+                const modelAsset: ModelAsset | null = await ModelAsset.fetch(assetVersion); /* istanbul ignore else */
+                if (modelAsset)
+                    modelAssets.push(modelAsset);
+            }
+        }
+
+        return new ModelConstellation(model, modelObjects, modelMaterials, modelMaterialChannels,
+            modelMaterialUVMaps, modelObjectModelMaterialXref, modelAssets.length > 0 ? modelAssets : null);
     }
 }
 

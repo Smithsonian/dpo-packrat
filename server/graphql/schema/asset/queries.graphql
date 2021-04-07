@@ -3,6 +3,7 @@ type Query {
     getUploadedAssetVersion: GetUploadedAssetVersionResult!
     getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
     getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
+    getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput!): GetModelConstellationForAssetVersionResult!
 }
 
 input GetAssetVersionsDetailsInput {
@@ -157,4 +158,13 @@ type AssetVersionContent {
 
 type GetContentsForAssetVersionsResult {
     AssetVersionContent: [AssetVersionContent!]!
+}
+
+input GetModelConstellationForAssetVersionInput {
+    idAssetVersion: Int!
+}
+
+type GetModelConstellationForAssetVersionResult {
+    idAssetVersion: Int!
+    ModelConstellation: ModelConstellation
 }

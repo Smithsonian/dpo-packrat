@@ -5,6 +5,7 @@ import getAsset from './queries/getAsset';
 import uploadAsset from './mutations/uploadAsset';
 import getUploadedAssetVersion from './queries/getUploadedAssetVersion';
 import getContentsForAssetVersions from './queries/getContentsForAssetVersions';
+import getModelConstellationForAssetVersion from './queries/getModelConstellationForAssetVersion';
 import getAssetVersionsDetails from './queries/getAssetVersionsDetails';
 import discardUploadedAssetVersions from './mutations/discardUploadedAssetVersions';
 import { BigIntResolver } from 'graphql-scalars';
@@ -14,6 +15,7 @@ const resolvers = {
         getAsset,
         getUploadedAssetVersion,
         getContentsForAssetVersions,
+        getModelConstellationForAssetVersion,
         getAssetVersionsDetails
     },
     Mutation: {

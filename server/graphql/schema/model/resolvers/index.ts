@@ -3,23 +3,27 @@ import ModelMaterial from './types/ModelMaterial';
 import ModelMaterialChannel from './types/ModelMaterialChannel';
 import ModelMaterialUVMap from './types/ModelMaterialUVMap';
 import ModelObject from './types/ModelObject';
+import ModelObjectModelMaterialXref from './types/ModelObjectModelMaterialXref';
 import ModelProcessingAction from './types/ModelProcessingAction';
 import ModelProcessingActionStep from './types/ModelProcessingActionStep';
 import getModel from './queries/getModel';
+import getModelConstellation from './queries/getModelConstellation';
 import createModel from './mutations/createModel';
 
 const resolvers = {
     Query: {
-        getModel
+        getModel,
+        getModelConstellation,
     },
     Mutation: {
-        createModel
+        createModel,
     },
     Model,
     ModelMaterial,
     ModelMaterialChannel,
     ModelMaterialUVMap,
     ModelObject,
+    ModelObjectModelMaterialXref,
     ModelProcessingAction,
     ModelProcessingActionStep,
 };

@@ -36,7 +36,7 @@ let workflowEngine: WF.IWorkflowEngine | null = null;
 const WorkflowSet: Set<WF.IWorkflow> = new Set<WF.IWorkflow>();
 
 let modelTestAvailable: boolean | null = null;
-let MTS: TESTMODEL.ModelTestSetup | null = new TESTMODEL.ModelTestSetup();
+const MTS: TESTMODEL.ModelTestSetup = new TESTMODEL.ModelTestSetup();
 
 afterAll(async done => {
     await H.Helpers.sleep(10000);
@@ -56,7 +56,6 @@ describe('JobNS Init', () => {
     });
 
     test('Model Test Cases', async () => {
-        MTS = new TESTMODEL.ModelTestSetup();
         modelTestAvailable = await MTS.initialize();
         expect(modelTestAvailable === null || modelTestAvailable).toBeTruthy(); // null means that model test files were not available, which is ok
         if (!modelTestAvailable)
@@ -195,7 +194,7 @@ function testCookExplicit(testCase: string, eJobType: CACHE.eVocabularyID): void
             return;
 
         LOG.logger.info(`JobNS.test testCook(${testCase}): ${CACHE.eVocabularyID[eJobType]} explicit IJob.executeJob`);
-        const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
+        const assetVersionIDs: number[] | undefined = MTS.getTestCase(testCase)?.assetVersionIDs();
         expect(assetVersionIDs).toBeTruthy();
         const parameters: any = computeJobParameters(testCase, eJobType);
         expect(parameters).toBeTruthy();
@@ -217,7 +216,7 @@ function testCookImplicit(testCase: string, eJobType: CACHE.eVocabularyID): void
             return;
 
         LOG.logger.info(`JobNS.test testCook(${testCase}): ${CACHE.eVocabularyID[eJobType]} implicit IJob.executeJob`);
-        const assetVersionIDs: number[] | undefined = MTS?.getTestCase(testCase)?.assetVersionIDs;
+        const assetVersionIDs: number[] | undefined = MTS.getTestCase(testCase)?.assetVersionIDs();
         expect(assetVersionIDs).toBeTruthy();
         const parameters: any = computeJobParameters(testCase, eJobType);
         expect(parameters).toBeTruthy();
@@ -282,7 +281,7 @@ async function computeVocabularyDBEnum(idVJobType: number): Promise<CACHE.eVocab
 }
 
 function computeJobParameters(testCase: string, eJobType: CACHE.eVocabularyID): any {
-    let modelName: string | undefined = MTS?.getTestCase(testCase)?.modelName;
+    let modelName: string | undefined = MTS.getTestCase(testCase)?.modelName;
     expect(modelName).toBeTruthy();
     modelName = modelName || '';
 
@@ -310,19 +309,47 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
     switch (jobData.eJobType) {
         case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect: {
             expect(output).toBeTruthy();
-            const JCOutput: COOK.JobCookSIPackratInspectOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''));
+            let JCOutput: COOK.JobCookSIPackratInspectOutput | null = null;
+            try {
+                JCOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''));
+            } catch (error) {
+                LOG.logger.error(`JonNS Test validateJobOutput ${CACHE.eVocabularyID[jobData.eJobType]}: ${output}`, error);
+                expect(true).toBeFalsy();
+            }
+            expect(JCOutput).toBeTruthy();
+            if (!JCOutput)
+                return false;
             expect(JCOutput.success).toBeTruthy();
 
             normalizeOutput(JCOutput);
 
-            const JCOutputStr: string = JSON.stringify(JCOutput, (key, value) => {
-                key; return (value instanceof Map) ? [...value] : value;
-            });
-            // LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`);
+            const JCOutputStr: string = JSON.stringify(JCOutput, H.Helpers.stringifyCallbackCustom);
 
-            const inspectJSON: string | undefined = MTS?.getTestCase(jobData.testCase)?.inspectJSON;
+            const MTC: TESTMODEL.ModelTestCase | undefined = MTS.getTestCase(jobData.testCase);
+            expect(MTC).toBeTruthy();
+            if (!MTC) {
+                LOG.logger.error(`Unable to find testcase ${jobData.testCase}`);
+                return false;
+            }
+
+            const inspectJSON: string | undefined = MTC.inspectJSON;
             expect(inspectJSON).toBeTruthy();
             expect(JCOutputStr).toEqual(inspectJSON);
+            if (JCOutputStr !== inspectJSON)
+                LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`);
+
+            // Test persistence of data
+            const assetFileNameMap: Map<string, number> = MTC.assetFileNameMap();
+            const res: H.IOResults = await JCOutput.persist(MTC.model.idModel, assetFileNameMap);
+            if (!res.success)
+                LOG.logger.error(`JobNS Persisting ${MTC.testCase} FAILED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyCallbackCustom)}: ${res.error}`);
+            else {
+                // expect(res.success).toBeTruthy();
+                expect(JCOutput.modelConstellation).toBeTruthy();
+                expect(JCOutput.modelConstellation?.Model).toBeTruthy();
+                expect(JCOutput.modelConstellation?.Model?.idModel).toBeTruthy();
+                LOG.logger.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyCallbackCustom)}`);
+            }
             return JCOutputStr === inspectJSON;
         }
 
@@ -334,10 +361,15 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
 }
 
 function normalizeOutput(JCOutput: COOK.JobCookSIPackratInspectOutput): void {
-    if (JCOutput.model)
-        JCOutput.model.DateCreated = normalizedCreationDate;
+    if (JCOutput.modelConstellation) {
+        if (JCOutput.modelConstellation.Model)
+            JCOutput.modelConstellation.Model.DateCreated = normalizedCreationDate;
+        if (JCOutput.modelConstellation.ModelAssets) {
+            for (const modelAsset of JCOutput.modelConstellation.ModelAssets)
+                modelAsset.AssetVersion.DateCreated = normalizedCreationDate;
+        }
+    }
 }
-
 // #endregion
 
 // #region Workflow Utils

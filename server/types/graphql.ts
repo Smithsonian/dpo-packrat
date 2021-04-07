@@ -35,6 +35,8 @@ export type Query = {
   getItemsForSubject: GetItemsForSubjectResult;
   getLicense: GetLicenseResult;
   getModel: GetModelResult;
+  getModelConstellation: GetModelConstellationResult;
+  getModelConstellationForAssetVersion: GetModelConstellationForAssetVersionResult;
   getObjectChildren: GetObjectChildrenResult;
   getObjectsForItem: GetObjectsForItemResult;
   getProject: GetProjectResult;
@@ -139,6 +141,16 @@ export type QueryGetLicenseArgs = {
 
 export type QueryGetModelArgs = {
   input: GetModelInput;
+};
+
+
+export type QueryGetModelConstellationArgs = {
+  input: GetModelConstellationInput;
+};
+
+
+export type QueryGetModelConstellationForAssetVersionArgs = {
+  input: GetModelConstellationForAssetVersionInput;
 };
 
 
@@ -586,6 +598,16 @@ export type GetContentsForAssetVersionsResult = {
   AssetVersionContent: Array<AssetVersionContent>;
 };
 
+export type GetModelConstellationForAssetVersionInput = {
+  idAssetVersion: Scalars['Int'];
+};
+
+export type GetModelConstellationForAssetVersionResult = {
+  __typename?: 'GetModelConstellationForAssetVersionResult';
+  idAssetVersion: Scalars['Int'];
+  ModelConstellation?: Maybe<ModelConstellation>;
+};
+
 
 export type Asset = {
   __typename?: 'Asset';
@@ -947,6 +969,15 @@ export type GetModelResult = {
   Model?: Maybe<Model>;
 };
 
+export type GetModelConstellationInput = {
+  idModel: Scalars['Int'];
+};
+
+export type GetModelConstellationResult = {
+  __typename?: 'GetModelConstellationResult';
+  ModelConstellation?: Maybe<ModelConstellation>;
+};
+
 export type Model = {
   __typename?: 'Model';
   idModel: Scalars['Int'];
@@ -960,6 +991,16 @@ export type Model = {
   idVUnits: Scalars['Int'];
   idVFileType: Scalars['Int'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
+  CountAnimations?: Maybe<Scalars['Int']>;
+  CountCameras?: Maybe<Scalars['Int']>;
+  CountFaces?: Maybe<Scalars['Int']>;
+  CountLights?: Maybe<Scalars['Int']>;
+  CountMaterials?: Maybe<Scalars['Int']>;
+  CountMeshes?: Maybe<Scalars['Int']>;
+  CountVertices?: Maybe<Scalars['Int']>;
+  CountEmbeddedTextures?: Maybe<Scalars['Int']>;
+  CountLinkedTextures?: Maybe<Scalars['Int']>;
+  FileEncoding?: Maybe<Scalars['String']>;
   ModelConstellation?: Maybe<ModelConstellation>;
   VCreationMethod?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
@@ -973,12 +1014,20 @@ export type Model = {
   SystemObject?: Maybe<SystemObject>;
 };
 
+export type ModelObjectModelMaterialXref = {
+  __typename?: 'ModelObjectModelMaterialXref';
+  idModelObjectModelMaterialXref: Scalars['Int'];
+  idModelObject: Scalars['Int'];
+  idModelMaterial: Scalars['Int'];
+  ModelObject?: Maybe<ModelObject>;
+  ModelMaterial?: Maybe<ModelMaterial>;
+};
+
 export type ModelMaterial = {
   __typename?: 'ModelMaterial';
   idModelMaterial: Scalars['Int'];
-  idModelObject: Scalars['Int'];
   Name?: Maybe<Scalars['String']>;
-  ModelObject: ModelObject;
+  ModelMaterialChannel?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
 };
 
 export type ModelMaterialChannel = {
@@ -994,9 +1043,13 @@ export type ModelMaterialChannel = {
   Scalar2?: Maybe<Scalars['Float']>;
   Scalar3?: Maybe<Scalars['Float']>;
   Scalar4?: Maybe<Scalars['Float']>;
-  ModelMaterial: ModelMaterial;
+  AdditionalAttributes?: Maybe<Scalars['String']>;
+  ModelMaterial?: Maybe<ModelMaterial>;
   VMaterialType?: Maybe<Vocabulary>;
   ModelMaterialUVMap?: Maybe<ModelMaterialUvMap>;
+  Type?: Maybe<Scalars['String']>;
+  Source?: Maybe<Scalars['String']>;
+  Value?: Maybe<Scalars['String']>;
 };
 
 export type ModelMaterialUvMap = {
@@ -1005,13 +1058,14 @@ export type ModelMaterialUvMap = {
   idModel: Scalars['Int'];
   idAsset: Scalars['Int'];
   UVMapEdgeLength: Scalars['Int'];
-  Model: Model;
-  Asset: Asset;
+  Model?: Maybe<Model>;
+  Asset?: Maybe<Asset>;
 };
 
-export type ModelMetrics = {
-  __typename?: 'ModelMetrics';
-  idModelMetrics: Scalars['Int'];
+export type ModelObject = {
+  __typename?: 'ModelObject';
+  idModelObject: Scalars['Int'];
+  idModel: Scalars['Int'];
   BoundingBoxP1X?: Maybe<Scalars['Float']>;
   BoundingBoxP1Y?: Maybe<Scalars['Float']>;
   BoundingBoxP1Z?: Maybe<Scalars['Float']>;
@@ -1032,15 +1086,7 @@ export type ModelMetrics = {
   IsTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
   IsWatertight?: Maybe<Scalars['Boolean']>;
   SelfIntersecting?: Maybe<Scalars['Boolean']>;
-};
-
-export type ModelObject = {
-  __typename?: 'ModelObject';
-  idModelObject: Scalars['Int'];
-  idModel: Scalars['Int'];
-  idModelMetrics?: Maybe<Scalars['Int']>;
-  Model: Model;
-  ModelMetrics?: Maybe<ModelMetrics>;
+  Model?: Maybe<Model>;
 };
 
 export type ModelProcessingAction = {
@@ -1082,14 +1128,23 @@ export type ModelSceneXref = {
   Scene?: Maybe<Scene>;
 };
 
+export type ModelAsset = {
+  __typename?: 'ModelAsset';
+  Asset: Asset;
+  AssetVersion: AssetVersion;
+  AssetName: Scalars['String'];
+  AssetType: Scalars['String'];
+};
+
 export type ModelConstellation = {
   __typename?: 'ModelConstellation';
   Model: Model;
-  ModelObjects?: Maybe<Array<Maybe<ModelObject>>>;
-  ModelMaterials?: Maybe<Array<Maybe<ModelMaterial>>>;
-  ModelMaterialChannels?: Maybe<Array<Maybe<ModelMaterialChannel>>>;
-  ModelMaterialUVMaps?: Maybe<Array<Maybe<ModelMaterialUvMap>>>;
-  ModelMetrics?: Maybe<Array<Maybe<ModelMetrics>>>;
+  ModelObjects?: Maybe<Array<ModelObject>>;
+  ModelMaterials?: Maybe<Array<ModelMaterial>>;
+  ModelMaterialChannels?: Maybe<Array<ModelMaterialChannel>>;
+  ModelMaterialUVMaps?: Maybe<Array<ModelMaterialUvMap>>;
+  ModelObjectModelMaterialXref?: Maybe<Array<ModelObjectModelMaterialXref>>;
+  ModelAssets?: Maybe<Array<ModelAsset>>;
 };
 
 export type PaginationInput = {
