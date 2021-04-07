@@ -42,8 +42,11 @@ app.use('/graphql', (req, _res, next) => {
     if (start > -1)
         start += 2; // skip two spaces found after {\n
     const end: number = query.indexOf('{\n', start + 1);
-    const queryTrim: string = (start > -1 && end > -1) ? query.substring(start + 1, end) : '';
-    log.info(`GQL ${++requestNumber}: ${queryTrim}${JSON.stringify(req.body.variables)}`);
+    const queryTrim: string = (start > -1 && end > -1) ? query.substring(start + 1, end).trim() : '';
+    if (queryTrim !== '__schema') {
+        // silence __schema logging, issued by GraphQL playground, for one
+        log.info(`GQL ${++requestNumber}: ${queryTrim} ${JSON.stringify(req.body.variables)}`);
+    }
     return next();
 });
 

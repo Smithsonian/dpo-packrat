@@ -314,7 +314,12 @@ export class AssetStorageAdapter {
             if (metadata.idVMetadataSource != vocabulary.idVocabulary || !metadata.ValueExtended)
                 continue;
             // Found it!
-            return JSON.parse(metadata.ValueExtended);
+            try {
+                return JSON.parse(metadata.ValueExtended);
+            } catch (error) {
+                LOG.logger.error(`AssetStorageAdapter.extractBulkIngestMetadata ${JSON.stringify(metadata)}`, error);
+                return null;
+            }
         }
         return null;
     }

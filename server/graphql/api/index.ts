@@ -73,6 +73,8 @@ import {
     GetVocabularyEntriesResult,
     GetContentsForAssetVersionsInput,
     GetContentsForAssetVersionsResult,
+    GetModelConstellationForAssetVersionInput,
+    GetModelConstellationForAssetVersionResult,
     AreCameraSettingsUniformInput,
     AreCameraSettingsUniformResult,
     IngestDataInput,
@@ -138,6 +140,7 @@ import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSub
 import getIngestionProjectsForSubjects from './queries/unit/getIngestionProjectsForSubjects';
 import getVocabularyEntries from './queries/vocabulary/getVocabularyEntries';
 import getContentsForAssetVersions from './queries/asset/getContentsForAssetVersions';
+import getModelConstellationForAssetVersion from './queries/asset/getModelConstellationForAssetVersion';
 import areCameraSettingsUniform from './queries/ingestion/areCameraSettingsUniform';
 import getSubjectsForUnit from './queries/unit/getSubjectsForUnit';
 import getItemsForSubject from './queries/unit/getItemsForSubject';
@@ -211,6 +214,7 @@ const allQueries = {
     getIngestionProjectsForSubjects,
     getVocabularyEntries,
     getContentsForAssetVersions,
+    getModelConstellationForAssetVersion,
     areCameraSettingsUniform,
     ingestData,
     getSubjectsForUnit,
@@ -454,6 +458,16 @@ class GraphQLApi {
 
     async getContentsForAssetVersions(input: GetContentsForAssetVersionsInput, context?: Context): Promise<GetContentsForAssetVersionsResult> {
         const operationName = 'getContentsForAssetVersions';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput, context?: Context): Promise<GetModelConstellationForAssetVersionResult> {
+        const operationName = 'getModelConstellationForAssetVersion';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

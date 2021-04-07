@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
-import { JobRun as JobRunBase } from '@prisma/client';
+import { JobRun as JobRunBase, Prisma } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 
 export enum eJobRunStatus {
     eUnitialized = 0,
@@ -27,6 +28,21 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
 
     constructor(input: JobRunBase) {
         super(input);
+    }
+
+    static constructFromPrisma(jobRunBase: JobRunBase): JobRun {
+        return new JobRun({
+            idJobRun: jobRunBase.idJobRun,
+            idJob: jobRunBase.idJob,
+            Status: jobRunBase.Status,
+            Result: H.Helpers.safeBoolean(jobRunBase.Result),
+            DateStart: jobRunBase.DateStart,
+            DateEnd: jobRunBase.DateEnd,
+            Configuration: jobRunBase.Configuration,
+            Parameters: jobRunBase.Parameters,
+            Output: jobRunBase.Output,
+            Error: jobRunBase.Error
+        });
     }
 
     static convertJobRunStatusToEnum(Status: number): eJobRunStatus {
@@ -103,6 +119,66 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                 await DBC.DBConnection.prisma.jobRun.findUnique({ where: { idJobRun, }, }), JobRun);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.JobRun.fetch', error);
+            return null;
+        }
+    }
+
+    /**
+     * Fetches JobRun records that match the specified criteria, ordered from most recent to least recent
+     * @param limitRows Number of records to fetch
+     * @param idVJobType Vocabulary ID of JobType to fetch, e.g. await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect)
+     * @param assetVersionIDs array of asset version IDs to which this job run is connected, via workflow
+     * @param eStatus job status
+     * @param result job result
+     */
+    static async fetchMatching(limitRows: number, idVJobType: number, eStatus: eJobRunStatus, result: boolean,
+        assetVersionIDs: number[] | null): Promise<JobRun[] | null> {
+        if (limitRows <= 0)
+            return null;
+        try {
+            let jobRunBaseList: JobRunBase[] | null = null;
+            if (assetVersionIDs)
+                jobRunBaseList = // return DBC.CopyArray<JobRunBase, JobRun>(
+                await DBC.DBConnection.prisma.$queryRaw<JobRun[]>`
+                SELECT JR.*
+                FROM JobRun AS JR
+                JOIN Job AS J ON (JR.idJob = J.idJob)
+                JOIN WorkflowStep AS WS ON (JR.idJobRun = WS.idJobRun)
+                JOIN WorkflowStepSystemObjectXref AS WSOX ON (WS.idWorkflowStep = WSOX.idWorkflowStep)
+                JOIN SystemObject AS SO ON (WSOX.idSystemObject = SO.idSystemObject)
+                WHERE SO.idAssetVersion IN (${Prisma.join(assetVersionIDs)})
+                  AND J.idVJobType = ${idVJobType}
+                  AND JR.Status = ${eStatus}
+                  AND JR.Result = ${result}
+                ORDER BY JR.DateEnd DESC
+                LIMIT ${limitRows}`; // , JobRun);
+            else
+                jobRunBaseList =
+                await DBC.DBConnection.prisma.$queryRaw<JobRun[]>`
+                SELECT JR.*
+                FROM JobRun AS JR
+                JOIN Job AS J ON (JR.idJob = J.idJob)
+                JOIN WorkflowStep AS WS ON (JR.idJobRun = WS.idJobRun)
+                JOIN WorkflowStepSystemObjectXref AS WSOX ON (WS.idWorkflowStep = WSOX.idWorkflowStep)
+                JOIN SystemObject AS SO ON (WSOX.idSystemObject = SO.idSystemObject)
+                WHERE SO.idAssetVersion IS NOT NULL
+                  AND J.idVJobType = ${idVJobType}
+                  AND JR.Status = ${eStatus}
+                  AND JR.Result = ${result}
+                ORDER BY JR.DateEnd DESC
+                LIMIT ${limitRows}`; // , JobRun);
+
+            // LOG.logger.info(`JobRun.fetchMatching(${limitRows}, ${idVJobType}, ${JSON.stringify(assetVersionIDs)}, ${eJobRunStatus[eStatus]}, ${result}) yields ${jobRunBaseList.length} records`);
+
+            const jobRunList: JobRun[] = [];
+            for (const jobRunBase of jobRunBaseList) {
+                const jobRun: JobRun = JobRun.constructFromPrisma(jobRunBase);
+                jobRunList.push(jobRun);
+                // LOG.logger.info(`JobRun.fetchMatching JR Output: ${jobRun.Output}`);
+            }
+            return jobRunList;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.JobRun.fetchMatching', error);
             return null;
         }
     }

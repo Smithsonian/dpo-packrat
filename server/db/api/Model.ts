@@ -19,7 +19,7 @@ export class ModelAsset {
     }
 
     static async fetch(assetVersion: AssetVersion): Promise<ModelAsset | null> {
-        const asset: Asset | null = await Asset.fetch(assetVersion.idAsset);
+        const asset: Asset | null = await Asset.fetch(assetVersion.idAsset); /* istanbul ignore next */
         if (!asset) {
             LOG.logger.error(`ModelAsset.fetch(${JSON.stringify(assetVersion)}) failed`);
             return null;
@@ -29,11 +29,11 @@ export class ModelAsset {
         const channelList: string[] = []; /* istanbul ignore else */
         if (uvMaps) {
             for (const uvMap of uvMaps) {
-                const uvChannels: ModelMaterialChannel[] | null = await ModelMaterialChannel.fetchFromModelMaterialUVMap(uvMap.idModelMaterialUVMap);
+                const uvChannels: ModelMaterialChannel[] | null = await ModelMaterialChannel.fetchFromModelMaterialUVMap(uvMap.idModelMaterialUVMap); /* istanbul ignore else */
                 if (uvChannels) {
                     for (const uvChannel of uvChannels) {
                         const VMaterialType: Vocabulary | undefined = uvChannel.idVMaterialType
-                            ? await CACHE.VocabularyCache.vocabulary(uvChannel.idVMaterialType) : undefined;
+                            ? await CACHE.VocabularyCache.vocabulary(uvChannel.idVMaterialType) : /* istanbul ignore next */ undefined;  /* istanbul ignore else */
                         if (VMaterialType)
                             channelList.push(VMaterialType.Term);
                         else if (uvChannel.MaterialTypeOther)
@@ -84,10 +84,10 @@ export class ModelConstellation {
 
         const modelAssets: ModelAsset[] = [];
         const SO: SystemObject | null = await model.fetchSystemObject();
-        const assetVersions: AssetVersion[] | null = SO ? await AssetVersion.fetchFromSystemObject(SO.idSystemObject) : null;
+        const assetVersions: AssetVersion[] | null = SO ? await AssetVersion.fetchFromSystemObject(SO.idSystemObject) : /* istanbul ignore next */ null;
         if (assetVersions) {
             for (const assetVersion of assetVersions) {
-                const modelAsset: ModelAsset | null = await ModelAsset.fetch(assetVersion);
+                const modelAsset: ModelAsset | null = await ModelAsset.fetch(assetVersion); /* istanbul ignore else */
                 if (modelAsset)
                     modelAssets.push(modelAsset);
             }
