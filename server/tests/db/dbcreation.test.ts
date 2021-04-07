@@ -1841,7 +1841,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch AssetVersion: AssetVersion.fetchFromUserByIngested Not Ingested', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
         if (userActive) {
-            assetVersionFetch = await DBAPI.AssetVersion.fetchFromUserByIngested(userActive.idUser, false);
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFromUserByIngested(userActive.idUser, false, false);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
             }
@@ -6164,7 +6164,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetVersion.fetchLatestFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
-        expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true, true)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchByAssetAndVersion(0, 1)).toBeNull();
         expect(await DBAPI.CaptureData.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromXref(0)).toBeNull();
