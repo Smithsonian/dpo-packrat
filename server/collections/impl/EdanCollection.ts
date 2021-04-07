@@ -49,7 +49,13 @@ class EdanCollection implements COL.ICollection {
 
         const params: string                = `q=${escape(query)}${filter}&rows=${rows}&start=${start}`;
         const reqResult: GetRequestResults  = await this.sendGetRequest(path, params);
-        const jsonResult                    = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
+        let jsonResult: any | null          = null;
+        try {
+            jsonResult                      = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
+        } catch (error) {
+            LOG.logger.error(`EdanCollection.queryCollection ${query}`, error);
+            jsonResult                      = null;
+        }
 
         // jsonResult.rows -- array of { ..., title, id, unitCode, ..., content };
         // content.descriptiveNonRepeating.title.content = name

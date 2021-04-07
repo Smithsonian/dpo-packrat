@@ -1,6 +1,6 @@
 import * as DBAPI from '../../../db';
 import { Model as ModelBase, ModelMaterial as ModelMaterialBase, ModelMaterialChannel as ModelMaterialChannelBase,
-    ModelMaterialUVMap as ModelMaterialUVMapBase, ModelMetrics as ModelMetricsBase, ModelObject as ModelObjectBase,
+    ModelMaterialUVMap as ModelMaterialUVMapBase, ModelObject as ModelObjectBase,
     ModelObjectModelMaterialXref as ModelObjectModelMaterialXrefBase } from '@prisma/client';
 
 export async function createModelTest(base: ModelBase): Promise<DBAPI.Model> {
@@ -33,14 +33,6 @@ export async function createModelMaterialUVMapTest(base: ModelMaterialUVMapBase)
     expect(created).toBeTruthy();
     expect(modelMaterialUVMap.idModelMaterialUVMap).toBeGreaterThan(0);
     return modelMaterialUVMap;
-}
-
-export async function createModelMetricsTest(base: ModelMetricsBase): Promise<DBAPI.ModelMetrics> {
-    const modelMetrics: DBAPI.ModelMetrics = new DBAPI.ModelMetrics(base);
-    const created: boolean = await modelMetrics.create();
-    expect(created).toBeTruthy();
-    expect(modelMetrics.idModelMetrics).toBeGreaterThan(0);
-    return modelMetrics;
 }
 
 export async function createModelObjectTest(base: ModelObjectBase): Promise<DBAPI.ModelObject> {

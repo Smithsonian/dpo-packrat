@@ -311,8 +311,9 @@ CREATE TABLE IF NOT EXISTS `ModelMaterialUVMap` (
   KEY `ModelUVMapFile_idAsset` (`idAsset`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
-CREATE TABLE IF NOT EXISTS `ModelMetrics` (
-  `idModelMetrics` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `ModelObject` (
+  `idModelObject` int(11) NOT NULL AUTO_INCREMENT,
+  `idModel` int(11) NOT NULL,
   `BoundingBoxP1X` double DEFAULT NULL,
   `BoundingBoxP1Y` double DEFAULT NULL,
   `BoundingBoxP1Z` double DEFAULT NULL,
@@ -333,13 +334,6 @@ CREATE TABLE IF NOT EXISTS `ModelMetrics` (
   `IsTwoManifoldBounded` boolean DEFAULT NULL,
   `IsWatertight` boolean DEFAULT NULL,
   `SelfIntersecting` boolean DEFAULT NULL,
-  PRIMARY KEY (`idModelMetrics`)
-) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
-
-CREATE TABLE IF NOT EXISTS `ModelObject` (
-  `idModelObject` int(11) NOT NULL AUTO_INCREMENT,
-  `idModel` int(11) NOT NULL,
-  `idModelMetrics` int(11) NULL,
   PRIMARY KEY (`idModelObject`),
   KEY `ModelObject_idModel` (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
@@ -893,11 +887,6 @@ ALTER TABLE `ModelObject`
 ADD CONSTRAINT `fk_modelobject_model1`
   FOREIGN KEY (`idModel`)
   REFERENCES `Model` (`idModel`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `fk_modelobject_modelmetrics1`
-  FOREIGN KEY (`idModelMetrics`)
-  REFERENCES `ModelMetrics` (`idModelMetrics`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

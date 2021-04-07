@@ -150,58 +150,67 @@ export abstract class JobCook<T> extends JobPackrat {
     async startJobWorker(fireDate: Date): Promise<H.IOResults> {
         fireDate;
 
-        // Create job via POST to /job
-        const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, this.getParameters(), eJobCookPriority.eNormal);
-        let axiosResponse: AxiosResponse<any> | null = null;
         let requestCount: number = 0;
         let res: H.IOResults = { success: false, error: '' };
 
-        let requestUrl: string = Config.job.cookServerUrl + 'job';
-        LOG.logger.info(`JobCook [${this.name()}] creating job: ${requestUrl}`);
-        while (requestCount++ < CookRequestRetryCount) {
-            try {
-                axiosResponse = await axios.post(requestUrl, jobCookPostBody);
-                if (axiosResponse?.status === 201)
-                    break; // success, continue
-                res = { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed: ${JSON.stringify(axiosResponse)}` };
-            } catch (error) {
-                const message: string | null = error.message;
-                res = (message && message.indexOf('getaddrinfo ENOTFOUND'))
-                    ? { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(error)}` }
-                    : { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
+        try {
+            // Create job via POST to /job
+            let requestUrl: string = Config.job.cookServerUrl + 'job';
+            let axiosResponse: AxiosResponse<any> | null = null;
+            const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, this.getParameters(), eJobCookPriority.eNormal);
+
+            LOG.logger.info(`JobCook [${this.name()}] creating job: ${requestUrl}`);
+            while (requestCount++ < CookRequestRetryCount) {
+                try {
+                    axiosResponse = await axios.post(requestUrl, jobCookPostBody);
+                    if (axiosResponse?.status === 201)
+                        break; // success, continue
+                    res = { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} failed: ${JSON.stringify(axiosResponse)}` };
+                } catch (error) {
+                    const message: string | null = error.message;
+                    res = (message && message.indexOf('getaddrinfo ENOTFOUND'))
+                        ? { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)} cannot connect to Cook: ${JSON.stringify(error)}` }
+                        : { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
+                }
+                if (requestCount === CookRequestRetryCount) {
+                    LOG.logger.error(`${res.error} Retries Failed`);
+                    return res;
+                } else
+                    await H.Helpers.sleep(CookRetryDelay);
             }
-            if (requestCount === CookRequestRetryCount) {
-                LOG.logger.error(`${res.error} Retries Failed`);
+
+            // stage files
+            res = await this.stageFiles();
+            if (!res.success)
                 return res;
-            } else
-                await H.Helpers.sleep(CookRetryDelay);
+
+            // Initiate job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/run
+            requestCount = 0;
+            res = { success: false, error: '' };
+            requestUrl = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
+            LOG.logger.info(`JobCook [${this.name()}] running job: ${requestUrl}`);
+            while (requestCount++ < CookRequestRetryCount) {
+                try {
+                    const axiosResponse = await axios.patch(requestUrl);
+                    if (axiosResponse.status === 202)
+                        break; // success, continue
+                    res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
+                } catch (error) {
+                    res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(error)}` };
+                }
+                if (requestCount === CookRequestRetryCount) {
+                    LOG.logger.error(`${res.error} Retries Failed`);
+                    return res;
+                } else
+                    await H.Helpers.sleep(CookRetryDelay);
+            }
+
+            res = { success: true, error: '' };
+        } finally {
+            if (!res.success)
+                this.signalCompletion();
         }
 
-        // stage files
-        res = await this.stageFiles();
-        if (!res.success)
-            return res;
-
-        // Initiate job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/run
-        requestCount = 0;
-        res = { success: false, error: '' };
-        requestUrl = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
-        LOG.logger.info(`JobCook [${this.name()}] running job: ${requestUrl}`);
-        while (requestCount++ < CookRequestRetryCount) {
-            try {
-                const axiosResponse = await axios.patch(requestUrl);
-                if (axiosResponse.status === 202)
-                    break; // success, continue
-                res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
-            } catch (error) {
-                res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(error)}` };
-            }
-            if (requestCount === CookRequestRetryCount) {
-                LOG.logger.error(`${res.error} Retries Failed`);
-                return res;
-            } else
-                await H.Helpers.sleep(CookRetryDelay);
-        }
         LOG.logger.info(`JobCook [${this.name()}] running`);
         return this.pollingLoop(CookTimeout);
     }

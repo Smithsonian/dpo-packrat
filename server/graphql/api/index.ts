@@ -22,6 +22,8 @@ import {
     GetLicenseResult,
     GetModelInput,
     GetModelResult,
+    GetModelConstellationInput,
+    GetModelConstellationResult,
     GetSceneInput,
     GetSceneResult,
     GetUnitInput,
@@ -71,6 +73,8 @@ import {
     GetVocabularyEntriesResult,
     GetContentsForAssetVersionsInput,
     GetContentsForAssetVersionsResult,
+    GetModelConstellationForAssetVersionInput,
+    GetModelConstellationForAssetVersionResult,
     AreCameraSettingsUniformInput,
     AreCameraSettingsUniformResult,
     IngestDataInput,
@@ -122,6 +126,7 @@ import getCaptureData from './queries/capturedata/getCaptureData';
 import getCaptureDataPhoto from './queries/capturedata/getCaptureDataPhoto';
 import getLicense from './queries/license/getLicense';
 import getModel from './queries/model/getModel';
+import getModelConstellation from './queries/model/getModelConstellation';
 import getScene from './queries/scene/getScene';
 import getUnit from './queries/unit/getUnit';
 import getProject from './queries/unit/getProject';
@@ -135,6 +140,7 @@ import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSub
 import getIngestionProjectsForSubjects from './queries/unit/getIngestionProjectsForSubjects';
 import getVocabularyEntries from './queries/vocabulary/getVocabularyEntries';
 import getContentsForAssetVersions from './queries/asset/getContentsForAssetVersions';
+import getModelConstellationForAssetVersion from './queries/asset/getModelConstellationForAssetVersion';
 import areCameraSettingsUniform from './queries/ingestion/areCameraSettingsUniform';
 import getSubjectsForUnit from './queries/unit/getSubjectsForUnit';
 import getItemsForSubject from './queries/unit/getItemsForSubject';
@@ -182,6 +188,7 @@ const allQueries = {
     getCaptureDataPhoto,
     getLicense,
     getModel,
+    getModelConstellation,
     getScene,
     getUnit,
     getProject,
@@ -207,6 +214,7 @@ const allQueries = {
     getIngestionProjectsForSubjects,
     getVocabularyEntries,
     getContentsForAssetVersions,
+    getModelConstellationForAssetVersion,
     areCameraSettingsUniform,
     ingestData,
     getSubjectsForUnit,
@@ -368,6 +376,16 @@ class GraphQLApi {
         });
     }
 
+    async getModelConstellation(input: GetModelConstellationInput, context?: Context): Promise<GetModelConstellationResult> {
+        const operationName = 'getModelConstellation';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
     async createModel(input: CreateModelInput, context?: Context): Promise<CreateModelResult> {
         const operationName = 'createModel';
         const variables = { input };
@@ -440,6 +458,16 @@ class GraphQLApi {
 
     async getContentsForAssetVersions(input: GetContentsForAssetVersionsInput, context?: Context): Promise<GetContentsForAssetVersionsResult> {
         const operationName = 'getContentsForAssetVersions';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput, context?: Context): Promise<GetModelConstellationForAssetVersionResult> {
+        const operationName = 'getModelConstellationForAssetVersion';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

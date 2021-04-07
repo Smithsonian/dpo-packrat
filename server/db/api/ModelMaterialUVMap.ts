@@ -64,6 +64,18 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
         }
     }
 
+    static async fetchFromAsset(idAsset: number): Promise<ModelMaterialUVMap[] | null> {
+        if (!idAsset)
+            return null;
+        try {
+            return DBC.CopyArray<ModelMaterialUVMapBase, ModelMaterialUVMap>(
+                await DBC.DBConnection.prisma.modelMaterialUVMap.findMany({ where: { idAsset } }), ModelMaterialUVMap);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.ModelMaterialUVMap.fetchFromAsset', error);
+            return null;
+        }
+    }
+
     static async fetchFromModel(idModel: number): Promise<ModelMaterialUVMap[] | null> {
         if (!idModel)
             return null;

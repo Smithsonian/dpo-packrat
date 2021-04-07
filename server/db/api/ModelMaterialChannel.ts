@@ -27,6 +27,24 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
         super(input);
     }
 
+    static constructFromPrisma(modelMaterialChannelBase: ModelMaterialChannelBase): ModelMaterialChannel {
+        return new ModelMaterialChannel({
+            idModelMaterialChannel: modelMaterialChannelBase.idModelMaterialChannel,
+            idModelMaterial: modelMaterialChannelBase.idModelMaterial,
+            idVMaterialType: H.Helpers.safeNumber(modelMaterialChannelBase.idVMaterialType),
+            MaterialTypeOther: modelMaterialChannelBase.MaterialTypeOther,
+            idModelMaterialUVMap: H.Helpers.safeNumber(modelMaterialChannelBase.idModelMaterialUVMap),
+            UVMapEmbedded: H.Helpers.safeBoolean(modelMaterialChannelBase.UVMapEmbedded),
+            ChannelPosition: H.Helpers.safeNumber(modelMaterialChannelBase.ChannelPosition),
+            ChannelWidth: H.Helpers.safeNumber(modelMaterialChannelBase.ChannelWidth),
+            Scalar1: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar1),
+            Scalar2: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar2),
+            Scalar3: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar3),
+            Scalar4: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar4),
+            AdditionalAttributes: modelMaterialChannelBase.AdditionalAttributes,
+        });
+    }
+
     protected updateCachedValues(): void {
         this.idVMaterialTypeOrig = this.idVMaterialType;
         this.idModelMaterialUVMapOrig = this.idModelMaterialUVMap;
@@ -131,27 +149,23 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                 WHERE idModelMaterial IN (${Prisma.join(idModelMaterials)})`; // , ModelMaterialChannel);
 
             const modelMaterialChannelList: ModelMaterialChannel[] = [];
-            for (const modelMaterialChannelBase of modelMaterialChannelBaseList) {
-                const modelMaterialChannel = new ModelMaterialChannel({
-                    idModelMaterialChannel: modelMaterialChannelBase.idModelMaterialChannel,
-                    idModelMaterial: modelMaterialChannelBase.idModelMaterial,
-                    idVMaterialType: H.Helpers.safeNumber(modelMaterialChannelBase.idVMaterialType),
-                    MaterialTypeOther: modelMaterialChannelBase.MaterialTypeOther,
-                    idModelMaterialUVMap: H.Helpers.safeNumber(modelMaterialChannelBase.idModelMaterialUVMap),
-                    UVMapEmbedded: H.Helpers.safeBoolean(modelMaterialChannelBase.UVMapEmbedded),
-                    ChannelPosition: H.Helpers.safeNumber(modelMaterialChannelBase.ChannelPosition),
-                    ChannelWidth: H.Helpers.safeNumber(modelMaterialChannelBase.ChannelWidth),
-                    Scalar1: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar1),
-                    Scalar2: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar2),
-                    Scalar3: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar3),
-                    Scalar4: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar4),
-                    AdditionalAttributes: modelMaterialChannelBase.AdditionalAttributes,
-                });
-                modelMaterialChannelList.push(modelMaterialChannel);
-            }
+            for (const modelMaterialChannelBase of modelMaterialChannelBaseList)
+                modelMaterialChannelList.push(ModelMaterialChannel.constructFromPrisma(modelMaterialChannelBase));
             return modelMaterialChannelList;
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterials', error);
+            return null;
+        }
+    }
+
+    static async fetchFromModelMaterialUVMap(idModelMaterialUVMap: number): Promise<ModelMaterialChannel[] | null> {
+        if (!idModelMaterialUVMap)
+            return null;
+        try {
+            return DBC.CopyArray<ModelMaterialChannelBase, ModelMaterialChannel>(
+                await DBC.DBConnection.prisma.modelMaterialChannel.findMany({ where: { idModelMaterialUVMap } }), ModelMaterialChannel);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterialUVMap', error);
             return null;
         }
     }
