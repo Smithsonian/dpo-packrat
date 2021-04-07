@@ -3146,6 +3146,10 @@ export type GetSubjectQuery = (
     & { Subject?: Maybe<(
       { __typename?: 'Subject' }
       & Pick<Subject, 'idSubject'>
+      & { SystemObject?: Maybe<(
+        { __typename?: 'SystemObject' }
+        & Pick<SystemObject, 'idSystemObject'>
+      )> }
     )> }
   ) }
 );
@@ -5394,6 +5398,9 @@ export const GetSubjectDocument = gql`
   getSubject(input: $input) {
     Subject {
       idSubject
+      SystemObject {
+        idSystemObject
+      }
     }
   }
 }

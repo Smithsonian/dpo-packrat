@@ -5,11 +5,11 @@
  */
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState, useEffect } from 'react';
+import React, { useState /*, useEffect */ } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
-import { RelatedObjectType } from '../../../../../types/graphql';
+import { RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import ObjectSelectModal from './ObjectSelectModal';
@@ -56,6 +56,100 @@ interface ModelProps {
     readonly metadataIndex: number;
 }
 
+interface ObjectMesh {
+    materialTypes: MaterialInfo[];
+    pointCount: number;
+    faceCount: number;
+    colorChannelCount: number;
+    textureCoordChannelCount: number;
+    hasBones: boolean | null;
+    hasFaceNormals: boolean | null;
+    hasTangents: boolean | null;
+    hasTextureCoordinates: boolean | null;
+    hasVertexNormals: boolean | null;
+    hasVertexColor: boolean | null;
+    manifoldClosed: boolean | null;
+    manifoldOpen: boolean | null;
+    isWatertight: boolean | null;
+    selfIntersecting: boolean | null;
+    boundingValues: number[];
+}
+
+interface MaterialInfo {
+    materialName: string;
+    type: MaterialType[];
+}
+
+interface MaterialType {
+    typeName: string;
+    source: string;
+    value: string;
+    additional: string;
+}
+
+const sampleObjectMesh: ObjectMesh = {
+    materialTypes: [
+        {
+            materialName: 'material1',
+            type: [
+                {
+                    typeName: 'diffuse1',
+                    source: 'armstrong1.jpg',
+                    value: '1.0',
+                    additional: 'ior:1'
+                },
+                {
+                    typeName: 'occlusion2',
+                    source: 'armstrong2.jpg',
+                    value: '2.0',
+                    additional: ''
+                }
+            ]
+        },
+        {
+            materialName: 'material2',
+            type: [
+                {
+                    typeName: 'diffuse2',
+                    source: 'garden.jpg',
+                    value: '3.0',
+                    additional: 'more info'
+                }
+            ]
+        }
+    ],
+    pointCount: 4,
+    faceCount: 4,
+    colorChannelCount: 5,
+    textureCoordChannelCount: 2,
+    hasBones: true,
+    hasFaceNormals: true,
+    hasTangents: true,
+    hasTextureCoordinates: null,
+    hasVertexNormals: true,
+    hasVertexColor: null,
+    manifoldClosed: true,
+    manifoldOpen: false,
+    isWatertight: true,
+    selfIntersecting: false,
+    boundingValues: [6, 1, 2, 3, 4, 5]
+};
+
+const sampleAssetFiles = [
+    {
+        assetName: 'armstrong.obj',
+        assetType: 'geometry'
+    },
+    {
+        assetName: 'ArmstrongBump.jpg',
+        assetType: 'Texture: bump'
+    },
+    {
+        assetName: 'another1.jpg',
+        assetType: 'something'
+    }
+];
+
 function Model(props: ModelProps): React.ReactElement {
     const { metadataIndex } = props;
     const classes = useStyles();
@@ -66,6 +160,17 @@ function Model(props: ModelProps): React.ReactElement {
     const [setDefaultIngestionFilters] = useRepositoryStore(state => [state.setDefaultIngestionFilters]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [modalOpen, setModalOpen] = useState(false);
+
+    // fetch the idSystemObject of the subject so that it can be used
+    // as the root to initialize the repository browser
+    const response = useGetSubjectQuery({
+        variables: {
+            input: {
+                idSubject: subjects[0]?.id
+            }
+        }
+    });
+    const idSystemObject: number | undefined = response?.data?.getSubject?.Subject?.SystemObject?.idSystemObject;
 
     const errors = getFieldErrors(metadata);
 
@@ -101,100 +206,6 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, value, MetadataType.model);
     };
 
-    interface ObjectMesh {
-        materialTypes: MaterialInfo[];
-        pointCount: number;
-        faceCount: number;
-        colorChannelCount: number;
-        textureCoordChannelCount: number;
-        hasBones: boolean | null;
-        hasFaceNormals: boolean | null;
-        hasTangents: boolean | null;
-        hasTextureCoordinates: boolean | null;
-        hasVertexNormals: boolean | null;
-        hasVertexColor: boolean | null;
-        manifoldClosed: boolean | null;
-        manifoldOpen: boolean | null;
-        isWatertight: boolean | null;
-        selfIntersecting: boolean | null;
-        boundingValues: number[];
-    }
-
-    interface MaterialInfo {
-        materialName: string;
-        type: MaterialType[];
-    }
-
-    interface MaterialType {
-        typeName: string;
-        source: string;
-        value: string;
-        additional: string;
-    }
-
-    const sampleObjectMesh: ObjectMesh = {
-        materialTypes: [
-            {
-                materialName: 'material1',
-                type: [
-                    {
-                        typeName: 'diffuse1',
-                        source: 'armstrong1.jpg',
-                        value: '1.0',
-                        additional: 'ior:1'
-                    },
-                    {
-                        typeName: 'occlusion2',
-                        source: 'armstrong2.jpg',
-                        value: '2.0',
-                        additional: ''
-                    }
-                ]
-            },
-            {
-                materialName: 'material2',
-                type: [
-                    {
-                        typeName: 'diffuse2',
-                        source: 'garden.jpg',
-                        value: '3.0',
-                        additional: 'more info'
-                    }
-                ]
-            }
-        ],
-        pointCount: 4,
-        faceCount: 4,
-        colorChannelCount: 5,
-        textureCoordChannelCount: 2,
-        hasBones: true,
-        hasFaceNormals: true,
-        hasTangents: true,
-        hasTextureCoordinates: null,
-        hasVertexNormals: true,
-        hasVertexColor: null,
-        manifoldClosed: true,
-        manifoldOpen: false,
-        isWatertight: true,
-        selfIntersecting: false,
-        boundingValues: [6, 1, 2, 3, 4, 5]
-    };
-
-    const sampleAssetFiles = [
-        {
-            assetName: 'armstrong.obj',
-            assetType: 'geometry'
-        },
-        {
-            assetName: 'ArmstrongBump.jpg',
-            assetType: 'Texture: bump'
-        },
-        {
-            assetName: 'another1.jpg',
-            assetType: 'something'
-        }
-    ];
-
     // const updateUVMapsVariant = (uvMapId: number, mapType: number) => {
     //     const { uvMaps } = model;
     //     const updatedUVMaps = uvMaps.map(uvMap => {
@@ -209,11 +220,8 @@ function Model(props: ModelProps): React.ReactElement {
     //     updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
     // };
 
-    useEffect(() => {
-        setDefaultIngestionFilters(eSystemObjectType.eModel, '11-33-44');
-    }, [setDefaultIngestionFilters]);
-
     const openSourceObjectModal = () => {
+        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         setModalOpen(true);
     };
 
@@ -233,8 +241,6 @@ function Model(props: ModelProps): React.ReactElement {
     };
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
-
-    console.log(subjects);
 
     return (
         <React.Fragment>
@@ -365,24 +371,4 @@ export default Model;
 {
     /* <InputField disabled type='number' label='Roughness' value={model.roughness} name='roughness' onChange={setIdField} />
 <InputField disabled type='number' label='Metalness' value={model.metalness} name='metalness' onChange={setIdField} /> */
-}
-
-{
-    /* <CheckboxField name='isTwoManifoldUnbounded' label='Is Two Manifold Unbounded?' value={model.isTwoManifoldUnbounded} onChange={setCheckboxField} />
-<CheckboxField name='isTwoManifoldBounded' label='Is Two Manifold Bounded?' value={model.isTwoManifoldBounded} onChange={setCheckboxField} />
-<CheckboxField name='isWatertight' label='Is Watertight?' value={model.isWatertight} onChange={setCheckboxField} />
-<CheckboxField name='hasNormals' label='Has Normals?' value={model.hasNormals} onChange={setCheckboxField} />
-<CheckboxField name='hasVertexColor' label='Has Vertex Color?' value={model.hasVertexColor} onChange={setCheckboxField} />
-<CheckboxField name='hasUVSpace' label='Has UV Space?' value={model.hasUVSpace} onChange={setCheckboxField} />
-<CheckboxField name='selfIntersecting' label='Self Intersecting?' value={model.selfIntersecting} onChange={setCheckboxField} />
-<BoundingBoxInput
-    disabled
-    boundingBoxP1X={model.boundingBoxP1X}
-    boundingBoxP1Y={model.boundingBoxP1Y}
-    boundingBoxP1Z={model.boundingBoxP1Z}
-    boundingBoxP2X={model.boundingBoxP2X}
-    boundingBoxP2Y={model.boundingBoxP2Y}
-    boundingBoxP2Z={model.boundingBoxP2Z}
-    onChange={setIdField}
-/> */
 }

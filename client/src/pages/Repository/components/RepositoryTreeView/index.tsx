@@ -10,7 +10,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { Loader } from '../../../../components';
 import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore } from '../../../../store';
 import { NavigationResultEntry } from '../../../../types/graphql';
@@ -73,12 +73,8 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
     const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
 
-    const [tree, initializeTree, getChildren] = useRepositoryStore(state => [state.tree, state.initializeTree, state.getChildren]);
+    const [tree, getChildren] = useRepositoryStore(state => [state.tree, state.getChildren]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
-
-    useEffect(() => {
-        initializeTree();
-    }, [initializeTree]);
 
     const onNodeToggle = useCallback(
         async (_, nodeIds: string[]) => {
