@@ -743,7 +743,7 @@ export class AssetStorageAdapter {
     }
 
     /** This method removes staged files from our storage system (i.e. uploaded but not ingested). If successful,
-     * it then deletes the asset version
+     * it then retires the asset version
      */
     static async discardAssetVersion(assetVersion: DBAPI.AssetVersion): Promise<AssetStorageResult> {
         // only works for staged versions -- fail if not staged

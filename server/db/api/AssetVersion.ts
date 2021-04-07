@@ -270,12 +270,32 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         }
     }
 
-    static async fetchFromUserByIngested(idUserCreator: number, Ingested: boolean): Promise<AssetVersion[] | null> {
+    /** Pass in a value for Retired if you need to seek only asset versions that have or have not been retired */
+    static async fetchFromUserByIngested(idUserCreator: number, Ingested: boolean, Retired: boolean | null = null): Promise<AssetVersion[] | null> {
         if (!idUserCreator)
             return null;
         try {
-            return DBC.CopyArray<AssetVersionBase, AssetVersion>(
-                await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator, Ingested } }), AssetVersion);
+            if (Retired === null)
+                return DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                    await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator, Ingested } }), AssetVersion);
+            else {
+                const assetVersions: AssetVersionBase[] | null = // DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                    await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                    SELECT AV.*
+                    FROM AssetVersion AS AV
+                    JOIN SystemObject AS SO ON (AV.idAssetVersion = SO.idAssetVersion)
+                    JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                    WHERE AV.idUserCreator = ${idUserCreator}
+                      AND AV.Ingested = ${Ingested}
+                      AND SO.Retired = ${Retired}`; //, AssetVersion);
+                /* istanbul ignore if */
+                if (!assetVersions || assetVersions.length == 0)
+                    return null;
+                const res: AssetVersion[] = [];
+                for (const assetVersion of assetVersions)   // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
+                    res.push(AssetVersion.constructFromPrisma(assetVersion));
+                return res;
+            }
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('DBAPI.AssetVersion.fetchFromUserByIngested', error);
             return null;
