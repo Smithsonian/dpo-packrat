@@ -2145,6 +2145,7 @@ export type Vocabulary = {
   idVocabularySet: Scalars['Int'];
   SortOrder: Scalars['Int'];
   Term: Scalars['String'];
+  eVocabID?: Maybe<Scalars['Int']>;
   VocabularySet?: Maybe<VocabularySet>;
 };
 
@@ -3294,7 +3295,7 @@ export type GetVocabularyEntriesQuery = (
       & Pick<VocabularyEntry, 'eVocabSetID'>
       & { Vocabulary: Array<(
         { __typename?: 'Vocabulary' }
-        & Pick<Vocabulary, 'idVocabulary' | 'Term'>
+        & Pick<Vocabulary, 'idVocabulary' | 'Term' | 'eVocabID'>
       )> }
     )> }
   ) }
@@ -5762,6 +5763,7 @@ export const GetVocabularyEntriesDocument = gql`
       Vocabulary {
         idVocabulary
         Term
+        eVocabID
       }
     }
   }
