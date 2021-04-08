@@ -8,6 +8,7 @@ const getVocabularyEntries = gql`
                 Vocabulary {
                     idVocabulary
                     Term
+                    eVocabID
                 }
             }
         }

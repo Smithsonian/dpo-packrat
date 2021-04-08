@@ -2142,6 +2142,7 @@ export type Vocabulary = {
   idVocabularySet: Scalars['Int'];
   SortOrder: Scalars['Int'];
   Term: Scalars['String'];
+  eVocabID?: Maybe<Scalars['Int']>;
   VocabularySet?: Maybe<VocabularySet>;
 };
 
