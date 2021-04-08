@@ -97,7 +97,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
                             };
 
                             const workflow: WF.IWorkflow | null = await workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion, workflowParams);
-                            const results = workflow ? await workflow.waitForCompletion(3600000) : { success: false, error: 'Unable to start Cook integration workflow' };
+                            const results = workflow ? await workflow.waitForCompletion(3600000) : { success: true, error: '' };
                             if (results.success)
                                 idAssetVersions.push(assetVersion.idAssetVersion);
                             else {
