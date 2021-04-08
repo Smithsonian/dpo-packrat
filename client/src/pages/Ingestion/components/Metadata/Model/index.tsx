@@ -5,11 +5,11 @@
  */
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState /*, useEffect */ } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
-import { RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
+import { RelatedObjectType, useGetSubjectQuery /*, useGetModelConstellationQuery */ } from '../../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import ObjectSelectModal from './ObjectSelectModal';
@@ -17,6 +17,7 @@ import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';
 // import UVContents from './UVContents';
 import AssetFilesTable from './AssetFilesTable';
+import { extractModelConstellation } from '../../../../../constants';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -45,6 +46,7 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     objectMeshTable: {
         display: 'flex',
+        flexDirection: 'column',
         borderRadius: 5,
         padding: 10,
         backgroundColor: palette.primary.light,
@@ -56,99 +58,49 @@ interface ModelProps {
     readonly metadataIndex: number;
 }
 
-interface ObjectMesh {
-    materialTypes: MaterialInfo[];
-    pointCount: number;
-    faceCount: number;
-    colorChannelCount: number;
-    textureCoordChannelCount: number;
-    hasBones: boolean | null;
-    hasFaceNormals: boolean | null;
-    hasTangents: boolean | null;
-    hasTextureCoordinates: boolean | null;
-    hasVertexNormals: boolean | null;
-    hasVertexColor: boolean | null;
-    manifoldClosed: boolean | null;
-    manifoldOpen: boolean | null;
-    isWatertight: boolean | null;
-    selfIntersecting: boolean | null;
-    boundingValues: number[];
-}
+// interface ObjectMesh {
+//     materialTypes: MaterialInfo[];
+//     pointCount: number;
+//     faceCount: number;
+//     colorChannelCount: number;
+//     textureCoordChannelCount: number;
+//     hasBones: boolean | null;
+//     hasFaceNormals: boolean | null;
+//     hasTangents: boolean | null;
+//     hasTextureCoordinates: boolean | null;
+//     hasVertexNormals: boolean | null;
+//     hasVertexColor: boolean | null;
+//     manifoldClosed: boolean | null;
+//     manifoldOpen: boolean | null;
+//     isWatertight: boolean | null;
+//     selfIntersecting: boolean | null;
+//     boundingValues: number[];
+// }
 
-interface MaterialInfo {
-    materialName: string;
-    type: MaterialType[];
-}
+// interface MaterialInfo {
+//     materialName: string;
+//     type: MaterialType[];
+// }
 
-interface MaterialType {
-    typeName: string;
-    source: string;
-    value: string;
-    additional: string;
-}
+// interface MaterialType {
+//     typeName: string;
+//     source: string;
+//     value: string;
+//     additional: string;
+// }
 
-const sampleObjectMesh: ObjectMesh = {
-    materialTypes: [
-        {
-            materialName: 'material1',
-            type: [
-                {
-                    typeName: 'diffuse1',
-                    source: 'armstrong1.jpg',
-                    value: '1.0',
-                    additional: 'ior:1'
-                },
-                {
-                    typeName: 'occlusion2',
-                    source: 'armstrong2.jpg',
-                    value: '2.0',
-                    additional: ''
-                }
-            ]
-        },
-        {
-            materialName: 'material2',
-            type: [
-                {
-                    typeName: 'diffuse2',
-                    source: 'garden.jpg',
-                    value: '3.0',
-                    additional: 'more info'
-                }
-            ]
-        }
-    ],
-    pointCount: 4,
-    faceCount: 4,
-    colorChannelCount: 5,
-    textureCoordChannelCount: 2,
-    hasBones: true,
-    hasFaceNormals: true,
-    hasTangents: true,
-    hasTextureCoordinates: null,
-    hasVertexNormals: true,
-    hasVertexColor: null,
-    manifoldClosed: true,
-    manifoldOpen: false,
-    isWatertight: true,
-    selfIntersecting: false,
-    boundingValues: [6, 1, 2, 3, 4, 5]
-};
-
-const sampleAssetFiles = [
-    {
-        assetName: 'armstrong.obj',
-        assetType: 'geometry'
-    },
-    {
-        assetName: 'ArmstrongBump.jpg',
-        assetType: 'Texture: bump'
-    },
-    {
-        assetName: 'another1.jpg',
-        assetType: 'something'
-    }
-];
+// interface ModelReadOnly {
+//     CountVertices: number;
+//     CountFaces: number;
+//     CountAnimations: number;
+//     CountCameras: number;
+//     CountLights: number;
+//     CountMaterials: number;
+//     CountMeshes: number;
+//     CountEmbeddedTextures: number;
+//     CountLinkedTextures: number;
+//     FileEncoding: string;
+// }
 
 function Model(props: ModelProps): React.ReactElement {
     const { metadataIndex } = props;
@@ -160,17 +112,423 @@ function Model(props: ModelProps): React.ReactElement {
     const [setDefaultIngestionFilters] = useRepositoryStore(state => [state.setDefaultIngestionFilters]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [modalOpen, setModalOpen] = useState(false);
+    const [ingestionModel, setIngestionModel] = useState<any>({
+        CountVertices: 0,
+        CountFaces: 0,
+        CountAnimations: 0,
+        CountCameras: 0,
+        CountLights: 0,
+        CountMaterials: 0,
+        CountMeshes: 0,
+        CountEmbeddedTextures: 0,
+        CountLinkedTextures: 0,
+        FileEncoding: ''
+    });
+    const [assetFiles, setAssetFiles] = useState([{ assetName: '', assetType: '' }]);
+    const [modelObjects, setModelObjects] = useState<any>([
+        {
+            idModelObject: 0,
+            CountPoint: 0,
+            CountFace: 0,
+            CountColorChannel: 0,
+            CountTextureCoordinateChannel: 0,
+            HasBones: null,
+            HasFaceNormals: null,
+            HasTangents: null,
+            HasTextureCoordinates: null,
+            HasVertextNormals: null,
+            HasVertexColor: null,
+            IsTwoManifoldUnbounded: null,
+            IsTwoManifoldBounded: null,
+            IsWatertight: null,
+            SelfIntersecting: null,
+            BoundingBoxP1X: 0,
+            BoundingBoxP1Y: 0,
+            BoundingBoxP1Z: 0,
+            BoundingBoxP2X: 0,
+            BoundingBoxP2Y: 0,
+            BoundingBoxP2Z: 0,
+            ModelMaterials: [
+                {
+                    idModelMaterial: 0,
+                    Name: '',
+                    ModelMaterialChannel: [
+                        {
+                            idModelMaterialChannel: 0,
+                            Type: '',
+                            Source: '',
+                            Value: '',
+                            Additional: ''
+                        }
+                    ]
+                }
+            ]
+        }
+    ]);
 
-    // fetch the idSystemObject of the subject so that it can be used
+    /*
+    //fetch the idSystemObject of the subject so that it can be used
+    const modelIngestionDetails = useGetModelConstellationQuery({
+        variables: {
+            input: {
+                idModel: 1
+            }
+        }
+    })
+*/
+    useEffect(() => {
+        const data: any = {
+            Model: {
+                Name: '',
+                Master: true,
+                Authoritative: true,
+                DateCreated: '2021-04-01T00:00:00.000Z',
+                idVCreationMethod: 0,
+                idVModality: 0,
+                idVUnits: 0,
+                idVPurpose: 0,
+                idVFileType: 0,
+                idAssetThumbnail: null,
+                CountAnimations: 0,
+                CountCameras: 0,
+                CountFaces: 149999,
+                CountLights: 0,
+                CountMaterials: 1,
+                CountMeshes: 1,
+                CountVertices: 74796,
+                CountEmbeddedTextures: 0,
+                CountLinkedTextures: 1,
+                FileEncoding: 'BINARY',
+                idModel: 1,
+                idAssetThumbnailOrig: null
+            },
+            ModelObjects: [
+                {
+                    idModelObject: 1,
+                    idModel: 1,
+                    BoundingBoxP1X: -892.2620849609375,
+                    BoundingBoxP1Y: -2167.86767578125,
+                    BoundingBoxP1Z: -971.3925170898438,
+                    BoundingBoxP2X: 892.2653198242188,
+                    BoundingBoxP2Y: 2167.867919921875,
+                    BoundingBoxP2Z: 971.3912963867188,
+                    CountPoint: 74796,
+                    CountFace: 149999,
+                    CountColorChannel: 0,
+                    CountTextureCoorinateChannel: 1,
+                    HasBones: false,
+                    HasFaceNormals: true,
+                    HasTangents: null,
+                    HasTextureCoordinates: true,
+                    HasVertexNormals: null,
+                    HasVertexColor: false,
+                    IsTwoManifoldUnbounded: false,
+                    IsTwoManifoldBounded: false,
+                    IsWatertight: false,
+                    SelfIntersecting: true
+                },
+                {
+                    idModelObject: 2,
+                    idModel: 2,
+                    BoundingBoxP1X: -892.2620849609375,
+                    BoundingBoxP1Y: -2167.86767578125,
+                    BoundingBoxP1Z: -971.3925170898438,
+                    BoundingBoxP2X: 892.2653198242188,
+                    BoundingBoxP2Y: 2167.867919921875,
+                    BoundingBoxP2Z: 971.3912963867188,
+                    CountPoint: 74796,
+                    CountFace: 149999,
+                    CountColorChannel: 0,
+                    CountTextureCoorinateChannel: 1,
+                    HasBones: false,
+                    HasFaceNormals: true,
+                    HasTangents: null,
+                    HasTextureCoordinates: true,
+                    HasVertexNormals: null,
+                    HasVertexColor: false,
+                    IsTwoManifoldUnbounded: false,
+                    IsTwoManifoldBounded: false,
+                    IsWatertight: false,
+                    SelfIntersecting: true
+                }
+            ],
+            ModelMaterials: [
+                {
+                    idModelMaterial: 1,
+                    Name: 'material_0'
+                },
+                {
+                    idModelMaterial: 2,
+                    Name: 'material_1'
+                }
+            ],
+            ModelMaterialChannels: [
+                {
+                    idModelMaterialChannel: 1,
+                    idModelMaterial: 1,
+                    idVMaterialType: 64,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: 1,
+                    UVMapEmbedded: false,
+                    ChannelPosition: 0,
+                    ChannelWidth: 3,
+                    Scalar1: 0.8,
+                    Scalar2: 0.8,
+                    Scalar3: 0.8,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 64,
+                    idModelMaterialUVMapOrig: 1,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                },
+                {
+                    idModelMaterialChannel: 2,
+                    idModelMaterial: 1,
+                    idVMaterialType: 65,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0.8,
+                    Scalar2: 0.8,
+                    Scalar3: 0.8,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 65,
+                    idModelMaterialUVMapOrig: null,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                },
+                {
+                    idModelMaterialChannel: 3,
+                    idModelMaterial: 1,
+                    idVMaterialType: 66,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0,
+                    Scalar2: 0,
+                    Scalar3: 0,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 66,
+                    idModelMaterialUVMapOrig: null,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                },
+                {
+                    idModelMaterialChannel: 4,
+                    idModelMaterial: 1,
+                    idVMaterialType: 67,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0,
+                    Scalar2: 0,
+                    Scalar3: 0,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 67,
+                    idModelMaterialUVMapOrig: null,
+                    Type: 'random',
+                    Source: 'random',
+                    Value: 'random'
+                },
+                {
+                    idModelMaterialChannel: 5,
+                    idModelMaterial: 1,
+                    idVMaterialType: 70,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0,
+                    Scalar2: null,
+                    Scalar3: null,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 70,
+                    idModelMaterialUVMapOrig: null,
+                    Type: 'text',
+                    Source: 'text',
+                    Value: 'text'
+                },
+                {
+                    idModelMaterialChannel: 6,
+                    idModelMaterial: 1,
+                    idVMaterialType: 71,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 1,
+                    Scalar2: null,
+                    Scalar3: null,
+                    Scalar4: null,
+                    AdditionalAttributes: "{ color: '0,0,0' }",
+                    idVMaterialTypeOrig: 71,
+                    idModelMaterialUVMapOrig: null,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                },
+                {
+                    idModelMaterialChannel: 7,
+                    idModelMaterial: 1,
+                    idVMaterialType: 74,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0,
+                    Scalar2: null,
+                    Scalar3: null,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 74,
+                    idModelMaterialUVMapOrig: null,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                },
+                {
+                    idModelMaterialChannel: 8,
+                    idModelMaterial: 2,
+                    idVMaterialType: 74,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0,
+                    Scalar2: null,
+                    Scalar3: null,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 74,
+                    idModelMaterialUVMapOrig: null,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                }
+            ],
+            ModelMaterialUVMaps: [
+                {
+                    idModel: 1,
+                    idAsset: 2,
+                    UVMapEdgeLength: 0,
+                    idModelMaterialUVMap: 1
+                }
+            ],
+            ModelObjectModelMaterialXref: [
+                {
+                    idModelObjectModelMaterialXref: 1,
+                    idModelObject: 1,
+                    idModelMaterial: 1
+                },
+                {
+                    idModelObjectModelMaterialXref: 2,
+                    idModelObject: 1,
+                    idModelMaterial: 2
+                },
+                {
+                    idModelObjectModelMaterialXref: 3,
+                    idModelObject: 2,
+                    idModelMaterial: 1
+                }
+            ],
+            ModelAssets: [
+                {
+                    Asset: {
+                        FileName: 'eremotherium_laurillardi-150k-4096.fbx',
+                        FilePath: '',
+                        idAssetGroup: null,
+                        idVAssetType: 0,
+                        idSystemObject: null,
+                        StorageKey: null,
+                        idAsset: 1,
+                        idAssetGroupOrig: null,
+                        idSystemObjectOrig: null
+                    },
+                    AssetVersion: {
+                        idAsset: 1,
+                        Version: 1,
+                        FileName: 'eremotherium_laurillardi-150k-4096.fbx',
+                        idUserCreator: 0,
+                        DateCreated: '2021-04-01T00:00:00.000Z',
+                        StorageHash: '',
+                        StorageSize: '0',
+                        StorageKeyStaging: '',
+                        Ingested: false,
+                        BulkIngest: false,
+                        idAssetVersion: 1
+                    },
+                    AssetName: 'eremotherium_laurillardi-150k-4096.fbx',
+                    AssetType: 'Model'
+                },
+                {
+                    Asset: {
+                        FileName:
+                            '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
+                        FilePath: '',
+                        idAssetGroup: null,
+                        idVAssetType: 0,
+                        idSystemObject: null,
+                        StorageKey: null,
+                        idAsset: 2,
+                        idAssetGroupOrig: null,
+                        idSystemObjectOrig: null
+                    },
+                    AssetVersion: {
+                        idAsset: 2,
+                        Version: 1,
+                        FileName:
+                            '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
+                        idUserCreator: 0,
+                        DateCreated: '2021-04-01T00:00:00.000Z',
+                        StorageHash: '',
+                        StorageSize: '0',
+                        StorageKeyStaging: '',
+                        Ingested: false,
+                        BulkIngest: false,
+                        idAssetVersion: 2
+                    },
+                    AssetName:
+                        '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
+                    AssetType: 'Texture Map diffuse'
+                }
+            ]
+        };
+
+        const { ingestionModel, modelObjects, assets } = extractModelConstellation(data);
+        setIngestionModel(ingestionModel);
+        setModelObjects(modelObjects);
+        setAssetFiles(assets);
+    }, []);
+
+    // const {data, error} = useGetModelConstellationForAssetVersionQuery({variables: {input: {idAssetVersion}}})
+
     // as the root to initialize the repository browser
-    const response = useGetSubjectQuery({
+    const subjectIdSystemObject = useGetSubjectQuery({
         variables: {
             input: {
                 idSubject: subjects[0]?.id
             }
         }
     });
-    const idSystemObject: number | undefined = response?.data?.getSubject?.Subject?.SystemObject?.idSystemObject;
+    const idSystemObject: number | undefined = subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject;
 
     const errors = getFieldErrors(metadata);
 
@@ -329,27 +687,27 @@ function Model(props: ModelProps): React.ReactElement {
                     {/* End of data-entry form */}
                     {/* Start of model-level metrics form */}
                     <Box className={classes.notRequiredFields}>
-                        <ReadOnlyRow label='Point Count' value={77} />
-                        <ReadOnlyRow label='Face Count' value={2} />
-                        <ReadOnlyRow label='Animation Count' value={2} />
-                        <ReadOnlyRow label='Camera Count' value={2} />
-                        <ReadOnlyRow label='Light Count' value={2} />
-                        <ReadOnlyRow label='Material Count' value={2} />
-                        <ReadOnlyRow label='Mesh Count' value={2} />
-                        <ReadOnlyRow label='Embedded Texture Count' value={2} />
-                        <ReadOnlyRow label='Linked Texture Count' value={2} />
-                        <ReadOnlyRow label='File Encoding' value={'Binary'} />
+                        <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices || 'unknown'} />
+                        <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces || 'unknown'} />
+                        <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations || 'unknown'} />
+                        <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras || 'unknown'} />
+                        <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights || 'unknown'} />
+                        <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials || 'unknown'} />
+                        <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes || 'unknown'} />
+                        <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures || 'unknown'} />
+                        <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures || 'unknown'} />
+                        <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding || 'unknown'} />
                     </Box>
                     {/* End of  model-level metrics form */}
                 </Box>
                 {/* start of object/mesh table */}
                 {/* Start of asset files table */}
                 <Box mb={2}>
-                    <AssetFilesTable files={sampleAssetFiles} />
+                    <AssetFilesTable files={assetFiles} />
                 </Box>
                 {/* End of asset files table */}
                 <Box display='flex' flexDirection='row' className={classes.objectMeshTable}>
-                    <ObjectMeshTable material={sampleObjectMesh} />
+                    <ObjectMeshTable modelObjects={modelObjects} />
                 </Box>
             </Box>
             <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={model.sourceObjects} />

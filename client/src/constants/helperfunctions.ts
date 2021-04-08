@@ -1,3 +1,5 @@
+import { ModelConstellation } from '../types/graphql';
+
 export function toTitleCase(str: string): string {
     return str.replace(/\w\S*/g, txt => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -39,3 +41,154 @@ export function extractISOMonthDateYear(iso: string | Date, materialUI = false):
     const result = `${time.getMonth() + 1}/${time.getDate()}/${time.getFullYear()}`;
     return result;
 }
+
+
+export function extractModelConstellation(data: ModelConstellation) {
+    const { Model, ModelObjectModelMaterialXref, ModelAssets, ModelObjects, ModelMaterialChannels, ModelMaterials } = data;
+    const {
+        CountVertices,
+        CountFaces,
+        CountAnimations,
+        CountCameras,
+        CountLights,
+        CountMaterials,
+        CountMeshes,
+        CountEmbeddedTextures,
+        CountLinkedTextures,
+        FileEncoding
+    } = Model;
+    let modelObjects: any = [];
+    let assets: any = [];
+    let ModelMaterialsHash = {};
+    const ingestionModel = {
+        CountVertices,
+        CountFaces,
+        CountAnimations,
+        CountCameras,
+        CountLights,
+        CountMaterials,
+        CountMeshes,
+        CountEmbeddedTextures,
+        CountLinkedTextures,
+        FileEncoding
+    }
+
+    if (ModelMaterials) {
+        ModelMaterials.forEach((modelMaterial) => {
+            ModelMaterialsHash[modelMaterial.idModelMaterial] = {
+                idModelMaterial: modelMaterial.idModelMaterial,
+                Name: modelMaterial.Name,
+                ModelMaterialChannel: []
+            }
+        })
+    }
+
+    if (ModelMaterialChannels) {
+        ModelMaterialChannels.forEach((channel) => {
+            if (ModelMaterialsHash[channel.idModelMaterial]) {
+                ModelMaterialsHash[channel.idModelMaterial].ModelMaterialChannel.push(channel);
+            }
+        })
+    }
+
+    if (ModelObjects) {
+        ModelObjects.forEach((modelObject) => {
+            let modelObj = modelObject;
+            modelObj["ModelMaterials"] = [];
+            modelObjects.push(modelObj);
+        });
+    }
+
+
+    if (ModelObjectModelMaterialXref) {
+        ModelObjectModelMaterialXref.forEach((xref) => {
+            const ind = modelObjects.findIndex((modelObject) => modelObject.idModelObject === xref.idModelObject);
+            if (ind !== -1) {
+                modelObjects[ind].ModelMaterials.push(ModelMaterialsHash[xref.idModelMaterial]);
+            }
+        });
+    }
+
+    if (ModelAssets) {
+        ModelAssets.forEach((asset) => assets.push({ assetName: asset.AssetName, assetType: asset.AssetType }));
+    }
+
+    return { ingestionModel, modelObjects, assets };
+}
+
+/*
+ModelMaterialsHash = {
+    idModelMaterial: {
+        idModelMaterial
+        Name
+        ModelMaterialChannel: []
+    }
+}
+*/
+/*
+modelObjects = [
+{
+    idModelObject
+    idModel
+    BoundingBoxP1X
+    BoundingBoxP1Y
+    BoundingBoxP1Z
+    BoundingBoxP2X
+    BoundingBoxP2Y
+    BoundingBoxP2Z
+    CountPoint
+    CountFace
+    CountColorChannel
+    CountTextureCoordinateChannel
+    HasBones
+    HasFaceNormals
+    HasTangents
+    HasTextureCoordinates
+    HasVertexNormals
+    HasVertexColor
+    IsTwoManifoldUnbounded
+    IsTwoManifoldBounded
+    IsWatertight
+    SelfIntersecting
+    Model
+    ModelMaterials: [
+        {
+            idModelMaterial
+            Name
+            ModelMaterialChannel: [
+                {
+                    idModelMaterialChannel
+                    idModelMaterial
+                    idVMaterialType
+                    Type
+                    Source
+                    Value
+                },
+                {
+                    idModelMaterialChannel
+                    idModelMaterial
+                    idVMaterialType
+                    Type
+                    Source
+                    Value
+                }
+            ]
+        },
+        {
+            idModelMaterial
+            Name
+            ModelMaterialChannel: [
+                {
+                    idModelMaterialChannel
+                    idModelMaterial
+                    idVMaterialType
+                    Type
+                    Source
+                    Value
+                }
+            ]
+        }
+    ]
+}
+]
+*/
