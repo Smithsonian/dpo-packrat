@@ -194,6 +194,8 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
                     case eVocabularyID.eWorkflowStepTypeStart:                  testVocabulary(vocabulary, 'Start'); break;
 
+                    case eVocabularyID.eWorkflowEventIngestionUploadAssetVersion: testVocabulary(vocabulary, 'Ingestion: Upload Asset Version'); break;
+
                     case eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested eVocabularyID enum ${eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
@@ -249,6 +251,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case eVocabularySetID.eAssetAssetType:
                     case eVocabularySetID.eJobJobType:
                     case eVocabularySetID.eWorkflowType:
+                    case eVocabularySetID.eWorkflowEvent:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet)
@@ -452,6 +455,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(eVocabularySetID.eJobJobType, 'Cook: unwrap');
             await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowType, 'Cook Job');
             await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowStepWorkflowStepType, 'Start');
+            await testVocabularyBySetAndTerm(eVocabularySetID.eWorkflowEvent, 'Ingestion: Upload Asset Version');
             await testVocabularyBySetAndTerm(eVocabularySetID.eAssetAssetType, 'OBVIOUSLY INVALID VALUE', false);
             await testVocabularyBySetAndTerm(eVocabularySetID.eNone, 'Other', false);
         });
