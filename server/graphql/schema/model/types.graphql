@@ -88,10 +88,10 @@ type ModelObject {
     BoundingBoxP2X: Float
     BoundingBoxP2Y: Float
     BoundingBoxP2Z: Float
-    CountPoint: Int
-    CountFace: Int
-    CountColorChannel: Int
-    CountTextureCoorinateChannel: Int
+    CountVertices: Int
+    CountFaces: Int
+    CountColorChannels: Int
+    CountTextureCoorinateChannels: Int
     HasBones: Boolean
     HasFaceNormals: Boolean
     HasTangents: Boolean

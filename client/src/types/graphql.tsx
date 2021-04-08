@@ -1075,10 +1075,10 @@ export type ModelObject = {
   BoundingBoxP2X?: Maybe<Scalars['Float']>;
   BoundingBoxP2Y?: Maybe<Scalars['Float']>;
   BoundingBoxP2Z?: Maybe<Scalars['Float']>;
-  CountPoint?: Maybe<Scalars['Int']>;
-  CountFace?: Maybe<Scalars['Int']>;
-  CountColorChannel?: Maybe<Scalars['Int']>;
-  CountTextureCoorinateChannel?: Maybe<Scalars['Int']>;
+  CountVertices?: Maybe<Scalars['Int']>;
+  CountFaces?: Maybe<Scalars['Int']>;
+  CountColorChannels?: Maybe<Scalars['Int']>;
+  CountTextureCoorinateChannels?: Maybe<Scalars['Int']>;
   HasBones?: Maybe<Scalars['Boolean']>;
   HasFaceNormals?: Maybe<Scalars['Boolean']>;
   HasTangents?: Maybe<Scalars['Boolean']>;
@@ -2737,7 +2737,7 @@ export type GetModelConstellationQuery = (
         )> }
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
-        & Pick<ModelObject, 'idModelObject' | 'idModel' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountPoint' | 'CountFace' | 'CountColorChannel' | 'CountTextureCoorinateChannel' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
+        & Pick<ModelObject, 'idModelObject' | 'idModel' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoorinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
       )>>, ModelMaterials?: Maybe<Array<(
         { __typename?: 'ModelMaterial' }
         & Pick<ModelMaterial, 'idModelMaterial' | 'Name'>
@@ -4444,10 +4444,10 @@ export const GetModelConstellationDocument = gql`
         BoundingBoxP2X
         BoundingBoxP2Y
         BoundingBoxP2Z
-        CountPoint
-        CountFace
-        CountColorChannel
-        CountTextureCoorinateChannel
+        CountVertices
+        CountFaces
+        CountColorChannels
+        CountTextureCoorinateChannels
         HasBones
         HasFaceNormals
         HasTangents
