@@ -1072,10 +1072,10 @@ export type ModelObject = {
   BoundingBoxP2X?: Maybe<Scalars['Float']>;
   BoundingBoxP2Y?: Maybe<Scalars['Float']>;
   BoundingBoxP2Z?: Maybe<Scalars['Float']>;
-  CountPoint?: Maybe<Scalars['Int']>;
-  CountFace?: Maybe<Scalars['Int']>;
-  CountColorChannel?: Maybe<Scalars['Int']>;
-  CountTextureCoorinateChannel?: Maybe<Scalars['Int']>;
+  CountVertices?: Maybe<Scalars['Int']>;
+  CountFaces?: Maybe<Scalars['Int']>;
+  CountColorChannels?: Maybe<Scalars['Int']>;
+  CountTextureCoorinateChannels?: Maybe<Scalars['Int']>;
   HasBones?: Maybe<Scalars['Boolean']>;
   HasFaceNormals?: Maybe<Scalars['Boolean']>;
   HasTangents?: Maybe<Scalars['Boolean']>;

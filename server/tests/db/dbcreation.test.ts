@@ -951,7 +951,7 @@ describe('DB Creation Test Suite', () => {
             modelObject = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
                 BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
-                CountPoint: 100, CountFace: 50, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: true, HasFaceNormals: false,
+                CountVertices: 100, CountFaces: 50, CountColorChannels: 0, CountTextureCoorinateChannels: 0, HasBones: true, HasFaceNormals: false,
                 HasTangents: true, HasTextureCoordinates: false, HasVertexNormals: true, HasVertexColor: false, IsTwoManifoldUnbounded: true,
                 IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
                 idModelObject: 0
@@ -962,7 +962,7 @@ describe('DB Creation Test Suite', () => {
             modelObject2 = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
                 BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 2, BoundingBoxP2Y: 2, BoundingBoxP2Z: 2,
-                CountPoint: null, CountFace: null, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: false, HasFaceNormals: false,
+                CountVertices: null, CountFaces: null, CountColorChannels: 0, CountTextureCoorinateChannels: 0, HasBones: false, HasFaceNormals: false,
                 HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: false, HasVertexColor: true, IsTwoManifoldUnbounded: false,
                 IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
                 idModelObject: 0
@@ -973,7 +973,7 @@ describe('DB Creation Test Suite', () => {
             modelObject3 = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
                 BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null, BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
-                CountPoint: null, CountFace: null, CountColorChannel: null, CountTextureCoorinateChannel: null, HasBones: null, HasFaceNormals: null,
+                CountVertices: null, CountFaces: null, CountColorChannels: null, CountTextureCoorinateChannels: null, HasBones: null, HasFaceNormals: null,
                 HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: null, HasVertexColor: null, IsTwoManifoldUnbounded: null,
                 IsTwoManifoldBounded: null, IsWatertight: null, SelfIntersecting: null,
                 idModelObject: 0
@@ -5429,14 +5429,14 @@ describe('DB Update Test Suite', () => {
         let bUpdated: boolean = false;
         if (modelObject) {
             const updated: number = 369;
-            modelObject.CountFace = updated;
+            modelObject.CountFaces = updated;
 
             bUpdated = await modelObject.update();
 
             const modelObjectFetch: DBAPI.ModelObject | null = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
             expect(modelObjectFetch).toBeTruthy();
             if (modelObjectFetch)
-                expect(modelObjectFetch.CountFace).toEqual(updated);
+                expect(modelObjectFetch.CountFaces).toEqual(updated);
         }
         expect(bUpdated).toBeTruthy();
     });
