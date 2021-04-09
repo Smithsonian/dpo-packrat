@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { ModelConstellation } from '../types/graphql';
 
 export function toTitleCase(str: string): string {
@@ -57,9 +60,9 @@ export function extractModelConstellation(data: ModelConstellation) {
         CountLinkedTextures,
         FileEncoding
     } = Model;
-    let modelObjects: any = [];
-    let assets: any = [];
-    let ModelMaterialsHash = {};
+    const modelObjects: any = [];
+    const assets: any = [];
+    const ModelMaterialsHash = {};
     const ingestionModel = {
         CountVertices,
         CountFaces,
@@ -71,7 +74,7 @@ export function extractModelConstellation(data: ModelConstellation) {
         CountEmbeddedTextures,
         CountLinkedTextures,
         FileEncoding
-    }
+    };
 
     if (ModelMaterials) {
         ModelMaterials.forEach((modelMaterial) => {
@@ -79,8 +82,8 @@ export function extractModelConstellation(data: ModelConstellation) {
                 idModelMaterial: modelMaterial.idModelMaterial,
                 Name: modelMaterial.Name,
                 ModelMaterialChannel: []
-            }
-        })
+            };
+        });
     }
 
     if (ModelMaterialChannels) {
@@ -88,13 +91,13 @@ export function extractModelConstellation(data: ModelConstellation) {
             if (ModelMaterialsHash[channel.idModelMaterial]) {
                 ModelMaterialsHash[channel.idModelMaterial].ModelMaterialChannel.push(channel);
             }
-        })
+        });
     }
 
     if (ModelObjects) {
         ModelObjects.forEach((modelObject) => {
-            let modelObj = modelObject;
-            modelObj["ModelMaterials"] = [];
+            const modelObj = modelObject;
+            modelObj['ModelMaterials'] = [];
             modelObjects.push(modelObj);
         });
     }
@@ -115,80 +118,3 @@ export function extractModelConstellation(data: ModelConstellation) {
 
     return { ingestionModel, modelObjects, assets };
 }
-
-/*
-ModelMaterialsHash = {
-    idModelMaterial: {
-        idModelMaterial
-        Name
-        ModelMaterialChannel: []
-    }
-}
-*/
-/*
-modelObjects = [
-{
-    idModelObject
-    idModel
-    BoundingBoxP1X
-    BoundingBoxP1Y
-    BoundingBoxP1Z
-    BoundingBoxP2X
-    BoundingBoxP2Y
-    BoundingBoxP2Z
-    CountPoint
-    CountFace
-    CountColorChannel
-    CountTextureCoordinateChannel
-    HasBones
-    HasFaceNormals
-    HasTangents
-    HasTextureCoordinates
-    HasVertexNormals
-    HasVertexColor
-    IsTwoManifoldUnbounded
-    IsTwoManifoldBounded
-    IsWatertight
-    SelfIntersecting
-    Model
-    ModelMaterials: [
-        {
-            idModelMaterial
-            Name
-            ModelMaterialChannel: [
-                {
-                    idModelMaterialChannel
-                    idModelMaterial
-                    idVMaterialType
-                    Type
-                    Source
-                    Value
-                },
-                {
-                    idModelMaterialChannel
-                    idModelMaterial
-                    idVMaterialType
-                    Type
-                    Source
-                    Value
-                }
-            ]
-        },
-        {
-            idModelMaterial
-            Name
-            ModelMaterialChannel: [
-                {
-                    idModelMaterialChannel
-                    idModelMaterial
-                    idVMaterialType
-                    Type
-                    Source
-                    Value
-                }
-            ]
-        }
-    ]
-}
-]
-*/

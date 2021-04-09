@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * Metadata
  *

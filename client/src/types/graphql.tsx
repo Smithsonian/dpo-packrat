@@ -817,7 +817,7 @@ export type RelatedObjectInput = {
 
 export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
-  systemCreated: Scalars['Boolean'];
+  name: Scalars['String'];
   master: Scalars['Boolean'];
   authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
@@ -826,14 +826,17 @@ export type IngestModelInput = {
   units: Scalars['Int'];
   dateCaptured: Scalars['String'];
   modelFileType: Scalars['Int'];
-  directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
-  uvMaps: Array<IngestUvMapInput>;
   sourceObjects: Array<RelatedObjectInput>;
-  roughness?: Maybe<Scalars['Int']>;
-  metalness?: Maybe<Scalars['Int']>;
-  pointCount?: Maybe<Scalars['Int']>;
+  vertexCount?: Maybe<Scalars['Int']>;
   faceCount?: Maybe<Scalars['Int']>;
+  animationCount?: Maybe<Scalars['Int']>;
+  cameraCount?: Maybe<Scalars['Int']>;
+  lightCount?: Maybe<Scalars['Int']>;
+  materialCount?: Maybe<Scalars['Int']>;
+  meshCount?: Maybe<Scalars['Int']>;
+  embeddedTextureCount?: Maybe<Scalars['Int']>;
+  linkedTextureCount?: Maybe<Scalars['Int']>;
   isTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
   isTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
   isWatertight?: Maybe<Scalars['Boolean']>;

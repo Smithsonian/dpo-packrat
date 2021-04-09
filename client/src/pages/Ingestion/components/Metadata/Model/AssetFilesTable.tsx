@@ -1,3 +1,6 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';

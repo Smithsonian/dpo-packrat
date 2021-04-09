@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * Metadata - Model
  *
@@ -57,50 +60,6 @@ const useStyles = makeStyles(({ palette }) => ({
 interface ModelProps {
     readonly metadataIndex: number;
 }
-
-// interface ObjectMesh {
-//     materialTypes: MaterialInfo[];
-//     pointCount: number;
-//     faceCount: number;
-//     colorChannelCount: number;
-//     textureCoordChannelCount: number;
-//     hasBones: boolean | null;
-//     hasFaceNormals: boolean | null;
-//     hasTangents: boolean | null;
-//     hasTextureCoordinates: boolean | null;
-//     hasVertexNormals: boolean | null;
-//     hasVertexColor: boolean | null;
-//     manifoldClosed: boolean | null;
-//     manifoldOpen: boolean | null;
-//     isWatertight: boolean | null;
-//     selfIntersecting: boolean | null;
-//     boundingValues: number[];
-// }
-
-// interface MaterialInfo {
-//     materialName: string;
-//     type: MaterialType[];
-// }
-
-// interface MaterialType {
-//     typeName: string;
-//     source: string;
-//     value: string;
-//     additional: string;
-// }
-
-// interface ModelReadOnly {
-//     CountVertices: number;
-//     CountFaces: number;
-//     CountAnimations: number;
-//     CountCameras: number;
-//     CountLights: number;
-//     CountMaterials: number;
-//     CountMeshes: number;
-//     CountEmbeddedTextures: number;
-//     CountLinkedTextures: number;
-//     FileEncoding: string;
-// }
 
 function Model(props: ModelProps): React.ReactElement {
     const { metadataIndex } = props;
@@ -166,16 +125,6 @@ function Model(props: ModelProps): React.ReactElement {
         }
     ]);
 
-    /*
-    //fetch the idSystemObject of the subject so that it can be used
-    const modelIngestionDetails = useGetModelConstellationQuery({
-        variables: {
-            input: {
-                idModel: 1
-            }
-        }
-    })
-*/
     useEffect(() => {
         const data: any = {
             Model: {
@@ -376,7 +325,7 @@ function Model(props: ModelProps): React.ReactElement {
                     Scalar2: null,
                     Scalar3: null,
                     Scalar4: null,
-                    AdditionalAttributes: "{ color: '0,0,0' }",
+                    AdditionalAttributes: 'string',
                     idVMaterialTypeOrig: 71,
                     idModelMaterialUVMapOrig: null,
                     Type: '',
@@ -518,7 +467,19 @@ function Model(props: ModelProps): React.ReactElement {
         setAssetFiles(assets);
     }, []);
 
-    // const {data, error} = useGetModelConstellationForAssetVersionQuery({variables: {input: {idAssetVersion}}})
+    /*
+    2 Approaches to gettingModelConstellation
+    //fetch the idSystemObject of the subject so that it can be used
+    const modelIngestionDetails = useGetModelConstellationForAssetVersionQuery({
+        variables: {
+            input: {
+                idAssetVersion: 1
+            }
+        }
+    })
+
+    const {data, error} = useGetModelConstellationForAssetVersionQuery({variables: {input: {idAssetVersion}}})
+*/
 
     // as the root to initialize the repository browser
     const subjectIdSystemObject = useGetSubjectQuery({

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable react/jsx-max-props-per-line */
 
 /**
  * ReadOnlyRow
