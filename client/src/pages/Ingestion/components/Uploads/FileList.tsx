@@ -33,7 +33,7 @@ function FileList(props: FileListProps): React.ReactElement {
     const onSelect = (id: FileId, selected: boolean): void => selectFile(id, selected);
 
     const getFileList = ({ id, name, size, status, selected, progress, type }: IngestionFile, index: number) => {
-        const uploading = status === FileUploadStatus.UPLOADING;
+        const uploading = (status === FileUploadStatus.UPLOADING || status === FileUploadStatus.PROCESSING);
         const complete = status === FileUploadStatus.COMPLETE;
         const failed = status === FileUploadStatus.FAILED;
         const cancelled = status === FileUploadStatus.CANCELLED;

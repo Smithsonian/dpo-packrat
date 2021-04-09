@@ -21,6 +21,7 @@ INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (19, 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (20, 'Asset.AssetType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (21, 'Job.JobType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (22, 'Workflow.Type', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (23, 'Workflow.Event', 1);
 
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 1, 'Photogrammetry');
@@ -136,8 +137,9 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 10, 'Cook:
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 11, 'Cook: si-voyager-asset');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 12, 'Cook: si-voyager-scene');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 13, 'Cook: unwrap');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 14, 'Cook Job');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 1, 'Cook Job');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (19, 1, 'Start');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (23, 1, 'Ingestion: Upload Asset Version');
 
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary 
 WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
