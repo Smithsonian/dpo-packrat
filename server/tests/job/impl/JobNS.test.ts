@@ -163,7 +163,7 @@ describe('JobNS IWorkflow Completion', () => {
                 continue;
 
             const eWorkflowType: CACHE.eVocabularyID | undefined =
-                await WFP.WorkflowEngine.computeWorkflowTypeEnumFromID(workflowConstellation.workflow.idVWorkflowType);
+                await WFP.WorkflowEngine.computeWorkflowEnumFromID(workflowConstellation.workflow.idVWorkflowType, CACHE.eVocabularySetID.eWorkflowType);
             expect(eWorkflowType).toBeTruthy();
             switch (eWorkflowType) {
                 case CACHE.eVocabularyID.eWorkflowTypeCookJob: {
