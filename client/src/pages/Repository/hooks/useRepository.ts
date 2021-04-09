@@ -11,7 +11,7 @@ import { GetObjectChildrenDocument, GetObjectChildrenQuery } from '../../../type
 function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
     return apolloClient.query({
         query: GetObjectChildrenDocument,
-        fetchPolicy: "network-only",
+        fetchPolicy: 'network-only',
         variables: {
             input: {
                 idRoot: idSystemObject,
@@ -35,7 +35,7 @@ function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0):
 function getObjectChildren(idRoot: number, filter: RepositoryFilter): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
     return apolloClient.query({
         query: GetObjectChildrenDocument,
-        fetchPolicy: "network-only",
+        fetchPolicy: 'network-only',
         variables: {
             input: {
                 idRoot,

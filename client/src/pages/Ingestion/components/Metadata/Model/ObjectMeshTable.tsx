@@ -1,3 +1,7 @@
+/* eslint-disable react/jsx-key */
+/* eslint-disable react/prop-types */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+
 import React from 'react';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -69,8 +73,8 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
         <React.Fragment>
             {modelObjects.map(modelObject => {
                 return (
-                    <Box className={classes.ModelObjectContainer}>
-                        <Box className={classes.materialFields} key={modelObject.idModelObject}>
+                    <Box className={classes.ModelObjectContainer} key={modelObject.idModelObject}>
+                        <Box className={classes.materialFields}>
                             {modelObject.ModelMaterials.map(materialType => {
                                 return (
                                     <React.Fragment>
@@ -99,8 +103,6 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                             <ReadOnlyRow label='Point Count' value={modelObject.CountPoint} />
                             <ReadOnlyRow label='Face Count' value={modelObject.CountFace} />
                             <ReadOnlyRow label='Color Channel Count' value={modelObject.CountColorChannel} />
-                            {console.log('modelobj', modelObject)}
-                            {console.log('texturecoordinatechannelcount', modelObject.CountTextureCoorinateChannel)}
                             <ReadOnlyRow label='Texture Coord Channel Count' value={modelObject.CountTextureCoorinateChannel} />
                             <ReadOnlyRow label='Has Bones?' value={interpretTrinary(modelObject.HasBones)} />
                             <ReadOnlyRow label='Has Face Normals?' value={interpretTrinary(modelObject.HasFaceNormals)} />
