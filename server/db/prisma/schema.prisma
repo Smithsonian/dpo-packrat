@@ -459,7 +459,6 @@ model ModelObject {
   IsTwoManifoldBounded          Boolean?
   IsWatertight                  Boolean?
   SelfIntersecting              Boolean?
-  
   Model                        Model                          @relation(fields: [idModel], references: [idModel])
   ModelObjectModelMaterialXref ModelObjectModelMaterialXref[]
 
