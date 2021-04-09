@@ -437,28 +437,28 @@ model ModelMaterialUVMap {
 }
 
 model ModelObject {
-  idModelObject                Int                            @id @default(autoincrement())
-  idModel                      Int
-  BoundingBoxP1X               Float?
-  BoundingBoxP1Y               Float?
-  BoundingBoxP1Z               Float?
-  BoundingBoxP2X               Float?
-  BoundingBoxP2Y               Float?
-  BoundingBoxP2Z               Float?
-  CountPoint                   Int?
-  CountFace                    Int?
-  CountColorChannel            Int?
-  CountTextureCoorinateChannel Int?
-  HasBones                     Boolean?
-  HasFaceNormals               Boolean?
-  HasTangents                  Boolean?
-  HasTextureCoordinates        Boolean?
-  HasVertexNormals             Boolean?
-  HasVertexColor               Boolean?
-  IsTwoManifoldUnbounded       Boolean?
-  IsTwoManifoldBounded         Boolean?
-  IsWatertight                 Boolean?
-  SelfIntersecting             Boolean?
+  idModelObject                 Int                           @id @default(autoincrement())
+  idModel                       Int
+  BoundingBoxP1X                Float?
+  BoundingBoxP1Y                Float?
+  BoundingBoxP1Z                Float?
+  BoundingBoxP2X                Float?
+  BoundingBoxP2Y                Float?
+  BoundingBoxP2Z                Float?
+  CountVertices                 Int?
+  CountFaces                    Int?
+  CountColorChannels            Int?
+  CountTextureCoorinateChannels Int?
+  HasBones                      Boolean?
+  HasFaceNormals                Boolean?
+  HasTangents                   Boolean?
+  HasTextureCoordinates         Boolean?
+  HasVertexNormals              Boolean?
+  HasVertexColor                Boolean?
+  IsTwoManifoldUnbounded        Boolean?
+  IsTwoManifoldBounded          Boolean?
+  IsWatertight                  Boolean?
+  SelfIntersecting              Boolean?
   Model                        Model                          @relation(fields: [idModel], references: [idModel])
   ModelObjectModelMaterialXref ModelObjectModelMaterialXref[]
 
