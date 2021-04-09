@@ -31,6 +31,7 @@ export enum eVocabularySetID {
     eAssetAssetType,
     eJobJobType,
     eWorkflowType,
+    eWorkflowEvent,
     eNone = -1
 }
 
@@ -126,6 +127,7 @@ export enum eVocabularyID {
     eJobJobTypeCookUnwrap,
     eWorkflowTypeCookJob,
     eWorkflowStepTypeStart,
+    eWorkflowEventIngestionUploadAssetVersion,
     eNone = -1
 }
 
@@ -206,6 +208,7 @@ export class VocabularyCache {
                 case 'Asset.AssetType':                         eVocabSetEnum = eVocabularySetID.eAssetAssetType; break;
                 case 'Job.JobType':                             eVocabSetEnum = eVocabularySetID.eJobJobType; break;
                 case 'Workflow.Type':                           eVocabSetEnum = eVocabularySetID.eWorkflowType; break;
+                case 'Workflow.Event':                          eVocabSetEnum = eVocabularySetID.eWorkflowEvent; break;
             }
 
             /* istanbul ignore else */
@@ -379,13 +382,19 @@ export class VocabularyCache {
 
                 case eVocabularySetID.eWorkflowType: {
                     switch (vocabulary.Term) {
-                        case 'Cook Job':                 eVocabEnum = eVocabularyID.eWorkflowTypeCookJob; break;
+                        case 'Cook Job':                        eVocabEnum = eVocabularyID.eWorkflowTypeCookJob; break;
                     }
                 } break;
 
                 case eVocabularySetID.eWorkflowStepWorkflowStepType: {
                     switch (vocabulary.Term) {
-                        case 'Start':                       eVocabEnum = eVocabularyID.eWorkflowStepTypeStart; break;
+                        case 'Start':                           eVocabEnum = eVocabularyID.eWorkflowStepTypeStart; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eWorkflowEvent: {
+                    switch (vocabulary.Term) {
+                        case 'Ingestion: Upload Asset Version': eVocabEnum = eVocabularyID.eWorkflowEventIngestionUploadAssetVersion; break;
                     }
                 } break;
             }

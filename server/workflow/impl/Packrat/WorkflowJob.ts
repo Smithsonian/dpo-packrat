@@ -28,6 +28,7 @@ export class WorkflowJob implements WF.IWorkflow {
     private idAssetVersions: number[] | null = null;
     private completionMutexes: MutexInterface[] = [];
     private complete: boolean = false;
+    private results: H.IOResults = { success: false, error: 'Workflow Job Not Initialized' };
 
     static async constructWorkflowJob(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WorkflowJob | null> {
         const workflowJob: WorkflowJob = new WorkflowJob(workflowParams, WFC);
@@ -92,7 +93,7 @@ export class WorkflowJob implements WF.IWorkflow {
             }
         }
 
-        // start job asynchronously, by not using await, so that remain unblocked:
+        // start job asynchronously, by not using await, so that we remain unblocked:
         job.executeJob(new Date());
         return { success: true, error: '' };
     }
@@ -120,10 +121,15 @@ export class WorkflowJob implements WF.IWorkflow {
                 eWorkflowStepState = DBAPI.eWorkflowStepState.eStarted;
                 break;
             case DBAPI.eJobRunStatus.eDone:
+                eWorkflowStepState = DBAPI.eWorkflowStepState.eFinished;
+                dateCompleted = new Date();
+                this.results = { success: true, error: '' };
+                break;
             case DBAPI.eJobRunStatus.eError:
             case DBAPI.eJobRunStatus.eCancelled:
                 eWorkflowStepState = DBAPI.eWorkflowStepState.eFinished;
                 dateCompleted = new Date();
+                this.results = { success: false, error: jobRun.Error || '' };
                 break;
         }
 
@@ -142,12 +148,12 @@ export class WorkflowJob implements WF.IWorkflow {
             }
         }
 
-        let result: boolean = true;
+        let dbUpdateResult: boolean = true;
 
         if (updateWFSNeeded)
-            result = await workflowStep.update() && result;
+            dbUpdateResult = await workflowStep.update() && dbUpdateResult;
         if (workflowComplete && this.workflowData.workflow)
-            result = await this.workflowData.workflow.update() && result;
+            dbUpdateResult = await this.workflowData.workflow.update() && dbUpdateResult;
 
         if (workflowComplete) {
             LOG.logger.info(`WorkflowJob.update RELEASING ${this.completionMutexes.length} WAITERS ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
@@ -156,7 +162,7 @@ export class WorkflowJob implements WF.IWorkflow {
             LOG.logger.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
         // LOG.logger.error(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${JSON.stringify(jobRun)} - ${JSON.stringify(workflowStep)}`, new Error());
 
-        return (result) ? { success: true, workflowComplete, error: '' } : { success: false, workflowComplete, error: 'Database Error' };
+        return (dbUpdateResult) ? { success: true, workflowComplete, error: '' } : { success: false, workflowComplete, error: 'Database Error' };
     }
 
     signalCompletion() {
@@ -167,7 +173,7 @@ export class WorkflowJob implements WF.IWorkflow {
 
     async waitForCompletion(timeout: number): Promise<H.IOResults> {
         if (this.complete)
-            return { success: true, error: '' };
+            return this.results;
         const waitMutex: MutexInterface = withTimeout(new Mutex(), timeout);
         this.completionMutexes.push(waitMutex);
 
@@ -176,8 +182,8 @@ export class WorkflowJob implements WF.IWorkflow {
             const releaseInner = await waitMutex.acquire(); // second acquire should wait
             releaseInner();
         } catch (error) {
-            if (error === E_CANCELED)                   // we're done
-                return { success: true, error: '' };
+            if (error === E_CANCELED)                   // we're done -- cancel comes from signalCompletion()
+                return this.results;
             else if (error === E_TIMEOUT)               // we timed out
                 return { success: false, error: `WorkflowJob.waitForCompletion timed out after ${timeout}ms` };
             else
@@ -185,7 +191,7 @@ export class WorkflowJob implements WF.IWorkflow {
         } finally {
             releaseOuter();
         }
-        return { success: true, error: '' };
+        return this.results;
     }
 
     async workflowConstellation(): Promise<DBAPI.WorkflowConstellation | null> {

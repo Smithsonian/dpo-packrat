@@ -5,6 +5,7 @@
  */
 import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
+import path from 'path';
 import { toast } from 'react-toastify';
 import { eVocabularySetID } from '../types/server';
 import { generateFileId } from '../utils/upload';
@@ -20,6 +21,7 @@ export type FileId = string;
 export enum FileUploadStatus {
     READY = 'READY',
     UPLOADING = 'UPLOADING',
+    PROCESSING = 'PROCESSING',
     COMPLETE = 'COMPLETE',
     CANCELLED = 'CANCELLED',
     FAILED = 'FAILED'
@@ -75,11 +77,13 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 const alreadyContains = !!lodash.find(pending, { id });
 
                 const { name, size } = file;
-                const { getInitialEntry } = useVocabularyStore.getState();
-                const type = getInitialEntry(eVocabularySetID.eAssetAssetType);
-
+                const extension: string = (name.toLowerCase().endsWith('.svx.json')) ? '.svx.json' : path.extname(name);
+                const { getAssetTypeForExtension, getInitialEntry } = useVocabularyStore.getState();
+                let type = getAssetTypeForExtension(extension);
+                if (!type)
+                    type = getInitialEntry(eVocabularySetID.eAssetAssetType);
                 if (!type) {
-                    toast.error(`Vocabulary for file ${name} not found`);
+                    toast.error(`Asset type for file ${name} not found`);
                     return;
                 }
 
@@ -128,6 +132,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 if (file.id === id) {
                     lodash.set(file, 'progress', 0);
                     lodash.set(file, 'status', FileUploadStatus.UPLOADING);
+                    // console.log(`upload.startUpload ${JSON.stringify(file)}`);
                 }
             });
 
@@ -182,7 +187,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             const onProgress = (event: ProgressEvent) => {
                 const { loaded, total } = event;
                 const progress = Math.floor((loaded / total) * 100);
-                const updateProgress = !(progress % 5);
+                const updateProgress = !(progress % 1);
 
                 if (updateProgress) {
                     const progressEvent: UploadProgressEvent = {
@@ -306,6 +311,11 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const updatedPendingProgress = lodash.forEach(pending, file => {
             if (file.id === id) {
                 lodash.set(file, 'progress', progress);
+                if (progress === 100) {
+                    // file.type should contain the vocabulary ID corresponding to the asset type ... in case we need this
+                    lodash.set(file, 'status', FileUploadStatus.PROCESSING);
+                    // console.log(`upload.onProgressEvent [100] ${JSON.stringify(file)}: ${id}`);
+                }   // else console.log(`upload.onProgressEvent [${progress}] ${JSON.stringify(file)}: ${id}`);
             }
         });
         set({ pending: updatedPendingProgress });
