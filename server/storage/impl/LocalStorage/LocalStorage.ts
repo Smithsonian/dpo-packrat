@@ -17,10 +17,12 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async initialize(rootRepository: string, rootStaging: string): Promise<H.IOResults> {
+        LOG.logger.info(`STR LocalStorage.initialize using ${rootRepository} and ${rootStaging}`);
         return await this.ocflRoot.initialize(rootRepository, rootStaging);
     }
 
     async readStream(readStreamInput: STORE.ReadStreamInput): Promise<STORE.ReadStreamResult> {
+        LOG.logger.info(`STR LocalStorage.readStream ${readStreamInput.storageKey}/${readStreamInput.fileName}`);
         const retValue: STORE.ReadStreamResult = {
             readStream: null,
             fileName: null,
@@ -91,6 +93,7 @@ export class LocalStorage implements STORE.IStorage {
      *    network transit from server to Isilon happens once, no matter if staging is located locally or on Isilon.
      */
     async writeStream(fileName: string): Promise<STORE.WriteStreamResult> {
+        LOG.logger.info(`STR LocalStorage.writeStream ${fileName}`);
         const retValue: STORE.WriteStreamResult = {
             writeStream: null,
             storageKey: null,
@@ -123,6 +126,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async commitWriteStream(CommitWriteStreamInput: STORE.CommitWriteStreamInput): Promise<STORE.CommitWriteStreamResult> {
+        LOG.logger.info(`STR LocalStorage.commitWriteStream ${CommitWriteStreamInput.storageKey}`);
         const retValue: STORE.CommitWriteStreamResult = {
             storageHash: null,
             storageSize: null,
@@ -167,6 +171,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async discardWriteStream(DiscardWriteStreamInput: STORE.DiscardWriteStreamInput): Promise<STORE.DiscardWriteStreamResult> {
+        LOG.logger.info(`STR LocalStorage.discardWriteStream ${DiscardWriteStreamInput.storageKey}`);
         if (DiscardWriteStreamInput.storageKey.includes('..') || DiscardWriteStreamInput.storageKey.includes(':'))
             return { success: false, error: 'Invalid storagekey' };
         const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), DiscardWriteStreamInput.storageKey);
@@ -174,6 +179,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async promoteStagedAsset(promoteStagedAssetInput: STORE.PromoteStagedAssetInput): Promise<STORE.PromoteStagedAssetResult> {
+        LOG.logger.info(`STR LocalStorage.promoteStagedAsset ${promoteStagedAssetInput.fileName} ${promoteStagedAssetInput.storageKeyStaged} -> ${promoteStagedAssetInput.storageKeyFinal}`);
         const { storageKeyStaged, storageKeyFinal, fileName, inputStream, metadata, opInfo } = promoteStagedAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, true);
         /* istanbul ignore next */
@@ -195,6 +201,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async renameAsset(renameAssetInput: STORE.RenameAssetInput): Promise<STORE.RenameAssetResult> {
+        LOG.logger.info(`STR LocalStorage.renameAsset ${renameAssetInput.storageKey} ${renameAssetInput.fileNameOld} -> ${renameAssetInput.fileNameNew}`);
         const { storageKey, fileNameOld, fileNameNew, opInfo } = renameAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
         /* istanbul ignore else */
@@ -211,6 +218,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async hideAsset(hideAssetInput: STORE.HideAssetInput): Promise<STORE.HideAssetResult> {
+        LOG.logger.info(`STR LocalStorage.hideAsset ${hideAssetInput.storageKey}/${hideAssetInput.fileName}`);
         const { storageKey, fileName, opInfo } = hideAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
         /* istanbul ignore else */
@@ -227,6 +235,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async reinstateAsset(reinstateAssetInput: STORE.ReinstateAssetInput): Promise<STORE.ReinstateAssetResult> {
+        LOG.logger.info(`STR LocalStorage.reinstateAsset ${reinstateAssetInput.storageKey}/${reinstateAssetInput.fileName}`);
         const { storageKey, fileName, version, opInfo } = reinstateAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
         /* istanbul ignore else */
@@ -243,6 +252,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async updateMetadata(updateMetadataInput: STORE.UpdateMetadataInput): Promise<STORE.UpdateMetadataResult> {
+        LOG.logger.info(`STR LocalStorage.updateMetadata ${updateMetadataInput.storageKey}`);
         const { storageKey, metadata, opInfo } = updateMetadataInput;
         const promoteStagedAssetInput: STORE.PromoteStagedAssetInput = {
             storageKeyStaged: '',
@@ -256,6 +266,7 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async validateAsset(storageKey: string): Promise<STORE.ValidateAssetResult> {
+        LOG.logger.info(`STR LocalStorage.validateAsset ${storageKey}`);
         const retValue: STORE.ValidateAssetResult = {
             success: false,
             error: ''

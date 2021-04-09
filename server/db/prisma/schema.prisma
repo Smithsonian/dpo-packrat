@@ -438,8 +438,8 @@ model ModelObject {
   IsTwoManifoldBounded          Boolean?
   IsWatertight                  Boolean?
   SelfIntersecting              Boolean?
-  Model                        Model                          @relation(fields: [idModel], references: [idModel])
-  ModelObjectModelMaterialXref ModelObjectModelMaterialXref[]
+  Model                         Model                         @relation(fields: [idModel], references: [idModel])
+  ModelObjectModelMaterialXref  ModelObjectModelMaterialXref[]
   @@index([idModel], name: "ModelObject_idModel")
 }
 

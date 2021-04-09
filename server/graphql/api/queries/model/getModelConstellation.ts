@@ -46,10 +46,10 @@ const getModelConstellation = gql`
                     BoundingBoxP2X
                     BoundingBoxP2Y
                     BoundingBoxP2Z
-                    CountPoint
-                    CountFace
-                    CountColorChannel
-                    CountTextureCoorinateChannel
+                    CountVertices
+                    CountFaces
+                    CountColorChannels
+                    CountTextureCoorinateChannels
                     HasBones
                     HasFaceNormals
                     HasTangents
