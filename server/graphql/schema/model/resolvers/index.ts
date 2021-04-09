@@ -8,15 +8,11 @@ import ModelProcessingAction from './types/ModelProcessingAction';
 import ModelProcessingActionStep from './types/ModelProcessingActionStep';
 import getModel from './queries/getModel';
 import getModelConstellation from './queries/getModelConstellation';
-import createModel from './mutations/createModel';
 
 const resolvers = {
     Query: {
         getModel,
         getModelConstellation,
-    },
-    Mutation: {
-        createModel,
     },
     Model,
     ModelMaterial,

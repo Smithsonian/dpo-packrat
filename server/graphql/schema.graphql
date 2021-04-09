@@ -100,7 +100,6 @@ type Mutation {
   createCaptureData(input: CreateCaptureDataInput!): CreateCaptureDataResult!
   createCaptureDataPhoto(input: CreateCaptureDataPhotoInput!): CreateCaptureDataPhotoResult!
   createItem(input: CreateItemInput!): CreateItemResult!
-  createModel(input: CreateModelInput!): CreateModelResult!
   createProject(input: CreateProjectInput!): CreateProjectResult!
   createScene(input: CreateSceneInput!): CreateSceneResult!
   createSubject(input: CreateSubjectInput!): CreateSubjectResult!
@@ -610,32 +609,6 @@ type LicenseAssignment {
   License: License
   SystemObject: SystemObject
   UserCreator: User
-}
-
-input CreateModelInput {
-  Name: String!
-  Authoritative: Boolean!
-  idVCreationMethod: Int!
-  idVModality: Int!
-  idVPurpose: Int!
-  idVUnits: Int!
-  idVFileType: Int!
-  Master: Boolean!
-  idAssetThumbnail: Int
-  CountAnimations: Int
-  CountCameras: Int
-  CountFaces: Int
-  CountLights: Int
-  CountMaterials: Int
-  CountMeshes: Int
-  CountVertices: Int
-  CountEmbeddedTextures: Int
-  CountLinkedTextures: Int
-  FileEncoding: String
-}
-
-type CreateModelResult {
-  Model: Model
 }
 
 input GetModelInput {
