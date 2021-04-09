@@ -132,7 +132,6 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 if (file.id === id) {
                     lodash.set(file, 'progress', 0);
                     lodash.set(file, 'status', FileUploadStatus.UPLOADING);
-                    // console.log(`upload.startUpload ${JSON.stringify(file)}`);
                 }
             });
 
@@ -311,11 +310,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const updatedPendingProgress = lodash.forEach(pending, file => {
             if (file.id === id) {
                 lodash.set(file, 'progress', progress);
-                if (progress === 100) {
-                    // file.type should contain the vocabulary ID corresponding to the asset type ... in case we need this
+                if (progress === 100)
                     lodash.set(file, 'status', FileUploadStatus.PROCESSING);
-                    // console.log(`upload.onProgressEvent [100] ${JSON.stringify(file)}: ${id}`);
-                }   // else console.log(`upload.onProgressEvent [${progress}] ${JSON.stringify(file)}: ${id}`);
             }
         });
         set({ pending: updatedPendingProgress });

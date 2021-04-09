@@ -36,7 +36,6 @@ import getUnitsFromNameSearchTest from './queries/unit/getUnitsFromNameSearch.te
 
 /* Mutations */
 import createCaptureDataTest from './mutations/capturedata/createCaptureData.test';
-import createModelTest from './mutations/model/createModel.test';
 import createSceneTest from './mutations/scene/createScene.test';
 import createUnitTest from './mutations/unit/createUnit.test';
 import createProjectTest from './mutations/unit/createProject.test';
@@ -88,7 +87,6 @@ describe('GraphQL Test Suite', () => {
 
     // Mutations
     createCaptureDataTest(utils);
-    createModelTest(utils);
     createSceneTest(utils);
     createUnitTest(utils);
     createProjectTest(utils);

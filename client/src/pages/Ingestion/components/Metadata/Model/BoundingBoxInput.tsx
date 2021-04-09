@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * BoundingBoxInput
  *
@@ -37,13 +39,7 @@ function BoundingBoxInput(props: BoundingBoxInputProps): React.ReactElement {
     };
 
     return (
-        <FieldType
-            required={false}
-            label='Bounding Box'
-            direction='row'
-            containerProps={rowFieldProps}
-            width={viewMode ? 'auto' : undefined}
-        >
+        <FieldType required={false} label='Bounding Box' direction='row' containerProps={rowFieldProps} width={viewMode ? 'auto' : undefined}>
             <Box display='flex' flex={1} flexDirection='column'>
                 <Box display='flex' justifyContent='flex-end'>
                     <DebounceNumberInput
@@ -68,6 +64,7 @@ function BoundingBoxInput(props: BoundingBoxInputProps): React.ReactElement {
                         onChange={onChange}
                     />
                 </Box>
+
                 <Box display='flex' mt='5px' justifyContent='flex-end'>
                     <DebounceNumberInput
                         updated={viewMode ? isFieldUpdated(details, modelFields, 'boundingBoxP2X') : false}
