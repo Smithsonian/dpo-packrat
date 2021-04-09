@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { ModelConstellation } from '../types/graphql';
+
 export function toTitleCase(str: string): string {
     return str.replace(/\w\S*/g, txt => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -38,4 +43,78 @@ export function extractISOMonthDateYear(iso: string | Date, materialUI = false):
     }
     const result = `${time.getMonth() + 1}/${time.getDate()}/${time.getFullYear()}`;
     return result;
+}
+
+
+export function extractModelConstellation(data: ModelConstellation) {
+    const { Model, ModelObjectModelMaterialXref, ModelAssets, ModelObjects, ModelMaterialChannels, ModelMaterials } = data;
+    const {
+        CountVertices,
+        CountFaces,
+        CountAnimations,
+        CountCameras,
+        CountLights,
+        CountMaterials,
+        CountMeshes,
+        CountEmbeddedTextures,
+        CountLinkedTextures,
+        FileEncoding
+    } = Model;
+    const modelObjects: any = [];
+    const assets: any = [];
+    const ModelMaterialsHash = {};
+    const ingestionModel = {
+        CountVertices,
+        CountFaces,
+        CountAnimations,
+        CountCameras,
+        CountLights,
+        CountMaterials,
+        CountMeshes,
+        CountEmbeddedTextures,
+        CountLinkedTextures,
+        FileEncoding
+    };
+
+    if (ModelMaterials) {
+        ModelMaterials.forEach((modelMaterial) => {
+            ModelMaterialsHash[modelMaterial.idModelMaterial] = {
+                idModelMaterial: modelMaterial.idModelMaterial,
+                Name: modelMaterial.Name,
+                ModelMaterialChannel: []
+            };
+        });
+    }
+
+    if (ModelMaterialChannels) {
+        ModelMaterialChannels.forEach((channel) => {
+            if (ModelMaterialsHash[channel.idModelMaterial]) {
+                ModelMaterialsHash[channel.idModelMaterial].ModelMaterialChannel.push(channel);
+            }
+        });
+    }
+
+    if (ModelObjects) {
+        ModelObjects.forEach((modelObject) => {
+            const modelObj = modelObject;
+            modelObj['ModelMaterials'] = [];
+            modelObjects.push(modelObj);
+        });
+    }
+
+
+    if (ModelObjectModelMaterialXref) {
+        ModelObjectModelMaterialXref.forEach((xref) => {
+            const ind = modelObjects.findIndex((modelObject) => modelObject.idModelObject === xref.idModelObject);
+            if (ind !== -1) {
+                modelObjects[ind].ModelMaterials.push(ModelMaterialsHash[xref.idModelMaterial]);
+            }
+        });
+    }
+
+    if (ModelAssets) {
+        ModelAssets.forEach((asset) => assets.push({ assetName: asset.AssetName, assetType: asset.AssetType }));
+    }
+
+    return { ingestionModel, modelObjects, assets };
 }

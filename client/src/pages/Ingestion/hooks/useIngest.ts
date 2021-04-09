@@ -17,7 +17,6 @@ import {
     StateIdentifier,
     StateItem,
     StateProject,
-    StateUVMap,
     useItemStore,
     useMetadataStore,
     useProjectStore,
@@ -38,7 +37,6 @@ import {
     IngestProjectInput,
     IngestSceneInput,
     IngestSubjectInput,
-    IngestUvMapInput
 } from '../../../types/graphql';
 import { nonNullValue } from '../../../utils/shared';
 
@@ -147,9 +145,7 @@ function useIngest(): UseIngest {
 
                 if (isModel) {
                     const {
-                        systemCreated,
                         identifiers,
-                        uvMaps,
                         sourceObjects,
                         dateCaptured,
                         creationMethod,
@@ -159,8 +155,6 @@ function useIngest(): UseIngest {
                         units,
                         purpose,
                         modelFileType,
-                        roughness,
-                        metalness,
                         pointCount,
                         faceCount,
                         isTwoManifoldUnbounded,
@@ -176,18 +170,15 @@ function useIngest(): UseIngest {
                         boundingBoxP2X,
                         boundingBoxP2Y,
                         boundingBoxP2Z,
-                        directory
                     } = model;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-                    const ingestUVMaps: IngestUvMapInput[] = getIngestUVMaps(uvMaps);
 
                     const modelData: IngestModelInput = {
+                        name: '',
                         idAssetVersion: parseFileId(file.id),
                         dateCaptured: dateCaptured.toISOString(),
                         identifiers: ingestIdentifiers,
-                        uvMaps: ingestUVMaps,
-                        systemCreated,
                         creationMethod: nonNullValue<number>('creationMethod', creationMethod),
                         master,
                         authoritative,
@@ -196,9 +187,7 @@ function useIngest(): UseIngest {
                         purpose: nonNullValue<number>('purpose', purpose),
                         modelFileType: nonNullValue<number>('modelFileType', modelFileType),
                         sourceObjects,
-                        roughness,
-                        metalness,
-                        pointCount,
+                        vertexCount: pointCount,
                         faceCount,
                         isTwoManifoldUnbounded,
                         isTwoManifoldBounded,
@@ -213,7 +202,6 @@ function useIngest(): UseIngest {
                         boundingBoxP2X,
                         boundingBoxP2Y,
                         boundingBoxP2Z,
-                        directory
                     };
 
                     ingestModel.push(modelData);
@@ -332,23 +320,6 @@ function useIngest(): UseIngest {
         });
 
         return ingestFolders;
-    };
-
-    const getIngestUVMaps = (uvMaps: StateUVMap[]): IngestUvMapInput[] => {
-        const ingestUVMaps: IngestUvMapInput[] = [];
-        lodash.forEach(uvMaps, (uvMap: StateUVMap) => {
-            const { name, edgeLength, mapType } = uvMap;
-
-            const uvMapData: IngestUvMapInput = {
-                name,
-                edgeLength,
-                mapType: nonNullValue<number>('mapType', mapType)
-            };
-
-            ingestUVMaps.push(uvMapData);
-        });
-
-        return ingestUVMaps;
     };
 
     return {

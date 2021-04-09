@@ -44,8 +44,6 @@ import {
     CreateCaptureDataResult,
     CreateCaptureDataPhotoInput,
     CreateCaptureDataPhotoResult,
-    CreateModelInput,
-    CreateModelResult,
     CreateSceneInput,
     CreateSceneResult,
     CreateUnitInput,
@@ -163,7 +161,6 @@ import getProjectList from './queries/systemobject/getProjectList';
 import createUser from './mutations/user/createUser';
 import createCaptureData from './mutations/capturedata/createCaptureData';
 import createCaptureDataPhoto from './mutations/capturedata/createCaptureDataPhoto';
-import createModel from './mutations/model/createModel';
 import createScene from './mutations/scene/createScene';
 import createUnit from './mutations/unit/createUnit';
 import createProject from './mutations/unit/createProject';
@@ -199,7 +196,6 @@ const allQueries = {
     createUser,
     createCaptureData,
     createCaptureDataPhoto,
-    createModel,
     createScene,
     createUnit,
     createProject,
@@ -378,16 +374,6 @@ class GraphQLApi {
 
     async getModelConstellation(input: GetModelConstellationInput, context?: Context): Promise<GetModelConstellationResult> {
         const operationName = 'getModelConstellation';
-        const variables = { input };
-        return this.graphqlRequest({
-            operationName,
-            variables,
-            context
-        });
-    }
-
-    async createModel(input: CreateModelInput, context?: Context): Promise<CreateModelResult> {
-        const operationName = 'createModel';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

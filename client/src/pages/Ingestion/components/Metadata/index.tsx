@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * Metadata
  *
@@ -37,8 +39,7 @@ const useStyles = makeStyles(({ palette }) => ({
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        overflow: 'auto',
-        maxHeight: 'calc(100vh - 60px)'
+        overflow: 'auto'
     },
     content: {
         display: 'flex',
@@ -124,7 +125,9 @@ function Metadata(): React.ReactElement {
             }
         } else {
             const nextMetadata = metadatas[metadataIndex + 1];
-            const { file: { id, type } } = nextMetadata;
+            const {
+                file: { id, type }
+            } = nextMetadata;
             const { isLast } = getMetadataInfo(id);
             const nextRoute = resolveSubRoute(HOME_ROUTES.INGESTION, `${INGESTION_ROUTE.ROUTES.METADATA}?fileId=${id}&type=${type}&last=${isLast}`);
             history.push(nextRoute);
@@ -153,13 +156,7 @@ function Metadata(): React.ReactElement {
                 <BreadcrumbsHeader project={project} item={item} metadata={metadata} />
                 {getMetadataComponent(metadataIndex)}
             </Box>
-            <SidebarBottomNavigator
-                rightLoading={ingestionLoading}
-                leftLabel='Previous'
-                onClickLeft={onPrevious}
-                rightLabel={isLast ? 'Finish' : 'Next'}
-                onClickRight={onNext}
-            />
+            <SidebarBottomNavigator rightLoading={ingestionLoading} leftLabel='Previous' onClickLeft={onPrevious} rightLabel={isLast ? 'Finish' : 'Next'} onClickRight={onNext} />
         </Box>
     );
 }
@@ -167,7 +164,7 @@ function Metadata(): React.ReactElement {
 interface BreadcrumbsHeaderProps {
     project: StateProject | undefined;
     item: StateItem | undefined;
-    metadata: StateMetadata
+    metadata: StateMetadata;
 }
 
 function BreadcrumbsHeader(props: BreadcrumbsHeaderProps) {

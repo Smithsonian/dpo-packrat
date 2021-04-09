@@ -307,7 +307,6 @@ export type Mutation = {
   createCaptureData: CreateCaptureDataResult;
   createCaptureDataPhoto: CreateCaptureDataPhotoResult;
   createItem: CreateItemResult;
-  createModel: CreateModelResult;
   createProject: CreateProjectResult;
   createScene: CreateSceneResult;
   createSubject: CreateSubjectResult;
@@ -335,11 +334,6 @@ export type MutationCreateCaptureDataPhotoArgs = {
 
 export type MutationCreateItemArgs = {
   input: CreateItemInput;
-};
-
-
-export type MutationCreateModelArgs = {
-  input: CreateModelInput;
 };
 
 
@@ -820,7 +814,7 @@ export type RelatedObjectInput = {
 
 export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
-  systemCreated: Scalars['Boolean'];
+  name: Scalars['String'];
   master: Scalars['Boolean'];
   authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
@@ -829,14 +823,17 @@ export type IngestModelInput = {
   units: Scalars['Int'];
   dateCaptured: Scalars['String'];
   modelFileType: Scalars['Int'];
-  directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
-  uvMaps: Array<IngestUvMapInput>;
   sourceObjects: Array<RelatedObjectInput>;
-  roughness?: Maybe<Scalars['Int']>;
-  metalness?: Maybe<Scalars['Int']>;
-  pointCount?: Maybe<Scalars['Int']>;
+  vertexCount?: Maybe<Scalars['Int']>;
   faceCount?: Maybe<Scalars['Int']>;
+  animationCount?: Maybe<Scalars['Int']>;
+  cameraCount?: Maybe<Scalars['Int']>;
+  lightCount?: Maybe<Scalars['Int']>;
+  materialCount?: Maybe<Scalars['Int']>;
+  meshCount?: Maybe<Scalars['Int']>;
+  embeddedTextureCount?: Maybe<Scalars['Int']>;
+  linkedTextureCount?: Maybe<Scalars['Int']>;
   isTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
   isTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
   isWatertight?: Maybe<Scalars['Boolean']>;
@@ -931,33 +928,6 @@ export type LicenseAssignment = {
   License?: Maybe<License>;
   SystemObject?: Maybe<SystemObject>;
   UserCreator?: Maybe<User>;
-};
-
-export type CreateModelInput = {
-  Name: Scalars['String'];
-  Authoritative: Scalars['Boolean'];
-  idVCreationMethod: Scalars['Int'];
-  idVModality: Scalars['Int'];
-  idVPurpose: Scalars['Int'];
-  idVUnits: Scalars['Int'];
-  idVFileType: Scalars['Int'];
-  Master: Scalars['Boolean'];
-  idAssetThumbnail?: Maybe<Scalars['Int']>;
-  CountAnimations?: Maybe<Scalars['Int']>;
-  CountCameras?: Maybe<Scalars['Int']>;
-  CountFaces?: Maybe<Scalars['Int']>;
-  CountLights?: Maybe<Scalars['Int']>;
-  CountMaterials?: Maybe<Scalars['Int']>;
-  CountMeshes?: Maybe<Scalars['Int']>;
-  CountVertices?: Maybe<Scalars['Int']>;
-  CountEmbeddedTextures?: Maybe<Scalars['Int']>;
-  CountLinkedTextures?: Maybe<Scalars['Int']>;
-  FileEncoding?: Maybe<Scalars['String']>;
-};
-
-export type CreateModelResult = {
-  __typename?: 'CreateModelResult';
-  Model?: Maybe<Model>;
 };
 
 export type GetModelInput = {

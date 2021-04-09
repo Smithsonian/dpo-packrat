@@ -15,7 +15,6 @@ import {
     CreateItemInput,
     CreateProjectInput,
     CreateSceneInput,
-    CreateModelInput,
     CreateCaptureDataInput,
     CreateCaptureDataPhotoInput,
     VocabularyEntry,
@@ -101,19 +100,6 @@ class TestSuiteUtils {
             Name: 'Test Scene',
             HasBeenQCd: true,
             IsOriented: true
-        };
-    };
-
-    createModelInput = (idVocabulary: number): CreateModelInput => {
-        return {
-            Name: 'Test Name',
-            Authoritative: true,
-            idVCreationMethod: idVocabulary,
-            idVModality: idVocabulary,
-            idVPurpose: idVocabulary,
-            idVUnits: idVocabulary,
-            idVFileType: idVocabulary,
-            Master: true
         };
     };
 

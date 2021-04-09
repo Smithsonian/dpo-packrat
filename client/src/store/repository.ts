@@ -34,12 +34,14 @@ type RepositoryStore = {
     getFilterState: () => RepositoryFilter;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
     updateFilterValue: (name: string, value: number | number[] | Date) => void;
-    resetRepositoryFilter: () => void;
+    resetRepositoryFilter: (modifyCookie?: boolean) => void;
     resetKeywordSearch: () => void;
     initializeTree: () => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
     updateRepositoryFilter: (filter: RepositoryFilter) => void;
     setCookieToState: () => void;
+    setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined) => void;
+    getChildrenForIngestion: (idRoot: number) => void;
 };
 
 export const treeRootKey: string = 'root';
@@ -82,7 +84,6 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         const { getFilterState } = get();
         const filter = getFilterState();
         const { data, error } = await getObjectChildrenForRoot(filter);
-
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;
@@ -95,8 +96,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         const { tree, getFilterState } = get();
         const filter = getFilterState();
         const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
+        console.log('nodeId', nodeId, 'filter', filter, 'idso', idSystemObject);
         const { data, error } = await getObjectChildren(idSystemObject, filter);
-
+        console.log('getchildren', data, error);
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;
@@ -163,7 +165,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         setCookieToState();
         initializeTree();
     },
-    resetRepositoryFilter: (): void => {
+    resetRepositoryFilter: (modifyCookie = true): void => {
         const { setCookieToState } = get();
         const stateValues = {
             repositoryRootType: [eSystemObjectType.eUnit],
@@ -178,9 +180,10 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelPurpose: [],
             modelFileType: [],
         };
-
         set(stateValues);
-        setCookieToState();
+        if (modifyCookie) {
+            setCookieToState();
+        }
     },
     resetKeywordSearch: (): void => {
         set({ keyword: '', search: '' });
@@ -246,6 +249,29 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelPurpose,
             modelFileType
         };
+        // 20 years
         document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};max-age=630700000`;
+    },
+    setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined): void => {
+        const { resetKeywordSearch, resetRepositoryFilter, getChildrenForIngestion } = get();
+        resetKeywordSearch();
+        resetRepositoryFilter(false);
+
+        if (systemObjectType === eSystemObjectType.eModel) {
+            set({ repositoryRootType: [], objectsToDisplay: [eSystemObjectType.eModel] });
+            getChildrenForIngestion(idRoot || 0);
+        }
+    },
+    getChildrenForIngestion: async (idSystemObject: number): Promise<void> => {
+        const { getFilterState } = get();
+        const filter = getFilterState();
+        const { data, error } = await getObjectChildrenForRoot(filter, idSystemObject);
+        if (data && !error) {
+            const { getObjectChildren } = data;
+            const { entries } = getObjectChildren;
+            const entry: [string, NavigationResultEntry[]] = [treeRootKey, entries];
+            const updatedTree = new Map([entry]);
+            set({ tree: updatedTree, loading: false });
+        }
     }
 }));

@@ -5,6 +5,9 @@ const getSubject = gql`
         getSubject(input: $input) {
             Subject {
                 idSubject
+                SystemObject {
+                    idSystemObject
+                }
             }
         }
     }

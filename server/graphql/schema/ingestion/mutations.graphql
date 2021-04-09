@@ -66,7 +66,7 @@ input RelatedObjectInput {
 
 input IngestModelInput {
     idAssetVersion: Int!
-    systemCreated: Boolean!
+    name: String!
     master: Boolean!
     authoritative: Boolean!
     creationMethod: Int!
@@ -75,14 +75,17 @@ input IngestModelInput {
     units: Int!
     dateCaptured: String!
     modelFileType: Int!
-    directory: String!
     identifiers: [IngestIdentifierInput!]!
-    uvMaps: [IngestUVMapInput!]!
     sourceObjects: [RelatedObjectInput!]!
-    roughness: Int
-    metalness: Int
-    pointCount: Int
+    vertexCount: Int
     faceCount: Int
+    animationCount: Int
+    cameraCount: Int
+    lightCount: Int
+    materialCount: Int
+    meshCount: Int
+    embeddedTextureCount: Int
+    linkedTextureCount: Int
     isTwoManifoldUnbounded: Boolean
     isTwoManifoldBounded: Boolean
     isWatertight: Boolean

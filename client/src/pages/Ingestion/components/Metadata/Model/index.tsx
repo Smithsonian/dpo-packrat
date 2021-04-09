@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * Metadata - Model
  *
@@ -5,36 +8,52 @@
  */
 import { Box, Checkbox } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React, { useState } from 'react';
-import { AssetIdentifiers, CheckboxField, DateInputField, FieldType, InputField, SelectField } from '../../../../../components';
-import { StateIdentifier, StateRelatedObject, useMetadataStore, useVocabularyStore } from '../../../../../store';
+import React, { useState, useEffect } from 'react';
+import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow } from '../../../../../components';
+import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
-import { RelatedObjectType } from '../../../../../types/graphql';
-import { eVocabularySetID } from '../../../../../types/server';
+import { RelatedObjectType, useGetSubjectQuery /*, useGetModelConstellationQuery */ } from '../../../../../types/graphql';
+import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
-import BoundingBoxInput from './BoundingBoxInput';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
-import UVContents from './UVContents';
+import ObjectMeshTable from './ObjectMeshTable';
+// import UVContents from './UVContents';
+import AssetFilesTable from './AssetFilesTable';
+import { extractModelConstellation } from '../../../../../constants';
 
-const useStyles = makeStyles(({ palette, typography }) => ({
+const useStyles = makeStyles(({ palette }) => ({
     container: {
         marginTop: 20
     },
     notRequiredFields: {
         display: 'flex',
-        flex: 1,
         flexDirection: 'column',
         marginLeft: 30,
         borderRadius: 5,
-        backgroundColor: palette.secondary.light
+        backgroundColor: palette.secondary.light,
+        width: '35%',
+        '& > *': {
+            height: '20px',
+            borderBottom: '0.5px solid #D8E5EE',
+            borderTop: '0.5px solid #D8E5EE'
+        }
     },
-    noteText: {
-        marginTop: 10,
-        fontSize: '0.8em',
-        fontWeight: typography.fontWeightLight,
-        fontStyle: 'italic',
-        textAlign: 'center'
+    dataEntry: {
+        '& > *': {
+            height: '20px',
+            borderBottom: '0.5px solid #D8E5EE',
+            borderTop: '0.5px solid #D8E5EE'
+        },
+        width: '35%'
+    },
+    objectMeshTable: {
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 5,
+        padding: 10,
+        backgroundColor: palette.primary.light,
+        width: '73%'
     }
 }));
 
@@ -49,8 +68,428 @@ function Model(props: ModelProps): React.ReactElement {
     const { model } = metadata;
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
-
+    const [setDefaultIngestionFilters] = useRepositoryStore(state => [state.setDefaultIngestionFilters]);
+    const [subjects] = useSubjectStore(state => [state.subjects]);
     const [modalOpen, setModalOpen] = useState(false);
+    const [ingestionModel, setIngestionModel] = useState<any>({
+        CountVertices: 0,
+        CountFaces: 0,
+        CountAnimations: 0,
+        CountCameras: 0,
+        CountLights: 0,
+        CountMaterials: 0,
+        CountMeshes: 0,
+        CountEmbeddedTextures: 0,
+        CountLinkedTextures: 0,
+        FileEncoding: ''
+    });
+    const [assetFiles, setAssetFiles] = useState([{ assetName: '', assetType: '' }]);
+    const [modelObjects, setModelObjects] = useState<any>([
+        {
+            idModelObject: 0,
+            CountPoint: 0,
+            CountFace: 0,
+            CountColorChannel: 0,
+            CountTextureCoordinateChannel: 0,
+            HasBones: null,
+            HasFaceNormals: null,
+            HasTangents: null,
+            HasTextureCoordinates: null,
+            HasVertextNormals: null,
+            HasVertexColor: null,
+            IsTwoManifoldUnbounded: null,
+            IsTwoManifoldBounded: null,
+            IsWatertight: null,
+            SelfIntersecting: null,
+            BoundingBoxP1X: 0,
+            BoundingBoxP1Y: 0,
+            BoundingBoxP1Z: 0,
+            BoundingBoxP2X: 0,
+            BoundingBoxP2Y: 0,
+            BoundingBoxP2Z: 0,
+            ModelMaterials: [
+                {
+                    idModelMaterial: 0,
+                    Name: '',
+                    ModelMaterialChannel: [
+                        {
+                            idModelMaterialChannel: 0,
+                            Type: '',
+                            Source: '',
+                            Value: '',
+                            Additional: ''
+                        }
+                    ]
+                }
+            ]
+        }
+    ]);
+
+    useEffect(() => {
+        const data: any = {
+            Model: {
+                Name: '',
+                Master: true,
+                Authoritative: true,
+                DateCreated: '2021-04-01T00:00:00.000Z',
+                idVCreationMethod: 0,
+                idVModality: 0,
+                idVUnits: 0,
+                idVPurpose: 0,
+                idVFileType: 0,
+                idAssetThumbnail: null,
+                CountAnimations: 0,
+                CountCameras: 0,
+                CountFaces: 149999,
+                CountLights: 0,
+                CountMaterials: 1,
+                CountMeshes: 1,
+                CountVertices: 74796,
+                CountEmbeddedTextures: 0,
+                CountLinkedTextures: 1,
+                FileEncoding: 'BINARY',
+                idModel: 1,
+                idAssetThumbnailOrig: null
+            },
+            ModelObjects: [
+                {
+                    idModelObject: 1,
+                    idModel: 1,
+                    BoundingBoxP1X: -892.2620849609375,
+                    BoundingBoxP1Y: -2167.86767578125,
+                    BoundingBoxP1Z: -971.3925170898438,
+                    BoundingBoxP2X: 892.2653198242188,
+                    BoundingBoxP2Y: 2167.867919921875,
+                    BoundingBoxP2Z: 971.3912963867188,
+                    CountPoint: 74796,
+                    CountFace: 149999,
+                    CountColorChannel: 0,
+                    CountTextureCoorinateChannel: 1,
+                    HasBones: false,
+                    HasFaceNormals: true,
+                    HasTangents: null,
+                    HasTextureCoordinates: true,
+                    HasVertexNormals: null,
+                    HasVertexColor: false,
+                    IsTwoManifoldUnbounded: false,
+                    IsTwoManifoldBounded: false,
+                    IsWatertight: false,
+                    SelfIntersecting: true
+                },
+                {
+                    idModelObject: 2,
+                    idModel: 2,
+                    BoundingBoxP1X: -892.2620849609375,
+                    BoundingBoxP1Y: -2167.86767578125,
+                    BoundingBoxP1Z: -971.3925170898438,
+                    BoundingBoxP2X: 892.2653198242188,
+                    BoundingBoxP2Y: 2167.867919921875,
+                    BoundingBoxP2Z: 971.3912963867188,
+                    CountPoint: 74796,
+                    CountFace: 149999,
+                    CountColorChannel: 0,
+                    CountTextureCoorinateChannel: 1,
+                    HasBones: false,
+                    HasFaceNormals: true,
+                    HasTangents: null,
+                    HasTextureCoordinates: true,
+                    HasVertexNormals: null,
+                    HasVertexColor: false,
+                    IsTwoManifoldUnbounded: false,
+                    IsTwoManifoldBounded: false,
+                    IsWatertight: false,
+                    SelfIntersecting: true
+                }
+            ],
+            ModelMaterials: [
+                {
+                    idModelMaterial: 1,
+                    Name: 'material_0'
+                },
+                {
+                    idModelMaterial: 2,
+                    Name: 'material_1'
+                }
+            ],
+            ModelMaterialChannels: [
+                {
+                    idModelMaterialChannel: 1,
+                    idModelMaterial: 1,
+                    idVMaterialType: 64,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: 1,
+                    UVMapEmbedded: false,
+                    ChannelPosition: 0,
+                    ChannelWidth: 3,
+                    Scalar1: 0.8,
+                    Scalar2: 0.8,
+                    Scalar3: 0.8,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 64,
+                    idModelMaterialUVMapOrig: 1,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                },
+                {
+                    idModelMaterialChannel: 2,
+                    idModelMaterial: 1,
+                    idVMaterialType: 65,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0.8,
+                    Scalar2: 0.8,
+                    Scalar3: 0.8,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 65,
+                    idModelMaterialUVMapOrig: null,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                },
+                {
+                    idModelMaterialChannel: 3,
+                    idModelMaterial: 1,
+                    idVMaterialType: 66,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0,
+                    Scalar2: 0,
+                    Scalar3: 0,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 66,
+                    idModelMaterialUVMapOrig: null,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                },
+                {
+                    idModelMaterialChannel: 4,
+                    idModelMaterial: 1,
+                    idVMaterialType: 67,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0,
+                    Scalar2: 0,
+                    Scalar3: 0,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 67,
+                    idModelMaterialUVMapOrig: null,
+                    Type: 'random',
+                    Source: 'random',
+                    Value: 'random'
+                },
+                {
+                    idModelMaterialChannel: 5,
+                    idModelMaterial: 1,
+                    idVMaterialType: 70,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0,
+                    Scalar2: null,
+                    Scalar3: null,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 70,
+                    idModelMaterialUVMapOrig: null,
+                    Type: 'text',
+                    Source: 'text',
+                    Value: 'text'
+                },
+                {
+                    idModelMaterialChannel: 6,
+                    idModelMaterial: 1,
+                    idVMaterialType: 71,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 1,
+                    Scalar2: null,
+                    Scalar3: null,
+                    Scalar4: null,
+                    AdditionalAttributes: 'string',
+                    idVMaterialTypeOrig: 71,
+                    idModelMaterialUVMapOrig: null,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                },
+                {
+                    idModelMaterialChannel: 7,
+                    idModelMaterial: 1,
+                    idVMaterialType: 74,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0,
+                    Scalar2: null,
+                    Scalar3: null,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 74,
+                    idModelMaterialUVMapOrig: null,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                },
+                {
+                    idModelMaterialChannel: 8,
+                    idModelMaterial: 2,
+                    idVMaterialType: 74,
+                    MaterialTypeOther: null,
+                    idModelMaterialUVMap: null,
+                    UVMapEmbedded: false,
+                    ChannelPosition: null,
+                    ChannelWidth: null,
+                    Scalar1: 0,
+                    Scalar2: null,
+                    Scalar3: null,
+                    Scalar4: null,
+                    AdditionalAttributes: null,
+                    idVMaterialTypeOrig: 74,
+                    idModelMaterialUVMapOrig: null,
+                    Type: '',
+                    Source: '',
+                    Value: ''
+                }
+            ],
+            ModelMaterialUVMaps: [
+                {
+                    idModel: 1,
+                    idAsset: 2,
+                    UVMapEdgeLength: 0,
+                    idModelMaterialUVMap: 1
+                }
+            ],
+            ModelObjectModelMaterialXref: [
+                {
+                    idModelObjectModelMaterialXref: 1,
+                    idModelObject: 1,
+                    idModelMaterial: 1
+                },
+                {
+                    idModelObjectModelMaterialXref: 2,
+                    idModelObject: 1,
+                    idModelMaterial: 2
+                },
+                {
+                    idModelObjectModelMaterialXref: 3,
+                    idModelObject: 2,
+                    idModelMaterial: 1
+                }
+            ],
+            ModelAssets: [
+                {
+                    Asset: {
+                        FileName: 'eremotherium_laurillardi-150k-4096.fbx',
+                        FilePath: '',
+                        idAssetGroup: null,
+                        idVAssetType: 0,
+                        idSystemObject: null,
+                        StorageKey: null,
+                        idAsset: 1,
+                        idAssetGroupOrig: null,
+                        idSystemObjectOrig: null
+                    },
+                    AssetVersion: {
+                        idAsset: 1,
+                        Version: 1,
+                        FileName: 'eremotherium_laurillardi-150k-4096.fbx',
+                        idUserCreator: 0,
+                        DateCreated: '2021-04-01T00:00:00.000Z',
+                        StorageHash: '',
+                        StorageSize: '0',
+                        StorageKeyStaging: '',
+                        Ingested: false,
+                        BulkIngest: false,
+                        idAssetVersion: 1
+                    },
+                    AssetName: 'eremotherium_laurillardi-150k-4096.fbx',
+                    AssetType: 'Model'
+                },
+                {
+                    Asset: {
+                        FileName:
+                            '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
+                        FilePath: '',
+                        idAssetGroup: null,
+                        idVAssetType: 0,
+                        idSystemObject: null,
+                        StorageKey: null,
+                        idAsset: 2,
+                        idAssetGroupOrig: null,
+                        idSystemObjectOrig: null
+                    },
+                    AssetVersion: {
+                        idAsset: 2,
+                        Version: 1,
+                        FileName:
+                            '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
+                        idUserCreator: 0,
+                        DateCreated: '2021-04-01T00:00:00.000Z',
+                        StorageHash: '',
+                        StorageSize: '0',
+                        StorageKeyStaging: '',
+                        Ingested: false,
+                        BulkIngest: false,
+                        idAssetVersion: 2
+                    },
+                    AssetName:
+                        '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
+                    AssetType: 'Texture Map diffuse'
+                }
+            ]
+        };
+
+        const { ingestionModel, modelObjects, assets } = extractModelConstellation(data);
+        setIngestionModel(ingestionModel);
+        setModelObjects(modelObjects);
+        setAssetFiles(assets);
+    }, []);
+
+    /*
+    2 Approaches to gettingModelConstellation
+    //fetch the idSystemObject of the subject so that it can be used
+    const modelIngestionDetails = useGetModelConstellationForAssetVersionQuery({
+        variables: {
+            input: {
+                idAssetVersion: 1
+            }
+        }
+    })
+
+    const {data, error} = useGetModelConstellationForAssetVersionQuery({variables: {input: {idAssetVersion}}})
+*/
+
+    // as the root to initialize the repository browser
+    const subjectIdSystemObject = useGetSubjectQuery({
+        variables: {
+            input: {
+                idSubject: subjects[0]?.id
+            }
+        }
+    });
+    const idSystemObject: number | undefined = subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject;
 
     const errors = getFieldErrors(metadata);
 
@@ -74,7 +513,6 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, idFieldValue, MetadataType.model);
     };
 
-
     const setDateField = (name: string, value?: string | null): void => {
         if (value) {
             const date = new Date(value);
@@ -82,21 +520,27 @@ function Model(props: ModelProps): React.ReactElement {
         }
     };
 
-    const updateUVMapsVariant = (uvMapId: number, mapType: number) => {
-        const { uvMaps } = model;
-        const updatedUVMaps = uvMaps.map(uvMap => {
-            if (uvMapId === uvMap.id) {
-                return {
-                    ...uvMap,
-                    mapType
-                };
-            }
-            return uvMap;
-        });
-        updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
+    const setNameField = ({ target }): void => {
+        const { name, value } = target;
+        updateMetadataField(metadataIndex, name, value, MetadataType.model);
     };
 
+    // const updateUVMapsVariant = (uvMapId: number, mapType: number) => {
+    //     const { uvMaps } = model;
+    //     const updatedUVMaps = uvMaps.map(uvMap => {
+    //         if (uvMapId === uvMap.id) {
+    //             return {
+    //                 ...uvMap,
+    //                 mapType
+    //             };
+    //         }
+    //         return uvMap;
+    //     });
+    //     updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
+    // };
+
     const openSourceObjectModal = () => {
+        setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         setModalOpen(true);
     };
 
@@ -115,32 +559,41 @@ function Model(props: ModelProps): React.ReactElement {
         onModalClose();
     };
 
-    const noteLabelProps = { style: { fontStyle: 'italic' } };
-    const noteFieldProps = { alignItems: 'center', style: { paddingBottom: 0 } };
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
 
     return (
         <React.Fragment>
             <Box className={classes.container}>
-                <AssetIdentifiers
-                    systemCreated={model.systemCreated}
-                    identifiers={model.identifiers}
-                    onSystemCreatedChange={setCheckboxField}
-                    onAddIdentifer={onIdentifersChange}
-                    onUpdateIdentifer={onIdentifersChange}
-                    onRemoveIdentifer={onIdentifersChange}
-                />
-                <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
-                <Box display='flex' flexDirection='row' mt={1}>
-                    <Box display='flex' flex={1} flexDirection='column'>
-                        <FieldType
-                            error={errors.model.dateCaptured}
-                            required
-                            label='Date Captured'
-                            direction='row'
-                            containerProps={rowFieldProps}
-                        >
+                <Box mb={2}>
+                    <AssetIdentifiers
+                        systemCreated={model.systemCreated}
+                        identifiers={model.identifiers}
+                        onSystemCreatedChange={setCheckboxField}
+                        onAddIdentifer={onIdentifersChange}
+                        onUpdateIdentifer={onIdentifersChange}
+                        onRemoveIdentifer={onIdentifersChange}
+                    />
+                </Box>
+
+                <Box mb={2}>
+                    <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
+                </Box>
+
+                {/* Start of data-entry form */}
+                <Box display='flex' flexDirection='row' mb={2}>
+                    <Box display='flex' flexDirection='column' className={classes.dataEntry} mr={2}>
+                        <InputField required type='string' label='Name' value={model.name} name='name' onChange={setNameField} />
+
+                        <FieldType error={errors.model.dateCaptured} required label='Date Captured' direction='row' containerProps={rowFieldProps}>
                             <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
+                        </FieldType>
+
+                        <FieldType required label='Master Model' direction='row' containerProps={rowFieldProps}>
+                            <Checkbox name='master' checked={model.master} color='primary' onChange={setCheckboxField} />
+                        </FieldType>
+
+                        <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
+                            <Checkbox name='authoritative' checked={model.authoritative} color='primary' onChange={setCheckboxField} />
                         </FieldType>
 
                         <SelectField
@@ -152,25 +605,6 @@ function Model(props: ModelProps): React.ReactElement {
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelCreationMethod)}
                         />
-
-                        <FieldType required label='Master' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='master'
-                                checked={model.master}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
-                        <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox
-                                name='authoritative'
-                                checked={model.authoritative}
-                                color='primary'
-                                onChange={setCheckboxField}
-                            />
-                        </FieldType>
-
                         <SelectField
                             required
                             label='Modality'
@@ -210,60 +644,31 @@ function Model(props: ModelProps): React.ReactElement {
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelFileType)}
                         />
-                        <UVContents
-                            initialEntry={getInitialEntry(eVocabularySetID.eModelMaterialChannelMaterialType)}
-                            uvMaps={model.uvMaps}
-                            options={getEntries(eVocabularySetID.eModelMaterialChannelMaterialType)}
-                            onUpdate={updateUVMapsVariant}
-                        />
                     </Box>
+                    {/* End of data-entry form */}
+                    {/* Start of model-level metrics form */}
                     <Box className={classes.notRequiredFields}>
-                        <FieldType required={false} label='(These values may be updated by Cook during ingestion)' labelProps={noteLabelProps} containerProps={noteFieldProps} />
-                        <InputField
-                            type='number'
-                            label='Roughness'
-                            value={model.roughness}
-                            name='roughness'
-                            onChange={setIdField}
-                        />
-                        <InputField
-                            type='number'
-                            label='Metalness'
-                            value={model.metalness}
-                            name='metalness'
-                            onChange={setIdField}
-                        />
-                        <InputField
-                            type='number'
-                            label='Point Count'
-                            value={model.pointCount}
-                            name='pointCount'
-                            onChange={setIdField}
-                        />
-                        <InputField
-                            type='number'
-                            label='Face Count'
-                            value={model.faceCount}
-                            name='faceCount'
-                            onChange={setIdField}
-                        />
-                        <CheckboxField name='isTwoManifoldUnbounded' label='Is Two Manifold Unbounded?' value={model.isTwoManifoldUnbounded} onChange={setCheckboxField} />
-                        <CheckboxField name='isTwoManifoldBounded' label='Is Two Manifold Bounded?' value={model.isTwoManifoldBounded} onChange={setCheckboxField} />
-                        <CheckboxField name='isWatertight' label='Is Watertight?' value={model.isWatertight} onChange={setCheckboxField} />
-                        <CheckboxField name='hasNormals' label='Has Normals?' value={model.hasNormals} onChange={setCheckboxField} />
-                        <CheckboxField name='hasVertexColor' label='Has Vertex Color?' value={model.hasVertexColor} onChange={setCheckboxField} />
-                        <CheckboxField name='hasUVSpace' label='Has UV Space?' value={model.hasUVSpace} onChange={setCheckboxField} />
-                        <CheckboxField name='selfIntersecting' label='Self Intersecting?' value={model.selfIntersecting} onChange={setCheckboxField} />
-                        <BoundingBoxInput
-                            boundingBoxP1X={model.boundingBoxP1X}
-                            boundingBoxP1Y={model.boundingBoxP1Y}
-                            boundingBoxP1Z={model.boundingBoxP1Z}
-                            boundingBoxP2X={model.boundingBoxP2X}
-                            boundingBoxP2Y={model.boundingBoxP2Y}
-                            boundingBoxP2Z={model.boundingBoxP2Z}
-                            onChange={setIdField}
-                        />
+                        <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices || 'unknown'} />
+                        <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces || 'unknown'} />
+                        <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations || 'unknown'} />
+                        <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras || 'unknown'} />
+                        <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights || 'unknown'} />
+                        <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials || 'unknown'} />
+                        <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes || 'unknown'} />
+                        <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures || 'unknown'} />
+                        <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures || 'unknown'} />
+                        <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding || 'unknown'} />
                     </Box>
+                    {/* End of  model-level metrics form */}
+                </Box>
+                {/* start of object/mesh table */}
+                {/* Start of asset files table */}
+                <Box mb={2}>
+                    <AssetFilesTable files={assetFiles} />
+                </Box>
+                {/* End of asset files table */}
+                <Box display='flex' flexDirection='row' className={classes.objectMeshTable}>
+                    <ObjectMeshTable modelObjects={modelObjects} />
                 </Box>
             </Box>
             <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={model.sourceObjects} />
