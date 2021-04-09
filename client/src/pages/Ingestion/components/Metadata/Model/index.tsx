@@ -677,17 +677,3 @@ function Model(props: ModelProps): React.ReactElement {
 }
 
 export default Model;
-
-{
-    /* <UVContents
-    initialEntry={getInitialEntry(eVocabularySetID.eModelMaterialChannelMaterialType)}
-    uvMaps={model.uvMaps}
-    options={getEntries(eVocabularySetID.eModelMaterialChannelMaterialType)}
-    onUpdate={updateUVMapsVariant}
-/> */
-}
-
-{
-    /* <InputField disabled type='number' label='Roughness' value={model.roughness} name='roughness' onChange={setIdField} />
-<InputField disabled type='number' label='Metalness' value={model.metalness} name='metalness' onChange={setIdField} /> */
-}
