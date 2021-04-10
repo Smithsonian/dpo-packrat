@@ -211,12 +211,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
             break;
         } case eSystemObjectType.eModel: {
-            // TODO: KARAN:  update/create UV Map
             if (data.Model) {
                 const Model = await DBAPI.Model.fetch(idObject);
 
                 if (Model) {
                     const {
+                        name,
                         master,
                         authoritative,
                         creationMethod,
@@ -226,9 +226,9 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         dateCaptured,
                         size,
                         modelFileType,
-                        // roughness, metalness, pointCount, faceCount, isTwoManifoldUnbounded, isTwoManifoldBounded, selfIntersecting, hasNormals, hasVertexColor, hasUVSpace, boundingBoxP1X, boundingBoxP1Y, boundingBoxP1Z, boundingBoxP2X, boundingBoxP2Y, boundingBoxP2Z
                     } = data.Model;
 
+                    if (name) Model.Name = name;
                     if (master) Model.Master = master;
                     if (authoritative) Model.Authoritative = authoritative;
                     if (creationMethod) Model.idVCreationMethod = creationMethod;

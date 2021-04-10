@@ -66,6 +66,7 @@ input RelatedObjectInput {
 
 input IngestModelInput {
     idAssetVersion: Int!
+    systemCreated: Boolean!
     name: String!
     master: Boolean!
     authoritative: Boolean!
@@ -75,30 +76,9 @@ input IngestModelInput {
     units: Int!
     dateCaptured: String!
     modelFileType: Int!
+    directory: String!
     identifiers: [IngestIdentifierInput!]!
     sourceObjects: [RelatedObjectInput!]!
-    vertexCount: Int
-    faceCount: Int
-    animationCount: Int
-    cameraCount: Int
-    lightCount: Int
-    materialCount: Int
-    meshCount: Int
-    embeddedTextureCount: Int
-    linkedTextureCount: Int
-    isTwoManifoldUnbounded: Boolean
-    isTwoManifoldBounded: Boolean
-    isWatertight: Boolean
-    selfIntersecting: Boolean
-    hasNormals: Boolean
-    hasVertexColor: Boolean
-    hasUVSpace: Boolean
-    boundingBoxP1X: Float
-    boundingBoxP1Y: Float
-    boundingBoxP1Z: Float
-    boundingBoxP2X: Float
-    boundingBoxP2Y: Float
-    boundingBoxP2Z: Float
 }
 
 input ReferenceModelInput {

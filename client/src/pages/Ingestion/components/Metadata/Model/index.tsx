@@ -18,7 +18,6 @@ import { withDefaultValueNumber } from '../../../../../utils/shared';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';
-// import UVContents from './UVContents';
 import AssetFilesTable from './AssetFilesTable';
 import { extractModelConstellation } from '../../../../../constants';
 

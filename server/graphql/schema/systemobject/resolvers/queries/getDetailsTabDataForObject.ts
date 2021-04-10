@@ -189,9 +189,7 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
 }
 
 async function getModelDetailFields(idModel: number): Promise<ModelDetailFields> {
-    let fields: ModelDetailFields = {
-        uvMaps: []
-    };
+    let fields: ModelDetailFields = { };
 
     // TODO: KARAN resolve uvMaps, systemCreated?
     const modelConstellation = await DBAPI.ModelConstellation.fetch(idModel);
@@ -201,6 +199,7 @@ async function getModelDetailFields(idModel: number): Promise<ModelDetailFields>
     const model = modelConstellation.Model;
     fields = {
         ...fields,
+        name: model?.Name,
         master: model?.Master,
         authoritative: model?.Authoritative,
         creationMethod: model?.idVCreationMethod,
@@ -224,6 +223,7 @@ async function getModelDetailFields(idModel: number): Promise<ModelDetailFields>
     }
 
     // TODO: fetch Material Channels, etc.
+    /*
     const ModelObject = (modelConstellation.ModelObjects && modelConstellation.ModelObjects.length > 0) ? modelConstellation.ModelObjects[0] : null;
     if (ModelObject) {
         fields = {
@@ -250,6 +250,6 @@ async function getModelDetailFields(idModel: number): Promise<ModelDetailFields>
             selfIntersecting: ModelObject.SelfIntersecting,
         };
     }
-
+    */
     return fields;
 }
