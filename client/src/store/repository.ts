@@ -96,9 +96,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         const { tree, getFilterState } = get();
         const filter = getFilterState();
         const { idSystemObject } = parseRepositoryTreeNodeId(nodeId);
-        console.log('nodeId', nodeId, 'filter', filter, 'idso', idSystemObject);
         const { data, error } = await getObjectChildren(idSystemObject, filter);
-        console.log('getchildren', data, error);
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries } = getObjectChildren;
@@ -254,11 +252,12 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined): void => {
         const { resetKeywordSearch, resetRepositoryFilter, getChildrenForIngestion } = get();
+        set({ isExpanded: false });
         resetKeywordSearch();
         resetRepositoryFilter(false);
 
         if (systemObjectType === eSystemObjectType.eModel) {
-            set({ repositoryRootType: [], objectsToDisplay: [eSystemObjectType.eModel] });
+            set({ repositoryRootType: [], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });
             getChildrenForIngestion(idRoot || 0);
         }
     },

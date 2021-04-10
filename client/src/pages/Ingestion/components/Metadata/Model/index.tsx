@@ -12,15 +12,15 @@ import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
-import { RelatedObjectType, useGetSubjectQuery /*, useGetModelConstellationQuery */ } from '../../../../../types/graphql';
+import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery /*, useGetModelConstellationQuery */ } from '../../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';
-// import UVContents from './UVContents';
 import AssetFilesTable from './AssetFilesTable';
 import { extractModelConstellation } from '../../../../../constants';
+import { apolloClient } from '../../../../../graphql/index';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -68,7 +68,7 @@ function Model(props: ModelProps): React.ReactElement {
     const { model } = metadata;
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
-    const [setDefaultIngestionFilters] = useRepositoryStore(state => [state.setDefaultIngestionFilters]);
+    const [setDefaultIngestionFilters, toggleFilter] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.toggleFilter]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [modalOpen, setModalOpen] = useState(false);
     const [ingestionModel, setIngestionModel] = useState<any>({
@@ -125,361 +125,31 @@ function Model(props: ModelProps): React.ReactElement {
         }
     ]);
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const idAssetVersion = urlParams.get('fileId');
+
     useEffect(() => {
-        const data: any = {
-            Model: {
-                Name: '',
-                Master: true,
-                Authoritative: true,
-                DateCreated: '2021-04-01T00:00:00.000Z',
-                idVCreationMethod: 0,
-                idVModality: 0,
-                idVUnits: 0,
-                idVPurpose: 0,
-                idVFileType: 0,
-                idAssetThumbnail: null,
-                CountAnimations: 0,
-                CountCameras: 0,
-                CountFaces: 149999,
-                CountLights: 0,
-                CountMaterials: 1,
-                CountMeshes: 1,
-                CountVertices: 74796,
-                CountEmbeddedTextures: 0,
-                CountLinkedTextures: 1,
-                FileEncoding: 'BINARY',
-                idModel: 1,
-                idAssetThumbnailOrig: null
-            },
-            ModelObjects: [
-                {
-                    idModelObject: 1,
-                    idModel: 1,
-                    BoundingBoxP1X: -892.2620849609375,
-                    BoundingBoxP1Y: -2167.86767578125,
-                    BoundingBoxP1Z: -971.3925170898438,
-                    BoundingBoxP2X: 892.2653198242188,
-                    BoundingBoxP2Y: 2167.867919921875,
-                    BoundingBoxP2Z: 971.3912963867188,
-                    CountPoint: 74796,
-                    CountFace: 149999,
-                    CountColorChannel: 0,
-                    CountTextureCoorinateChannel: 1,
-                    HasBones: false,
-                    HasFaceNormals: true,
-                    HasTangents: null,
-                    HasTextureCoordinates: true,
-                    HasVertexNormals: null,
-                    HasVertexColor: false,
-                    IsTwoManifoldUnbounded: false,
-                    IsTwoManifoldBounded: false,
-                    IsWatertight: false,
-                    SelfIntersecting: true
-                },
-                {
-                    idModelObject: 2,
-                    idModel: 2,
-                    BoundingBoxP1X: -892.2620849609375,
-                    BoundingBoxP1Y: -2167.86767578125,
-                    BoundingBoxP1Z: -971.3925170898438,
-                    BoundingBoxP2X: 892.2653198242188,
-                    BoundingBoxP2Y: 2167.867919921875,
-                    BoundingBoxP2Z: 971.3912963867188,
-                    CountPoint: 74796,
-                    CountFace: 149999,
-                    CountColorChannel: 0,
-                    CountTextureCoorinateChannel: 1,
-                    HasBones: false,
-                    HasFaceNormals: true,
-                    HasTangents: null,
-                    HasTextureCoordinates: true,
-                    HasVertexNormals: null,
-                    HasVertexColor: false,
-                    IsTwoManifoldUnbounded: false,
-                    IsTwoManifoldBounded: false,
-                    IsWatertight: false,
-                    SelfIntersecting: true
+        async function fetchModelConstellation() {
+            const { data } = await apolloClient.query({
+                query: GetModelConstellationForAssetVersionDocument,
+                variables: {
+                    input: {
+                        idAssetVersion: Number(idAssetVersion)
+                    }
                 }
-            ],
-            ModelMaterials: [
-                {
-                    idModelMaterial: 1,
-                    Name: 'material_0'
-                },
-                {
-                    idModelMaterial: 2,
-                    Name: 'material_1'
-                }
-            ],
-            ModelMaterialChannels: [
-                {
-                    idModelMaterialChannel: 1,
-                    idModelMaterial: 1,
-                    idVMaterialType: 64,
-                    MaterialTypeOther: null,
-                    idModelMaterialUVMap: 1,
-                    UVMapEmbedded: false,
-                    ChannelPosition: 0,
-                    ChannelWidth: 3,
-                    Scalar1: 0.8,
-                    Scalar2: 0.8,
-                    Scalar3: 0.8,
-                    Scalar4: null,
-                    AdditionalAttributes: null,
-                    idVMaterialTypeOrig: 64,
-                    idModelMaterialUVMapOrig: 1,
-                    Type: '',
-                    Source: '',
-                    Value: ''
-                },
-                {
-                    idModelMaterialChannel: 2,
-                    idModelMaterial: 1,
-                    idVMaterialType: 65,
-                    MaterialTypeOther: null,
-                    idModelMaterialUVMap: null,
-                    UVMapEmbedded: false,
-                    ChannelPosition: null,
-                    ChannelWidth: null,
-                    Scalar1: 0.8,
-                    Scalar2: 0.8,
-                    Scalar3: 0.8,
-                    Scalar4: null,
-                    AdditionalAttributes: null,
-                    idVMaterialTypeOrig: 65,
-                    idModelMaterialUVMapOrig: null,
-                    Type: '',
-                    Source: '',
-                    Value: ''
-                },
-                {
-                    idModelMaterialChannel: 3,
-                    idModelMaterial: 1,
-                    idVMaterialType: 66,
-                    MaterialTypeOther: null,
-                    idModelMaterialUVMap: null,
-                    UVMapEmbedded: false,
-                    ChannelPosition: null,
-                    ChannelWidth: null,
-                    Scalar1: 0,
-                    Scalar2: 0,
-                    Scalar3: 0,
-                    Scalar4: null,
-                    AdditionalAttributes: null,
-                    idVMaterialTypeOrig: 66,
-                    idModelMaterialUVMapOrig: null,
-                    Type: '',
-                    Source: '',
-                    Value: ''
-                },
-                {
-                    idModelMaterialChannel: 4,
-                    idModelMaterial: 1,
-                    idVMaterialType: 67,
-                    MaterialTypeOther: null,
-                    idModelMaterialUVMap: null,
-                    UVMapEmbedded: false,
-                    ChannelPosition: null,
-                    ChannelWidth: null,
-                    Scalar1: 0,
-                    Scalar2: 0,
-                    Scalar3: 0,
-                    Scalar4: null,
-                    AdditionalAttributes: null,
-                    idVMaterialTypeOrig: 67,
-                    idModelMaterialUVMapOrig: null,
-                    Type: 'random',
-                    Source: 'random',
-                    Value: 'random'
-                },
-                {
-                    idModelMaterialChannel: 5,
-                    idModelMaterial: 1,
-                    idVMaterialType: 70,
-                    MaterialTypeOther: null,
-                    idModelMaterialUVMap: null,
-                    UVMapEmbedded: false,
-                    ChannelPosition: null,
-                    ChannelWidth: null,
-                    Scalar1: 0,
-                    Scalar2: null,
-                    Scalar3: null,
-                    Scalar4: null,
-                    AdditionalAttributes: null,
-                    idVMaterialTypeOrig: 70,
-                    idModelMaterialUVMapOrig: null,
-                    Type: 'text',
-                    Source: 'text',
-                    Value: 'text'
-                },
-                {
-                    idModelMaterialChannel: 6,
-                    idModelMaterial: 1,
-                    idVMaterialType: 71,
-                    MaterialTypeOther: null,
-                    idModelMaterialUVMap: null,
-                    UVMapEmbedded: false,
-                    ChannelPosition: null,
-                    ChannelWidth: null,
-                    Scalar1: 1,
-                    Scalar2: null,
-                    Scalar3: null,
-                    Scalar4: null,
-                    AdditionalAttributes: 'string',
-                    idVMaterialTypeOrig: 71,
-                    idModelMaterialUVMapOrig: null,
-                    Type: '',
-                    Source: '',
-                    Value: ''
-                },
-                {
-                    idModelMaterialChannel: 7,
-                    idModelMaterial: 1,
-                    idVMaterialType: 74,
-                    MaterialTypeOther: null,
-                    idModelMaterialUVMap: null,
-                    UVMapEmbedded: false,
-                    ChannelPosition: null,
-                    ChannelWidth: null,
-                    Scalar1: 0,
-                    Scalar2: null,
-                    Scalar3: null,
-                    Scalar4: null,
-                    AdditionalAttributes: null,
-                    idVMaterialTypeOrig: 74,
-                    idModelMaterialUVMapOrig: null,
-                    Type: '',
-                    Source: '',
-                    Value: ''
-                },
-                {
-                    idModelMaterialChannel: 8,
-                    idModelMaterial: 2,
-                    idVMaterialType: 74,
-                    MaterialTypeOther: null,
-                    idModelMaterialUVMap: null,
-                    UVMapEmbedded: false,
-                    ChannelPosition: null,
-                    ChannelWidth: null,
-                    Scalar1: 0,
-                    Scalar2: null,
-                    Scalar3: null,
-                    Scalar4: null,
-                    AdditionalAttributes: null,
-                    idVMaterialTypeOrig: 74,
-                    idModelMaterialUVMapOrig: null,
-                    Type: '',
-                    Source: '',
-                    Value: ''
-                }
-            ],
-            ModelMaterialUVMaps: [
-                {
-                    idModel: 1,
-                    idAsset: 2,
-                    UVMapEdgeLength: 0,
-                    idModelMaterialUVMap: 1
-                }
-            ],
-            ModelObjectModelMaterialXref: [
-                {
-                    idModelObjectModelMaterialXref: 1,
-                    idModelObject: 1,
-                    idModelMaterial: 1
-                },
-                {
-                    idModelObjectModelMaterialXref: 2,
-                    idModelObject: 1,
-                    idModelMaterial: 2
-                },
-                {
-                    idModelObjectModelMaterialXref: 3,
-                    idModelObject: 2,
-                    idModelMaterial: 1
-                }
-            ],
-            ModelAssets: [
-                {
-                    Asset: {
-                        FileName: 'eremotherium_laurillardi-150k-4096.fbx',
-                        FilePath: '',
-                        idAssetGroup: null,
-                        idVAssetType: 0,
-                        idSystemObject: null,
-                        StorageKey: null,
-                        idAsset: 1,
-                        idAssetGroupOrig: null,
-                        idSystemObjectOrig: null
-                    },
-                    AssetVersion: {
-                        idAsset: 1,
-                        Version: 1,
-                        FileName: 'eremotherium_laurillardi-150k-4096.fbx',
-                        idUserCreator: 0,
-                        DateCreated: '2021-04-01T00:00:00.000Z',
-                        StorageHash: '',
-                        StorageSize: '0',
-                        StorageKeyStaging: '',
-                        Ingested: false,
-                        BulkIngest: false,
-                        idAssetVersion: 1
-                    },
-                    AssetName: 'eremotherium_laurillardi-150k-4096.fbx',
-                    AssetType: 'Model'
-                },
-                {
-                    Asset: {
-                        FileName:
-                            '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
-                        FilePath: '',
-                        idAssetGroup: null,
-                        idVAssetType: 0,
-                        idSystemObject: null,
-                        StorageKey: null,
-                        idAsset: 2,
-                        idAssetGroupOrig: null,
-                        idSystemObjectOrig: null
-                    },
-                    AssetVersion: {
-                        idAsset: 2,
-                        Version: 1,
-                        FileName:
-                            '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
-                        idUserCreator: 0,
-                        DateCreated: '2021-04-01T00:00:00.000Z',
-                        StorageHash: '',
-                        StorageSize: '0',
-                        StorageKeyStaging: '',
-                        Ingested: false,
-                        BulkIngest: false,
-                        idAssetVersion: 2
-                    },
-                    AssetName:
-                        '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
-                    AssetType: 'Texture Map diffuse'
-                }
-            ]
-        };
-
-        const { ingestionModel, modelObjects, assets } = extractModelConstellation(data);
-        setIngestionModel(ingestionModel);
-        setModelObjects(modelObjects);
-        setAssetFiles(assets);
-    }, []);
-
-    /*
-    2 Approaches to gettingModelConstellation
-    //fetch the idSystemObject of the subject so that it can be used
-    const modelIngestionDetails = useGetModelConstellationForAssetVersionQuery({
-        variables: {
-            input: {
-                idAssetVersion: 1
+            });
+            // console.log('modelConstellation', data.getModelConstellationForAssetVersion.ModelConstellation);
+            if (data.getModelConstellationForAssetVersion.ModelConstellation) {
+                const modelConstellation = data.getModelConstellationForAssetVersion.ModelConstellation;
+                const { ingestionModel, modelObjects, assets } = extractModelConstellation(modelConstellation);
+                setIngestionModel(ingestionModel);
+                setModelObjects(modelObjects);
+                setAssetFiles(assets);
             }
         }
-    })
 
-    const {data, error} = useGetModelConstellationForAssetVersionQuery({variables: {input: {idAssetVersion}}})
-*/
+        fetchModelConstellation();
+    }, [idAssetVersion]);
 
     // as the root to initialize the repository browser
     const subjectIdSystemObject = useGetSubjectQuery({
@@ -525,20 +195,6 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, value, MetadataType.model);
     };
 
-    // const updateUVMapsVariant = (uvMapId: number, mapType: number) => {
-    //     const { uvMaps } = model;
-    //     const updatedUVMaps = uvMaps.map(uvMap => {
-    //         if (uvMapId === uvMap.id) {
-    //             return {
-    //                 ...uvMap,
-    //                 mapType
-    //             };
-    //         }
-    //         return uvMap;
-    //     });
-    //     updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
-    // };
-
     const openSourceObjectModal = () => {
         setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         setModalOpen(true);
@@ -552,6 +208,7 @@ function Model(props: ModelProps): React.ReactElement {
 
     const onModalClose = () => {
         setModalOpen(false);
+        toggleFilter();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
@@ -648,16 +305,16 @@ function Model(props: ModelProps): React.ReactElement {
                     {/* End of data-entry form */}
                     {/* Start of model-level metrics form */}
                     <Box className={classes.notRequiredFields}>
-                        <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices || 'unknown'} />
-                        <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces || 'unknown'} />
-                        <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations || 'unknown'} />
-                        <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras || 'unknown'} />
-                        <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights || 'unknown'} />
-                        <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials || 'unknown'} />
-                        <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes || 'unknown'} />
-                        <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures || 'unknown'} />
-                        <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures || 'unknown'} />
-                        <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding || 'unknown'} />
+                        <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} />
+                        <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} />
+                        <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} />
+                        <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} />
+                        <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} />
+                        <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} />
+                        <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} />
+                        <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} />
+                        <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} />
+                        <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} />
                     </Box>
                     {/* End of  model-level metrics form */}
                 </Box>
@@ -677,3 +334,359 @@ function Model(props: ModelProps): React.ReactElement {
 }
 
 export default Model;
+
+// console.log('fetchedModelConstellation');
+// const data: any = {
+//     Model: {
+//         Name: '',
+//         Master: true,
+//         Authoritative: true,
+//         DateCreated: '2021-04-01T00:00:00.000Z',
+//         idVCreationMethod: 0,
+//         idVModality: 0,
+//         idVUnits: 0,
+//         idVPurpose: 0,
+//         idVFileType: 0,
+//         idAssetThumbnail: null,
+//         CountAnimations: 0,
+//         CountCameras: 0,
+//         CountFaces: 149999,
+//         CountLights: 0,
+//         CountMaterials: 1,
+//         CountMeshes: 1,
+//         CountVertices: 74796,
+//         CountEmbeddedTextures: 0,
+//         CountLinkedTextures: 1,
+//         FileEncoding: 'BINARY',
+//         idModel: 1,
+//         idAssetThumbnailOrig: null
+//     },
+//     ModelObjects: [
+//         {
+//             idModelObject: 1,
+//             idModel: 1,
+//             BoundingBoxP1X: -892.2620849609375,
+//             BoundingBoxP1Y: -2167.86767578125,
+//             BoundingBoxP1Z: -971.3925170898438,
+//             BoundingBoxP2X: 892.2653198242188,
+//             BoundingBoxP2Y: 2167.867919921875,
+//             BoundingBoxP2Z: 971.3912963867188,
+//             CountPoint: 74796,
+//             CountFace: 149999,
+//             CountColorChannel: 0,
+//             CountTextureCoorinateChannel: 1,
+//             HasBones: false,
+//             HasFaceNormals: true,
+//             HasTangents: null,
+//             HasTextureCoordinates: true,
+//             HasVertexNormals: null,
+//             HasVertexColor: false,
+//             IsTwoManifoldUnbounded: false,
+//             IsTwoManifoldBounded: false,
+//             IsWatertight: false,
+//             SelfIntersecting: true
+//         },
+//         {
+//             idModelObject: 2,
+//             idModel: 2,
+//             BoundingBoxP1X: -892.2620849609375,
+//             BoundingBoxP1Y: -2167.86767578125,
+//             BoundingBoxP1Z: -971.3925170898438,
+//             BoundingBoxP2X: 892.2653198242188,
+//             BoundingBoxP2Y: 2167.867919921875,
+//             BoundingBoxP2Z: 971.3912963867188,
+//             CountPoint: 74796,
+//             CountFace: 149999,
+//             CountColorChannel: 0,
+//             CountTextureCoorinateChannel: 1,
+//             HasBones: false,
+//             HasFaceNormals: true,
+//             HasTangents: null,
+//             HasTextureCoordinates: true,
+//             HasVertexNormals: null,
+//             HasVertexColor: false,
+//             IsTwoManifoldUnbounded: false,
+//             IsTwoManifoldBounded: false,
+//             IsWatertight: false,
+//             SelfIntersecting: true
+//         }
+//     ],
+//     ModelMaterials: [
+//         {
+//             idModelMaterial: 1,
+//             Name: 'material_0'
+//         },
+//         {
+//             idModelMaterial: 2,
+//             Name: 'material_1'
+//         }
+//     ],
+//     ModelMaterialChannels: [
+//         {
+//             idModelMaterialChannel: 1,
+//             idModelMaterial: 1,
+//             idVMaterialType: 64,
+//             MaterialTypeOther: null,
+//             idModelMaterialUVMap: 1,
+//             UVMapEmbedded: false,
+//             ChannelPosition: 0,
+//             ChannelWidth: 3,
+//             Scalar1: 0.8,
+//             Scalar2: 0.8,
+//             Scalar3: 0.8,
+//             Scalar4: null,
+//             AdditionalAttributes: null,
+//             idVMaterialTypeOrig: 64,
+//             idModelMaterialUVMapOrig: 1,
+//             Type: '',
+//             Source: '',
+//             Value: ''
+//         },
+//         {
+//             idModelMaterialChannel: 2,
+//             idModelMaterial: 1,
+//             idVMaterialType: 65,
+//             MaterialTypeOther: null,
+//             idModelMaterialUVMap: null,
+//             UVMapEmbedded: false,
+//             ChannelPosition: null,
+//             ChannelWidth: null,
+//             Scalar1: 0.8,
+//             Scalar2: 0.8,
+//             Scalar3: 0.8,
+//             Scalar4: null,
+//             AdditionalAttributes: null,
+//             idVMaterialTypeOrig: 65,
+//             idModelMaterialUVMapOrig: null,
+//             Type: '',
+//             Source: '',
+//             Value: ''
+//         },
+//         {
+//             idModelMaterialChannel: 3,
+//             idModelMaterial: 1,
+//             idVMaterialType: 66,
+//             MaterialTypeOther: null,
+//             idModelMaterialUVMap: null,
+//             UVMapEmbedded: false,
+//             ChannelPosition: null,
+//             ChannelWidth: null,
+//             Scalar1: 0,
+//             Scalar2: 0,
+//             Scalar3: 0,
+//             Scalar4: null,
+//             AdditionalAttributes: null,
+//             idVMaterialTypeOrig: 66,
+//             idModelMaterialUVMapOrig: null,
+//             Type: '',
+//             Source: '',
+//             Value: ''
+//         },
+//         {
+//             idModelMaterialChannel: 4,
+//             idModelMaterial: 1,
+//             idVMaterialType: 67,
+//             MaterialTypeOther: null,
+//             idModelMaterialUVMap: null,
+//             UVMapEmbedded: false,
+//             ChannelPosition: null,
+//             ChannelWidth: null,
+//             Scalar1: 0,
+//             Scalar2: 0,
+//             Scalar3: 0,
+//             Scalar4: null,
+//             AdditionalAttributes: null,
+//             idVMaterialTypeOrig: 67,
+//             idModelMaterialUVMapOrig: null,
+//             Type: 'random',
+//             Source: 'random',
+//             Value: 'random'
+//         },
+//         {
+//             idModelMaterialChannel: 5,
+//             idModelMaterial: 1,
+//             idVMaterialType: 70,
+//             MaterialTypeOther: null,
+//             idModelMaterialUVMap: null,
+//             UVMapEmbedded: false,
+//             ChannelPosition: null,
+//             ChannelWidth: null,
+//             Scalar1: 0,
+//             Scalar2: null,
+//             Scalar3: null,
+//             Scalar4: null,
+//             AdditionalAttributes: null,
+//             idVMaterialTypeOrig: 70,
+//             idModelMaterialUVMapOrig: null,
+//             Type: 'text',
+//             Source: 'text',
+//             Value: 'text'
+//         },
+//         {
+//             idModelMaterialChannel: 6,
+//             idModelMaterial: 1,
+//             idVMaterialType: 71,
+//             MaterialTypeOther: null,
+//             idModelMaterialUVMap: null,
+//             UVMapEmbedded: false,
+//             ChannelPosition: null,
+//             ChannelWidth: null,
+//             Scalar1: 1,
+//             Scalar2: null,
+//             Scalar3: null,
+//             Scalar4: null,
+//             AdditionalAttributes: 'string',
+//             idVMaterialTypeOrig: 71,
+//             idModelMaterialUVMapOrig: null,
+//             Type: '',
+//             Source: '',
+//             Value: ''
+//         },
+//         {
+//             idModelMaterialChannel: 7,
+//             idModelMaterial: 1,
+//             idVMaterialType: 74,
+//             MaterialTypeOther: null,
+//             idModelMaterialUVMap: null,
+//             UVMapEmbedded: false,
+//             ChannelPosition: null,
+//             ChannelWidth: null,
+//             Scalar1: 0,
+//             Scalar2: null,
+//             Scalar3: null,
+//             Scalar4: null,
+//             AdditionalAttributes: null,
+//             idVMaterialTypeOrig: 74,
+//             idModelMaterialUVMapOrig: null,
+//             Type: '',
+//             Source: '',
+//             Value: ''
+//         },
+//         {
+//             idModelMaterialChannel: 8,
+//             idModelMaterial: 2,
+//             idVMaterialType: 74,
+//             MaterialTypeOther: null,
+//             idModelMaterialUVMap: null,
+//             UVMapEmbedded: false,
+//             ChannelPosition: null,
+//             ChannelWidth: null,
+//             Scalar1: 0,
+//             Scalar2: null,
+//             Scalar3: null,
+//             Scalar4: null,
+//             AdditionalAttributes: null,
+//             idVMaterialTypeOrig: 74,
+//             idModelMaterialUVMapOrig: null,
+//             Type: '',
+//             Source: '',
+//             Value: ''
+//         }
+//     ],
+//     ModelMaterialUVMaps: [
+//         {
+//             idModel: 1,
+//             idAsset: 2,
+//             UVMapEdgeLength: 0,
+//             idModelMaterialUVMap: 1
+//         }
+//     ],
+//     ModelObjectModelMaterialXref: [
+//         {
+//             idModelObjectModelMaterialXref: 1,
+//             idModelObject: 1,
+//             idModelMaterial: 1
+//         },
+//         {
+//             idModelObjectModelMaterialXref: 2,
+//             idModelObject: 1,
+//             idModelMaterial: 2
+//         },
+//         {
+//             idModelObjectModelMaterialXref: 3,
+//             idModelObject: 2,
+//             idModelMaterial: 1
+//         }
+//     ],
+//     ModelAssets: [
+//         {
+//             Asset: {
+//                 FileName: 'eremotherium_laurillardi-150k-4096.fbx',
+//                 FilePath: '',
+//                 idAssetGroup: null,
+//                 idVAssetType: 0,
+//                 idSystemObject: null,
+//                 StorageKey: null,
+//                 idAsset: 1,
+//                 idAssetGroupOrig: null,
+//                 idSystemObjectOrig: null
+//             },
+//             AssetVersion: {
+//                 idAsset: 1,
+//                 Version: 1,
+//                 FileName: 'eremotherium_laurillardi-150k-4096.fbx',
+//                 idUserCreator: 0,
+//                 DateCreated: '2021-04-01T00:00:00.000Z',
+//                 StorageHash: '',
+//                 StorageSize: '0',
+//                 StorageKeyStaging: '',
+//                 Ingested: false,
+//                 BulkIngest: false,
+//                 idAssetVersion: 1
+//             },
+//             AssetName: 'eremotherium_laurillardi-150k-4096.fbx',
+//             AssetType: 'Model'
+//         },
+//         {
+//             Asset: {
+//                 FileName:
+//                     '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
+//                 FilePath: '',
+//                 idAssetGroup: null,
+//                 idVAssetType: 0,
+//                 idSystemObject: null,
+//                 StorageKey: null,
+//                 idAsset: 2,
+//                 idAssetGroupOrig: null,
+//                 idSystemObjectOrig: null
+//             },
+//             AssetVersion: {
+//                 idAsset: 2,
+//                 Version: 1,
+//                 FileName:
+//                     '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
+//                 idUserCreator: 0,
+//                 DateCreated: '2021-04-01T00:00:00.000Z',
+//                 StorageHash: '',
+//                 StorageSize: '0',
+//                 StorageKeyStaging: '',
+//                 Ingested: false,
+//                 BulkIngest: false,
+//                 idAssetVersion: 2
+//             },
+//             AssetName:
+//                 '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
+//             AssetType: 'Texture Map diffuse'
+//         }
+//     ]
+// };
+
+// const { ingestionModel, modelObjects, assets } = extractModelConstellation(data);
+// setIngestionModel(ingestionModel);
+// setModelObjects(modelObjects);
+// setAssetFiles(assets);
+
+// import UVContents from './UVContents';
+// const updateUVMapsVariant = (uvMapId: number, mapType: number) => {
+//     const { uvMaps } = model;
+//     const updatedUVMaps = uvMaps.map(uvMap => {
+//         if (uvMapId === uvMap.id) {
+//             return {
+//                 ...uvMap,
+//                 mapType
+//             };
+//         }
+//         return uvMap;
+//     });
+//     updateMetadataField(metadataIndex, 'uvMaps', updatedUVMaps, MetadataType.model);
+// };
