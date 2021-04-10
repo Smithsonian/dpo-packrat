@@ -86,8 +86,8 @@ const uvMapSchema = yup.object().shape({
 
 const sourceObjectSchema = yup.object().shape({
     idSystemObject: yup.number().required(),
-    name: yup.string().required(),
-    identifier: yup.string().required(),
+    name: yup.string().nullable(),
+    identifier: yup.string().nullable(),
     objectType: yup.number().required()
 });
 
