@@ -551,7 +551,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             CountVertices: JCStat.numVertices,
             CountFaces: JCStat.numFaces,
             CountColorChannels: JCStat.numColorChannels,
-            CountTextureCoorinateChannels: JCStat.numTexCoordChannels,
+            CountTextureCoordinateChannels: JCStat.numTexCoordChannels,
             HasBones: JCStat.hasBones,
             HasFaceNormals: JCStat.hasNormals,
             HasTangents: JCStat.hasTangents,

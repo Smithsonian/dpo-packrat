@@ -1001,7 +1001,7 @@ export type ModelObject = {
   CountVertices?: Maybe<Scalars['Int']>;
   CountFaces?: Maybe<Scalars['Int']>;
   CountColorChannels?: Maybe<Scalars['Int']>;
-  CountTextureCoorinateChannels?: Maybe<Scalars['Int']>;
+  CountTextureCoordinateChannels?: Maybe<Scalars['Int']>;
   HasBones?: Maybe<Scalars['Boolean']>;
   HasFaceNormals?: Maybe<Scalars['Boolean']>;
   HasTangents?: Maybe<Scalars['Boolean']>;
