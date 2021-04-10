@@ -55,7 +55,7 @@ export class WorkflowJob implements WF.IWorkflow {
         const jobEngine: JOB.IJobEngine | null = await JOB.JobFactory.getInstance();
         if (!jobEngine) {
             const error: string = 'WorkflowJob.start unable to fetch JobEngine';
-            LOG.logger.error(error);
+            LOG.logger.error('WF ' + error);
             return { success: false, error };
         }
 
@@ -69,7 +69,7 @@ export class WorkflowJob implements WF.IWorkflow {
 
         const job: JOB.IJob | null = await jobEngine.create(jobCreationParameters);
         if (!job) {
-            const error: string = `WorkflowJob.start unable to start job ${jobCreationParameters.eJobType
+            const error: string = `WF WorkflowJob.start unable to start job ${jobCreationParameters.eJobType
                 ? CACHE.eVocabularyID[jobCreationParameters.eJobType] : 'undefined'}`;
             LOG.logger.error(error);
             return { success: false, error };
@@ -78,7 +78,7 @@ export class WorkflowJob implements WF.IWorkflow {
         // link WorkflowStep to JobRun
         const jobRunDB: DBAPI.JobRun | null = await job.dbJobRun();
         if (!jobRunDB) {
-            const error: string = `WorkflowJob.start unable to fetch JobRun DB ${jobCreationParameters.eJobType
+            const error: string = `WF WorkflowJob.start unable to fetch JobRun DB ${jobCreationParameters.eJobType
                 ? CACHE.eVocabularyID[jobCreationParameters.eJobType] : 'undefined'}`;
             LOG.logger.error(error);
             return { success: false, error };
@@ -102,7 +102,7 @@ export class WorkflowJob implements WF.IWorkflow {
         // update workflowStep based on job run data
         const eWorkflowStepStateOrig: DBAPI.eWorkflowStepState = workflowStep.getState();
         if (eWorkflowStepStateOrig == DBAPI.eWorkflowStepState.eFinished) {
-            LOG.logger.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} Already Completed`);
+            LOG.logger.info(`WF WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} Already Completed`);
             return { success: true, workflowComplete: true, error: '' }; // job is already done
         }
 
@@ -156,11 +156,11 @@ export class WorkflowJob implements WF.IWorkflow {
             dbUpdateResult = await this.workflowData.workflow.update() && dbUpdateResult;
 
         if (workflowComplete) {
-            LOG.logger.info(`WorkflowJob.update RELEASING ${this.completionMutexes.length} WAITERS ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
+            LOG.logger.info(`WF WorkflowJob.update RELEASING ${this.completionMutexes.length} WAITERS ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
             this.signalCompletion();
         } else
-            LOG.logger.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
-        // LOG.logger.error(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${JSON.stringify(jobRun)} - ${JSON.stringify(workflowStep)}`, new Error());
+            LOG.logger.info(`WF WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`);
+        // LOG.logger.error(`WF WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${JSON.stringify(jobRun)} - ${JSON.stringify(workflowStep)}`, new Error());
 
         return (dbUpdateResult) ? { success: true, workflowComplete, error: '' } : { success: false, workflowComplete, error: 'Database Error' };
     }
@@ -202,7 +202,7 @@ export class WorkflowJob implements WF.IWorkflow {
         // confirm that this.workflowParams.parameters is valid
         if (!(this.workflowParams.parameters instanceof WorkflowJobParameters)) {
             const error: string = `WorkflowJob.start called with parameters not of type WorkflowJobParameters: ${JSON.stringify(this.workflowParams.parameters)}`;
-            LOG.logger.error(error);
+            LOG.logger.error('WF ' + error);
             return { success: false, error };
         }
 
@@ -212,7 +212,7 @@ export class WorkflowJob implements WF.IWorkflow {
         const eJobType: CACHE.eVocabularyID = this.workflowJobParameters.eCookJob;
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eJobType, CACHE.eVocabularySetID.eJobJobType)) {
             const error: string = `WorkflowJob.start called with parameters not of type WorkflowJobParameters: ${JSON.stringify(this.workflowJobParameters)}`;
-            LOG.logger.error(error);
+            LOG.logger.error('WF ' + error);
             return { success: false, error };
         }
 
@@ -225,11 +225,11 @@ export class WorkflowJob implements WF.IWorkflow {
             const OID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
             if (!OID) {
                 const error: string = `WorkflowJob.start unable to compute system object type for ${idSystemObject}`;
-                LOG.logger.error(error);
+                LOG.logger.error('WF ' + error);
                 return { success: false, error };
             } else if (OID.eObjectType != DBAPI.eSystemObjectType.eAssetVersion) {
                 const error: string = `WorkflowJob.start called with invalid system object type ${JSON.stringify(OID)} for ${idSystemObject}; expected eAssetVersion`;
-                LOG.logger.error(error);
+                LOG.logger.error('WF ' + error);
                 return { success: false, error };
             }
             this.idAssetVersions.push(OID.idObject);

@@ -70,6 +70,7 @@ type CaptureDataDetailFields {
 }
 
 type ModelDetailFields {
+    name: String
     size: BigInt
     master: Boolean
     authoritative: Boolean
@@ -79,27 +80,6 @@ type ModelDetailFields {
     units: Int
     dateCaptured: String
     modelFileType: Int
-    uvMaps: [IngestUVMap!]!
-    boundingBoxP1X: Float
-    boundingBoxP1Y: Float
-    boundingBoxP1Z: Float
-    boundingBoxP2X: Float
-    boundingBoxP2Y: Float
-    boundingBoxP2Z: Float
-    countPoint: Int
-    countFace: Int
-    countColorChannel: Int
-    countTextureCoorinateChannel: Int
-    hasBones: Boolean
-    hasFaceNormals: Boolean
-    hasTangents: Boolean
-    hasTextureCoordinates: Boolean
-    hasVertexNormals: Boolean
-    hasVertexColor: Boolean
-    isTwoManifoldUnbounded: Boolean
-    isTwoManifoldBounded: Boolean
-    isWatertight: Boolean
-    selfIntersecting: Boolean
 }
 
 type SceneDetailFields {

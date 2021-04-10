@@ -173,12 +173,6 @@ type IngestPhotogrammetry {
   identifiers: [IngestIdentifier!]!
 }
 
-type IngestUVMap {
-  name: String!
-  edgeLength: Int!
-  mapType: Int!
-}
-
 enum RelatedObjectType {
   Source
   Derived
@@ -194,6 +188,7 @@ type RelatedObject {
 type IngestModel {
   idAssetVersion: Int!
   systemCreated: Boolean!
+  name: String!
   master: Boolean!
   authoritative: Boolean!
   creationMethod: Int!
@@ -204,25 +199,7 @@ type IngestModel {
   modelFileType: Int!
   directory: String!
   identifiers: [IngestIdentifier!]!
-  uvMaps: [IngestUVMap!]!
   sourceObjects: [RelatedObject!]!
-  roughness: Int
-  metalness: Int
-  pointCount: Int
-  faceCount: Int
-  isTwoManifoldUnbounded: Boolean
-  isTwoManifoldBounded: Boolean
-  isWatertight: Boolean
-  selfIntersecting: Boolean
-  hasNormals: Boolean
-  hasVertexColor: Boolean
-  hasUVSpace: Boolean
-  boundingBoxP1X: Float
-  boundingBoxP1Y: Float
-  boundingBoxP1Z: Float
-  boundingBoxP2X: Float
-  boundingBoxP2Y: Float
-  boundingBoxP2Z: Float
 }
 
 enum ReferenceModelAction {
@@ -503,6 +480,7 @@ input RelatedObjectInput {
 
 input IngestModelInput {
   idAssetVersion: Int!
+  systemCreated: Boolean!
   name: String!
   master: Boolean!
   authoritative: Boolean!
@@ -512,30 +490,9 @@ input IngestModelInput {
   units: Int!
   dateCaptured: String!
   modelFileType: Int!
+  directory: String!
   identifiers: [IngestIdentifierInput!]!
   sourceObjects: [RelatedObjectInput!]!
-  vertexCount: Int
-  faceCount: Int
-  animationCount: Int
-  cameraCount: Int
-  lightCount: Int
-  materialCount: Int
-  meshCount: Int
-  embeddedTextureCount: Int
-  linkedTextureCount: Int
-  isTwoManifoldUnbounded: Boolean
-  isTwoManifoldBounded: Boolean
-  isWatertight: Boolean
-  selfIntersecting: Boolean
-  hasNormals: Boolean
-  hasVertexColor: Boolean
-  hasUVSpace: Boolean
-  boundingBoxP1X: Float
-  boundingBoxP1Y: Float
-  boundingBoxP1Z: Float
-  boundingBoxP2X: Float
-  boundingBoxP2Y: Float
-  boundingBoxP2Z: Float
 }
 
 input ReferenceModelInput {
@@ -949,6 +906,7 @@ input CaptureDataDetailFieldsInput {
 }
 
 input ModelDetailFieldsInput {
+  name: String
   size: BigInt
   master: Boolean
   authoritative: Boolean
@@ -958,24 +916,6 @@ input ModelDetailFieldsInput {
   units: Int
   dateCaptured: DateTime
   modelFileType: Int
-  uvMaps: [IngestUVMapInput!]!
-  roughness: Int
-  metalness: Int
-  pointCount: Int
-  faceCount: Int
-  isTwoManifoldUnbounded: Boolean
-  isTwoManifoldBounded: Boolean
-  isWatertight: Boolean
-  selfIntersecting: Boolean
-  hasNormals: Boolean
-  hasVertexColor: Boolean
-  hasUVSpace: Boolean
-  boundingBoxP1X: Float
-  boundingBoxP1Y: Float
-  boundingBoxP1Z: Float
-  boundingBoxP2X: Float
-  boundingBoxP2Y: Float
-  boundingBoxP2Z: Float
 }
 
 input SceneDetailFieldsInput {
@@ -1098,6 +1038,7 @@ type CaptureDataDetailFields {
 }
 
 type ModelDetailFields {
+  name: String
   size: BigInt
   master: Boolean
   authoritative: Boolean
@@ -1107,27 +1048,6 @@ type ModelDetailFields {
   units: Int
   dateCaptured: String
   modelFileType: Int
-  uvMaps: [IngestUVMap!]!
-  boundingBoxP1X: Float
-  boundingBoxP1Y: Float
-  boundingBoxP1Z: Float
-  boundingBoxP2X: Float
-  boundingBoxP2Y: Float
-  boundingBoxP2Z: Float
-  countPoint: Int
-  countFace: Int
-  countColorChannel: Int
-  countTextureCoorinateChannel: Int
-  hasBones: Boolean
-  hasFaceNormals: Boolean
-  hasTangents: Boolean
-  hasTextureCoordinates: Boolean
-  hasVertexNormals: Boolean
-  hasVertexColor: Boolean
-  isTwoManifoldUnbounded: Boolean
-  isTwoManifoldBounded: Boolean
-  isWatertight: Boolean
-  selfIntersecting: Boolean
 }
 
 type SceneDetailFields {
