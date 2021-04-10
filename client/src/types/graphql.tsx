@@ -1004,7 +1004,7 @@ export type ModelObject = {
   CountVertices?: Maybe<Scalars['Int']>;
   CountFaces?: Maybe<Scalars['Int']>;
   CountColorChannels?: Maybe<Scalars['Int']>;
-  CountTextureCoorinateChannels?: Maybe<Scalars['Int']>;
+  CountTextureCoordinateChannels?: Maybe<Scalars['Int']>;
   HasBones?: Maybe<Scalars['Boolean']>;
   HasFaceNormals?: Maybe<Scalars['Boolean']>;
   HasTangents?: Maybe<Scalars['Boolean']>;
@@ -2608,7 +2608,7 @@ export type GetModelConstellationQuery = (
         )> }
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
-        & Pick<ModelObject, 'idModelObject' | 'idModel' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoorinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
+        & Pick<ModelObject, 'idModelObject' | 'idModel' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
       )>>, ModelMaterials?: Maybe<Array<(
         { __typename?: 'ModelMaterial' }
         & Pick<ModelMaterial, 'idModelMaterial' | 'Name'>
@@ -4262,7 +4262,7 @@ export const GetModelConstellationDocument = gql`
         CountVertices
         CountFaces
         CountColorChannels
-        CountTextureCoorinateChannels
+        CountTextureCoordinateChannels
         HasBones
         HasFaceNormals
         HasTangents

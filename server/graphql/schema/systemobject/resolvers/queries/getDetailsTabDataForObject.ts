@@ -237,7 +237,7 @@ async function getModelDetailFields(idModel: number): Promise<ModelDetailFields>
             countPoint: ModelObject.CountVertices,
             countFace: ModelObject.CountFaces,
             countColorChannel: ModelObject.CountColorChannels,
-            countTextureCoorinateChannel: ModelObject.CountTextureCoorinateChannels,
+            countTextureCoordinateChannel: ModelObject.CountTextureCoordinateChannels,
             hasBones: ModelObject.HasBones,
             hasFaceNormals: ModelObject.HasFaceNormals,
             hasTangents: ModelObject.HasTangents,
