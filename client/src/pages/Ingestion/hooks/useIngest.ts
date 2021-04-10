@@ -147,6 +147,8 @@ function useIngest(): UseIngest {
                     const {
                         identifiers,
                         sourceObjects,
+                        systemCreated,
+                        name,
                         dateCaptured,
                         creationMethod,
                         master,
@@ -155,27 +157,13 @@ function useIngest(): UseIngest {
                         units,
                         purpose,
                         modelFileType,
-                        pointCount,
-                        faceCount,
-                        isTwoManifoldUnbounded,
-                        isTwoManifoldBounded,
-                        isWatertight,
-                        selfIntersecting,
-                        hasNormals,
-                        hasVertexColor,
-                        hasUVSpace,
-                        boundingBoxP1X,
-                        boundingBoxP1Y,
-                        boundingBoxP1Z,
-                        boundingBoxP2X,
-                        boundingBoxP2Y,
-                        boundingBoxP2Z,
+                        directory,
                     } = model;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const modelData: IngestModelInput = {
-                        name: '',
+                        name,
                         idAssetVersion: parseFileId(file.id),
                         dateCaptured: dateCaptured.toISOString(),
                         identifiers: ingestIdentifiers,
@@ -186,22 +174,9 @@ function useIngest(): UseIngest {
                         units: nonNullValue<number>('units', units),
                         purpose: nonNullValue<number>('purpose', purpose),
                         modelFileType: nonNullValue<number>('modelFileType', modelFileType),
+                        directory,
+                        systemCreated,
                         sourceObjects,
-                        vertexCount: pointCount,
-                        faceCount,
-                        isTwoManifoldUnbounded,
-                        isTwoManifoldBounded,
-                        isWatertight,
-                        selfIntersecting,
-                        hasNormals,
-                        hasVertexColor,
-                        hasUVSpace,
-                        boundingBoxP1X,
-                        boundingBoxP1Y,
-                        boundingBoxP1Z,
-                        boundingBoxP2X,
-                        boundingBoxP2Y,
-                        boundingBoxP2Z,
                     };
 
                     ingestModel.push(modelData);

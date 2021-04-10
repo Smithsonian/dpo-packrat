@@ -170,7 +170,7 @@ export class VocabularyCache {
     // Cache Construction
     // **************************
     private async flushInternalWorker(): Promise<boolean> {
-        LOG.logger.info('CACHE: VocabularyCache.flushInternalWorker() start');
+        LOG.logger.info('CACHE VocabularyCache.flushInternalWorker() start');
         const vocabArray: Vocabulary[] | null = await Vocabulary.fetchAll();
         /* istanbul ignore if */
         if (!vocabArray)
@@ -419,7 +419,7 @@ export class VocabularyCache {
         for (const vocabList of this.vocabSetEntries.values())
             vocabList.sort((vocab1, vocab2) => vocab1.SortOrder - vocab2.SortOrder);
 
-        LOG.logger.info('CACHE: VocabularyCache.flushInternalWorker() done');
+        LOG.logger.info('CACHE VocabularyCache.flushInternalWorker() done');
         return true;
     }
 

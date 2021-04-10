@@ -3,9 +3,9 @@
  *
  * These are store specific utilities.
  */
-import { AssetVersion, IngestFolder, IngestIdentifier, IngestUvMap, Item, Project, SubjectUnitIdentifier, Vocabulary } from '../types/graphql';
+import { AssetVersion, IngestFolder, IngestIdentifier, Item, Project, SubjectUnitIdentifier, Vocabulary } from '../types/graphql';
 import { StateItem } from './item';
-import { StateFolder, StateIdentifier, StateUVMap } from './metadata';
+import { StateFolder, StateIdentifier } from './metadata';
 import { StateProject } from './project';
 import { StateSubject } from './subject';
 import { FileId, FileUploadStatus, IngestionFile } from './upload';
@@ -93,15 +93,4 @@ export function parseFoldersToState(folders: IngestFolder[]): StateFolder[] {
     }));
 
     return stateFolders;
-}
-
-export function parseUVMapsToState(folders: IngestUvMap[]): StateUVMap[] {
-    const uvMaps: StateUVMap[] = folders.map(({ name, edgeLength, mapType }: IngestUvMap, index: number) => ({
-        id: index,
-        name,
-        edgeLength,
-        mapType
-    }));
-
-    return uvMaps;
 }
