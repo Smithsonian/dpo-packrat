@@ -14,7 +14,7 @@ import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore,
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery /*, useGetModelConstellationQuery */ } from '../../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
-import { withDefaultValueNumber } from '../../../../../utils/shared';
+// import { withDefaultValueNumber } from '../../../../../utils/shared';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';
@@ -67,30 +67,30 @@ function Model(props: ModelProps): React.ReactElement {
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { model } = metadata;
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
-    const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
+    const [getEntries /*, getInitialEntry*/] = useVocabularyStore(state => [state.getEntries /*, state.getInitialEntry*/]);
     const [setDefaultIngestionFilters, toggleFilter] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.toggleFilter]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [modalOpen, setModalOpen] = useState(false);
     const [ingestionModel, setIngestionModel] = useState<any>({
-        CountVertices: 0,
-        CountFaces: 0,
-        CountAnimations: 0,
-        CountCameras: 0,
-        CountLights: 0,
-        CountMaterials: 0,
-        CountMeshes: 0,
-        CountEmbeddedTextures: 0,
-        CountLinkedTextures: 0,
+        CountVertices: null,
+        CountFaces: null,
+        CountAnimations: null,
+        CountCameras: null,
+        CountLights: null,
+        CountMaterials: null,
+        CountMeshes: null,
+        CountEmbeddedTextures: null,
+        CountLinkedTextures: null,
         FileEncoding: ''
     });
     const [assetFiles, setAssetFiles] = useState([{ assetName: '', assetType: '' }]);
     const [modelObjects, setModelObjects] = useState<any>([
         {
-            idModelObject: 0,
-            CountPoint: 0,
-            CountFace: 0,
-            CountColorChannel: 0,
-            CountTextureCoordinateChannel: 0,
+            idModelObject: null,
+            CountPoint: null,
+            CountFace: null,
+            CountColorChannel: null,
+            CountTextureCoordinateChannel: null,
             HasBones: null,
             HasFaceNormals: null,
             HasTangents: null,
@@ -101,12 +101,12 @@ function Model(props: ModelProps): React.ReactElement {
             IsTwoManifoldBounded: null,
             IsWatertight: null,
             SelfIntersecting: null,
-            BoundingBoxP1X: 0,
-            BoundingBoxP1Y: 0,
-            BoundingBoxP1Z: 0,
-            BoundingBoxP2X: 0,
-            BoundingBoxP2Y: 0,
-            BoundingBoxP2Z: 0,
+            BoundingBoxP1X: null,
+            BoundingBoxP1Y: null,
+            BoundingBoxP1Z: null,
+            BoundingBoxP2X: null,
+            BoundingBoxP2Y: null,
+            BoundingBoxP2Z: null,
             ModelMaterials: [
                 {
                     idModelMaterial: 0,
@@ -138,10 +138,10 @@ function Model(props: ModelProps): React.ReactElement {
                     }
                 }
             });
-            // console.log('modelConstellation', data.getModelConstellationForAssetVersion.ModelConstellation);
             if (data.getModelConstellationForAssetVersion.ModelConstellation) {
                 const modelConstellation = data.getModelConstellationForAssetVersion.ModelConstellation;
                 const { ingestionModel, modelObjects, assets } = extractModelConstellation(modelConstellation);
+                updateMetadataField(metadataIndex, 'name', modelConstellation.Model.Name, MetadataType.model);
                 setIngestionModel(ingestionModel);
                 setModelObjects(modelObjects);
                 setAssetFiles(assets);
@@ -257,7 +257,8 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Creation Method'
                             error={errors.model.creationMethod}
-                            value={withDefaultValueNumber(model.creationMethod, getInitialEntry(eVocabularySetID.eModelCreationMethod))}
+                            // value={withDefaultValueNumber(model.creationMethod, getInitialEntry(eVocabularySetID.eModelCreationMethod))}
+                            value={''}
                             name='creationMethod'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelCreationMethod)}
@@ -266,7 +267,8 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Modality'
                             error={errors.model.modality}
-                            value={withDefaultValueNumber(model.modality, getInitialEntry(eVocabularySetID.eModelModality))}
+                            // value={withDefaultValueNumber(model.modality, getInitialEntry(eVocabularySetID.eModelModality))}
+                            value={''}
                             name='modality'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelModality)}
@@ -276,7 +278,8 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Units'
                             error={errors.model.units}
-                            value={withDefaultValueNumber(model.units, getInitialEntry(eVocabularySetID.eModelUnits))}
+                            // value={withDefaultValueNumber(model.units, getInitialEntry(eVocabularySetID.eModelUnits))}
+                            value={''}
                             name='units'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelUnits)}
@@ -286,7 +289,8 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Purpose'
                             error={errors.model.purpose}
-                            value={withDefaultValueNumber(model.purpose, getInitialEntry(eVocabularySetID.eModelPurpose))}
+                            // value={withDefaultValueNumber(model.purpose, getInitialEntry(eVocabularySetID.eModelPurpose))}
+                            value={''}
                             name='purpose'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelPurpose)}
@@ -296,7 +300,8 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Model File Type'
                             error={errors.model.modelFileType}
-                            value={withDefaultValueNumber(model.modelFileType, getInitialEntry(eVocabularySetID.eModelFileType))}
+                            // value={withDefaultValueNumber(model.modelFileType, getInitialEntry(eVocabularySetID.eModelFileType))}
+                            value={''}
                             name='modelFileType'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelFileType)}
