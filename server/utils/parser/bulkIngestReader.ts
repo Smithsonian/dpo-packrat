@@ -364,9 +364,9 @@ export class BulkIngestReader {
         { LOG.logger.error(vocabResult.error); return null; }
         const units: number = vocabResult.idVocabulary;
 
-        // TODO: model fields, not sure what is needed here
         return {
             idAssetVersion: 0,
+            name: bagitModel.name,
             dateCaptured: bagitModel.date_created,
             creationMethod,
             master: bagitModel.master != 0,
@@ -378,7 +378,6 @@ export class BulkIngestReader {
             systemCreated: true,
             modelFileType: 0,
             identifiers: [],
-            uvMaps: [],
             sourceObjects: []
         };
     }
