@@ -54,7 +54,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     if (!itemDB)
         return { success: false };
 
-    // write subjects to item
+    // wire subjects to item
     if (!await wireSubjectsToItem(subjectsDB, itemDB))
         return { success: false };
 
@@ -433,6 +433,25 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
                 return false;
             }
         }
+    }
+
+    // wire model to sourceObjects
+    if (model.sourceObjects && model.sourceObjects.length > 0) {
+        const SO: DBAPI.SystemObject | null = await modelDB.fetchSystemObject();
+        if (SO) {
+            for (const sourceObject of model.sourceObjects) {
+                const xref: DBAPI.SystemObjectXref = new DBAPI.SystemObjectXref({
+                    idSystemObjectMaster: sourceObject.idSystemObject,
+                    idSystemObjectDerived: SO.idSystemObject,
+                    idSystemObjectXref: 0
+                });
+                if (!await xref.create()) {
+                    LOG.logger.error(`GQL ingestData failed to create SystemObjectXref ${JSON.stringify(xref)}`);
+                    continue;
+                }
+            }
+        } else
+            LOG.logger.error(`GQL ingestData unable to fetch system object for model ${modelDB.idModel}`);
     }
 
     // TODO: deal with zips and bulk ingest, in which we may want to split the uploaded asset into mutiple assets
