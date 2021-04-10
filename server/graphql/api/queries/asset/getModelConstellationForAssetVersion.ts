@@ -17,7 +17,7 @@ const getModelConstellationForAssetVersion = gql`
                     CountEmbeddedTextures,
                     CountLinkedTextures,
                     FileEncoding
-
+                    Name
                 }
                 ModelObjects {
                     idModelObject
