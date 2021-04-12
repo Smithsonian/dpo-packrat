@@ -66,13 +66,14 @@ class JobCookPostBody<T> {
 
 export abstract class JobCook<T> extends JobPackrat {
     private _configuration: JobCookConfiguration;
-    private _idAssetVersions: number[] | null;
-    private completionMutexes: MutexInterface[] = [];
-    private complete: boolean = false;
+    protected _idAssetVersions: number[] | null;
+    private _completionMutexes: MutexInterface[] = [];
+    private _complete: boolean = false;
+    protected _streamOverrideMap: Map<number, STORE.ReadStreamResult> = new Map<number, STORE.ReadStreamResult>();
 
     private static _stagingSempaphore = new Semaphore(CookWebDAVSimultaneousTransfers);
 
-    protected abstract getParameters(): T;
+    protected abstract getParameters(): Promise<T>;
 
     // null jobId means create a new one
     constructor(jobEngine: JOB.IJobEngine, clientId: string, jobName: string,
@@ -92,17 +93,18 @@ export abstract class JobCook<T> extends JobPackrat {
         return this._configuration;
     }
 
-    signalCompletion() {
-        this.complete = true;
-        for (const mutex of this.completionMutexes)
+    async signalCompletion(): Promise<void> {
+        this._complete = true;
+        for (const mutex of this._completionMutexes)
             mutex.cancel();
+        await this.cleanupJob();
     }
 
     async waitForCompletion(timeout: number): Promise<H.IOResults> {
-        if (this.complete)
+        if (this._complete)
             return { success: true, error: '' };
         const waitMutex: MutexInterface = withTimeout(new Mutex(), timeout);
-        this.completionMutexes.push(waitMutex);
+        this._completionMutexes.push(waitMutex);
 
         const releaseOuter = await waitMutex.acquire();     // first acquire should succeed
         try {
@@ -141,12 +143,13 @@ export abstract class JobCook<T> extends JobPackrat {
             LOG.logger.error('JobCook.pollingLoop', error);
             return this._results;
         } finally {
-            this.signalCompletion();
+            await this.signalCompletion();
         }
         return this._results;
     }
     // #endregion
 
+    // #region JobPackrat interface
     async startJobWorker(fireDate: Date): Promise<H.IOResults> {
         fireDate;
 
@@ -157,7 +160,7 @@ export abstract class JobCook<T> extends JobPackrat {
             // Create job via POST to /job
             let requestUrl: string = Config.job.cookServerUrl + 'job';
             let axiosResponse: AxiosResponse<any> | null = null;
-            const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, this.getParameters(), eJobCookPriority.eNormal);
+            const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, await this.getParameters(), eJobCookPriority.eNormal);
 
             LOG.logger.info(`JobCook [${this.name()}] creating job: ${requestUrl}`);
             while (requestCount++ < CookRequestRetryCount) {
@@ -208,7 +211,7 @@ export abstract class JobCook<T> extends JobPackrat {
             res = { success: true, error: '' };
         } finally {
             if (!res.success)
-                this.signalCompletion();
+                await this.signalCompletion();
         }
 
         LOG.logger.info(`JobCook [${this.name()}] running`);
@@ -243,6 +246,7 @@ export abstract class JobCook<T> extends JobPackrat {
         LOG.logger.info(`JobCook [${this.name()}] cancelled`);
         return { success: true, error: '' };
     }
+    // #endregion
 
     // returns true if polling indicates we're done; false if polling should continue
     private async pollingCallback(pollNumber: number): Promise<boolean> {
@@ -286,7 +290,11 @@ export abstract class JobCook<T> extends JobPackrat {
         for (const idAssetVersion of this._idAssetVersions) {
             const resInner: H.IOResults = await JobCook._stagingSempaphore.runExclusive(async (value) => {
                 try {
-                    const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion);
+                    // look for read stream in override map, which may be supplied when we're ingesting a zip file containing a model and associated UV Maps
+                    // in this case, the override stream is for the model geometry file
+                    let RSR: STORE.ReadStreamResult | undefined = this._streamOverrideMap.get(idAssetVersion);
+                    if (!RSR)
+                        RSR = await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion);
                     if (!RSR.success || !RSR.readStream || !RSR.fileName)
                         return { success: false, error: `JobCook.stageFiles unable to read asset version ${idAssetVersion}: ${RSR.error}` };
 
@@ -296,14 +304,14 @@ export abstract class JobCook<T> extends JobPackrat {
 
                     const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl, {
                         authType: AuthType.None,
-                        maxBodyLength: 1024 * 1024 * 1024,
+                        maxBodyLength: 10 * 1024 * 1024 * 1024,
                         withCredentials: false
                     });
                     const webdavWSOpts: CreateWriteStreamOptions = {
                         headers: { 'Content-Type': 'application/octet-stream' }
                     };
                     const WS: Writable = webdavClient.createWriteStream(destination, webdavWSOpts);
-                    const res: H.IOResults = await H.Helpers.writeStreamToStream(RSR.readStream, WS, true);
+                    const res: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
 
                     if (!res.success) {
                         const error = `JobCook.stageFiles unable to transmit file ${RSR.fileName} for asset version ${idAssetVersion}: ${res.error}`;
@@ -313,11 +321,28 @@ export abstract class JobCook<T> extends JobPackrat {
 
                     LOG.logger.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}: completed`);
 
-                    for (let statCount: number = 0; statCount < 3; statCount++) {
+                    // use WebDAV client's stat to detect when file is fully staged and available on the server
+                    // poll for filesize of remote file.  Continue polling:
+                    // - until we match or exceed our streamed size
+                    // - as long as the remote size is less than our streamed size, up to 100 times
+                    // - as long as the remote size is growing, and not "stuck" at the same size more than 5 times
+                    // - pause CookRetryDelay ms between stat polls
+                    let sizeLast: number = 0;
+                    let stuckCount: number = 0;
+                    for (let statCount: number = 0; statCount < 100; statCount++) {
                         try {
                             const stat: any = await webdavClient.stat(destination);
                             const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
-                            return { success: baseName === RSR.fileName, error: '' };
+                            const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
+                            LOG.logger.info(`JobCook.stageFiles staging polling ${Config.job.cookServerUrl}${destination.substring(1)}: ${size} received vs ${res.size} transmitted`);
+                            if (size >= res.size)
+                                return { success: baseName === RSR.fileName, error: '' };
+                            if (size === sizeLast) {
+                                if (++stuckCount >= 5)
+                                    return { success: false, error: `Unable to verify existence of staged file ${RSR.fileName}` };
+                            }
+                            sizeLast = size;
+                            await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                         } catch (error) {
                             LOG.logger.error('JobCook.stageFiles stat', error);
                             await H.Helpers.sleep(CookRetryDelay); // sleep for CookRetryDelay ms before retrying
