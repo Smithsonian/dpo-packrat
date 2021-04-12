@@ -47,6 +47,7 @@ export abstract class JobPackrat implements JOB.IJob {
     // To be implemented by derived classes
     protected abstract startJobWorker(fireDate: Date): Promise<H.IOResults>;
     protected abstract cancelJobWorker(): Promise<H.IOResults>;
+    protected abstract cleanupJob(): Promise<H.IOResults>;
     // #endregion
 
     // #region node-scheduler interface
@@ -60,14 +61,18 @@ export abstract class JobPackrat implements JOB.IJob {
         if (updateWorkflowEngine) {
             const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
             if (!workflowEngine) {
-                LOG.logger.error('JobPackrat.updateWorkflowEngine failed, no WorkflowFactory instance');
+                LOG.logger.error('JobPackrat.updateEngines failed, no WorkflowFactory instance');
                 return false;
             }
             res = workflowEngine.jobUpdated(this._dbJobRun.idJobRun) && res;
         }
 
-        if (sendJobCompletion)
+        if (sendJobCompletion) {
             await this._jobEngine.jobCompleted(this);
+            const cleanupRes: H.IOResults = await this.cleanupJob();
+            if (!cleanupRes.success)
+                LOG.logger.error(`JobPackrat.updateEngines failed to cleanup job: ${cleanupRes.error}`);
+        }
 
         return res;
     }

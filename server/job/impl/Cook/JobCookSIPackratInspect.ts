@@ -7,7 +7,9 @@ import * as JOB from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
+import * as STORE from '../../../storage/interface';
 import * as H from '../../../utils/helpers';
+import { ZipStream } from '../../../utils/zipStream';
 import { maybe, maybeString } from '../../../utils/types';
 
 import { isArray } from 'lodash';
@@ -613,8 +615,58 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         this.parameters = parameters;
     }
 
-    protected getParameters(): JobCookSIPackratInspectParameters {
+    async cleanupJob(): Promise<H.IOResults> {
+        return { success: true, error: '' };
+    }
+
+    protected async getParameters(): Promise<JobCookSIPackratInspectParameters> {
+        // if asset is zipped, unzip the asset, seek geometry file, and then plan to stage that file using this._streamOverrideMap
+        await this.testForZip();
         return this.parameters;
+    }
+
+    private async testForZip(): Promise<boolean> {
+        if (path.extname(this.parameters.sourceMeshFile).toLowerCase() !== '.zip')
+            return false;
+
+        if (!this._idAssetVersions || this._idAssetVersions.length == 0)
+            return false;
+
+        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(this._idAssetVersions[0]);
+        if (!RSR.success || !RSR.readStream) {
+            LOG.logger.error(`JobCookSIPackratInspect.testForZip unable to read asset version ${this._idAssetVersions[0]}: ${RSR.error}`);
+            return false;
+        }
+
+        const ZS: ZipStream = new ZipStream(RSR.readStream);
+        const zipRes: H.IOResults = await ZS.load();
+        if (!zipRes.success) {
+            LOG.logger.error(`JobCookSIPackratInspect.testForZip unable to read asset version ${this._idAssetVersions[0]}: ${zipRes.error}`);
+            return false;
+        }
+
+        const files: string[] = await ZS.getJustFiles(null);
+        for (const file of files) {
+            if (await CACHE.VocabularyCache.mapModelFileByExtension(file) === undefined)
+                continue;
+
+            const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(file);
+            if (!readStream) {
+                LOG.logger.error(`JobCookSIPackratInspect.testForZip unable to fetch read steram for ${file} in zip of idAssetVersion ${this._idAssetVersions[0]}`);
+                return false;
+            }
+
+            this.parameters.sourceMeshFile = file;
+            this._streamOverrideMap.set(this._idAssetVersions[0], {
+                readStream,
+                fileName: file,
+                storageHash: null,
+                success: true,
+                error: ''
+            });
+            return true;
+        }
+        return false;
     }
 }
 
