@@ -594,6 +594,8 @@ export class VocabularyCache {
             case 'camdng': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
             case 'tif': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
             case 'tiff': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'bmp': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'png': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
             case 'processed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
             case 'colcor': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
             case 'zeroed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;

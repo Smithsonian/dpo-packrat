@@ -12,7 +12,7 @@ export default async function discardUploadedAssetVersions(
     const { user } = context;
     const { idAssetVersions } = args.input;
     if (!user) {
-        LOG.logger.error('uploadAsset unable to retrieve user context');
+        LOG.logger.error('GQL discardUploadedAssetVersions unable to retrieve user context');
         return { success: false };
     }
 
@@ -20,14 +20,14 @@ export default async function discardUploadedAssetVersions(
     for (const idAssetVersion of idAssetVersions) {
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
         if (!assetVersion) {
-            LOG.logger.error(`discardUploadedAssetVersions Unable to fetch asset version with id ${idAssetVersion}`);
+            LOG.logger.error(`GQL discardUploadedAssetVersions Unable to fetch asset version with id ${idAssetVersion}`);
             success = false;
             continue;
         }
 
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
         if (!ASR.success) {
-            LOG.logger.error(`discardUploadedAssetVersions failed to discard asset version ${JSON.stringify(assetVersion)}: ${ASR.error}`);
+            LOG.logger.error(`GQL discardUploadedAssetVersions failed to discard asset version ${JSON.stringify(assetVersion)}: ${ASR.error}`);
             success = false;
             continue;
         }
