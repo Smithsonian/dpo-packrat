@@ -215,7 +215,7 @@ export class AssetStorageAdapter {
             if (!await assetClone.setAssetType(eVocabID))
                 return { assets: null, assetVersions: null, success: false, error: 'AssetStorageAdapter.commitNewAssetVersionBulk unable to create assets & asset versions' };
 
-            const assetNameOverride: string = asset.FileName + ' Object ' + objectNumber;
+            const assetNameOverride: string = asset.FileName + ' Set ' + objectNumber;
             objectNumber++;
             const assetVersion: DBAPI.AssetVersion | null = await AssetStorageAdapter.createAssetConstellation(assetClone, idUserCreator,
                 DateCreated, resStorage, commitWriteStreamInput.storageKey, true, ingestedObject, assetNameOverride); /* istanbul ignore else */
