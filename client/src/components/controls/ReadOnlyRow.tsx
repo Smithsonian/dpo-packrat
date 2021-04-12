@@ -6,7 +6,7 @@
  *
  * */
 import React from 'react';
-import { Typography } from '@material-ui/core/';
+import { Typography, Box } from '@material-ui/core/';
 import { ViewableProps } from '../../types/repository';
 import FieldType from '../shared/FieldType';
 
@@ -22,7 +22,9 @@ function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
 
     return (
         <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps} width={'auto'}>
-            <Typography>{value}</Typography>
+            <Box display='flex' flexDirection='row' whiteSpace='nowrap'>
+                <Typography style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A' }}>{value}</Typography>
+            </Box>
         </FieldType>
     );
 }

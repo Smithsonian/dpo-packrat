@@ -7,24 +7,25 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { ReadOnlyRow } from '../../../../../components';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(theme => ({
     notRequiredFields: {
         display: 'flex',
         width: '50%',
         flexDirection: 'column',
         marginLeft: 30,
         borderRadius: 5,
-        backgroundColor: palette.secondary.light,
+        backgroundColor: theme.palette.secondary.light,
         '& > *': {
             height: '20px',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
-        }
+        },
+        minWidth: '300px'
     },
     materialFields: {
         display: 'flex',
         flexDirection: 'column',
-        width: '50%'
+        width: 'auto'
     },
     unindentedFields: {
         '& > :first-child': {
@@ -53,6 +54,8 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     ModelObjectContainer: {
         display: 'flex',
+        width: 'auto',
+        minWidth: '300px',
         marginBottom: '3%'
     }
 }));
@@ -77,8 +80,8 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                         <Box className={classes.materialFields}>
                             {modelObject.ModelMaterials.map(materialType => {
                                 return (
-                                    <React.Fragment>
-                                        <Box className={classes.unindentedFields} key={materialType.idModelMaterial}>
+                                    <React.Fragment key={materialType.idModelMaterial}>
+                                        <Box className={classes.unindentedFields}>
                                             <ReadOnlyRow label='Material Name' value={materialType.Name} />
                                             {materialType.ModelMaterialChannel.map(channel => {
                                                 return (
@@ -100,10 +103,10 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                         </Box>
 
                         <Box className={classes.notRequiredFields}>
-                            <ReadOnlyRow label='Point Count' value={modelObject.CountPoint} />
-                            <ReadOnlyRow label='Face Count' value={modelObject.CountFace} />
-                            <ReadOnlyRow label='Color Channel Count' value={modelObject.CountColorChannel} />
-                            <ReadOnlyRow label='Texture Coord Channel Count' value={modelObject.CountTextureCoorinateChannel} />
+                            <ReadOnlyRow label='Vertex Count' value={modelObject.CountVertices} />
+                            <ReadOnlyRow label='Face Count' value={modelObject.CountFaces} />
+                            <ReadOnlyRow label='Color Channel Count' value={modelObject.CountColorChannels} />
+                            <ReadOnlyRow label='Texture Coord Channel Count' value={modelObject.CountTextureCoordinateChannels} />
                             <ReadOnlyRow label='Has Bones?' value={interpretTrinary(modelObject.HasBones)} />
                             <ReadOnlyRow label='Has Face Normals?' value={interpretTrinary(modelObject.HasFaceNormals)} />
                             <ReadOnlyRow label='Has Tangents?' value={interpretTrinary(modelObject.HasTangents)} />
@@ -114,25 +117,21 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                             <ReadOnlyRow label='Manifold (Open)?' value={interpretTrinary(modelObject.IsTwoManifoldBounded)} />
                             <ReadOnlyRow label='Is Watertight?' value={interpretTrinary(modelObject.IsWatertight)} />
                             <ReadOnlyRow label='Self Intersecting?' value={interpretTrinary(modelObject.SelfIntersecting)} />
-                            <ReadOnlyRow label='Bounding Box' />
-                            <ReadOnlyRow
-                                label='Min'
-                                value={`(${roundToTwoPlaces(modelObject.BoundingBoxP1X)} , ${roundToTwoPlaces(modelObject.BoundingBoxP1Y)} , ${roundToTwoPlaces(
-                                    modelObject.BoundingBoxP1Z
-                                )})`}
-                            />
-                            <ReadOnlyRow
-                                label='Max'
-                                value={`(${roundToTwoPlaces(modelObject.BoundingBoxP2X)} , ${roundToTwoPlaces(modelObject.BoundingBoxP2Y)} , ${roundToTwoPlaces(
-                                    modelObject.BoundingBoxP2Z
-                                )})`}
-                            />
-
-                            {/* <ReadOnlyRow label='P1Y' value={modelObject.BoundingBoxP1Y} />
-                            <ReadOnlyRow label='P1Z' value={modelObject.BoundingBoxP1Z} />
-                            <ReadOnlyRow label='P2X' value={modelObject.BoundingBoxP2X} />
-                            <ReadOnlyRow label='P2Y' value={modelObject.BoundingBoxP2Y} />
-                            <ReadOnlyRow label='P2Z' value={modelObject.BoundingBoxP2Z} /> */}
+                            <Box style={{ height: 'auto' }}>
+                                <ReadOnlyRow label='Bounding Box' />
+                                <ReadOnlyRow
+                                    label='Min'
+                                    value={`(${roundToTwoPlaces(modelObject.BoundingBoxP1X)} , ${roundToTwoPlaces(modelObject.BoundingBoxP1Y)} , ${roundToTwoPlaces(
+                                        modelObject.BoundingBoxP1Z
+                                    )})`}
+                                />
+                                <ReadOnlyRow
+                                    label='Max'
+                                    value={`(${roundToTwoPlaces(modelObject.BoundingBoxP2X)} , ${roundToTwoPlaces(modelObject.BoundingBoxP2Y)} , ${roundToTwoPlaces(
+                                        modelObject.BoundingBoxP2Z
+                                    )})`}
+                                />
+                            </Box>
                         </Box>
                     </Box>
                 );

@@ -2471,8 +2471,23 @@ export type GetModelConstellationForAssetVersionQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel'>
-      ) }
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name'>
+      ), ModelObjects?: Maybe<Array<(
+        { __typename?: 'ModelObject' }
+        & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
+      )>>, ModelMaterials?: Maybe<Array<(
+        { __typename?: 'ModelMaterial' }
+        & Pick<ModelMaterial, 'idModelMaterial' | 'Name'>
+      )>>, ModelMaterialChannels?: Maybe<Array<(
+        { __typename?: 'ModelMaterialChannel' }
+        & Pick<ModelMaterialChannel, 'Type' | 'Source' | 'Value' | 'AdditionalAttributes' | 'idModelMaterial' | 'idModelMaterialChannel'>
+      )>>, ModelObjectModelMaterialXref?: Maybe<Array<(
+        { __typename?: 'ModelObjectModelMaterialXref' }
+        & Pick<ModelObjectModelMaterialXref, 'idModelObjectModelMaterialXref' | 'idModelObject' | 'idModelMaterial'>
+      )>>, ModelAssets?: Maybe<Array<(
+        { __typename?: 'ModelAsset' }
+        & Pick<ModelAsset, 'AssetName' | 'AssetType'>
+      )>> }
     )> }
   ) }
 );
@@ -3951,6 +3966,62 @@ export const GetModelConstellationForAssetVersionDocument = gql`
     ModelConstellation {
       Model {
         idModel
+        CountVertices
+        CountFaces
+        CountAnimations
+        CountCameras
+        CountLights
+        CountMaterials
+        CountMeshes
+        CountEmbeddedTextures
+        CountLinkedTextures
+        FileEncoding
+        Name
+      }
+      ModelObjects {
+        idModelObject
+        BoundingBoxP1X
+        BoundingBoxP1Y
+        BoundingBoxP1Z
+        BoundingBoxP1Z
+        BoundingBoxP2X
+        BoundingBoxP2Y
+        BoundingBoxP2Z
+        CountVertices
+        CountFaces
+        CountColorChannels
+        CountTextureCoordinateChannels
+        HasBones
+        HasFaceNormals
+        HasTangents
+        HasTextureCoordinates
+        HasVertexNormals
+        HasVertexColor
+        IsTwoManifoldUnbounded
+        IsTwoManifoldBounded
+        IsWatertight
+        SelfIntersecting
+      }
+      ModelMaterials {
+        idModelMaterial
+        Name
+      }
+      ModelMaterialChannels {
+        Type
+        Source
+        Value
+        AdditionalAttributes
+        idModelMaterial
+        idModelMaterialChannel
+      }
+      ModelObjectModelMaterialXref {
+        idModelObjectModelMaterialXref
+        idModelObject
+        idModelMaterial
+      }
+      ModelAssets {
+        AssetName
+        AssetType
       }
     }
   }

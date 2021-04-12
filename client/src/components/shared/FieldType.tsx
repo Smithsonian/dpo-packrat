@@ -15,10 +15,9 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         borderRadius: 5,
         width: ({ width }: FieldTypeProps) => width || '100%',
         marginTop: ({ marginTop }: FieldTypeProps) => spacing(marginTop || 0),
-        backgroundColor: ({ required, error }: FieldTypeProps) => error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light
+        backgroundColor: ({ required, error }: FieldTypeProps) => (error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light)
     },
     label: {
-        margin: '5px 0px 10px 0px',
         color: palette.primary.dark
     },
     loading: {
@@ -47,7 +46,11 @@ function FieldType(props: FieldTypeProps): React.ReactElement {
     const { label, renderLabel, children, align = 'left', direction, containerProps, labelProps, loading } = props;
     const classes = useStyles(props);
 
-    let content: React.ReactNode = <Typography align={align} className={classes.label} variant='caption' {...labelProps}>{label}</Typography>;
+    let content: React.ReactNode = (
+        <Typography align={align} className={classes.label} variant='caption' {...labelProps}>
+            {label}
+        </Typography>
+    );
 
     if (renderLabel === false) {
         content = null;

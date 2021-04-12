@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * SelectField
  *
@@ -16,15 +18,15 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         padding: '0px 10px',
         background: palette.background.paper,
         border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
-        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
+        backgroundColor: (updated: boolean) => (updated ? palette.secondary.light : palette.background.paper),
         borderRadius: 5,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
             fontSize: '0.8em',
             minWidth: 180,
-            maxWidth: 180,
+            maxWidth: 180
         }
-    },
+    }
 }));
 
 interface SelectFieldProps extends ViewableProps {
@@ -53,15 +55,12 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
             containerProps={rowFieldProps}
             width={width || viewMode ? 'auto' : undefined}
         >
-            <Select
-                value={value}
-                className={classes.select}
-                name={name}
-                onChange={onChange}
-                disabled={disabled}
-                disableUnderline
-            >
-                {options.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline>
+                {options.map(({ idVocabulary, Term }, index) => (
+                    <MenuItem key={index} value={idVocabulary}>
+                        {Term}
+                    </MenuItem>
+                ))}
             </Select>
         </FieldType>
     );
