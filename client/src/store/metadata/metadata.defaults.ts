@@ -40,6 +40,7 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     systemCreated: true,
     identifiers: [],
     folders: [],
+    name: '',
     description: '',
     dateCaptured: new Date(),
     datasetType: null,

@@ -22,6 +22,7 @@ type IngestFolder {
 
 type IngestPhotogrammetry {
     idAssetVersion: Int!
+    name: String!
     dateCaptured: String!
     datasetType: Int!
     systemCreated: Boolean!

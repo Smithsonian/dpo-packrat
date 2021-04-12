@@ -58,6 +58,12 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         }
     };
 
+    const setNameField = ({ target }): void => {
+        const { name, value } = target;
+        if (value)
+            updateMetadataField(metadataIndex, name, value, MetadataType.photogrammetry);
+    };
+
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
         updateMetadataField(metadataIndex, name, checked, MetadataType.photogrammetry);
@@ -98,6 +104,9 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
             <Box display='flex' flexDirection='row' mt={1}>
                 <Box display='flex' flex={1} flexDirection='column'>
+                    <InputField required type='string' label='Name'
+                        name='name' value={photogrammetry.name} onChange={setNameField}
+                    />
                     <FieldType
                         error={errors.photogrammetry.dateCaptured}
                         required

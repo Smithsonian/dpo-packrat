@@ -154,6 +154,7 @@ type IngestFolder {
 
 type IngestPhotogrammetry {
   idAssetVersion: Int!
+  name: String!
   dateCaptured: String!
   datasetType: Int!
   systemCreated: Boolean!
@@ -446,6 +447,7 @@ input IngestFolderInput {
 
 input IngestPhotogrammetryInput {
   idAssetVersion: Int!
+  name: String!
   dateCaptured: String!
   datasetType: Int!
   systemCreated: Boolean!
