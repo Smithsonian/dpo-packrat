@@ -460,8 +460,6 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
     modelDB.idVUnits = model.units;
     modelDB.idVFileType = model.modelFileType;
 
-    // TODO: extract out common code for asset constellations
-    // TODO: handle ingested collections, such as via zip file, and build assetMap from all assets in collection
     const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(model.idAssetVersion);
     if (!assetVersion) {
         LOG.logger.error(`GQL ingestData unable to fetch asset version from ${JSON.stringify(model)}`);
@@ -516,7 +514,6 @@ async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<
             LOG.logger.error(`GQL ingestData unable to fetch system object for model ${modelDB.idModel}`);
     }
 
-    // TODO: deal with zips and bulk ingest, in which we may want to split the uploaded asset into mutiple assets
     if (model.idAssetVersion)
         assetVersionMap.set(model.idAssetVersion, modelDB);
     return true;
