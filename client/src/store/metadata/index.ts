@@ -24,7 +24,7 @@ import { StateProject, useProjectStore } from '../project';
 import { StateSubject, useSubjectStore } from '../subject';
 import { FileId, IngestionFile, useUploadStore } from '../upload';
 import { useUserStore } from '../user';
-import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState, parseUVMapsToState } from '../utils';
+import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from '../utils';
 import { useVocabularyStore } from '../vocabulary';
 import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema } from './metadata.defaults';
 import {
@@ -174,11 +174,11 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         const defaultModel: ModelFields = {
             ...defaultModelFields,
             identifiers: defaultIdentifierField,
-            creationMethod: getInitialEntry(eVocabularySetID.eModelCreationMethod),
-            modality: getInitialEntry(eVocabularySetID.eModelModality),
-            units: getInitialEntry(eVocabularySetID.eModelUnits),
-            purpose: getInitialEntry(eVocabularySetID.eModelPurpose),
-            modelFileType: getInitialEntry(eVocabularySetID.eModelFileType)
+            // creationMethod: getInitialEntry(eVocabularySetID.eModelCreationMethod),
+            // modality: getInitialEntry(eVocabularySetID.eModelModality),
+            // units: getInitialEntry(eVocabularySetID.eModelUnits),
+            // purpose: getInitialEntry(eVocabularySetID.eModelPurpose),
+            // modelFileType: getInitialEntry(eVocabularySetID.eModelFileType)
         };
 
         const defaultScene: SceneFields = {
@@ -278,7 +278,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
                         metadatas.push(metadataStep);
                     } else if (Model) {
-                        const { identifiers, uvMaps } = Model;
+                        const { identifiers } = Model;
                         const stateIdentifiers: StateIdentifier[] = parseIdentifiersToState(identifiers, defaultIdentifierField);
 
                         metadataStep = {
@@ -289,7 +289,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                                     ...Model,
                                     dateCaptured: new Date(Model.dateCaptured),
                                     identifiers: stateIdentifiers,
-                                    uvMaps: parseUVMapsToState(uvMaps)
                                 })
                             }
                         };
@@ -359,7 +358,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
             return metadata;
         });
-
         set({ metadatas: updatedMetadatas });
     },
     getInitialStateFolders: (folders: string[]): StateFolder[] => {

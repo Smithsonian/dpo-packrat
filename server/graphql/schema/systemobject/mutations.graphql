@@ -67,6 +67,7 @@ input CaptureDataDetailFieldsInput {
 }
 
 input ModelDetailFieldsInput {
+    name: String
     size: BigInt
     master: Boolean
     authoritative: Boolean
@@ -76,24 +77,6 @@ input ModelDetailFieldsInput {
     units: Int
     dateCaptured: DateTime
     modelFileType: Int
-    uvMaps: [IngestUVMapInput!]!
-    roughness: Int
-    metalness: Int
-    pointCount: Int
-    faceCount: Int
-    isTwoManifoldUnbounded: Boolean
-    isTwoManifoldBounded: Boolean
-    isWatertight: Boolean
-    selfIntersecting: Boolean
-    hasNormals: Boolean
-    hasVertexColor: Boolean
-    hasUVSpace: Boolean
-    boundingBoxP1X: Float
-    boundingBoxP1Y: Float
-    boundingBoxP1Z: Float
-    boundingBoxP2X: Float
-    boundingBoxP2Y: Float
-    boundingBoxP2Z: Float
 }
 
 input SceneDetailFieldsInput {

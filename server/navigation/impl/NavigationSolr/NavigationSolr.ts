@@ -205,7 +205,7 @@ export class NavigationSolr implements NAV.INavigation {
             `nextCursorMark: ${queryResult.result.nextCursorMark} }`);
         // let docNumber: number = 1;
         for (const doc of queryResult.result.response.docs) {
-            if (!doc.id || !doc.CommonObjectType || !doc.CommonidObject || !doc.CommonName) {
+            if (!doc.id || !doc.CommonObjectType || !doc.CommonidObject || (doc.CommonName === null)) {
                 LOG.logger.error(`NavigationSolr.executeSolrQuery: malformed query response document ${JSON.stringify(doc)}`);
                 continue;
             }

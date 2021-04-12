@@ -462,13 +462,6 @@ export type IngestPhotogrammetry = {
   identifiers: Array<IngestIdentifier>;
 };
 
-export type IngestUvMap = {
-  __typename?: 'IngestUVMap';
-  name: Scalars['String'];
-  edgeLength: Scalars['Int'];
-  mapType: Scalars['Int'];
-};
-
 export enum RelatedObjectType {
   Source = 'Source',
   Derived = 'Derived'
@@ -486,6 +479,7 @@ export type IngestModel = {
   __typename?: 'IngestModel';
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
+  name: Scalars['String'];
   master: Scalars['Boolean'];
   authoritative: Scalars['Boolean'];
   creationMethod: Scalars['Int'];
@@ -496,25 +490,7 @@ export type IngestModel = {
   modelFileType: Scalars['Int'];
   directory: Scalars['String'];
   identifiers: Array<IngestIdentifier>;
-  uvMaps: Array<IngestUvMap>;
   sourceObjects: Array<RelatedObject>;
-  roughness?: Maybe<Scalars['Int']>;
-  metalness?: Maybe<Scalars['Int']>;
-  pointCount?: Maybe<Scalars['Int']>;
-  faceCount?: Maybe<Scalars['Int']>;
-  isTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
-  isTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
-  isWatertight?: Maybe<Scalars['Boolean']>;
-  selfIntersecting?: Maybe<Scalars['Boolean']>;
-  hasNormals?: Maybe<Scalars['Boolean']>;
-  hasVertexColor?: Maybe<Scalars['Boolean']>;
-  hasUVSpace?: Maybe<Scalars['Boolean']>;
-  boundingBoxP1X?: Maybe<Scalars['Float']>;
-  boundingBoxP1Y?: Maybe<Scalars['Float']>;
-  boundingBoxP1Z?: Maybe<Scalars['Float']>;
-  boundingBoxP2X?: Maybe<Scalars['Float']>;
-  boundingBoxP2Y?: Maybe<Scalars['Float']>;
-  boundingBoxP2Z?: Maybe<Scalars['Float']>;
 };
 
 export enum ReferenceModelAction {
@@ -814,6 +790,7 @@ export type RelatedObjectInput = {
 
 export type IngestModelInput = {
   idAssetVersion: Scalars['Int'];
+  systemCreated: Scalars['Boolean'];
   name: Scalars['String'];
   master: Scalars['Boolean'];
   authoritative: Scalars['Boolean'];
@@ -823,30 +800,9 @@ export type IngestModelInput = {
   units: Scalars['Int'];
   dateCaptured: Scalars['String'];
   modelFileType: Scalars['Int'];
+  directory: Scalars['String'];
   identifiers: Array<IngestIdentifierInput>;
   sourceObjects: Array<RelatedObjectInput>;
-  vertexCount?: Maybe<Scalars['Int']>;
-  faceCount?: Maybe<Scalars['Int']>;
-  animationCount?: Maybe<Scalars['Int']>;
-  cameraCount?: Maybe<Scalars['Int']>;
-  lightCount?: Maybe<Scalars['Int']>;
-  materialCount?: Maybe<Scalars['Int']>;
-  meshCount?: Maybe<Scalars['Int']>;
-  embeddedTextureCount?: Maybe<Scalars['Int']>;
-  linkedTextureCount?: Maybe<Scalars['Int']>;
-  isTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
-  isTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
-  isWatertight?: Maybe<Scalars['Boolean']>;
-  selfIntersecting?: Maybe<Scalars['Boolean']>;
-  hasNormals?: Maybe<Scalars['Boolean']>;
-  hasVertexColor?: Maybe<Scalars['Boolean']>;
-  hasUVSpace?: Maybe<Scalars['Boolean']>;
-  boundingBoxP1X?: Maybe<Scalars['Float']>;
-  boundingBoxP1Y?: Maybe<Scalars['Float']>;
-  boundingBoxP1Z?: Maybe<Scalars['Float']>;
-  boundingBoxP2X?: Maybe<Scalars['Float']>;
-  boundingBoxP2Y?: Maybe<Scalars['Float']>;
-  boundingBoxP2Z?: Maybe<Scalars['Float']>;
 };
 
 export type ReferenceModelInput = {
@@ -1045,7 +1001,7 @@ export type ModelObject = {
   CountVertices?: Maybe<Scalars['Int']>;
   CountFaces?: Maybe<Scalars['Int']>;
   CountColorChannels?: Maybe<Scalars['Int']>;
-  CountTextureCoorinateChannels?: Maybe<Scalars['Int']>;
+  CountTextureCoordinateChannels?: Maybe<Scalars['Int']>;
   HasBones?: Maybe<Scalars['Boolean']>;
   HasFaceNormals?: Maybe<Scalars['Boolean']>;
   HasTangents?: Maybe<Scalars['Boolean']>;
@@ -1287,6 +1243,7 @@ export type CaptureDataDetailFieldsInput = {
 };
 
 export type ModelDetailFieldsInput = {
+  name?: Maybe<Scalars['String']>;
   size?: Maybe<Scalars['BigInt']>;
   master?: Maybe<Scalars['Boolean']>;
   authoritative?: Maybe<Scalars['Boolean']>;
@@ -1296,24 +1253,6 @@ export type ModelDetailFieldsInput = {
   units?: Maybe<Scalars['Int']>;
   dateCaptured?: Maybe<Scalars['DateTime']>;
   modelFileType?: Maybe<Scalars['Int']>;
-  uvMaps: Array<IngestUvMapInput>;
-  roughness?: Maybe<Scalars['Int']>;
-  metalness?: Maybe<Scalars['Int']>;
-  pointCount?: Maybe<Scalars['Int']>;
-  faceCount?: Maybe<Scalars['Int']>;
-  isTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
-  isTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
-  isWatertight?: Maybe<Scalars['Boolean']>;
-  selfIntersecting?: Maybe<Scalars['Boolean']>;
-  hasNormals?: Maybe<Scalars['Boolean']>;
-  hasVertexColor?: Maybe<Scalars['Boolean']>;
-  hasUVSpace?: Maybe<Scalars['Boolean']>;
-  boundingBoxP1X?: Maybe<Scalars['Float']>;
-  boundingBoxP1Y?: Maybe<Scalars['Float']>;
-  boundingBoxP1Z?: Maybe<Scalars['Float']>;
-  boundingBoxP2X?: Maybe<Scalars['Float']>;
-  boundingBoxP2Y?: Maybe<Scalars['Float']>;
-  boundingBoxP2Z?: Maybe<Scalars['Float']>;
 };
 
 export type SceneDetailFieldsInput = {
@@ -1443,6 +1382,7 @@ export type CaptureDataDetailFields = {
 
 export type ModelDetailFields = {
   __typename?: 'ModelDetailFields';
+  name?: Maybe<Scalars['String']>;
   size?: Maybe<Scalars['BigInt']>;
   master?: Maybe<Scalars['Boolean']>;
   authoritative?: Maybe<Scalars['Boolean']>;
@@ -1452,27 +1392,6 @@ export type ModelDetailFields = {
   units?: Maybe<Scalars['Int']>;
   dateCaptured?: Maybe<Scalars['String']>;
   modelFileType?: Maybe<Scalars['Int']>;
-  uvMaps: Array<IngestUvMap>;
-  boundingBoxP1X?: Maybe<Scalars['Float']>;
-  boundingBoxP1Y?: Maybe<Scalars['Float']>;
-  boundingBoxP1Z?: Maybe<Scalars['Float']>;
-  boundingBoxP2X?: Maybe<Scalars['Float']>;
-  boundingBoxP2Y?: Maybe<Scalars['Float']>;
-  boundingBoxP2Z?: Maybe<Scalars['Float']>;
-  countPoint?: Maybe<Scalars['Int']>;
-  countFace?: Maybe<Scalars['Int']>;
-  countColorChannel?: Maybe<Scalars['Int']>;
-  countTextureCoorinateChannel?: Maybe<Scalars['Int']>;
-  hasBones?: Maybe<Scalars['Boolean']>;
-  hasFaceNormals?: Maybe<Scalars['Boolean']>;
-  hasTangents?: Maybe<Scalars['Boolean']>;
-  hasTextureCoordinates?: Maybe<Scalars['Boolean']>;
-  hasVertexNormals?: Maybe<Scalars['Boolean']>;
-  hasVertexColor?: Maybe<Scalars['Boolean']>;
-  isTwoManifoldUnbounded?: Maybe<Scalars['Boolean']>;
-  isTwoManifoldBounded?: Maybe<Scalars['Boolean']>;
-  isWatertight?: Maybe<Scalars['Boolean']>;
-  selfIntersecting?: Maybe<Scalars['Boolean']>;
 };
 
 export type SceneDetailFields = {

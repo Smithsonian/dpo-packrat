@@ -15,7 +15,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
     CountVertices!: number | null;
     CountFaces!: number | null;
     CountColorChannels!: number | null;
-    CountTextureCoorinateChannels!: number | null;
+    CountTextureCoordinateChannels!: number | null;
     HasBones!: boolean | null;
     HasFaceNormals!: boolean | null;
     HasTangents!: boolean | null;
@@ -36,13 +36,13 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
     protected async createWorker(): Promise<boolean> {
         try {
             const { idModel, BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z, CountVertices,
-                CountFaces, CountColorChannels, CountTextureCoorinateChannels, HasBones, HasFaceNormals, HasTangents, HasTextureCoordinates,
+                CountFaces, CountColorChannels, CountTextureCoordinateChannels, HasBones, HasFaceNormals, HasTangents, HasTextureCoordinates,
                 HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded, IsTwoManifoldBounded, IsWatertight, SelfIntersecting } = this;
             ({ idModelObject: this.idModelObject, idModel: this.idModel,
                 BoundingBoxP1X: this.BoundingBoxP1X, BoundingBoxP1Y: this.BoundingBoxP1Y, BoundingBoxP1Z: this.BoundingBoxP1Z,
                 BoundingBoxP2X: this.BoundingBoxP2X, BoundingBoxP2Y: this.BoundingBoxP2Y, BoundingBoxP2Z: this.BoundingBoxP2Z,
                 CountVertices: this.CountVertices, CountFaces: this.CountFaces, CountColorChannels: this.CountColorChannels,
-                CountTextureCoorinateChannels: this.CountTextureCoorinateChannels, HasBones: this.HasBones, HasFaceNormals: this.HasFaceNormals,
+                CountTextureCoordinateChannels: this.CountTextureCoordinateChannels, HasBones: this.HasBones, HasFaceNormals: this.HasFaceNormals,
                 HasTangents: this.HasTangents, HasTextureCoordinates: this.HasTextureCoordinates, HasVertexNormals: this.HasVertexNormals,
                 HasVertexColor: this.HasVertexColor, IsTwoManifoldUnbounded: this.IsTwoManifoldUnbounded, IsTwoManifoldBounded: this.IsTwoManifoldBounded,
                 IsWatertight: this.IsWatertight, SelfIntersecting: this.SelfIntersecting } =
@@ -50,7 +50,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
                     data: {
                         Model:              { connect: { idModel }, },
                         BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
-                        CountVertices, CountFaces, CountColorChannels, CountTextureCoorinateChannels, HasBones, HasFaceNormals,
+                        CountVertices, CountFaces, CountColorChannels, CountTextureCoordinateChannels, HasBones, HasFaceNormals,
                         HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded,
                         IsTwoManifoldBounded, IsWatertight, SelfIntersecting
                     },
@@ -65,7 +65,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelObject, idModel, BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y,
-                BoundingBoxP2Z,CountVertices, CountFaces, CountColorChannels, CountTextureCoorinateChannels, HasBones, HasFaceNormals,
+                BoundingBoxP2Z,CountVertices, CountFaces, CountColorChannels, CountTextureCoordinateChannels, HasBones, HasFaceNormals,
                 HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded, IsTwoManifoldBounded,
                 IsWatertight, SelfIntersecting } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.modelObject.update({
@@ -73,7 +73,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
                 data: {
                     Model:              { connect: { idModel }, },
                     BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
-                    CountVertices, CountFaces, CountColorChannels, CountTextureCoorinateChannels, HasBones, HasFaceNormals,
+                    CountVertices, CountFaces, CountColorChannels, CountTextureCoordinateChannels, HasBones, HasFaceNormals,
                     HasTangents, HasTextureCoordinates, HasVertexNormals, HasVertexColor, IsTwoManifoldUnbounded,
                     IsTwoManifoldBounded, IsWatertight, SelfIntersecting
                 },

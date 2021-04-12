@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * SelectField
  *
@@ -29,7 +31,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 
 interface SelectFieldProps extends ViewableProps {
     label: string;
-    value: '' | number | null;
+    value: number | null;
     name: string;
     options: VocabularyOption[];
     error?: boolean;
@@ -53,7 +55,7 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
             containerProps={rowFieldProps}
             width={width || viewMode ? 'auto' : undefined}
         >
-            <Select value={value} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline>
+            <Select value={value || ''} className={classes.select} name={name} onChange={onChange} disabled={disabled} disableUnderline>
                 {options.map(({ idVocabulary, Term }, index) => (
                     <MenuItem key={index} value={idVocabulary}>
                         {Term}
