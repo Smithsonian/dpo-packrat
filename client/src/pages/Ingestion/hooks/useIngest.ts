@@ -100,6 +100,7 @@ function useIngest(): UseIngest {
                         dateCaptured,
                         datasetType,
                         systemCreated,
+                        name,
                         description,
                         cameraSettingUniform,
                         datasetFieldId,
@@ -121,6 +122,7 @@ function useIngest(): UseIngest {
 
                     const photogrammetryData: IngestPhotogrammetryInput = {
                         idAssetVersion: parseFileId(file.id),
+                        name,
                         dateCaptured: dateCaptured.toISOString(),
                         datasetType: nonNullValue<number>('datasetType', datasetType),
                         systemCreated,

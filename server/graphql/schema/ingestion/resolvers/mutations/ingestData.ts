@@ -335,7 +335,7 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry)
 
     // create photogrammetry objects, identifiers, etc.
     const captureDataDB: DBAPI.CaptureData = new DBAPI.CaptureData({
-        Name: '', // TODO: gather and wire this into place
+        Name: photogrammetry.name,
         idVCaptureMethod: vocabulary.idVocabulary,
         DateCaptured: H.Helpers.convertStringToDate(photogrammetry.dateCaptured) || new Date(),
         Description: photogrammetry.description,
