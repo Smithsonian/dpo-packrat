@@ -423,13 +423,13 @@ export class AssetStorageAdapter {
                     else {
                         let psuedoVariantType: string = path.extname(asset.FileName);
                         if (psuedoVariantType)
-                            psuedoVariantType = psuedoVariantType.substring(1);
+                            psuedoVariantType = psuedoVariantType.substring(1); // strip off leading '.' in extension
                         if (await CACHE.VocabularyCache.mapPhotogrammetryVariantType(psuedoVariantType) !== undefined)
                             eAssetType = eVocabularyID.eAssetAssetTypeModelUVMapFile;
                         else
                             eAssetType = eVocabularyID.eAssetAssetTypeOther;
                     }
-                    break; /* istanbul ignore next */ // TODO: we need to determine if this is a GeometryFile or GeometryUVMap...
+                    break; /* istanbul ignore next */
                 default:
                     LOG.logger.info(`AssetStorageAdapter.ingestAssetBulkZipWorker encountered unxpected asset type id for Asset ${JSON.stringify(asset, H.Helpers.stringifyCallbackCustom)}`);
                     eAssetType = eVocabularyID.eAssetAssetTypeOther;
