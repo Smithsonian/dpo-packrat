@@ -63,6 +63,7 @@ export const photogrammetryFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     folders: yup.array().of(folderSchema),
+    name: yup.string(),
     description: yup.string().required('Description cannot be empty'),
     dateCaptured: yup.date().required(),
     datasetType: yup.number().typeError('Please select a valid dataset type'),
