@@ -232,11 +232,10 @@ export class AssetStorageAdapter {
     private static async createAssetConstellation(asset: DBAPI.Asset, idUserCreator: number,
         DateCreated: Date, resStorage: STORE.CommitWriteStreamResult, storageKey: string,
         BulkIngest: boolean, ingestedObject: IngestMetadata | null, assetNameOverride: string | null): Promise<DBAPI.AssetVersion | null> {
+        // LOG.logger.info(`STR AssetStorageAdapter.createAssetConstellation for ${JSON.stringify(asset)} with override name ${assetNameOverride}`);
         if (asset.idAsset == 0) {
-            assetNameOverride;
-            // TODO: use assetNameOverride, but ensure tests still work!
-            // if (assetNameOverride)
-            //     asset.FileName = assetNameOverride;
+            if (assetNameOverride)
+                asset.FileName = assetNameOverride;
             /* istanbul ignore if */
             if (!await asset.create()) {
                 const error: string = `AssetStorageAdapter.createAssetAndVersion: Unable to create Asset ${JSON.stringify(asset, H.Helpers.stringifyCallbackCustom)}`;
@@ -248,7 +247,7 @@ export class AssetStorageAdapter {
         const assetVersion: DBAPI.AssetVersion = new DBAPI.AssetVersion({
             idAsset: asset.idAsset,
             Version: 1, /* ignored */
-            FileName: asset.FileName, // assetNameOverride ? assetNameOverride : asset.FileName,
+            FileName: assetNameOverride ? assetNameOverride : asset.FileName,
             idUserCreator,
             DateCreated,
             StorageHash: resStorage.storageHash ? resStorage.storageHash : /* istanbul ignore next */ '',
@@ -623,11 +622,6 @@ export class AssetStorageAdapter {
     /** Cracks open the file associated with assetVersion in an efficient manner.
      * Caller must call 'await CrackAssetResult.zip.close()' if the returned zip is not null. */
     static async crackAsset(assetVersion: DBAPI.AssetVersion): Promise<CrackAssetResult> {
-        // if our filename is not a zip, return failure
-        /* istanbul ignore next */
-        if (!assetVersion.FileName.toLowerCase().endsWith('.zip'))
-            return { success: false, error: 'AssetStorageAdapter.crackAsset asked to crack a non-archive file', zip: null, asset: null, isBagit: false };
-
         // 1. retrieve the associated asset
         // 2. determine if this is a plain old zip or a bagit bulk ingestion file (determined from asset.idVAssetType)
         // 3. determine the storage key and whether it's staging or repository
@@ -660,8 +654,9 @@ export class AssetStorageAdapter {
             return { success: false, error, zip: null, asset: null, isBagit: false };
         }
 
+        const isZipFilename: boolean = (path.extname(assetVersion.FileName).toLowerCase() === '.zip');
         const isBulkIngest: boolean = assetVersion.BulkIngest || (await asset.assetType() == eVocabularyID.eAssetAssetTypeBulkIngestion);
-        // LOG.logger.info(`getAssetVersionContents fileName ${assetVersion.FileName} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest}`);
+        LOG.logger.info(`STR crackAssetWorker fileName ${assetVersion.FileName} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`);
         let reader: IZip;
         if (ingested) {
             // ingested content lives on isilon storage; we'll need to stream it back to the server for processing
@@ -680,20 +675,21 @@ export class AssetStorageAdapter {
 
             reader = (isBulkIngest) /* istanbul ignore next */ // We don't ingest bulk ingest files as is -- they end up getting cracked apart, so we're unlikely to hit this branch of code
                 ? new BagitReader({ zipFileName: null, zipStream: RSR.readStream, directory: null, validate: true, validateContent: false })
-                : new ZipStream(RSR.readStream);
+                : new ZipStream(RSR.readStream, isZipFilename); // use isZipFilename to determine if errors should be logged
         } else {
             // non-ingested content is staged locally
             const stagingFileName: string = await storage.stagingFileName(storageKey);
             reader = (isBulkIngest)
                 ? new BagitReader({ zipFileName: stagingFileName, zipStream: null, directory: null, validate: true, validateContent: false })
-                : new ZipFile(stagingFileName);
+                : new ZipFile(stagingFileName, isZipFilename); // use isZipFilename to determine if errors should be logged
         }
 
         try {
             const ioResults: IOResults = await reader.load(); /* istanbul ignore next */
             if (!ioResults.success) {
                 await reader.close();
-                LOG.logger.error(ioResults.error);
+                if (isBulkIngest || isZipFilename)
+                    LOG.logger.error(ioResults.error);
                 return { success: false, error: ioResults.error, zip: null, asset: null, isBagit: false };
             }
         } catch (error) /* istanbul ignore next */ {
@@ -705,21 +701,19 @@ export class AssetStorageAdapter {
     }
 
     static async getAssetVersionContents(assetVersion: DBAPI.AssetVersion): Promise<AssetVersionContent> {
-        LOG.logger.info(`STR AssetStorageAdapter.getAssetVersionContents idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}`);
         const retValue = {
             idAssetVersion: assetVersion.idAssetVersion,
             folders: new Array<string>(),
             all: new Array<string>()
         };
 
-        // if our filename is not a zip, just return it!
-        if (!assetVersion.FileName.toLowerCase().endsWith('.zip')) {
+        const ASC: CrackAssetResult = await AssetStorageAdapter.crackAsset(assetVersion); /* istanbul ignore next */
+        LOG.logger.info(`STR AssetStorageAdapter.getAssetVersionContents idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}, ASC.success ${ASC.success}, ASC.zip ${ASC.zip}`);
+        if (!ASC.zip) {     // if our file is not a zip, just return it
             retValue.all.push(assetVersion.FileName);
             return retValue;
         }
-
-        const ASC: CrackAssetResult = await AssetStorageAdapter.crackAsset(assetVersion); /* istanbul ignore next */
-        if (!ASC.success || !ASC.zip)
+        if (!ASC.success)   // if cracking the asset fails, then we found nothing
             return retValue;
 
         // for the time being, we handle bagit content differently than zip content
