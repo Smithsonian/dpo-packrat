@@ -12,13 +12,15 @@ import StreamZip from 'node-stream-zip';
  */
 export class ZipFile implements IZip {
     private _fileName: string;
+    private _logErrors: boolean = true;
     private _zip: StreamZip | null = null;
     private _entries: string[] = [];
     private _files: string[] = [];
     private _dirs: string[] = [];
 
-    constructor(fileName: string) {
+    constructor(fileName: string, logErrors: boolean = true) {
         this._fileName = fileName;
+        this._logErrors = logErrors;
     }
 
     async load(): Promise<H.IOResults> {
@@ -50,7 +52,8 @@ export class ZipFile implements IZip {
                     resolve({ success: false, error: 'Zip not initialized' });
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('ZipFile.load', error);
+            if (this._logErrors)
+                LOG.logger.error('ZipFile.load', error);
             return { success: false, error: JSON.stringify(error) };
         }
     }
