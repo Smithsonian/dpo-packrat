@@ -1,4 +1,4 @@
-import { IngestDataResult, MutationIngestDataArgs, IngestSubjectInput, IngestItemInput, IngestPhotogrammetry, IngestModelInput, IngestIdentifier, User } from '../../../../../types/graphql';
+import { IngestDataResult, MutationIngestDataArgs, IngestSubjectInput, IngestItemInput, IngestPhotogrammetry, IngestModelInput, IngestIdentifier, User, IngestPhotogrammetryInput } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
@@ -58,16 +58,24 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     if (!await wireSubjectsToItem(subjectsDB, itemDB))
         return { success: false };
 
-    // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
-    const assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>();
+    const ingestPhotogrammetry: boolean = input.photogrammetry && input.photogrammetry.length > 0;
+    const ingestModel: boolean = input.model && input.model.length > 0;
+    const assetVersionMap: Map<number, DBAPI.SystemObjectBased> = new Map<number, DBAPI.SystemObjectBased>(); // map from idAssetVersion -> object that "owns" the asset -- populated during creation of asset-owning objects below
+    const ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>(); // map from idAssetVersion -> photogrammetry input
     // create photogrammetry objects, if needed
-    if (input.photogrammetry && input.photogrammetry.length > 0) {
-        for (const photogrammetry of input.photogrammetry)
-            if (!await createPhotogrammetryObjects(photogrammetry, assetVersionMap))
+    if (ingestPhotogrammetry) {
+        for (const photogrammetry of input.photogrammetry) {
+            const captureDataDB: DBAPI.CaptureData | null = await createPhotogrammetryObjects(photogrammetry);
+            if (!captureDataDB)
                 return { success: false };
+            if (photogrammetry.idAssetVersion) {
+                assetVersionMap.set(photogrammetry.idAssetVersion, captureDataDB);
+                ingestPhotoMap.set(photogrammetry.idAssetVersion, photogrammetry);
+            }
+        }
     }
 
-    if (input.model && input.model.length > 0) {
+    if (ingestModel) {
         for (const model of input.model) {
             if (!await createModelObjects(model, assetVersionMap))
                 return { success: false };
@@ -79,8 +87,12 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
         return { success: false };
 
     // next, promote asset into repository storage
-    if (!await promoteAssetsIntoRepository(assetVersionMap, user))
-        return { success: false };
+    const ingestRes: Map<number, IngestAssetResult | null> = await promoteAssetsIntoRepository(assetVersionMap, user);
+
+    // finally, use results to create/update derived objects
+    if (ingestPhotogrammetry) {
+        await createPhotogrammetryDerivedObjects(assetVersionMap, ingestPhotoMap, ingestRes);
+    }
 
     return { success: true };
 }
@@ -314,14 +326,11 @@ async function wireSubjectsToItem(subjectsDB: DBAPI.Subject[], itemDB: DBAPI.Ite
     return true;
 }
 
-// map from idAssetVersion -> object that "owns" the asset
-async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
-    assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
-
+async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry): Promise<DBAPI.CaptureData | null> {
     const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry);
     if (!vocabulary) {
         LOG.logger.error('GQL ingestData unable to retrieve photogrammetry capture method vocabulary from cache');
-        return false;
+        return null;
     }
 
     // create photogrammetry objects, identifiers, etc.
@@ -335,7 +344,7 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
     });
     if (!await captureDataDB.create()) {
         LOG.logger.error(`GQL ingestData unable to create CaptureData for photogrammetry data ${JSON.stringify(photogrammetry)}`);
-        return false;
+        return null;
     }
 
     const captureDataPhotoDB: DBAPI.CaptureDataPhoto = new DBAPI.CaptureDataPhoto({
@@ -355,13 +364,13 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
     });
     if (!await captureDataPhotoDB.create()) {
         LOG.logger.error(`GQL ingestData unable to create CaptureDataPhoto for photogrammetry data ${JSON.stringify(photogrammetry)}`);
-        return false;
+        return null;
     }
 
     if (photogrammetry.systemCreated) {
         if (!await createIdentifierForObject(null, captureDataDB)) {
             LOG.logger.error(`GQL ingestData unable to create identifier for photogrammetry data ${JSON.stringify(photogrammetry)}`);
-            return false;
+            return null;
         }
     }
 
@@ -369,16 +378,69 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
         for (const identifier of photogrammetry.identifiers) {
             if (!await createIdentifierForObject(identifier, captureDataDB)) {
                 LOG.logger.error(`GQL ingestData unable to create identifier for photogrammetry data ${JSON.stringify(photogrammetry)}`);
-                return false;
+                return null;
             }
         }
     }
 
-    // TODO: deal with zips and bulk ingest, in which we may want to split the uploaded asset into mutiple assets
-    // TODO: create CaptureDataFile objects
-    if (photogrammetry.idAssetVersion)
-        assetVersionMap.set(photogrammetry.idAssetVersion, captureDataDB);
-    return true;
+    return captureDataDB;
+}
+
+async function createPhotogrammetryDerivedObjects(assetVersionMap: Map<number, DBAPI.SystemObjectBased>,
+    ingestPhotoMap: Map<number, IngestPhotogrammetryInput>,
+    ingestRes: Map<number, IngestAssetResult | null>): Promise<boolean> {
+    // create CaptureDataFile
+    let res: boolean = true;
+    for (const [ idAssetVersion, SOBased ] of assetVersionMap) {
+        if (!(SOBased instanceof DBAPI.CaptureData))
+            continue;
+        const ingestAssetRes: IngestAssetResult | null | undefined = ingestRes.get(idAssetVersion);
+        if (!ingestAssetRes) {
+            LOG.logger.error(`GQL ingestData unable to locate ingest results for idAssetVersion ${idAssetVersion}`);
+            res = false;
+            continue;
+        }
+        if (!ingestAssetRes.success) {
+            LOG.logger.error(`GQL ingestData failed for idAssetVersion ${idAssetVersion}: ${ingestAssetRes.error}`);
+            res = false;
+            continue;
+        }
+
+        const ingestPhotogrammetry: IngestPhotogrammetryInput | undefined = ingestPhotoMap.get(idAssetVersion);
+        if (!ingestPhotogrammetry) {
+            LOG.logger.error(`GQL ingestData unable to find photogrammetry input for idAssetVersion ${idAssetVersion}`);
+            res = false;
+            continue;
+        }
+
+        const folderVariantMap: Map<string, number> = new Map<string, number>(); // map of normalized folder name to variant vocabulary id
+        for (const folder of ingestPhotogrammetry.folders)
+            folderVariantMap.set(folder.name.toLowerCase(), folder.variantType);
+
+        for (const asset of ingestAssetRes.assets || []) {
+            let lastSlash: number = asset.FilePath.lastIndexOf('/');
+            if (lastSlash === -1)
+                lastSlash = asset.FilePath.lastIndexOf('\\');
+            const variantPath = asset.FilePath.substring(lastSlash + 1).toLowerCase();
+
+            const idVVariantType: number = folderVariantMap.get(variantPath) || 0;
+            LOG.logger.info(`GQL ingestData mapped ${asset.FilePath} to variant ${idVVariantType}`);
+
+            const CDF: DBAPI.CaptureDataFile = new DBAPI.CaptureDataFile({
+                idCaptureData: SOBased.idCaptureData,
+                idAsset: asset.idAsset,
+                idVVariantType,
+                CompressedMultipleFiles: false,
+                idCaptureDataFile: 0
+            });
+            if (!await CDF.create()) {
+                LOG.logger.error(`GQL ingestData unable to create CaptureDataFile for idAssetVersion ${idAssetVersion}, asset ${JSON.stringify(asset)}`);
+                res = false;
+                continue;
+            }
+        }
+    }
+    return res;
 }
 
 async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
@@ -471,19 +533,22 @@ async function wireItemToAssetOwners(itemDB: DBAPI.Item, assetVersionMap: Map<nu
     return true;
 }
 
-async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.SystemObjectBased>, user: User): Promise<boolean> {
+async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.SystemObjectBased>, user: User): Promise<Map<number, IngestAssetResult | null>> {
     // map from idAssetVersion -> object that "owns" the asset
+    const res: Map<number, IngestAssetResult | null> = new Map<number, IngestAssetResult | null>();
     for (const [idAssetVersion, SOBased] of assetVersionMap) {
         const assetVersionDB: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
         if (!assetVersionDB) {
             LOG.logger.error(`GQL ingestData unable to load assetVersion for ${idAssetVersion}`);
-            return false;
+            res.set(idAssetVersion, null);
+            continue;
         }
 
         const assetDB: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersionDB.idAsset);
         if (!assetDB) {
             LOG.logger.error(`GQL ingestData unable to load asset for ${assetVersionDB.idAsset}`);
-            return false;
+            res.set(idAssetVersion, null);
+            continue;
         }
 
         const opInfo: OperationInfo = {
@@ -493,10 +558,9 @@ async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.Sy
             userName: user.Name
         };
         const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(assetDB, assetVersionDB, SOBased, opInfo);
-        if (!ISR.success) {
+        if (!ISR.success)
             LOG.logger.error(`GQL ingestData unable to ingest assetVersion ${idAssetVersion}: ${ISR.error}`);
-            return false;
-        }
+        res.set(idAssetVersion, ISR);
     }
-    return true;
+    return res;
 }
