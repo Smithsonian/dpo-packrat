@@ -174,11 +174,11 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         const defaultModel: ModelFields = {
             ...defaultModelFields,
             identifiers: defaultIdentifierField,
-            creationMethod: getInitialEntry(eVocabularySetID.eModelCreationMethod),
-            modality: getInitialEntry(eVocabularySetID.eModelModality),
-            units: getInitialEntry(eVocabularySetID.eModelUnits),
-            purpose: getInitialEntry(eVocabularySetID.eModelPurpose),
-            modelFileType: getInitialEntry(eVocabularySetID.eModelFileType)
+            // creationMethod: getInitialEntry(eVocabularySetID.eModelCreationMethod),
+            // modality: getInitialEntry(eVocabularySetID.eModelModality),
+            // units: getInitialEntry(eVocabularySetID.eModelUnits),
+            // purpose: getInitialEntry(eVocabularySetID.eModelPurpose),
+            // modelFileType: getInitialEntry(eVocabularySetID.eModelFileType)
         };
 
         const defaultScene: SceneFields = {
@@ -358,7 +358,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
             return metadata;
         });
-
         set({ metadatas: updatedMetadatas });
     },
     getInitialStateFolders: (folders: string[]): StateFolder[] => {

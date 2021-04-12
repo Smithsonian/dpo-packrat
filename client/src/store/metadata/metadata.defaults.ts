@@ -98,8 +98,8 @@ export const defaultModelFields: ModelFields = {
     sourceObjects: [],
     dateCaptured: new Date(),
     creationMethod: null,
-    master: false,
-    authoritative: false,
+    master: true,
+    authoritative: true,
     modality: null,
     units: null,
     purpose: null,
@@ -110,6 +110,7 @@ export const defaultModelFields: ModelFields = {
 export type ModelSchemaType = typeof modelFieldsSchema;
 
 export const modelFieldsSchema = yup.object().shape({
+    name: yup.string(),
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     uvMaps: yup.array().of(uvMapSchema),
