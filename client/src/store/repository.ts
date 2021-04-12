@@ -31,6 +31,7 @@ type RepositoryStore = {
     modelFileType: number[];
     fromDate: Date | null;
     toDate: Date | null;
+    repositoryBrowserRoot: number | null;
     getFilterState: () => RepositoryFilter;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
     updateFilterValue: (name: string, value: number | number[] | Date) => void;
@@ -42,6 +43,7 @@ type RepositoryStore = {
     setCookieToState: () => void;
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined) => void;
     getChildrenForIngestion: (idRoot: number) => void;
+    closeRepositoryBrowser: () => void;
 };
 
 export const treeRootKey: string = 'root';
@@ -66,6 +68,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     modelFileType: [],
     fromDate: null,
     toDate: null,
+    repositoryBrowserRoot: null,
     updateFilterValue: (name: string, value: number | number[] | Date): void => {
         const { initializeTree, setCookieToState, keyword } = get();
         set({ [name]: value, loading: true, search: keyword });
@@ -81,16 +84,21 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ isExpanded: !isExpanded });
     },
     initializeTree: async (): Promise<void> => {
-        const { getFilterState } = get();
+        const { getFilterState, getChildrenForIngestion, repositoryBrowserRoot } = get();
         const filter = getFilterState();
-        const { data, error } = await getObjectChildrenForRoot(filter);
-        if (data && !error) {
-            const { getObjectChildren } = data;
-            const { entries } = getObjectChildren;
-            const entry: [string, NavigationResultEntry[]] = [treeRootKey, entries];
-            const updatedTree = new Map([entry]);
-            set({ tree: updatedTree, loading: false });
+        if (repositoryBrowserRoot) {
+            getChildrenForIngestion(repositoryBrowserRoot);
+        } else {
+            const { data, error } = await getObjectChildrenForRoot(filter);
+            if (data && !error) {
+                const { getObjectChildren } = data;
+                const { entries } = getObjectChildren;
+                const entry: [string, NavigationResultEntry[]] = [treeRootKey, entries];
+                const updatedTree = new Map([entry]);
+                set({ tree: updatedTree, loading: false });
+            }
         }
+
     },
     getChildren: async (nodeId: string): Promise<void> => {
         const { tree, getFilterState } = get();
@@ -252,7 +260,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     },
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined): void => {
         const { resetKeywordSearch, resetRepositoryFilter, getChildrenForIngestion } = get();
-        set({ isExpanded: false });
+        set({ isExpanded: false, repositoryBrowserRoot: idRoot });
         resetKeywordSearch();
         resetRepositoryFilter(false);
 
@@ -272,5 +280,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const updatedTree = new Map([entry]);
             set({ tree: updatedTree, loading: false });
         }
+    },
+    closeRepositoryBrowser: (): void => {
+        set({ isExpanded: true, repositoryBrowserRoot: null });
     }
 }));

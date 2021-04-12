@@ -469,7 +469,7 @@ export class IndexSolr {
         const modelObjectCountVerticesMap: Map<number, boolean> = new Map<number, boolean>();
         const modelObjectCountFacesMap: Map<number, boolean> = new Map<number, boolean>();
         const modelObjectCountColorChannelsMap: Map<number, boolean> = new Map<number, boolean>();
-        const modelObjectCountTextureCoorinateChannelsMap: Map<number, boolean> = new Map<number, boolean>();
+        const modelObjectCountTextureCoordinateChannelsMap: Map<number, boolean> = new Map<number, boolean>();
         const modelObjectHasBonesMap: Map<boolean, boolean> = new Map<boolean, boolean>();
         const modelObjectHasFaceNormalsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
         const modelObjectHasTangentsMap: Map<boolean, boolean> = new Map<boolean, boolean>();
@@ -528,7 +528,7 @@ export class IndexSolr {
             if (modelObject.CountVertices) modelObjectCountVerticesMap.set(modelObject.CountVertices, true);
             if (modelObject.CountFaces) modelObjectCountFacesMap.set(modelObject.CountFaces, true);
             if (modelObject.CountColorChannels) modelObjectCountColorChannelsMap.set(modelObject.CountColorChannels, true);
-            if (modelObject.CountTextureCoorinateChannels) modelObjectCountTextureCoorinateChannelsMap.set(modelObject.CountTextureCoorinateChannels, true);
+            if (modelObject.CountTextureCoordinateChannels) modelObjectCountTextureCoordinateChannelsMap.set(modelObject.CountTextureCoordinateChannels, true);
             if (modelObject.HasBones) modelObjectHasBonesMap.set(modelObject.HasBones, true);
             if (modelObject.HasFaceNormals) modelObjectHasFaceNormalsMap.set(modelObject.HasFaceNormals, true);
             if (modelObject.HasTangents) modelObjectHasTangentsMap.set(modelObject.HasTangents, true);
@@ -559,7 +559,7 @@ export class IndexSolr {
         doc.ModelObjectCountVertices = [...modelObjectCountVerticesMap.keys()];
         doc.ModelObjectCountFaces = [...modelObjectCountFacesMap.keys()];
         doc.ModelObjectCountColorChannels = [...modelObjectCountColorChannelsMap.keys()];
-        doc.ModelObjectCountTextureCoorinateChannels = [...modelObjectCountTextureCoorinateChannelsMap.keys()];
+        doc.ModelObjectCountTextureCoordinateChannels = [...modelObjectCountTextureCoordinateChannelsMap.keys()];
         doc.ModelObjectHasBones = [...modelObjectHasBonesMap.keys()];
         doc.ModelObjectHasFaceNormals = [...modelObjectHasFaceNormalsMap.keys()];
         doc.ModelObjectHasTangents = [...modelObjectHasTangentsMap.keys()];

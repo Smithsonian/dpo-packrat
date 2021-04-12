@@ -86,8 +86,8 @@ const uvMapSchema = yup.object().shape({
 
 const sourceObjectSchema = yup.object().shape({
     idSystemObject: yup.number().required(),
-    name: yup.string().required(),
-    identifier: yup.string().required(),
+    name: yup.string().nullable(),
+    identifier: yup.string().nullable(),
     objectType: yup.number().required()
 });
 
@@ -95,7 +95,6 @@ export const defaultModelFields: ModelFields = {
     name: '',
     systemCreated: true,
     identifiers: [],
-    uvMaps: [],
     sourceObjects: [],
     dateCaptured: new Date(),
     creationMethod: null,
@@ -105,29 +104,13 @@ export const defaultModelFields: ModelFields = {
     units: null,
     purpose: null,
     modelFileType: null,
-    roughness: null,
-    metalness: null,
-    pointCount: null,
-    faceCount: null,
-    isTwoManifoldUnbounded: null,
-    isTwoManifoldBounded: null,
-    selfIntersecting: null,
-    isWatertight: null,
-    hasNormals: null,
-    hasVertexColor: null,
-    hasUVSpace: null,
-    boundingBoxP1X: null,
-    boundingBoxP1Y: null,
-    boundingBoxP1Z: null,
-    boundingBoxP2X: null,
-    boundingBoxP2Y: null,
-    boundingBoxP2Z: null,
     directory: ''
 };
 
 export type ModelSchemaType = typeof modelFieldsSchema;
 
 export const modelFieldsSchema = yup.object().shape({
+    name: yup.string(),
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     uvMaps: yup.array().of(uvMapSchema),

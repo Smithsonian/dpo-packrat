@@ -297,7 +297,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let idAsset: number = 0;
         let idAssetVersion: number = 0;
 
-        const model: DBAPI.Model = JobCookSIPackratInspectOutput.createModel(++idModel, modelStats);
+        const model: DBAPI.Model = await JobCookSIPackratInspectOutput.createModel(++idModel, modelStats);
 
         if (sourceMeshFile) {
             if (!modelAssets)
@@ -473,17 +473,54 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         return JCOutput;
     }
 
-    static createModel(idModel: number, modelStats: any | undefined): DBAPI.Model {
+    static async extractFromAssetVersion(idAssetVersion: number): Promise<JobCookSIPackratInspectOutput | null> {
+        // find JobCook results for this asset version
+        const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        if (!idVJobType) {
+            LOG.logger.error('JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job ID of si-packrat-inspect');
+            return null;
+        }
+
+        const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eJobRunStatus.eDone, true, [idAssetVersion]);
+        if (!jobRuns || jobRuns.length != 1) {
+            LOG.logger.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}`);
+            return null;
+        }
+
+        let JCOutput: JobCookSIPackratInspectOutput | null = null;
+        try {
+            JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRuns[0].Output || ''));
+        } catch (error) {
+            LOG.logger.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion${JCOutput ? ' ' + JCOutput.error : ''}`, error);
+            return null;
+        }
+
+        if (!JCOutput.success) {
+            LOG.logger.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed extracting job output [${JCOutput.error}]: ${jobRuns[0].Output}`);
+            return null;
+        }
+
+        // LOG.logger.info(`GraphQL JobCookSIPackratInspectOutput.extractFromAssetVersion(${JSON.stringify(idAssetVersions)}) = ${JSON.stringify(result)}`);
+        return JCOutput;
+    }
+
+    private static async createModel(idModel: number, modelStats: any | undefined,
+        name: string | null = null, dateCreated: Date | null = null): Promise<DBAPI.Model> {
+
+        // Compute FileType from file extension
+        let vFileType: DBAPI.Vocabulary | undefined = undefined;
+        if (name)
+            vFileType = await CACHE.VocabularyCache.mapModelFileByExtension(name);
         return new DBAPI.Model({
-            Name: '',
+            Name: name || '',
             Master: true,
             Authoritative: true,
-            DateCreated: new Date(),
+            DateCreated: dateCreated || new Date(),
             idVCreationMethod: 0,
             idVModality: 0,
             idVUnits: 0,
             idVPurpose: 0,
-            idVFileType: 0,
+            idVFileType: vFileType ? vFileType.idVocabulary : 0,
             idAssetThumbnail: null,
             CountAnimations: modelStats ? maybe<number>(modelStats?.numAnimations) : null,
             CountCameras: modelStats ? maybe<number>(modelStats?.numCameras) : null,
@@ -499,7 +536,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         });
     }
 
-    static createModelObject(idModelObject: number, idModel: number,
+    private static createModelObject(idModelObject: number, idModel: number,
         JCBoundingBox: JobCookBoundingBox | null, JCStat: JobCookStatistics): DBAPI.ModelObject {
         // TODO: Verify types; deal with booleans vs 'false' / 'true'
         return new DBAPI.ModelObject({
@@ -514,7 +551,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             CountVertices: JCStat.numVertices,
             CountFaces: JCStat.numFaces,
             CountColorChannels: JCStat.numColorChannels,
-            CountTextureCoorinateChannels: JCStat.numTexCoordChannels,
+            CountTextureCoordinateChannels: JCStat.numTexCoordChannels,
             HasBones: JCStat.hasBones,
             HasFaceNormals: JCStat.hasNormals,
             HasTangents: JCStat.hasTangents,
@@ -528,7 +565,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         });
     }
 
-    static createModelMaterialUVMap(idModelMaterialUVMap: number, idModel: number, idAsset: number): DBAPI.ModelMaterialUVMap {
+    private static createModelMaterialUVMap(idModelMaterialUVMap: number, idModel: number, idAsset: number): DBAPI.ModelMaterialUVMap {
         return new DBAPI.ModelMaterialUVMap({
             idModel,
             idAsset,
@@ -537,7 +574,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         });
     }
 
-    static createModelAsset(idAsset: number, idAssetVersion: number, FileName: string,
+    private static createModelAsset(idAsset: number, idAssetVersion: number, FileName: string,
         isModel: boolean, channelList: string[] | null): DBAPI.ModelAsset {
         const asset: DBAPI.Asset = new DBAPI.Asset({
             FileName,

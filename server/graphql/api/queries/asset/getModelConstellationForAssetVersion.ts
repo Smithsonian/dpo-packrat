@@ -31,7 +31,7 @@ const getModelConstellationForAssetVersion = gql`
                     CountVertices
                     CountFaces
                     CountColorChannels
-                    CountTextureCoorinateChannels
+                    CountTextureCoordinateChannels
                     HasBones
                     HasFaceNormals
                     HasTangents

@@ -48,13 +48,13 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
                 return;
             }
 
+            currentDefaultItem.selected = false;
             const newItemSelected = lodash.find(fetchedItems, { selected: true });
 
-            if (newItemSelected) {
-                currentDefaultItem.selected = false;
-            }
+            if (!newItemSelected)
+                fetchedItems[0].selected = true;
 
-            const newItems: StateItem[] = [currentDefaultItem].concat(fetchedItems);
+            const newItems: StateItem[] = fetchedItems.concat([currentDefaultItem]);
 
             set({ items: newItems, loading: false });
         }

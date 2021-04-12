@@ -8,13 +8,18 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+import Typography from '@material-ui/core/Typography';
 import DescriptionIcon from '@material-ui/icons/Description';
 import Box from '@material-ui/core/Box';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(theme => ({
     assetFilesTableContainer: {
-        width: '75%',
-        backgroundColor: palette.secondary.light
+        minWidth: '75%',
+        width: 'auto',
+        [theme.breakpoints.down('md')]: {
+            width: '100%'
+        },
+        backgroundColor: theme.palette.secondary.light
     },
     headerRow: {
         borderBottom: '3px solid #a9a9a9'
@@ -28,7 +33,10 @@ const useStyles = makeStyles(({ palette }) => ({
         width: '20px'
     },
     assetNameCol: {
-        width: '30%'
+        width: '65%'
+    },
+    assetTypeCol: {
+        width: '35%'
     }
 }));
 
@@ -41,7 +49,7 @@ function AssetFilesTable({ files }): React.ReactElement {
                     <TableRow className={classes.headerRow}>
                         <TableCell className={classes.iconCol}></TableCell>
                         <TableCell className={classes.assetNameCol}>Asset Name</TableCell>
-                        <TableCell>Asset Type</TableCell>
+                        <TableCell className={classes.assetTypeCol}>Asset Type</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -50,8 +58,16 @@ function AssetFilesTable({ files }): React.ReactElement {
                             <TableCell>
                                 <DescriptionIcon />
                             </TableCell>
-                            <TableCell>{row.assetName}</TableCell>
-                            <TableCell>{row.assetType}</TableCell>
+                            <TableCell>
+                                <Box component='div' overflow='visible' minWidth='10px'>
+                                    <Typography>{row.assetName}</Typography>
+                                </Box>
+                            </TableCell>
+                            <TableCell>
+                                <Box component='div' overflow='visible'>
+                                    {row.assetType}
+                                </Box>
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

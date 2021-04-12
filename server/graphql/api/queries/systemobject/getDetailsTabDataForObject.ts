@@ -57,6 +57,7 @@ const getDetailsTabDataForObject = gql`
             }
             Model {
                 size
+                name
                 master
                 authoritative
                 creationMethod
@@ -65,31 +66,6 @@ const getDetailsTabDataForObject = gql`
                 units
                 modelFileType
                 dateCaptured
-                uvMaps {
-                    name
-                    edgeLength
-                    mapType
-                }
-                boundingBoxP1X
-                boundingBoxP1Y
-                boundingBoxP1Z
-                boundingBoxP2X
-                boundingBoxP2Y
-                boundingBoxP2Z
-                countPoint
-                countFace
-                countColorChannel
-                countTextureCoorinateChannel
-                hasBones
-                hasFaceNormals
-                hasTangents
-                hasTextureCoordinates
-                hasVertexNormals
-                hasVertexColor
-                isTwoManifoldUnbounded
-                isTwoManifoldBounded
-                isWatertight
-                selfIntersecting
             }
             Scene {
                 Links

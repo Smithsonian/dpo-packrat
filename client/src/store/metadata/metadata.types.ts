@@ -42,7 +42,7 @@ export type FieldErrors = {
     };
 };
 
-export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateUVMap[] | StateRelatedObject[];
+export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateRelatedObject[];
 
 export type MetadataUpdate = {
     valid: boolean;
@@ -83,18 +83,10 @@ export type PhotogrammetryFields = {
     directory: string;
 };
 
-export type StateUVMap = {
-    id: number;
-    name: string;
-    edgeLength: number;
-    mapType: number | null;
-};
-
 export type ModelFields = {
     name: string;
     systemCreated: boolean;
     identifiers: StateIdentifier[];
-    uvMaps: StateUVMap[];
     sourceObjects: StateRelatedObject[];
     dateCaptured: Date;
     creationMethod: number | null;
@@ -104,23 +96,6 @@ export type ModelFields = {
     units: number | null;
     purpose: number | null;
     modelFileType: number | null;
-    roughness: number | null;
-    metalness: number | null;
-    pointCount: number | null;
-    faceCount: number | null;
-    isTwoManifoldUnbounded: boolean | null;
-    isTwoManifoldBounded: boolean | null;
-    selfIntersecting: boolean | null;
-    isWatertight: boolean | null;
-    hasNormals: boolean | null;
-    hasVertexColor: boolean | null;
-    hasUVSpace: boolean | null;
-    boundingBoxP1X: number | null;
-    boundingBoxP1Y: number | null;
-    boundingBoxP1Z: number | null;
-    boundingBoxP2X: number | null;
-    boundingBoxP2Y: number | null;
-    boundingBoxP2Z: number | null;
     directory: string;
 };
 

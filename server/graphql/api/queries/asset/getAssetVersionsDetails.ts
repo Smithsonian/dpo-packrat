@@ -51,6 +51,7 @@ const getAssetVersionsDetails = gql`
                 Model {
                     idAssetVersion
                     systemCreated
+                    name
                     master
                     authoritative
                     creationMethod
@@ -64,28 +65,6 @@ const getAssetVersionsDetails = gql`
                         identifier
                         identifierType
                     }
-                    uvMaps {
-                        name
-                        edgeLength
-                        mapType
-                    }
-                    roughness
-                    metalness
-                    pointCount
-                    faceCount
-                    isTwoManifoldUnbounded
-                    isTwoManifoldBounded
-                    isWatertight
-                    selfIntersecting
-                    hasNormals
-                    hasVertexColor
-                    hasUVSpace
-                    boundingBoxP1X
-                    boundingBoxP1Y
-                    boundingBoxP1Z
-                    boundingBoxP2X
-                    boundingBoxP2Y
-                    boundingBoxP2Z
                 }
                 Scene {
                     idAssetVersion

@@ -323,7 +323,7 @@ CREATE TABLE IF NOT EXISTS `ModelObject` (
   `CountVertices` int(11) DEFAULT NULL,
   `CountFaces` int(11) DEFAULT NULL,
   `CountColorChannels` int(11) DEFAULT NULL,
-  `CountTextureCoorinateChannels` int(11) DEFAULT NULL,
+  `CountTextureCoordinateChannels` int(11) DEFAULT NULL,
   `HasBones` boolean DEFAULT NULL,
   `HasFaceNormals` boolean DEFAULT NULL,
   `HasTangents` boolean DEFAULT NULL,

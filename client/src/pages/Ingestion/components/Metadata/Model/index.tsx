@@ -14,7 +14,6 @@ import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore,
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery /*, useGetModelConstellationQuery */ } from '../../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
-// import { withDefaultValueNumber } from '../../../../../utils/shared';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';
@@ -22,7 +21,7 @@ import AssetFilesTable from './AssetFilesTable';
 import { extractModelConstellation } from '../../../../../constants';
 import { apolloClient } from '../../../../../graphql/index';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(theme => ({
     container: {
         marginTop: 20
     },
@@ -31,8 +30,12 @@ const useStyles = makeStyles(({ palette }) => ({
         flexDirection: 'column',
         marginLeft: 30,
         borderRadius: 5,
-        backgroundColor: palette.secondary.light,
+        backgroundColor: theme.palette.secondary.light,
         width: '35%',
+        minWidth: '300px',
+        [theme.breakpoints.down('md')]: {
+            width: '50%'
+        },
         '& > *': {
             height: '20px',
             borderBottom: '0.5px solid #D8E5EE',
@@ -40,20 +43,25 @@ const useStyles = makeStyles(({ palette }) => ({
         }
     },
     dataEntry: {
+        width: '35%',
+        [theme.breakpoints.down('md')]: {
+            width: '50%'
+        },
+        minWidth: '300px',
         '& > *': {
             height: '20px',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
-        },
-        width: '35%'
+        }
     },
     objectMeshTable: {
         display: 'flex',
-        flexDirection: 'column',
+        justifyContent: 'space-evenly',
         borderRadius: 5,
         padding: 10,
-        backgroundColor: palette.primary.light,
-        width: '73%'
+        backgroundColor: theme.palette.primary.light,
+        width: '75%',
+        maxWidth: '800px'
     }
 }));
 
@@ -67,8 +75,8 @@ function Model(props: ModelProps): React.ReactElement {
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { model } = metadata;
     const [updateMetadataField, getFieldErrors] = useMetadataStore(state => [state.updateMetadataField, state.getFieldErrors]);
-    const [getEntries /*, getInitialEntry*/] = useVocabularyStore(state => [state.getEntries /*, state.getInitialEntry*/]);
-    const [setDefaultIngestionFilters, toggleFilter] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.toggleFilter]);
+    const [getEntries] = useVocabularyStore(state => [state.getEntries]);
+    const [setDefaultIngestionFilters, closeRepositoryBrowser] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [modalOpen, setModalOpen] = useState(false);
     const [ingestionModel, setIngestionModel] = useState<any>({
@@ -107,21 +115,7 @@ function Model(props: ModelProps): React.ReactElement {
             BoundingBoxP2X: null,
             BoundingBoxP2Y: null,
             BoundingBoxP2Z: null,
-            ModelMaterials: [
-                {
-                    idModelMaterial: 0,
-                    Name: '',
-                    ModelMaterialChannel: [
-                        {
-                            idModelMaterialChannel: 0,
-                            Type: '',
-                            Source: '',
-                            Value: '',
-                            Additional: ''
-                        }
-                    ]
-                }
-            ]
+            ModelMaterials: []
         }
     ]);
 
@@ -149,9 +143,9 @@ function Model(props: ModelProps): React.ReactElement {
         }
 
         fetchModelConstellation();
-    }, [idAssetVersion]);
+    }, [idAssetVersion, metadataIndex, updateMetadataField]);
 
-    // as the root to initialize the repository browser
+    // use subject's idSystemObject as the root to initialize the repository browser
     const subjectIdSystemObject = useGetSubjectQuery({
         variables: {
             input: {
@@ -208,7 +202,7 @@ function Model(props: ModelProps): React.ReactElement {
 
     const onModalClose = () => {
         setModalOpen(false);
-        toggleFilter();
+        closeRepositoryBrowser();
     };
 
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
@@ -257,8 +251,7 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Creation Method'
                             error={errors.model.creationMethod}
-                            // value={withDefaultValueNumber(model.creationMethod, getInitialEntry(eVocabularySetID.eModelCreationMethod))}
-                            value={''}
+                            value={model.creationMethod}
                             name='creationMethod'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelCreationMethod)}
@@ -267,8 +260,7 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Modality'
                             error={errors.model.modality}
-                            // value={withDefaultValueNumber(model.modality, getInitialEntry(eVocabularySetID.eModelModality))}
-                            value={''}
+                            value={model.modality}
                             name='modality'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelModality)}
@@ -278,8 +270,7 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Units'
                             error={errors.model.units}
-                            // value={withDefaultValueNumber(model.units, getInitialEntry(eVocabularySetID.eModelUnits))}
-                            value={''}
+                            value={model.units}
                             name='units'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelUnits)}
@@ -289,8 +280,7 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Purpose'
                             error={errors.model.purpose}
-                            // value={withDefaultValueNumber(model.purpose, getInitialEntry(eVocabularySetID.eModelPurpose))}
-                            value={''}
+                            value={model.purpose}
                             name='purpose'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelPurpose)}
@@ -300,14 +290,14 @@ function Model(props: ModelProps): React.ReactElement {
                             required
                             label='Model File Type'
                             error={errors.model.modelFileType}
-                            // value={withDefaultValueNumber(model.modelFileType, getInitialEntry(eVocabularySetID.eModelFileType))}
-                            value={''}
+                            value={model.modelFileType}
                             name='modelFileType'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelFileType)}
                         />
                     </Box>
                     {/* End of data-entry form */}
+
                     {/* Start of model-level metrics form */}
                     <Box className={classes.notRequiredFields}>
                         <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} />
@@ -323,12 +313,11 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                     {/* End of  model-level metrics form */}
                 </Box>
-                {/* start of object/mesh table */}
-                {/* Start of asset files table */}
+
                 <Box mb={2}>
                     <AssetFilesTable files={assetFiles} />
                 </Box>
-                {/* End of asset files table */}
+
                 <Box display='flex' flexDirection='row' className={classes.objectMeshTable}>
                     <ObjectMeshTable modelObjects={modelObjects} />
                 </Box>
@@ -339,347 +328,6 @@ function Model(props: ModelProps): React.ReactElement {
 }
 
 export default Model;
-
-// console.log('fetchedModelConstellation');
-// const data: any = {
-//     Model: {
-//         Name: '',
-//         Master: true,
-//         Authoritative: true,
-//         DateCreated: '2021-04-01T00:00:00.000Z',
-//         idVCreationMethod: 0,
-//         idVModality: 0,
-//         idVUnits: 0,
-//         idVPurpose: 0,
-//         idVFileType: 0,
-//         idAssetThumbnail: null,
-//         CountAnimations: 0,
-//         CountCameras: 0,
-//         CountFaces: 149999,
-//         CountLights: 0,
-//         CountMaterials: 1,
-//         CountMeshes: 1,
-//         CountVertices: 74796,
-//         CountEmbeddedTextures: 0,
-//         CountLinkedTextures: 1,
-//         FileEncoding: 'BINARY',
-//         idModel: 1,
-//         idAssetThumbnailOrig: null
-//     },
-//     ModelObjects: [
-//         {
-//             idModelObject: 1,
-//             idModel: 1,
-//             BoundingBoxP1X: -892.2620849609375,
-//             BoundingBoxP1Y: -2167.86767578125,
-//             BoundingBoxP1Z: -971.3925170898438,
-//             BoundingBoxP2X: 892.2653198242188,
-//             BoundingBoxP2Y: 2167.867919921875,
-//             BoundingBoxP2Z: 971.3912963867188,
-//             CountPoint: 74796,
-//             CountFace: 149999,
-//             CountColorChannel: 0,
-//             CountTextureCoorinateChannel: 1,
-//             HasBones: false,
-//             HasFaceNormals: true,
-//             HasTangents: null,
-//             HasTextureCoordinates: true,
-//             HasVertexNormals: null,
-//             HasVertexColor: false,
-//             IsTwoManifoldUnbounded: false,
-//             IsTwoManifoldBounded: false,
-//             IsWatertight: false,
-//             SelfIntersecting: true
-//         },
-//         {
-//             idModelObject: 2,
-//             idModel: 2,
-//             BoundingBoxP1X: -892.2620849609375,
-//             BoundingBoxP1Y: -2167.86767578125,
-//             BoundingBoxP1Z: -971.3925170898438,
-//             BoundingBoxP2X: 892.2653198242188,
-//             BoundingBoxP2Y: 2167.867919921875,
-//             BoundingBoxP2Z: 971.3912963867188,
-//             CountPoint: 74796,
-//             CountFace: 149999,
-//             CountColorChannel: 0,
-//             CountTextureCoorinateChannel: 1,
-//             HasBones: false,
-//             HasFaceNormals: true,
-//             HasTangents: null,
-//             HasTextureCoordinates: true,
-//             HasVertexNormals: null,
-//             HasVertexColor: false,
-//             IsTwoManifoldUnbounded: false,
-//             IsTwoManifoldBounded: false,
-//             IsWatertight: false,
-//             SelfIntersecting: true
-//         }
-//     ],
-//     ModelMaterials: [
-//         {
-//             idModelMaterial: 1,
-//             Name: 'material_0'
-//         },
-//         {
-//             idModelMaterial: 2,
-//             Name: 'material_1'
-//         }
-//     ],
-//     ModelMaterialChannels: [
-//         {
-//             idModelMaterialChannel: 1,
-//             idModelMaterial: 1,
-//             idVMaterialType: 64,
-//             MaterialTypeOther: null,
-//             idModelMaterialUVMap: 1,
-//             UVMapEmbedded: false,
-//             ChannelPosition: 0,
-//             ChannelWidth: 3,
-//             Scalar1: 0.8,
-//             Scalar2: 0.8,
-//             Scalar3: 0.8,
-//             Scalar4: null,
-//             AdditionalAttributes: null,
-//             idVMaterialTypeOrig: 64,
-//             idModelMaterialUVMapOrig: 1,
-//             Type: '',
-//             Source: '',
-//             Value: ''
-//         },
-//         {
-//             idModelMaterialChannel: 2,
-//             idModelMaterial: 1,
-//             idVMaterialType: 65,
-//             MaterialTypeOther: null,
-//             idModelMaterialUVMap: null,
-//             UVMapEmbedded: false,
-//             ChannelPosition: null,
-//             ChannelWidth: null,
-//             Scalar1: 0.8,
-//             Scalar2: 0.8,
-//             Scalar3: 0.8,
-//             Scalar4: null,
-//             AdditionalAttributes: null,
-//             idVMaterialTypeOrig: 65,
-//             idModelMaterialUVMapOrig: null,
-//             Type: '',
-//             Source: '',
-//             Value: ''
-//         },
-//         {
-//             idModelMaterialChannel: 3,
-//             idModelMaterial: 1,
-//             idVMaterialType: 66,
-//             MaterialTypeOther: null,
-//             idModelMaterialUVMap: null,
-//             UVMapEmbedded: false,
-//             ChannelPosition: null,
-//             ChannelWidth: null,
-//             Scalar1: 0,
-//             Scalar2: 0,
-//             Scalar3: 0,
-//             Scalar4: null,
-//             AdditionalAttributes: null,
-//             idVMaterialTypeOrig: 66,
-//             idModelMaterialUVMapOrig: null,
-//             Type: '',
-//             Source: '',
-//             Value: ''
-//         },
-//         {
-//             idModelMaterialChannel: 4,
-//             idModelMaterial: 1,
-//             idVMaterialType: 67,
-//             MaterialTypeOther: null,
-//             idModelMaterialUVMap: null,
-//             UVMapEmbedded: false,
-//             ChannelPosition: null,
-//             ChannelWidth: null,
-//             Scalar1: 0,
-//             Scalar2: 0,
-//             Scalar3: 0,
-//             Scalar4: null,
-//             AdditionalAttributes: null,
-//             idVMaterialTypeOrig: 67,
-//             idModelMaterialUVMapOrig: null,
-//             Type: 'random',
-//             Source: 'random',
-//             Value: 'random'
-//         },
-//         {
-//             idModelMaterialChannel: 5,
-//             idModelMaterial: 1,
-//             idVMaterialType: 70,
-//             MaterialTypeOther: null,
-//             idModelMaterialUVMap: null,
-//             UVMapEmbedded: false,
-//             ChannelPosition: null,
-//             ChannelWidth: null,
-//             Scalar1: 0,
-//             Scalar2: null,
-//             Scalar3: null,
-//             Scalar4: null,
-//             AdditionalAttributes: null,
-//             idVMaterialTypeOrig: 70,
-//             idModelMaterialUVMapOrig: null,
-//             Type: 'text',
-//             Source: 'text',
-//             Value: 'text'
-//         },
-//         {
-//             idModelMaterialChannel: 6,
-//             idModelMaterial: 1,
-//             idVMaterialType: 71,
-//             MaterialTypeOther: null,
-//             idModelMaterialUVMap: null,
-//             UVMapEmbedded: false,
-//             ChannelPosition: null,
-//             ChannelWidth: null,
-//             Scalar1: 1,
-//             Scalar2: null,
-//             Scalar3: null,
-//             Scalar4: null,
-//             AdditionalAttributes: 'string',
-//             idVMaterialTypeOrig: 71,
-//             idModelMaterialUVMapOrig: null,
-//             Type: '',
-//             Source: '',
-//             Value: ''
-//         },
-//         {
-//             idModelMaterialChannel: 7,
-//             idModelMaterial: 1,
-//             idVMaterialType: 74,
-//             MaterialTypeOther: null,
-//             idModelMaterialUVMap: null,
-//             UVMapEmbedded: false,
-//             ChannelPosition: null,
-//             ChannelWidth: null,
-//             Scalar1: 0,
-//             Scalar2: null,
-//             Scalar3: null,
-//             Scalar4: null,
-//             AdditionalAttributes: null,
-//             idVMaterialTypeOrig: 74,
-//             idModelMaterialUVMapOrig: null,
-//             Type: '',
-//             Source: '',
-//             Value: ''
-//         },
-//         {
-//             idModelMaterialChannel: 8,
-//             idModelMaterial: 2,
-//             idVMaterialType: 74,
-//             MaterialTypeOther: null,
-//             idModelMaterialUVMap: null,
-//             UVMapEmbedded: false,
-//             ChannelPosition: null,
-//             ChannelWidth: null,
-//             Scalar1: 0,
-//             Scalar2: null,
-//             Scalar3: null,
-//             Scalar4: null,
-//             AdditionalAttributes: null,
-//             idVMaterialTypeOrig: 74,
-//             idModelMaterialUVMapOrig: null,
-//             Type: '',
-//             Source: '',
-//             Value: ''
-//         }
-//     ],
-//     ModelMaterialUVMaps: [
-//         {
-//             idModel: 1,
-//             idAsset: 2,
-//             UVMapEdgeLength: 0,
-//             idModelMaterialUVMap: 1
-//         }
-//     ],
-//     ModelObjectModelMaterialXref: [
-//         {
-//             idModelObjectModelMaterialXref: 1,
-//             idModelObject: 1,
-//             idModelMaterial: 1
-//         },
-//         {
-//             idModelObjectModelMaterialXref: 2,
-//             idModelObject: 1,
-//             idModelMaterial: 2
-//         },
-//         {
-//             idModelObjectModelMaterialXref: 3,
-//             idModelObject: 2,
-//             idModelMaterial: 1
-//         }
-//     ],
-//     ModelAssets: [
-//         {
-//             Asset: {
-//                 FileName: 'eremotherium_laurillardi-150k-4096.fbx',
-//                 FilePath: '',
-//                 idAssetGroup: null,
-//                 idVAssetType: 0,
-//                 idSystemObject: null,
-//                 StorageKey: null,
-//                 idAsset: 1,
-//                 idAssetGroupOrig: null,
-//                 idSystemObjectOrig: null
-//             },
-//             AssetVersion: {
-//                 idAsset: 1,
-//                 Version: 1,
-//                 FileName: 'eremotherium_laurillardi-150k-4096.fbx',
-//                 idUserCreator: 0,
-//                 DateCreated: '2021-04-01T00:00:00.000Z',
-//                 StorageHash: '',
-//                 StorageSize: '0',
-//                 StorageKeyStaging: '',
-//                 Ingested: false,
-//                 BulkIngest: false,
-//                 idAssetVersion: 1
-//             },
-//             AssetName: 'eremotherium_laurillardi-150k-4096.fbx',
-//             AssetType: 'Model'
-//         },
-//         {
-//             Asset: {
-//                 FileName:
-//                     '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
-//                 FilePath: '',
-//                 idAssetGroup: null,
-//                 idVAssetType: 0,
-//                 idSystemObject: null,
-//                 StorageKey: null,
-//                 idAsset: 2,
-//                 idAssetGroupOrig: null,
-//                 idSystemObjectOrig: null
-//             },
-//             AssetVersion: {
-//                 idAsset: 2,
-//                 Version: 1,
-//                 FileName:
-//                     '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
-//                 idUserCreator: 0,
-//                 DateCreated: '2021-04-01T00:00:00.000Z',
-//                 StorageHash: '',
-//                 StorageSize: '0',
-//                 StorageKeyStaging: '',
-//                 Ingested: false,
-//                 BulkIngest: false,
-//                 idAssetVersion: 2
-//             },
-//             AssetName:
-//                 '/Users/blundellj/OneDrive - Smithsonian Institution/Packrat demo files/model validation demo files/eremotherium_laurillardi-150k-4096-obj/eremotherium_laurillardi-150k-4096-diffuse.jpg',
-//             AssetType: 'Texture Map diffuse'
-//         }
-//     ]
-// };
-
-// const { ingestionModel, modelObjects, assets } = extractModelConstellation(data);
-// setIngestionModel(ingestionModel);
-// setModelObjects(modelObjects);
-// setAssetFiles(assets);
 
 // import UVContents from './UVContents';
 // const updateUVMapsVariant = (uvMapId: number, mapType: number) => {

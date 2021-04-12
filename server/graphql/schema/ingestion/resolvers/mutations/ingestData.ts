@@ -1,4 +1,4 @@
-import { IngestDataResult, MutationIngestDataArgs, IngestSubjectInput, IngestItemInput, IngestPhotogrammetry, IngestIdentifier, User } from '../../../../../types/graphql';
+import { IngestDataResult, MutationIngestDataArgs, IngestSubjectInput, IngestItemInput, IngestPhotogrammetry, IngestModelInput, IngestIdentifier, User } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
@@ -7,6 +7,7 @@ import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 import { AssetStorageAdapter, IngestAssetResult, OperationInfo } from '../../../../../storage/interface';
 import { VocabularyCache, eVocabularyID } from '../../../../../cache';
+import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 
 export default async function ingestData(_: Parent, args: MutationIngestDataArgs, context: Context): Promise<IngestDataResult> {
     const { input } = args;
@@ -14,17 +15,17 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
 
     // data validation; FYI ... input.project is allowed to be unspecified
     if (!input.subjects || input.subjects.length == 0) {
-        LOG.logger.error('GraphQL ingestData called with no subjects');
+        LOG.logger.error('GQL ingestData called with no subjects');
         return { success: false };
     }
 
     if (!input.item) {
-        LOG.logger.error('GraphQL ingestData called with no item');
+        LOG.logger.error('GQL ingestData called with no item');
         return { success: false };
     }
 
     if (!user) {
-        LOG.logger.error('GraphQL ingestData unable to retrieve user context');
+        LOG.logger.error('GQL ingestData unable to retrieve user context');
         return { success: false };
     }
 
@@ -53,7 +54,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     if (!itemDB)
         return { success: false };
 
-    // write subjects to item
+    // wire subjects to item
     if (!await wireSubjectsToItem(subjectsDB, itemDB))
         return { success: false };
 
@@ -64,6 +65,13 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
         for (const photogrammetry of input.photogrammetry)
             if (!await createPhotogrammetryObjects(photogrammetry, assetVersionMap))
                 return { success: false };
+    }
+
+    if (input.model && input.model.length > 0) {
+        for (const model of input.model) {
+            if (!await createModelObjects(model, assetVersionMap))
+                return { success: false };
+        }
     }
 
     // wire item to asset-owning objects
@@ -82,7 +90,7 @@ async function getVocabularyARK(): Promise<DBAPI.Vocabulary | undefined> {
     if (!vocabularyARK) {
         vocabularyARK = await VocabularyCache.vocabularyByEnum(eVocabularyID.eIdentifierIdentifierTypeARK);
         if (!vocabularyARK) {
-            LOG.logger.error('GraphQL ingestData unable to fetch vocabulary for ARK Identifiers');
+            LOG.logger.error('GQL ingestData unable to fetch vocabulary for ARK Identifiers');
             return undefined;
         }
     }
@@ -106,7 +114,7 @@ async function createIdentifier(identifierValue: string, SO: DBAPI.SystemObject 
     });
 
     if (!await identifier.create()) {
-        LOG.logger.error(`GraphQL ingestData unable to create identifier record for subject's arkId ${identifierValue}`);
+        LOG.logger.error(`GQL ingestData unable to create identifier record for subject's arkId ${identifierValue}`);
         return null;
     }
     return identifier;
@@ -115,7 +123,7 @@ async function createIdentifier(identifierValue: string, SO: DBAPI.SystemObject 
 async function createIdentifierForObject(identifier: IngestIdentifier | null, SOBased: DBAPI.SystemObjectBased): Promise<boolean> {
     const SO: DBAPI.SystemObject | null = await SOBased.fetchSystemObject();
     if (!SO) {
-        LOG.logger.error(`GraphQL ingestData unable to fetch system object from ${JSON.stringify(SOBased)}`);
+        LOG.logger.error(`GQL ingestData unable to fetch system object from ${JSON.stringify(SOBased)}`);
         return false;
     }
 
@@ -126,7 +134,7 @@ async function createIdentifierForObject(identifier: IngestIdentifier | null, SO
         const arkId: string = ICOL.generateArk(null, false);
         const identifierSystemDB: DBAPI.Identifier | null = await createIdentifier(arkId, SO, null);
         if (!identifierSystemDB) {
-            LOG.logger.error(`GraphQL ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`);
+            LOG.logger.error(`GQL ingestData unable to create identifier record for object ${JSON.stringify(SOBased)}`);
             return false;
         } else
             return true;
@@ -141,7 +149,7 @@ async function createIdentifierForObject(identifier: IngestIdentifier | null, SO
         if (identifier.identifierType == vocabularyARK.idVocabulary) {
             const arkId: string | null = ICOL.extractArkFromUrl(identifier.identifier);
             if (!arkId) {
-                LOG.logger.error(`GraphQL ingestData asked to create an ark indentifier with invalid ark ${identifier.identifier} no value for ${JSON.stringify(SOBased)}`);
+                LOG.logger.error(`GQL ingestData asked to create an ark indentifier with invalid ark ${identifier.identifier} no value for ${JSON.stringify(SOBased)}`);
                 return false;
             } else
                 IdentifierValue = arkId;
@@ -149,7 +157,7 @@ async function createIdentifierForObject(identifier: IngestIdentifier | null, SO
             IdentifierValue = identifier.identifier;
 
         if (!IdentifierValue) {
-            LOG.logger.error(`GraphQL ingestData asked to create an indentifier with no value for ${JSON.stringify(SOBased)}`);
+            LOG.logger.error(`GQL ingestData asked to create an indentifier with no value for ${JSON.stringify(SOBased)}`);
             return false;
         }
 
@@ -168,7 +176,7 @@ async function validateOrCreateUnitEdan(units: DBAPI.Unit[] | null, Abbreviation
             idUnitEdan: 0
         });
         if (!await unitEdanDB.create()) {
-            LOG.logger.error(`GraphQL ingestData unable to create unitEdan record for subject's unit ${Abbreviation}`);
+            LOG.logger.error(`GQL ingestData unable to create unitEdan record for subject's unit ${Abbreviation}`);
             return null;
         }
         return await DBAPI.Unit.fetch(1);
@@ -188,7 +196,7 @@ async function createSubject(idUnit: number, Name: string, identifier: DBAPI.Ide
         idSubject: 0
     });
     if (!await subjectDB.create()) {
-        LOG.logger.error(`GraphQL ingestData unable to create subject record with name ${Name}`);
+        LOG.logger.error(`GQL ingestData unable to create subject record with name ${Name}`);
         return null;
     }
     return subjectDB;
@@ -200,12 +208,12 @@ async function updateIdentifier(identifier: DBAPI.Identifier | null, subjectDB: 
         return true;
     const SO: DBAPI.SystemObject | null = await subjectDB.fetchSystemObject();
     if (!SO) {
-        LOG.logger.error(`GraphQL ingestData unable to fetch system object for subject record ${JSON.stringify(subjectDB)}`);
+        LOG.logger.error(`GQL ingestData unable to fetch system object for subject record ${JSON.stringify(subjectDB)}`);
         return false;
     }
     identifier.idSystemObject = SO.idSystemObject;
     if (!await identifier.update()) {
-        LOG.logger.error(`GraphQL ingestData unable to update identifier's idSystemObject ${JSON.stringify(identifier)}`);
+        LOG.logger.error(`GQL ingestData unable to update identifier's idSystemObject ${JSON.stringify(identifier)}`);
         return false;
     }
 
@@ -216,13 +224,13 @@ async function validateExistingSubject(subject: IngestSubjectInput, units: DBAPI
     // if this subject exists, validate it
     const subjectDB: DBAPI.Subject | null = subject.id ? await DBAPI.Subject.fetch(subject.id) : null;
     if (!subjectDB) {
-        LOG.logger.error(`GraphQL ingestData called with invalid subject ${subject.id}`);
+        LOG.logger.error(`GQL ingestData called with invalid subject ${subject.id}`);
         return null;
     }
 
     // existing subjects must be connected to an existing unit
     if (!units || units.length == 0) {
-        LOG.logger.error(`GraphQL ingestData called with invalid subject's unit ${subject.unit}`);
+        LOG.logger.error(`GQL ingestData called with invalid subject's unit ${subject.unit}`);
         return null;
     }
     return subjectDB;
@@ -257,14 +265,14 @@ async function createSubjectAndRelated(subject: IngestSubjectInput, units: DBAPI
 async function wireProjectToSubjects(idProject: number, subjectsDB: DBAPI.Subject[]): Promise<boolean> {
     const projectDB: DBAPI.Project | null = await DBAPI.Project.fetch(idProject);
     if (!projectDB) {
-        LOG.logger.error(`GraphQL ingestData unable to fetch project ${idProject}`);
+        LOG.logger.error(`GQL ingestData unable to fetch project ${idProject}`);
         return false;
     }
 
     for (const subjectDB of subjectsDB) {
         const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(projectDB, subjectDB);
         if (!xref) {
-            LOG.logger.error(`GraphQL ingestData unable to wire project ${JSON.stringify(projectDB)} to subject ${JSON.stringify(subjectDB)}`);
+            LOG.logger.error(`GQL ingestData unable to wire project ${JSON.stringify(projectDB)} to subject ${JSON.stringify(subjectDB)}`);
             return false;
         }
     }
@@ -276,7 +284,7 @@ async function fetchOrCreateItem(item: IngestItemInput): Promise<DBAPI.Item | nu
     if (item.id) {
         itemDB = await DBAPI.Item.fetch(item.id);
         if (!itemDB)
-            LOG.logger.error(`GraphQL ingestData could not compute item from ${item.id}`);
+            LOG.logger.error(`GQL ingestData could not compute item from ${item.id}`);
     } else {
         itemDB = new DBAPI.Item({
             idAssetThumbnail: null,
@@ -287,7 +295,7 @@ async function fetchOrCreateItem(item: IngestItemInput): Promise<DBAPI.Item | nu
         });
 
         if (!await itemDB.create()) {
-            LOG.logger.error(`GraphQL ingestData unable to create item from ${JSON.stringify(item)}`);
+            LOG.logger.error(`GQL ingestData unable to create item from ${JSON.stringify(item)}`);
             return null;
         }
     }
@@ -299,7 +307,7 @@ async function wireSubjectsToItem(subjectsDB: DBAPI.Subject[], itemDB: DBAPI.Ite
     for (const subjectDB of subjectsDB) {
         const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(subjectDB, itemDB);
         if (!xref) {
-            LOG.logger.error(`GraphQL ingestData unable to wire subject ${JSON.stringify(subjectDB)} to item ${JSON.stringify(itemDB)}`);
+            LOG.logger.error(`GQL ingestData unable to wire subject ${JSON.stringify(subjectDB)} to item ${JSON.stringify(itemDB)}`);
             return false;
         }
     }
@@ -312,10 +320,9 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
 
     const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry);
     if (!vocabulary) {
-        LOG.logger.error('GraphQL ingestData unable to retrieve photogrammetry capture method vocabulary from cache');
+        LOG.logger.error('GQL ingestData unable to retrieve photogrammetry capture method vocabulary from cache');
         return false;
     }
-
 
     // create photogrammetry objects, identifiers, etc.
     const captureDataDB: DBAPI.CaptureData = new DBAPI.CaptureData({
@@ -327,7 +334,7 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
         idCaptureData: 0
     });
     if (!await captureDataDB.create()) {
-        LOG.logger.error(`GraphQL ingestData unable to create CaptureData for photogrammetry data ${JSON.stringify(photogrammetry)}`);
+        LOG.logger.error(`GQL ingestData unable to create CaptureData for photogrammetry data ${JSON.stringify(photogrammetry)}`);
         return false;
     }
 
@@ -347,13 +354,13 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
         idCaptureDataPhoto: 0
     });
     if (!await captureDataPhotoDB.create()) {
-        LOG.logger.error(`GraphQL ingestData unable to create CaptureDataPhoto for photogrammetry data ${JSON.stringify(photogrammetry)}`);
+        LOG.logger.error(`GQL ingestData unable to create CaptureDataPhoto for photogrammetry data ${JSON.stringify(photogrammetry)}`);
         return false;
     }
 
     if (photogrammetry.systemCreated) {
         if (!await createIdentifierForObject(null, captureDataDB)) {
-            LOG.logger.error(`GraphQL ingestData unable to create identifier for photogrammetry data ${JSON.stringify(photogrammetry)}`);
+            LOG.logger.error(`GQL ingestData unable to create identifier for photogrammetry data ${JSON.stringify(photogrammetry)}`);
             return false;
         }
     }
@@ -361,7 +368,7 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
     if (photogrammetry.identifiers && photogrammetry.identifiers.length > 0) {
         for (const identifier of photogrammetry.identifiers) {
             if (!await createIdentifierForObject(identifier, captureDataDB)) {
-                LOG.logger.error(`GraphQL ingestData unable to create identifier for photogrammetry data ${JSON.stringify(photogrammetry)}`);
+                LOG.logger.error(`GQL ingestData unable to create identifier for photogrammetry data ${JSON.stringify(photogrammetry)}`);
                 return false;
             }
         }
@@ -374,11 +381,90 @@ async function createPhotogrammetryObjects(photogrammetry: IngestPhotogrammetry,
     return true;
 }
 
+async function createModelObjects(model: IngestModelInput, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
+    const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(model.idAssetVersion);
+    if (!JCOutput || !JCOutput.success || !JCOutput.modelConstellation || !JCOutput.modelConstellation.Model) {
+        LOG.logger.error(`GQL ingestData createModelObjects failed to extract JobCookSIPackratInspectOutput from idAssetVersion ${model.idAssetVersion}`);
+        return false;
+    }
+
+    const modelDB: DBAPI.Model = JCOutput.modelConstellation.Model;
+    modelDB.Name = model.name;
+    modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCaptured) || new Date();
+    modelDB.Authoritative = model.authoritative;
+    modelDB.idVCreationMethod = model.creationMethod;
+    modelDB.idVModality = model.modality;
+    modelDB.idVPurpose = model.purpose;
+    modelDB.idVUnits = model.units;
+    modelDB.idVFileType = model.modelFileType;
+
+    // TODO: extract out common code for asset constellations
+    // TODO: handle ingested collections, such as via zip file, and build assetMap from all assets in collection
+    const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(model.idAssetVersion);
+    if (!assetVersion) {
+        LOG.logger.error(`GQL ingestData unable to fetch asset version from ${JSON.stringify(model)}`);
+        return false;
+    }
+    const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
+    if (!asset) {
+        LOG.logger.error(`GQL ingestData unable to fetch asset from ${JSON.stringify(model)}, idAsset ${assetVersion.idAsset}`);
+        return false;
+    }
+    const assetMap: Map<string, number> = new Map<string, number>();
+    assetMap.set(asset.FileName, asset.idAsset);
+
+    const res: H.IOResults = await JCOutput.persist(0, assetMap);
+    if (!res.success) {
+        LOG.logger.error(`GQL ingestData unable to create model constellation ${JSON.stringify(model)}: ${res.success}`);
+        return false;
+    }
+
+    if (model.systemCreated) {
+        if (!await createIdentifierForObject(null, modelDB)) {
+            LOG.logger.error(`GQL ingestData unable to create identifier for model data ${JSON.stringify(model)}`);
+            return false;
+        }
+    }
+
+    if (model.identifiers && model.identifiers.length > 0) {
+        for (const identifier of model.identifiers) {
+            if (!await createIdentifierForObject(identifier, modelDB)) {
+                LOG.logger.error(`GQL ingestData unable to create identifier for model data ${JSON.stringify(model)}`);
+                return false;
+            }
+        }
+    }
+
+    // wire model to sourceObjects
+    if (model.sourceObjects && model.sourceObjects.length > 0) {
+        const SO: DBAPI.SystemObject | null = await modelDB.fetchSystemObject();
+        if (SO) {
+            for (const sourceObject of model.sourceObjects) {
+                const xref: DBAPI.SystemObjectXref = new DBAPI.SystemObjectXref({
+                    idSystemObjectMaster: sourceObject.idSystemObject,
+                    idSystemObjectDerived: SO.idSystemObject,
+                    idSystemObjectXref: 0
+                });
+                if (!await xref.create()) {
+                    LOG.logger.error(`GQL ingestData failed to create SystemObjectXref ${JSON.stringify(xref)}`);
+                    continue;
+                }
+            }
+        } else
+            LOG.logger.error(`GQL ingestData unable to fetch system object for model ${modelDB.idModel}`);
+    }
+
+    // TODO: deal with zips and bulk ingest, in which we may want to split the uploaded asset into mutiple assets
+    if (model.idAssetVersion)
+        assetVersionMap.set(model.idAssetVersion, modelDB);
+    return true;
+}
+
 async function wireItemToAssetOwners(itemDB: DBAPI.Item, assetVersionMap: Map<number, DBAPI.SystemObjectBased>): Promise<boolean> {
     for (const SOBased of assetVersionMap.values()) {
         const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(itemDB, SOBased);
         if (!xref) {
-            LOG.logger.error(`GraphQL ingestData unable to wire item ${JSON.stringify(itemDB)} to asset owner ${JSON.stringify(SOBased)}`);
+            LOG.logger.error(`GQL ingestData unable to wire item ${JSON.stringify(itemDB)} to asset owner ${JSON.stringify(SOBased)}`);
             return false;
         }
     }
@@ -390,13 +476,13 @@ async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.Sy
     for (const [idAssetVersion, SOBased] of assetVersionMap) {
         const assetVersionDB: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
         if (!assetVersionDB) {
-            LOG.logger.error(`GraphQL ingestData unable to load assetVersion for ${idAssetVersion}`);
+            LOG.logger.error(`GQL ingestData unable to load assetVersion for ${idAssetVersion}`);
             return false;
         }
 
         const assetDB: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersionDB.idAsset);
         if (!assetDB) {
-            LOG.logger.error(`GraphQL ingestData unable to load asset for ${assetVersionDB.idAsset}`);
+            LOG.logger.error(`GQL ingestData unable to load asset for ${assetVersionDB.idAsset}`);
             return false;
         }
 
@@ -408,7 +494,7 @@ async function promoteAssetsIntoRepository(assetVersionMap: Map<number, DBAPI.Sy
         };
         const ISR: IngestAssetResult = await AssetStorageAdapter.ingestAsset(assetDB, assetVersionDB, SOBased, opInfo);
         if (!ISR.success) {
-            LOG.logger.error(`GraphQL ingestData unable to ingest assetVersion ${idAssetVersion}: ${ISR.error}`);
+            LOG.logger.error(`GQL ingestData unable to ingest assetVersion ${idAssetVersion}: ${ISR.error}`);
             return false;
         }
     }

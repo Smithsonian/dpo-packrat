@@ -96,7 +96,7 @@ export function extractModelConstellation(data: ModelConstellation) {
 
     if (ModelObjects) {
         ModelObjects.forEach((modelObject) => {
-            let modelObj = { ...modelObject };
+            const modelObj = { ...modelObject };
             modelObj['ModelMaterials'] = [];
             modelObjects.push(modelObj);
         });

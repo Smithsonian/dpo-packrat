@@ -44,7 +44,7 @@ export class SystemObjectCache {
     // Cache Construction
     // **************************
     private async flushInternalWorker(): Promise<boolean> {
-        LOG.logger.info('CACHE: SystemObjectCache.flushInternalWorker() start');
+        LOG.logger.info('CACHE SystemObjectCache.flushInternalWorker() start');
         // TODO: replace with paged output
         const SOFetch: SystemObject[] | null = await SystemObject.fetchAll(); /* istanbul ignore next */
         if (!SOFetch) {
@@ -59,7 +59,7 @@ export class SystemObjectCache {
                 this.systemIDToObjectMap.set(SO.idSystemObject, oID);
             }
         }
-        LOG.logger.info('CACHE: SystemObjectCache.flushInternalWorker() done');
+        LOG.logger.info('CACHE SystemObjectCache.flushInternalWorker() done');
         return true;
     }
 
