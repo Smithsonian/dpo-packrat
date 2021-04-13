@@ -38,18 +38,18 @@ const ModelMaterialChannel = {
             }
             return asset.FileName;
         }
-        return parent.UVMapEmbedded ? '(embedded)' : ('unknown');
+        return parent.UVMapEmbedded ? '(embedded)' : '';
     },
     Value: async (parent: Parent): Promise<string | null> => {
         const values: number[] = [];
-        if (parent.Scalar1)
+        if (parent.Scalar1 != null) // checks for null and undefined
             values.push(parent.Scalar1);
-        if (parent.Scalar2)
+        if (parent.Scalar2 != null) // checks for null and undefined
             values.push(parent.Scalar2);
-        if (parent.Scalar3)
+        if (parent.Scalar3 != null) // checks for null and undefined
             values.push(parent.Scalar3);
-        if (parent.Scalar4)
-            values.push(parent.Scalar5);
+        if (parent.Scalar4 != null) // checks for null and undefined
+            values.push(parent.Scalar4);
         return values.join(', ');
     }
 };
