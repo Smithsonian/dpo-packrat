@@ -965,6 +965,7 @@ export type ModelMaterialChannel = {
   idVMaterialType?: Maybe<Scalars['Int']>;
   MaterialTypeOther?: Maybe<Scalars['String']>;
   idModelMaterialUVMap?: Maybe<Scalars['Int']>;
+  UVMapEmbedded?: Maybe<Scalars['Boolean']>;
   ChannelPosition?: Maybe<Scalars['Int']>;
   ChannelWidth?: Maybe<Scalars['Int']>;
   Scalar1?: Maybe<Scalars['Float']>;

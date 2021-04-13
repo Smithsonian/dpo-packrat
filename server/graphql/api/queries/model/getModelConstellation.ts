@@ -76,6 +76,7 @@ const getModelConstellation = gql`
                     }
                     MaterialTypeOther
                     idModelMaterialUVMap
+                    UVMapEmbedded
                     ChannelPosition
                     ChannelWidth
                     Scalar1
