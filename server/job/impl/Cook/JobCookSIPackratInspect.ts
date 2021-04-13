@@ -390,8 +390,8 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                                     const materialValue: string | null = maybeString(value);
                                     scalars = materialValue?.replace(/ /g, '').split(',').map(x => +x);
                                     if (!scalars) {
-                                        if (typeof(channel?.value) === 'number')
-                                            scalars = [channel.value];
+                                        if (typeof(value) === 'number')
+                                            scalars = [value];
                                     }
                                 }   break;
 
