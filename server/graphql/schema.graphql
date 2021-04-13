@@ -644,6 +644,7 @@ type ModelMaterialChannel {
   idVMaterialType: Int
   MaterialTypeOther: String
   idModelMaterialUVMap: Int
+  UVMapEmbedded: Boolean
   ChannelPosition: Int
   ChannelWidth: Int
   Scalar1: Float

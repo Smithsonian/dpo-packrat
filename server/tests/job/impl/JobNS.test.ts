@@ -311,7 +311,7 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
             expect(output).toBeTruthy();
             let JCOutput: COOK.JobCookSIPackratInspectOutput | null = null;
             try {
-                JCOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''));
+                JCOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''), null, null);
             } catch (error) {
                 LOG.logger.error(`JonNS Test validateJobOutput ${CACHE.eVocabularyID[jobData.eJobType]}: ${output}`, error);
                 expect(true).toBeFalsy();
