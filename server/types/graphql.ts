@@ -443,6 +443,7 @@ export type IngestFolder = {
 export type IngestPhotogrammetry = {
   __typename?: 'IngestPhotogrammetry';
   idAssetVersion: Scalars['Int'];
+  name: Scalars['String'];
   dateCaptured: Scalars['String'];
   datasetType: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
@@ -756,6 +757,7 @@ export type IngestFolderInput = {
 
 export type IngestPhotogrammetryInput = {
   idAssetVersion: Scalars['Int'];
+  name: Scalars['String'];
   dateCaptured: Scalars['String'];
   datasetType: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
@@ -963,6 +965,7 @@ export type ModelMaterialChannel = {
   idVMaterialType?: Maybe<Scalars['Int']>;
   MaterialTypeOther?: Maybe<Scalars['String']>;
   idModelMaterialUVMap?: Maybe<Scalars['Int']>;
+  UVMapEmbedded?: Maybe<Scalars['Boolean']>;
   ChannelPosition?: Maybe<Scalars['Int']>;
   ChannelWidth?: Maybe<Scalars['Int']>;
   Scalar1?: Maybe<Scalars['Float']>;

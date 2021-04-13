@@ -67,6 +67,7 @@ export type PhotogrammetryFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     folders: StateFolder[];
+    name: string;
     description: string;
     dateCaptured: Date;
     datasetType: number | null;

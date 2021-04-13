@@ -262,7 +262,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         return { success: true, error: '' };
     }
 
-    static async extract(output: any): Promise<JobCookSIPackratInspectOutput> {
+    static async extract(output: any, fileName: string | null, dateCreated: Date | null): Promise<JobCookSIPackratInspectOutput> {
         const JCOutput: JobCookSIPackratInspectOutput = new JobCookSIPackratInspectOutput();
 
         const modelObjects: DBAPI.ModelObject[] = [];
@@ -299,7 +299,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let idAsset: number = 0;
         let idAssetVersion: number = 0;
 
-        const model: DBAPI.Model = await JobCookSIPackratInspectOutput.createModel(++idModel, modelStats);
+        const model: DBAPI.Model = await JobCookSIPackratInspectOutput.createModel(++idModel, modelStats, fileName, dateCreated);
 
         if (sourceMeshFile) {
             if (!modelAssets)
@@ -390,8 +390,8 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                                     const materialValue: string | null = maybeString(value);
                                     scalars = materialValue?.replace(/ /g, '').split(',').map(x => +x);
                                     if (!scalars) {
-                                        if (typeof(channel?.value) === 'number')
-                                            scalars = [channel.value];
+                                        if (typeof(value) === 'number')
+                                            scalars = [value];
                                     }
                                 }   break;
 
@@ -489,9 +489,19 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             return null;
         }
 
+        // Determine filename, file type, and date created by computing asset version:
+        let fileName: string | null = null;
+        let dateCreated: Date | null = null;
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
+        if (assetVersion) {
+            fileName = assetVersion.FileName;
+            dateCreated = assetVersion.DateCreated;
+        } else
+            LOG.logger.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion unable to fetch assetVersion from ${idAssetVersion}`);
+
         let JCOutput: JobCookSIPackratInspectOutput | null = null;
         try {
-            JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRuns[0].Output || ''));
+            JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRuns[0].Output || ''), fileName, dateCreated);
         } catch (error) {
             LOG.logger.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion${JCOutput ? ' ' + JCOutput.error : ''}`, error);
             return null;
@@ -502,19 +512,20 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             return null;
         }
 
-        // LOG.logger.info(`GraphQL JobCookSIPackratInspectOutput.extractFromAssetVersion(${JSON.stringify(idAssetVersions)}) = ${JSON.stringify(result)}`);
+        // LOG.logger.info(`GraphQL JobCookSIPackratInspectOutput.extractFromAssetVersion(${JSON.stringify(idAssetVersion)}) = ${JSON.stringify(JCOutput.modelConstellation, H.Helpers.stringifyCallbackCustom)}`);
         return JCOutput;
     }
 
     private static async createModel(idModel: number, modelStats: any | undefined,
-        name: string | null = null, dateCreated: Date | null = null): Promise<DBAPI.Model> {
+        fileName: string | null = null, dateCreated: Date | null = null): Promise<DBAPI.Model> {
 
         // Compute FileType from file extension
         let vFileType: DBAPI.Vocabulary | undefined = undefined;
-        if (name)
-            vFileType = await CACHE.VocabularyCache.mapModelFileByExtension(name);
+        if (fileName)
+            vFileType = await CACHE.VocabularyCache.mapModelFileByExtension(fileName);
+        // LOG.logger.info(`JobCookPackratInspect createModel ${fileName} -> ${JSON.stringify(vFileType)}`);
         return new DBAPI.Model({
-            Name: name || '',
+            Name: fileName || '',
             Master: true,
             Authoritative: true,
             DateCreated: dateCreated || new Date(),
@@ -540,7 +551,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
     private static createModelObject(idModelObject: number, idModel: number,
         JCBoundingBox: JobCookBoundingBox | null, JCStat: JobCookStatistics): DBAPI.ModelObject {
-        // TODO: Verify types; deal with booleans vs 'false' / 'true'
         return new DBAPI.ModelObject({
             idModelObject,
             idModel,
