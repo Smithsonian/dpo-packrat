@@ -5,7 +5,6 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as LOG from '../../../../../utils/logger';
-import * as H from '../../../../../utils/helpers';
 
 const ModelMaterialChannel = {
     ModelMaterial: async (parent: Parent): Promise<DBAPI.ModelMaterial | null> => {
