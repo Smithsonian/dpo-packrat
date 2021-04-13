@@ -1037,19 +1037,6 @@ type CaptureDataDetailFields {
   folders: [IngestFolder!]!
 }
 
-type ModelDetailFields {
-  name: String
-  size: BigInt
-  master: Boolean
-  authoritative: Boolean
-  creationMethod: Int
-  modality: Int
-  purpose: Int
-  units: Int
-  dateCaptured: String
-  modelFileType: Int
-}
-
 type SceneDetailFields {
   Links: [String!]!
   AssetType: Int
@@ -1098,7 +1085,7 @@ type GetDetailsTabDataForObjectResult {
   Subject: SubjectDetailFields
   Item: ItemDetailFields
   CaptureData: CaptureDataDetailFields
-  Model: ModelDetailFields
+  Model: ModelConstellation
   Scene: SceneDetailFields
   IntermediaryFile: IntermediaryFileDetailFields
   ProjectDocumentation: ProjectDocumentationDetailFields
