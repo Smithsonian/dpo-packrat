@@ -95,7 +95,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromUnits(): Promise<boolean> {
         LOG.logger.info('ObjectGraphDatabase.computeGraphDataFromUnits');
         // iterate across all Units; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
-        const units: Unit[] | null = await Unit.fetchAll(); /* istanbul ignore if */
+        const units: Unit[] | null = await Unit.fetchAllWithSubjects(); /* istanbul ignore if */
         if (!units)
             return false;
         for (const unit of units) {
