@@ -322,6 +322,7 @@ export class BulkIngestReader {
         return {
             idAssetVersion: 0,
             systemCreated: true, // TODO: not sure what is needed here
+            name: bagitCDP.name,
             dateCaptured: bagitCDP.date_captured,
             datasetType,
             description: bagitCDP.description,

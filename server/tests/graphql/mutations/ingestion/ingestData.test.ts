@@ -155,6 +155,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         const photogrammetry: IngestPhotogrammetry = {
                             idAssetVersion: assetVersion.idAssetVersion,
+                            name: 'capture data name',
                             dateCaptured: new Date().toISOString(),
                             datasetType,
                             systemCreated: true,
