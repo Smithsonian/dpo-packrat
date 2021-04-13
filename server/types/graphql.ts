@@ -1380,20 +1380,6 @@ export type CaptureDataDetailFields = {
   folders: Array<IngestFolder>;
 };
 
-export type ModelDetailFields = {
-  __typename?: 'ModelDetailFields';
-  name?: Maybe<Scalars['String']>;
-  size?: Maybe<Scalars['BigInt']>;
-  master?: Maybe<Scalars['Boolean']>;
-  authoritative?: Maybe<Scalars['Boolean']>;
-  creationMethod?: Maybe<Scalars['Int']>;
-  modality?: Maybe<Scalars['Int']>;
-  purpose?: Maybe<Scalars['Int']>;
-  units?: Maybe<Scalars['Int']>;
-  dateCaptured?: Maybe<Scalars['String']>;
-  modelFileType?: Maybe<Scalars['Int']>;
-};
-
 export type SceneDetailFields = {
   __typename?: 'SceneDetailFields';
   Links: Array<Scalars['String']>;
@@ -1450,7 +1436,7 @@ export type GetDetailsTabDataForObjectResult = {
   Subject?: Maybe<SubjectDetailFields>;
   Item?: Maybe<ItemDetailFields>;
   CaptureData?: Maybe<CaptureDataDetailFields>;
-  Model?: Maybe<ModelDetailFields>;
+  Model?: Maybe<ModelConstellation>;
   Scene?: Maybe<SceneDetailFields>;
   IntermediaryFile?: Maybe<IntermediaryFileDetailFields>;
   ProjectDocumentation?: Maybe<ProjectDocumentationDetailFields>;
