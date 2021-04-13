@@ -4482,6 +4482,16 @@ describe('DB Fetch Special Test Suite', () => {
         }
     });
 
+    test('DB Fetch Special: Unit.fetchAllWithSubjects', async () => {
+        const unitFetch: DBAPI.Unit[] | null = await DBAPI.Unit.fetchAllWithSubjects();
+        expect(unitFetch).toBeTruthy();
+        if (unitFetch) {
+            expect(unitFetch.length).toBeGreaterThan(0);
+            if (unit && unit2)
+                expect(unitFetch).toEqual(expect.arrayContaining([unit, unit2]));
+        }
+    });
+
     test('DB Fetch Special: UnitEdan.fetchFromUnit', async () => {
         let unitEdanFetch: DBAPI.UnitEdan[] | null = null;
         if (unit) {
