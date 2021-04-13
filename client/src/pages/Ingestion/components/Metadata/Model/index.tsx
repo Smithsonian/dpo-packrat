@@ -6,8 +6,7 @@
  *
  * This component renders the metadata fields specific to model asset.
  */
-import { Box, Checkbox } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { Box, Checkbox, makeStyles } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
