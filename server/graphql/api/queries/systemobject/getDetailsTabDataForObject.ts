@@ -58,17 +58,25 @@ const getDetailsTabDataForObject = gql`
             Model {
                 Model {
                     idModel
-                    CountVertices,
-                    CountFaces,
-                    CountAnimations,
-                    CountCameras,
-                    CountLights,
-                    CountMaterials,
-                    CountMeshes,
-                    CountEmbeddedTextures,
-                    CountLinkedTextures,
+                    CountVertices
+                    CountFaces
+                    CountAnimations
+                    CountCameras
+                    CountLights
+                    CountMaterials
+                    CountMeshes
+                    CountEmbeddedTextures
+                    CountLinkedTextures
                     FileEncoding
                     Name
+                    DateCreated
+                    Master
+                    Authoritative
+                    idVCreationMethod
+                    idVModality
+                    idVUnits
+                    idVPurpose
+                    idVFileType
                 }
                 ModelObjects {
                     idModelObject
