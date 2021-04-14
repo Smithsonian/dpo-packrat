@@ -89,7 +89,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         }
 
         if (assetType.model) {
-            errors.model.dateCaptured = metadata.model.dateCaptured.toString() === 'Invalid Date' || metadata.model.dateCaptured.toString() === new Date('January 1, 1970 01:00:01').toString();
+            errors.model.dateCaptured = lodash.isNull(metadata.model.dateCaptured) || metadata.model.dateCaptured.toString() === 'Invalid Date';
             errors.model.creationMethod = lodash.isNull(metadata.model.creationMethod);
             errors.model.modality = lodash.isNull(metadata.model.modality);
             errors.model.units = lodash.isNull(metadata.model.units);
