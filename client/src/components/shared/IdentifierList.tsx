@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * IdentifierList
  *
@@ -26,7 +28,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontFamily: typography.fontFamily,
         borderBottom: `1px solid ${palette.grey[300]}`,
         '&:focus': {
-            outline: 'none',
+            outline: 'none'
         },
         '&::placeholder': {
             fontStyle: 'italic'
@@ -44,7 +46,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         borderRadius: 5,
         fontFamily: typography.fontFamily,
         [breakpoints.down('lg')]: {
-            fontSize: '0.8em',
+            fontSize: '0.8em'
         }
     },
     identifierOption: {
@@ -61,7 +63,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 }));
 
 interface IdentifierListProps extends ViewableProps {
-    identifiers: StateIdentifier[]
+    identifiers: StateIdentifier[];
     onAdd: (initialEntry: number | null) => void;
     onUpdate: (id: number, fieldName: string, fieldValue: number | string | boolean) => void;
     onRemove: (id: number) => void;
@@ -75,7 +77,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
     const hasIdentifiers: boolean = !!identifiers.length;
 
     return (
-        <Box overflow='hidden'>
+        <Box overflow='hidden' display={identifiers.length ? 'block' : 'none'}>
             <FieldType required={false} renderLabel={false} width='auto'>
                 {hasIdentifiers && <Header />}
                 {!hasIdentifiers && viewMode && (
@@ -89,20 +91,8 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                     const update = ({ target }) => onUpdate(id, target.name, target.value);
 
                     return (
-                        <Box
-                            key={index}
-                            display='flex'
-                            flexDirection='row'
-                            alignItems='center'
-                            paddingBottom='10px'
-                        >
-                            <Checkbox
-                                checked={selected}
-                                name='selected'
-                                color='primary'
-                                onChange={updateCheckbox}
-                                disabled={disabled}
-                            />
+                        <Box key={index} display='flex' flexDirection='row' alignItems='center' paddingBottom='10px'>
+                            <Checkbox checked={selected} name='selected' color='primary' onChange={updateCheckbox} disabled={disabled} />
                             <DebounceInput
                                 value={identifier}
                                 name='identifier'
@@ -112,15 +102,12 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                                 placeholder='Add new identifer'
                                 disabled={disabled}
                             />
-                            <Select
-                                value={identifierType}
-                                className={classes.identifierSelect}
-                                name='identifierType'
-                                onChange={update}
-                                disableUnderline
-                                disabled={disabled}
-                            >
-                                {identifierTypes.map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                            <Select value={identifierType} className={classes.identifierSelect} name='identifierType' onChange={update} disableUnderline disabled={disabled}>
+                                {identifierTypes.map(({ idVocabulary, Term }, index) => (
+                                    <MenuItem key={index} value={idVocabulary}>
+                                        {Term}
+                                    </MenuItem>
+                                ))}
                             </Select>
                             <MdRemoveCircleOutline className={classes.identifierOption} onClick={remove} size={30} />
                         </Box>

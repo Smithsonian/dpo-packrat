@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { ModelConstellation } from '../types/graphql';
-
 export function toTitleCase(str: string): string {
     return str.replace(/\w\S*/g, txt => {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -46,34 +43,20 @@ export function extractISOMonthDateYear(iso: string | Date, materialUI = false):
 }
 
 
-export function extractModelConstellation(data: ModelConstellation) {
+export function extractModelConstellation(data: any) {
+    if (!data) {
+        return {
+            ingestionModel: {},
+            modelObjects: [],
+            assets: []
+        };
+    }
     const { Model, ModelObjectModelMaterialXref, ModelAssets, ModelObjects, ModelMaterialChannels, ModelMaterials } = data;
-    const {
-        CountVertices,
-        CountFaces,
-        CountAnimations,
-        CountCameras,
-        CountLights,
-        CountMaterials,
-        CountMeshes,
-        CountEmbeddedTextures,
-        CountLinkedTextures,
-        FileEncoding
-    } = Model;
     const modelObjects: any = [];
     const assets: any = [];
     const ModelMaterialsHash = {};
     const ingestionModel = {
-        CountVertices,
-        CountFaces,
-        CountAnimations,
-        CountCameras,
-        CountLights,
-        CountMaterials,
-        CountMeshes,
-        CountEmbeddedTextures,
-        CountLinkedTextures,
-        FileEncoding
+        ...Model
     };
 
     if (ModelMaterials) {
