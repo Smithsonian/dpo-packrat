@@ -85,6 +85,19 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
         }
     }
 
+    static async fetchAllWithSubjects(): Promise<Unit[] | null> {
+        try {
+            return DBC.CopyArray<UnitBase, Unit>(
+                await DBC.DBConnection.prisma.$queryRaw<Unit[]>`
+                SELECT DISTINCT U.*
+                FROM Unit AS U
+                JOIN Subject AS S ON (U.idUnit = S.idUnit)`, Unit);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.logger.error('DBAPI.Unit.fetchAllWithSubjects', error);
+            return null;
+        }
+    }
+
     /**
      * Computes the array of units that are connected to any of the specified projects.
      * Units  are connected to system objects; we examine those system objects which are in a *master* relationship
