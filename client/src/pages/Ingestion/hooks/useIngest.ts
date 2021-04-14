@@ -168,7 +168,7 @@ function useIngest(): UseIngest {
                     if (!dateCaptured) {
                         dateCaptured = '';
                     } else if (typeof dateCaptured === 'object') {
-                        dateCaptured = nonNullValue<string>('datecaptured', dateCaptured.toISOString())
+                        dateCaptured = nonNullValue<string>('datecaptured', dateCaptured.toISOString());
                     }
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
