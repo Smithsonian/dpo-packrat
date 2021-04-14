@@ -7,17 +7,18 @@ const getModelConstellationForAssetVersion = gql`
             ModelConstellation {
                 Model {
                     idModel
-                    CountVertices,
-                    CountFaces,
-                    CountAnimations,
-                    CountCameras,
-                    CountLights,
-                    CountMaterials,
-                    CountMeshes,
-                    CountEmbeddedTextures,
-                    CountLinkedTextures,
+                    CountVertices
+                    CountFaces
+                    CountAnimations
+                    CountCameras
+                    CountLights
+                    CountMaterials
+                    CountMeshes
+                    CountEmbeddedTextures
+                    CountLinkedTextures
                     FileEncoding
                     Name
+                    idVFileType
                 }
                 ModelObjects {
                     idModelObject
