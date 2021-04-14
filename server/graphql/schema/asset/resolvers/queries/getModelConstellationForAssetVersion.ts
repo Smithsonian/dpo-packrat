@@ -5,11 +5,8 @@ import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook/JobC
 
 
 export default async function getModelConstellationForAssetVersion(_: Parent, args: QueryGetModelConstellationForAssetVersionArgs,
-    context: Context): Promise<GetModelConstellationForAssetVersionResult> {
-    const { user } = context;
+    __: Context): Promise<GetModelConstellationForAssetVersionResult> {
     const { idAssetVersion } = args.input;
-    if (!user)
-        return { idAssetVersion };
 
     const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion);
     if (!JCOutput || !JCOutput.success) {
@@ -17,6 +14,6 @@ export default async function getModelConstellationForAssetVersion(_: Parent, ar
         return { idAssetVersion };
     }
 
-    // LOG.logger.info(`GraphQL getModelConstellationForAssetVersion(${JSON.stringify(idAssetVersions)}) = ${JSON.stringify(result)}`);
+    // LOG.logger.info(`GraphQL getModelConstellationForAssetVersion(${JSON.stringify(idAssetVersion)}) = ${JSON.stringify(JCOutput.modelConstellation, H.Helpers.stringifyCallbackCustom)}`);
     return { idAssetVersion, ModelConstellation: JCOutput.modelConstellation };
 }

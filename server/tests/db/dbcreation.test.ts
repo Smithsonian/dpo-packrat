@@ -10,7 +10,6 @@ afterAll(async done => {
     // await H.Helpers.sleep(4000);
     await DBC.DBConnection.disconnect();
     await DBC.DBConnection.disconnect(); // second time to test disconnecting after already being disconnected!
-    LOG.getRequestLogger(); // added for full test coverage!
     done();
 });
 

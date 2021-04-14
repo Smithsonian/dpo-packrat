@@ -1,6 +1,7 @@
 import { IAuth, VerifyUserResult } from './IAuth';
 import { LocalAuth, LDAPAuth } from '../impl';
 import { Config, AUTH_TYPE } from '../../config';
+import { ASL, LocalStore } from '../../utils/localStore';
 import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
 
@@ -48,6 +49,11 @@ class AuthFactory {
             LOG.logger.info(`AuthFactory.verifyUser: ${error}`);
             return { user: null, error };
         }
+
+        // record user in local storage:
+        const LS: LocalStore | undefined = ASL.getStore();
+        if (LS)
+            LS.user = user;
 
         LOG.logger.info(`AuthFactory.verifyUser ${email} successfully authenticated`);
         return { user, error: null };
