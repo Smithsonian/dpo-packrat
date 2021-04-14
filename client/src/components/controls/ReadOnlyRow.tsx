@@ -22,8 +22,8 @@ function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
 
     return (
         <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps} width='auto'>
-            <Box display='flex' flexDirection='row' whiteSpace='normal' width='60px'>
-                <Typography style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A', fontSize: '12px' }}>{value}</Typography>
+            <Box width='70%' textAlign='right'>
+                <Typography style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A', fontSize: '12px', overflowWrap: 'break-word' }}>{value}</Typography>
             </Box>
         </FieldType>
     );
