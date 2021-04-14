@@ -7,14 +7,9 @@ import * as LOG from '../../../../../utils/logger';
 export default async function discardUploadedAssetVersions(
     _: Parent,
     args: MutationDiscardUploadedAssetVersionsArgs,
-    context: Context
+    _context: Context
 ): Promise<DiscardUploadedAssetVersionsResult | void> {
-    const { user } = context;
     const { idAssetVersions } = args.input;
-    if (!user) {
-        LOG.logger.error('GQL discardUploadedAssetVersions unable to retrieve user context');
-        return { success: false };
-    }
 
     let success: boolean = true;
     for (const idAssetVersion of idAssetVersions) {

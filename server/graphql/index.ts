@@ -1,20 +1,26 @@
+import { Request } from 'express';
+import { ApolloServerExpressConfig, AuthenticationError } from 'apollo-server-express';
+
 import GraphQLApi from './api';
 import schema from './schema';
-// import * as LOG from '../utils/logger';
-import { ApolloServerExpressConfig /*, AuthenticationError */ } from 'apollo-server-express';
 
-// const AUTH_REQUIRED: boolean = true;
-// let requestNumber: number = 0;
+const gqlAuthRequired: boolean = true; // set to false for debugging GraphQL using the GQL Playground ... this lets us avoid authentication
+const unauthenticatedGQLQueries: Set<string> = new Set<string>([
+    'getCurrentUser',
+    'getVocabularyEntries(input: $input)',
+]);
 
 const ApolloServerOptions: ApolloServerExpressConfig = {
     schema,
     context: ({ req }) => {
-        // LOG.logger.info(`[${++requestNumber}]`);
         const user = req['user'];
         const isAuthenticated = req['isAuthenticated']();
 
-        // if (AUTH_REQUIRED && !user)
-        //     throw new AuthenticationError('GraphQL user is not authenticated');
+        if (gqlAuthRequired) {
+            const authRequired: boolean = !unauthenticatedGQLQueries.has(computeGQLQuery(req) || '');
+            if (authRequired && !user)
+                throw new AuthenticationError('GraphQL user is not authenticated');
+        }
 
         return {
             user,
@@ -23,4 +29,18 @@ const ApolloServerOptions: ApolloServerExpressConfig = {
     }
 };
 
-export { GraphQLApi as default, schema, ApolloServerOptions };
+function computeGQLQuery(req: Request): string | null {
+    // extract first line of query string
+    // e.g. query = '{\n  getAssetVersionsDetails(input: {idAssetVersions: [101]}) {\n...'
+    const query: string | undefined = req.body.query;
+    if (!query)
+        return null;
+    let start: number = query.indexOf('{\n');
+    if (start > -1)
+        start += 2; // skip two spaces found after {\n
+    const end: number = query.indexOf('{\n', start + 1);
+    const queryTrim: string = (start > -1 && end > -1) ? query.substring(start + 1, end).trim() : '';
+    return queryTrim;
+}
+
+export { GraphQLApi as default, schema, ApolloServerOptions, computeGQLQuery };

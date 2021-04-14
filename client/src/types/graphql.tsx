@@ -2632,7 +2632,7 @@ export type GetModelConstellationQuery = (
         & Pick<ModelMaterial, 'idModelMaterial' | 'Name'>
       )>>, ModelMaterialChannels?: Maybe<Array<(
         { __typename?: 'ModelMaterialChannel' }
-        & Pick<ModelMaterialChannel, 'idModelMaterialChannel' | 'idModelMaterial' | 'Type' | 'Source' | 'Value' | 'MaterialTypeOther' | 'idModelMaterialUVMap' | 'ChannelPosition' | 'ChannelWidth' | 'Scalar1' | 'Scalar2' | 'Scalar3' | 'Scalar4' | 'AdditionalAttributes'>
+        & Pick<ModelMaterialChannel, 'idModelMaterialChannel' | 'idModelMaterial' | 'Type' | 'Source' | 'Value' | 'MaterialTypeOther' | 'idModelMaterialUVMap' | 'UVMapEmbedded' | 'ChannelPosition' | 'ChannelWidth' | 'Scalar1' | 'Scalar2' | 'Scalar3' | 'Scalar4' | 'AdditionalAttributes'>
         & { VMaterialType?: Maybe<(
           { __typename?: 'Vocabulary' }
           & Pick<Vocabulary, 'Term'>
@@ -4363,6 +4363,7 @@ export const GetModelConstellationDocument = gql`
         }
         MaterialTypeOther
         idModelMaterialUVMap
+        UVMapEmbedded
         ChannelPosition
         ChannelWidth
         Scalar1
