@@ -151,7 +151,6 @@ function useIngest(): UseIngest {
                         sourceObjects,
                         systemCreated,
                         name,
-                        dateCaptured,
                         creationMethod,
                         master,
                         authoritative,
@@ -162,12 +161,22 @@ function useIngest(): UseIngest {
                         directory,
                     } = model;
 
+                    let {
+                        dateCaptured
+                    } = model;
+
+                    if (!dateCaptured) {
+                        dateCaptured = '';
+                    } else if (typeof dateCaptured === 'object') {
+                        dateCaptured = nonNullValue<string>('datecaptured', dateCaptured.toISOString())
+                    }
+
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
 
                     const modelData: IngestModelInput = {
                         name,
                         idAssetVersion: parseFileId(file.id),
-                        dateCaptured: dateCaptured.toISOString(),
+                        dateCaptured,
                         identifiers: ingestIdentifiers,
                         creationMethod: nonNullValue<number>('creationMethod', creationMethod),
                         master,
