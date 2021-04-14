@@ -34,7 +34,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 }));
 
 interface DateInputFieldProps extends ViewableProps {
-    value: Date | null;
+    value: Date | null | string;
     onChange: (date: MaterialUiPickersDate, value?: string | null | undefined) => void;
 }
 

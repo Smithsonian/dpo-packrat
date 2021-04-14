@@ -2460,7 +2460,7 @@ export type GetModelConstellationForAssetVersionQuery = (
       { __typename?: 'ModelConstellation' }
       & { Model: (
         { __typename?: 'Model' }
-        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name'>
+        & Pick<Model, 'idModel' | 'CountVertices' | 'CountFaces' | 'CountAnimations' | 'CountCameras' | 'CountLights' | 'CountMaterials' | 'CountMeshes' | 'CountEmbeddedTextures' | 'CountLinkedTextures' | 'FileEncoding' | 'Name' | 'idVFileType'>
       ), ModelObjects?: Maybe<Array<(
         { __typename?: 'ModelObject' }
         & Pick<ModelObject, 'idModelObject' | 'BoundingBoxP1X' | 'BoundingBoxP1Y' | 'BoundingBoxP1Z' | 'BoundingBoxP2X' | 'BoundingBoxP2Y' | 'BoundingBoxP2Z' | 'CountVertices' | 'CountFaces' | 'CountColorChannels' | 'CountTextureCoordinateChannels' | 'HasBones' | 'HasFaceNormals' | 'HasTangents' | 'HasTextureCoordinates' | 'HasVertexNormals' | 'HasVertexColor' | 'IsTwoManifoldUnbounded' | 'IsTwoManifoldBounded' | 'IsWatertight' | 'SelfIntersecting'>
@@ -3984,6 +3984,7 @@ export const GetModelConstellationForAssetVersionDocument = gql`
         CountLinkedTextures
         FileEncoding
         Name
+        idVFileType
       }
       ModelObjects {
         idModelObject
