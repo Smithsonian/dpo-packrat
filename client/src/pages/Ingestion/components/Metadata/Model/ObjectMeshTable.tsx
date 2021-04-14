@@ -10,53 +10,65 @@ import { ReadOnlyRow } from '../../../../../components';
 const useStyles = makeStyles(theme => ({
     notRequiredFields: {
         display: 'flex',
-        width: '50%',
         flexDirection: 'column',
         marginLeft: 30,
         borderRadius: 5,
         backgroundColor: theme.palette.secondary.light,
         '& > *': {
-            height: '20px',
+            minHeight: '20px',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
+        },
+        width: '35%',
+        [theme.breakpoints.down('md')]: {
+            width: '50%'
         },
         minWidth: '300px'
     },
     materialFields: {
         display: 'flex',
         flexDirection: 'column',
-        width: 'auto'
+        width: '35%',
+        [theme.breakpoints.down('md')]: {
+            width: '50%'
+        },
+        minWidth: '300px'
     },
     unindentedFields: {
         '& > :first-child': {
-            height: '20px',
+            minHeight: '20px',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
         }
     },
     indentedFields: {
-        '& > :first-child': {
-            height: '20px',
-            borderBottom: '0.5px solid #D8E5EE',
-            borderTop: '0.5px solid #D8E5EE'
-        },
         '& > *': {
-            textIndent: '30px'
-        }
-    },
-    nestedIndentedFields: {
-        '& > *': {
-            height: '20px',
-            textIndent: '60px',
+            textIndent: '30px',
+            minHeight: '20px',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
         }
     },
     ModelObjectContainer: {
         display: 'flex',
-        width: 'auto',
-        minWidth: '300px',
+        width: '100%',
         marginBottom: '3%'
+    },
+    boundingBox: {
+        '& > *': {
+            height: '10px'
+        },
+        '& :not(:first-child)': {
+            textIndent: '30px'
+        }
+    },
+    objectMeshTable: {
+        display: 'flex',
+        flexDirection: 'row',
+        borderRadius: 5,
+        padding: 10,
+        backgroundColor: theme.palette.primary.light,
+        width: '100%'
     }
 }));
 
@@ -73,7 +85,7 @@ function interpretTrinary(truthyOrNull: boolean | null) {
 function ObjectMeshTable({ modelObjects }): React.ReactElement {
     const classes = useStyles();
     return (
-        <React.Fragment>
+        <Box className={classes.objectMeshTable}>
             {modelObjects.map(modelObject => {
                 return (
                     <Box className={classes.ModelObjectContainer} key={modelObject.idModelObject}>
@@ -85,9 +97,9 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                             <ReadOnlyRow label='Material Name' value={materialType.Name} />
                                             {materialType.ModelMaterialChannel.map(channel => {
                                                 return (
-                                                    <Box className={classes.indentedFields} key={channel.idModelMaterialChannel}>
+                                                    <Box className={classes.unindentedFields} key={channel.idModelMaterialChannel}>
                                                         <ReadOnlyRow label='Type' value={channel.Type} />
-                                                        <Box className={classes.nestedIndentedFields}>
+                                                        <Box className={classes.indentedFields}>
                                                             <ReadOnlyRow label='Source' value={channel.Source} />
                                                             <ReadOnlyRow label='Value' value={channel.Value} />
                                                             <ReadOnlyRow label='Additional' value={channel.AdditionalAttributes} />
@@ -117,7 +129,7 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                             <ReadOnlyRow label='Manifold (Open)?' value={interpretTrinary(modelObject.IsTwoManifoldBounded)} />
                             <ReadOnlyRow label='Is Watertight?' value={interpretTrinary(modelObject.IsWatertight)} />
                             <ReadOnlyRow label='Self Intersecting?' value={interpretTrinary(modelObject.SelfIntersecting)} />
-                            <Box style={{ height: 'auto' }}>
+                            <Box className={classes.boundingBox}>
                                 <ReadOnlyRow label='Bounding Box' />
                                 <ReadOnlyRow
                                     label='Min'
@@ -136,7 +148,7 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                     </Box>
                 );
             })}
-        </React.Fragment>
+        </Box>
     );
 }
 
