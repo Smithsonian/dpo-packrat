@@ -98,7 +98,7 @@ export const defaultModelFields: ModelFields = {
     systemCreated: true,
     identifiers: [],
     sourceObjects: [],
-    dateCaptured: new Date(),
+    dateCaptured: new Date('January 1, 1970 01:00:01'),
     creationMethod: null,
     master: true,
     authoritative: true,
