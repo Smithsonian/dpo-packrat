@@ -137,7 +137,8 @@ export class OCFLObject {
         if (metadata) {
             // serialize metadata to new version folder & compute hash
             const metadataFilename: string = ST.OCFLMetadataFilename;
-            const hashResults: H.HashResults = await H.Helpers.writeJsonAndComputeHash(path.join(destFolder, metadataFilename), metadata, ST.OCFLDigestAlgorithm);
+            const hashResults: H.HashResults = await H.Helpers.writeJsonAndComputeHash(path.join(destFolder, metadataFilename),
+                metadata, ST.OCFLDigestAlgorithm, H.Helpers.stringifyDatabaseRow);
             /* istanbul ignore next */
             if (!hashResults.success)
                 return hashResults;

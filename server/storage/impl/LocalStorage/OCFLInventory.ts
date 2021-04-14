@@ -402,7 +402,7 @@ export class OCFLInventory implements OCFLInventoryType {
 
         try {
             const digestContentsExpected: string = OCFLInventory.digestContents(hashResults.hash);
-            const digestContents: string = await fs.readFile(digestFilename);
+            const digestContents: string = await fs.readFile(digestFilename, 'utf-8');
             if (digestContentsExpected != digestContents) {
                 results.success = false;
                 results.error = `Inventory digest ${digestFilename} did not have expected contents`;

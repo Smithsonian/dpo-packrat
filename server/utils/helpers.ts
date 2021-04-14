@@ -410,9 +410,12 @@ export class Helpers {
         }
     }
 
-    static async writeJsonAndComputeHash(dest: string, obj: any, hashMethod: string): Promise<HashResults> {
+    static async writeJsonAndComputeHash(dest: string, obj: any, hashMethod: string, replacer: any | null = null): Promise<HashResults> {
         try {
-            await fs.writeJson(dest, obj);
+            if (!replacer)
+                await fs.writeJson(dest, obj);
+            else
+                await fs.writeJson(dest, obj, { replacer });
             return await Helpers.computeHashFromFile(dest, hashMethod);
         } catch (error) /* istanbul ignore next */ {
             LOG.logger.error('Helpers.writeJsonAndComputeHash', error);
@@ -450,12 +453,22 @@ export class Helpers {
     }
 
     /** Stringifies Maps and BigInts */
-    static stringifyCallbackCustom(key: any, value: any): any {
+    static stringifyMapsAndBigints(key: any, value: any): any {
         key;
         if (typeof value === 'bigint')
             return value.toString();
         if (value instanceof Map)
             return [...value];
         return value;
+    }
+
+    /** Stringifies Database Rows, removing *Orig keys */
+    static stringifyDatabaseRow(key: any, value: any): any {
+        /* istanbul ignore else */
+        if (typeof key === 'string') {
+            if (key.endsWith('Orig'))
+                return undefined;
+        }
+        return Helpers.stringifyMapsAndBigints(key, value);
     }
 }
