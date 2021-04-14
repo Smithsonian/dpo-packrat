@@ -1,4 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable  react/jsx-max-props-per-line */
+
 /**
  * ModelDetails
  *
@@ -90,11 +92,11 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
 </FieldType> */}
 
                 <FieldType required label='Master Model' direction='row' containerProps={rowFieldProps}>
-                    <Checkbox name='master' checked={true} color='primary' onChange={setCheckboxField} />
+                    <Checkbox name='master' checked color='primary' onChange={setCheckboxField} />
                 </FieldType>
 
                 <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
-                    <Checkbox name='authoritative' checked={true} color='primary' onChange={setCheckboxField} />
+                    <Checkbox name='authoritative' checked color='primary' onChange={setCheckboxField} />
                 </FieldType>
 
                 <SelectField

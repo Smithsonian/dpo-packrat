@@ -49,7 +49,7 @@ export function extractModelConstellation(data: any) {
             ingestionModel: {},
             modelObjects: [],
             assets: []
-        }
+        };
     }
     const { Model, ModelObjectModelMaterialXref, ModelAssets, ModelObjects, ModelMaterialChannels, ModelMaterials } = data;
     const modelObjects: any = [];
