@@ -299,7 +299,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let idAsset: number = 0;
         let idAssetVersion: number = 0;
 
-        const model: DBAPI.Model = await JobCookSIPackratInspectOutput.createModel(++idModel, modelStats, fileName, dateCreated);
+        const model: DBAPI.Model = await JobCookSIPackratInspectOutput.createModel(++idModel, modelStats, sourceMeshFile ? sourceMeshFile : fileName, dateCreated);
 
         if (sourceMeshFile) {
             if (!modelAssets)
