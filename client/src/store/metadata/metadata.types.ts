@@ -89,7 +89,7 @@ export type ModelFields = {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
     sourceObjects: StateRelatedObject[];
-    dateCaptured: Date;
+    dateCaptured: Date | string | null;
     creationMethod: number | null;
     master: boolean;
     authoritative: boolean;
