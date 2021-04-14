@@ -35,7 +35,7 @@ const useStyles = makeStyles(theme => ({
     },
     indentedFields: {
         '& > *': {
-            textIndent: '30px',
+            textIndent: '15px',
             minHeight: '20px',
             borderBottom: '0.5px solid #D8E5EE',
             borderTop: '0.5px solid #D8E5EE'
@@ -66,11 +66,18 @@ const useStyles = makeStyles(theme => ({
     ObjectMeshContainer: {
         borderRadius: 5,
         padding: 10,
-        paddingTop: 15,
         backgroundColor: theme.palette.primary.light,
         width: 'fit-content',
         display: 'flex',
         flexDirection: 'column'
+    },
+    captionContainer: {
+        flex: '1 1 0%',
+        width: '92%',
+        display: 'flex',
+        marginBottom: '8px',
+        flexDirection: 'row',
+        color: '#2C405A'
     }
 }));
 
@@ -88,7 +95,9 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
     const classes = useStyles();
     return (
         <Box className={classes.ObjectMeshContainer}>
-            <Typography variant='caption'>Mesh and Material</Typography>
+            <Box className={classes.captionContainer}>
+                <Typography variant='caption'>Material and Mesh</Typography>
+            </Box>
             <Box className={classes.objectMeshTable}>
                 {modelObjects.map(modelObject => {
                     return (

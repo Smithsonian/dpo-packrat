@@ -51,7 +51,6 @@ const useStyles = makeStyles(theme => ({
     ModelMetricsAndFormContainer: {
         borderRadius: 5,
         padding: 10,
-        paddingTop: 15,
         backgroundColor: theme.palette.primary.light,
         width: 'fit-content',
         display: 'flex',
@@ -61,10 +60,17 @@ const useStyles = makeStyles(theme => ({
         display: 'flex',
         flexDirection: 'row',
         borderRadius: 5,
-        paddingTop: 5,
         backgroundColor: theme.palette.primary.light,
         width: 'auto',
         justifyContent: 'space-around'
+    },
+    captionContainer: {
+        flex: '1 1 0%',
+        width: '92%',
+        display: 'flex',
+        marginBottom: '8px',
+        flexDirection: 'row',
+        color: '#2C405A'
     }
 }));
 
@@ -96,7 +102,8 @@ function Model(props: ModelProps): React.ReactElement {
         CountMeshes: null,
         CountEmbeddedTextures: null,
         CountLinkedTextures: null,
-        FileEncoding: ''
+        FileEncoding: '',
+        idVFileType: null
     });
     const [assetFiles, setAssetFiles] = useState([{ assetName: '', assetType: '' }]);
     const [modelObjects, setModelObjects] = useState<any>([
@@ -143,6 +150,7 @@ function Model(props: ModelProps): React.ReactElement {
                 const modelConstellation = data.getModelConstellationForAssetVersion.ModelConstellation;
                 const { ingestionModel, modelObjects, assets } = extractModelConstellation(modelConstellation);
                 updateMetadataField(metadataIndex, 'name', modelConstellation.Model.Name, MetadataType.model);
+                updateMetadataField(metadataIndex, 'modelFileType', modelConstellation.Model.idVFileType, MetadataType.model);
                 setIngestionModel(ingestionModel);
                 setModelObjects(modelObjects);
                 setAssetFiles(assets);
@@ -240,16 +248,16 @@ function Model(props: ModelProps): React.ReactElement {
                 </Box>
                 {/* Start of data-entry form */}
                 <Box className={classes.ModelMetricsAndFormContainer}>
-                    <Typography variant='caption'>Model</Typography>
+                    <Box className={classes.captionContainer}>
+                        <Typography variant='caption'>Model</Typography>
+                    </Box>
+
                     <Box className={classes.modelMetricsAndForm}>
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
                             <InputField required type='string' label='Name' value={model.name} name='name' onChange={setNameField} />
 
                             <FieldType error={errors.model.dateCaptured} required label='Date Created' direction='row' containerProps={rowFieldProps}>
-                                <DateInputField
-                                    value={model.dateCaptured.toString() === new Date('January 1, 1970 01:00:01').toString() ? null : model.dateCaptured}
-                                    onChange={(_, value) => setDateField('dateCaptured', value)}
-                                />
+                                <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
                             </FieldType>
 
                             <FieldType required label='Master Model' direction='row' containerProps={rowFieldProps}>
