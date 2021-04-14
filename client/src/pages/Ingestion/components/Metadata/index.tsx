@@ -144,7 +144,7 @@ function Metadata(): React.ReactElement {
         }
 
         if (assetType.model) {
-            return <Model metadataIndex={metadataIndex} />;
+            return <Model metadataIndex={metadataIndex} onPrevious={onPrevious} onClickRight={onNext} isLast={isLast} rightLoading={ingestionLoading} />;
         }
 
         return <Other metadataIndex={metadataIndex} />;
