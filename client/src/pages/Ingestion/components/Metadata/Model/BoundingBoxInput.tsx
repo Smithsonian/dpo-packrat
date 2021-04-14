@@ -9,12 +9,12 @@
 import { Box } from '@material-ui/core';
 import React from 'react';
 import { DebounceNumberInput, FieldType } from '../../../../../components';
-import { ModelDetailFields } from '../../../../../types/graphql';
+// import { ModelDetailFields } from '../../../../../types/graphql';
 import { ViewableProps } from '../../../../../types/repository';
 import { isFieldUpdated } from '../../../../../utils/repository';
 
 interface BoundingBoxInputProps extends ViewableProps {
-    modelFields?: ModelDetailFields | null;
+    modelFields?: null;
     boundingBoxP1X?: number | null;
     boundingBoxP1Y?: number | null;
     boundingBoxP1Z?: number | null;

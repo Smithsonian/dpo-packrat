@@ -69,7 +69,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 datasetType: false
             },
             model: {
-                dateCaptured: false,
+                dateCaptured: true,
                 creationMethod: false,
                 modality: false,
                 units: false,
@@ -89,7 +89,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         }
 
         if (assetType.model) {
-            errors.model.dateCaptured = metadata.model.dateCaptured.toString() === 'Invalid Date';
+            errors.model.dateCaptured = metadata.model.dateCaptured.toString() === 'Invalid Date' || metadata.model.dateCaptured.toString() === new Date('January 1, 1970 01:00:01').toString();
             errors.model.creationMethod = lodash.isNull(metadata.model.creationMethod);
             errors.model.modality = lodash.isNull(metadata.model.modality);
             errors.model.units = lodash.isNull(metadata.model.units);
@@ -156,14 +156,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         const idAssetVersions: number[] = lodash.map(selectedFiles, ({ id }) => parseFileId(id));
 
-        const defaultIdentifier: StateIdentifier = {
-            id: 0,
-            identifier: '',
-            identifierType: getInitialEntry(eVocabularySetID.eIdentifierIdentifierType),
-            selected: false
-        };
 
-        const defaultIdentifierField = [defaultIdentifier];
+        const defaultIdentifierField: StateIdentifier[] = [];
 
         const defaultPhotogrammetry: PhotogrammetryFields = {
             ...defaultPhotogrammetryFields,
