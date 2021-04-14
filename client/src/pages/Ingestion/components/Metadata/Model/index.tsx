@@ -8,10 +8,10 @@
  */
 import { Box, Checkbox, makeStyles } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
-import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow } from '../../../../../components';
+import { AssetIdentifiers, DateInputField, FieldType, InputField, SelectField, ReadOnlyRow, SidebarBottomNavigator } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
-import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery /*, useGetModelConstellationQuery */ } from '../../../../../types/graphql';
+import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../../types/server';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
@@ -55,21 +55,24 @@ const useStyles = makeStyles(theme => ({
     },
     objectMeshTable: {
         display: 'flex',
-        justifyContent: 'space-evenly',
         borderRadius: 5,
         padding: 10,
         backgroundColor: theme.palette.primary.light,
-        width: '75%',
-        maxWidth: '800px'
+        // width: 'auto',
+        width: '100%'
     }
 }));
 
 interface ModelProps {
     readonly metadataIndex: number;
+    onPrevious: () => void;
+    onClickRight: () => Promise<void>;
+    isLast: boolean;
+    rightLoading: boolean;
 }
 
 function Model(props: ModelProps): React.ReactElement {
-    const { metadataIndex } = props;
+    const { metadataIndex, onPrevious, onClickRight, isLast, rightLoading } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { model } = metadata;
@@ -210,7 +213,6 @@ function Model(props: ModelProps): React.ReactElement {
     };
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between' };
-
     return (
         <React.Fragment>
             <Box className={classes.container}>
@@ -228,14 +230,19 @@ function Model(props: ModelProps): React.ReactElement {
                 <Box mb={2}>
                     <RelatedObjectsList type={RelatedObjectType.Source} relatedObjects={model.sourceObjects} onAdd={openSourceObjectModal} onRemove={onRemoveSourceObject} />
                 </Box>
-
+                <Box mb={2}>
+                    <AssetFilesTable files={assetFiles} />
+                </Box>
                 {/* Start of data-entry form */}
                 <Box display='flex' flexDirection='row' mb={2}>
                     <Box display='flex' flexDirection='column' className={classes.dataEntry} mr={2}>
                         <InputField required type='string' label='Name' value={model.name} name='name' onChange={setNameField} />
 
-                        <FieldType error={errors.model.dateCaptured} required label='Date Captured' direction='row' containerProps={rowFieldProps}>
-                            <DateInputField value={model.dateCaptured} onChange={(_, value) => setDateField('dateCaptured', value)} />
+                        <FieldType error={errors.model.dateCaptured} required label='Date Created' direction='row' containerProps={rowFieldProps}>
+                            <DateInputField
+                                value={model.dateCaptured.toString() === new Date('January 1, 1970 01:00:01').toString() ? null : model.dateCaptured}
+                                onChange={(_, value) => setDateField('dateCaptured', value)}
+                            />
                         </FieldType>
 
                         <FieldType required label='Master Model' direction='row' containerProps={rowFieldProps}>
@@ -312,14 +319,16 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                     {/* End of  model-level metrics form */}
                 </Box>
-
-                <Box mb={2}>
-                    <AssetFilesTable files={assetFiles} />
-                </Box>
-
-                <Box display='flex' flexDirection='row' className={classes.objectMeshTable}>
-                    <ObjectMeshTable modelObjects={modelObjects} />
-                </Box>
+                <SidebarBottomNavigator
+                    rightLoading={rightLoading}
+                    leftLabel='Previous'
+                    onClickLeft={onPrevious}
+                    rightLabel={isLast ? 'Finish' : 'Next'}
+                    onClickRight={onClickRight}
+                />
+                {/* <Box display='flex' flexDirection='row' className={classes.objectMeshTable}> */}
+                <ObjectMeshTable modelObjects={modelObjects} />
+                {/* </Box> */}
             </Box>
             <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={model.sourceObjects} />
         </React.Fragment>

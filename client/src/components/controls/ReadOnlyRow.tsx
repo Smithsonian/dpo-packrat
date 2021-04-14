@@ -21,9 +21,9 @@ function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
     return (
-        <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps} width={'auto'}>
-            <Box display='flex' flexDirection='row' whiteSpace='nowrap'>
-                <Typography style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A' }}>{value}</Typography>
+        <FieldType required={false} label={label} direction='row' containerProps={rowFieldProps} width='auto'>
+            <Box display='flex' flexDirection='row' whiteSpace='normal' width='60px'>
+                <Typography style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', color: '#2C405A', fontSize: '12px' }}>{value}</Typography>
             </Box>
         </FieldType>
     );

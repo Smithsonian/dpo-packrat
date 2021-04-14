@@ -1,4 +1,4 @@
-import { Box, Checkbox, Typography } from '@material-ui/core';
+import { Box, Checkbox, Typography, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import lodash from 'lodash';
 import React from 'react';
@@ -11,12 +11,19 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     assetIdentifier: {
         display: 'flex',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 10
     },
     systemCreatedText: {
         marginLeft: spacing(2),
         fontStyle: 'italic',
         color: palette.primary.contrastText
+    },
+    addIdentifierButton: {
+        height: 30,
+        width: 80,
+        fontSize: '0.8em',
+        color: '#FFFFFF',
+        backgroundColor: '#0079C4'
     }
 }));
 
@@ -67,15 +74,26 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
     return (
         <Box marginBottom='10px'>
             <FieldType required label='Asset Identifier(s)'>
-                <Box className={classes.assetIdentifier}>
-                    <Checkbox
-                        name='systemCreated'
-                        checked={systemCreated}
-                        color='primary'
-                        onChange={onSystemCreatedChange}
-                    />
-                    <Typography className={classes.systemCreatedText} variant='body1'>System will create an identifier</Typography>
+                <Box display='flex' justifyContent='space-between'>
+                    <Box className={classes.assetIdentifier}>
+                        <Checkbox name='systemCreated' checked={systemCreated} color='primary' onChange={onSystemCreatedChange} />
+                        <Typography className={classes.systemCreatedText} variant='body1'>
+                            System will create an identifier
+                        </Typography>
+                    </Box>
+                    {!identifiers.length && (
+                        <Button
+                            className={classes.addIdentifierButton}
+                            variant='contained'
+                            onClick={() => {
+                                addIdentifer(getEntries(eVocabularySetID.eIdentifierIdentifierType)[0].idVocabulary);
+                            }}
+                        >
+                            Add
+                        </Button>
+                    )}
                 </Box>
+
                 <IdentifierList
                     identifiers={identifiers}
                     identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}

@@ -80,7 +80,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
         case eSystemObjectType.eModel:
             if (systemObject?.idModel) {
                 // result.Model = await getModelDetailFields(systemObject.idModel);
-                result.Model = await DBAPI.ModelConstellation.fetch(systemObject?.idModel);
+                result.Model = await DBAPI.ModelConstellation.fetch(systemObject.idModel);
             }
             break;
         case eSystemObjectType.eScene:
