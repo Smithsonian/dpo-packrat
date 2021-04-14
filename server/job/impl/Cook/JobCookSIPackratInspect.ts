@@ -113,7 +113,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (!mappedId) // try again, with just filename
                     mappedId = assetMap.get(path.basename(modelAsset.Asset.FileName));
                 if (!mappedId) {
-                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.stringifyCallbackCustom)}`;
+                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.stringifyMapsAndBigints)}`;
                     LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
                     // return { success: false, error };
                     continue;

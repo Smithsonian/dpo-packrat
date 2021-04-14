@@ -359,7 +359,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
         ? await createRandomFile(directoryName, fileName, fileSize) // create a file
         : path.join(directoryName, fileName);                       // just yield a filename
 
-    let inputStream: NodeJS.ReadStream | null = null;
+    let inputStream: fs.ReadStream | null = null;
     if (useInputStream)
         inputStream = fs.createReadStream(pathOnDisk);
 
