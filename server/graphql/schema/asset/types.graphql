@@ -25,7 +25,7 @@ type AssetVersion {
     StorageSize: BigInt!
     StorageKeyStaging: String!
     FileName: String!
-    Ingested: Boolean!
+    Ingested: Boolean
     Version: Int!
     Asset: Asset
     User: User

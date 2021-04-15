@@ -606,7 +606,7 @@ export type AssetVersion = {
   StorageSize: Scalars['BigInt'];
   StorageKeyStaging: Scalars['String'];
   FileName: Scalars['String'];
-  Ingested: Scalars['Boolean'];
+  Ingested?: Maybe<Scalars['Boolean']>;
   Version: Scalars['Int'];
   Asset?: Maybe<Asset>;
   User?: Maybe<User>;

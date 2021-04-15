@@ -98,9 +98,14 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
 
                             const workflow: WF.IWorkflow | null = await workflowEngine.event(CACHE.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion, workflowParams);
                             const results = workflow ? await workflow.waitForCompletion(3600000) : { success: true, error: '' };
-                            if (results.success)
+                            if (results.success) {
                                 idAssetVersions.push(assetVersion.idAssetVersion);
-                            else {
+                                if (assetVersion.Ingested === null) {
+                                    assetVersion.Ingested = false;
+                                    if (!await assetVersion.update())
+                                        LOG.logger.error('GQL uploadAsset post-upload workflow suceeded, but unable to update asset version ingested flag');
+                                }
+                            } else {
                                 LOG.logger.error(`GQL uploadAsset post-upload workflow error: ${results.error}`);
                                 const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
                                 if (SO) {

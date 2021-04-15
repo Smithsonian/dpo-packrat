@@ -610,7 +610,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             StorageHash: '',
             StorageSize: BigInt(0),
             StorageKeyStaging: '',
-            Ingested: false,
+            Ingested: null,
             BulkIngest: false,
             idAssetVersion
         });

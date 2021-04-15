@@ -319,7 +319,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 if (data.AssetVersion) {
                     const { Ingested } = data.AssetVersion;
-                    if (!isNull(Ingested) && !isUndefined(Ingested)) AssetVersion.Ingested = Ingested;
+                    if (!isUndefined(Ingested))
+                        AssetVersion.Ingested = Ingested;
                 }
 
                 await AssetVersion.update();
