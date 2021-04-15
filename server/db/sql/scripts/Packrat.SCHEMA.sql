@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS `CaptureDataFile` (
   `idCaptureDataFile` int(11) NOT NULL AUTO_INCREMENT,
   `idCaptureData` int(11) NOT NULL,
   `idAsset` int(11) NOT NULL,
-  `idVVariantType` int(11) NOT NULL,
+  `idVVariantType` int(11) NULL,
   `CompressedMultipleFiles` boolean NOT NULL,
   PRIMARY KEY (`idCaptureDataFile`),
   KEY `CaptureDataFile_idCaptureData` (`idCaptureData`),

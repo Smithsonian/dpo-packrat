@@ -414,17 +414,23 @@ async function createPhotogrammetryDerivedObjects(assetVersionMap: Map<number, D
         }
 
         const folderVariantMap: Map<string, number> = new Map<string, number>(); // map of normalized folder name to variant vocabulary id
-        for (const folder of ingestPhotogrammetry.folders)
+        for (const folder of ingestPhotogrammetry.folders) {
             folderVariantMap.set(folder.name.toLowerCase(), folder.variantType);
+            // LOG.logger.info(`GQL ingestData mapping ${folder.name.toLowerCase()} -> ${folder.variantType}`);
+        }
 
         for (const asset of ingestAssetRes.assets || []) {
-            let lastSlash: number = asset.FilePath.lastIndexOf('/');
-            if (lastSlash === -1)
-                lastSlash = asset.FilePath.lastIndexOf('\\');
-            const variantPath = asset.FilePath.substring(lastSlash + 1).toLowerCase();
+            // map asset's file path to variant type
+            let idVVariantType: number = folderVariantMap.get(asset.FilePath.toLowerCase()) || 0;
+            if (!idVVariantType) {  // if that failed, try again with the last part of the path
+                let lastSlash: number = asset.FilePath.lastIndexOf('/');
+                if (lastSlash === -1)
+                    lastSlash = asset.FilePath.lastIndexOf('\\');
+                const variantPath = asset.FilePath.substring(lastSlash + 1).toLowerCase();
 
-            const idVVariantType: number = folderVariantMap.get(variantPath) || 0;
-            LOG.logger.info(`GQL ingestData mapped ${asset.FilePath} to variant ${idVVariantType}`);
+                idVVariantType = folderVariantMap.get(variantPath) || 0;
+            }
+            // LOG.logger.info(`GQL ingestData mapped ${asset.FilePath} to variant ${idVVariantType}`);
 
             const CDF: DBAPI.CaptureDataFile = new DBAPI.CaptureDataFile({
                 idCaptureData: SOBased.idCaptureData,

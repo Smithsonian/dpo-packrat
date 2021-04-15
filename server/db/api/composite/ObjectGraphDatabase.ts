@@ -337,7 +337,8 @@ export class ObjectGraphDatabase {
                     if (captureDataFiles) {
                         objectGraphState.variantTypes = new Map<number, boolean>();
                         for (const captureDataFile of captureDataFiles)
-                            objectGraphState.variantTypes.set(captureDataFile.idVVariantType, true);
+                            if (captureDataFile.idVVariantType)
+                                objectGraphState.variantTypes.set(captureDataFile.idVVariantType, true);
                     }
                 } else
                     LOG.logger.error(`ObjectGraphDatabase.applyGraphData() Unable to load CaptureData from ${systemObjectIDType}`);

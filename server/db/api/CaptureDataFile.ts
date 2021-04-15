@@ -8,13 +8,17 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
     CompressedMultipleFiles!: boolean;
     idAsset!: number;
     idCaptureData!: number;
-    idVVariantType!: number;
+    idVVariantType!: number | null;
+
+    private idVVariantTypeOrig!: number | null;
 
     constructor(input: CaptureDataFileBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    protected updateCachedValues(): void {
+        this.idVVariantTypeOrig = this.idVVariantType;
+    }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -25,7 +29,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
                     data: {
                         CaptureData:    { connect: { idCaptureData }, },
                         Asset:          { connect: { idAsset }, },
-                        Vocabulary:     { connect: { idVocabulary: idVVariantType }, },
+                        Vocabulary:     idVVariantType ? { connect: { idVocabulary: idVVariantType }, } : undefined,
                         CompressedMultipleFiles
                     },
                 }));
@@ -38,13 +42,13 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idCaptureDataFile, idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = this;
+            const { idCaptureDataFile, idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles, idVVariantTypeOrig } = this;
             return await DBC.DBConnection.prisma.captureDataFile.update({
                 where: { idCaptureDataFile, },
                 data: {
                     CaptureData:    { connect: { idCaptureData }, },
                     Asset:          { connect: { idAsset }, },
-                    Vocabulary:     { connect: { idVocabulary: idVVariantType }, },
+                    Vocabulary:     idVVariantType ? { connect: { idVocabulary: idVVariantType }, } : idVVariantTypeOrig ? { disconnect: true, } : undefined,
                     CompressedMultipleFiles
                 },
             }) ? true : /* istanbul ignore next */ false;

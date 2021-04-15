@@ -4893,6 +4893,34 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: CaptureDataFile.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (captureDataFile) {
+            captureDataFile.idVVariantType = null;
+            bUpdated = await captureDataFile.update();
+
+            const captureDataFileFetch: DBAPI.CaptureDataFile | null = await DBAPI.CaptureDataFile.fetch(captureDataFile.idCaptureDataFile);
+            expect(captureDataFileFetch).toBeTruthy();
+            if (captureDataFileFetch)
+                expect(captureDataFileFetch.idVVariantType).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: CaptureDataFile.update when null', async () => {
+        let bUpdated: boolean = false;
+        if (captureDataFile) {
+            captureDataFile.CompressedMultipleFiles = true;
+            bUpdated = await captureDataFile.update();
+
+            const captureDataFileFetch: DBAPI.CaptureDataFile | null = await DBAPI.CaptureDataFile.fetch(captureDataFile.idCaptureDataFile);
+            expect(captureDataFileFetch).toBeTruthy();
+            if (captureDataFileFetch)
+                expect(captureDataFileFetch.CompressedMultipleFiles).toEqual(true);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: CaptureDataGroup.update', async () => {
         let bUpdated: boolean = false;
         if (captureDataGroup) {
