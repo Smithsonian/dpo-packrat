@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   `StorageHash` varchar(128) CHARACTER SET 'LATIN1' NOT NULL,
   `StorageSize` bigint(20) NOT NULL DEFAULT 0,
   `StorageKeyStaging` varchar(512) CHARACTER SET 'LATIN1' NOT NULL,
-  `Ingested` boolean NOT NULL,
+  `Ingested` boolean DEFAULT NULL,
   `BulkIngest` boolean NOT NULL,
   PRIMARY KEY (`idAssetVersion`),
   KEY `AssetVersion_idAsset_Version` (`idAsset`,`Version`),

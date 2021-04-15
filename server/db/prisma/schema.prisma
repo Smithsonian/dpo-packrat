@@ -122,7 +122,7 @@ model AssetVersion {
   StorageHash       String        @mariasql.VarChar(128)
   StorageSize       BigInt        @default(0)
   StorageKeyStaging String        @mariasql.VarChar(512)
-  Ingested          Boolean
+  Ingested          Boolean?
   BulkIngest        Boolean
   Asset             Asset         @relation(fields: [idAsset], references: [idAsset])
   User              User          @relation(fields: [idUserCreator], references: [idUser])

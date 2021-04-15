@@ -4803,30 +4803,6 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
-    test('DB Creation: AssetVersion.delete', async () => {
-        let assetVersion3: DBAPI.AssetVersion | null = null;
-        if (assetThumbnail && userActive) {
-            assetVersion3 = await UTIL.createAssetVersionTest({
-                idAsset: assetThumbnail.idAsset,
-                Version: 0,
-                FileName: assetThumbnail.FileName,
-                idUserCreator: userActive.idUser,
-                DateCreated: UTIL.nowCleansed(),
-                StorageHash: 'Asset Checksum',
-                StorageSize: BigInt(50),
-                StorageKeyStaging: '',
-                Ingested: true,
-                BulkIngest: false,
-                idAssetVersion: 0
-            });
-
-            const idAssetVersion: number = assetVersion3.idAssetVersion;
-            expect(idAssetVersion).toBeTruthy();
-        }
-        expect(assetVersion3).toBeTruthy();
-    });
-
-
     test('DB Update: CaptureData.update', async () => {
         let bUpdated: boolean = false;
         if (captureData && assetWithoutAG) {

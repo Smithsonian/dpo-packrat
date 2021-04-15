@@ -14,7 +14,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     StorageHash!: string;
     StorageSize!: bigint;
     StorageKeyStaging!: string;
-    Ingested!: boolean;
+    Ingested!: boolean | null;  // null means uploaded, not processed; false means uploaded and processed, true means uploaded, processed, and ingested
     BulkIngest!: boolean;
 
     constructor(input: AssetVersionBase) {
@@ -31,7 +31,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             StorageHash: assetVersion.StorageHash,
             StorageSize: BigInt(assetVersion.StorageSize),
             StorageKeyStaging: assetVersion.StorageKeyStaging,
-            Ingested: assetVersion.Ingested ? true : false,
+            Ingested: (assetVersion.Ingested === null) ? null : (assetVersion.Ingested ? true : false), // we're expecting Prisma to send values like null, 0, and 1
             BulkIngest: assetVersion.BulkIngest ? true : false,
             Version: assetVersion.Version
         });
@@ -142,26 +142,6 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         }
     }
 
-    /*
-    async delete(): Promise<boolean> {
-        const { idAssetVersion } = this;
-        if (!idAssetVersion)
-            return false;
-        try {
-            const delSysObj: SystemObjectBase | null = await DBC.DBConnection.prisma.systemObject.delete({ where: { idAssetVersion, }, });
-            if (!delSysObj) {
-                LOG.logger.error(`DBAPI.AssetVersion.delete unable to delete system object related to ${JSON.stringify(this)}`);
-                return false;
-            }
-
-            const delAV: AssetVersionBase | null = await DBC.DBConnection.prisma.assetVersion.delete({ where: { idAssetVersion, }, });
-            return (delAV != null);
-        } catch (error) {
-            LOG.logger.error('DBAPI.AssetVersion.delete', error);
-            return false;
-        }
-    }
-    */
     static async fetch(idAssetVersion: number): Promise<AssetVersion | null> {
         if (!idAssetVersion)
             return null;
@@ -271,7 +251,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     }
 
     /** Pass in a value for Retired if you need to seek only asset versions that have or have not been retired */
-    static async fetchFromUserByIngested(idUserCreator: number, Ingested: boolean, Retired: boolean | null = null): Promise<AssetVersion[] | null> {
+    static async fetchFromUserByIngested(idUserCreator: number, Ingested: boolean | null, Retired: boolean | null = null): Promise<AssetVersion[] | null> {
         if (!idUserCreator)
             return null;
         try {
@@ -302,7 +282,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         }
     }
 
-    static async fetchByIngested(Ingested: boolean): Promise<AssetVersion[] | null> {
+    static async fetchByIngested(Ingested: boolean | null): Promise<AssetVersion[] | null> {
         try {
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { Ingested } }), AssetVersion);
