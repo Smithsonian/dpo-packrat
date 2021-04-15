@@ -38,6 +38,8 @@ export class ZipFile implements IZip {
                             for (const entry of Object.values(this._zip.entries())) { /* istanbul ignore next */
                                 if (entry.name.toUpperCase().startsWith('__MACOSX')) // ignore wacky MAC OSX resource folder stuffed into zips created on that platform
                                     continue;
+                                if (entry.name.toUpperCase().endsWith('/.DS_STORE')) // ignore wacky MAC OSX resource file stuffed into zips created on that platform
+                                    continue;
                                 this._entries.push(entry.name);
                                 if (entry.isDirectory)
                                     this._dirs.push(entry.name);

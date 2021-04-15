@@ -17,8 +17,8 @@ import * as path from 'path';
 
 export class JobCookSIPackratInspectParameters {
     constructor(sourceMeshFile: string, sourceMaterialFiles: string | undefined = undefined) {
-        this.sourceMeshFile = sourceMeshFile;
-        this.sourceMaterialFiles = sourceMaterialFiles;
+        this.sourceMeshFile = path.basename(sourceMeshFile);
+        this.sourceMaterialFiles = sourceMaterialFiles ? path.basename(sourceMaterialFiles) : undefined;
     }
     sourceMeshFile: string;
     sourceMaterialFiles?: string | undefined;
@@ -670,7 +670,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 return false;
             }
 
-            this.parameters.sourceMeshFile = file;
+            this.parameters.sourceMeshFile = path.basename(file);
             this._streamOverrideMap.set(this._idAssetVersions[0], {
                 readStream,
                 fileName: file,
