@@ -1,4 +1,4 @@
-import { Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Item, Model,
+import { Actor, Asset, AssetVersion, CaptureData, Identifier, IntermediaryFile, Item, Model,
     Project, ProjectDocumentation, Scene, Stakeholder, Subject, SystemObject,
     SystemObjectPairs, Unit, eSystemObjectType } from '../..';
 import * as LOG from '../../../utils/logger';
@@ -16,6 +16,33 @@ export enum eObjectGraphMode {
     eDescendents,
     eAll
 }
+
+export type ObjectGraphSubjectIdentifier = {
+    idSubject: number;
+    idAssetThumbnail: number | null;
+    idGeoLocation: number | null;
+    idUnit: number;
+    Name: string;
+    idIdentifierPreferred: number | null;
+    identifier: string | null;
+};
+
+export type ObjectGraphToPersist = {
+    idSystemObject: number;
+    unit: Unit[] | undefined;
+    project: Project[] | undefined;
+    subject: ObjectGraphSubjectIdentifier[] | undefined;
+    item: Item[] | undefined;
+    captureData: CaptureData[] | undefined;
+    model: Model[] | undefined;
+    scene: Scene[] | undefined;
+    intermediaryFile: IntermediaryFile[] | undefined;
+    projectDocumentation: ProjectDocumentation[] | undefined;
+    asset: Asset[] | undefined;
+    assetVersion: AssetVersion[] | undefined;
+    actor: Actor[] | undefined;
+    stakeholder: Stakeholder[] | undefined;
+};
 
 export class ObjectGraph {
     idSystemObject: number = 0;
@@ -70,6 +97,46 @@ export class ObjectGraph {
                 return await this.fetchWorker(this.idSystemObject, null, eObjectGraphMode.eDescendents, this.depth);
             }
         }
+    }
+
+    /** Provides a trimmed down representation of an ObjectGraph that is appropriate for
+     * persistence as a file, part of an OCFL Object storage. We remove internal data elements
+     * needed for calculations, and we hide empty elements by emitting undefined. Finally, we
+     * extend the representation of subjects with their preferred identifiers.
+     */
+    async toPersist(): Promise<ObjectGraphToPersist> {
+        let subject: ObjectGraphSubjectIdentifier[] | undefined = undefined;
+        if (this.subject) {
+            subject = [];
+            for (const sub of this.subject) {
+                let identifier: string | null = null;
+                if (sub.idIdentifierPreferred) {
+                    const identifierDB = await Identifier.fetch(sub.idIdentifierPreferred);
+                    if (identifierDB)
+                        identifier = identifierDB.IdentifierValue;
+                    else
+                        LOG.logger.error(`ObjectGraph.toPersist unable to fetch identifier for subject ${JSON.stringify(sub)}`);
+                }
+                subject.push({ ...sub, identifier });
+            }
+        }
+
+        return {
+            idSystemObject: this.idSystemObject,
+            unit: this.unit || undefined,
+            project: this.project || undefined,
+            subject,
+            item: this.item || undefined,
+            captureData: this.captureData || undefined,
+            model: this.model || undefined,
+            scene: this.scene || undefined,
+            intermediaryFile: this.intermediaryFile || undefined,
+            projectDocumentation: this.projectDocumentation || undefined,
+            asset: this.asset || undefined,
+            assetVersion: this.assetVersion || undefined,
+            actor: this.actor || undefined,
+            stakeholder: this.stakeholder || undefined,
+        };
     }
 
     // Expected types of hierarchies:
