@@ -13,6 +13,7 @@ import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions } from '
 import { Writable } from 'stream';
 import axios, { AxiosResponse } from 'axios';
 import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
+import * as path from 'path';
 
 const CookWebDAVSimultaneousTransfers: number = 2;
 const CookRequestRetryCount: number = 3;
@@ -298,8 +299,11 @@ export abstract class JobCook<T> extends JobPackrat {
                     if (!RSR.success || !RSR.readStream || !RSR.fileName)
                         return { success: false, error: `JobCook.stageFiles unable to read asset version ${idAssetVersion}: ${RSR.error}` };
 
+                    // handle the fact that our asset may be stuffed into a subfolder (due to it being zipped)
+                    const fileName: string = path.basename(RSR.fileName);
+
                     // transmit file to Cook work folder via WebDAV
-                    const destination: string = `/${this._configuration.jobId}/${RSR.fileName}`;
+                    const destination: string = `/${this._configuration.jobId}/${fileName}`;
                     LOG.logger.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`);
 
                     const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl, {
@@ -314,7 +318,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     const res: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
 
                     if (!res.success) {
-                        const error = `JobCook.stageFiles unable to transmit file ${RSR.fileName} for asset version ${idAssetVersion}: ${res.error}`;
+                        const error = `JobCook.stageFiles unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
                         LOG.logger.error(error);
                         return { success: false, error };
                     }
@@ -336,10 +340,10 @@ export abstract class JobCook<T> extends JobPackrat {
                             const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
                             LOG.logger.info(`JobCook.stageFiles staging polling ${Config.job.cookServerUrl}${destination.substring(1)}: ${size} received vs ${res.size} transmitted`);
                             if (size >= res.size)
-                                return { success: baseName === RSR.fileName, error: '' };
+                                return { success: baseName === fileName, error: '' };
                             if (size === sizeLast) {
                                 if (++stuckCount >= 5)
-                                    return { success: false, error: `Unable to verify existence of staged file ${RSR.fileName}` };
+                                    return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
                             }
                             sizeLast = size;
                             await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
@@ -348,7 +352,7 @@ export abstract class JobCook<T> extends JobPackrat {
                             await H.Helpers.sleep(CookRetryDelay); // sleep for CookRetryDelay ms before retrying
                         }
                     }
-                    return { success: false, error: `Unable to verify existence of staged file ${RSR.fileName}` };
+                    return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
                 } catch (error) {
                     LOG.logger.error('JobCook.stageFiles', error);
                     return { success: false, error: JSON.stringify(error) };
