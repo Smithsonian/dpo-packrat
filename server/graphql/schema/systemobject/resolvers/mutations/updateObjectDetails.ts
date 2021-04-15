@@ -213,38 +213,36 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         } case eSystemObjectType.eModel: {
             if (data.Model) {
                 const Model = await DBAPI.Model.fetch(idObject);
-
                 if (Model) {
                     const {
-                        name,
-                        master,
-                        authoritative,
-                        creationMethod,
-                        modality,
-                        purpose,
-                        units,
-                        dateCaptured,
-                        size,
-                        modelFileType,
+                        Name,
+                        DateCaptured,
+                        Master,
+                        Authoritative,
+                        CreationMethod,
+                        Modality,
+                        Units,
+                        Purpose,
+                        ModelFileType
                     } = data.Model;
 
-                    if (name) Model.Name = name;
-                    if (master) Model.Master = master;
-                    if (authoritative) Model.Authoritative = authoritative;
-                    if (creationMethod) Model.idVCreationMethod = creationMethod;
-                    if (modality) Model.idVModality = modality;
-                    if (purpose) Model.idVPurpose = purpose;
-                    if (units) Model.idVUnits = units;
-                    if (modelFileType) Model.idVFileType = modelFileType;
-                    Model.DateCreated = new Date(dateCaptured);
+                    if (Name) Model.Name = Name;
+                    if (typeof Master === 'boolean') Model.Master = Master;
+                    if (typeof Authoritative === 'boolean') Model.Authoritative = Authoritative;
+                    if (CreationMethod) Model.idVCreationMethod = CreationMethod;
+                    if (Modality) Model.idVModality = Modality;
+                    if (Purpose) Model.idVPurpose = Purpose;
+                    if (Units) Model.idVUnits = Units;
+                    if (ModelFileType) Model.idVFileType = ModelFileType;
+                    Model.DateCreated = new Date(DateCaptured);
 
-                    if (Model.idAssetThumbnail) {
-                        const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(Model.idAssetThumbnail);
-                        if (AssetVersion && AssetVersion[0]) {
-                            const [AV] = AssetVersion;
-                            if (size) AV.StorageSize = size;
-                        }
-                    }
+                    // if (Model.idAssetThumbnail) {
+                    //     const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(Model.idAssetThumbnail);
+                    //     if (AssetVersion && AssetVersion[0]) {
+                    //         const [AV] = AssetVersion;
+                    //         if (size) AV.StorageSize = size;
+                    //     }
+                    // }
 
                     /*
                     // TODO: do we want to update the asset name?  I don't think so...
@@ -255,7 +253,15 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         await Asset.update();
                     }
                     */
-                    await Model.update();
+                    try {
+                        if (await Model.update()) {
+                            break;
+                        } else {
+                            throw new Error('error in updating');
+                        }
+                    } catch (error) {
+                        throw new Error(error);
+                    }
                 }
             }
             break;

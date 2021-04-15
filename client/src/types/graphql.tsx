@@ -1249,16 +1249,15 @@ export type CaptureDataDetailFieldsInput = {
 };
 
 export type ModelDetailFieldsInput = {
-  name?: Maybe<Scalars['String']>;
-  size?: Maybe<Scalars['BigInt']>;
-  master?: Maybe<Scalars['Boolean']>;
-  authoritative?: Maybe<Scalars['Boolean']>;
-  creationMethod?: Maybe<Scalars['Int']>;
-  modality?: Maybe<Scalars['Int']>;
-  purpose?: Maybe<Scalars['Int']>;
-  units?: Maybe<Scalars['Int']>;
-  dateCaptured?: Maybe<Scalars['DateTime']>;
-  modelFileType?: Maybe<Scalars['Int']>;
+  Name?: Maybe<Scalars['String']>;
+  Master?: Maybe<Scalars['Boolean']>;
+  Authoritative?: Maybe<Scalars['Boolean']>;
+  CreationMethod?: Maybe<Scalars['Int']>;
+  Modality?: Maybe<Scalars['Int']>;
+  Purpose?: Maybe<Scalars['Int']>;
+  Units?: Maybe<Scalars['Int']>;
+  DateCaptured?: Maybe<Scalars['DateTime']>;
+  ModelFileType?: Maybe<Scalars['Int']>;
 };
 
 export type SceneDetailFieldsInput = {

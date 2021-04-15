@@ -909,16 +909,15 @@ input CaptureDataDetailFieldsInput {
 }
 
 input ModelDetailFieldsInput {
-  name: String
-  size: BigInt
-  master: Boolean
-  authoritative: Boolean
-  creationMethod: Int
-  modality: Int
-  purpose: Int
-  units: Int
-  dateCaptured: DateTime
-  modelFileType: Int
+  Name: String
+  Master: Boolean
+  Authoritative: Boolean
+  CreationMethod: Int
+  Modality: Int
+  Purpose: Int
+  Units: Int
+  DateCaptured: DateTime
+  ModelFileType: Int
 }
 
 input SceneDetailFieldsInput {
