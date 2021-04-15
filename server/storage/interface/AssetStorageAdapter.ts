@@ -387,7 +387,7 @@ export class AssetStorageAdapter {
         const assetVersions: DBAPI.AssetVersion[] = [];
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${asset.FilePath}/` : '';
-        for (const entry of await zip.getAllEntries(null)) {
+        for (const entry of (bulkIngest ? await zip.getAllEntries(null) : await zip.getJustFiles(null))) {
             // LOG.logger.info(`Checking ${entry} for ${fileID}`);
             if (bulkIngest && !entry.includes(fileID)) // only process assets found in our path
                 continue;
@@ -505,7 +505,7 @@ export class AssetStorageAdapter {
     }
 
     private static async promoteAssetWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion,
-        metadata: DBAPI.ObjectGraph, opInfo: STORE.OperationInfo, inputStream: NodeJS.ReadableStream | null): Promise<AssetStorageResult> {
+        objectGraph: DBAPI.ObjectGraph, opInfo: STORE.OperationInfo, inputStream: NodeJS.ReadableStream | null): Promise<AssetStorageResult> {
 
         let storageKey: string = (asset.idAsset > 0 && asset.StorageKey) ? asset.StorageKey : '';
         if (!storageKey) {
@@ -522,7 +522,7 @@ export class AssetStorageAdapter {
             storageKeyFinal: storageKey,
             fileName: asset.FileName,
             inputStream,
-            metadata,
+            metadata: await objectGraph.toPersist(),
             opInfo
         };
 
@@ -535,8 +535,8 @@ export class AssetStorageAdapter {
         // Update Asset if new information is being provided here
         // StorageKey should be updated only the first time we ingest
         let updateAsset: boolean = false;
-        if (asset.idSystemObject != metadata.idSystemObject) {
-            asset.idSystemObject = metadata.idSystemObject;
+        if (asset.idSystemObject != objectGraph.idSystemObject) {
+            asset.idSystemObject = objectGraph.idSystemObject;
             updateAsset = true;
         }
         if (asset.StorageKey != storageKey) {
