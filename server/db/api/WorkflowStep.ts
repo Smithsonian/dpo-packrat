@@ -51,7 +51,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStep.create', error);
+            LOG.error('DBAPI.WorkflowStep.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -73,7 +73,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStep.update', error);
+            LOG.error('DBAPI.WorkflowStep.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -108,7 +108,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return DBC.CopyObject<WorkflowStepBase, WorkflowStep>(
                 await DBC.DBConnection.prisma.workflowStep.findUnique({ where: { idWorkflowStep, }, }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStep.fetch', error);
+            LOG.error('DBAPI.WorkflowStep.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -125,7 +125,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                     },
                 }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStep.fetchSystemObjectFromXref', error);
+            LOG.error('DBAPI.WorkflowStep.fetchSystemObjectFromXref', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -137,7 +137,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return DBC.CopyArray<WorkflowStepBase, WorkflowStep>(
                 await DBC.DBConnection.prisma.workflowStep.findMany({ where: { idUserOwner } }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStep.fetchFromUser', error);
+            LOG.error('DBAPI.WorkflowStep.fetchFromUser', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -149,7 +149,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return DBC.CopyArray<WorkflowStepBase, WorkflowStep>(
                 await DBC.DBConnection.prisma.workflowStep.findMany({ where: { idWorkflow } }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStep.fetchFromWorkflow', error);
+            LOG.error('DBAPI.WorkflowStep.fetchFromWorkflow', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -161,7 +161,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return DBC.CopyArray<WorkflowStepBase, WorkflowStep>(
                 await DBC.DBConnection.prisma.workflowStep.findMany({ where: { idJobRun } }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStep.fetchFromJobRun', error);
+            LOG.error('DBAPI.WorkflowStep.fetchFromJobRun', LOG.LS.eDB, error);
             return null;
         }
     }

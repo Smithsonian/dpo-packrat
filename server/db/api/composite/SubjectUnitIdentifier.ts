@@ -90,7 +90,7 @@ export class SubjectUnitIdentifier {
             ORDER BY S.idSubject
             LIMIT ${maxResults};`;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SubjectUnitIdentifier.fetch', error);
+            LOG.error('DBAPI.SubjectUnitIdentifier.fetch', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -84,7 +84,7 @@ export class ObjectGraph {
     async fetch(): Promise<boolean> {
         if (!this.idSystemObject)
             return true;
-        // LOG.logger.info(`OA: ${this.idSystemObject}`);
+        // LOG.info(`OA: ${this.idSystemObject}`, LOG.LS.eDB);
         switch (this.eMode) {
             case eObjectGraphMode.eAncestors:
             case eObjectGraphMode.eDescendents:
@@ -115,7 +115,7 @@ export class ObjectGraph {
                     if (identifierDB)
                         identifier = identifierDB.IdentifierValue;
                     else
-                        LOG.logger.error(`ObjectGraph.toPersist unable to fetch identifier for subject ${JSON.stringify(sub)}`);
+                        LOG.error(`ObjectGraph.toPersist unable to fetch identifier for subject ${JSON.stringify(sub)}`, LOG.LS.eDB);
                 }
                 subject.push({ ...sub, identifier });
             }
@@ -154,14 +154,14 @@ export class ObjectGraph {
         try {
             /* istanbul ignore if */
             if (eMode != eObjectGraphMode.eAncestors && eMode != eObjectGraphMode.eDescendents) {
-                LOG.logger.error(`DBAPI.ObjectGraph.fetchWorker called with invalid mode ${eMode}`);
+                LOG.error(`DBAPI.ObjectGraph.fetchWorker called with invalid mode ${eMode}`, LOG.LS.eDB);
                 return true;
             }
             // detect cycle; if so, record and short-circuit
             if (relatedType && idSystemObject == this.idSystemObject) {
                 this.noCycles = false;
                 this.validHierarchy = false;
-                LOG.logger.error(`DBAPI.ObjectGraph.fetchWorker Detected Cycle via ${idSystemObject}`);
+                LOG.error(`DBAPI.ObjectGraph.fetchWorker Detected Cycle via ${idSystemObject}`, LOG.LS.eDB);
                 return true;
             }
 
@@ -185,7 +185,7 @@ export class ObjectGraph {
             const SOP: SystemObjectPairs | null = await SystemObjectPairs.fetch(idSystemObject);
             /* istanbul ignore next */
             if (!SOP) {
-                LOG.logger.error(`DBAPI.ObjectGraph.fetchWorker Unidentified SystemObject ${idSystemObject}`);
+                LOG.error(`DBAPI.ObjectGraph.fetchWorker Unidentified SystemObject ${idSystemObject}`, LOG.LS.eDB);
                 return true;
             } else {
                 // Determine what kind of object this is; perform type-specific validity checks; push to the appropriate list; gather explicitly related objects
@@ -219,7 +219,7 @@ export class ObjectGraph {
 
             /* istanbul ignore if */
             if (sourceType.eObjectType == eSystemObjectType.eUnknown)
-                LOG.logger.error(`DBAPI.ObjectGraph.fetchWorker Unidentified SystemObject type ${JSON.stringify(SOP)}`);
+                LOG.error(`DBAPI.ObjectGraph.fetchWorker Unidentified SystemObject type ${JSON.stringify(SOP)}`, LOG.LS.eDB);
 
             this.systemObjectProcessed.set(idSystemObject, sourceType);
             this.systemObjectAdded.set(idSystemObject, sourceType);
@@ -234,9 +234,9 @@ export class ObjectGraph {
             const traverseType: string = (eMode == eObjectGraphMode.eAncestors) ? '^^' : 'vv';
             const prefix: string = `OA [${this.pushCount.toString().padStart(3, '0')} ${traverseType}]: `;
             if (eMode == eObjectGraphMode.eAncestors)
-                LOG.logger.info(`${prefix}${sourceDesc} -> ${relatedDesc}${valid}$`);
+                LOG.info(`${prefix}${sourceDesc} -> ${relatedDesc}${valid}$`, LOG.LS.eDB);
             else
-                LOG.logger.info(`${prefix}${relatedDesc} -> ${sourceDesc}${valid}$`);
+                LOG.info(`${prefix}${relatedDesc} -> ${sourceDesc}${valid}$`, LOG.LS.eDB);
             */
 
             // gather using master/derived systemobjectxref's
@@ -260,7 +260,7 @@ export class ObjectGraph {
                         if (SO)
                             this.systemObjectList.push(SO.idSystemObject);
                         else
-                            LOG.logger.error(`Missing SystemObject for asset ${JSON.stringify(asset)}`);
+                            LOG.error(`Missing SystemObject for asset ${JSON.stringify(asset)}`, LOG.LS.eDB);
                     }
                 }
             }
@@ -277,7 +277,7 @@ export class ObjectGraph {
                 }
             }
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ObjectGraph.fetchWorker', error);
+            LOG.error('DBAPI.ObjectGraph.fetchWorker', LOG.LS.eDB, error);
             return false;
         }
 
@@ -330,7 +330,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.logger.error(`Missing SystemObject for unit ${actor.idUnit} linked from ${JSON.stringify(actor)}`);
+                    LOG.error(`Missing SystemObject for unit ${actor.idUnit} linked from ${JSON.stringify(actor)}`, LOG.LS.eDB);
             }
         } // else ... no children
         return true;
@@ -370,7 +370,7 @@ export class ObjectGraph {
                     if (SO)
                         this.systemObjectList.push(SO.idSystemObject);
                     else
-                        LOG.logger.error(`Missing SystemObject for assetVersion ${assetVersion.idAssetVersion} linked from ${JSON.stringify(assetVersion)}`);
+                        LOG.error(`Missing SystemObject for assetVersion ${assetVersion.idAssetVersion} linked from ${JSON.stringify(assetVersion)}`, LOG.LS.eDB);
                 }
             }
         }
@@ -407,7 +407,7 @@ export class ObjectGraph {
             if (SO)
                 this.systemObjectList.push(SO.idSystemObject);
             else
-                LOG.logger.error(`Missing SystemObject for asset ${assetVersion.idAsset} linked from ${JSON.stringify(assetVersion)}`);
+                LOG.error(`Missing SystemObject for asset ${assetVersion.idAsset} linked from ${JSON.stringify(assetVersion)}`, LOG.LS.eDB);
         } // else ... no children
         return true;
     }
@@ -447,7 +447,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.logger.error(`Missing SystemObject for asset ${captureData.idAssetThumbnail} linked from ${JSON.stringify(captureData)}`);
+                    LOG.error(`Missing SystemObject for asset ${captureData.idAssetThumbnail} linked from ${JSON.stringify(captureData)}`, LOG.LS.eDB);
             }
         }
         return true;
@@ -519,7 +519,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.logger.error(`Missing SystemObject for asset ${item.idAssetThumbnail} linked from ${JSON.stringify(item)}`);
+                    LOG.error(`Missing SystemObject for asset ${item.idAssetThumbnail} linked from ${JSON.stringify(item)}`, LOG.LS.eDB);
             }
         }
 
@@ -566,7 +566,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.logger.error(`Missing SystemObject for asset ${model.idAssetThumbnail} linked from ${JSON.stringify(model)}`);
+                    LOG.error(`Missing SystemObject for asset ${model.idAssetThumbnail} linked from ${JSON.stringify(model)}`, LOG.LS.eDB);
             }
         }
         return true;
@@ -610,7 +610,7 @@ export class ObjectGraph {
                     if (SO)
                         this.systemObjectList.push(SO.idSystemObject);
                     else
-                        LOG.logger.error(`Missing SystemObject for project documentation ${JSON.stringify(PD)}`);
+                        LOG.error(`Missing SystemObject for project documentation ${JSON.stringify(PD)}`, LOG.LS.eDB);
                 }
             }
         }
@@ -647,7 +647,7 @@ export class ObjectGraph {
             if (SO)
                 this.systemObjectList.push(SO.idSystemObject);
             else
-                LOG.logger.error(`Missing SystemObject for project ${projectDocumentation.idProject} linked from ${JSON.stringify(projectDocumentation)}`);
+                LOG.error(`Missing SystemObject for project ${projectDocumentation.idProject} linked from ${JSON.stringify(projectDocumentation)}`, LOG.LS.eDB);
         } // else ... no children
         return true;
     }
@@ -690,7 +690,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.logger.error(`Missing SystemObject for asset ${scene.idAssetThumbnail} linked from ${JSON.stringify(scene)}`);
+                    LOG.error(`Missing SystemObject for asset ${scene.idAssetThumbnail} linked from ${JSON.stringify(scene)}`, LOG.LS.eDB);
             }
         }
 
@@ -759,7 +759,7 @@ export class ObjectGraph {
             if (SO)
                 this.systemObjectList.push(SO.idSystemObject);
             else
-                LOG.logger.error(`Missing SystemObject for unit ${subject.idUnit} linked from ${JSON.stringify(subject)}`);
+                LOG.error(`Missing SystemObject for unit ${subject.idUnit} linked from ${JSON.stringify(subject)}`, LOG.LS.eDB);
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // children
             if (subject.idAssetThumbnail) {
                 const SO: SystemObject | null = await SystemObject.fetchFromAssetID(subject.idAssetThumbnail);
@@ -767,7 +767,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.logger.error(`Missing SystemObject for asset ${subject.idAssetThumbnail} linked from ${JSON.stringify(subject)}`);
+                    LOG.error(`Missing SystemObject for asset ${subject.idAssetThumbnail} linked from ${JSON.stringify(subject)}`, LOG.LS.eDB);
             }
         }
         return true;
@@ -812,7 +812,7 @@ export class ObjectGraph {
                     if (SO)
                         this.systemObjectList.push(SO.idSystemObject);
                     else
-                        LOG.logger.error(`Missing SystemObject for subject ${JSON.stringify(subject)}`);
+                        LOG.error(`Missing SystemObject for subject ${JSON.stringify(subject)}`, LOG.LS.eDB);
                 }
             }
 
@@ -825,7 +825,7 @@ export class ObjectGraph {
                     if (SO)
                         this.systemObjectList.push(SO.idSystemObject);
                     else
-                        LOG.logger.error(`Missing SystemObject for subject ${JSON.stringify(actor)}`);
+                        LOG.error(`Missing SystemObject for subject ${JSON.stringify(actor)}`, LOG.LS.eDB);
                 }
             }
         }

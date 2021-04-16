@@ -2648,7 +2648,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch Workflow: Workflow.fetchFromWorkflowType', async () => {
         let workflowFetch: DBAPI.Workflow[] | null = null;
         if (vocabularyWorkflowType) {
-            LOG.logger.info(`DB Fetch Workflow fetching from workflow vocab ${JSON.stringify(vocabularyWorkflowType)}`);
+            LOG.info(`DB Fetch Workflow fetching from workflow vocab ${JSON.stringify(vocabularyWorkflowType)}`, LOG.LS.eTEST);
             const eVocabEnum: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(vocabularyWorkflowType.idVocabulary);
             expect(eVocabEnum).toBeTruthy();
 

@@ -27,7 +27,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessRoleAccessActionXref.create', error);
+            LOG.error('DBAPI.AccessRoleAccessActionXref.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -43,7 +43,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessRoleAccessActionXref.update', error);
+            LOG.error('DBAPI.AccessRoleAccessActionXref.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -55,7 +55,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
             return DBC.CopyObject<AccessRoleAccessActionXrefBase, AccessRoleAccessActionXref>(
                 await DBC.DBConnection.prisma.accessRoleAccessActionXref.findUnique({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessRoleAccessActionXref.fetch', error);
+            LOG.error('DBAPI.AccessRoleAccessActionXref.fetch', LOG.LS.eDB, error);
             return null;
         }
     }

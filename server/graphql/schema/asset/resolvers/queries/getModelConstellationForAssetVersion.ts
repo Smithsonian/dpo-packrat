@@ -10,10 +10,10 @@ export default async function getModelConstellationForAssetVersion(_: Parent, ar
 
     const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion);
     if (!JCOutput || !JCOutput.success) {
-        LOG.logger.error(`getModelConstellationForAssetVersion failed extracting job output: ${JCOutput ? JCOutput.error : ''}`);
+        LOG.error(`getModelConstellationForAssetVersion failed extracting job output: ${JCOutput ? JCOutput.error : ''}`, LOG.LS.eGQL);
         return { idAssetVersion };
     }
 
-    // LOG.logger.info(`GraphQL getModelConstellationForAssetVersion(${JSON.stringify(idAssetVersion)}) = ${JSON.stringify(JCOutput.modelConstellation, H.Helpers.stringifyCallbackCustom)}`);
+    // LOG.info(`GraphQL getModelConstellationForAssetVersion(${JSON.stringify(idAssetVersion)}) = ${JSON.stringify(JCOutput.modelConstellation, H.Helpers.stringifyCallbackCustom)}`, LOG.LS.eGQL);
     return { idAssetVersion, ModelConstellation: JCOutput.modelConstellation };
 }

@@ -28,7 +28,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Project.create', error);
+            LOG.error('DBAPI.Project.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -41,7 +41,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 data: { Name, Description, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Project.update', error);
+            LOG.error('DBAPI.Project.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -52,7 +52,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.project.fetchSystemObject', error);
+            LOG.error('DBAPI.project.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -64,7 +64,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return DBC.CopyObject<ProjectBase, Project>(
                 await DBC.DBConnection.prisma.project.findUnique({ where: { idProject, }, }), Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Project.fetch', error);
+            LOG.error('DBAPI.Project.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -74,7 +74,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return DBC.CopyArray<ProjectBase, Project>(
                 await DBC.DBConnection.prisma.project.findMany(), Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Project.fetchAll', error);
+            LOG.error('DBAPI.Project.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -98,7 +98,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObject AS SOS ON (SOX.idSystemObjectDerived = SOS.idSystemObject)
                 WHERE SOS.idSubject IN (${Prisma.join(idSubjects)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.PRoject.fetchMasterFromSubjects', error);
+            LOG.error('DBAPI.PRoject.fetchMasterFromSubjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -122,7 +122,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObject AS SOS ON (SOX.idSystemObjectDerived = SOS.idSystemObject)
                 WHERE SOS.idStakeholder IN (${Prisma.join(idStakeholders)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.PRoject.fetchMasterFromSubjects', error);
+            LOG.error('DBAPI.PRoject.fetchMasterFromSubjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -142,7 +142,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN ProjectDocumentation AS PD ON (PD.idProject = P.idProject)
                 WHERE PD.idProjectDocumentation IN (${Prisma.join(idProjectDocumentations)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.PRoject.fetchMasterFromProjectDocumentations', error);
+            LOG.error('DBAPI.PRoject.fetchMasterFromProjectDocumentations', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -166,7 +166,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObject AS SOUnit ON (SOX.idSystemObjectMaster = SOUnit.idSystemObject)
                 WHERE SOUnit.idUnit IN (${Prisma.join(idUnits)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.PRoject.fetchDerivedFromSubjectsUnits', error);
+            LOG.error('DBAPI.PRoject.fetchDerivedFromSubjectsUnits', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -191,7 +191,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN Subject AS S ON (SOUnit.idUnit = S.idUnit)
                 WHERE S.idSubject IN (${Prisma.join(idSubjects)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.PRoject.fetchDerivedFromSubjectsUnits', error);
+            LOG.error('DBAPI.PRoject.fetchDerivedFromSubjectsUnits', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -204,7 +204,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 where: { Name: { contains: search }, },
             }), Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Project.fetchProjectList', error);
+            LOG.error('DBAPI.Project.fetchProjectList', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -83,7 +83,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.JobRun.create', error);
+            LOG.error('DBAPI.JobRun.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -106,7 +106,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.JobRun.update', error);
+            LOG.error('DBAPI.JobRun.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -118,7 +118,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
             return DBC.CopyObject<JobRunBase, JobRun>(
                 await DBC.DBConnection.prisma.jobRun.findUnique({ where: { idJobRun, }, }), JobRun);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.JobRun.fetch', error);
+            LOG.error('DBAPI.JobRun.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -168,17 +168,17 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                 ORDER BY JR.DateEnd DESC
                 LIMIT ${limitRows}`; // , JobRun);
 
-            // LOG.logger.info(`JobRun.fetchMatching(${limitRows}, ${idVJobType}, ${JSON.stringify(assetVersionIDs)}, ${eJobRunStatus[eStatus]}, ${result}) yields ${jobRunBaseList.length} records`);
+            // LOG.info(`JobRun.fetchMatching(${limitRows}, ${idVJobType}, ${JSON.stringify(assetVersionIDs)}, ${eJobRunStatus[eStatus]}, ${result}) yields ${jobRunBaseList.length} records`, LOG.LS.eDB);
 
             const jobRunList: JobRun[] = [];
             for (const jobRunBase of jobRunBaseList) {
                 const jobRun: JobRun = JobRun.constructFromPrisma(jobRunBase);
                 jobRunList.push(jobRun);
-                // LOG.logger.info(`JobRun.fetchMatching JR Output: ${jobRun.Output}`);
+                // LOG.info(`JobRun.fetchMatching JR Output: ${jobRun.Output}`, LOG.LS.eDB);
             }
             return jobRunList;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.JobRun.fetchMatching', error);
+            LOG.error('DBAPI.JobRun.fetchMatching', LOG.LS.eDB, error);
             return null;
         }
     }

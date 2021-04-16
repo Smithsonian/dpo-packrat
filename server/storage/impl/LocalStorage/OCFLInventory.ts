@@ -27,7 +27,7 @@ export class OCFLInventoryManifest {
 
     addContent(fileName: string, hash: string): void {
         hash = hash.toLowerCase();
-        // LOG.logger.info(`OCFLInventoryManifest.addContent ${fileName}: ${hash}`);
+        // LOG.info(`OCFLInventoryManifest.addContent ${fileName}: ${hash}`, LOG.LS.eSTR);
 
         // Look for fileName in existing data
         const fileMap: Map<string, string> = this.getFileMap();
@@ -45,7 +45,7 @@ export class OCFLInventoryManifest {
     }
 
     removeContent(fileName: string, hash: string): boolean {
-        // LOG.logger.info(`OCFLInventoryManifest.removeContent ${fileName}: ${hash}`);
+        // LOG.info(`OCFLInventoryManifest.removeContent ${fileName}: ${hash}`, LOG.LS.eSTR);
         hash = hash.toLowerCase();
         if (!this[hash])    // if we can't find this hash
             return false;   // error
@@ -56,7 +56,7 @@ export class OCFLInventoryManifest {
         if (matchIndex == -1)   // if we can't find our filename in the array
             return false;       // error
 
-        // LOG.logger.info(`OCFLInventory.Manifest.removeContent found ${fileName} at ${matchIndex} in ${JSON.stringify(stringArray)}`);
+        // LOG.info(`OCFLInventory.Manifest.removeContent found ${fileName} at ${matchIndex} in ${JSON.stringify(stringArray)}`, LOG.LS.eSTR);
         stringArray.splice(matchIndex, 1);     // yank our item
         if (stringArray.length > 0)
             this[hash] = stringArray;       // if there are still entries, record the updated list
@@ -134,15 +134,15 @@ export class OCFLInventoryManifest {
     getEntries(): OCFLInventoryManifestEntry[] {
         const entries: OCFLInventoryManifestEntry[] = [];
         for (const hash in this) {
-            // LOG.logger.info(`OCFLInventoryManifest.getEntries hash = ${hash}; value = ${JSON.stringify(this[hash])}`);
+            // LOG.info(`OCFLInventoryManifest.getEntries hash = ${hash}; value = ${JSON.stringify(this[hash])}`, LOG.LS.eSTR);
             /* istanbul ignore if */
             if (!Array.isArray(this[hash]))
                 continue;
             const files: Array<string> = <Array<string>><unknown>this[hash];
-            // LOG.logger.info(`OCFLInventoryManifest.getEntries pushing hash = ${hash}; files = ${JSON.stringify(files)}`);
+            // LOG.info(`OCFLInventoryManifest.getEntries pushing hash = ${hash}; files = ${JSON.stringify(files)}`, LOG.LS.eSTR);
             entries.push ({ hash, files });
         }
-        // LOG.logger.info(`OCFLInventoryManifest.getEntries returning ${JSON.stringify(entries)}`);
+        // LOG.info(`OCFLInventoryManifest.getEntries returning ${JSON.stringify(entries)}`, LOG.LS.eSTR);
         return entries;
     }
 
@@ -150,7 +150,7 @@ export class OCFLInventoryManifest {
     getFileMap(): Map<string, string> {
         const fileMap: Map<string, string> = new Map<string, string>(); // map of fileName -> hash
         for (const manifestEntry of this.getEntries()) {
-            // LOG.logger.info(`OCFLInventoryManifest.getFileMap manifestEntry = ${JSON.stringify(manifestEntry)}`);
+            // LOG.info(`OCFLInventoryManifest.getFileMap manifestEntry = ${JSON.stringify(manifestEntry)}`, LOG.LS.eSTR);
             for (const fileName of manifestEntry.files)
                 fileMap.set(fileName, manifestEntry.hash);
         }
@@ -379,7 +379,7 @@ export class OCFLInventory implements OCFLInventoryType {
     }
 
     async validate(ocflObject: OCFLObject, isRootInventory: boolean): Promise<H.IOResults> {
-        // LOG.logger.info(`OCFLInventory.validate ${JSON.stringify(this)}`);
+        // LOG.info(`OCFLInventory.validate ${JSON.stringify(this)}`, LOG.LS.eSTR);
         let results: H.IOResults;
 
         // Confirm conformance to spec
@@ -411,7 +411,7 @@ export class OCFLInventory implements OCFLInventoryType {
         } catch (error) /* istanbul ignore next */ {
             results.success = false;
             results.error = `OCFLInventory.validate failed to read digestFile ${digestFilename}: ${error}`;
-            LOG.logger.error(results.error, error);
+            LOG.error(results.error, LOG.LS.eSTR, error);
             return results;
         }
 
@@ -429,7 +429,7 @@ export class OCFLInventory implements OCFLInventoryType {
             }
         }
 
-        // LOG.logger.info('OCFLInventory.validate done');
+        // LOG.info('OCFLInventory.validate done', LOG.LS.eSTR);
         results.success = true;
         return results;
     }
@@ -466,7 +466,7 @@ export class OCFLInventory implements OCFLInventoryType {
                 error: ''
             };
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('OCFLInventory.writeToDesk', error);
+            LOG.error('OCFLInventory.writeToDesk', LOG.LS.eSTR, error);
             return {
                 success: false,
                 error: JSON.stringify(error)
@@ -502,12 +502,12 @@ export class OCFLInventory implements OCFLInventoryType {
         };
 
         const dest: string = OCFLInventory.inventoryFilePath(ocflObject, version);
-        // LOG.logger.info(`OCFLInventory.readFromDiskWorker ${dest}`);
+        // LOG.info(`OCFLInventory.readFromDiskWorker ${dest}`, LOG.LS.eSTR);
         const ioResults = await H.Helpers.fileOrDirExists(dest);
         if (!ioResults.success) {
             retValue.success = false;
             retValue.error = ioResults.error;
-            LOG.logger.error(retValue.error);
+            LOG.error(retValue.error, LOG.LS.eSTR);
             return retValue;
         }
 
@@ -516,13 +516,13 @@ export class OCFLInventory implements OCFLInventoryType {
             retValue.ocflInventory.revive(JSON.parse(await fs.readFile(dest, { encoding: 'utf8' })));
             retValue.success = true;
         } catch (error) {
-            LOG.logger.error('OCFLInventory.readFromDisk', error);
+            LOG.error('OCFLInventory.readFromDisk', LOG.LS.eSTR, error);
             retValue.success = false;
             retValue.error = JSON.stringify(error);
-            LOG.logger.error(retValue.error);
+            LOG.error(retValue.error, LOG.LS.eSTR);
         }
 
-        // LOG.logger.info(`OCFLInventory.readFromDiskWorker ${dest} done`);
+        // LOG.info(`OCFLInventory.readFromDiskWorker ${dest} done`, LOG.LS.eSTR);
         return retValue;
     }
 }

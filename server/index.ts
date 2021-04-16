@@ -16,8 +16,8 @@ import { IndexSolr } from './navigation/impl/NavigationSolr/IndexSolr';
 import * as LOG from './utils/logger';
 import { ASL, LocalStore } from './utils/localStore';
 
-LOG.logger.info('**************************');
-LOG.logger.info('Packrat Server Initialized');
+LOG.info('**************************', LOG.LS.eSYS);
+LOG.info('Packrat Server Initialized', LOG.LS.eSYS);
 
 const app = express();
 const PORT = 4000;
@@ -26,7 +26,7 @@ const idRequestMiddleware = (req: Request, _res, next) => { // creates a LocalSt
     if (!req.originalUrl.startsWith('/auth/') && !req.originalUrl.startsWith('/graphql')) {
         const user = req['user'];
         ASL.run(new LocalStore(true, user), () => {
-            LOG.logger.info(req.originalUrl);
+            LOG.info(req.originalUrl, LOG.LS.eHTTP);
             next();
         });
     } else
@@ -37,7 +37,7 @@ const idRequestMiddleware2 = (req, _res, next) => { // creates a LocalStore popu
     const user = req['user'];
     ASL.run(new LocalStore(true, user), () => {
         if (!req.originalUrl.startsWith('/graphql'))
-            LOG.logger.info(req.originalUrl);
+            LOG.info(req.originalUrl, LOG.LS.eHTTP);
         next();
     });
 };
@@ -45,7 +45,7 @@ const idRequestMiddleware2 = (req, _res, next) => { // creates a LocalStore popu
 const graphqlLoggingMiddleware = (req, _res, next) => {
     const query: string | null = computeGQLQuery(req);
     if (query && query !== '__schema') // silence __schema logging, issued by GraphQL playground
-        LOG.logger.info(`GQL ${query} ${JSON.stringify(req.body.variables)}`);
+        LOG.info(`${query} ${JSON.stringify(req.body.variables)}`, LOG.LS.eGQL);
     return next();
 };
 
@@ -68,12 +68,12 @@ server.applyMiddleware({ app, cors: false });
 
 if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, () => {
-        LOG.logger.info('GraphQL Server is running');
+        LOG.info('Server is running', LOG.LS.eSYS);
     });
 }
 
 app.get('/logtest', (_: Request, response: Response) => {
-    LOG.logger.info('Logger Info Test');
+    LOG.info('Logger Info Test', LOG.LS.eSYS);
     response.send('Got Here');
 });
 

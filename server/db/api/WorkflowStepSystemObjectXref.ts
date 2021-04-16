@@ -29,7 +29,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.create', error);
+            LOG.error('DBAPI.WorkflowStepSystemObjectXref.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -46,7 +46,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.update', error);
+            LOG.error('DBAPI.WorkflowStepSystemObjectXref.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -58,7 +58,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
             return DBC.CopyObject<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
                 await DBC.DBConnection.prisma.workflowStepSystemObjectXref.findUnique({ where: { idWorkflowStepSystemObjectXref, }, }), WorkflowStepSystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetch', error);
+            LOG.error('DBAPI.WorkflowStepSystemObjectXref.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -70,7 +70,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
             return DBC.CopyArray<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
                 await DBC.DBConnection.prisma.workflowStepSystemObjectXref.findMany({ where: { idWorkflowStep } }), WorkflowStepSystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep', error);
+            LOG.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -99,7 +99,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
             }
             return resWSX;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow', error);
+            LOG.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow', LOG.LS.eDB, error);
             return null;
         }
     }

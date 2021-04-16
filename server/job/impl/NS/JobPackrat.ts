@@ -61,7 +61,7 @@ export abstract class JobPackrat implements JOB.IJob {
         if (updateWorkflowEngine) {
             const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
             if (!workflowEngine) {
-                LOG.logger.error('JobPackrat.updateEngines failed, no WorkflowFactory instance');
+                LOG.error('JobPackrat.updateEngines failed, no WorkflowFactory instance', LOG.LS.eJOB);
                 return false;
             }
             res = workflowEngine.jobUpdated(this._dbJobRun.idJobRun) && res;
@@ -71,7 +71,7 @@ export abstract class JobPackrat implements JOB.IJob {
             await this._jobEngine.jobCompleted(this);
             const cleanupRes: H.IOResults = await this.cleanupJob();
             if (!cleanupRes.success)
-                LOG.logger.error(`JobPackrat.updateEngines failed to cleanup job: ${cleanupRes.error}`);
+                LOG.error(`JobPackrat.updateEngines failed to cleanup job: ${cleanupRes.error}`, LOG.LS.eJOB);
         }
 
         return res;
@@ -81,7 +81,7 @@ export abstract class JobPackrat implements JOB.IJob {
     async recordCreated(): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() == DBAPI.eJobRunStatus.eUnitialized);
         if (updated) {
-            LOG.logger.info(`JobPackrat [${this.name()}] Created`);
+            LOG.info(`JobPackrat [${this.name()}] Created`, LOG.LS.eJOB);
             this._dbJobRun.DateStart = new Date();
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
             await this._dbJobRun.update();
@@ -92,7 +92,7 @@ export abstract class JobPackrat implements JOB.IJob {
     async recordWaiting(): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eWaiting);
         if (updated) {
-            LOG.logger.info(`JobPackrat [${this.name()}] Waiting`);
+            LOG.info(`JobPackrat [${this.name()}] Waiting`, LOG.LS.eJOB);
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eWaiting);
             await this._dbJobRun.update();
             this.updateEngines(true); // don't block
@@ -102,7 +102,7 @@ export abstract class JobPackrat implements JOB.IJob {
     async recordStart(): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eRunning);
         if (updated) {
-            LOG.logger.info(`JobPackrat [${this.name()}] Starting`);
+            LOG.info(`JobPackrat [${this.name()}] Starting`, LOG.LS.eJOB);
             this._dbJobRun.DateStart = new Date();
             this._dbJobRun.setStatus(DBAPI.eJobRunStatus.eRunning);
             await this._dbJobRun.update();
@@ -113,7 +113,7 @@ export abstract class JobPackrat implements JOB.IJob {
     async recordSuccess(output: string): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eDone);
         if (updated) {
-            LOG.logger.info(`JobPackrat [${this.name()}] Success`);
+            LOG.info(`JobPackrat [${this.name()}] Success`, LOG.LS.eJOB);
             this._results = { success: true, error: '' };   // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = true;
@@ -127,7 +127,7 @@ export abstract class JobPackrat implements JOB.IJob {
     async recordFailure(errorMsg: string): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eError);
         if (updated) {
-            LOG.logger.error(`JobPackrat [${this.name()}] Failure: ${errorMsg}`);
+            LOG.error(`JobPackrat [${this.name()}] Failure: ${errorMsg}`, LOG.LS.eJOB);
             this._results = { success: false, error: errorMsg }; // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = false;
@@ -142,10 +142,10 @@ export abstract class JobPackrat implements JOB.IJob {
         const updated: boolean = (this._dbJobRun.getStatus() != DBAPI.eJobRunStatus.eCancelled);
         if (!updated) {
             if (errorMsg) {
-                LOG.logger.error(`JobPackrat [${this.name()}] Cancel: ${errorMsg}`);
+                LOG.error(`JobPackrat [${this.name()}] Cancel: ${errorMsg}`, LOG.LS.eJOB);
                 this._dbJobRun.Error = errorMsg;
             } else
-                LOG.logger.error(`JobPackrat [${this.name()}] Cancel`);
+                LOG.error(`JobPackrat [${this.name()}] Cancel`, LOG.LS.eJOB);
 
             this._results = { success: false, error: 'Job Cancelled' + (errorMsg ? ` ${errorMsg}` : '') }; // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();

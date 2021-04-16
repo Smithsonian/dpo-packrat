@@ -37,7 +37,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Scene.create', error);
+            LOG.error('DBAPI.Scene.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -56,7 +56,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Scene.update', error);
+            LOG.error('DBAPI.Scene.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -67,7 +67,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idScene, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.scene.fetchSystemObject', error);
+            LOG.error('DBAPI.scene.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -79,7 +79,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return DBC.CopyObject<SceneBase, Scene>(
                 await DBC.DBConnection.prisma.scene.findUnique({ where: { idScene, }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Scene.fetch', error);
+            LOG.error('DBAPI.Scene.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -89,7 +89,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return DBC.CopyArray<SceneBase, Scene>(
                 await DBC.DBConnection.prisma.scene.findMany(), Scene);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Scene.fetchAll', error);
+            LOG.error('DBAPI.Scene.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -101,7 +101,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return DBC.CopyArray<SceneBase, Scene>(
                 await DBC.DBConnection.prisma.scene.findMany({ where: { ModelSceneXref: { some: { idModel }, }, }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.fetchSceneFromXref', error);
+            LOG.error('DBAPI.fetchSceneFromXref', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -125,7 +125,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
                 WHERE SOI.idItem IN (${Prisma.join(idItem)})`, Scene);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Scene.fetchDerivedFromItems', error);
+            LOG.error('DBAPI.Scene.fetchDerivedFromItems', LOG.LS.eDB, error);
             return null;
         }
     }

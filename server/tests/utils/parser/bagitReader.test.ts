@@ -53,7 +53,7 @@ describe('BagitReader', () => {
         for (const entry of await bagitZipStream.getAllEntries(null)) {
             const observedSize: number | null = await bagitZipStream.uncompressedSize(entry);
             const expectedSize: number | undefined = fileSizeMap.get(entry);
-            LOG.logger.info(`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`);
+            LOG.info(`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`, LOG.LS.eTEST);
             expect(observedSize).not.toBeNull();
             expect(expectedSize).not.toBeUndefined();
             expect(observedSize).toEqual(expectedSize);
@@ -220,7 +220,7 @@ async function testBagitLoad(options: BagitLoadOptions): Promise<BagitReader> {
     let result: H.IOResults = await bagit.load();
 
     if (!result.success) {
-        LOG.logger.error(result.error);
+        LOG.error(result.error, LOG.LS.eTEST);
         expect(expectFailure).toBeTruthy();
         return bagit;
     }
@@ -228,7 +228,7 @@ async function testBagitLoad(options: BagitLoadOptions): Promise<BagitReader> {
     if (!validate && subsequentValidate) {
         result = await bagit.validate();
         if (!result.success)
-            LOG.logger.error(result.error);
+            LOG.error(result.error, LOG.LS.eTEST);
         expect(result.success).toBeTruthy();
     }
 

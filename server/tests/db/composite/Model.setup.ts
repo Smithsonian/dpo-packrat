@@ -48,7 +48,7 @@ export class ModelTestCase {
     assetFileNameMap(): Map<string, number> {
         const retValue: Map<string, number> = new Map<string, number>();
         for (const assetVersion of this.assetVersions) {
-            LOG.logger.info(`ModelTestCase.assetFileNameMap [${assetVersion.FileName}, ${assetVersion.idAssetVersion}]`);
+            LOG.info(`ModelTestCase.assetFileNameMap [${assetVersion.FileName}, ${assetVersion.idAssetVersion}]`, LOG.LS.eTEST);
             retValue.set(assetVersion.FileName, assetVersion.idAsset);
         }
         return retValue;
@@ -162,7 +162,7 @@ export class ModelTestSetup {
         // let assigned: boolean = true;
         this.userOwner = await UTIL.createUserTest({ Name: 'Model Test', EmailAddress: 'modeltest@si.edu', SecurityID: 'Model Test', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0 });
         if (!this.userOwner) {
-            LOG.logger.error('ModelTestSetup failed to create user');
+            LOG.error('ModelTestSetup failed to create user', LOG.LS.eTEST);
             return false;
         }
 
@@ -172,13 +172,13 @@ export class ModelTestSetup {
         this.vocabMUnits = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelUnitsMillimeter);
         this.vocabMPurpose = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eModelPurposeMaster);
         if (!this.vocabModel || !this.vocabMCreation || !this.vocabMModality || !this.vocabMUnits || !this.vocabMPurpose) {
-            LOG.logger.error('ModelTestSetup failed to fetch Model-related Vocabulary');
+            LOG.error('ModelTestSetup failed to fetch Model-related Vocabulary', LOG.LS.eTEST);
             return false;
         }
 
         this.storage = await STORE.StorageFactory.getInstance();
         if (!this.storage) {
-            LOG.logger.error('ModelTestSetup failed to retrieve storage interface');
+            LOG.error('ModelTestSetup failed to retrieve storage interface', LOG.LS.eTEST);
             return false;
         }
 
@@ -187,7 +187,7 @@ export class ModelTestSetup {
                 continue;
             const fileExists: boolean = await this.testFileExistence(MTD);
             if (!fileExists) {
-                LOG.logger.info(`ModelTestSetup unable to locate file for ${JSON.stringify(MTD)}`);
+                LOG.info(`ModelTestSetup unable to locate file for ${JSON.stringify(MTD)}`, LOG.LS.eTEST);
                 return null;
             }
 
@@ -196,7 +196,7 @@ export class ModelTestSetup {
             if (MTD.geometry) {
                 const vocabMFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(MTD.fileName);
                 if (!vocabMFileType) {
-                    LOG.logger.error('ModelTestSetup failed to fetch Model file type Vocabulary');
+                    LOG.error('ModelTestSetup failed to fetch Model file type Vocabulary', LOG.LS.eTEST);
                     return false;
                 }
 
@@ -217,7 +217,7 @@ export class ModelTestSetup {
             } else {
                 const MTC: ModelTestCase | undefined = this.testCaseMap.get(MTD.testCase);
                 if (!MTC) {
-                    LOG.logger.error(`ModelTestSetup attempting to ingest non-model ${MTD.fileName} without model already created`);
+                    LOG.error(`ModelTestSetup attempting to ingest non-model ${MTD.fileName} without model already created`, LOG.LS.eTEST);
                     return false;
                 }
                 model = MTC.model;
@@ -225,7 +225,7 @@ export class ModelTestSetup {
 
             const { success, asset, assetVersion } = await this.ingestFile(MTD, model);
             if (!success) {
-                LOG.logger.error('ModelTestSetup failed to ingest model');
+                LOG.error('ModelTestSetup failed to ingest model', LOG.LS.eTEST);
                 return false;
             }
 
@@ -335,13 +335,13 @@ export class ModelTestSetup {
 
         const wsRes: STORE.WriteStreamResult = await this.storage.writeStream(MTD.fileName);
         if (!wsRes.success || !wsRes.writeStream || !wsRes.storageKey) {
-            LOG.logger.error(`ModelTestSetup.ingestFile Unable to create write stream for ${MTD.fileName}: ${wsRes.error}`);
+            LOG.error(`ModelTestSetup.ingestFile Unable to create write stream for ${MTD.fileName}: ${wsRes.error}`, LOG.LS.eTEST);
             return { success: false, asset: null, assetVersion: null };
         }
         const filePath: string = this.computeFilePath(MTD);
         const wrRes: H.IOResults = await H.Helpers.writeFileToStream(filePath, wsRes.writeStream);
         if (!wrRes.success) {
-            LOG.logger.error(`ModelTestSetup.ingestFile Unable to write ${filePath} to stream: ${wrRes.error}`);
+            LOG.error(`ModelTestSetup.ingestFile Unable to write ${filePath} to stream: ${wrRes.error}`, LOG.LS.eTEST);
             return { success: false, asset: null, assetVersion: null };
         }
 
@@ -358,7 +358,7 @@ export class ModelTestSetup {
 
         const comRes: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
         if (!comRes.success || !comRes.assets || comRes.assets.length != 1 || !comRes.assetVersions || comRes.assetVersions.length != 1) {
-            LOG.logger.error(`ModelTestSetup.ingestFile Unable to commit asset: ${comRes.error}`);
+            LOG.error(`ModelTestSetup.ingestFile Unable to commit asset: ${comRes.error}`, LOG.LS.eTEST);
             return { success: false, asset: null, assetVersion: null };
         }
 
@@ -380,15 +380,15 @@ export class ModelTestSetup {
         if (MTD.hash) {
             const hashRes: H.HashResults = await H.Helpers.computeHashFromFile(filePath, 'sha256');
             if (!hashRes.success) {
-                LOG.logger.error(`ModelTestSetup.testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`);
+                LOG.error(`ModelTestSetup.testFileExistience('${filePath}') unable to compute hash ${hashRes.error}`, LOG.LS.eTEST);
                 success = false;
             } else if (hashRes.hash != MTD.hash) {
-                LOG.logger.error(`ModelTestSetup.testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${MTD.hash}`);
+                LOG.error(`ModelTestSetup.testFileExistience('${filePath}') computed different hash ${hashRes.hash} than expected ${MTD.hash}`, LOG.LS.eTEST);
                 success = false;
             }
         }
 
-        LOG.logger.info(`ModelTestSetup.testFileExistience('${filePath}') = ${success}`);
+        LOG.info(`ModelTestSetup.testFileExistience('${filePath}') = ${success}`, LOG.LS.eTEST);
         return success;
     }
 }
