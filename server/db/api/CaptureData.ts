@@ -39,7 +39,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureData.create', error);
+            LOG.error('DBAPI.CaptureData.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -59,7 +59,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureData.update', error);
+            LOG.error('DBAPI.CaptureData.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -70,7 +70,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idCaptureData, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureData.fetchSystemObject', error);
+            LOG.error('DBAPI.CaptureData.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -82,7 +82,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             return DBC.CopyObject<CaptureDataBase, CaptureData>(
                 await DBC.DBConnection.prisma.captureData.findUnique({ where: { idCaptureData, }, }), CaptureData);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureData.fetch', error);
+            LOG.error('DBAPI.CaptureData.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -92,7 +92,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             return DBC.CopyArray<CaptureDataBase, CaptureData>(
                 await DBC.DBConnection.prisma.captureData.findMany(), CaptureData);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureData.fetchAll', error);
+            LOG.error('DBAPI.CaptureData.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -105,7 +105,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 await DBC.DBConnection.prisma.captureData.findMany({ where: { CaptureDataPhoto: { some: { idCaptureDataPhoto, }, }, }, }), CaptureData);
             return (retValue && retValue.length > 0) ? retValue[0] : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureData.fetchFromCaptureDataPhoto', error);
+            LOG.error('DBAPI.CaptureData.fetchFromCaptureDataPhoto', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -123,7 +123,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                     },
                 }), CaptureData);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureData.fetchFromXref', error);
+            LOG.error('DBAPI.CaptureData.fetchFromXref', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -147,7 +147,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
                 WHERE SOI.idItem IN (${Prisma.join(idItem)})`, CaptureData);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureData.fetchDerivedFromItems', error);
+            LOG.error('DBAPI.CaptureData.fetchDerivedFromItems', LOG.LS.eDB, error);
             return null;
         }
     }

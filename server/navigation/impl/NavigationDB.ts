@@ -42,7 +42,7 @@ export class NavigationDB implements NAV.INavigation {
     }
 
     private static async getChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
-        // LOG.logger.info(`NavigationDB.getChildren(${JSON.stringify(filter)})`);
+        // LOG.info(`NavigationDB.getChildren(${JSON.stringify(filter)})`, LOG.LS.eNAV);
         const oID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(filter.idRoot);
         if (!oID)
             return { success: false, error: `NavigationDB.getChildren unable to fetch information for filter ${JSON.stringify(filter)}`, entries: [], metadataColumns: filter.metadataColumns };
@@ -81,7 +81,7 @@ export class NavigationDB implements NAV.INavigation {
 
         const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchAll(); /* istanbul ignore if */
         if (!units) {
-            LOG.logger.error('NavigationDB.getRoot unable to retrieve units');
+            LOG.error('NavigationDB.getRoot unable to retrieve units', LOG.LS.eNAV);
             return [];
         }
 
@@ -89,7 +89,7 @@ export class NavigationDB implements NAV.INavigation {
             const oID: CACHE.ObjectIDAndType = { idObject: unit.idUnit, eObjectType: eSystemObjectType.eUnit };
             const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
             if (!sID) {
-                LOG.logger.error(`NavigationDB.getRoot unable to compute idSystemObject for ${JSON.stringify(oID)}`);
+                LOG.error(`NavigationDB.getRoot unable to compute idSystemObject for ${JSON.stringify(oID)}`, LOG.LS.eNAV);
                 continue;
             }
 
@@ -120,7 +120,7 @@ export class NavigationDB implements NAV.INavigation {
                         metadata: await NavigationDB.computeMetadataForSubject(subject, filter.metadataColumns)
                     });
                 else
-                    LOG.logger.error(`NavigateDB.computeChildrenForUnit unable to fetch information for ${JSON.stringify(oIDSubject)}`);
+                    LOG.error(`NavigateDB.computeChildrenForUnit unable to fetch information for ${JSON.stringify(oIDSubject)}`, LOG.LS.eNAV);
             }
         }
     }
@@ -148,7 +148,7 @@ export class NavigationDB implements NAV.INavigation {
 
         const projects: DBAPI.Project[] | null = await DBAPI.Project.fetchAll(); /* istanbul ignore if */
         if (!projects) {
-            LOG.logger.error('NavigationDB.getRoot unable to retrieve projects');
+            LOG.error('NavigationDB.getRoot unable to retrieve projects', LOG.LS.eNAV);
             return [];
         }
 
@@ -156,7 +156,7 @@ export class NavigationDB implements NAV.INavigation {
             const oID: CACHE.ObjectIDAndType = { idObject: project.idProject, eObjectType: eSystemObjectType.eProject };
             const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
             if (!sID) {
-                LOG.logger.error(`NavigationDB.getRoot unable to compute idSystemObject for ${JSON.stringify(oID)}`);
+                LOG.error(`NavigationDB.getRoot unable to compute idSystemObject for ${JSON.stringify(oID)}`, LOG.LS.eNAV);
                 continue;
             }
 
@@ -204,7 +204,7 @@ export class NavigationDB implements NAV.INavigation {
         filter; oID;
         const subject: DBAPI.Subject | null = (OG.subject) ? OG.subject[0] : /* istanbul ignore next */ await DBAPI.Subject.fetch(oID.idObject); /* istanbul ignore if */
         if (!subject) {
-            LOG.logger.error(`NavigateDB.computeChildrenForSubject unable to fetch subject information for ${JSON.stringify(oID)}`);
+            LOG.error(`NavigateDB.computeChildrenForSubject unable to fetch subject information for ${JSON.stringify(oID)}`, LOG.LS.eNAV);
             return;
         }
 
@@ -222,7 +222,7 @@ export class NavigationDB implements NAV.INavigation {
                         metadata: await NavigationDB.computeMetadataForItem(item, subject, filter.metadataColumns)
                     });
                 else
-                    LOG.logger.error(`NavigateDB.computeChildrenForSubject unable to fetch information for ${JSON.stringify(oIDITem)}`);
+                    LOG.error(`NavigateDB.computeChildrenForSubject unable to fetch information for ${JSON.stringify(oIDITem)}`, LOG.LS.eNAV);
             }
         }
     }
@@ -258,7 +258,7 @@ export class NavigationDB implements NAV.INavigation {
         filter; oID;
         const item: DBAPI.Item | null = (OG.item) ? OG.item[0] : /* istanbul ignore next */ await DBAPI.Item.fetch(oID.idObject); /* istanbul ignore if */
         if (!item) {
-            LOG.logger.error(`NavigateDB.computeChildrenForItem unable to fetch item information for ${JSON.stringify(oID)}`);
+            LOG.error(`NavigateDB.computeChildrenForItem unable to fetch item information for ${JSON.stringify(oID)}`, LOG.LS.eNAV);
             return;
         } /* istanbul ignore else */
 
@@ -276,7 +276,7 @@ export class NavigationDB implements NAV.INavigation {
                         metadata: await NavigationDB.computeMetadataForItemChildren(/* captureData, */ item, filter.metadataColumns)
                     });
                 else
-                    LOG.logger.error(`NavigateDB.computeChildrenForItem unable to fetch information for ${JSON.stringify(oIDCD)}`);
+                    LOG.error(`NavigateDB.computeChildrenForItem unable to fetch information for ${JSON.stringify(oIDCD)}`, LOG.LS.eNAV);
             }
         } /* istanbul ignore else */
 
@@ -294,7 +294,7 @@ export class NavigationDB implements NAV.INavigation {
                         metadata: await NavigationDB.computeMetadataForItemChildren(/* model, */ item, filter.metadataColumns)
                     });
                 else
-                    LOG.logger.error(`NavigateDB.computeChildrenForItem unable to fetch information for ${JSON.stringify(oIDModel)}`);
+                    LOG.error(`NavigateDB.computeChildrenForItem unable to fetch information for ${JSON.stringify(oIDModel)}`, LOG.LS.eNAV);
             }
         } /* istanbul ignore else */
 
@@ -311,7 +311,7 @@ export class NavigationDB implements NAV.INavigation {
                         metadata: await NavigationDB.computeMetadataForItemChildren(/* scene, */ item, filter.metadataColumns)
                     });
                 else
-                    LOG.logger.error(`NavigateDB.computeChildrenForItem unable to fetch information for ${JSON.stringify(oIDScene)}`);
+                    LOG.error(`NavigateDB.computeChildrenForItem unable to fetch information for ${JSON.stringify(oIDScene)}`, LOG.LS.eNAV);
             }
         }
     }

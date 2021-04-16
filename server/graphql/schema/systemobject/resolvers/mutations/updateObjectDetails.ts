@@ -1,7 +1,7 @@
 import { eSystemObjectType } from '../../../../../db';
 import { UpdateObjectDetailsResult, MutationUpdateObjectDetailsArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
-import * as LOG from '../../../../../utils';
+// import * as LOG from '../../../../../utils';
 import * as DBAPI from '../../../../../db';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
@@ -10,7 +10,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { input } = args;
     const { idSystemObject, idObject, objectType, data } = input;
 
-    LOG.logger.info(JSON.stringify(data, null, 2));
+    // LOG.info(JSON.stringify(data, null, 2), LOG.LS.eGQL);
 
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired)) {
         return { success: false };
@@ -319,7 +319,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 if (data.AssetVersion) {
                     const { Ingested } = data.AssetVersion;
-                    if (!isNull(Ingested) && !isUndefined(Ingested)) AssetVersion.Ingested = Ingested;
+                    if (!isUndefined(Ingested))
+                        AssetVersion.Ingested = Ingested;
                 }
 
                 await AssetVersion.update();

@@ -76,7 +76,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialChannel.create', error);
+            LOG.error('DBAPI.ModelMaterialChannel.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -104,7 +104,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialChannel.update', error);
+            LOG.error('DBAPI.ModelMaterialChannel.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -116,7 +116,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return DBC.CopyObject<ModelMaterialChannelBase, ModelMaterialChannel>(
                 await DBC.DBConnection.prisma.modelMaterialChannel.findUnique({ where: { idModelMaterialChannel, }, }), ModelMaterialChannel);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialChannel.fetch', error);
+            LOG.error('DBAPI.ModelMaterialChannel.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -128,7 +128,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return DBC.CopyArray<ModelMaterialChannelBase, ModelMaterialChannel>(
                 await DBC.DBConnection.prisma.modelMaterialChannel.findMany({ where: { idModelMaterial } }), ModelMaterialChannel);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterial', error);
+            LOG.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterial', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -153,7 +153,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                 modelMaterialChannelList.push(ModelMaterialChannel.constructFromPrisma(modelMaterialChannelBase));
             return modelMaterialChannelList;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterials', error);
+            LOG.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterials', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -165,7 +165,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return DBC.CopyArray<ModelMaterialChannelBase, ModelMaterialChannel>(
                 await DBC.DBConnection.prisma.modelMaterialChannel.findMany({ where: { idModelMaterialUVMap } }), ModelMaterialChannel);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterialUVMap', error);
+            LOG.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterialUVMap', LOG.LS.eDB, error);
             return null;
         }
     }

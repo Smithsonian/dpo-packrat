@@ -31,7 +31,7 @@ export async function createItemAndIDsForBagitTesting(base: ItemBase): Promise<D
     const ID1Desc: string = `ID1 ${itemID1 ? itemID1.idIdentifier : 'missing'}`;
     const ID2Desc: string = `ID2 ${itemID2 ? itemID2.idIdentifier : 'missing'}`;
     const ID3Desc: string = `ID3 ${itemID3 ? itemID3.idIdentifier : 'missing'}`;
-    LOG.logger.info(`createItemAndIDsForBagitTesting: item ${item.idItem}, ${ID1Desc} ${ID2Desc} ${ID3Desc}`);
+    LOG.info(`createItemAndIDsForBagitTesting: item ${item.idItem}, ${ID1Desc} ${ID2Desc} ${ID3Desc}`, LOG.LS.eTEST);
     */
     return item;
 }

@@ -49,7 +49,7 @@ export class ZipStream implements IZip {
             }
         } catch (error) /* istanbul ignore next */ {
             if (this._logErrors)
-                LOG.logger.error('ZipStream.load', error);
+                LOG.error('ZipStream.load', LOG.LS.eSYS, error);
             return { success: false, error: JSON.stringify(error) };
         }
         return { success: true, error: '' };
@@ -71,7 +71,7 @@ export class ZipStream implements IZip {
             const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
             return (ZO) ? ZO.nodeStream() : null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error(`ZipStream.streamContent ${entry}`, error);
+            LOG.error(`ZipStream.streamContent ${entry}`, LOG.LS.eSYS, error);
             return null;
         }
     }

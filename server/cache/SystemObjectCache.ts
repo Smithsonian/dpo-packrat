@@ -44,11 +44,11 @@ export class SystemObjectCache {
     // Cache Construction
     // **************************
     private async flushInternalWorker(): Promise<boolean> {
-        LOG.logger.info('CACHE SystemObjectCache.flushInternalWorker() start');
+        LOG.info('CACHE SystemObjectCache.flushInternalWorker() start', LOG.LS.eCACHE );
         // TODO: replace with paged output
         const SOFetch: SystemObject[] | null = await SystemObject.fetchAll(); /* istanbul ignore next */
         if (!SOFetch) {
-            LOG.logger.error('SystemObjectCache.flushInternalWorker unable to fetch System Objects');
+            LOG.error('SystemObjectCache.flushInternalWorker unable to fetch System Objects', LOG.LS.eCACHE );
             return false;
         }
 
@@ -59,7 +59,7 @@ export class SystemObjectCache {
                 this.systemIDToObjectMap.set(SO.idSystemObject, oID);
             }
         }
-        LOG.logger.info('CACHE SystemObjectCache.flushInternalWorker() done');
+        LOG.info('CACHE SystemObjectCache.flushInternalWorker() done', LOG.LS.eCACHE );
         return true;
     }
 
@@ -93,7 +93,7 @@ export class SystemObjectCache {
                 this.objectIDToSystemMap.set(oID, sID);
                 this.systemIDToObjectMap.set(SO.idSystemObject, oID);
             } else
-                LOG.logger.error(`SystemObjectCache.getSystemFromObjectIDInternal unable to lookup ${eSystemObjectType[eObjectType]}, id ${idObject}`);
+                LOG.error(`SystemObjectCache.getSystemFromObjectIDInternal unable to lookup ${eSystemObjectType[eObjectType]}, id ${idObject}`, LOG.LS.eCACHE );
         }
         return sID;
     }
@@ -107,7 +107,7 @@ export class SystemObjectCache {
                 oID = SystemObjectCache.convertSystemObjectToObjectID(SO);
                 Retired = SO.Retired;
             } else
-                LOG.logger.error(`SystemObjectCache.getObjectFromSystemInternal unable to lookup idSystemObject ${idSystemObject}`);
+                LOG.error(`SystemObjectCache.getObjectFromSystemInternal unable to lookup idSystemObject ${idSystemObject}`, LOG.LS.eCACHE );
 
             if (oID) {
                 this.objectIDToSystemMap.set(oID, { idSystemObject, Retired });
@@ -206,7 +206,7 @@ export class SystemObjectCache {
         else if (SO.idActor) return { idObject: SO.idActor, eObjectType: eSystemObjectType.eActor };
         else if (SO.idStakeholder) return { idObject: SO.idStakeholder, eObjectType: eSystemObjectType.eStakeholder };
 
-        LOG.logger.error(`SystemObjectCache.convertSystemObjectToObjectID unable to interpret ${JSON.stringify(SO)}`);
+        LOG.error(`SystemObjectCache.convertSystemObjectToObjectID unable to interpret ${JSON.stringify(SO)}`, LOG.LS.eCACHE );
         return undefined;
     }
 

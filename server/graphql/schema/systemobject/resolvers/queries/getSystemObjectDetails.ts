@@ -11,7 +11,7 @@ import {
     SystemObject
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
-import * as LOGGER from '../../../../../utils/logger';
+import * as LOG from '../../../../../utils/logger';
 
 export default async function getSystemObjectDetails(_: Parent, args: QueryGetSystemObjectDetailsArgs): Promise<GetSystemObjectDetailsResult> {
     const { input } = args;
@@ -28,13 +28,13 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 
     if (!oID) {
         const message: string = `No object ID found for ID: ${idSystemObject}`;
-        LOGGER.logger.error(message);
+        LOG.error(message, LOG.LS.eGQL);
         throw new Error(message);
     }
 
     if (!systemObject) {
         const message: string = `No system object found for ID: ${idSystemObject}`;
-        LOGGER.logger.error(message);
+        LOG.error(message, LOG.LS.eGQL);
         throw new Error(message);
     }
 
@@ -95,7 +95,7 @@ async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType
 
         if (!oID) {
             const message: string = `No object ID found for ID: ${idSystemObject}`;
-            LOGGER.logger.error(message);
+            LOG.error(message, LOG.LS.eGQL);
             throw new Error(message);
         }
 

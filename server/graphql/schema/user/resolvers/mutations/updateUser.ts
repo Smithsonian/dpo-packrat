@@ -11,7 +11,7 @@ export default async function updateUser(_: Parent, args: MutationUpdateUserArgs
     const User = await DBAPI.User.fetch(idUser);
 
     if (User === null) {
-        // LOG.logger.info('Error when fetching user in updateUser.ts');
+        // LOG.info('Error when fetching user in updateUser.ts', LOG.LS.eGQL);
         throw new Error('User not found');
     }
 
@@ -23,7 +23,7 @@ export default async function updateUser(_: Parent, args: MutationUpdateUserArgs
 
     const success = await User.update();
     if (!success) {
-        // LOG.logger.info('Error when updating user in updateUser.ts');
+        // LOG.info('Error when updating user in updateUser.ts', LOG.LS.eGQL);
         throw new Error('Error when updating user in updateUser.ts');
     }
 

@@ -26,7 +26,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.VocabularySet.create', error);
+            LOG.error('DBAPI.VocabularySet.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -42,7 +42,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.VocabularySet.update', error);
+            LOG.error('DBAPI.VocabularySet.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -54,7 +54,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
             return DBC.CopyObject<VocabularySetBase, VocabularySet>(
                 await DBC.DBConnection.prisma.vocabularySet.findUnique({ where: { idVocabularySet, }, }), VocabularySet);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.VocabularySet.fetch', error);
+            LOG.error('DBAPI.VocabularySet.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -64,7 +64,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
             return DBC.CopyArray<VocabularySetBase, VocabularySet>(
                 await DBC.DBConnection.prisma.vocabularySet.findMany(), VocabularySet);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.VocabularySet.fetchAll', error);
+            LOG.error('DBAPI.VocabularySet.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }

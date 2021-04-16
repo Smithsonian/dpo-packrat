@@ -12,34 +12,34 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     private workflowMap: Map<number, WF.IWorkflow> = new Map<number, WF.IWorkflow>();
 
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
-        LOG.logger.info(`WF WorkflowEngine.create workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`);
+        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
         const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
         if (!WFC)
             return null;
 
         if (!workflowParams.eWorkflowType) {
-            LOG.logger.error(`WF WorkflowEngine.create called without workflow type ${JSON.stringify(workflowParams)}`);
+            LOG.error(`WorkflowEngine.create called without workflow type ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
             return null;
         }
 
         const workflow: WF.IWorkflow | null = await this.fetchWorkflowImpl(workflowParams, WFC);
         if (!workflow) {
-            LOG.logger.error(`WF WorkflowEngine.create failed to fetch workflow implementation ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`);
+            LOG.error(`WorkflowEngine.create failed to fetch workflow implementation ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
             return null;
         }
         if (WFC.workflow)
             this.workflowMap.set(WFC.workflow.idWorkflow, workflow);
         const startResults: H.IOResults = await workflow.start();
         if (!startResults) {
-            LOG.logger.error(`WF WorkflowEngine.create failed to start workflow ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`);
+            LOG.error(`WorkflowEngine.create failed to start workflow ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
             return null;
         }
-        LOG.logger.info(`WF WorkflowEngine.created workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`);
+        LOG.info(`WorkflowEngine.created workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
         return workflow;
     }
 
     async jobUpdated(idJobRun: number): Promise<boolean> {
-        LOG.logger.info(`WF WorkflowEngine.jobUpdated: ${idJobRun}`);
+        LOG.info(`WorkflowEngine.jobUpdated: ${idJobRun}`, LOG.LS.eWF);
 
         const jobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(idJobRun);
         if (!jobRun)
@@ -52,21 +52,21 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         for (const workflowStep of workflowSteps) {
             const WFC: DBAPI.WorkflowConstellation | null = await DBAPI.WorkflowConstellation.fetch(workflowStep.idWorkflow);
             if (!WFC || !WFC.workflow) {
-                LOG.logger.error(`WF WorkflowEngine.jobUpdated (${idJobRun}) skipping orphan workflow step ${JSON.stringify(workflowStep)}`);
+                LOG.error(`WorkflowEngine.jobUpdated (${idJobRun}) skipping orphan workflow step ${JSON.stringify(workflowStep)}`, LOG.LS.eWF);
                 continue;
             }
 
             // lookup workflow object and forward "updated" event
             const workflow: WF.IWorkflow | undefined = this.workflowMap.get(WFC.workflow.idWorkflow);
             if (!workflow) {
-                LOG.logger.error(`WF WorkflowEngine.jobUpdated(${idJobRun}) unable to locate workflow ${WFC.workflow.idWorkflow}`);
+                LOG.error(`WorkflowEngine.jobUpdated(${idJobRun}) unable to locate workflow ${WFC.workflow.idWorkflow}`, LOG.LS.eWF);
                 continue;
             }
 
             const updateRes: WF.WorkflowUpdateResults = await workflow.update(workflowStep, jobRun);
             if (updateRes.workflowComplete) {
                 this.workflowMap.delete(WFC.workflow.idWorkflow);
-                LOG.logger.info(`WF WorkflowEngine.jobUpdated completed workflow [${this.workflowMap.size}]: ${idJobRun}`);
+                LOG.info(`WorkflowEngine.jobUpdated completed workflow [${this.workflowMap.size}]: ${idJobRun}`, LOG.LS.eWF);
             }
             result = updateRes.success && result;
         }
@@ -74,17 +74,17 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     }
 
     async event(eWorkflowEvent: CACHE.eVocabularyID, workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow | null> {
-        LOG.logger.info(`WF WorkflowEngine.event ${CACHE.eVocabularyID[eWorkflowEvent]}`);
+        LOG.info(`WorkflowEngine.event ${CACHE.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
         const idVWorkflowEvent: number | undefined = await WorkflowEngine.computeWorkflowIDFromEnum(eWorkflowEvent, CACHE.eVocabularySetID.eWorkflowEvent);
         if (!idVWorkflowEvent) {
-            LOG.logger.error(`WF WorkflowEngine.event called with invalid workflow event type ${CACHE.eVocabularyID[eWorkflowEvent]}`);
+            LOG.error(`WorkflowEngine.event called with invalid workflow event type ${CACHE.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
             return null;
         }
 
         switch (eWorkflowEvent) {
             case CACHE.eVocabularyID.eWorkflowEventIngestionUploadAssetVersion: return this.eventIngestionUploadAssetVersion(workflowParams);
             default:
-                LOG.logger.info(`WF WorkflowEngine.event called with unhandled workflow event type ${CACHE.eVocabularyID[eWorkflowEvent]}`);
+                LOG.info(`WorkflowEngine.event called with unhandled workflow event type ${CACHE.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
                 return null;
         }
     }
@@ -97,26 +97,26 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         for (const idSystemObject of workflowParams.idSystemObject) {
             const oID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
             if (!oID) {
-                LOG.logger.error(`WF WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid idSystemObject ${idSystemObject}`);
+                LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid idSystemObject ${idSystemObject}`, LOG.LS.eWF);
                 continue;
             }
 
             if (oID.eObjectType != DBAPI.eSystemObjectType.eAssetVersion) {
-                LOG.logger.error(`WF WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid object ${JSON.stringify(oID)}`);
+                LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid object ${JSON.stringify(oID)}`, LOG.LS.eWF);
                 continue;
             }
 
             // load asset version
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(oID.idObject);
             if (!assetVersion)  {
-                LOG.logger.error(`WF WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid object ${JSON.stringify(oID)}`);
+                LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid object ${JSON.stringify(oID)}`, LOG.LS.eWF);
                 continue;
             }
 
             // load asset
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
             if (!asset) {
-                LOG.logger.error(`WF WorkflowEngine.eventIngestionUploadAssetVersion unable to load asset from idAsset ${assetVersion.idAsset}`);
+                LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to load asset from idAsset ${assetVersion.idAsset}`, LOG.LS.eWF);
                 continue;
             }
 
@@ -140,7 +140,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
                     workflow = await this.create(wfParams);
                     if (!workflow) {
-                        LOG.logger.error(`WF WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}`);
+                        LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}`, LOG.LS.eWF);
                         continue;
                     }
                 } break;
@@ -154,18 +154,18 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             case CACHE.eVocabularyID.eWorkflowTypeCookJob:
                 return new WFP.WorkflowJobParameters(eJobType, new COOK.JobCookSIPackratInspectParameters(modelName));
             default:
-                LOG.logger.error(`WF WorkflowEngine.computeWorkflowParameters: unexpected workflow type ${CACHE.eVocabularyID[eWorkflowType]}`);
+                LOG.error(`WorkflowEngine.computeWorkflowParameters: unexpected workflow type ${CACHE.eVocabularyID[eWorkflowType]}`, LOG.LS.eWF);
         }
     }
 
     static async computeWorkflowIDFromEnum(eVocabEnum: CACHE.eVocabularyID, eVocabSetEnum: CACHE.eVocabularySetID): Promise<number | undefined> {
         const idVocab: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eVocabEnum);
         if (!idVocab) {
-            LOG.logger.error(`WF WorkflowEngine.computeWorkflowTypeFromEnum called with invalid workflow type ${CACHE.eVocabularyID[eVocabEnum]}`);
+            LOG.error(`WorkflowEngine.computeWorkflowTypeFromEnum called with invalid workflow type ${CACHE.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
             return undefined;
         }
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eVocabEnum, eVocabSetEnum)) {
-            LOG.logger.error(`WF WorkflowEngine.computeWorkflowTypeFromEnum called with non-workflow type vocabulary ${CACHE.eVocabularyID[eVocabEnum]}`);
+            LOG.error(`WorkflowEngine.computeWorkflowTypeFromEnum called with non-workflow type vocabulary ${CACHE.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
             return undefined;
         }
         return idVocab;
@@ -174,11 +174,11 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     static async computeWorkflowEnumFromID(idVocab: number, eVocabSetEnum: CACHE.eVocabularySetID): Promise<CACHE.eVocabularyID | undefined> {
         const eVocabEnum: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVocab);
         if (!eVocabEnum) {
-            LOG.logger.error(`WF WorkflowEngine.computeWorkflowTypeEnumFromID called with invalid workflow type ${idVocab}`);
+            LOG.error(`WorkflowEngine.computeWorkflowTypeEnumFromID called with invalid workflow type ${idVocab}`, LOG.LS.eWF);
             return undefined;
         }
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eVocabEnum, eVocabSetEnum)) {
-            LOG.logger.error(`WF WorkflowEngine.computeWorkflowTypeEnumFromID called with non-workflow type vocabulary ${CACHE.eVocabularyID[eVocabEnum]}`);
+            LOG.error(`WorkflowEngine.computeWorkflowTypeEnumFromID called with non-workflow type vocabulary ${CACHE.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
             return undefined;
         }
         return eVocabEnum;
@@ -211,7 +211,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // WorkflowStep for initiation
         const idVWorkflowStepType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eWorkflowStepTypeStart);
         if (!idVWorkflowStepType) {
-            LOG.logger.error(`WF WorkflowEngine.create called with invalid workflow type ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`);
+            LOG.error(`WorkflowEngine.create called with invalid workflow type ${CACHE.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
             return null;
         }
 
