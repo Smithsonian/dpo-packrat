@@ -11,7 +11,6 @@ import API, { AuthResponseType } from '../api';
 
 type UserStore = {
     user: User | null;
-    isAuthenticated: () => Promise<boolean>;
     initialize: () => Promise<void>;
     login: (email: string, password: string) => Promise<AuthResponseType>;
     logout: () => Promise<AuthResponseType>;
@@ -19,9 +18,6 @@ type UserStore = {
 
 export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: GetState<UserStore>) => ({
     user: null,
-    isAuthenticated: async (): Promise<boolean> => {
-        return !!(await getAuthenticatedUser());
-    },
     initialize: async () => {
         const { user } = get();
         if (!user) {
