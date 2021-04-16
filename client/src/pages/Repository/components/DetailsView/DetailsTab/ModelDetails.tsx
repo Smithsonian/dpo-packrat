@@ -8,8 +8,8 @@
  */
 import { Typography, Box, makeStyles, Checkbox } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
-import { DateInputField, FieldType, Loader, SelectField, InputField, ReadOnlyRow } from '../../../../../components';
-import { useVocabularyStore } from '../../../../../store';
+import { DateInputField, FieldType, Loader, SelectField, ReadOnlyRow } from '../../../../../components';
+import { useVocabularyStore, useRepositoryDetailsFormStore } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
 // import { isFieldUpdated } from '../../../../../utils/repository';
 // import { withDefaultValueNumber } from '../../../../../utils/shared';
@@ -82,13 +82,23 @@ export const useStyles = makeStyles(theme => ({
 
 function ModelDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
-    const { data, loading, disabled, onUpdateDetail, objectType } = props;
+    const { data, loading, onUpdateDetail, objectType } = props;
 
     const { ingestionModel, modelObjects, assets } = extractModelConstellation(data?.getDetailsTabDataForObject?.Model);
-    const [details, setDetails] = useState({});
-    const [getInitialEntry, getEntries] = useVocabularyStore(state => [state.getInitialEntry, state.getEntries]);
-
-    console.log(typeof classes, typeof disabled, typeof getInitialEntry);
+    const [details] = useState({});
+    const [setFormField, setFormDateField, dateCaptured, master, authoritative, creationMethod, modality, purpose, units, fileType] = useRepositoryDetailsFormStore(state => [
+        state.setFormField,
+        state.setFormDateField,
+        state.dateCaptured,
+        state.master,
+        state.authoritative,
+        state.creationMethod,
+        state.modality,
+        state.purpose,
+        state.units,
+        state.fileType
+    ]);
+    const [getEntries] = useVocabularyStore(state => [state.getEntries]);
 
     useEffect(() => {
         onUpdateDetail(objectType, details);
@@ -96,7 +106,24 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
 
     useEffect(() => {
         if (data && !loading) {
-            console.log('data', data);
+            if (data.getDetailsTabDataForObject?.Model?.Model) {
+                const { DateCreated, Authoritative, Master, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = data.getDetailsTabDataForObject.Model.Model;
+
+                if (DateCreated) {
+                    setFormDateField(new Date(DateCreated));
+                }
+                if (typeof Authoritative === 'boolean') {
+                    setFormField('authoritative', Authoritative);
+                }
+                if (typeof Master === 'boolean') {
+                    setFormField('master', Master);
+                }
+                setFormField('creationMethod', idVCreationMethod);
+                setFormField('modality', idVModality);
+                setFormField('purpose', idVPurpose);
+                setFormField('units', idVUnits);
+                setFormField('fileType', idVFileType);
+            }
         }
     }, [data, loading]);
 
@@ -107,9 +134,8 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
     const setDateField = (value?: string | null): void => {
         if (value) {
             const date = new Date(value);
-            setDetails(details => ({ ...details, creationDate: date }));
+            setFormDateField(date);
         }
-        console.log(details);
     };
 
     const setIdField = ({ target }): void => {
@@ -119,36 +145,22 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
         if (value) {
             idFieldValue = Number.parseInt(value, 10);
         }
-
-        setDetails(details => ({ ...details, [name]: idFieldValue }));
-        console.log(details);
+        setFormField(name, idFieldValue);
     };
 
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
-        setDetails(details => ({ ...details, [name]: checked }));
-        console.log(details);
-    };
-
-    const setNameField = ({ target }): void => {
-        const { name, value } = target;
-        setDetails(details => ({ ...details, [name]: value }));
-        console.log(details);
+        setFormField(name, checked);
     };
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
-    // const modelData = data.getDetailsTabDataForObject?.Model;
-
-    console.log('creation', getEntries(eVocabularySetID.eModelCreationMethod));
-    console.log('modality', getEntries(eVocabularySetID.eModelModality));
-    console.log('unit', getEntries(eVocabularySetID.eModelUnits));
-    console.log('purpose', getEntries(eVocabularySetID.eModelPurpose));
-    console.log('filetype', getEntries(eVocabularySetID.eModelFileType));
-
     return (
         // <Box display='flex' style={{ backgroundColor: 'purple', width: 'fit-content' }}>
-        <Box display='flex' flex={1} flexDirection='column' style={{ width: '100%' }}>
+        <Box display='flex' flex={1} flexDirection='column' style={{ width: '100%' }} alignItems='center'>
+            <Box className={classes.assetFilesTable}>
+                <AssetFilesTable files={assets} />
+            </Box>
             <Box className={classes.ModelMetricsAndFormContainer}>
                 <Box className={classes.captionContainer}>
                     <Typography variant='caption'>Model</Typography>
@@ -156,56 +168,37 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
 
                 <Box className={classes.modelMetricsAndForm}>
                     <Box display='flex' flexDirection='column' className={classes.dataEntry}>
-                        <InputField required type='string' label='Name' value={ingestionModel.Name} name='name' onChange={setNameField} />
-
-                        {/* <FieldType required label='Date Captured' direction='row' containerProps={rowFieldProps}>
-    <DateInputField value={} onChange={(_, value) => setDateField('dateCaptured', value)} />
-</FieldType> */}
                         <FieldType required label='Date Created' direction='row' containerProps={rowFieldProps}>
-                            <DateInputField value={ingestionModel.DateCreated} onChange={(_, value) => setDateField(value)} />
+                            <DateInputField value={dateCaptured} onChange={(_, value) => setDateField(value)} />
                         </FieldType>
 
                         <FieldType required label='Master Model' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox name='master' checked={ingestionModel.Master} color='primary' onChange={setCheckboxField} />
+                            <Checkbox name='master' checked={!!master} color='primary' onChange={setCheckboxField} />
                         </FieldType>
 
                         <FieldType required label='Authoritative' direction='row' containerProps={rowFieldProps}>
-                            <Checkbox name='authoritative' checked={ingestionModel.Authoritative} color='primary' onChange={setCheckboxField} />
+                            <Checkbox name='authoritative' checked={!!authoritative} color='primary' onChange={setCheckboxField} />
                         </FieldType>
 
                         <SelectField
                             required
                             label='Creation Method'
-                            value={ingestionModel.idVCreationMethod}
+                            value={creationMethod}
                             name='creationMethod'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelCreationMethod)}
                         />
-                        <SelectField
-                            required
-                            label='Modality'
-                            value={ingestionModel.idVModality}
-                            name='modality'
-                            onChange={setIdField}
-                            options={getEntries(eVocabularySetID.eModelModality)}
-                        />
+                        <SelectField required label='Modality' value={modality} name='modality' onChange={setIdField} options={getEntries(eVocabularySetID.eModelModality)} />
 
-                        <SelectField required label='Units' value={ingestionModel.idVUnits} name='units' onChange={setIdField} options={getEntries(eVocabularySetID.eModelUnits)} />
+                        <SelectField required label='Units' value={units} name='units' onChange={setIdField} options={getEntries(eVocabularySetID.eModelUnits)} />
 
-                        <SelectField
-                            required
-                            label='Purpose'
-                            value={ingestionModel.idVPurpose}
-                            name='purpose'
-                            onChange={setIdField}
-                            options={getEntries(eVocabularySetID.eModelPurpose)}
-                        />
+                        <SelectField required label='Purpose' value={purpose} name='purpose' onChange={setIdField} options={getEntries(eVocabularySetID.eModelPurpose)} />
 
                         <SelectField
                             required
                             label='Model File Type'
-                            value={ingestionModel.idVFileType}
-                            name='modelFileType'
+                            value={fileType}
+                            name='fileType'
                             onChange={setIdField}
                             options={getEntries(eVocabularySetID.eModelFileType)}
                         />
@@ -223,10 +216,6 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} />
                     </Box>
                 </Box>
-            </Box>
-
-            <Box className={classes.assetFilesTable}>
-                <AssetFilesTable files={assets} />
             </Box>
 
             {/* <Box display='flex' flexDirection='row'> */}
