@@ -69,8 +69,8 @@ export class OCFLRoot {
     async initialize(rootRepository: string, rootStaging: string): Promise<H.IOResults> {
         this.storageRootRepo = rootRepository;  // root of OCFL repository
         this.storageRootStaging = rootStaging;  // root of staging area
-        LOG.logger.info(`OCFL Storage initialization: Repo Root    = ${this.storageRootRepo}`);
-        LOG.logger.info(`OCFL Storage initialization: Staging Root = ${this.storageRootStaging}`);
+        LOG.info(`OCFL Storage initialization: Repo Root    = ${this.storageRootRepo}`, LOG.LS.eSTR);
+        LOG.info(`OCFL Storage initialization: Staging Root = ${this.storageRootStaging}`, LOG.LS.eSTR);
 
         let ioResults: H.IOResults;
         ioResults = await H.Helpers.initializeDirectory(this.storageRootRepo, 'Storage OCFLRoot');

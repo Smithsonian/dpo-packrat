@@ -64,12 +64,12 @@ export class ObjectGraphDataEntry {
 
     recordChild(child: SystemObjectIDType): void {
         this.childMap.set(child.idSystemObject, child);
-        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} children: ${this.childMap.size}`);
+        // LOG.info(`${JSON.stringify(this.systemObjectIDType)} children: ${this.childMap.size}`, LOG.LS.eDB);
     }
 
     recordParent(parent: SystemObjectIDType): void {
         this.parentMap.set(parent.idSystemObject, parent);
-        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} parents: ${this.parentMap.size}`);
+        // LOG.info(`${JSON.stringify(this.systemObjectIDType)} parents: ${this.parentMap.size}`, LOG.LS.eDB);
     }
 
     // Returns true if applying objectGraphState updated the state of this ObjectGraphDataEntry
@@ -141,8 +141,8 @@ export class ObjectGraphDataEntry {
         objectGraphDataEntryHierarchy.parents = [...this.parentMap.keys()];
         objectGraphDataEntryHierarchy.children = [...this.childMap.keys()];
 
-        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(this.parentMap.keys())} (${JSON.stringify(this.parentMap.size)})`);
-        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(objectGraphDataEntryHierarchy.parents)} -Children-> ${JSON.stringify(objectGraphDataEntryHierarchy.children)}`);
+        // LOG.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(this.parentMap.keys())} (${JSON.stringify(this.parentMap.size)})`, LOG.LS.eDB);
+        // LOG.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(objectGraphDataEntryHierarchy.parents)} -Children-> ${JSON.stringify(objectGraphDataEntryHierarchy.children)}`, LOG.LS.eDB);
 
         for (const systemObjectIDType of this.ancestorObjectMap.values()) {
             switch (systemObjectIDType.eObjectType) {

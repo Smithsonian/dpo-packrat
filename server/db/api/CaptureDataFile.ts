@@ -35,7 +35,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataFile.create', error);
+            LOG.error('DBAPI.CaptureDataFile.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -53,7 +53,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataFile.update', error);
+            LOG.error('DBAPI.CaptureDataFile.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -65,7 +65,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             return DBC.CopyObject<CaptureDataFileBase, CaptureDataFile>(
                 await DBC.DBConnection.prisma.captureDataFile.findUnique({ where: { idCaptureDataFile, }, }), CaptureDataFile);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataFile.fetch', error);
+            LOG.error('DBAPI.CaptureDataFile.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -77,7 +77,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             return DBC.CopyArray<CaptureDataFileBase, CaptureDataFile>(
                 await DBC.DBConnection.prisma.captureDataFile.findMany({ where: { idCaptureData } }), CaptureDataFile);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataFile.fetchFromCaptureData', error);
+            LOG.error('DBAPI.CaptureDataFile.fetchFromCaptureData', LOG.LS.eDB, error);
             return null;
         }
     }

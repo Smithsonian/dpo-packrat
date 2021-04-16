@@ -170,7 +170,7 @@ export class VocabularyCache {
     // Cache Construction
     // **************************
     private async flushInternalWorker(): Promise<boolean> {
-        LOG.logger.info('CACHE VocabularyCache.flushInternalWorker() start');
+        LOG.info('CACHE VocabularyCache.flushInternalWorker() start', LOG.LS.eCACHE);
         const vocabArray: Vocabulary[] | null = await Vocabulary.fetchAll();
         /* istanbul ignore if */
         if (!vocabArray)
@@ -409,8 +409,8 @@ export class VocabularyCache {
             if (vocabEntryArray)
                 vocabEntryArray.push(vocabulary);
             else {
-                LOG.logger.error('VocabularyCache.flushInternalWorker() encountered invalid VocabularySet ID [' +
-                    vocabulary.idVocabularySet + '] in vocabulary object ID [' + vocabulary.idVocabularySet + ']');
+                LOG.error('VocabularyCache.flushInternalWorker() encountered invalid VocabularySet ID [' +
+                    vocabulary.idVocabularySet + '] in vocabulary object ID [' + vocabulary.idVocabularySet + ']', LOG.LS.eCACHE);
                 continue;
             }
         }
@@ -419,7 +419,7 @@ export class VocabularyCache {
         for (const vocabList of this.vocabSetEntries.values())
             vocabList.sort((vocab1, vocab2) => vocab1.SortOrder - vocab2.SortOrder);
 
-        LOG.logger.info('CACHE VocabularyCache.flushInternalWorker() done');
+        LOG.info('CACHE VocabularyCache.flushInternalWorker() done', LOG.LS.eCACHE);
         return true;
     }
 
@@ -482,21 +482,21 @@ export class VocabularyCache {
     private isVocabularyInSetInternal(eVocabEnum: eVocabularyID, eVocabSetEnum: eVocabularySetID): boolean {
         const vocab: Vocabulary | undefined = this.vocabularyByEnumInternal(eVocabEnum);
         if (!vocab) {
-            // LOG.logger.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 1`);
+            // LOG.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 1`, { eLS: LOG.eLS.eCACHE });
             return false;
         }
 
         const vocabSet: VocabularySet | undefined = this.vocabularySetByEnumInternal(eVocabSetEnum);
         if (!vocabSet) {
-            // LOG.logger.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 2`);
+            // LOG.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 2`, { eLS: LOG.eLS.eCACHE });
             return false;
         }
 
         if (vocabSet.idVocabularySet === vocab.idVocabularySet) {
-            // LOG.logger.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: true`);
+            // LOG.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: true`, { eLS: LOG.eLS.eCACHE });
             return true;
         }
-        // LOG.logger.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 3`);
+        // LOG.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 3`, { eLS: LOG.eLS.eCACHE });
         return false;
     }
 
@@ -632,10 +632,10 @@ export class VocabularyCache {
             case '.ptx':  eVocabID = eVocabularyID.eModelFileTypeptx; break;
             case '.pts':  eVocabID = eVocabularyID.eModelFileTypepts; break;
             default:
-                // LOG.logger.info(`VocabularyCache.mapModelFileByExtension(${fileName}) using unrecognized ext ${extension}`);
+                // LOG.info(`VocabularyCache.mapModelFileByExtension(${fileName}) using unrecognized ext ${extension}`, { eLS: LOG.eLS.eCACHE });
                 return undefined;
         }
-        // LOG.logger.info(`VocabularyCache.mapModelFileByExtension(${fileName}) = ${eVocabularyID[eVocabID]} using ext ${extension}`);
+        // LOG.info(`VocabularyCache.mapModelFileByExtension(${fileName}) = ${eVocabularyID[eVocabID]} using ext ${extension}`, { eLS: LOG.eLS.eCACHE });
         return await VocabularyCache.vocabularyByEnum(eVocabID);
     }
 

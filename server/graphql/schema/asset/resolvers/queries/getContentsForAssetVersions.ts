@@ -13,9 +13,9 @@ export default async function getContentsForAssetVersions(_: Parent, args: Query
         if (assetVersion)
             result.push(await AssetStorageAdapter.getAssetVersionContents(assetVersion));
         else
-            LOG.logger.error(`GraphQL getContentsForAssetVersions unable to load AssetVersion from ID ${idAssetVersion}`);
+            LOG.error(`GraphQL getContentsForAssetVersions unable to load AssetVersion from ID ${idAssetVersion}`, LOG.LS.eGQL);
     }
 
-    // LOG.logger.info(`GraphQL getContentsForAssetVersions(${JSON.stringify(idAssetVersions)}) = ${JSON.stringify(result)}`);
+    // LOG.info(`GraphQL getContentsForAssetVersions(${JSON.stringify(idAssetVersions)}) = ${JSON.stringify(result)}`, LOG.LS.eGQL);
     return { AssetVersionContent: result };
 }

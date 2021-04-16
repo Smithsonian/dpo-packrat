@@ -48,7 +48,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Job.create', error);
+            LOG.error('DBAPI.Job.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -66,7 +66,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Job.update', error);
+            LOG.error('DBAPI.Job.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -78,7 +78,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
             return DBC.CopyObject<JobBase, Job>(
                 await DBC.DBConnection.prisma.job.findUnique({ where: { idJob, }, }), Job);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Job.fetch', error);
+            LOG.error('DBAPI.Job.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -90,7 +90,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
             return DBC.CopyArray<JobBase, Job>(
                 await DBC.DBConnection.prisma.job.findMany({ where: { idVJobType, }, }), Job);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Job.fetchByType', error);
+            LOG.error('DBAPI.Job.fetchByType', LOG.LS.eDB, error);
             return null;
         }
     }

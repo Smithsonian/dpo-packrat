@@ -36,24 +36,24 @@ export class JobEngine implements JOB.IJobEngine {
             // look up job type
             dbJob = await DBAPI.Job.fetch(idJob);
             if (!dbJob) {
-                LOG.logger.error(`JobEngine.create unable to fetch Job with ID ${idJob}`);
+                LOG.error(`JobEngine.create unable to fetch Job with ID ${idJob}`, LOG.LS.eJOB);
                 return null;
             }
             const eJobType2: CACHE.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(dbJob.idVJobType);
             if (!eJobType2) {
-                LOG.logger.error(`JobEngine.createByID unable to fetch Job type from ${JSON.stringify(dbJob)}`);
+                LOG.error(`JobEngine.createByID unable to fetch Job type from ${JSON.stringify(dbJob)}`, LOG.LS.eJOB);
                 return null;
             }
 
             if (eJobType === null)
                 eJobType = eJobType2;
             else if (eJobType != eJobType2) {
-                LOG.logger.error(`JobEngine.create called with contradictory idJob (job type ${CACHE.eVocabularyID[eJobType2]}) vs. job type ${CACHE.eVocabularyID[eJobType]}`);
+                LOG.error(`JobEngine.create called with contradictory idJob (job type ${CACHE.eVocabularyID[eJobType2]}) vs. job type ${CACHE.eVocabularyID[eJobType]}`, LOG.LS.eJOB);
                 return null;
             }
         } else {
             if (!eJobType) {
-                LOG.logger.error('JobEngine.create called with null values for idJob and eJobType');
+                LOG.error('JobEngine.create called with null values for idJob and eJobType', LOG.LS.eJOB);
                 return null;
             }
 
@@ -64,13 +64,13 @@ export class JobEngine implements JOB.IJobEngine {
 
         const dbJobRun: DBAPI.JobRun | null = await this.createJobRunDBRecord(dbJob, null, parameters);
         if (!dbJobRun) {
-            LOG.logger.error('JobEngine.createWorker unable to create JobRun');
+            LOG.error('JobEngine.createWorker unable to create JobRun', LOG.LS.eJOB);
             return null;
         }
 
         const job: JobPackrat | null = await this.createJob(eJobType, idAssetVersions, parameters, frequency, dbJobRun);
         if (!job) {
-            LOG.logger.error('JobEngine.createWorker unable to create Job');
+            LOG.error('JobEngine.createWorker unable to create Job', LOG.LS.eJOB);
             return null;
         }
 
@@ -81,7 +81,7 @@ export class JobEngine implements JOB.IJobEngine {
         }
 
         this.jobMap.set(dbJobRun.idJobRun, new JobData(job, dbJob, dbJobRun));
-        LOG.logger.info(`JobEngine.create [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`);
+        LOG.info(`JobEngine.create [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`, LOG.LS.eJOB);
         return job;
     }
 
@@ -89,7 +89,7 @@ export class JobEngine implements JOB.IJobEngine {
         const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
         if (dbJobRun) {
             this.jobMap.delete(dbJobRun.idJobRun);
-            LOG.logger.info(`JobEngine.jobCompleted [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`);
+            LOG.info(`JobEngine.jobCompleted [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`, LOG.LS.eJOB);
         }
     }
     // #endregion
@@ -98,7 +98,7 @@ export class JobEngine implements JOB.IJobEngine {
     private async createJobDBRecord(eJobType: CACHE.eVocabularyID, frequency: string | null): Promise<DBAPI.Job | null> {
         const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eJobType);
         if (!idVJobType) {
-            LOG.logger.error(`JobEngine.createDBJob unable to fetch Job type from ${CACHE.eVocabularyID[eJobType]}`);
+            LOG.error(`JobEngine.createDBJob unable to fetch Job type from ${CACHE.eVocabularyID[eJobType]}`, LOG.LS.eJOB);
             return null;
         }
 
@@ -119,7 +119,7 @@ export class JobEngine implements JOB.IJobEngine {
         if (!dbJob) {
             dbJob = new DBAPI.Job({ idJob: 0, idVJobType, Name, Status: DBAPI.eJobStatus.eActive, Frequency: frequency || '' });
             if (!await dbJob.create()) {
-                LOG.logger.error('JobEngine.createJobDBRecord failed');
+                LOG.error('JobEngine.createJobDBRecord failed', LOG.LS.eJOB);
                 return null;
             }
         }
@@ -136,7 +136,7 @@ export class JobEngine implements JOB.IJobEngine {
         });
 
         if (!await dbJobRun.create()) {
-            LOG.logger.error('JobEngine.createJobRunDBRecord failed');
+            LOG.error('JobEngine.createJobRunDBRecord failed', LOG.LS.eJOB);
             return null;
         }
         return dbJobRun;
@@ -156,7 +156,7 @@ export class JobEngine implements JOB.IJobEngine {
             return job;
 
         if (frequency === '') { // empty frequency means run it once, now
-            LOG.logger.info(`JobEngine.createJob running now ${job.name()}`);
+            LOG.info(`JobEngine.createJob running now ${job.name()}`, LOG.LS.eJOB);
             job.executeJob(new Date()); // do not use await here, so that we remain unblocked while the job starts
         } else {                 // non-empty frequency means run job on schedule
             const nsJob: NS.Job = NS.scheduleJob(job.name(), frequency, job.executeJob);
@@ -172,11 +172,11 @@ export class JobEngine implements JOB.IJobEngine {
                 if (parameters instanceof COOK.JobCookSIPackratInspectParameters)
                     return new COOK.JobCookSIPackratInspect(this, idAssetVersions, parameters, dbJobRun);
                 else {
-                    LOG.logger.error(`JobEngine.createJobWorker called with parameters not of type JobCookSIPackratInspect: ${JSON.stringify(parameters)}`);
+                    LOG.error(`JobEngine.createJobWorker called with parameters not of type JobCookSIPackratInspect: ${JSON.stringify(parameters)}`, LOG.LS.eJOB);
                     return null;
                 }
             default:
-                LOG.logger.error(`JobEngine.createJobWorker unknown job type ${CACHE.eVocabularyID[eJobType]}`);
+                LOG.error(`JobEngine.createJobWorker unknown job type ${CACHE.eVocabularyID[eJobType]}`, LOG.LS.eJOB);
                 return null;
         }
     }

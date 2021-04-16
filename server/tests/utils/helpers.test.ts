@@ -154,7 +154,7 @@ describe('Utils: Helpers', () => {
     test('Utils: Helpers.copyFile', async () => {
         let res: H.IOResults = await H.Helpers.copyFile(filePath, filePath2);
         expect(res.success).toBeTruthy();
-        LOG.logger.info('NOTICE: The logged error that should follow is expected!');
+        LOG.info('NOTICE: The logged error that should follow is expected!', LOG.LS.eTEST);
         res = await H.Helpers.copyFile(filePath, filePath2, false);
         expect(res.success).toBeFalsy();
     });
@@ -200,7 +200,7 @@ describe('Utils: Helpers', () => {
             const hash: string = await H.Helpers.createRandomFile(WS, RANDOM_FILE_SIZE);
             expect(hash).toBeTruthy();
         } catch (error) {
-            LOG.logger.error(`Helpers.createRandomeFile test failed: ${JSON.stringify(error)}`);
+            LOG.error(`Helpers.createRandomeFile test failed: ${JSON.stringify(error)}`, LOG.LS.eTEST);
             expect(false).toBeTruthy();
         }
     });
@@ -225,7 +225,7 @@ describe('Utils: Helpers', () => {
         const stream: NodeJS.WritableStream = fs.createWriteStream(filePathTemp);
         let ioResults: H.IOResults = await H.Helpers.writeFileToStream(filePath, stream);
         if (!ioResults.success)
-            LOG.logger.info(ioResults.error);
+            LOG.info(ioResults.error, LOG.LS.eTEST);
         expect(ioResults.success).toBeTruthy();
 
         ioResults = await H.Helpers.removeFile(filePathTemp);
@@ -239,7 +239,7 @@ describe('Utils: Helpers', () => {
 
         let ioResults: H.IOResults = await H.Helpers.writeStreamToStream(readStream, writeStream);
         if (!ioResults.success)
-            LOG.logger.info(ioResults.error);
+            LOG.info(ioResults.error, LOG.LS.eTEST);
         expect(ioResults.success).toBeTruthy();
 
         ioResults = await H.Helpers.removeFile(filePathTemp);
@@ -253,7 +253,7 @@ describe('Utils: Helpers', () => {
 
         const ioResultsSized: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(readStream, writeStream);
         if (!ioResultsSized.success)
-            LOG.logger.info(ioResultsSized.error);
+            LOG.info(ioResultsSized.error, LOG.LS.eTEST);
         expect(ioResultsSized.success).toBeTruthy();
         expect(ioResultsSized.size).toEqual(RANDOM_FILE_SIZE);
 
@@ -409,11 +409,11 @@ describe('Utils: Helpers', () => {
         };
 
         const output1: string = JSON.stringify(testData, H.Helpers.stringifyMapsAndBigints);
-        LOG.logger.info(`output: ${output1}`);
+        LOG.info(`output: ${output1}`, LOG.LS.eTEST);
         expect(output1).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"valueOrig":39}');
 
         const output2: string = JSON.stringify(testData, H.Helpers.stringifyDatabaseRow);
-        LOG.logger.info(`output: ${output2}`);
+        LOG.info(`output: ${output2}`, LOG.LS.eTEST);
         expect(output2).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false}');
     });
 });

@@ -33,20 +33,20 @@ class AuthFactory {
         const users: DBAPI.User[] | null = await DBAPI.User.fetchByEmail(email);
         if (!users || users.length == 0) {
             const error: string = `${email} is not a Packrat user`;
-            LOG.logger.error(`AuthFactory.verifyUser: ${error}`);
+            LOG.error(`AuthFactory.verifyUser: ${error}`, LOG.LS.eAUTH);
             return { user: null, error };
         }
 
         if (users.length > 1) {
             const error: string = `Multiple users exist for ${email}`;
-            LOG.logger.error(`AuthFactory.verifyUser: ${error}`);
+            LOG.error(`AuthFactory.verifyUser: ${error}`, LOG.LS.eAUTH);
             return { user: null, error };
         }
 
         const user: DBAPI.User = users[0];
         if (!user.Active) {
             const error: string = `${email} is not active in Packrat`;
-            LOG.logger.info(`AuthFactory.verifyUser: ${error}`);
+            LOG.info(`AuthFactory.verifyUser: ${error}`, LOG.LS.eAUTH);
             return { user: null, error };
         }
 
@@ -55,7 +55,7 @@ class AuthFactory {
         if (LS)
             LS.user = user;
 
-        LOG.logger.info(`AuthFactory.verifyUser ${email} successfully authenticated`);
+        LOG.info(`AuthFactory.verifyUser ${email} successfully authenticated`, LOG.LS.eAUTH);
         return { user, error: null };
     }
 }

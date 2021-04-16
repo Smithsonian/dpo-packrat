@@ -17,27 +17,27 @@ interface ApolloFile {
 export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult | void> {
     const { user } = context;
     if (!user) {
-        LOG.logger.error('GQL uploadAsset unable to retrieve user context');
+        LOG.error('uploadAsset unable to retrieve user context', LOG.LS.eGQL);
         return { status: UploadStatus.Failed, error: 'User not authenticated' };
     }
 
     const { filename, createReadStream }: ApolloFile = await args.file;
-    LOG.logger.info(`GQL uploadAsset ${filename}`);
+    LOG.info(`uploadAsset ${filename}`, LOG.LS.eGQL);
     const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
     if (!storage) {
-        LOG.logger.error('GQL uploadAsset unable to retrieve Storage Implementation from StorageFactory.getInstance()');
+        LOG.error('uploadAsset unable to retrieve Storage Implementation from StorageFactory.getInstance()', LOG.LS.eGQL);
         return { status: UploadStatus.Failed, error: 'Storage unavailable' };
     }
 
     const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
     if (WSResult.error || !WSResult.writeStream || !WSResult.storageKey) {
-        LOG.logger.error(`GQL uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`);
+        LOG.error(`uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`, LOG.LS.eGQL);
         return { status: UploadStatus.Failed, error: 'Storage unavailable' };
     }
     const { writeStream, storageKey } = WSResult;
     const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(args.type);
     if (!vocabulary) {
-        LOG.logger.error('GQL uploadAsset unable to retrieve asset type vocabulary');
+        LOG.error('uploadAsset unable to retrieve asset type vocabulary', LOG.LS.eGQL);
         return { status: UploadStatus.Failed, error: 'Unable to retrieve asset type vocabulary' };
     }
 
@@ -64,7 +64,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
 
                 const commitResult: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
                 if (!commitResult.success) {
-                    LOG.logger.error(`GQL uploadAsset AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`);
+                    LOG.error(`uploadAsset AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`, LOG.LS.eGQL);
                     resolve({ status: UploadStatus.Failed, error: commitResult.error });
                 }
                 // commitResult.assets; commitResult.assetVersions; <-- These have been created
@@ -103,16 +103,16 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
                                 if (assetVersion.Ingested === null) {
                                     assetVersion.Ingested = false;
                                     if (!await assetVersion.update())
-                                        LOG.logger.error('GQL uploadAsset post-upload workflow suceeded, but unable to update asset version ingested flag');
+                                        LOG.error('uploadAsset post-upload workflow suceeded, but unable to update asset version ingested flag', LOG.LS.eGQL);
                                 }
                             } else {
-                                LOG.logger.error(`GQL uploadAsset post-upload workflow error: ${results.error}`);
+                                LOG.error(`uploadAsset post-upload workflow error: ${results.error}`, LOG.LS.eGQL);
                                 const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
                                 if (SO) {
                                     if (!await SO.retireObject())
-                                        LOG.logger.error('GQL uploadAsset post-upload workflow error handler failed to retire uploaded asset');
+                                        LOG.error('uploadAsset post-upload workflow error handler failed to retire uploaded asset', LOG.LS.eGQL);
                                 } else
-                                    LOG.logger.error('GQL uploadAsset post-upload workflow error handler failed to fetch system object for uploaded asset');
+                                    LOG.error('uploadAsset post-upload workflow error handler failed to fetch system object for uploaded asset', LOG.LS.eGQL);
                                 success = false;
                                 error = 'Post-upload Workflow Failed';
                             }
@@ -134,7 +134,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
             // stream.on('close', async () => { });
         });
     } catch (error) {
-        LOG.logger.error('GQL uploadAsset', error);
+        LOG.error('uploadAsset', error, LOG.LS.eGQL);
         return { status: UploadStatus.Failed, error: 'Upload failed' };
     }
 }

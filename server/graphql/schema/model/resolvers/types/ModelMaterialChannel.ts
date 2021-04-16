@@ -28,12 +28,12 @@ const ModelMaterialChannel = {
         if (parent.idModelMaterialUVMap) {
             const uvMap: DBAPI.ModelMaterialUVMap | null = await DBAPI.ModelMaterialUVMap.fetch(parent.idModelMaterialUVMap);
             if (!uvMap) {
-                LOG.logger.error(`ModelMaterialChannel.Source unable to load ModelMaterialUVMap from ${JSON.stringify(parent)}`);
+                LOG.error(`ModelMaterialChannel.Source unable to load ModelMaterialUVMap from ${JSON.stringify(parent)}`, LOG.LS.eGQL);
                 return null;
             }
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(uvMap.idAsset);
             if (!asset) {
-                LOG.logger.error(`ModelMaterialChannel.Source unable to load ModelMaterialUVMap's asset from ${JSON.stringify(parent)} -> ${JSON.stringify(uvMap)}`);
+                LOG.error(`ModelMaterialChannel.Source unable to load ModelMaterialUVMap's asset from ${JSON.stringify(parent)} -> ${JSON.stringify(uvMap)}`, LOG.LS.eGQL);
                 return null;
             }
             return asset.FileName;

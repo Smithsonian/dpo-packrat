@@ -59,7 +59,7 @@ describe('JobNS Init', () => {
         modelTestAvailable = await MTS.initialize();
         expect(modelTestAvailable === null || modelTestAvailable).toBeTruthy(); // null means that model test files were not available, which is ok
         if (!modelTestAvailable)
-            LOG.logger.info('JobNS Skipping Cook Job and Workflow Tests, missing test models');
+            LOG.info('JobNS Skipping Cook Job and Workflow Tests, missing test models', LOG.LS.eTEST);
     });
 });
 
@@ -109,14 +109,14 @@ describe('JobNS Cook Test Completion', () => {
         for (const job of JobSet)
             jobFinalizationList.push(job.waitForCompletion(testTimeout));
 
-        LOG.logger.info(`JobNS Cook awaiting job completion of ${JobSet.size} jobs`);
+        LOG.info(`JobNS Cook awaiting job completion of ${JobSet.size} jobs`, LOG.LS.eTEST);
         try {
             const resultsArray = await Promise.all(jobFinalizationList);
             for (const res of resultsArray)
                 expect(res.success).toBeTruthy();
-            LOG.logger.info(`JobNS Cook received job completion of ${resultsArray.length} jobs`);
+            LOG.info(`JobNS Cook received job completion of ${resultsArray.length} jobs`, LOG.LS.eTEST);
         } catch (error) {
-            LOG.logger.error('JobNS Cook Job Completion failed', error);
+            LOG.error('JobNS Cook Job Completion failed', LOG.LS.eTEST, error);
         }
     });
 
@@ -139,14 +139,14 @@ describe('JobNS IWorkflow Completion', () => {
         for (const WF of WorkflowSet)
             wfFinalizationList.push(WF.waitForCompletion(testTimeout));
 
-        LOG.logger.info(`JobNS IWorkflow Completion awaiting completion of ${WorkflowSet.size} workflows`);
+        LOG.info(`JobNS IWorkflow Completion awaiting completion of ${WorkflowSet.size} workflows`, LOG.LS.eTEST);
         try {
             const resultsArray = await Promise.all(wfFinalizationList);
             for (const res of resultsArray)
                 expect(res.success).toBeTruthy();
-            LOG.logger.info(`JobNS IWorkflow Completion received completion of ${resultsArray.length} workflows`);
+            LOG.info(`JobNS IWorkflow Completion received completion of ${resultsArray.length} workflows`, LOG.LS.eTEST);
         } catch (error) {
-            LOG.logger.error('JobNS IWorkflow Completion failed', error);
+            LOG.error('JobNS IWorkflow Completion failed', LOG.LS.eTEST, error);
         }
     });
 
@@ -179,7 +179,7 @@ describe('JobNS IWorkflow Completion', () => {
                 } break;
 
                 default:
-                    LOG.logger.error(`JobNS IWorkflow Job Results encountered Unexpected Workflow Type: ${eWorkflowType ? CACHE.eVocabularyID[eWorkflowType] : 'undefined'}`);
+                    LOG.error(`JobNS IWorkflow Job Results encountered Unexpected Workflow Type: ${eWorkflowType ? CACHE.eVocabularyID[eWorkflowType] : 'undefined'}`, LOG.LS.eTEST);
                     expect(false).toBeTruthy();
                     break;
             }
@@ -193,7 +193,7 @@ function testCookExplicit(testCase: string, eJobType: CACHE.eVocabularyID): void
         if (!modelTestAvailable)
             return;
 
-        LOG.logger.info(`JobNS.test testCook(${testCase}): ${CACHE.eVocabularyID[eJobType]} explicit IJob.executeJob`);
+        LOG.info(`JobNS.test testCook(${testCase}): ${CACHE.eVocabularyID[eJobType]} explicit IJob.executeJob`, LOG.LS.eTEST);
         const assetVersionIDs: number[] | undefined = MTS.getTestCase(testCase)?.assetVersionIDs();
         expect(assetVersionIDs).toBeTruthy();
         const parameters: any = computeJobParameters(testCase, eJobType);
@@ -215,7 +215,7 @@ function testCookImplicit(testCase: string, eJobType: CACHE.eVocabularyID): void
         if (!modelTestAvailable)
             return;
 
-        LOG.logger.info(`JobNS.test testCook(${testCase}): ${CACHE.eVocabularyID[eJobType]} implicit IJob.executeJob`);
+        LOG.info(`JobNS.test testCook(${testCase}): ${CACHE.eVocabularyID[eJobType]} implicit IJob.executeJob`, LOG.LS.eTEST);
         const assetVersionIDs: number[] | undefined = MTS.getTestCase(testCase)?.assetVersionIDs();
         expect(assetVersionIDs).toBeTruthy();
         const parameters: any = computeJobParameters(testCase, eJobType);
@@ -269,14 +269,14 @@ async function testCreateJob(idJob: number | null, eJobType: CACHE.eVocabularyID
 async function computeVocabularyDBID(eJobType: CACHE.eVocabularyID): Promise<number | undefined> {
     const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eJobType);
     if (!idVJobType)
-        LOG.logger.error(`computeVocabularyDBID unable to fetch Job type from ${CACHE.eVocabularyID[eJobType]}`);
+        LOG.error(`computeVocabularyDBID unable to fetch Job type from ${CACHE.eVocabularyID[eJobType]}`, LOG.LS.eTEST);
     return idVJobType;
 }
 
 async function computeVocabularyDBEnum(idVJobType: number): Promise<CACHE.eVocabularyID | undefined> {
     const eJobType: number | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVJobType);
     if (!eJobType)
-        LOG.logger.error(`computeVocabularyDBEnum unable to fetch Job enum from ${idVJobType}`);
+        LOG.error(`computeVocabularyDBEnum unable to fetch Job enum from ${idVJobType}`, LOG.LS.eTEST);
     return eJobType;
 }
 
@@ -288,7 +288,7 @@ function computeJobParameters(testCase: string, eJobType: CACHE.eVocabularyID): 
     switch (eJobType) {
         case CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect: return new COOK.JobCookSIPackratInspectParameters(modelName);
         default:
-            LOG.logger.error(`JobNS.test computeJobParameters: unexpected job type ${CACHE.eVocabularyID[eJobType]}`);
+            LOG.error(`JobNS.test computeJobParameters: unexpected job type ${CACHE.eVocabularyID[eJobType]}`, LOG.LS.eTEST);
             expect(false).toBeTruthy();
     }
 }
@@ -313,7 +313,7 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
             try {
                 JCOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''), null, null);
             } catch (error) {
-                LOG.logger.error(`JonNS Test validateJobOutput ${CACHE.eVocabularyID[jobData.eJobType]}: ${output}`, error);
+                LOG.error(`JonNS Test validateJobOutput ${CACHE.eVocabularyID[jobData.eJobType]}: ${output}`, LOG.LS.eTEST, error);
                 expect(true).toBeFalsy();
             }
             expect(JCOutput).toBeTruthy();
@@ -328,7 +328,7 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
             const MTC: TESTMODEL.ModelTestCase | undefined = MTS.getTestCase(jobData.testCase);
             expect(MTC).toBeTruthy();
             if (!MTC) {
-                LOG.logger.error(`Unable to find testcase ${jobData.testCase}`);
+                LOG.error(`Unable to find testcase ${jobData.testCase}`, LOG.LS.eTEST);
                 return false;
             }
 
@@ -336,25 +336,25 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
             expect(inspectJSON).toBeTruthy();
             expect(JCOutputStr).toEqual(inspectJSON);
             if (JCOutputStr !== inspectJSON)
-                LOG.logger.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`);
+                LOG.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`, LOG.LS.eTEST);
 
             // Test persistence of data
             const assetFileNameMap: Map<string, number> = MTC.assetFileNameMap();
             const res: H.IOResults = await JCOutput.persist(MTC.model.idModel, assetFileNameMap);
             if (!res.success)
-                LOG.logger.error(`JobNS Persisting ${MTC.testCase} FAILED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyMapsAndBigints)}: ${res.error}`);
+                LOG.error(`JobNS Persisting ${MTC.testCase} FAILED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyMapsAndBigints)}: ${res.error}`, LOG.LS.eTEST);
             else {
                 // expect(res.success).toBeTruthy();
                 expect(JCOutput.modelConstellation).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model?.idModel).toBeTruthy();
-                LOG.logger.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyMapsAndBigints)}`);
+                LOG.info(`JobNS Persisting ${MTC.testCase} SUCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eTEST);
             }
             return JCOutputStr === inspectJSON;
         }
 
         default:
-            LOG.logger.error(`JobNS validateJobOutput encountered Unexpected Job Type: ${jobData.eJobType ? CACHE.eVocabularyID[jobData.eJobType] : 'undefined'}`);
+            LOG.error(`JobNS validateJobOutput encountered Unexpected Job Type: ${jobData.eJobType ? CACHE.eVocabularyID[jobData.eJobType] : 'undefined'}`, LOG.LS.eTEST);
             expect(false).toBeTruthy();
             return false;
     }
@@ -378,7 +378,7 @@ function testWorkflow(testCase: string, eWorkflowType: CACHE.eVocabularyID, eJob
         if (!modelTestAvailable || !workflowEngine)
             return;
 
-        LOG.logger.info(`JobNS.test IWorkflow(${testCase}): ${CACHE.eVocabularyID[eWorkflowType]} ${CACHE.eVocabularyID[eJobType]}`);
+        LOG.info(`JobNS.test IWorkflow(${testCase}): ${CACHE.eVocabularyID[eWorkflowType]} ${CACHE.eVocabularyID[eJobType]}`, LOG.LS.eTEST);
         const idSystemObject: number[] | null = (await MTS?.getTestCase(testCase)?.computeSystemObjectIDs()) || null;
         expect(idSystemObject).toBeTruthy();
 
@@ -443,7 +443,7 @@ function computeWorkflowParameters(testCase: string, eWorkflowType: CACHE.eVocab
         case CACHE.eVocabularyID.eWorkflowTypeCookJob:
             return new WFP.WorkflowJobParameters(eJobType, computeJobParameters(testCase, eJobType));
         default:
-            LOG.logger.error(`JobNS.test computeWorkflowParameters: unexpected workflow type ${CACHE.eVocabularyID[eWorkflowType]}`);
+            LOG.error(`JobNS.test computeWorkflowParameters: unexpected workflow type ${CACHE.eVocabularyID[eWorkflowType]}`, LOG.LS.eTEST);
             expect(false).toBeTruthy();
     }
 }

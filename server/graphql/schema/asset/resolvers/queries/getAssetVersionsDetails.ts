@@ -16,7 +16,7 @@ export default async function getAssetVersionsDetails(_: Parent, args: QueryGetA
     for (const idAssetVersion of idAssetVersions) {
         const assetVersion: AssetVersion | null = await AssetVersion.fetch(idAssetVersion);
         if (!assetVersion) {
-            LOG.logger.error(`GraphQL getAssetVersionsDetails called with invalid idAssetVersion ${idAssetVersion}`);
+            LOG.error(`GraphQL getAssetVersionsDetails called with invalid idAssetVersion ${idAssetVersion}`, LOG.LS.eGQL);
             return { valid: false, Details: [] };
         }
 

@@ -75,7 +75,7 @@ export class OCFLObject {
         fileName: string | null, metadata: any | null, opInfo: OperationInfo): Promise<H.IOResults> {
         if (pathOnDisk && inputStream) {
             const error: string = 'OCFLObject.addOrUpdate called with both a file and a stream';
-            LOG.logger.error(error);
+            LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };
         }
 
@@ -229,7 +229,7 @@ export class OCFLObject {
         // copy old file to new file in new version
         const fullPathSource: string = path.join(this._objectRoot, contentPathSource);
         const fullPathDest: string = this.fileLocationExplicit(fileNameNew, version);
-        // LOG.logger.info(`Copying ${fullPathSource} to ${fullPathDest}`);
+        // LOG.info(`Copying ${fullPathSource} to ${fullPathDest}`, LOG.LS.eSTR);
         results = await H.Helpers.copyFile(fullPathSource, fullPathDest, false);
         /* istanbul ignore next */
         if (!results.success)
@@ -237,11 +237,11 @@ export class OCFLObject {
 
         // record copied, renamed file
         const contentPathDest: string = path.join(OCFLObject.versionContentPartialPath(version), fileNameNew);
-        // LOG.logger.info(`Calling OFCLInventory.addContent for ${fileNameNew} at ${contentPathDest}`);
+        // LOG.info(`Calling OFCLInventory.addContent for ${fileNameNew} at ${contentPathDest}`, LOG.LS.eSTR);
         this._ocflInventory.addContent(contentPathDest, fileNameNew, hash);
 
         // remove old file from inventory, if we're changing names (reinstate uses this code, with fileNameOld === fileNameNew)
-        // LOG.logger.info(`Calling OFCLInventory.removeContent for ${fileNameOld} at ${contentPathSource}`);
+        // LOG.info(`Calling OFCLInventory.removeContent for ${fileNameOld} at ${contentPathSource}`, LOG.LS.eSTR);
         /* istanbul ignore next */
         if (fileNameOld != fileNameNew && !this._ocflInventory.removeContent(contentPathSource, fileNameOld, hash))
             return {
@@ -380,12 +380,12 @@ export class OCFLObject {
         if (maxVersion <= 0) {
             ioResults.success = false;
             ioResults.error = `Invalid inventory file for ${this._storageKey}`;
-            LOG.logger.error(ioResults.error);
+            LOG.error(ioResults.error, LOG.LS.eSTR);
             return ioResults;
         }
         ioResults = await ocflInventoryRoot.validate(this, true);
         if (!ioResults.success) {
-            LOG.logger.error(ioResults.error);
+            LOG.error(ioResults.error, LOG.LS.eSTR);
             return ioResults;
         }
 
@@ -395,7 +395,7 @@ export class OCFLObject {
             if (!invResults.success || !invResults.ocflInventory) {
                 ioResults.success = false;
                 ioResults.error = invResults.error ? invResults.error : /* istanbul ignore next */ `Failed to read inventory for ${this._storageKey}, version ${version}`;
-                LOG.logger.error(ioResults.error);
+                LOG.error(ioResults.error, LOG.LS.eSTR);
                 return ioResults;
             }
 
@@ -403,7 +403,7 @@ export class OCFLObject {
             ioResults = await ocflInventory.validate(this, false);
             /* istanbul ignore next */
             if (!ioResults.success) {
-                LOG.logger.error(ioResults.error);
+                LOG.error(ioResults.error, LOG.LS.eSTR);
                 return ioResults;
             }
 
@@ -412,7 +412,7 @@ export class OCFLObject {
                 if (!L.isEqual(ocflInventory, ocflInventoryRoot)) {
                     ioResults.success = false;
                     ioResults.error = `Root inventory does not match head inventory for ${this._storageKey}`;
-                    LOG.logger.error(ioResults.error);
+                    LOG.error(ioResults.error, LOG.LS.eSTR);
                     return ioResults;
                 }
             }
@@ -421,7 +421,7 @@ export class OCFLObject {
             if (version != ocflInventory.headVersion) {
                 ioResults.success = false;
                 ioResults.error = `Invalid inventory version for ${this._storageKey}: observed ${ocflInventory.headVersion}, expected ${version}`;
-                LOG.logger.error(ioResults.error);
+                LOG.error(ioResults.error, LOG.LS.eSTR);
                 return ioResults;
             }
         }
@@ -433,14 +433,14 @@ export class OCFLObject {
         if (!fileList) {
             ioResults.success = false;
             ioResults.error = `Unable to read filelist from directory from ${this._objectRoot}`;
-            LOG.logger.error(ioResults.error);
+            LOG.error(ioResults.error, LOG.LS.eSTR);
             return ioResults;
         }
 
         for (const fileName of fileList) {
             const relName: string = path.relative(this._objectRoot, fileName);
             const baseName: string = path.basename(fileName);
-            // LOG.logger.info(`Examining ${fileName}; relName ${relName}; basename ${baseName}`);
+            // LOG.info(`Examining ${fileName}; relName ${relName}; basename ${baseName}`, LOG.LS.eSTR);
 
             // Skip Inventory, Inventory Digest, and Namaste file
             if (baseName == ST.OCFLStorageObjectInventoryFilename ||
@@ -452,28 +452,28 @@ export class OCFLObject {
             if (!hash) {
                 ioResults.success = false;
                 ioResults.error = `No hash found for ${relName} in manifest ${JSON.stringify(fileMap)}`;
-                LOG.logger.error(ioResults.error);
+                LOG.error(ioResults.error, LOG.LS.eSTR);
                 return ioResults;
             }
 
             ioResults = await H.Helpers.fileOrDirExists(fileName);
             /* istanbul ignore if */
             if (!ioResults.success) {
-                LOG.logger.error(ioResults.error);
+                LOG.error(ioResults.error, LOG.LS.eSTR);
                 return ioResults;
             }
 
             const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(fileName, ST.OCFLDigestAlgorithm);
             /* istanbul ignore if */
             if (!hashResults.success) {
-                LOG.logger.error(hashResults.error);
+                LOG.error(hashResults.error, LOG.LS.eSTR);
                 return hashResults;
             }
 
             if (hash != hashResults.hash) {
                 ioResults.success = false;
                 ioResults.error = `Computed hash for ${fileName} does not match; expected ${hash}; observed ${hashResults.hash}`;
-                LOG.logger.error(ioResults.error);
+                LOG.error(ioResults.error, LOG.LS.eSTR);
                 return ioResults;
             }
         }

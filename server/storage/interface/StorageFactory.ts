@@ -20,7 +20,7 @@ export class StorageFactory {
                     if (IOR.success)
                         StorageFactory.instance = LS;
                     else
-                        LOG.logger.error(`Error encountered in StorageFactory.getInstance while initializing LocalStorage: ${IOR.error}`);
+                        LOG.error(`Error encountered in StorageFactory.getInstance while initializing LocalStorage: ${IOR.error}`, LOG.LS.eSTR);
                     break;
                 }
             }

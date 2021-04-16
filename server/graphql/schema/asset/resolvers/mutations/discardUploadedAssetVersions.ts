@@ -15,14 +15,14 @@ export default async function discardUploadedAssetVersions(
     for (const idAssetVersion of idAssetVersions) {
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
         if (!assetVersion) {
-            LOG.logger.error(`GQL discardUploadedAssetVersions Unable to fetch asset version with id ${idAssetVersion}`);
+            LOG.error(`discardUploadedAssetVersions Unable to fetch asset version with id ${idAssetVersion}`, LOG.LS.eGQL);
             success = false;
             continue;
         }
 
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
         if (!ASR.success) {
-            LOG.logger.error(`GQL discardUploadedAssetVersions failed to discard asset version ${JSON.stringify(assetVersion)}: ${ASR.error}`);
+            LOG.error(`discardUploadedAssetVersions failed to discard asset version ${JSON.stringify(assetVersion)}: ${ASR.error}`, LOG.LS.eGQL);
             success = false;
             continue;
         }
