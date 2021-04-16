@@ -34,9 +34,11 @@ let assetVersion: DBAPI.AssetVersion | null;
 let assetVersion2: DBAPI.AssetVersion | null;
 let assetVersionModel: DBAPI.AssetVersion | null;
 let assetVersionNotIngested: DBAPI.AssetVersion | null;
+let assetVersionNotProcessed: DBAPI.AssetVersion | null;
 let captureData: DBAPI.CaptureData | null;
 let captureDataNulls: DBAPI.CaptureData | null;
 let captureDataFile: DBAPI.CaptureDataFile | null;
+let captureDataFileNulls: DBAPI.CaptureDataFile | null;
 let captureDataGroup: DBAPI.CaptureDataGroup | null;
 let captureDataGroupCaptureDataXref: DBAPI.CaptureDataGroupCaptureDataXref | null;
 let captureDataGroupCaptureDataXref2: DBAPI.CaptureDataGroupCaptureDataXref | null;
@@ -576,7 +578,7 @@ describe('DB Creation Test Suite', () => {
         expect(assetVersion).toBeTruthy();
     });
 
-    test('DB Creation: AssetVersion Not Ingested', async () => {
+    test('DB Creation: AssetVersion Uploaded, Processed', async () => {
         if (assetThumbnail && userActive)
             assetVersionNotIngested = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
@@ -592,6 +594,24 @@ describe('DB Creation Test Suite', () => {
                 idAssetVersion: 0
             });
         expect(assetVersionNotIngested).toBeTruthy();
+    });
+
+    test('DB Creation: AssetVersion Uploaded, Not Processed', async () => {
+        if (assetThumbnail && userActive)
+            assetVersionNotProcessed = await UTIL.createAssetVersionTest({
+                idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FilePath,
+                idUserCreator: userActive.idUser,
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum Not Processed',
+                StorageSize: BigInt(50),
+                StorageKeyStaging: '',
+                Ingested: null,
+                BulkIngest: true,
+                idAssetVersion: 0
+            });
+        expect(assetVersionNotProcessed).toBeTruthy();
     });
 
     test('DB Creation: CaptureData', async () => {
@@ -627,12 +647,28 @@ describe('DB Creation Test Suite', () => {
                 CompressedMultipleFiles: false,
                 idAsset: assetThumbnail.idAsset,
                 idCaptureData: captureData.idCaptureData,
-                idVVariantType!: vocabulary.idVocabulary
+                idVVariantType: vocabulary.idVocabulary
             });
         expect(captureDataFile).toBeTruthy();
         if (captureDataFile) {
             expect(await captureDataFile.create()).toBeTruthy();
             expect(captureDataFile.idCaptureDataFile).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: CaptureDataFile Nulls', async () => {
+        if (captureData && assetThumbnail && vocabulary)
+            captureDataFileNulls = new DBAPI.CaptureDataFile({
+                idCaptureDataFile: 0,
+                CompressedMultipleFiles: false,
+                idAsset: assetThumbnail.idAsset,
+                idCaptureData: captureData.idCaptureData,
+                idVVariantType: null
+            });
+        expect(captureDataFileNulls).toBeTruthy();
+        if (captureDataFileNulls) {
+            expect(await captureDataFileNulls.create()).toBeTruthy();
+            expect(captureDataFileNulls.idCaptureDataFile).toBeGreaterThan(0);
         }
     });
 
@@ -1746,7 +1782,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersionNotIngested]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersionNotIngested, assetVersionNotProcessed]));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -1756,8 +1792,8 @@ describe('DB Fetch By ID Test Suite', () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
         if (systemObjectSubject) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromSystemObject(systemObjectSubject.idSystemObject);
-            if (assetVersionFetch && assetVersionNotIngested)
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotProcessed]));
         }
         expect(assetVersionFetch).toBeTruthy();
     });
@@ -1767,7 +1803,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(assetVersionNotIngested);
+                expect(assetVersionFetch).toEqual(assetVersionNotProcessed);
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -1859,12 +1895,23 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetVersionFetch).toBeTruthy();
     });
 
-    test('DB Fetch AssetVersion: AssetVersion.fetchByIngested Not Ingested', async () => {
+    test('DB Fetch AssetVersion: AssetVersion.fetchByIngested Not Ingested, Processed', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
         if (userActive) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchByIngested(false);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchByIngested Not Ingested, Not Processed', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (userActive) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchByIngested(null);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotProcessed]));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -3802,11 +3849,9 @@ describe('DB Fetch Special Test Suite', () => {
 
     test('DB Fetch Special: AssetVersion.fetchAll', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
-        if (assetVersion && assetVersion2 && assetVersionNotIngested) {
-            assetVersionFetch = await DBAPI.AssetVersion.fetchAll();
-            if (assetVersionFetch)
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersion2, assetVersionNotIngested]));
-        }
+        assetVersionFetch = await DBAPI.AssetVersion.fetchAll();
+        if (assetVersionFetch)
+            expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersion2, assetVersionNotIngested, assetVersionNotProcessed]));
         expect(assetVersionFetch).toBeTruthy();
     });
 
