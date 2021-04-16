@@ -210,7 +210,7 @@ function DetailsView(): React.ReactElement {
             if (objectType === eSystemObjectType.eModel) {
                 const { dateCaptured, master, authoritative, creationMethod, modality, purpose, units, fileType } = getFormState();
                 updatedData = {
-                    Retired: updatedData?.Retired || objectDetailsData?.getSystemObjectDetails.retired,
+                    Retired: updatedData?.Retired || details?.retired,
                     Name: updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name,
                     Model: {
                         Name: updatedData?.Name,

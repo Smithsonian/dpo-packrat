@@ -15,7 +15,6 @@ import { eVocabularySetID } from '../../../../../types/server';
 // import { withDefaultValueNumber } from '../../../../../utils/shared';
 import { extractModelConstellation } from '../../../../../constants/helperfunctions';
 import ObjectMeshTable from './../../../../Ingestion/components/Metadata/Model/ObjectMeshTable';
-import AssetFilesTable from './../../../../Ingestion/components/Metadata/Model/AssetFilesTable';
 import { DetailComponentProps } from './index';
 
 export const useStyles = makeStyles(theme => ({
@@ -53,7 +52,7 @@ export const useStyles = makeStyles(theme => ({
         borderRadius: 5,
         padding: 10,
         backgroundColor: theme.palette.primary.light,
-        width: '90%',
+        width: 'calc(100% - 40px)',
         display: 'flex',
         flexDirection: 'column'
     },
@@ -73,10 +72,18 @@ export const useStyles = makeStyles(theme => ({
         flexDirection: 'row',
         color: '#2C405A'
     },
-    assetFilesTable: {
+    objectMeshTableContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        width: '100%',
         '& > *': {
-            width: 'calc(90% + 20px)'
+            width: 'calc(100% - 40px)'
         }
+    },
+    detailsContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
     }
 }));
 
@@ -84,7 +91,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const { data, loading, onUpdateDetail, objectType } = props;
 
-    const { ingestionModel, modelObjects, assets } = extractModelConstellation(data?.getDetailsTabDataForObject?.Model);
+    const { ingestionModel, modelObjects } = extractModelConstellation(data?.getDetailsTabDataForObject?.Model);
     const [details] = useState({});
     const [setFormField, setFormDateField, dateCaptured, master, authoritative, creationMethod, modality, purpose, units, fileType] = useRepositoryDetailsFormStore(state => [
         state.setFormField,
@@ -156,12 +163,8 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
     return (
-        // <Box display='flex' style={{ backgroundColor: 'purple', width: 'fit-content' }}>
-        <Box display='flex' flex={1} flexDirection='column' style={{ width: '100%' }} alignItems='center'>
-            <Box className={classes.assetFilesTable}>
-                <AssetFilesTable files={assets} />
-            </Box>
-            <Box className={classes.ModelMetricsAndFormContainer}>
+        <Box flex={1} className={classes.detailsContainer}>
+            <Box className={classes.ModelMetricsAndFormContainer} mb={2}>
                 <Box className={classes.captionContainer}>
                     <Typography variant='caption'>Model</Typography>
                 </Box>
@@ -217,12 +220,10 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                     </Box>
                 </Box>
             </Box>
-
-            {/* <Box display='flex' flexDirection='row'> */}
-            <ObjectMeshTable modelObjects={modelObjects} />
-            {/* </Box> */}
+            <Box className={classes.objectMeshTableContainer}>
+                <ObjectMeshTable modelObjects={modelObjects} />
+            </Box>
         </Box>
-        // </Box>
     );
 }
 
