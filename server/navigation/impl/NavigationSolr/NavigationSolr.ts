@@ -95,7 +95,7 @@ export class NavigationSolr implements NAV.INavigation {
             if (filterColumn)
                 filterColumns.push(filterColumn.substring(1)); // strip of "e" prefix (eHierarchyUnit -> HierarchyUnit)
             else
-                LOG.logger.error(`NavigationSolr.computeSolrQuery called with unexpected metadata column ${metadataColumn}`);
+                LOG.error(`NavigationSolr.computeSolrQuery called with unexpected metadata column ${metadataColumn}`, LOG.LS.eNAV);
         }
 
         if (filterColumns.length > 0)
@@ -103,7 +103,7 @@ export class NavigationSolr implements NAV.INavigation {
 
         if (filter.rows > 0)
             SQ = SQ.rows(filter.rows);
-        LOG.logger.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}:\n${this._solrClient.solrUrl()}/select?${SQ.build()}`);
+        LOG.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}:\n${this._solrClient.solrUrl()}/select?${SQ.build()}`, LOG.LS.eNAV);
         return SQ;
     }
 
@@ -159,7 +159,7 @@ export class NavigationSolr implements NAV.INavigation {
         for (const systemObjectType of systemObjectTypes) {
             const filterValue = DBAPI.SystemObjectTypeToName(systemObjectType);
             if (!filterValue) {
-                LOG.logger.error(`NavigationSolr.computeSolrQuery handling invalid system object type ${systemObjectType}`);
+                LOG.error(`NavigationSolr.computeSolrQuery handling invalid system object type ${systemObjectType}`, LOG.LS.eNAV);
                 continue;
             }
             termList.push(filterValue);
@@ -173,7 +173,7 @@ export class NavigationSolr implements NAV.INavigation {
         for (const idVocabFilter of vocabFilterIDs) {
             const vocabFilter: Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabFilter);
             if (!vocabFilter) {
-                LOG.logger.error(`NavigationSolr.computeSolrQuery handling invalid vocabulary value ${idVocabFilter}`);
+                LOG.error(`NavigationSolr.computeSolrQuery handling invalid vocabulary value ${idVocabFilter}`, LOG.LS.eNAV);
                 continue;
             }
             termList.push(vocabFilter.Term);
@@ -190,26 +190,26 @@ export class NavigationSolr implements NAV.INavigation {
         const queryResult: SolrQueryResult = await this.executeSolrQueryWorker(SQ);
         if (queryResult.error) {
             error = `Solr Query Failure: ${JSON.stringify(queryResult.error)}`;
-            LOG.logger.error(`NavigationSolr.executeSolrQuery: ${error}`);
+            LOG.error(`NavigationSolr.executeSolrQuery: ${error}`, LOG.LS.eNAV);
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
         if (!queryResult.result || !queryResult.result.response || queryResult.result.response.numFound === undefined ||
             (queryResult.result.response.numFound > 0 && !queryResult.result.response.docs)) {
             error = `Solr Query Response malformed: ${JSON.stringify(queryResult.result)}`;
-            LOG.logger.error(`NavigationSolr.executeSolrQuery: ${error}`);
+            LOG.error(`NavigationSolr.executeSolrQuery: ${error}`, LOG.LS.eNAV);
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
 
-        LOG.logger.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, ` +
+        LOG.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, ` +
             `start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length}, ` +
-            `nextCursorMark: ${queryResult.result.nextCursorMark} }`);
+            `nextCursorMark: ${queryResult.result.nextCursorMark} }`, LOG.LS.eNAV);
         // let docNumber: number = 1;
         for (const doc of queryResult.result.response.docs) {
             if (!doc.id || !doc.CommonObjectType || !doc.CommonidObject || (doc.CommonName === null)) {
-                LOG.logger.error(`NavigationSolr.executeSolrQuery: malformed query response document ${JSON.stringify(doc)}`);
+                LOG.error(`NavigationSolr.executeSolrQuery: malformed query response document ${JSON.stringify(doc)}`, LOG.LS.eNAV);
                 continue;
             }
-            // LOG.logger.info(`NavigationSolr.executeSolrQuery [${docNumber++}]: ${JSON.stringify(doc)}`);
+            // LOG.info(`NavigationSolr.executeSolrQuery [${docNumber++}]: ${JSON.stringify(doc)}`, LOG.LS.eNAV);
 
             const entry: NAV.NavigationResultEntry = {
                 idSystemObject: parseInt(doc.id),
@@ -225,7 +225,7 @@ export class NavigationSolr implements NAV.INavigation {
         let cursorMark: string | null = queryResult.result.nextCursorMark ? queryResult.result.nextCursorMark : null;
         if (cursorMark == filter.cursorMark)    // solr returns the same cursorMark as the initial query when there are no more results; if so, clear out cursorMark
             cursorMark = null;
-        // LOG.logger.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`);
+        // LOG.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
         return { success: true, error: '', entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
@@ -234,7 +234,7 @@ export class NavigationSolr implements NAV.INavigation {
             const request: ClientRequest = this._solrClient._client.search(SQ,
                 function (err, obj) {
                     if (err) {
-                        LOG.logger.error('NavigationSolr.executeSolrQueryWorker', err);
+                        LOG.error('NavigationSolr.executeSolrQueryWorker', LOG.LS.eNAV, err);
                         resolve({ result: null, error: err });
                     } else
                         resolve({ result: obj, error: null });

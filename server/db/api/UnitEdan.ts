@@ -30,7 +30,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.UnitEdan.create', error);
+            LOG.error('DBAPI.UnitEdan.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -46,7 +46,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.UnitEdan.update', error);
+            LOG.error('DBAPI.UnitEdan.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -58,7 +58,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
             return DBC.CopyObject<UnitEdanBase, UnitEdan>(
                 await DBC.DBConnection.prisma.unitEdan.findUnique({ where: { idUnitEdan, }, }), UnitEdan);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.UnitEdan.fetch', error);
+            LOG.error('DBAPI.UnitEdan.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -71,7 +71,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
             return DBC.CopyArray<UnitEdanBase, UnitEdan>(
                 await DBC.DBConnection.prisma.unitEdan.findMany({ where: { idUnit } }), UnitEdan);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.UnitEdan.fetchFromUnit', error);
+            LOG.error('DBAPI.UnitEdan.fetchFromUnit', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -83,7 +83,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
             return DBC.CopyObject<UnitEdanBase, UnitEdan>(
                 await DBC.DBConnection.prisma.unitEdan.findUnique({ where: { Abbreviation }, }), UnitEdan);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchFromAbbreviation', error);
+            LOG.error('DBAPI.Unit.fetchFromAbbreviation', LOG.LS.eDB, error);
             return null;
         }
     }

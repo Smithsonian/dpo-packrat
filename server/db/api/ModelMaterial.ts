@@ -24,7 +24,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterial.create', error);
+            LOG.error('DBAPI.ModelMaterial.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -40,7 +40,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterial.update', error);
+            LOG.error('DBAPI.ModelMaterial.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -52,7 +52,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
             return DBC.CopyObject<ModelMaterialBase, ModelMaterial>(
                 await DBC.DBConnection.prisma.modelMaterial.findUnique({ where: { idModelMaterial, }, }), ModelMaterial);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterial.fetch', error);
+            LOG.error('DBAPI.ModelMaterial.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -74,7 +74,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
                 ModelMaterial
             );
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterial.fetchFromModelObjects', error);
+            LOG.error('DBAPI.ModelMaterial.fetchFromModelObjects', LOG.LS.eDB, error);
             return null;
         }
     }

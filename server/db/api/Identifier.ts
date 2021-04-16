@@ -33,7 +33,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Identifier.create', error);
+            LOG.error('DBAPI.Identifier.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -51,7 +51,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Identifier.update', error);
+            LOG.error('DBAPI.Identifier.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -63,7 +63,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             return DBC.CopyObject<IdentifierBase, Identifier>(
                 await DBC.DBConnection.prisma.identifier.findUnique({ where: { idIdentifier, }, }), Identifier);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Identifier.fetch', error);
+            LOG.error('DBAPI.Identifier.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -74,7 +74,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             return DBC.CopyArray<IdentifierBase, Identifier>(
                 await DBC.DBConnection.prisma.identifier.findMany({ where: { IdentifierValue, }, }), Identifier);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Identifier.fetchFromIdentifierValue', error);
+            LOG.error('DBAPI.Identifier.fetchFromIdentifierValue', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -93,7 +93,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
                     WHERE S.idSubject = ${idSubject}`, Identifier);
             return (IDArray && IDArray.length > 0) ? IDArray[0] : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Identifier.fetchFromSubjectPreferred', error);
+            LOG.error('DBAPI.Identifier.fetchFromSubjectPreferred', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -105,7 +105,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             return DBC.CopyArray<IdentifierBase, Identifier>(
                 await DBC.DBConnection.prisma.identifier.findMany({ where: { idSystemObject } }), Identifier);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Identifier.fetchFromSystemObject', error);
+            LOG.error('DBAPI.Identifier.fetchFromSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }

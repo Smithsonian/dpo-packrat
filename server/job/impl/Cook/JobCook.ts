@@ -13,6 +13,7 @@ import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions } from '
 import { Writable } from 'stream';
 import axios, { AxiosResponse } from 'axios';
 import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
+import * as path from 'path';
 
 const CookWebDAVSimultaneousTransfers: number = 2;
 const CookRequestRetryCount: number = 3;
@@ -140,7 +141,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 await H.Helpers.sleep(CookRetryDelay);
             }
         } catch (error) {
-            LOG.logger.error('JobCook.pollingLoop', error);
+            LOG.error('JobCook.pollingLoop', LOG.LS.eJOB, error);
             return this._results;
         } finally {
             await this.signalCompletion();
@@ -162,7 +163,7 @@ export abstract class JobCook<T> extends JobPackrat {
             let axiosResponse: AxiosResponse<any> | null = null;
             const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, await this.getParameters(), eJobCookPriority.eNormal);
 
-            LOG.logger.info(`JobCook [${this.name()}] creating job: ${requestUrl}`);
+            LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl}`, LOG.LS.eJOB);
             while (requestCount++ < CookRequestRetryCount) {
                 try {
                     axiosResponse = await axios.post(requestUrl, jobCookPostBody);
@@ -176,7 +177,7 @@ export abstract class JobCook<T> extends JobPackrat {
                         : { success: false, error: `JobCook [${this.name()}] post ${requestUrl} body ${JSON.stringify(jobCookPostBody)}: ${JSON.stringify(error)}` };
                 }
                 if (requestCount === CookRequestRetryCount) {
-                    LOG.logger.error(`${res.error} Retries Failed`);
+                    LOG.error(`${res.error} Retries Failed`, LOG.LS.eJOB);
                     return res;
                 } else
                     await H.Helpers.sleep(CookRetryDelay);
@@ -191,7 +192,7 @@ export abstract class JobCook<T> extends JobPackrat {
             requestCount = 0;
             res = { success: false, error: '' };
             requestUrl = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
-            LOG.logger.info(`JobCook [${this.name()}] running job: ${requestUrl}`);
+            LOG.info(`JobCook [${this.name()}] running job: ${requestUrl}`, LOG.LS.eJOB);
             while (requestCount++ < CookRequestRetryCount) {
                 try {
                     const axiosResponse = await axios.patch(requestUrl);
@@ -202,7 +203,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(error)}` };
                 }
                 if (requestCount === CookRequestRetryCount) {
-                    LOG.logger.error(`${res.error} Retries Failed`);
+                    LOG.error(`${res.error} Retries Failed`, LOG.LS.eJOB);
                     return res;
                 } else
                     await H.Helpers.sleep(CookRetryDelay);
@@ -214,7 +215,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 await this.signalCompletion();
         }
 
-        LOG.logger.info(`JobCook [${this.name()}] running`);
+        LOG.info(`JobCook [${this.name()}] running`, LOG.LS.eJOB);
         return this.pollingLoop(CookTimeout);
     }
 
@@ -223,7 +224,7 @@ export abstract class JobCook<T> extends JobPackrat {
         let requestCount: number = 0;
         let res: H.IOResults = { success: false, error: '' };
         const requestUrl: string = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/cancel`;
-        LOG.logger.info(`JobCook [${this.name()}] cancelling job: ${requestUrl}`);
+        LOG.info(`JobCook [${this.name()}] cancelling job: ${requestUrl}`, LOG.LS.eJOB);
         while (requestCount++ < CookRequestRetryCount) {
             try {
                 const axiosResponse = await axios.patch(requestUrl);
@@ -236,21 +237,21 @@ export abstract class JobCook<T> extends JobPackrat {
                 break;
             else {
                 if (requestCount === CookRequestRetryCount) {
-                    LOG.logger.error(`${res.error} Retries Failed`);
+                    LOG.error(`${res.error} Retries Failed`, LOG.LS.eJOB);
                     return res;
                 } else
                     await H.Helpers.sleep(CookRetryDelay);
             }
         }
 
-        LOG.logger.info(`JobCook [${this.name()}] cancelled`);
+        LOG.info(`JobCook [${this.name()}] cancelled`, LOG.LS.eJOB);
         return { success: true, error: '' };
     }
     // #endregion
 
     // returns true if polling indicates we're done; false if polling should continue
     private async pollingCallback(pollNumber: number): Promise<boolean> {
-        // LOG.logger.info(`JobCook [${this.name()}] polling [${pollNumber}]`);
+        // LOG.info(`JobCook [${this.name()}] polling [${pollNumber}]`, LOG.LS.eJOB);
         // poll server for status update
         // Get job report via GET to /clients/<CLIENTID>/jobs/<JOBID>/report
         const requestUrl: string = Config.job.cookServerUrl + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/report`;
@@ -259,13 +260,13 @@ export abstract class JobCook<T> extends JobPackrat {
             if (axiosResponse.status !== 200) {
                 // only log errors after first attempt, as job creation may not be complete on Cook server
                 if (pollNumber > 1)
-                    LOG.logger.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${JSON.stringify(axiosResponse)}`);
+                    LOG.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${JSON.stringify(axiosResponse)}`, LOG.LS.eJOB);
                 return false;
             }
 
             // look for completion in 'state' member, via value of 'done', 'error', or 'cancelled'; update eJobRunStatus and terminate polling job
             const cookJobReport = axiosResponse.data;
-            LOG.logger.info(`JobCook [${this.name()}] polling [${pollNumber}], state: ${cookJobReport['state']}: ${requestUrl}`);
+            LOG.info(`JobCook [${this.name()}] polling [${pollNumber}], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
             switch (cookJobReport['state']) {
                 case 'created':     await this.recordCreated();                                 break;
                 case 'waiting':     await this.recordWaiting();                                 break;
@@ -277,7 +278,7 @@ export abstract class JobCook<T> extends JobPackrat {
         } catch (error) {
             // only log errors after first attempt, as job creation may not be complete on Cook server
             if (pollNumber > 1)
-                LOG.logger.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${JSON.stringify(error)}`);
+                LOG.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${JSON.stringify(error)}`, LOG.LS.eJOB);
         }
         return false;
     }
@@ -298,9 +299,12 @@ export abstract class JobCook<T> extends JobPackrat {
                     if (!RSR.success || !RSR.readStream || !RSR.fileName)
                         return { success: false, error: `JobCook.stageFiles unable to read asset version ${idAssetVersion}: ${RSR.error}` };
 
+                    // handle the fact that our asset may be stuffed into a subfolder (due to it being zipped)
+                    const fileName: string = path.basename(RSR.fileName);
+
                     // transmit file to Cook work folder via WebDAV
-                    const destination: string = `/${this._configuration.jobId}/${RSR.fileName}`;
-                    LOG.logger.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`);
+                    const destination: string = `/${this._configuration.jobId}/${fileName}`;
+                    LOG.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
 
                     const webdavClient: WebDAVClient = createClient(Config.job.cookServerUrl, {
                         authType: AuthType.None,
@@ -314,12 +318,12 @@ export abstract class JobCook<T> extends JobPackrat {
                     const res: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
 
                     if (!res.success) {
-                        const error = `JobCook.stageFiles unable to transmit file ${RSR.fileName} for asset version ${idAssetVersion}: ${res.error}`;
-                        LOG.logger.error(error);
+                        const error = `JobCook.stageFiles unable to transmit file ${fileName} for asset version ${idAssetVersion}: ${res.error}`;
+                        LOG.error(error, LOG.LS.eJOB);
                         return { success: false, error };
                     }
 
-                    LOG.logger.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}: completed`);
+                    LOG.info(`JobCook.stageFiles staging via WebDAV at ${Config.job.cookServerUrl}${destination.substring(1)}: completed`, LOG.LS.eJOB);
 
                     // use WebDAV client's stat to detect when file is fully staged and available on the server
                     // poll for filesize of remote file.  Continue polling:
@@ -334,23 +338,23 @@ export abstract class JobCook<T> extends JobPackrat {
                             const stat: any = await webdavClient.stat(destination);
                             const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
                             const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
-                            LOG.logger.info(`JobCook.stageFiles staging polling ${Config.job.cookServerUrl}${destination.substring(1)}: ${size} received vs ${res.size} transmitted`);
+                            LOG.info(`JobCook.stageFiles staging polling ${Config.job.cookServerUrl}${destination.substring(1)}: ${size} received vs ${res.size} transmitted`, LOG.LS.eJOB);
                             if (size >= res.size)
-                                return { success: baseName === RSR.fileName, error: '' };
+                                return { success: baseName === fileName, error: '' };
                             if (size === sizeLast) {
                                 if (++stuckCount >= 5)
-                                    return { success: false, error: `Unable to verify existence of staged file ${RSR.fileName}` };
+                                    return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
                             }
                             sizeLast = size;
                             await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                         } catch (error) {
-                            LOG.logger.error('JobCook.stageFiles stat', error);
+                            LOG.error('JobCook.stageFiles stat', LOG.LS.eJOB, error);
                             await H.Helpers.sleep(CookRetryDelay); // sleep for CookRetryDelay ms before retrying
                         }
                     }
-                    return { success: false, error: `Unable to verify existence of staged file ${RSR.fileName}` };
+                    return { success: false, error: `Unable to verify existence of staged file ${fileName}` };
                 } catch (error) {
-                    LOG.logger.error('JobCook.stageFiles', error);
+                    LOG.error('JobCook.stageFiles', LOG.LS.eJOB, error);
                     return { success: false, error: JSON.stringify(error) };
                 }
             });

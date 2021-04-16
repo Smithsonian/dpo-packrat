@@ -4,7 +4,6 @@ import * as DBAPI from '../../../../../db';
 
 export default async function getUploadedAssetVersion(_: Parent, __: unknown, context: Context): Promise<GetUploadedAssetVersionResult> {
     const { user } = context;
-
     if (!user) {
         return { AssetVersion: [] };
     }

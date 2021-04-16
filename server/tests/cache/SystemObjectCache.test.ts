@@ -52,7 +52,7 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
             expect(SOFetch).toBeTruthy();
             expect(SOFetch ? SOFetch.length : /* istanbul ignore next */ 0).toBeGreaterThan(0);
             systemObjectAll = SOFetch || [];
-            // LOG.logger.info(`Fetched SO: ${systemObjectAll.length}`);
+            // LOG.info(`Fetched SO: ${systemObjectAll.length}`, LOG.LS.eTEST);
         });
 
         test('Cache: SystemObjectCache Methods ' + description, async () => {
@@ -120,7 +120,7 @@ function systemObjectCacheTestClearFlush(): void {
 }
 
 async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean> {
-    // LOG.logger.info(`Testing ${JSON.stringify(SOExamine)}`);
+    // LOG.info(`Testing ${JSON.stringify(SOExamine)}`, LOG.LS.eTEST);
     const oID: ObjectIDAndType | undefined = SystemObjectCache.convertSystemObjectToObjectID(SOExamine);
     expect(oID).toBeTruthy();
     if (!oID)
@@ -143,7 +143,7 @@ async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean>
         case eSystemObjectType.eActor: SO = await SystemObject.fetchFromActorID(idObject); break;
         case eSystemObjectType.eStakeholder: SO = await SystemObject.fetchFromStakeholderID(idObject); break;
         case eSystemObjectType.eUnknown:
-            LOG.logger.error(`SystemObjectCache.convertSystemObjectToObjectID(${JSON.stringify(SOExamine)}) encountered unknown SystemObject type: ${JSON.stringify(oID)}`);
+            LOG.error(`SystemObjectCache.convertSystemObjectToObjectID(${JSON.stringify(SOExamine)}) encountered unknown SystemObject type: ${JSON.stringify(oID)}`, LOG.LS.eTEST);
             expect(eObjectType).not.toEqual(eSystemObjectType.eUnknown);
             break;
     }
@@ -151,12 +151,12 @@ async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean>
     if (SO)
         expect(SO).toEqual(SOExamine);
 
-    // LOG.logger.info(`Got here 1 ${SOExamine.idSystemObject}`);
+    // LOG.info(`Got here 1 ${SOExamine.idSystemObject}`, LOG.LS.eTEST);
     const oIDFetch: ObjectIDAndType | undefined = await SystemObjectCache.getObjectFromSystem(SOExamine.idSystemObject);
     expect(oIDFetch).toBeTruthy();
     expect(oIDFetch).toEqual(oID);
 
-    // LOG.logger.info(`Got here 2 ${SOExamine.idSystemObject}`);
+    // LOG.info(`Got here 2 ${SOExamine.idSystemObject}`, LOG.LS.eTEST);
     const SOInfo: SystemObjectInfo | undefined = await SystemObjectCache.getSystemFromObjectID(oID);
     expect(SOInfo).toBeTruthy();
     if (SOInfo) {
@@ -168,7 +168,7 @@ async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean>
 }
 
 async function testObjectAndID(oID: ObjectIDAndType): Promise<boolean> {
-    // LOG.logger.info(`Testing ${JSON.stringify(oID)}`);
+    // LOG.info(`Testing ${JSON.stringify(oID)}`, LOG.LS.eTEST);
     let SO: SystemObject | null = null;
     let SOI: SystemObjectInfo | undefined = undefined;
     const { idObject, eObjectType } = oID;
@@ -239,7 +239,7 @@ async function testObjectAndID(oID: ObjectIDAndType): Promise<boolean> {
             SOI = (stakeholder) ? await SystemObjectCache.getSystemFromStakeholder(stakeholder) : undefined;
         } break;
         case eSystemObjectType.eUnknown:
-            LOG.logger.error('Invalid Test Case!');
+            LOG.error('Invalid Test Case!', LOG.LS.eTEST);
             expect(eObjectType).not.toEqual(eSystemObjectType.eUnknown);
             break;
     }

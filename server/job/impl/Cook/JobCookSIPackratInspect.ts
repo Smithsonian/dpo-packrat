@@ -17,8 +17,8 @@ import * as path from 'path';
 
 export class JobCookSIPackratInspectParameters {
     constructor(sourceMeshFile: string, sourceMaterialFiles: string | undefined = undefined) {
-        this.sourceMeshFile = sourceMeshFile;
-        this.sourceMaterialFiles = sourceMaterialFiles;
+        this.sourceMeshFile = path.basename(sourceMeshFile);
+        this.sourceMaterialFiles = sourceMaterialFiles ? path.basename(sourceMaterialFiles) : undefined;
     }
     sourceMeshFile: string;
     sourceMaterialFiles?: string | undefined;
@@ -96,7 +96,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
     async persist(idModel: number, assetMap: Map<string, number>): Promise<H.IOResults> {
         if (!this.modelConstellation || !this.modelConstellation.Model || !this.modelConstellation.ModelObjects) {
             const error: string = 'Invalid JobCookSIPackratInspectOutput';
-            LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+            LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
             return { success: false, error };
         }
 
@@ -113,8 +113,8 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (!mappedId) // try again, with just filename
                     mappedId = assetMap.get(path.basename(modelAsset.Asset.FileName));
                 if (!mappedId) {
-                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.stringifyCallbackCustom)}`;
-                    LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                    const error: string = `Missing ${modelAsset.Asset.FileName} and ${path.basename(modelAsset.Asset.FileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.stringifyMapsAndBigints)}`;
+                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -127,7 +127,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
             if (!model) {
                 const error: string = `Failed to fetch model ${idModel}`;
-                LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                 return { success: false, error };
             }
 
@@ -188,7 +188,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedAssetId: number | undefined = assetIDMap.get(modelMaterialUVMap.idAsset);
                 if (!mappedAssetId) {
                     const error: string = `Missing ${modelMaterialUVMap.idAsset} from asset ID Map`;
-                    LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -209,7 +209,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelMaterialChannel.idModelMaterial);
                 if (!mappedModelMaterialId) {
                     const error: string = `Missing ${modelMaterialChannel.idModelMaterial} from model material ID map`;
-                    LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -219,7 +219,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     mappedModelMaterialUVMapId = modelMaterialUVMapIDMap.get(modelMaterialChannel.idModelMaterialUVMap);
                     if (!mappedModelMaterialUVMapId) {
                         const error: string = `Missing ${modelMaterialChannel.idModelMaterialUVMap} from model material UV ID map`;
-                        LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                        LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                         // return { success: false, error };
                         continue;
                     }
@@ -239,7 +239,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelObjectModelMaterialXref.idModelMaterial);
                 if (!mappedModelMaterialId) {
                     const error: string = `Missing ${modelObjectModelMaterialXref.idModelMaterial} from model material ID map`;
-                    LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -247,7 +247,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 const mappedModelObjectId: number | undefined = modelObjectIDMap.get(modelObjectModelMaterialXref.idModelObject);
                 if (!mappedModelObjectId) {
                     const error: string = `Missing ${modelObjectModelMaterialXref.idModelObject} from model object ID map`;
-                    LOG.logger.error(`JobCookSIPackratInspectOutput.persist: ${error}`);
+                    LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
                 }
@@ -299,7 +299,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let idAsset: number = 0;
         let idAssetVersion: number = 0;
 
-        const model: DBAPI.Model = await JobCookSIPackratInspectOutput.createModel(++idModel, modelStats, fileName, dateCreated);
+        const model: DBAPI.Model = await JobCookSIPackratInspectOutput.createModel(++idModel, modelStats, sourceMeshFile ? sourceMeshFile : fileName, dateCreated);
 
         if (sourceMeshFile) {
             if (!modelAssets)
@@ -311,7 +311,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             idModelObject++;
             const statistics: any = mesh.statistics;
             if (!statistics) {
-                LOG.logger.error(`JobCookSIPackratInspectOutput.extract missing steps['merge-reports'].result.inspection.meshes[${idModelObject - 1}].statistics: ${JSON.stringify(output)}`);
+                LOG.error(`JobCookSIPackratInspectOutput.extract missing steps['merge-reports'].result.inspection.meshes[${idModelObject - 1}].statistics: ${JSON.stringify(output)}`, LOG.LS.eJOB);
                 continue;
             }
 
@@ -327,7 +327,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     if ((materialIndex + 1) > materialCount) {
                         JCOutput.success = false;
                         JCOutput.error = `Invalid materialIndex ${materialIndex}`;
-                        LOG.logger.error(`JobCookSIPackratInspectOutput.extract: ${JCOutput.error}`);
+                        LOG.error(`JobCookSIPackratInspectOutput.extract: ${JCOutput.error}`, LOG.LS.eJOB);
                         continue;
                     }
 
@@ -368,7 +368,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
                         // iterate across object properties, extract those of interest; stuff the rest in AdditionalAttributes
                         for (const [key, value] of Object.entries(channel)) {
-                            // LOG.logger.info(`JobCookSIPackratInspect.extract channel ${key}: ${JSON.stringify(value)}`);
+                            // LOG.info(`JobCookSIPackratInspect.extract channel ${key}: ${JSON.stringify(value)}`, LOG.LS.eJOB);
                             switch (key) {
                                 case 'type':
                                     materialType = maybeString(value);
@@ -483,13 +483,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         // find JobCook results for this asset version
         const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         if (!idVJobType) {
-            LOG.logger.error('JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job ID of si-packrat-inspect');
+            LOG.error('JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job ID of si-packrat-inspect', LOG.LS.eJOB);
             return null;
         }
 
         const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eJobRunStatus.eDone, true, [idAssetVersion]);
         if (!jobRuns || jobRuns.length != 1) {
-            LOG.logger.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}`);
+            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}`, LOG.LS.eJOB);
             return null;
         }
 
@@ -501,22 +501,22 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             fileName = assetVersion.FileName;
             dateCreated = assetVersion.DateCreated;
         } else
-            LOG.logger.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion unable to fetch assetVersion from ${idAssetVersion}`);
+            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion unable to fetch assetVersion from ${idAssetVersion}`, LOG.LS.eJOB);
 
         let JCOutput: JobCookSIPackratInspectOutput | null = null;
         try {
             JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRuns[0].Output || ''), fileName, dateCreated);
         } catch (error) {
-            LOG.logger.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion${JCOutput ? ' ' + JCOutput.error : ''}`, error);
+            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion${JCOutput ? ' ' + JCOutput.error : ''}`, LOG.LS.eJOB, error);
             return null;
         }
 
         if (!JCOutput.success) {
-            LOG.logger.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed extracting job output [${JCOutput.error}]: ${jobRuns[0].Output}`);
+            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed extracting job output [${JCOutput.error}]: ${jobRuns[0].Output}`, LOG.LS.eJOB);
             return null;
         }
 
-        // LOG.logger.info(`GraphQL JobCookSIPackratInspectOutput.extractFromAssetVersion(${JSON.stringify(idAssetVersion)}) = ${JSON.stringify(JCOutput.modelConstellation, H.Helpers.stringifyCallbackCustom)}`);
+        // LOG.info(`GraphQL JobCookSIPackratInspectOutput.extractFromAssetVersion(${JSON.stringify(idAssetVersion)}) = ${JSON.stringify(JCOutput.modelConstellation, H.Helpers.stringifyCallbackCustom)}`, LOG.LS.eJOB);
         return JCOutput;
     }
 
@@ -527,7 +527,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let vFileType: DBAPI.Vocabulary | undefined = undefined;
         if (fileName)
             vFileType = await CACHE.VocabularyCache.mapModelFileByExtension(fileName);
-        // LOG.logger.info(`JobCookPackratInspect createModel ${fileName} -> ${JSON.stringify(vFileType)}`);
+        // LOG.info(`JobCookPackratInspect createModel ${fileName} -> ${JSON.stringify(vFileType)}`, LOG.LS.eJOB);
         return new DBAPI.Model({
             Name: fileName || '',
             Master: true,
@@ -610,7 +610,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             StorageHash: '',
             StorageSize: BigInt(0),
             StorageKeyStaging: '',
-            Ingested: false,
+            Ingested: null,
             BulkIngest: false,
             idAssetVersion
         });
@@ -648,14 +648,14 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(this._idAssetVersions[0]);
         if (!RSR.success || !RSR.readStream) {
-            LOG.logger.error(`JobCookSIPackratInspect.testForZip unable to read asset version ${this._idAssetVersions[0]}: ${RSR.error}`);
+            LOG.error(`JobCookSIPackratInspect.testForZip unable to read asset version ${this._idAssetVersions[0]}: ${RSR.error}`, LOG.LS.eJOB);
             return false;
         }
 
         const ZS: ZipStream = new ZipStream(RSR.readStream);
         const zipRes: H.IOResults = await ZS.load();
         if (!zipRes.success) {
-            LOG.logger.error(`JobCookSIPackratInspect.testForZip unable to read asset version ${this._idAssetVersions[0]}: ${zipRes.error}`);
+            LOG.error(`JobCookSIPackratInspect.testForZip unable to read asset version ${this._idAssetVersions[0]}: ${zipRes.error}`, LOG.LS.eJOB);
             return false;
         }
 
@@ -666,11 +666,11 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
             const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(file);
             if (!readStream) {
-                LOG.logger.error(`JobCookSIPackratInspect.testForZip unable to fetch read steram for ${file} in zip of idAssetVersion ${this._idAssetVersions[0]}`);
+                LOG.error(`JobCookSIPackratInspect.testForZip unable to fetch read steram for ${file} in zip of idAssetVersion ${this._idAssetVersions[0]}`, LOG.LS.eJOB);
                 return false;
             }
 
-            this.parameters.sourceMeshFile = file;
+            this.parameters.sourceMeshFile = path.basename(file);
             this._streamOverrideMap.set(this._idAssetVersions[0], {
                 readStream,
                 fileName: file,

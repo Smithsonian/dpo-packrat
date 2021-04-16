@@ -11,8 +11,6 @@ function bar<T, TResult>(functionToProfile: (this: T) => TResult, thisArg: T): T
 
 // export async function CreateProfile<TResult>(functionToProfile: (this: void) => TResult, thisArg?: undefined): Promise<TResult>;
 export async function CreateProfile<T, TResult>(functionToProfile: (this: T) => Promise<TResult>, thisArg: T): Promise<TResult> {
-    LOG.logger.info('****************************************');
-    LOG.logger.info('CreateProfile() starting');
     return new Promise<TResult>((resolve) => {
         const inspector = require('inspector');
         const fs = require('fs');
@@ -20,6 +18,7 @@ export async function CreateProfile<T, TResult>(functionToProfile: (this: T) => 
         session.connect();
 
         session.post('Profiler.enable', async () => {
+            LOG.info('Profiler.start', LOG.LS.eSYS);
             session.post('Profiler.start', async () => {
                 // const retValue: boolean = await functionToProfile();
                 const retValue: TResult = await functionToProfile.call(thisArg);
@@ -30,6 +29,7 @@ export async function CreateProfile<T, TResult>(functionToProfile: (this: T) => 
                     // Write profile to disk
                     if (!err)
                         fs.writeFileSync('./profile.cpuprofile', JSON.stringify(profile));
+                    LOG.info('Profiler.stop', LOG.LS.eSYS);
                 });
             });
         });

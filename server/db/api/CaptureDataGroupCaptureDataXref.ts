@@ -27,7 +27,7 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataGroupCaptureDataXref.create', error);
+            LOG.error('DBAPI.CaptureDataGroupCaptureDataXref.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -43,7 +43,7 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataGroupCaptureDataXref.update', error);
+            LOG.error('DBAPI.CaptureDataGroupCaptureDataXref.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -56,7 +56,7 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
                 await DBC.DBConnection.prisma.captureDataGroupCaptureDataXref.findUnique({ where: { idCaptureDataGroupCaptureDataXref, }, }),
                 CaptureDataGroupCaptureDataXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataGroupCaptureDataXref.fetch', error);
+            LOG.error('DBAPI.CaptureDataGroupCaptureDataXref.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
