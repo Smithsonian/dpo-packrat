@@ -21,7 +21,7 @@ export class ModelAsset {
     static async fetch(assetVersion: AssetVersion): Promise<ModelAsset | null> {
         const asset: Asset | null = await Asset.fetch(assetVersion.idAsset); /* istanbul ignore next */
         if (!asset) {
-            LOG.logger.error(`ModelAsset.fetch(${JSON.stringify(assetVersion)}) failed`);
+            LOG.error(`ModelAsset.fetch(${JSON.stringify(assetVersion)}) failed`, LOG.LS.eDB);
             return null;
         }
         const uvMaps: ModelMaterialUVMap[] | null = await ModelMaterialUVMap.fetchFromAsset(assetVersion.idAsset);
@@ -72,7 +72,7 @@ export class ModelConstellation {
     static async fetch(idModel: number): Promise<ModelConstellation | null> {
         const model: Model | null = await Model.fetch(idModel);
         if (!model) {
-            LOG.logger.error(`ModelConstellation.fetch() unable to compute model from ${idModel}`);
+            LOG.error(`ModelConstellation.fetch() unable to compute model from ${idModel}`, LOG.LS.eDB);
             return null;
         }
 
@@ -161,7 +161,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Model.create', error);
+            LOG.error('DBAPI.Model.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -189,7 +189,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Model.update', error);
+            LOG.error('DBAPI.Model.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -200,7 +200,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idModel, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.model.fetchSystemObject', error);
+            LOG.error('DBAPI.model.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -212,7 +212,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return DBC.CopyObject<ModelBase, Model>(
                 await DBC.DBConnection.prisma.model.findUnique({ where: { idModel, }, }), Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Model.fetch', error);
+            LOG.error('DBAPI.Model.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -222,7 +222,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return DBC.CopyArray<ModelBase, Model>(
                 await DBC.DBConnection.prisma.model.findMany(), Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Model.fetchAll', error);
+            LOG.error('DBAPI.Model.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -234,7 +234,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return DBC.CopyArray<ModelBase, Model>(
                 await DBC.DBConnection.prisma.model.findMany({ where: { ModelSceneXref: { some: { idScene }, }, }, }), Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.fetchModelFromXref', error);
+            LOG.error('DBAPI.fetchModelFromXref', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -258,7 +258,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
                 WHERE SOI.idItem IN (${Prisma.join(idItem)})`, Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Model.fetchDerivedFromItems', error);
+            LOG.error('DBAPI.Model.fetchDerivedFromItems', LOG.LS.eDB, error);
             return null;
         }
     }

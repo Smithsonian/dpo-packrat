@@ -47,7 +47,7 @@ const getContentsForAssetVersionsTest = (utils: TestSuiteUtils): void => {
                         const assetVersion = new DBAPI.AssetVersion(assetVersionInput);
                         if (await assetVersion.create()) {
                             const getContentsInput: GetContentsForAssetVersionsInput = {
-                                idAssetVersions: [assetVersion.idAsset]
+                                idAssetVersions: [assetVersion.idAssetVersion]
                             };
 
                             const { AssetVersionContent } = await graphQLApi.getContentsForAssetVersions(getContentsInput);

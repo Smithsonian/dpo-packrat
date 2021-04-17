@@ -27,7 +27,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectVersion.create', error);
+            LOG.error('DBAPI.SystemObjectVersion.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -43,7 +43,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectVersion.update', error);
+            LOG.error('DBAPI.SystemObjectVersion.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -55,7 +55,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return DBC.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBC.DBConnection.prisma.systemObjectVersion.findUnique({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectVersion.fetch', error);
+            LOG.error('DBAPI.SystemObjectVersion.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -67,7 +67,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return DBC.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBC.DBConnection.prisma.systemObjectVersion.findMany({ where: { idSystemObject } }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectVersion.fetchFromSystemObject', error);
+            LOG.error('DBAPI.SystemObjectVersion.fetchFromSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }

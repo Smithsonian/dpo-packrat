@@ -122,7 +122,7 @@ model AssetVersion {
   StorageHash       String        @mariasql.VarChar(128)
   StorageSize       BigInt        @default(0)
   StorageKeyStaging String        @mariasql.VarChar(512)
-  Ingested          Boolean
+  Ingested          Boolean?
   BulkIngest        Boolean
   Asset             Asset         @relation(fields: [idAsset], references: [idAsset])
   User              User          @relation(fields: [idUserCreator], references: [idUser])
@@ -155,11 +155,11 @@ model CaptureDataFile {
   idCaptureDataFile       Int         @id @default(autoincrement())
   idCaptureData           Int
   idAsset                 Int
-  idVVariantType          Int
+  idVVariantType          Int?
   CompressedMultipleFiles Boolean
   Asset                   Asset       @relation(fields: [idAsset], references: [idAsset])
   CaptureData             CaptureData @relation(fields: [idCaptureData], references: [idCaptureData])
-  Vocabulary              Vocabulary  @relation(fields: [idVVariantType], references: [idVocabulary])
+  Vocabulary              Vocabulary? @relation(fields: [idVVariantType], references: [idVocabulary])
   @@index([idAsset], name: "CaptureDataFile_idAsset")
   @@index([idCaptureData], name: "CaptureDataFile_idCaptureData")
   @@index([idVVariantType], name: "fk_capturedatafile_vocabulary1")

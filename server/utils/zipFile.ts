@@ -38,6 +38,8 @@ export class ZipFile implements IZip {
                             for (const entry of Object.values(this._zip.entries())) { /* istanbul ignore next */
                                 if (entry.name.toUpperCase().startsWith('__MACOSX')) // ignore wacky MAC OSX resource folder stuffed into zips created on that platform
                                     continue;
+                                if (entry.name.toUpperCase().endsWith('/.DS_STORE')) // ignore wacky MAC OSX resource file stuffed into zips created on that platform
+                                    continue;
                                 this._entries.push(entry.name);
                                 if (entry.isDirectory)
                                     this._dirs.push(entry.name);
@@ -53,7 +55,7 @@ export class ZipFile implements IZip {
             });
         } catch (error) /* istanbul ignore next */ {
             if (this._logErrors)
-                LOG.logger.error('ZipFile.load', error);
+                LOG.error('ZipFile.load', LOG.LS.eSYS, error);
             return { success: false, error: JSON.stringify(error) };
         }
     }
@@ -71,7 +73,7 @@ export class ZipFile implements IZip {
                         resolve({ success: true, error: '' });
                     else {
                         const error: string = `ZipFile.close ${err}`;
-                        LOG.logger.error(error);
+                        LOG.error(error, LOG.LS.eSYS);
                         resolve({ success: false, error });
                     }
                 });
@@ -93,12 +95,12 @@ export class ZipFile implements IZip {
                         if (!error && stream)
                             resolve(stream);
                         else {
-                            LOG.logger.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`);
+                            LOG.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
                             resolve(null);
                         }
                     });
                 } catch (error) /* istanbul ignore next */ {
-                    LOG.logger.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`);
+                    LOG.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
                     resolve(null);
                 }
             }
@@ -114,7 +116,7 @@ export class ZipFile implements IZip {
                     const zipEntry = this._zip.entry(entry);
                     resolve((zipEntry) ? zipEntry.size : null);
                 } catch (error) /* istanbul ignore next */ {
-                    LOG.logger.info(`ZipFile.uncompressedSize ${entry}: ${JSON.stringify(error)}`);
+                    LOG.info(`ZipFile.uncompressedSize ${entry}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
                     resolve(null);
                 }
             }

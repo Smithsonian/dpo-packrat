@@ -127,7 +127,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                         };
 
                         const getContentsInput: GetContentsForAssetVersionsInput = {
-                            idAssetVersions: [assetVersion.idAsset]
+                            idAssetVersions: [assetVersion.idAssetVersion]
                         };
 
                         const { AssetVersionContent } = await graphQLApi.getContentsForAssetVersions(getContentsInput);

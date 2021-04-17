@@ -547,7 +547,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             for (const sVocabSetID in eVocabularySetID) {
                 if (!isNaN(Number(sVocabSetID)))
                     continue;
-                // LOG.logger.info(`VocabularyCache.vocabularySetEnumToId of ${sVocabSetID}`);
+                // LOG.info(`VocabularyCache.vocabularySetEnumToId of ${sVocabSetID}`, LOG.LS.eTEST);
                 const eVocabSetID: eVocabularySetID = (<any>eVocabularySetID)[sVocabSetID];
                 const vocabularySet: DB.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
                 const vocabSetID: number | undefined = await VocabularyCache.vocabularySetEnumToId(eVocabSetID);
@@ -565,7 +565,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     continue;
                 expect(vocabularySet.idVocabularySet).toEqual(vocabSetID);
 
-                // LOG.logger.info(`VocabularyCache.vocabularySetIdToEnum of ${vocabularySet.idVocabularySet}`);
+                // LOG.info(`VocabularyCache.vocabularySetIdToEnum of ${vocabularySet.idVocabularySet}`, LOG.LS.eTEST);
                 // fetches the VocabularySet.idVocabularySet for a given vocabulary set enum
                 // static async vocabularySetIdToEnum(idVocabularySet: number): Promise<eVocabularySetID | undefined> {
                 const eVocabSetIDFetch: eVocabularySetID | undefined = await VocabularyCache.vocabularySetIdToEnum(vocabularySet.idVocabularySet);
@@ -606,7 +606,7 @@ function vocabularyCacheTestClearFlush(): void {
 }
 
 function testVocabulary(vocabulary: DB.Vocabulary | undefined, termExpected: string): void {
-    // LOG.logger.info(`VocabularyCacheTest testVocabulary ${termExpected} ${JSON.stringify(vocabulary)}`);
+    // LOG.info(`VocabularyCacheTest testVocabulary ${termExpected} ${JSON.stringify(vocabulary)}`, LOG.LS.eTEST);
     expect(vocabulary).toBeTruthy();
     /* istanbul ignore else */
     if (vocabulary)
@@ -622,7 +622,7 @@ async function testVocabularyBySetAndTerm(eVocabSetId: eVocabularySetID, term: s
 }
 
 async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: eVocabularyID): Promise<void> {
-    // LOG.logger.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`);
+    // LOG.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
     const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapPhotogrammetryVariantType(variantType);
     const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
     if (eVocabID != eVocabularyID.eNone) {
@@ -636,7 +636,7 @@ async function testMapPhotogrammetryVariantType(variantType: string, eVocabID: e
 }
 
 async function testMapModelFileByExtension(modelExtension: string, eVocabID: eVocabularyID): Promise<void> {
-    // LOG.logger.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`);
+    // LOG.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
     const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapModelFileByExtension(modelExtension);
     const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
     if (eVocabID != eVocabularyID.eNone) {
@@ -650,7 +650,7 @@ async function testMapModelFileByExtension(modelExtension: string, eVocabID: eVo
 }
 
 async function testMapModelChannelMaterialType(materialType: string, eVocabID: eVocabularyID): Promise<void> {
-    // LOG.logger.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`);
+    // LOG.info(`Testing ${variantType}; expecting ${eVocabularyID[eVocabID]}`, LOG.LS.eTEST);
     const vocabObserved: DB.Vocabulary | undefined = await VocabularyCache.mapModelChannelMaterialType(materialType);
     const vocabExpected: DB.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
     if (eVocabID != eVocabularyID.eNone) {

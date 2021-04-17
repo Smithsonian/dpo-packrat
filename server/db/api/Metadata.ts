@@ -48,7 +48,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Metadata.create', error);
+            LOG.error('DBAPI.Metadata.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -71,7 +71,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Metadata.update', error);
+            LOG.error('DBAPI.Metadata.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -83,7 +83,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return DBC.CopyObject<MetadataBase, Metadata>(
                 await DBC.DBConnection.prisma.metadata.findUnique({ where: { idMetadata, }, }), Metadata);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Metadata.fetch', error);
+            LOG.error('DBAPI.Metadata.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -95,7 +95,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return DBC.CopyArray<MetadataBase, Metadata>(
                 await DBC.DBConnection.prisma.metadata.findMany({ where: { idUser } }), Metadata);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Metadata.fetchFromUser', error);
+            LOG.error('DBAPI.Metadata.fetchFromUser', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -107,7 +107,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return DBC.CopyArray<MetadataBase, Metadata>(
                 await DBC.DBConnection.prisma.metadata.findMany({ where: { idSystemObject } }), Metadata);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Metadata.fetchFromSystemObject', error);
+            LOG.error('DBAPI.Metadata.fetchFromSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }

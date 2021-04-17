@@ -5,18 +5,15 @@ import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook/JobC
 
 
 export default async function getModelConstellationForAssetVersion(_: Parent, args: QueryGetModelConstellationForAssetVersionArgs,
-    context: Context): Promise<GetModelConstellationForAssetVersionResult> {
-    const { user } = context;
+    __: Context): Promise<GetModelConstellationForAssetVersionResult> {
     const { idAssetVersion } = args.input;
-    if (!user)
-        return { idAssetVersion };
 
     const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion);
     if (!JCOutput || !JCOutput.success) {
-        LOG.logger.error(`getModelConstellationForAssetVersion failed extracting job output: ${JCOutput ? JCOutput.error : ''}`);
+        LOG.error(`getModelConstellationForAssetVersion failed extracting job output: ${JCOutput ? JCOutput.error : ''}`, LOG.LS.eGQL);
         return { idAssetVersion };
     }
 
-    // LOG.logger.info(`GraphQL getModelConstellationForAssetVersion(${JSON.stringify(idAssetVersions)}) = ${JSON.stringify(result)}`);
+    // LOG.info(`GraphQL getModelConstellationForAssetVersion(${JSON.stringify(idAssetVersion)}) = ${JSON.stringify(JCOutput.modelConstellation, H.Helpers.stringifyCallbackCustom)}`, LOG.LS.eGQL);
     return { idAssetVersion, ModelConstellation: JCOutput.modelConstellation };
 }

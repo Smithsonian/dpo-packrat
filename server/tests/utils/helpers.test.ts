@@ -135,19 +135,26 @@ describe('Utils: Helpers', () => {
     test('Utils: Helpers.writeJsonAndComputeHash', async () => {
         const obj = {
             abba: 1,
-            dabba: 'doo'
+            dabba: 'doo',
+            dabbaOrig: 'doo-dee'
         };
         const res1: H.HashResults = await H.Helpers.writeJsonAndComputeHash(filePath5, obj, 'sha512');
         expect(res1.success).toBeTruthy();
         const res2: H.HashResults = await H.Helpers.computeHashFromFile(filePath5, 'sha512');
         expect(res2.success).toBeTruthy();
         expect(res1.hash).toEqual(res2.hash);
+
+        const res3: H.HashResults = await H.Helpers.writeJsonAndComputeHash(filePath5, obj, 'sha512', H.Helpers.stringifyDatabaseRow);
+        expect(res3.success).toBeTruthy();
+        const res4: H.HashResults = await H.Helpers.computeHashFromFile(filePath5, 'sha512');
+        expect(res4.success).toBeTruthy();
+        expect(res3.hash).toEqual(res4.hash);
     });
 
     test('Utils: Helpers.copyFile', async () => {
         let res: H.IOResults = await H.Helpers.copyFile(filePath, filePath2);
         expect(res.success).toBeTruthy();
-        LOG.logger.info('NOTICE: The logged error that should follow is expected!');
+        LOG.info('NOTICE: The logged error that should follow is expected!', LOG.LS.eTEST);
         res = await H.Helpers.copyFile(filePath, filePath2, false);
         expect(res.success).toBeFalsy();
     });
@@ -193,7 +200,7 @@ describe('Utils: Helpers', () => {
             const hash: string = await H.Helpers.createRandomFile(WS, RANDOM_FILE_SIZE);
             expect(hash).toBeTruthy();
         } catch (error) {
-            LOG.logger.error(`Helpers.createRandomeFile test failed: ${JSON.stringify(error)}`);
+            LOG.error(`Helpers.createRandomeFile test failed: ${JSON.stringify(error)}`, LOG.LS.eTEST);
             expect(false).toBeTruthy();
         }
     });
@@ -217,10 +224,40 @@ describe('Utils: Helpers', () => {
         const filePathTemp: string = H.Helpers.randomFilename(directoryPath, '');
         const stream: NodeJS.WritableStream = fs.createWriteStream(filePathTemp);
         let ioResults: H.IOResults = await H.Helpers.writeFileToStream(filePath, stream);
-        LOG.logger.info(ioResults.error);
+        if (!ioResults.success)
+            LOG.info(ioResults.error, LOG.LS.eTEST);
         expect(ioResults.success).toBeTruthy();
 
         ioResults = await H.Helpers.removeFile(filePathTemp);
+        expect(ioResults.success).toBeTruthy();
+    });
+
+    test('Utils: Helpers.writeStreamToStream, waitOnEnd = false', async () => {
+        const filePathTemp: string = H.Helpers.randomFilename(directoryPath, '');
+        const writeStream: NodeJS.WritableStream = fs.createWriteStream(filePathTemp);
+        const readStream: NodeJS.ReadableStream = fs.createReadStream(filePath);
+
+        let ioResults: H.IOResults = await H.Helpers.writeStreamToStream(readStream, writeStream);
+        if (!ioResults.success)
+            LOG.info(ioResults.error, LOG.LS.eTEST);
+        expect(ioResults.success).toBeTruthy();
+
+        ioResults = await H.Helpers.removeFile(filePathTemp);
+        expect(ioResults.success).toBeTruthy();
+    });
+
+    test('Utils: Helpers.writeStreamToStreamComputeSize', async () => {
+        const filePathTemp: string = H.Helpers.randomFilename(directoryPath, '');
+        const writeStream: NodeJS.WritableStream = fs.createWriteStream(filePathTemp);
+        const readStream: NodeJS.ReadableStream = fs.createReadStream(filePathRandom);
+
+        const ioResultsSized: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(readStream, writeStream);
+        if (!ioResultsSized.success)
+            LOG.info(ioResultsSized.error, LOG.LS.eTEST);
+        expect(ioResultsSized.success).toBeTruthy();
+        expect(ioResultsSized.size).toEqual(RANDOM_FILE_SIZE);
+
+        const ioResults: H.IOResults = await H.Helpers.removeFile(filePathTemp);
         expect(ioResults.success).toBeTruthy();
     });
 
@@ -352,13 +389,14 @@ describe('Utils: Helpers', () => {
         expect(H.Helpers.safeBoolean(objVal)).toBeTruthy();
     });
 
-    test('Utils: Helpers.stringifyCallbackCustom', async () => {
+    test('Utils: Helpers.stringify*', async () => {
         type testType = {
             map: Map<number, number>,
             bigint: BigInt,
             string: string,
             number: number,
             boolean: boolean,
+            valueOrig: number,
         };
 
         const testData: testType = {
@@ -366,12 +404,17 @@ describe('Utils: Helpers', () => {
             bigint: BigInt(999999999999999),
             string: 'string',
             number: 50,
-            boolean: false
+            boolean: false,
+            valueOrig: 39
         };
 
-        const output: string = JSON.stringify(testData, H.Helpers.stringifyCallbackCustom);
-        LOG.logger.info(`output: ${output}`);
-        expect(output).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false}');
+        const output1: string = JSON.stringify(testData, H.Helpers.stringifyMapsAndBigints);
+        LOG.info(`output: ${output1}`, LOG.LS.eTEST);
+        expect(output1).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false,"valueOrig":39}');
+
+        const output2: string = JSON.stringify(testData, H.Helpers.stringifyDatabaseRow);
+        LOG.info(`output: ${output2}`, LOG.LS.eTEST);
+        expect(output2).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false}');
     });
 });
 

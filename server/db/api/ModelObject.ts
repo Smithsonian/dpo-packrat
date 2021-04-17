@@ -57,7 +57,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObject.create', error);
+            LOG.error('DBAPI.ModelObject.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -80,7 +80,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObject.update', error);
+            LOG.error('DBAPI.ModelObject.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -92,7 +92,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
             return DBC.CopyObject<ModelObjectBase, ModelObject>(
                 await DBC.DBConnection.prisma.modelObject.findUnique({ where: { idModelObject, }, }), ModelObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObject.fetch', error);
+            LOG.error('DBAPI.ModelObject.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -104,7 +104,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
             return DBC.CopyArray<ModelObjectBase, ModelObject>(
                 await DBC.DBConnection.prisma.modelObject.findMany({ where: { idModel } }), ModelObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObject.fetchFromModel', error);
+            LOG.error('DBAPI.ModelObject.fetchFromModel', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -822,7 +822,7 @@ describe('DB Composite ObjectGraph All', () => {
 // ************************************************************
 describe('DB Composite ObjectGraph.fetch Invalid', () => {
     test('DB Composite ObjectGraph Invalid Object Wiring Ascending 1', async () => {
-        LOG.logger.info('NOTICE: Errors that follow are due to invalid wiring and are expected!');
+        LOG.info('NOTICE: Errors that follow are due to invalid wiring and are expected!', LOG.LS.eTEST);
         await UTIL.createXref(OHTS.intermediaryFile1, OHTS.subject4);
         await UTIL.createXref(OHTS.projectDocumentation1, OHTS.subject4);
         await UTIL.createXref(OHTS.scene1, OHTS.subject4);
