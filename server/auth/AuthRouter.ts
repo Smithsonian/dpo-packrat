@@ -7,7 +7,7 @@ AuthRouter.post('/login', (request: Request, response: Response, next: NextFunct
     passport.authenticate('local', (error, user) => {
         if (error)
             return response.send({ success: false, message: error });
-        return request.logIn(user, error => {
+        return request.logIn(user, error => {   // assigns user to request.user
             if (error)
                 return next(error);
             return response.send({ success: true });

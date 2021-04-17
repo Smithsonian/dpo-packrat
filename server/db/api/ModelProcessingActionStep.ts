@@ -29,7 +29,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelProcessingActionStep.create', error);
+            LOG.error('DBAPI.ModelProcessingActionStep.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -46,7 +46,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelProcessingActionStep.update', error);
+            LOG.error('DBAPI.ModelProcessingActionStep.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -58,7 +58,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
             return DBC.CopyObject<ModelProcessingActionStepBase, ModelProcessingActionStep>(
                 await DBC.DBConnection.prisma.modelProcessingActionStep.findUnique({ where: { idModelProcessingActionStep, }, }), ModelProcessingActionStep);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelProcessingActionStep.fetch', error);
+            LOG.error('DBAPI.ModelProcessingActionStep.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -70,7 +70,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
             return DBC.CopyArray<ModelProcessingActionStepBase, ModelProcessingActionStep>(
                 await DBC.DBConnection.prisma.modelProcessingActionStep.findMany({ where: { idModelProcessingAction } }), ModelProcessingActionStep);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelProcessingActionStep.fetchFromModelProcessingAction', error);
+            LOG.error('DBAPI.ModelProcessingActionStep.fetchFromModelProcessingAction', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -26,8 +26,8 @@ export class IndexSolr {
     private countUnknown:               number = 0;
 
     async fullIndexProfiled(): Promise<boolean> {
-        LOG.logger.info('****************************************');
-        LOG.logger.info('IndexSolr.fullIndexProfiled() starting');
+        LOG.info('****************************************', LOG.LS.eNAV);
+        LOG.info('IndexSolr.fullIndexProfiled() starting', LOG.LS.eNAV);
         return new Promise<boolean>((resolve) => {
             const inspector = require('inspector');
             const fs = require('fs');
@@ -36,19 +36,19 @@ export class IndexSolr {
 
             session.post('Profiler.enable', async () => {
                 session.post('Profiler.start', async () => {
-                    LOG.logger.info('IndexSolr.fullIndexProfiled() fullIndex() starting');
+                    LOG.info('IndexSolr.fullIndexProfiled() fullIndex() starting', LOG.LS.eNAV);
                     const retValue: boolean = await this.fullIndex();
-                    LOG.logger.info('IndexSolr.fullIndexProfiled() fullIndex() complete');
+                    LOG.info('IndexSolr.fullIndexProfiled() fullIndex() complete', LOG.LS.eNAV);
                     resolve(retValue);
 
                     // some time later...
                     session.post('Profiler.stop', (err, { profile }) => {
                         // Write profile to disk, upload, etc.
                         if (!err) {
-                            LOG.logger.info('IndexSolr.fullIndexProfiled() writing profile');
+                            LOG.info('IndexSolr.fullIndexProfiled() writing profile', LOG.LS.eNAV);
                             fs.writeFileSync('./profile.cpuprofile', JSON.stringify(profile));
                         }
-                        LOG.logger.info('IndexSolr.fullIndexProfiled() writing profile ending');
+                        LOG.info('IndexSolr.fullIndexProfiled() writing profile ending', LOG.LS.eNAV);
                     });
                 });
             });
@@ -57,7 +57,7 @@ export class IndexSolr {
 
     async fullIndex(): Promise<boolean> {
         if (IndexSolr.fullIndexUnderway) {
-            LOG.logger.error('IndexSolr.fullIndex() already underway; exiting this additional request early');
+            LOG.error('IndexSolr.fullIndex() already underway; exiting this additional request early', LOG.LS.eNAV);
             return false;
         }
 
@@ -76,12 +76,12 @@ export class IndexSolr {
         // Compute full object graph for object
         const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAll, 32, this.objectGraphDatabase);
         if (!await OG.fetch()) {
-            LOG.logger.error(`IndexSolr.indexObject failed fetching ObjectGraph for ${idSystemObject}`);
+            LOG.error(`IndexSolr.indexObject failed fetching ObjectGraph for ${idSystemObject}`, LOG.LS.eNAV);
             return false;
         }
         const OGDE: ObjectGraphDataEntry | undefined = this.objectGraphDatabase.objectMap.get(idSystemObject);
         if (!OGDE) {
-            LOG.logger.error('IndexSolr.indexObject failed fetching ObjectGraphDataEntry from ObjectGraphDatabase');
+            LOG.error('IndexSolr.indexObject failed fetching ObjectGraphDataEntry from ObjectGraphDatabase', LOG.LS.eNAV);
             return false;
         }
 
@@ -89,14 +89,14 @@ export class IndexSolr {
         if (await this.handleObject(doc, OGDE)) {
             const solrClient: SolrClient = new SolrClient(null, null, null);
             try {
-                solrClient._client.add([doc], undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.indexObject adding record', err); else obj; });
-                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.indexObject -> commit()', err); else obj; });
+                solrClient._client.add([doc], undefined, function (err, obj) { if (err) LOG.error('IndexSolr.indexObject adding record', LOG.LS.eNAV, err); else obj; });
+                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.error('IndexSolr.indexObject -> commit()', LOG.LS.eNAV, err); else obj; });
             } catch (error) {
-                LOG.logger.error(`IndexSolr.indexObject ${idSystemObject} failed`, error);
+                LOG.error(`IndexSolr.indexObject ${idSystemObject} failed`, LOG.LS.eNAV, error);
                 return false;
             }
         } else
-            LOG.logger.error('IndexSolr.indexObject failed in handleObject');
+            LOG.error('IndexSolr.indexObject failed in handleObject', LOG.LS.eNAV);
 
         return true;
     }
@@ -104,7 +104,7 @@ export class IndexSolr {
     private async fullIndexWorker(): Promise<boolean> {
         const solrClient: SolrClient = new SolrClient(null, null, null);
         if (!(await this.objectGraphDatabase.fetch())) {
-            LOG.logger.error('IndexSolr.fullIndex failed on ObjectGraphDatabase.fetch()');
+            LOG.error('IndexSolr.fullIndex failed on ObjectGraphDatabase.fetch()', LOG.LS.eNAV);
             return false;
         }
 
@@ -117,46 +117,46 @@ export class IndexSolr {
 
                 if (docs.length >= 1000) {
                     try {
-                        solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.fullIndex adding cached records', err); else obj; });
-                        solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.fullIndex -> commit()', err); else obj; });
+                        solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex adding cached records', LOG.LS.eNAV, err); else obj; });
+                        solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex -> commit()', LOG.LS.eNAV, err); else obj; });
                     } catch (error) {
-                        LOG.logger.error('IndexSolr.fullIndexWorker failed', error);
+                        LOG.error('IndexSolr.fullIndexWorker failed', LOG.LS.eNAV, error);
                         return false;
                     }
                     documentCount += docs.length;
-                    LOG.logger.info(`IndexSolr.fullIndex committed ${documentCount} total documents`);
+                    LOG.info(`IndexSolr.fullIndex committed ${documentCount} total documents`, LOG.LS.eNAV);
                     docs = [];
                 }
             } else
-                LOG.logger.error('IndexSolr.fullIndex failed in handleObject');
+                LOG.error('IndexSolr.fullIndex failed in handleObject', LOG.LS.eNAV);
         }
 
         if (docs.length > 0) {
             try {
-                solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.fullIndex adding cached records', err); else obj; });
-                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.logger.error('IndexSolr.fullIndex -> commit()', err); else obj; });
+                solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex adding cached records', LOG.LS.eNAV, err); else obj; });
+                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex -> commit()', LOG.LS.eNAV, err); else obj; });
             } catch (error) {
-                LOG.logger.error('IndexSolr.fullIndexWorker failed', error);
+                LOG.error('IndexSolr.fullIndexWorker failed', LOG.LS.eNAV, error);
                 return false;
             }
             documentCount += docs.length;
         }
 
-        LOG.logger.info(`IndexSolr.fullIndex indexed units: ${this.countUnit}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed projects: ${this.countProject}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed subjects: ${this.countSubject}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed items: ${this.countItem}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed capture data: ${this.countCaptureData}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed models: ${this.countModel}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed scenes: ${this.countScene}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed intermediary files: ${this.countIntermediaryFile}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed project documentation: ${this.countProjectDocumentation}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed assets: ${this.countAsset}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed asset versions: ${this.countAssetVersion}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed actors: ${this.countActor}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed stakeholders: ${this.countStakeholder}`);
-        LOG.logger.info(`IndexSolr.fullIndex indexed unknown: ${this.countUnknown}`);
-        LOG.logger.info(`IndexSolr.fullIndex committed ${documentCount} total documents`);
+        LOG.info(`IndexSolr.fullIndex indexed units: ${this.countUnit}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed projects: ${this.countProject}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed subjects: ${this.countSubject}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed items: ${this.countItem}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed capture data: ${this.countCaptureData}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed models: ${this.countModel}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed scenes: ${this.countScene}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed intermediary files: ${this.countIntermediaryFile}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed project documentation: ${this.countProjectDocumentation}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed assets: ${this.countAsset}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed asset versions: ${this.countAssetVersion}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed actors: ${this.countActor}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed stakeholders: ${this.countStakeholder}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex indexed unknown: ${this.countUnknown}`, LOG.LS.eNAV);
+        LOG.info(`IndexSolr.fullIndex committed ${documentCount} total documents`, LOG.LS.eNAV);
         return true;
     }
 
@@ -209,7 +209,7 @@ export class IndexSolr {
                     this.hierarchyNameMap.set(objInfo.idSystemObject, name);
                 } else {
                     name = 'Unknown';
-                    LOG.logger.error(`Unable to compute Unit for ${JSON.stringify(objInfo)}`);
+                    LOG.error(`Unable to compute Unit for ${JSON.stringify(objInfo)}`, LOG.LS.eNAV);
                 }
             }
             nameArray.push(name);
@@ -231,7 +231,7 @@ export class IndexSolr {
                     this.hierarchyNameMap.set(objInfo.idSystemObject, name);
                 } else {
                     name = 'Unknown';
-                    LOG.logger.error(`Unable to compute Project for ${JSON.stringify(objInfo)}`);
+                    LOG.error(`Unable to compute Project for ${JSON.stringify(objInfo)}`, LOG.LS.eNAV);
                 }
             }
             nameArray.push(name);
@@ -253,7 +253,7 @@ export class IndexSolr {
                     this.hierarchyNameMap.set(objInfo.idSystemObject, name);
                 } else {
                     name = 'Unknown';
-                    LOG.logger.error(`Unable to compute Subject for ${JSON.stringify(objInfo)}`);
+                    LOG.error(`Unable to compute Subject for ${JSON.stringify(objInfo)}`, LOG.LS.eNAV);
                 }
             }
             nameArray.push(name);
@@ -275,7 +275,7 @@ export class IndexSolr {
                     this.hierarchyNameMap.set(objInfo.idSystemObject, name);
                 } else {
                     name = 'Unknown';
-                    LOG.logger.error(`Unable to compute Item for ${JSON.stringify(objInfo)}`);
+                    LOG.error(`Unable to compute Item for ${JSON.stringify(objInfo)}`, LOG.LS.eNAV);
                 }
             }
             nameArray.push(name);
@@ -328,7 +328,7 @@ export class IndexSolr {
     private async handleUnit(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!unit) {
-            LOG.logger.error(`IndexSolr.handleUnit failed to compute unit from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleUnit failed to compute unit from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
         doc.CommonName = unit.Name;
@@ -341,7 +341,7 @@ export class IndexSolr {
     private async handleProject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const project: DBAPI.Project | null = await DBAPI.Project.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!project) {
-            LOG.logger.error(`IndexSolr.handleProject failed to compute project from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleProject failed to compute project from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
         doc.CommonName = project.Name;
@@ -353,7 +353,7 @@ export class IndexSolr {
     private async handleSubject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const subject: DBAPI.Subject | null = await DBAPI.Subject.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!subject) {
-            LOG.logger.error(`IndexSolr.handleSubject failed to compute subject from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleSubject failed to compute subject from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
 
@@ -370,7 +370,7 @@ export class IndexSolr {
     private async handleItem(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const item: DBAPI.Item | null = await DBAPI.Item.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!item) {
-            LOG.logger.error(`IndexSolr.handleItem failed to compute item from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleItem failed to compute item from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
         doc.CommonName = item.Name;
@@ -382,7 +382,7 @@ export class IndexSolr {
     private async handleCaptureData(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const captureData: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!captureData) {
-            LOG.logger.error(`IndexSolr.handleCaptureData failed to compute capture data from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleCaptureData failed to compute capture data from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
         const captureDataPhotos: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(captureData.idCaptureData);
@@ -424,7 +424,7 @@ export class IndexSolr {
     private async handleModel(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const modelConstellation: DBAPI.ModelConstellation | null = await DBAPI.ModelConstellation.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!modelConstellation) {
-            LOG.logger.error(`IndexSolr.handleModel failed to compute ModelConstellation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleModel failed to compute ModelConstellation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
         const model: DBAPI.Model = modelConstellation.Model;
@@ -579,7 +579,7 @@ export class IndexSolr {
     private async handleScene(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!scene) {
-            LOG.logger.error(`IndexSolr.handleScene failed to compute scene from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleScene failed to compute scene from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
         doc.CommonName = scene.Name;
@@ -592,7 +592,7 @@ export class IndexSolr {
     private async handleIntermediaryFile(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const intermediaryFile: DBAPI.IntermediaryFile | null = await DBAPI.IntermediaryFile.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!intermediaryFile) {
-            LOG.logger.error(`IndexSolr.handleIntermediaryFile failed to compute intermediaryFile from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleIntermediaryFile failed to compute intermediaryFile from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
         doc.CommonName = `Intermediary File created ${intermediaryFile.DateCreated.toISOString()}`;
@@ -604,7 +604,7 @@ export class IndexSolr {
     private async handleProjectDocumentation(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const projectDocumentation: DBAPI.ProjectDocumentation | null = await DBAPI.ProjectDocumentation.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!projectDocumentation) {
-            LOG.logger.error(`IndexSolr.handleProjectDocumentation failed to compute projectDocumentation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleProjectDocumentation failed to compute projectDocumentation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
         doc.CommonName = projectDocumentation.Name;
@@ -616,7 +616,7 @@ export class IndexSolr {
     private async handleAsset(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!asset) {
-            LOG.logger.error(`IndexSolr.handleAsset failed to compute asset from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleAsset failed to compute asset from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
         doc.CommonName = asset.FileName;
@@ -630,13 +630,13 @@ export class IndexSolr {
     private async handleAssetVersion(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!assetVersion) {
-            LOG.logger.error(`IndexSolr.handleAssetVersion failed to compute assetVersion from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleAssetVersion failed to compute assetVersion from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
 
         const user: DBAPI.User | null = await DBAPI.User.fetch(assetVersion.idUserCreator);
         if (!user) {
-            LOG.logger.error(`IndexSolr.handleAssetVersion failed to compute idUserCreator from ${assetVersion.idUserCreator}`);
+            LOG.error(`IndexSolr.handleAssetVersion failed to compute idUserCreator from ${assetVersion.idUserCreator}`, LOG.LS.eNAV);
             return false;
         }
         doc.CommonName = `Version ${assetVersion.Version}`;
@@ -652,7 +652,7 @@ export class IndexSolr {
     private async handleActor(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const actor: DBAPI.Actor | null = await DBAPI.Actor.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!actor) {
-            LOG.logger.error(`IndexSolr.handleActor failed to compute actor from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleActor failed to compute actor from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
         doc.CommonName = actor.IndividualName;
@@ -664,7 +664,7 @@ export class IndexSolr {
     private async handleStakeholder(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const stakeholder: DBAPI.Stakeholder | null = await DBAPI.Stakeholder.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!stakeholder) {
-            LOG.logger.error(`IndexSolr.handleStakeholder failed to compute stakeholder from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+            LOG.error(`IndexSolr.handleStakeholder failed to compute stakeholder from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
             return false;
         }
 
@@ -679,7 +679,7 @@ export class IndexSolr {
     }
 
     private async handleUnknown(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
-        LOG.logger.error(`IndexSolr.fullIndex called with unknown object type from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`);
+        LOG.error(`IndexSolr.fullIndex called with unknown object type from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
         doc.CommonName = `Unknown ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`;
         this.countUnknown++;
         return false;

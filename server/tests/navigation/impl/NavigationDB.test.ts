@@ -109,13 +109,13 @@ async function testNavigation(filter: NavigationFilter, expectSuccess: boolean =
     const navResult: NavigationResult = await nav.getObjectChildren(filter);
     validateResult(navResult, expectSuccess);
     if (expectSuccess) {
-        // LOG.logger.info(`Filter: ${JSON.stringify(filter)}`);
+        // LOG.info(`Filter: ${JSON.stringify(filter)}`, LOG.LS.eTEST);
         await validateResultEntries(navResult.entries, filter.objectTypes);
     }
 }
 
 function validateResult(navResult: NavigationResult, expectSuccess: boolean = true): void {
-    // LOG.logger.info(`${JSON.stringify(navResult)}`);
+    // LOG.info(`${JSON.stringify(navResult)}`, LOG.LS.eTEST);
     if (expectSuccess) {
         expect(navResult.success).toBeTruthy();
         expect(navResult.entries.length).toBeGreaterThan(0);
@@ -129,7 +129,7 @@ function validateResult(navResult: NavigationResult, expectSuccess: boolean = tr
 
 async function validateResultEntries(navResultEntries: NavigationResultEntry[], objectTypes: eSystemObjectType[]): Promise<void> {
     for (const NRE of navResultEntries) {
-        // LOG.logger.info(`${JSON.stringify(NRE)}`);
+        // LOG.info(`${JSON.stringify(NRE)}`, LOG.LS.eTEST);
         expect(objectTypes).toEqual(expect.arrayContaining([NRE.objectType]));
         expect(NRE.metadata.length).toEqual(metadataColumns.length);
 

@@ -30,7 +30,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.create', error);
+            LOG.error('DBAPI.Unit.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -47,7 +47,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.update', error);
+            LOG.error('DBAPI.Unit.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -58,7 +58,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idUnit, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchSystemObject', error);
+            LOG.error('DBAPI.Unit.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -70,7 +70,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyObject<UnitBase, Unit>(
                 await DBC.DBConnection.prisma.unit.findUnique({ where: { idUnit, }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetch', error);
+            LOG.error('DBAPI.Unit.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -80,7 +80,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyArray<UnitBase, Unit>(
                 await DBC.DBConnection.prisma.unit.findMany(), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchAll', error);
+            LOG.error('DBAPI.Unit.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -93,7 +93,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 FROM Unit AS U
                 JOIN Subject AS S ON (U.idUnit = S.idUnit)`, Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchAllWithSubjects', error);
+            LOG.error('DBAPI.Unit.fetchAllWithSubjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -117,7 +117,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectDerived = SOP.idSystemObject)
                 WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchMasterFromProjects', error);
+            LOG.error('DBAPI.Unit.fetchMasterFromProjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -129,7 +129,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyArray<UnitBase, Unit>(
                 await DBC.DBConnection.prisma.unit.findMany({ where: { UnitEdan: { some: { Abbreviation }, }, }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchFromUnitEdanAbbreviation', error);
+            LOG.error('DBAPI.Unit.fetchFromUnitEdanAbbreviation', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -145,7 +145,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                     { Name: { contains: search }, },
                 ] }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchFromNameSearch', error);
+            LOG.error('DBAPI.Unit.fetchFromNameSearch', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -1,7 +1,9 @@
 import PassportLocal from 'passport-local';
 import passport from 'passport';
-import * as DBAPI from '../../db';
+
 import { AuthFactory, VerifiedUser } from '../interface';
+import * as DBAPI from '../../db';
+// import { ASL, LocalStore } from '../../utils/localStore';
 
 const options = {
     usernameField: 'email'
@@ -28,6 +30,17 @@ passport.serializeUser((user: DBAPI.User, done) => {
 
 passport.deserializeUser(async (id: number, done) => {
     const user: DBAPI.User | null = await DBAPI.User.fetch(id);
+    // At this point, our express middleware hasn't yet been called, so ASL.getStore() will return null
+    // Instead of the code below, we rely on passport stashing the user object in req['user']
+    // This is likely accomplished via this method here!
+    // We use that stashed user when creating the local store
+    /*
+    if (user) {
+        const LS: LocalStore | undefined = ASL.getStore();
+        if (LS)
+            LS.user = user;
+    }
+    */
     done(null, user);
 });
 

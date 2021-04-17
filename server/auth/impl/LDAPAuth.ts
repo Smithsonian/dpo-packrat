@@ -20,7 +20,7 @@ class LDAPAuth implements IAuth {
         });
 
         // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
-        client.on('error', error=> { LOG.logger.error('LDAPAuth.verifyUser', error); });
+        client.on('error', error=> { LOG.error('LDAPAuth.verifyUser', error, LOG.LS.eAUTH); });
 
         // Step 2: Bind Packrat Service Account
         const res: VerifyUserResult = await this.bindService(client, ldapConfig);
@@ -45,7 +45,7 @@ class LDAPAuth implements IAuth {
         return new Promise<VerifyUserResult>(function(resolve) {
             client.bind(ldapBind, ldapConfig.password, (err: any): void => {
                 if (err) {
-                    LOG.logger.error(`LDAPAuth.bindService failed: ${JSON.stringify(err)}`);
+                    LOG.error(`LDAPAuth.bindService failed: ${JSON.stringify(err)}`, LOG.LS.eAUTH);
                     resolve({ success: false, error: 'Unable to connect to LDAP server' });
                 } else
                     resolve({ success: true, error: '' });
@@ -69,12 +69,12 @@ class LDAPAuth implements IAuth {
             client.search(ldapConfig.DC, searchOptions, (err: any, res: LDAP.SearchCallbackResponse): void => {
                 if (err) {
                     const error: string = `Unable to locate ${email}`;
-                    LOG.logger.error(`LDAPAuth.searchForUser ${error}`);
+                    LOG.error(`LDAPAuth.searchForUser ${error}`, LOG.LS.eAUTH);
                     resolve({ success: false, error, DN: null });
                 }
 
                 res.on('searchEntry', (entry: any) => {
-                    LOG.logger.info(`LDAPAuth.searchForUser found ${email}: ${JSON.stringify(entry.objectName)}`);
+                    LOG.info(`LDAPAuth.searchForUser found ${email}: ${JSON.stringify(entry.objectName)}`, LOG.LS.eAUTH);
                     searchComplete = true;
                     resolve({ success: true, error: '', DN: entry.objectName });
                 });
@@ -82,7 +82,7 @@ class LDAPAuth implements IAuth {
                 res.on('error', (err: any) => {
                     err;
                     const error: string = `Unable to locate ${email}`;
-                    LOG.logger.error(`LDAPAuth.searchForUser ${error}`);
+                    LOG.error(`LDAPAuth.searchForUser ${error}`, LOG.LS.eAUTH);
                     resolve({ success: false, error, DN: null });
                 });
 
@@ -90,7 +90,7 @@ class LDAPAuth implements IAuth {
                     if (!searchComplete) {
                         result;
                         const error: string = `Unable to locate ${email}`;
-                        LOG.logger.error(`LDAPAuth.searchForUser ${error}`);
+                        LOG.error(`LDAPAuth.searchForUser ${error}`, LOG.LS.eAUTH);
                         resolve({ success: false, error, DN: null });
                     }
                 });
@@ -104,7 +104,7 @@ class LDAPAuth implements IAuth {
                 if (err) {
                     err;
                     const error: string = `Invalid password for ${email}`;
-                    LOG.logger.error(`LDAPAuth.bindUser ${error}`);
+                    LOG.error(`LDAPAuth.bindUser ${error}`, LOG.LS.eAUTH);
                     resolve({ success: false, error });
                 } else
                     resolve({ success: true, error: '' });

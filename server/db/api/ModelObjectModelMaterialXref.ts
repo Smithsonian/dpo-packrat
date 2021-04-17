@@ -27,7 +27,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObjectModelMaterialXref.create', error);
+            LOG.error('DBAPI.ModelObjectModelMaterialXref.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -44,7 +44,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObjectModelMaterialXref.update', error);
+            LOG.error('DBAPI.ModelObjectModelMaterialXref.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -56,7 +56,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
             return DBC.CopyObject<ModelObjectModelMaterialXrefBase, ModelObjectModelMaterialXref>(
                 await DBC.DBConnection.prisma.modelObjectModelMaterialXref.findUnique({ where: { idModelObjectModelMaterialXref, }, }), ModelObjectModelMaterialXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObjectModelMaterialXref.fetch', error);
+            LOG.error('DBAPI.ModelObjectModelMaterialXref.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -68,7 +68,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
             return DBC.CopyArray<ModelObjectModelMaterialXrefBase, ModelObjectModelMaterialXref>(
                 await DBC.DBConnection.prisma.modelObjectModelMaterialXref.findMany({ where: { idModelObject } }), ModelObjectModelMaterialXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelObject', error);
+            LOG.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -87,7 +87,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
                 FROM ModelObjectModelMaterialXref
                 WHERE idModelObject IN (${Prisma.join(idModelObjects)})`, ModelObjectModelMaterialXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelObjects', error);
+            LOG.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelObjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -99,7 +99,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
             return DBC.CopyArray<ModelObjectModelMaterialXrefBase, ModelObjectModelMaterialXref>(
                 await DBC.DBConnection.prisma.modelObjectModelMaterialXref.findMany({ where: { idModelMaterial } }), ModelObjectModelMaterialXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterial', error);
+            LOG.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterial', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -118,7 +118,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
                 FROM ModelObjectModelMaterialXref
                 WHERE idModelMaterial IN (${Prisma.join(idModelMaterials)})`, ModelObjectModelMaterialXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterials', error);
+            LOG.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterials', LOG.LS.eDB, error);
             return null;
         }
     }

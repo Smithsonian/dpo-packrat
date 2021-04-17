@@ -53,7 +53,7 @@ class EdanCollection implements COL.ICollection {
         try {
             jsonResult                      = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
         } catch (error) {
-            LOG.logger.error(`EdanCollection.queryCollection ${query}`, error);
+            LOG.error(`EdanCollection.queryCollection ${query}`, LOG.LS.eCOLL, error);
             jsonResult                      = null;
         }
 
@@ -98,8 +98,8 @@ class EdanCollection implements COL.ICollection {
             }
         }
 
-        // LOG.logger.info(JSON.stringify(result) + '\n\n');
-        // LOG.logger.info(reqResult.output + '\n\n');
+        // LOG.info(JSON.stringify(result) + '\n\n', LOG.LS.eCOLL);
+        // LOG.info(reqResult.output + '\n\n', LOG.LS.eCOLL);
         return result;
     }
 
@@ -171,7 +171,7 @@ class EdanCollection implements COL.ICollection {
                 success: res.ok
             };
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('EdanCollection.sendGetRequest', error);
+            LOG.error('EdanCollection.sendGetRequest', LOG.LS.eCOLL, error);
             return {
                 output: JSON.stringify(error),
                 statusText: 'node-fetch error',

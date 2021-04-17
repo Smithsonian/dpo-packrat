@@ -43,7 +43,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Subject.create', error);
+            LOG.error('DBAPI.Subject.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -64,7 +64,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Subject.update', error);
+            LOG.error('DBAPI.Subject.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -75,7 +75,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSubject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.subject.fetchSystemObject', error);
+            LOG.error('DBAPI.subject.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -87,7 +87,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return DBC.CopyObject<SubjectBase, Subject>(
                 await DBC.DBConnection.prisma.subject.findUnique({ where: { idSubject, }, }), Subject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Subject.fetch', error);
+            LOG.error('DBAPI.Subject.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -97,7 +97,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return DBC.CopyArray<SubjectBase, Subject>(
                 await DBC.DBConnection.prisma.subject.findMany(), Subject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Subject.fetchAll', error);
+            LOG.error('DBAPI.Subject.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -109,7 +109,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return DBC.CopyArray<SubjectBase, Subject>(
                 await DBC.DBConnection.prisma.subject.findMany({ where: { idUnit } }), Subject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Subject.fetchFromUnit', error);
+            LOG.error('DBAPI.Subject.fetchFromUnit', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -133,7 +133,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectDerived = SOI.idSystemObject)
                 WHERE SOI.idItem IN (${Prisma.join(idItems)})`, Subject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchMasterFromItems', error);
+            LOG.error('DBAPI.Item.fetchMasterFromItems', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -157,7 +157,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectMaster = SOP.idSystemObject)
                 WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Subject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchDerivedFromProjects', error);
+            LOG.error('DBAPI.Item.fetchDerivedFromProjects', LOG.LS.eDB, error);
             return null;
         }
     }

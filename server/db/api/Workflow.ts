@@ -14,19 +14,19 @@ export class WorkflowConstellation {
         const WFC: WorkflowConstellation = new WorkflowConstellation();
         WFC.workflow = await Workflow.fetch(idWorkflow);
         if (!WFC.workflow) {
-            LOG.logger.error(`WorkflowConstellation.fetch failed to retrieve Workflow ${idWorkflow}`);
+            LOG.error(`WorkflowConstellation.fetch failed to retrieve Workflow ${idWorkflow}`, LOG.LS.eDB);
             return null;
         }
 
         WFC.workflowStep = await WorkflowStep.fetchFromWorkflow(idWorkflow); /* istanbul ignore next */
         if (!WFC.workflowStep) {
-            LOG.logger.error(`WorkflowConstellation.fetch failed to retrieve WorkflowSteps from workflow ${idWorkflow}`);
+            LOG.error(`WorkflowConstellation.fetch failed to retrieve WorkflowSteps from workflow ${idWorkflow}`, LOG.LS.eDB);
             return null;
         }
 
         WFC.workflowStepXref = await WorkflowStepSystemObjectXref.fetchFromWorkflow(idWorkflow); /* istanbul ignore next */
         if (!WFC.workflowStepXref) {
-            LOG.logger.error(`WorkflowConstellation.fetch failed to retrieve WorkflowStepSystemObjectXrefs from workflow ${idWorkflow}`);
+            LOG.error(`WorkflowConstellation.fetch failed to retrieve WorkflowStepSystemObjectXrefs from workflow ${idWorkflow}`, LOG.LS.eDB);
             return null;
         }
         return WFC;
@@ -72,7 +72,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Workflow.create', error);
+            LOG.error('DBAPI.Workflow.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -94,7 +94,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Workflow.update', error);
+            LOG.error('DBAPI.Workflow.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -106,7 +106,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return DBC.CopyObject<WorkflowBase, Workflow>(
                 await DBC.DBConnection.prisma.workflow.findUnique({ where: { idWorkflow, }, }), Workflow);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Workflow.fetch', error);
+            LOG.error('DBAPI.Workflow.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -118,7 +118,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return DBC.CopyArray<WorkflowBase, Workflow>(
                 await DBC.DBConnection.prisma.workflow.findMany({ where: { idProject } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Workflow.fetchFromProject', error);
+            LOG.error('DBAPI.Workflow.fetchFromProject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -130,20 +130,20 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return DBC.CopyArray<WorkflowBase, Workflow>(
                 await DBC.DBConnection.prisma.workflow.findMany({ where: { idUserInitiator } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Workflow.fetchFromUser', error);
+            LOG.error('DBAPI.Workflow.fetchFromUser', LOG.LS.eDB, error);
             return null;
         }
     }
 
     static async fetchFromWorkflowType(eWorkType: CACHE.eVocabularyID): Promise<Workflow[] | null> {
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eWorkType, CACHE.eVocabularySetID.eWorkflowType)) {
-            LOG.logger.error(`Workflow.fetchFromWorkflowType ${CACHE.eVocabularyID[eWorkType]} is not from the correct vocabulary set`);
+            LOG.error(`Workflow.fetchFromWorkflowType ${CACHE.eVocabularyID[eWorkType]} is not from the correct vocabulary set`, LOG.LS.eDB);
             return null;
         }
 
         const idVWorkflowType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eWorkType); /* istanbul ignore next */
         if (!idVWorkflowType) {
-            LOG.logger.error(`Workflow.fetchFromWorkflowType ${eWorkType} is missing from Vocabulary`);
+            LOG.error(`Workflow.fetchFromWorkflowType ${eWorkType} is missing from Vocabulary`, LOG.LS.eDB);
             return null;
         }
 
@@ -151,7 +151,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return DBC.CopyArray<WorkflowBase, Workflow>(
                 await DBC.DBConnection.prisma.workflow.findMany({ where: { idVWorkflowType } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Workflow.fetchFromWorkflowType', error);
+            LOG.error('DBAPI.Workflow.fetchFromWorkflowType', LOG.LS.eDB, error);
             return null;
         }
     }

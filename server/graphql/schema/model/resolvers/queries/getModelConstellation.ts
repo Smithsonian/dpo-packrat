@@ -10,6 +10,6 @@ export default async function getModelConstellation(_: Parent, args: Args): Prom
     const { idModel } = input;
 
     const ModelConstellation = await DBAPI.ModelConstellation.fetch(idModel);
-    // LOG.logger.info(`getModelConstellation(${idModel}) = ${JSON.stringify(ModelConstellation)}`);
+    // LOG.info(`getModelConstellation(${idModel}) = ${JSON.stringify(ModelConstellation)}`, LOG.LS.eGQL);
     return { ModelConstellation };
 }

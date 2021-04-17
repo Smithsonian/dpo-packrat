@@ -56,7 +56,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.User.create', error);
+            LOG.error('DBAPI.User.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -90,7 +90,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.User.update', error);
+            LOG.error('DBAPI.User.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -102,7 +102,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
             return DBC.CopyObject<UserBase, User>(
                 await DBC.DBConnection.prisma.user.findUnique({ where: { idUser, }, }), User);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.User.fetch', error);
+            LOG.error('DBAPI.User.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -111,7 +111,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
         try {
             return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({ where: { EmailAddress, }, }), User);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.User.fetchByEmail', error);
+            LOG.error('DBAPI.User.fetchByEmail', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -147,7 +147,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
                     }), User);
             }
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.User.fetchUserList', error);
+            LOG.error('DBAPI.User.fetchUserList', LOG.LS.eDB, error);
             return null;
         }
     }
