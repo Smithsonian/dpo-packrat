@@ -156,7 +156,7 @@ export class WorkflowJob implements WF.IWorkflow {
             dbUpdateResult = await this.workflowData.workflow.update() && dbUpdateResult;
 
         if (workflowComplete) {
-            LOG.info(`WorkflowJob.update RELEASING ${this.completionMutexes.length} WAITERS ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`, LOG.LS.eWF);
+            LOG.info(`WorkflowJob.update releasing ${this.completionMutexes.length} waiter(s) ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`, LOG.LS.eWF);
             this.signalCompletion();
         } else
             LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${DBAPI.eJobRunStatus[jobRun.getStatus()]} -> ${DBAPI.eWorkflowStepState[eWorkflowStepState]}`, LOG.LS.eWF);

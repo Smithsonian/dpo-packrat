@@ -448,6 +448,11 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                             Scalar4: (scalars && scalars.length >= 4) ? scalars[3] : null,
                             AdditionalAttributes
                         });
+                        // Stuff extra data for use within GraphQL's getModelConstellationForAssetVersion
+                        // That method wants to compute "Source" using information derived from database IDs
+                        // But the DB IDs here are artificial. So use this placeholder for the time being
+                        if (materialUri)
+                            modelMaterialChannel['Source'] = materialUri;
 
                         if (!modelMaterialChannels)
                             modelMaterialChannels = [];
