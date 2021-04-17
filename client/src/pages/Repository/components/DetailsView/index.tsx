@@ -1,3 +1,5 @@
+/* eslint-disable prefer-const */
+
 /**
  * DetailsView
  *
@@ -10,7 +12,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { parseIdentifiersToState, useVocabularyStore } from '../../../../store';
+import { parseIdentifiersToState, useVocabularyStore, useRepositoryDetailsFormStore } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -81,9 +83,11 @@ function DetailsView(): React.ReactElement {
 
     const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
     const { data, loading } = useObjectDetails(idSystemObject);
-    const [updatedData, setUpdatedData] = useState({});
+    let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
 
     const getEntries = useVocabularyStore(state => state.getEntries);
+    const getFormState = useRepositoryDetailsFormStore(state => state.getFormState);
+    const objectDetailsData = data;
 
     useEffect(() => {
         if (data && !loading) {
@@ -203,11 +207,27 @@ function DetailsView(): React.ReactElement {
     };
 
     const updateData = async (): Promise<void> => {
-        const confirmed: boolean = global.confirm('Are you sure you want to update data');
-        if (!confirmed) return;
-
         setIsUpdatingData(true);
         try {
+            if (objectType === eSystemObjectType.eModel) {
+                const { dateCaptured, master, authoritative, creationMethod, modality, purpose, units, fileType } = getFormState();
+                updatedData = {
+                    Retired: updatedData?.Retired || details?.retired,
+                    Name: updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name,
+                    Model: {
+                        Name: updatedData?.Name,
+                        Master: master,
+                        Authoritative: authoritative,
+                        CreationMethod: creationMethod,
+                        Modality: modality,
+                        Purpose: purpose,
+                        Units: units,
+                        ModelFileType: fileType,
+                        DateCaptured: dateCaptured
+                    }
+                };
+            }
+
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
 
             if (data?.updateObjectDetails?.success) {

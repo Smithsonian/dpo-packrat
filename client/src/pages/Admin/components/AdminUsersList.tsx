@@ -4,9 +4,8 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Box } from '@material-ui/core';
+import { Box, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import Tooltip from '@material-ui/core/Tooltip';
 import ClearIcon from '@material-ui/icons/Clear';
 import CheckIcon from '@material-ui/icons/Check';
 import { DataGrid, Columns, CellValue } from '@material-ui/data-grid';
@@ -125,8 +124,7 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
 }
 
 function extractISOMonthDateYearHelper(iso: CellValue): string | null {
-    if (typeof iso !== 'string' && (!(iso instanceof Date)))
-        return null;
+    if (typeof iso !== 'string' && !(iso instanceof Date)) return null;
     return extractISOMonthDateYear(iso);
 }
 
