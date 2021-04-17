@@ -150,7 +150,11 @@ function Model(props: ModelProps): React.ReactElement {
                 const modelConstellation = data.getModelConstellationForAssetVersion.ModelConstellation;
                 const { ingestionModel, modelObjects, assets } = extractModelConstellation(modelConstellation);
                 updateMetadataField(metadataIndex, 'name', modelConstellation.Model.Name, MetadataType.model);
-                updateMetadataField(metadataIndex, 'modelFileType', modelConstellation.Model.idVFileType, MetadataType.model);
+
+                // handles 0 and non-numeric idVFileTypes
+                if (modelConstellation.Model.idVFileType) {
+                    updateMetadataField(metadataIndex, 'modelFileType', Number(modelConstellation.Model.idVFileType), MetadataType.model);
+                }
                 setIngestionModel(ingestionModel);
                 setModelObjects(modelObjects);
                 setAssetFiles(assets);
