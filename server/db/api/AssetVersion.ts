@@ -12,13 +12,29 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     idUserCreator!: number;
     DateCreated!: Date;
     StorageHash!: string;
-    StorageSize!: number;
+    StorageSize!: bigint;
     StorageKeyStaging!: string;
-    Ingested!: boolean;
+    Ingested!: boolean | null;  // null means uploaded, not processed; false means uploaded and processed, true means uploaded, processed, and ingested
     BulkIngest!: boolean;
 
     constructor(input: AssetVersionBase) {
         super(input);
+    }
+
+    static constructFromPrisma(assetVersion: AssetVersionBase): AssetVersion {
+        return new AssetVersion({
+            idAssetVersion: assetVersion.idAssetVersion,
+            idAsset: assetVersion.idAsset,
+            FileName: assetVersion.FileName,
+            idUserCreator: assetVersion.idUserCreator,
+            DateCreated: new Date(assetVersion.DateCreated),
+            StorageHash: assetVersion.StorageHash,
+            StorageSize: BigInt(assetVersion.StorageSize),
+            StorageKeyStaging: assetVersion.StorageKeyStaging,
+            Ingested: (assetVersion.Ingested === null) ? null : (assetVersion.Ingested ? true : false), // we're expecting Prisma to send values like null, 0, and 1
+            BulkIngest: assetVersion.BulkIngest ? true : false,
+            Version: assetVersion.Version
+        });
     }
 
     protected updateCachedValues(): void { }
@@ -51,7 +67,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.create', error);
+            LOG.error('DBAPI.AssetVersion.create', LOG.LS.eDB, error);
             return false;
         }
 
@@ -68,7 +84,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             }
             return false;
         } catch (error) {
-            LOG.logger.error('DBAPI.AssetVersion.create', error);
+            LOG.error('DBAPI.AssetVersion.create', LOG.LS.eDB, error);
             return false;
         }
         */
@@ -86,7 +102,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 WHERE AV.idAsset = ${idAsset};`;
             return (VersionInfo && VersionInfo.length > 0) ? VersionInfo[0].Version : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.computeNextVersionNumber', error);
+            LOG.error('DBAPI.AssetVersion.computeNextVersionNumber', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -110,7 +126,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.update', error);
+            LOG.error('DBAPI.AssetVersion.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -119,41 +135,21 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         try {
             const { idAssetVersion } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAssetVersion, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAssetVersion, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.fetchSystemObject', error);
+            LOG.error('DBAPI.AssetVersion.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
 
-    /*
-    async delete(): Promise<boolean> {
-        const { idAssetVersion } = this;
-        if (!idAssetVersion)
-            return false;
-        try {
-            const delSysObj: SystemObjectBase | null = await DBC.DBConnection.prisma.systemObject.delete({ where: { idAssetVersion, }, });
-            if (!delSysObj) {
-                LOG.logger.error(`DBAPI.AssetVersion.delete unable to delete system object related to ${JSON.stringify(this)}`);
-                return false;
-            }
-
-            const delAV: AssetVersionBase | null = await DBC.DBConnection.prisma.assetVersion.delete({ where: { idAssetVersion, }, });
-            return (delAV != null);
-        } catch (error) {
-            LOG.logger.error('DBAPI.AssetVersion.delete', error);
-            return false;
-        }
-    }
-    */
     static async fetch(idAssetVersion: number): Promise<AssetVersion | null> {
         if (!idAssetVersion)
             return null;
         try {
             return DBC.CopyObject<AssetVersionBase, AssetVersion>(
-                await DBC.DBConnection.prisma.assetVersion.findOne({ where: { idAssetVersion, }, }), AssetVersion);
+                await DBC.DBConnection.prisma.assetVersion.findUnique({ where: { idAssetVersion, }, }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.fetch', error);
+            LOG.error('DBAPI.AssetVersion.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -163,7 +159,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany(), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.fetchAll', error);
+            LOG.error('DBAPI.AssetVersion.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -175,7 +171,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idAsset, Version }, }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.fetch', error);
+            LOG.error('DBAPI.AssetVersion.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -187,7 +183,33 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idAsset } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.fetchFromAsset', error);
+            LOG.error('DBAPI.AssetVersion.fetchFromAsset', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchFromSystemObject(idSystemObject: number): Promise<AssetVersion[] | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            const assetVersions: AssetVersionBase[] | null = // DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                SELECT AV.*
+                FROM AssetVersion AS AV
+                JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                WHERE A.idSystemObject = ${idSystemObject}
+                  AND VERSION = (SELECT MAX(VERSION)
+                                 FROM AssetVersion AS AVI
+                                 WHERE AVI.idAsset = AV.idAsset);`; //, AssetVersion);
+            /* istanbul ignore if */
+            if (!assetVersions || assetVersions.length == 0)
+                return null;
+            const res: AssetVersion[] = [];
+            for (const assetVersion of assetVersions)   // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
+                res.push(AssetVersion.constructFromPrisma(assetVersion));
+            return res;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.AssetVersion.fetchFromSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -209,21 +231,9 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 return null;
             const assetVersion: AssetVersionBase = assetVersions[0];
             // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
-            return new AssetVersion({
-                idAssetVersion: assetVersion.idAssetVersion,
-                idAsset: assetVersion.idAsset,
-                FileName: assetVersion.FileName,
-                idUserCreator: assetVersion.idUserCreator,
-                DateCreated: new Date(assetVersion.DateCreated),
-                StorageHash: assetVersion.StorageHash,
-                StorageSize: assetVersion.StorageSize,
-                StorageKeyStaging: assetVersion.StorageKeyStaging,
-                Ingested: assetVersion.Ingested ? true : false,
-                BulkIngest: assetVersion.BulkIngest ? true : false,
-                Version: assetVersion.Version
-            });
+            return AssetVersion.constructFromPrisma(assetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.fetchLatestFromAsset', error);
+            LOG.error('DBAPI.AssetVersion.fetchLatestFromAsset', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -235,29 +245,49 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.fetchFromUser', error);
+            LOG.error('DBAPI.AssetVersion.fetchFromUser', LOG.LS.eDB, error);
             return null;
         }
     }
 
-    static async fetchFromUserByIngested(idUserCreator: number, Ingested: boolean): Promise<AssetVersion[] | null> {
+    /** Pass in a value for Retired if you need to seek only asset versions that have or have not been retired */
+    static async fetchFromUserByIngested(idUserCreator: number, Ingested: boolean | null, Retired: boolean | null = null): Promise<AssetVersion[] | null> {
         if (!idUserCreator)
             return null;
         try {
-            return DBC.CopyArray<AssetVersionBase, AssetVersion>(
-                await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator, Ingested } }), AssetVersion);
+            if (Retired === null)
+                return DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                    await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator, Ingested } }), AssetVersion);
+            else {
+                const assetVersions: AssetVersionBase[] | null = // DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                    await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                    SELECT AV.*
+                    FROM AssetVersion AS AV
+                    JOIN SystemObject AS SO ON (AV.idAssetVersion = SO.idAssetVersion)
+                    JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                    WHERE AV.idUserCreator = ${idUserCreator}
+                      AND AV.Ingested = ${Ingested}
+                      AND SO.Retired = ${Retired}`; //, AssetVersion);
+                /* istanbul ignore if */
+                if (!assetVersions || assetVersions.length == 0)
+                    return null;
+                const res: AssetVersion[] = [];
+                for (const assetVersion of assetVersions)   // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
+                    res.push(AssetVersion.constructFromPrisma(assetVersion));
+                return res;
+            }
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.fetchFromUserByIngested', error);
+            LOG.error('DBAPI.AssetVersion.fetchFromUserByIngested', LOG.LS.eDB, error);
             return null;
         }
     }
 
-    static async fetchByIngested(Ingested: boolean): Promise<AssetVersion[] | null> {
+    static async fetchByIngested(Ingested: boolean | null): Promise<AssetVersion[] | null> {
         try {
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { Ingested } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.fetchByIngested', error);
+            LOG.error('DBAPI.AssetVersion.fetchByIngested', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -267,7 +297,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { StorageKeyStaging } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AssetVersion.fetchByStorageKeyStaging', error);
+            LOG.error('DBAPI.AssetVersion.fetchByStorageKeyStaging', LOG.LS.eDB, error);
             return null;
         }
     }

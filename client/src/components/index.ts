@@ -22,6 +22,7 @@ import EmptyTable from './shared/EmptyTable';
 import EnvBanner from './shared/EnvBanner';
 import DebounceNumberInput from './controls/DebounceNumberInput';
 import CheckboxField from './controls/CheckboxField';
+import ReadOnlyRow from './controls/ReadOnlyRow';
 
 export {
     Header,
@@ -44,6 +45,7 @@ export {
     EnvBanner,
     DebounceNumberInput,
     CheckboxField,
+    ReadOnlyRow
 };
 
 export type { RepositoryIconProps };

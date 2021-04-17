@@ -33,7 +33,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelProcessingAction.create', error);
+            LOG.error('DBAPI.ModelProcessingAction.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -52,7 +52,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelProcessingAction.update', error);
+            LOG.error('DBAPI.ModelProcessingAction.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -62,9 +62,9 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
             return null;
         try {
             return DBC.CopyObject<ModelProcessingActionBase, ModelProcessingAction>(
-                await DBC.DBConnection.prisma.modelProcessingAction.findOne({ where: { idModelProcessingAction, }, }), ModelProcessingAction);
+                await DBC.DBConnection.prisma.modelProcessingAction.findUnique({ where: { idModelProcessingAction, }, }), ModelProcessingAction);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelProcessingAction.fetch', error);
+            LOG.error('DBAPI.ModelProcessingAction.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -76,7 +76,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
             return DBC.CopyArray<ModelProcessingActionBase, ModelProcessingAction>(
                 await DBC.DBConnection.prisma.modelProcessingAction.findMany({ where: { idModel } }), ModelProcessingAction);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelProcessingAction.fetchFromModel', error);
+            LOG.error('DBAPI.ModelProcessingAction.fetchFromModel', LOG.LS.eDB, error);
             return null;
         }
     }

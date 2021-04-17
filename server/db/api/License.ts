@@ -21,7 +21,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
                 await DBC.DBConnection.prisma.license.create({ data: { Name, Description }, }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.License.create', error);
+            LOG.error('DBAPI.License.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -34,7 +34,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
                 data: { Name, Description, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.License.update', error);
+            LOG.error('DBAPI.License.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -44,9 +44,9 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
             return null;
         try {
             return DBC.CopyObject<LicenseBase, License>(
-                await DBC.DBConnection.prisma.license.findOne({ where: { idLicense, }, }), License);
+                await DBC.DBConnection.prisma.license.findUnique({ where: { idLicense, }, }), License);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.License.fetch', error);
+            LOG.error('DBAPI.License.fetch', LOG.LS.eDB, error);
             return null;
         }
     }

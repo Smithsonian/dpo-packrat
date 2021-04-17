@@ -3,6 +3,7 @@ type Query {
     getUploadedAssetVersion: GetUploadedAssetVersionResult!
     getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
     getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
+    getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput!): GetModelConstellationForAssetVersionResult!
 }
 
 input GetAssetVersionsDetailsInput {
@@ -21,6 +22,7 @@ type IngestFolder {
 
 type IngestPhotogrammetry {
     idAssetVersion: Int!
+    name: String!
     dateCaptured: String!
     datasetType: Int!
     systemCreated: Boolean!
@@ -40,12 +42,6 @@ type IngestPhotogrammetry {
     identifiers: [IngestIdentifier!]!
 }
 
-type IngestUVMap {
-    name: String!
-    edgeLength: Int!
-    mapType: Int!
-}
-
 enum RelatedObjectType {
     Source
     Derived
@@ -61,6 +57,7 @@ type RelatedObject {
 type IngestModel {
     idAssetVersion: Int!
     systemCreated: Boolean!
+    name: String!
     master: Boolean!
     authoritative: Boolean!
     creationMethod: Int!
@@ -71,22 +68,7 @@ type IngestModel {
     modelFileType: Int!
     directory: String!
     identifiers: [IngestIdentifier!]!
-    uvMaps: [IngestUVMap!]!
     sourceObjects: [RelatedObject!]!
-    roughness: Int
-    metalness: Int
-    pointCount: Int
-    faceCount: Int
-    isWatertight: Boolean
-    hasNormals: Boolean
-    hasVertexColor: Boolean
-    hasUVSpace: Boolean
-    boundingBoxP1X: Float
-    boundingBoxP1Y: Float
-    boundingBoxP1Z: Float
-    boundingBoxP2X: Float
-    boundingBoxP2Y: Float
-    boundingBoxP2Z: Float
 }
 
 enum ReferenceModelAction {
@@ -97,7 +79,7 @@ enum ReferenceModelAction {
 type ReferenceModel {
     idSystemObject: Int!
     name: String!
-    fileSize: Int!
+    fileSize: BigInt!
     resolution: Int
     boundingBoxP1X: Float
     boundingBoxP1Y: Float
@@ -154,4 +136,13 @@ type AssetVersionContent {
 
 type GetContentsForAssetVersionsResult {
     AssetVersionContent: [AssetVersionContent!]!
+}
+
+input GetModelConstellationForAssetVersionInput {
+    idAssetVersion: Int!
+}
+
+type GetModelConstellationForAssetVersionResult {
+    idAssetVersion: Int!
+    ModelConstellation: ModelConstellation
 }

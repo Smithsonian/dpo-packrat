@@ -1,4 +1,4 @@
-import LocalAuth from './local';
-import LDAPAuth from './ldap';
+import LocalAuth from './LocalAuth';
+import LDAPAuth from './LDAPAuth';
 
 export { LocalAuth, LDAPAuth };

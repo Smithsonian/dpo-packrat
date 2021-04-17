@@ -22,13 +22,12 @@ const storageKey: string = H.Helpers.computeHashFromString('1', 'sha1');
 
 beforeAll(() => {
     testStorageRoot = path.join('var', 'test', H.Helpers.randomSlug());
-    LOG.logger.info(`Creating test storage root in ${path.resolve(testStorageRoot)}`);
+    LOG.info(`Creating test storage root in ${path.resolve(testStorageRoot)}`, LOG.LS.eTEST);
 });
 
 afterAll(async done => {
-    LOG.logger.info(`Removing test storage root from ${path.resolve(testStorageRoot)}`);
+    LOG.info(`Removing test storage root from ${path.resolve(testStorageRoot)}`, LOG.LS.eTEST);
     await H.Helpers.removeDirectory(testStorageRoot, true);
-    // jest.setTimeout(5000);
     // await H.Helpers.sleep(2000);
     done();
 });
@@ -142,7 +141,7 @@ describe('OCFL Object', () => {
     });
 
     test('OCFL OCFLRoot.ocflObject Existing 1', async () => {
-        jest.setTimeout(30000); // this is needed here, for some reason, when running in my container
+        jest.setTimeout(60000); // this is needed here, for some reason, when running in my container
         let initRes: OO.OCFLObjectInitResults = await ocflRoot.ocflObject(storageKey, false);  // Don't create if missing
         expect(initRes.success).toBeTruthy();
         await testValidate(initRes.ocflObject, 1, 'unmodified');
@@ -309,7 +308,7 @@ async function createUploadLocation(ocflRoot: OR.OCFLRoot, fileName: string = ''
     const res: OR.ComputeWriteStreamLocationResults = await ocflRoot.computeWriteStreamLocation(fileName);
     expect(res.ioResults.success).toBeTruthy();
 
-    // LOG.logger.info(`Created write location at ${path.resolve(res.locationPrivate)}`);
+    // LOG.info(`Created write location at ${path.resolve(res.locationPrivate)}`, LOG.LS.eTEST);
     const directoryName: string = path.dirname(res.locationPrivate);
     const ioResults: H.IOResults = await H.Helpers.fileOrDirExists(directoryName);
     expect(ioResults.success).toBeTruthy();
@@ -337,7 +336,7 @@ async function createRandomFile(directoryName: string, fileName: string, fileSiz
             stream.on('finish', () => { resolve(fullPath); });
             stream.on('error', reject);
         } catch (error) {
-            LOG.logger.error('OCFL.test.ts createRandomFile() error', error);
+            LOG.error('OCFL.test.ts createRandomFile() error', LOG.LS.eTEST, error);
             reject(error);
         }
     });
@@ -360,12 +359,12 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
         ? await createRandomFile(directoryName, fileName, fileSize) // create a file
         : path.join(directoryName, fileName);                       // just yield a filename
 
-    let inputStream: NodeJS.ReadStream | null = null;
+    let inputStream: fs.ReadStream | null = null;
     if (useInputStream)
         inputStream = fs.createReadStream(pathOnDisk);
 
     // Add content
-    LOG.logger.info(`addOrUpdate ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}${useInputStream ? ' (use inputstream)' : ''}${forceJustMetadata ? ' (just metadata)': ''}`);
+    LOG.info(`addOrUpdate ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}${useInputStream ? ' (use inputstream)' : ''}${forceJustMetadata ? ' (just metadata)': ''}`, LOG.LS.eTEST);
     let ioResults: H.IOResults;
     if (!forceJustMetadata)
         ioResults = await ocflObject.addOrUpdate(inputStream && !specifyBothPathAndStream ? null : pathOnDisk, inputStream, fileName, metadataOA, opInfo);
@@ -382,7 +381,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     expect(expectSuccess === ioResults.success).toBeTruthy();
     if (!ioResults.success) {
         if (expectSuccess)
-            LOG.logger.error(ioResults.error);
+            LOG.error(ioResults.error, LOG.LS.eTEST);
         else
             return fileName;
     }
@@ -390,11 +389,11 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     // Internal Validation
     ioResults = await ocflObject.validate();
     if (!ioResults.success)
-        LOG.logger.error(ioResults.error);
+        LOG.error(ioResults.error, LOG.LS.eTEST);
     expect(ioResults.success).toBeTruthy();
 
     // External validation
-    // LOG.logger.info(`OCFL Object Root Validations: ${ocflObject.objectRoot}`);
+    // LOG.info(`OCFL Object Root Validations: ${ocflObject.objectRoot}`, LOG.LS.eTEST);
     ioResults = await H.Helpers.fileOrDirExists(path.join(ocflObject.objectRoot, ST.OCFLStorageObjectNamasteFilename));
     expect(ioResults.success).toBeTruthy();
     ioResults = await H.Helpers.fileOrDirExists(path.join(ocflObject.objectRoot, ST.OCFLStorageObjectInventoryFilename));
@@ -404,7 +403,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
 
     const version: number = ocflObject.headVersion();
     const versionRoot: string = ocflObject.versionRoot(version);
-    // LOG.logger.info(`OCFL Object Version Root Validations: ${versionRoot}`);
+    // LOG.info(`OCFL Object Version Root Validations: ${versionRoot}`, LOG.LS.eTEST);
     ioResults = await H.Helpers.fileOrDirExists(versionRoot);
     expect(ioResults.success).toBeTruthy();
     ioResults = await H.Helpers.fileOrDirExists(path.join(versionRoot, ST.OCFLStorageObjectInventoryFilename));
@@ -413,7 +412,7 @@ async function testAddOrUpdate(ocflObject: OO.OCFLObject | null, SOBased: DBAPI.
     expect(ioResults.success).toBeTruthy();
 
     const contentRoot: string = ocflObject.versionContentFullPath(version);
-    // LOG.logger.info(`OCFL Object Content Root Validations: ${contentRoot}`);
+    // LOG.info(`OCFL Object Content Root Validations: ${contentRoot}`, LOG.LS.eTEST);
     ioResults = await H.Helpers.fileOrDirExists(contentRoot);
     expect(ioResults.success).toBeTruthy();
     ioResults = await H.Helpers.fileOrDirExists(path.join(contentRoot, ST.OCFLMetadataFilename));
@@ -435,10 +434,10 @@ async function testRename(ocflObject: OO.OCFLObject | null, fileNameOld: string,
         return '';
 
     const fileNameNew: string = H.Helpers.randomSlug();
-    LOG.logger.info(`testRename ${fileNameOld} to ${fileNameNew}: Expected ${expectSuccess ? 'success' : 'failure'}`);
+    LOG.info(`testRename ${fileNameOld} to ${fileNameNew}: Expected ${expectSuccess ? 'success' : 'failure'}`, LOG.LS.eTEST);
     const ioResults: H.IOResults = await ocflObject.rename(fileNameOld, fileNameNew, opInfo);
     if (!ioResults.success && expectSuccess)
-        LOG.logger.error(ioResults.error);
+        LOG.error(ioResults.error, LOG.LS.eTEST);
     expect(expectSuccess === ioResults.success).toBeTruthy();
     return ioResults.success ? fileNameNew : fileNameOld;
 }
@@ -448,10 +447,10 @@ async function testDelete(ocflObject: OO.OCFLObject | null, fileName: string, ex
     if (!ocflObject)
         return;
 
-    LOG.logger.info(`testDelete ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`);
+    LOG.info(`testDelete ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`, LOG.LS.eTEST);
     const ioResults: H.IOResults = await ocflObject.delete(fileName, opInfo);
     if (!ioResults.success && expectSuccess)
-        LOG.logger.error(ioResults.error);
+        LOG.error(ioResults.error, LOG.LS.eTEST);
     expect(expectSuccess === ioResults.success).toBeTruthy();
 }
 
@@ -460,10 +459,10 @@ async function testReinstate(ocflObject: OO.OCFLObject | null, fileName: string,
     if (!ocflObject)
         return;
 
-    LOG.logger.info(`testReinstate ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`);
+    LOG.info(`testReinstate ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`, LOG.LS.eTEST);
     const ioResults: H.IOResults = await ocflObject.reinstate(fileName, -1, opInfo);
     if (!ioResults.success && expectSuccess)
-        LOG.logger.error(ioResults.error);
+        LOG.error(ioResults.error, LOG.LS.eTEST);
     expect(expectSuccess === ioResults.success).toBeTruthy();
 }
 
@@ -472,10 +471,10 @@ async function testPurge(ocflObject: OO.OCFLObject | null, fileName: string, exp
     if (!ocflObject)
         return;
 
-    LOG.logger.info(`testPurge ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`);
+    LOG.info(`testPurge ${fileName}: Expected ${expectSuccess ? 'success' : 'failure'}`, LOG.LS.eTEST);
     const ioResults: H.IOResults = await ocflObject.purge(fileName);
     if (!ioResults.success && expectSuccess)
-        LOG.logger.error(ioResults.error);
+        LOG.error(ioResults.error, LOG.LS.eTEST);
     expect(expectSuccess === ioResults.success).toBeTruthy();
 }
 
@@ -600,15 +599,15 @@ async function testValidate(ocflObject: OO.OCFLObject | null, testMode: number, 
             expectSuccess = false;
         } break;
         default: {
-            LOG.logger.error(`testValidate Unimplemented test case ${testMode}: {${testCase}}`);
+            LOG.error(`testValidate Unimplemented test case ${testMode}: {${testCase}}`, LOG.LS.eTEST);
             expect(false).toBeTruthy();
         } break;
     }
 
-    LOG.logger.info(`testValidate mode ${testMode} (${testCase}): Expected ${expectSuccess ? 'success' : 'failure'}`);
+    LOG.info(`testValidate mode ${testMode} (${testCase}): Expected ${expectSuccess ? 'success' : 'failure'}`, LOG.LS.eTEST);
     ioResults = await ocflObject.validate();
     if (!ioResults.success && expectSuccess)
-        LOG.logger.error(ioResults.error);
+        LOG.error(ioResults.error, LOG.LS.eTEST);
     expect(expectSuccess === ioResults.success).toBeTruthy();
 
     // reset

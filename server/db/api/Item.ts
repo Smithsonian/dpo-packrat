@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Item as ItemBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { Item as ItemBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -39,7 +39,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.create', error);
+            LOG.error('DBAPI.Item.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -58,7 +58,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.update', error);
+            LOG.error('DBAPI.Item.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -67,9 +67,9 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
         try {
             const { idItem } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idItem, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idItem, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.item.fetchSystemObject', error);
+            LOG.error('DBAPI.item.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -79,9 +79,9 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             return null;
         try {
             return DBC.CopyObject<ItemBase, Item>(
-                await DBC.DBConnection.prisma.item.findOne({ where: { idItem, }, }), Item);
+                await DBC.DBConnection.prisma.item.findUnique({ where: { idItem, }, }), Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetch', error);
+            LOG.error('DBAPI.Item.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -91,7 +91,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             return DBC.CopyArray<ItemBase, Item>(
                 await DBC.DBConnection.prisma.item.findMany(), Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchAll', error);
+            LOG.error('DBAPI.Item.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -122,7 +122,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                     },
                 }), Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchDerivedFromSubject', error);
+            LOG.error('DBAPI.Item.fetchDerivedFromSubject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -146,9 +146,9 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 JOIN SystemObject AS SOI ON (I.idItem = SOI.idItem)
                 JOIN SystemObjectXref AS SOX ON (SOI.idSystemObject = SOX.idSystemObjectDerived)
                 JOIN SystemObject AS SOS ON (SOX.idSystemObjectMaster = SOS.idSystemObject)
-                WHERE SOS.idSubject IN (${join(idSubjects)})`, Item);
+                WHERE SOS.idSubject IN (${Prisma.join(idSubjects)})`, Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchDerivedFromSubjects', error);
+            LOG.error('DBAPI.Item.fetchDerivedFromSubjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -172,9 +172,9 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 JOIN SystemObject AS SOI ON (I.idItem = SOI.idItem)
                 JOIN SystemObjectXref AS SOX ON (SOI.idSystemObject = SOX.idSystemObjectMaster)
                 JOIN SystemObject AS SOC ON (SOX.idSystemObjectDerived = SOC.idSystemObject)
-                WHERE SOC.idCaptureData IN (${join(idCaptureDatas)})`, Item);
+                WHERE SOC.idCaptureData IN (${Prisma.join(idCaptureDatas)})`, Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchMasterFromCaptureData', error);
+            LOG.error('DBAPI.Item.fetchMasterFromCaptureData', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -198,9 +198,9 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 JOIN SystemObject AS SOI ON (I.idItem = SOI.idItem)
                 JOIN SystemObjectXref AS SOX ON (SOI.idSystemObject = SOX.idSystemObjectMaster)
                 JOIN SystemObject AS SOM ON (SOX.idSystemObjectDerived = SOM.idSystemObject)
-                WHERE SOM.idModel IN (${join(idModels)})`, Item);
+                WHERE SOM.idModel IN (${Prisma.join(idModels)})`, Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchMasterFromModel', error);
+            LOG.error('DBAPI.Item.fetchMasterFromModel', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -224,9 +224,9 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 JOIN SystemObject AS SOI ON (I.idItem = SOI.idItem)
                 JOIN SystemObjectXref AS SOX ON (SOI.idSystemObject = SOX.idSystemObjectMaster)
                 JOIN SystemObject AS SOS ON (SOX.idSystemObjectDerived = SOS.idSystemObject)
-                WHERE SOS.idScene IN (${join(idScenes)})`, Item);
+                WHERE SOS.idScene IN (${Prisma.join(idScenes)})`, Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchMasterFromScene', error);
+            LOG.error('DBAPI.Item.fetchMasterFromScene', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -250,9 +250,9 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 JOIN SystemObject AS SOI ON (I.idItem = SOI.idItem)
                 JOIN SystemObjectXref AS SOX ON (SOI.idSystemObject = SOX.idSystemObjectMaster)
                 JOIN SystemObject AS SOIF ON (SOX.idSystemObjectDerived = SOIF.idSystemObject)
-                WHERE SOIF.idIntermediaryFile IN (${join(idIntermediaryFiles)})`, Item);
+                WHERE SOIF.idIntermediaryFile IN (${Prisma.join(idIntermediaryFiles)})`, Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Item.fetchMasterFromIntermediaryFiles', error);
+            LOG.error('DBAPI.Item.fetchMasterFromIntermediaryFiles', LOG.LS.eDB, error);
             return null;
         }
     }

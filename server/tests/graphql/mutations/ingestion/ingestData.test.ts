@@ -42,7 +42,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
     });
 
     describe('Mutation: ingestData', () => {
-        jest.setTimeout(30000);
+        jest.setTimeout(60000);
         test('should work with valid input', async done => {
             const vocabularySetArgs: CreateVocabularySetInput = createVocabularySetInput();
             const { VocabularySet } = await graphQLApi.createVocabularySet(vocabularySetArgs);
@@ -127,7 +127,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                         };
 
                         const getContentsInput: GetContentsForAssetVersionsInput = {
-                            idAssetVersions: [assetVersion.idAsset]
+                            idAssetVersions: [assetVersion.idAssetVersion]
                         };
 
                         const { AssetVersionContent } = await graphQLApi.getContentsForAssetVersions(getContentsInput);
@@ -155,6 +155,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
                         const photogrammetry: IngestPhotogrammetry = {
                             idAssetVersion: assetVersion.idAssetVersion,
+                            name: 'capture data name',
                             dateCaptured: new Date().toISOString(),
                             datasetType,
                             systemCreated: true,

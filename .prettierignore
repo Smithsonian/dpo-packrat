@@ -6,3 +6,5 @@ node_modules/
 *.json
 *.md
 *.yml
+client/src/types/graphql.tsx
+server/types/graphql.ts

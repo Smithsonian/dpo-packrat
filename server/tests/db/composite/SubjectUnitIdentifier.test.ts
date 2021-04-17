@@ -9,7 +9,7 @@ afterAll(async done => {
 // DB Composite SubjectUnitIdentifier
 // *******************************************************************
 describe('DB Composite SubjectUnitIdentifier Test', () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(60000);
     const ICollection: COL.ICollection = COL.CollectionFactory.getInstance();
 
     executeQuery('Mount', false, true);

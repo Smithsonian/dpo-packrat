@@ -17,7 +17,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         width: '50%',
         background: palette.background.paper,
         border: (updated: boolean) => `1px solid ${fade(updated ? palette.secondary.main : palette.primary.contrastText, 0.4)}`,
-        backgroundColor: (updated: boolean) => updated ? palette.secondary.light : palette.background.paper,
+        backgroundColor: (updated: boolean) => (updated ? palette.secondary.light : palette.background.paper),
         padding: '1px 8px',
         color: Colors.defaults.white,
         marginTop: 0,
@@ -26,14 +26,15 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
             minWidth: 160,
             maxWidth: 160,
             '& > div > input': {
-                fontSize: '0.8em',
+                fontSize: '0.8em'
             }
-        }
+        },
+        marginBottom: 0
     }
 }));
 
 interface DateInputFieldProps extends ViewableProps {
-    value: Date;
+    value: Date | null | string;
     onChange: (date: MaterialUiPickersDate, value?: string | null | undefined) => void;
 }
 

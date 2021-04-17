@@ -1,4 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /**
  * Repository
  *
@@ -22,20 +24,21 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        maxWidth: (sideBarExpanded: boolean) => sideBarExpanded ? '85vw' : '93vw',
+        maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '85vw' : '93vw'),
         flexDirection: 'column',
         padding: 20,
         paddingBottom: 0,
         paddingRight: 0,
         [breakpoints.down('lg')]: {
             paddingRight: 20,
-            maxWidth: (sideBarExpanded: boolean) => sideBarExpanded ? '85vw' : '92vw',
+            maxWidth: (sideBarExpanded: boolean) => (sideBarExpanded ? '85vw' : '92vw')
         }
     }
 }));
 
 export type RepositoryFilter = {
     search: string;
+    keyword: string;
     repositoryRootType: eSystemObjectType[];
     objectsToDisplay: eSystemObjectType[];
     metadataToDisplay: eMetadata[];
@@ -56,16 +59,8 @@ function Repository(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <PrivateRoute path={resolveRoute(HOME_ROUTES.REPOSITORY)}>
-                <PrivateRoute
-                    exact
-                    path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)}
-                    component={TreeViewPage}
-                />
-                <PrivateRoute
-                    exact
-                    path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.DETAILS)}
-                    component={DetailsView}
-                />
+                <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} component={TreeViewPage} />
+                <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.DETAILS)} component={DetailsView} />
                 <PrivateRoute exact path={resolveSubRoute(REPOSITORY_ROUTE.TYPE, 'details')}>
                     <Redirect to={resolveSubRoute(REPOSITORY_ROUTE.TYPE, REPOSITORY_ROUTE.ROUTES.VIEW)} />
                 </PrivateRoute>
@@ -79,6 +74,7 @@ function TreeViewPage(): React.ReactElement {
     const location = useLocation();
     const {
         search,
+        keyword,
         repositoryRootType,
         objectsToDisplay,
         metadataToDisplay,
@@ -95,44 +91,81 @@ function TreeViewPage(): React.ReactElement {
 
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
 
-    const filterState: RepositoryFilter = React.useMemo(() => ({
-        search,
-        repositoryRootType,
-        objectsToDisplay,
-        metadataToDisplay,
-        units,
-        projects,
-        has,
-        missing,
-        captureMethod,
-        variantType,
-        modelPurpose,
-        modelFileType,
-    }), [
-        search,
-        repositoryRootType,
-        objectsToDisplay,
-        metadataToDisplay,
-        units,
-        projects,
-        has,
-        missing,
-        captureMethod,
-        variantType,
-        modelPurpose,
-        modelFileType,
-    ]);
+    const filterState: RepositoryFilter = React.useMemo(
+        () => ({
+            search,
+            keyword,
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        }),
+        [search, keyword, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
+    );
 
-    const initialFilterState = Object.keys(queries).length ? queries : filterState;
+    const setDefaultFilterSelectionsCookie = () => {
+        document.cookie = `filterSelections=${JSON.stringify({
+            repositoryRootType: [eSystemObjectType.eUnit],
+            objectsToDisplay: [],
+            metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
+            units: [],
+            projects: [],
+            has: [],
+            missing: [],
+            captureMethod: [],
+            variantType: [],
+            modelPurpose: [],
+            modelFileType: []
+        })}`;
+    };
+
+    /*
+        Sets up a default cookie if no filterSelection cookie exists.
+        If a filterSelection cookie exists, component will read that
+        and generate URL and state based on cookie.
+    */
+    let cookieFilterSelections;
+    (function setRepositoryViewCookies() {
+        if (!document.cookie.length || document.cookie.indexOf('filterSelections') === -1) {
+            setDefaultFilterSelectionsCookie();
+        }
+        cookieFilterSelections = document.cookie.split(';');
+        cookieFilterSelections = cookieFilterSelections.find(entry => entry.trim().startsWith('filterSelections'));
+        cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
+    })();
+
+    const initialFilterState = Object.keys(queries).length ? queries : cookieFilterSelections;
 
     useEffect(() => {
         updateRepositoryFilter(initialFilterState);
-    }, [updateRepositoryFilter]);
+    }, [updateRepositoryFilter, location.search]);
 
     useEffect(() => {
-        const route = generateRepositoryUrl(filterState);
+        const newRepositoryFilterState: any = {
+            search,
+            repositoryRootType,
+            objectsToDisplay,
+            metadataToDisplay,
+            units,
+            projects,
+            has,
+            missing,
+            captureMethod,
+            variantType,
+            modelPurpose,
+            modelFileType
+        };
+
+        const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
         history.push(route);
-    }, [filterState, history]);
+    }, [history, filterState]);
 
     return (
         <React.Fragment>

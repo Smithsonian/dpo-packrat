@@ -22,9 +22,9 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         fontWeight: typography.fontWeightMedium
     },
     value: {
-        color: ({ clickable = true }: DetailProps) => clickable ? palette.primary.main : palette.primary.dark,
-        textDecoration: ({ clickable = true, value }: DetailProps) => clickable && value ? 'underline' : undefined
-    },
+        color: ({ clickable = true }: DetailProps) => (clickable ? palette.primary.main : palette.primary.dark),
+        textDecoration: ({ clickable = true, value }: DetailProps) => (clickable && value ? 'underline' : undefined)
+    }
 }));
 
 interface ObjectDetailsProps {
@@ -35,12 +35,13 @@ interface ObjectDetailsProps {
     disabled: boolean;
     publishedState: string;
     retired: boolean;
-    originalFields: GetSystemObjectDetailsResult;
-    onRetiredUpdate: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
+    hideRetired?: boolean;
+    originalFields?: GetSystemObjectDetailsResult;
+    onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
 }
 
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
-    const { unit, project, subject, item, publishedState, retired, disabled, originalFields, onRetiredUpdate } = props;
+    const { unit, project, subject, item, publishedState, retired, hideRetired, disabled, originalFields, onRetiredUpdate } = props;
 
     const isRetiredUpdated: boolean = isFieldUpdated({ retired }, originalFields, 'retired');
 
@@ -51,16 +52,20 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             <Detail idSystemObject={subject?.idSystemObject} label='Subject' value={subject?.name} />
             <Detail idSystemObject={item?.idSystemObject} label='Item' value={item?.name} />
             <Detail label='Publication Status' value={publishedState} clickable={false} />
-            <Detail label='Retired' valueComponent={
-                <Checkbox
-                    name='retired'
-                    disabled={disabled}
-                    checked={withDefaultValueBoolean(retired, false)}
-                    onChange={onRetiredUpdate}
-                    {...getUpdatedCheckboxProps(isRetiredUpdated)}
-                />}
-            />
-
+            {!hideRetired && (
+                <Detail
+                    label='Retired'
+                    valueComponent={
+                        <Checkbox
+                            name='retired'
+                            disabled={disabled}
+                            checked={withDefaultValueBoolean(retired, false)}
+                            onChange={onRetiredUpdate}
+                            {...getUpdatedCheckboxProps(isRetiredUpdated)}
+                        />
+                    }
+                />
+            )}
         </Box>
     );
 }
@@ -80,11 +85,7 @@ function Detail(props: DetailProps): React.ReactElement {
     let content: React.ReactNode = <Typography className={classes.value}>{value || '-'}</Typography>;
 
     if (clickable && idSystemObject) {
-        content = (
-            <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
-                {content}
-            </NewTabLink>
-        );
+        content = <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>{content}</NewTabLink>;
     }
 
     return (

@@ -37,9 +37,11 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
             DateActivated = new Date();
             DateDisabled = (!Active) ? DateActivated : null;
 
-            ({ idUser: this.idUser, Name: this.Name, EmailAddress: this.EmailAddress, SecurityID: this.SecurityID,
+            ({
+                idUser: this.idUser, Name: this.Name, EmailAddress: this.EmailAddress, SecurityID: this.SecurityID,
                 Active: this.Active, DateActivated: this.DateActivated, DateDisabled: this.DateDisabled,
-                WorkflowNotificationTime: this.WorkflowNotificationTime, EmailSettings: this.EmailSettings } =
+                WorkflowNotificationTime: this.WorkflowNotificationTime, EmailSettings: this.EmailSettings
+            } =
                 await DBC.DBConnection.prisma.user.create({
                     data: {
                         Name,
@@ -54,7 +56,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.User.create', error);
+            LOG.error('DBAPI.User.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -67,10 +69,10 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
             // handle disabling and activating by detecting a change in the Active state:
             if (Active != ActiveOrig) {
                 if (ActiveOrig) // we are disabling
-                    DateDisabled = new Date();
+                    this.DateDisabled = DateDisabled = new Date();
                 else {          // we are activating
-                    DateActivated = new Date();
-                    DateDisabled = null;
+                    this.DateActivated = DateActivated = new Date();
+                    this.DateDisabled = DateDisabled = null;
                 }
             }
 
@@ -88,7 +90,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.User.update', error);
+            LOG.error('DBAPI.User.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -98,9 +100,9 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
             return null;
         try {
             return DBC.CopyObject<UserBase, User>(
-                await DBC.DBConnection.prisma.user.findOne({ where: { idUser, }, }), User);
+                await DBC.DBConnection.prisma.user.findUnique({ where: { idUser, }, }), User);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.User.fetch', error);
+            LOG.error('DBAPI.User.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -109,7 +111,7 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
         try {
             return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({ where: { EmailAddress, }, }), User);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.User.fetchByEmail', error);
+            LOG.error('DBAPI.User.fetchByEmail', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -120,26 +122,32 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
 
             switch (eStatus) {
                 case eUserStatus.eAll:
-                    return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({ where: {
-                        OR: [
-                            { EmailAddress: { contains: search }, },
-                            { Name: { contains: search }, },
-                        ],
-                    }, }), User);
-
-                default:
-                    return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({ where: {
-                        AND: [
-                            { OR: [
+                    return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({
+                        where: {
+                            OR: [
                                 { EmailAddress: { contains: search }, },
                                 { Name: { contains: search }, },
-                            ] },
-                            { Active },
-                        ],
-                    }, }), User);
+                            ],
+                        },
+                    }), User);
+
+                default:
+                    return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({
+                        where: {
+                            AND: [
+                                {
+                                    OR: [
+                                        { EmailAddress: { contains: search }, },
+                                        { Name: { contains: search }, },
+                                    ]
+                                },
+                                { Active },
+                            ],
+                        },
+                    }), User);
             }
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.User.fetchUserList', error);
+            LOG.error('DBAPI.User.fetchUserList', LOG.LS.eDB, error);
             return null;
         }
     }

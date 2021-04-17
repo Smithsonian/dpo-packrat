@@ -67,30 +67,15 @@ input CaptureDataDetailFieldsInput {
 }
 
 input ModelDetailFieldsInput {
-    size: Int
-    master: Boolean
-    authoritative: Boolean
-    creationMethod: Int
-    modality: Int
-    purpose: Int
-    units: Int
-    dateCaptured: DateTime
-    modelFileType: Int
-    uvMaps: [IngestUVMapInput!]!
-    roughness: Int
-    metalness: Int
-    pointCount: Int
-    faceCount: Int
-    isWatertight: Boolean
-    hasNormals: Boolean
-    hasVertexColor: Boolean
-    hasUVSpace: Boolean
-    boundingBoxP1X: Float
-    boundingBoxP1Y: Float
-    boundingBoxP1Z: Float
-    boundingBoxP2X: Float
-    boundingBoxP2Y: Float
-    boundingBoxP2Z: Float
+    Name: String
+    Master: Boolean
+    Authoritative: Boolean
+    CreationMethod: Int
+    Modality: Int
+    Purpose: Int
+    Units: Int
+    DateCaptured: DateTime
+    ModelFileType: Int
 }
 
 input SceneDetailFieldsInput {
@@ -115,7 +100,7 @@ input AssetVersionDetailFieldsInput {
     DateCreated: DateTime
     Ingested: Boolean
     Version: Int
-    StorageSize: Int
+    StorageSize: BigInt
 }
 
 input ActorDetailFieldsInput {

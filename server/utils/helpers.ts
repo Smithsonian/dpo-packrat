@@ -16,6 +16,12 @@ export type IOResults = {
     error: string;
 };
 
+export type IOResultsSized = {
+    success: boolean;
+    error: string;
+    size: number;
+};
+
 export type HashResults = {
     hash: string;
     dataLength: number;
@@ -72,7 +78,7 @@ export class Helpers {
         try {
             await fsp.copyFile(nameSource, nameDestination, allowOverwrite ? 0 : fs.constants.COPYFILE_EXCL);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.copyFile', error);
+            LOG.error('Helpers.copyFile', LOG.LS.eSYS, error);
             res.success = false;
             res.error = `Unable to copy ${nameSource} to ${nameDestination}: ${error}`;
         }
@@ -88,7 +94,7 @@ export class Helpers {
         try {
             await fsp.rename(nameSource, nameDestination);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.moveFile', error);
+            LOG.error('Helpers.moveFile', LOG.LS.eSYS, error);
             res.success = false;
             res.error = `Unable to move ${nameSource} to ${nameDestination}: ${error}`;
         }
@@ -109,7 +115,7 @@ export class Helpers {
                 res.error = `${name} does not exist`;
             }
         } catch (error) /* istanbul ignore next */ {
-            // LOG.logger.error('Helpers.fileOrDirExists', error);
+            // LOG.error('Helpers.fileOrDirExists', LOG.LS.eSYS, error);
             res.success = false;
             res.error = `${name} does not exist: ${error}`;
         }
@@ -126,7 +132,7 @@ export class Helpers {
             const fileHandle: fsp.FileHandle = await fsp.open(filename, 'a');
             await fileHandle.close();
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.ensureFileExists', error);
+            LOG.error('Helpers.ensureFileExists', LOG.LS.eSYS, error);
             res.success = false;
             res.error = `Unable to ensure existence of ${filename}: ${error}`;
         }
@@ -139,11 +145,11 @@ export class Helpers {
         if (ioResults.success)
             return ioResults;
 
-        LOG.logger.info(`${description} Creating ${dest}`);
+        LOG.info(`${description} Creating ${dest}`, LOG.LS.eSYS);
         ioResults = source ? await Helpers.copyFile(source, dest) : await Helpers.ensureFileExists(dest);
         /* istanbul ignore if */
         if (!ioResults.success)
-            LOG.logger.error(`${description} Unable to create ${dest}`);
+            LOG.error(`${description} Unable to create ${dest}`, LOG.LS.eSYS);
         return ioResults;
     }
 
@@ -162,7 +168,7 @@ export class Helpers {
             const file2Buf = await fsp.readFile(file2);
             ioResults.success = file1Buf.equals(file2Buf);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.ensureFileExists', error);
+            LOG.error('Helpers.ensureFileExists', LOG.LS.eSYS, error);
             ioResults.success = false;
             ioResults.error = `Unable to test if files match: ${error}`;
         }
@@ -190,7 +196,7 @@ export class Helpers {
                 stream.on('finish', () => { resolve(hash.digest('hex')); });
                 stream.on('error', reject);
             } catch (error) /* istanbul ignore next */ {
-                LOG.logger.error('Helpers.createRandomFile() error', error);
+                LOG.error('Helpers.createRandomFile() error', LOG.LS.eSYS, error);
                 reject(error);
             }
         });
@@ -205,7 +211,7 @@ export class Helpers {
         try {
             await fsp.unlink(filename);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.removeFile', error);
+            LOG.error('Helpers.removeFile', LOG.LS.eSYS, error);
             res.success = false;
             res.error = `Unable to remove file ${filename}: ${error}`;
         }
@@ -223,7 +229,7 @@ export class Helpers {
             // if (!fs.existsSync(directory))
             //     fs.mkdirsSync(directory);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.createDirectory', error);
+            LOG.error('Helpers.createDirectory', LOG.LS.eSYS, error);
             res.success = false;
             res.error = `Unable to create directory ${directory}: ${error}`;
         }
@@ -239,7 +245,7 @@ export class Helpers {
         try {
             await fsp.rmdir(directory, { recursive });
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.removeDirectory', error);
+            LOG.error('Helpers.removeDirectory', LOG.LS.eSYS, error);
             res.success = false;
             res.error = `Unable to remove directory ${directory}: ${error}`;
         }
@@ -251,11 +257,11 @@ export class Helpers {
         if (ioResults.success)
             return ioResults;
 
-        LOG.logger.info(`${description} Creating ${directory}`);
+        LOG.info(`${description} Creating ${directory}`, LOG.LS.eSYS);
         ioResults = await Helpers.createDirectory(directory);
         /* istanbul ignore if */
         if (!ioResults.success)
-            LOG.logger.error(`${description} Unable to create ${directory}`);
+            LOG.error(`${description} Unable to create ${directory}`, LOG.LS.eSYS);
         return ioResults;
     }
 
@@ -279,7 +285,7 @@ export class Helpers {
                     dirEntries.push(fullPath);
             }
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.getDirectoryEntriesRecursive', error);
+            LOG.error('Helpers.getDirectoryEntriesRecursive', LOG.LS.eSYS, error);
             return null;
         }
         return dirEntries;
@@ -330,7 +336,7 @@ export class Helpers {
                 stream.on('error', () => { resolve({ hash: '', dataLength: 0, success: false, error: 'Helpers.computeHashFromFile() Stream Error' }); });
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.computeHashFromFile', error);
+            LOG.error('Helpers.computeHashFromFile', LOG.LS.eSYS, error);
             return { hash: '', dataLength: 0, success: false, error: `Helpers.computeHashFromFile: ${JSON.stringify(error)}` };
         }
     }
@@ -349,7 +355,7 @@ export class Helpers {
                 stream.on('error', () => { resolve(null); });
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.readFileFromStream', error);
+            LOG.error('Helpers.readFileFromStream', LOG.LS.eSYS, error);
             return null;
         }
     }
@@ -363,7 +369,7 @@ export class Helpers {
                 stream.on('error', () => { resolve(null); });
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.computeSizeOfStream', error);
+            LOG.error('Helpers.computeSizeOfStream', LOG.LS.eSYS, error);
             return null;
         }
     }
@@ -373,30 +379,46 @@ export class Helpers {
             const readStream: NodeJS.ReadableStream = await fs.createReadStream(fileName);
             return await Helpers.writeStreamToStream(readStream, writeStream);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.writeFileToStream', error);
+            LOG.error('Helpers.writeFileToStream', LOG.LS.eSYS, error);
             return { success: false, error: `Helpers.writeFileToStream: ${JSON.stringify(error)}` };
         }
     }
 
-    static async writeStreamToStream(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream): Promise<IOResults> {
+    // static writeStreamCounter: number = 0;
+    static async writeStreamToStream(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream, waitOnEnd: boolean = false): Promise<IOResults> {
+        return Helpers.writeStreamToStreamComputeSize(readStream, writeStream, waitOnEnd);
+    }
+
+    static async writeStreamToStreamComputeSize(readStream: NodeJS.ReadableStream, writeStream: NodeJS.WritableStream, waitOnEnd: boolean = false): Promise<IOResultsSized> {
         try {
+            let size: number = 0;
             readStream.pipe(writeStream);
-            return new Promise<IOResults>((resolve) => {
-                writeStream.on('finish', () => { resolve({ success: true, error: '' }); }); /* istanbul ignore next */
-                writeStream.on('error', () => { resolve({ success: false, error: '' }); });
+            return new Promise<IOResultsSized>((resolve) => {
+                readStream.on('data', (chunk: Buffer) => { size += chunk.length; });
+                /* istanbul ignore else */
+                if (!waitOnEnd) {
+                    writeStream.on('finish', () => { resolve({ success: true, error: '', size }); }); /* istanbul ignore next */
+                    writeStream.on('end', () => { resolve({ success: true, error: '', size }); }); /* istanbul ignore next */
+                } else {
+                    writeStream.on('end', () => { resolve({ success: true, error: '', size }); });
+                } /* istanbul ignore next */
+                writeStream.on('error', () => { resolve({ success: false, error: 'Unknown stream error', size }); });
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.writeStreamToStream', error);
-            return { success: false, error: `Helpers.writeFileToStream: ${JSON.stringify(error)}` };
+            LOG.error('Helpers.writeStreamToStream', LOG.LS.eSYS, error);
+            return { success: false, error: `Helpers.writeFileToStream: ${JSON.stringify(error)}`, size: 0 };
         }
     }
 
-    static async writeJsonAndComputeHash(dest: string, obj: any, hashMethod: string): Promise<HashResults> {
+    static async writeJsonAndComputeHash(dest: string, obj: any, hashMethod: string, replacer: any | null = null): Promise<HashResults> {
         try {
-            await fs.writeJson(dest, obj);
+            if (!replacer)
+                await fs.writeJson(dest, obj);
+            else
+                await fs.writeJson(dest, obj, { replacer });
             return await Helpers.computeHashFromFile(dest, hashMethod);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.writeJsonAndComputeHash', error);
+            LOG.error('Helpers.writeJsonAndComputeHash', LOG.LS.eSYS, error);
             return { hash: '', dataLength: 0, success: false, error: JSON.stringify(error) };
         }
     }
@@ -407,20 +429,46 @@ export class Helpers {
         });
     }
 
+    /** dateString is in UTC by default, unless otherwise specified in the string itself */
     static convertStringToDate(dateString: string): Date | null {
         try {
             const date: Date = new Date(dateString);
             return isNaN(date.getTime()) ? null : date;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('Helpers.convertStringToDate', error);
+            LOG.error('Helpers.convertStringToDate', LOG.LS.eSYS, error);
             return null;
         }
     }
 
-    static convertDateToYYYYMMDD(date: Date): string {
-        const dayOfMonth = ('0' + date.getDate()).slice(-2);
-        const month = ('0' + (date.getMonth() + 1)).slice(-2);
-        const year = date.getFullYear();
-        return year + '-' + month + '-' + dayOfMonth;
+    static safeNumber(value: any): number | null {
+        if (value == null)
+            return null;
+        return parseFloat(value);
+    }
+
+    static safeBoolean(value: any): boolean | null {
+        if (value == null)
+            return null;
+        return value ? true : false;
+    }
+
+    /** Stringifies Maps and BigInts */
+    static stringifyMapsAndBigints(key: any, value: any): any {
+        key;
+        if (typeof value === 'bigint')
+            return value.toString();
+        if (value instanceof Map)
+            return [...value];
+        return value;
+    }
+
+    /** Stringifies Database Rows, removing *Orig keys */
+    static stringifyDatabaseRow(key: any, value: any): any {
+        /* istanbul ignore else */
+        if (typeof key === 'string') {
+            if (key.endsWith('Orig'))
+                return undefined;
+        }
+        return Helpers.stringifyMapsAndBigints(key, value);
     }
 }

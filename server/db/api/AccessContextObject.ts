@@ -27,7 +27,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessContextObject.create', error);
+            LOG.error('DBAPI.AccessContextObject.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -43,7 +43,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessContextObject.update', error);
+            LOG.error('DBAPI.AccessContextObject.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -53,9 +53,9 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             return null;
         try {
             return DBC.CopyObject<AccessContextObjectBase, AccessContextObject>(
-                await DBC.DBConnection.prisma.accessContextObject.findOne({ where: { idAccessContextObject, }, }), AccessContextObject);
+                await DBC.DBConnection.prisma.accessContextObject.findUnique({ where: { idAccessContextObject, }, }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessContextObject.fetch', error);
+            LOG.error('DBAPI.AccessContextObject.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -67,7 +67,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             return DBC.CopyArray<AccessContextObjectBase, AccessContextObject>(
                 await DBC.DBConnection.prisma.accessContextObject.findMany({ where: { idAccessContext } }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessContextObject.fetchFromAccessContext', error);
+            LOG.error('DBAPI.AccessContextObject.fetchFromAccessContext', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -79,7 +79,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             return DBC.CopyArray<AccessContextObjectBase, AccessContextObject>(
                 await DBC.DBConnection.prisma.accessContextObject.findMany({ where: { idSystemObject } }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessContextObject.fetchFromSystemObject', error);
+            LOG.error('DBAPI.AccessContextObject.fetchFromSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -28,7 +28,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessContext.create', error);
+            LOG.error('DBAPI.AccessContext.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -41,7 +41,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
                 data: { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessContext.update', error);
+            LOG.error('DBAPI.AccessContext.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -51,9 +51,9 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
             return null;
         try {
             return DBC.CopyObject<AccessContextBase, AccessContext>(
-                await DBC.DBConnection.prisma.accessContext.findOne({ where: { idAccessContext, }, }), AccessContext);
+                await DBC.DBConnection.prisma.accessContext.findUnique({ where: { idAccessContext, }, }), AccessContext);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessContext.fetch', error);
+            LOG.error('DBAPI.AccessContext.fetch', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ModelMaterialUVMap as ModelMaterialUVMapBase, join } from '@prisma/client';
+import { ModelMaterialUVMap as ModelMaterialUVMapBase, Prisma } from '@prisma/client';
 import { Model } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -29,7 +29,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialUVMap.create', error);
+            LOG.error('DBAPI.ModelMaterialUVMap.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -47,7 +47,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialUVMap.update', error);
+            LOG.error('DBAPI.ModelMaterialUVMap.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -57,9 +57,21 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return null;
         try {
             return DBC.CopyObject<ModelMaterialUVMapBase, ModelMaterialUVMap>(
-                await DBC.DBConnection.prisma.modelMaterialUVMap.findOne({ where: { idModelMaterialUVMap, }, }), ModelMaterialUVMap);
+                await DBC.DBConnection.prisma.modelMaterialUVMap.findUnique({ where: { idModelMaterialUVMap, }, }), ModelMaterialUVMap);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialUVMap.fetch', error);
+            LOG.error('DBAPI.ModelMaterialUVMap.fetch', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchFromAsset(idAsset: number): Promise<ModelMaterialUVMap[] | null> {
+        if (!idAsset)
+            return null;
+        try {
+            return DBC.CopyArray<ModelMaterialUVMapBase, ModelMaterialUVMap>(
+                await DBC.DBConnection.prisma.modelMaterialUVMap.findMany({ where: { idAsset } }), ModelMaterialUVMap);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.ModelMaterialUVMap.fetchFromAsset', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -71,7 +83,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return DBC.CopyArray<ModelMaterialUVMapBase, ModelMaterialUVMap>(
                 await DBC.DBConnection.prisma.modelMaterialUVMap.findMany({ where: { idModel } }), ModelMaterialUVMap);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialUVMap.fetchFromModel', error);
+            LOG.error('DBAPI.ModelMaterialUVMap.fetchFromModel', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -88,11 +100,11 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
                 await DBC.DBConnection.prisma.$queryRaw<ModelMaterialUVMap[]>`
                 SELECT DISTINCT *
                 FROM ModelMaterialUVMap
-                WHERE idModel IN (${join(idModel)})`,
+                WHERE idModel IN (${Prisma.join(idModel)})`,
                 ModelMaterialUVMap
             );
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelMaterialUVMap.fetchFromModels', error);
+            LOG.error('DBAPI.ModelMaterialUVMap.fetchFromModels', LOG.LS.eDB, error);
             return null;
         }
     }

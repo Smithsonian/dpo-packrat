@@ -1,7 +1,7 @@
 import { eSystemObjectType } from '../../../../../db';
 import { UpdateObjectDetailsResult, MutationUpdateObjectDetailsArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
-import * as LOG from '../../../../../utils';
+// import * as LOG from '../../../../../utils';
 import * as DBAPI from '../../../../../db';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
@@ -10,7 +10,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { input } = args;
     const { idSystemObject, idObject, objectType, data } = input;
 
-    LOG.logger.info(JSON.stringify(data, null, 2));
+    // LOG.info(JSON.stringify(data, null, 2), LOG.LS.eGQL);
 
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired)) {
         return { success: false };
@@ -211,70 +211,57 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
             break;
         } case eSystemObjectType.eModel: {
-            // TODO: KARAN:  update/create UV Map
             if (data.Model) {
                 const Model = await DBAPI.Model.fetch(idObject);
-
                 if (Model) {
                     const {
-                        master,
-                        authoritative,
-                        creationMethod,
-                        modality,
-                        purpose,
-                        units,
-                        dateCaptured,
-                        size,
-                        modelFileType,
-                        // roughness, metalness, pointCount, faceCount, isWatertight, hasNormals, hasVertexColor, hasUVSpace, boundingBoxP1X, boundingBoxP1Y, boundingBoxP1Z, boundingBoxP2X, boundingBoxP2Y, boundingBoxP2Z
+                        Name,
+                        DateCaptured,
+                        Master,
+                        Authoritative,
+                        CreationMethod,
+                        Modality,
+                        Units,
+                        Purpose,
+                        ModelFileType
                     } = data.Model;
 
-                    if (master) Model.Master = master;
-                    if (authoritative) Model.Authoritative = authoritative;
-                    if (creationMethod) Model.idVCreationMethod = creationMethod;
-                    if (modality) Model.idVModality = modality;
-                    if (purpose) Model.idVPurpose = purpose;
-                    if (units) Model.idVUnits = units;
-                    if (modelFileType) Model.idVFileType = modelFileType;
-                    Model.DateCreated = new Date(dateCaptured);
+                    if (Name) Model.Name = Name;
+                    if (typeof Master === 'boolean') Model.Master = Master;
+                    if (typeof Authoritative === 'boolean') Model.Authoritative = Authoritative;
+                    if (CreationMethod) Model.idVCreationMethod = CreationMethod;
+                    if (Modality) Model.idVModality = Modality;
+                    if (Purpose) Model.idVPurpose = Purpose;
+                    if (Units) Model.idVUnits = Units;
+                    if (ModelFileType) Model.idVFileType = ModelFileType;
+                    Model.DateCreated = new Date(DateCaptured);
 
-                    if (Model.idAssetThumbnail) {
-                        const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(Model.idAssetThumbnail);
-                        if (AssetVersion && AssetVersion[0]) {
-                            const [AV] = AssetVersion;
-                            if (size) AV.StorageSize = size;
-                        }
-                    }
+                    // if (Model.idAssetThumbnail) {
+                    //     const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(Model.idAssetThumbnail);
+                    //     if (AssetVersion && AssetVersion[0]) {
+                    //         const [AV] = AssetVersion;
+                    //         if (size) AV.StorageSize = size;
+                    //     }
+                    // }
 
                     /*
-                    // TODO: do we want to update the asset name and metrics?  I don't think so...
-                    const modelMetrics = await DBAPI.ModelMetrics.fetch(Model.idModelMetrics);
-                    if (modelMetrics) {
-                        const Asset = await DBAPI.Asset.fetch(MGF.idAsset);
-                        if (Asset) {
-                            Asset.FileName = data.Name;
-                            await Asset.update();
-                        }
-
-                        MGF.Roughness = maybe<number>(roughness);
-                        MGF.Metalness = maybe<number>(metalness);
-                        MGF.PointCount = maybe<number>(pointCount);
-                        MGF.FaceCount = maybe<number>(faceCount);
-                        MGF.IsWatertight = maybe<boolean>(isWatertight);
-                        MGF.HasNormals = maybe<boolean>(hasNormals);
-                        MGF.HasVertexColor = maybe<boolean>(hasVertexColor);
-                        MGF.HasUVSpace = maybe<boolean>(hasUVSpace);
-                        MGF.BoundingBoxP1X = maybe<number>(boundingBoxP1X);
-                        MGF.BoundingBoxP1Y = maybe<number>(boundingBoxP1Y);
-                        MGF.BoundingBoxP1Z = maybe<number>(boundingBoxP1Z);
-                        MGF.BoundingBoxP2X = maybe<number>(boundingBoxP2X);
-                        MGF.BoundingBoxP2Y = maybe<number>(boundingBoxP2Y);
-                        MGF.BoundingBoxP2Z = maybe<number>(boundingBoxP2Z);
-
-                        await MGF.update();
+                    // TODO: do we want to update the asset name?  I don't think so...
+                    // Look up asset using SystemObjectXref, with idSystemObjectMaster = Model's system object ID
+                    const Asset = await DBAPI.Asset.fetch(MGF.idAsset);
+                    if (Asset) {
+                        Asset.FileName = data.Name;
+                        await Asset.update();
                     }
                     */
-                    await Model.update();
+                    try {
+                        if (await Model.update()) {
+                            break;
+                        } else {
+                            throw new Error('error in updating');
+                        }
+                    } catch (error) {
+                        throw new Error(error);
+                    }
                 }
             }
             break;
@@ -338,7 +325,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 if (data.AssetVersion) {
                     const { Ingested } = data.AssetVersion;
-                    if (!isNull(Ingested) && !isUndefined(Ingested)) AssetVersion.Ingested = Ingested;
+                    if (!isUndefined(Ingested))
+                        AssetVersion.Ingested = Ingested;
                 }
 
                 await AssetVersion.update();

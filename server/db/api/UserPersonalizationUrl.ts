@@ -29,7 +29,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.UserPersonalizationUrl.create', error);
+            LOG.error('DBAPI.UserPersonalizationUrl.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -46,7 +46,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.UserPersonalizationUrl.update', error);
+            LOG.error('DBAPI.UserPersonalizationUrl.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -56,9 +56,9 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
             return null;
         try {
             return DBC.CopyObject<UserPersonalizationUrlBase, UserPersonalizationUrl>(
-                await DBC.DBConnection.prisma.userPersonalizationUrl.findOne({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
+                await DBC.DBConnection.prisma.userPersonalizationUrl.findUnique({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.UserPersonalizationUrl.fetch', error);
+            LOG.error('DBAPI.UserPersonalizationUrl.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -70,7 +70,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
             return DBC.CopyArray<UserPersonalizationUrlBase, UserPersonalizationUrl>(
                 await DBC.DBConnection.prisma.userPersonalizationUrl.findMany({ where: { idUser } }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.UserPersonalizationUrl.fetchFromUser', error);
+            LOG.error('DBAPI.UserPersonalizationUrl.fetchFromUser', LOG.LS.eDB, error);
             return null;
         }
     }

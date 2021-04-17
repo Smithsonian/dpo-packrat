@@ -52,11 +52,14 @@ yarn start:server
 # Alternative docker workflow:
 
 ```
+# If step 2. wasn't working, follow this alternative instead.
 # Creates Devbox for packrat
 yarn devbox:up
 # Creates DB for devbox
 yarn devbox:db
-# Create and Connects db and devbox to the same network
+# Creates SOLR for devbox
+yarn devbox:solr
+# Create and Connects devbox-db, devbox-solr, and devbox to the same network
 yarn devbox:network
 # Drops you into shell inside the image
 yarn devbox:start
@@ -64,7 +67,7 @@ yarn devbox:start
 
 *Note: if you get permission denied during the execution make sure to give it permission using:*
 ```
-chmod 777 ./scripts/devbox/*.sh
+chmod 777 ./conf/scripts/devbox/*.sh
 ```
 
 # Deployment instructions:
@@ -89,7 +92,7 @@ git checkout master
 
 4. Deploy using the `deploy.sh` script
 ```
-./scripts/deploy.sh prod
+./conf/scripts/deploy.sh prod
 ```
 If you get `permission denied for docker` then use
 ```
@@ -100,15 +103,15 @@ If you get `Error while loading shared libraries: libz.so.1` for `docker-compose
 sudo mount /tmp -o remount,exec
 ```
 
-5. Wait for the images to be build/updated, then use `cleanup.sh` script to cleanup any residual docker images are left (optional)
+5. Wait for the images to be build/updated, then use `./conf/scripts/cleanup.sh` script to cleanup any residual docker images are left (optional)
 
 6. Make sure nginx is active using `sudo service nginx status --no-pager`
 
 ## Start databases (Production server only):
 
-1. Start `dev` or `prod` databases using `scripts/initdb.sh` script
+1. Start `dev` or `prod` databases using `./conf/scripts/initdb.sh` script
 ```
-MYSQL_ROOT_PASSWORD=<your_mysql_password> ./scripts/initdb.sh dev
+MYSQL_ROOT_PASSWORD=<your_mysql_password> ./conf/scripts/initdb.sh dev
 ```
 *Note: `MYSQL_ROOT_PASSWORD` be same what you mentioned in the `.env.dev` or `.env.prod` file for that particular environment. Mostly would be used for `dev` environment.*
 
@@ -116,7 +119,7 @@ MYSQL_ROOT_PASSWORD=<your_mysql_password> ./scripts/initdb.sh dev
 
 1. Make the changes to production nginx configuration is located at `scripts/proxy/nginx.conf`
 
-2. Use `scripts/proxy/refresh.sh` script to restart/update nginx service
+2. Use `conf/scripts/refreshProxy.sh` script to restart/update nginx service
 ```
-./scripts/proxy/refresh.sh
+./conf/scripts/refreshProxy.sh
 ```

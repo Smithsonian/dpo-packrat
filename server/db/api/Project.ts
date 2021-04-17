@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Project as ProjectBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { Project as ProjectBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -23,12 +23,12 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                     data: {
                         Name,
                         Description,
-                        SystemObject:   { create: { Retired: false }, },
+                        SystemObject: { create: { Retired: false }, },
                     }
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Project.create', error);
+            LOG.error('DBAPI.Project.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -41,7 +41,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 data: { Name, Description, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Project.update', error);
+            LOG.error('DBAPI.Project.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -50,9 +50,9 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
         try {
             const { idProject } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idProject, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.project.fetchSystemObject', error);
+            LOG.error('DBAPI.project.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -62,9 +62,9 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return null;
         try {
             return DBC.CopyObject<ProjectBase, Project>(
-                await DBC.DBConnection.prisma.project.findOne({ where: { idProject, }, }), Project);
+                await DBC.DBConnection.prisma.project.findUnique({ where: { idProject, }, }), Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Project.fetch', error);
+            LOG.error('DBAPI.Project.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -74,7 +74,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return DBC.CopyArray<ProjectBase, Project>(
                 await DBC.DBConnection.prisma.project.findMany(), Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Project.fetchAll', error);
+            LOG.error('DBAPI.Project.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -96,9 +96,9 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObject AS SOP ON (P.idProject = SOP.idProject)
                 JOIN SystemObjectXref AS SOX ON (SOP.idSystemObject = SOX.idSystemObjectMaster)
                 JOIN SystemObject AS SOS ON (SOX.idSystemObjectDerived = SOS.idSystemObject)
-                WHERE SOS.idSubject IN (${join(idSubjects)})`, Project);
+                WHERE SOS.idSubject IN (${Prisma.join(idSubjects)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.PRoject.fetchMasterFromSubjects', error);
+            LOG.error('DBAPI.PRoject.fetchMasterFromSubjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -120,9 +120,9 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObject AS SOP ON (P.idProject = SOP.idProject)
                 JOIN SystemObjectXref AS SOX ON (SOP.idSystemObject = SOX.idSystemObjectMaster)
                 JOIN SystemObject AS SOS ON (SOX.idSystemObjectDerived = SOS.idSystemObject)
-                WHERE SOS.idStakeholder IN (${join(idStakeholders)})`, Project);
+                WHERE SOS.idStakeholder IN (${Prisma.join(idStakeholders)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.PRoject.fetchMasterFromSubjects', error);
+            LOG.error('DBAPI.PRoject.fetchMasterFromSubjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -140,9 +140,9 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 SELECT DISTINCT P.*
                 FROM Project AS P
                 JOIN ProjectDocumentation AS PD ON (PD.idProject = P.idProject)
-                WHERE PD.idProjectDocumentation IN (${join(idProjectDocumentations)})`, Project);
+                WHERE PD.idProjectDocumentation IN (${Prisma.join(idProjectDocumentations)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.PRoject.fetchMasterFromProjectDocumentations', error);
+            LOG.error('DBAPI.PRoject.fetchMasterFromProjectDocumentations', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -164,9 +164,9 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObject AS SOProject ON (P.idProject = SOProject.idProject)
                 JOIN SystemObjectXref AS SOX ON (SOProject.idSystemObject = SOX.idSystemObjectDerived)
                 JOIN SystemObject AS SOUnit ON (SOX.idSystemObjectMaster = SOUnit.idSystemObject)
-                WHERE SOUnit.idUnit IN (${join(idUnits)})`, Project);
+                WHERE SOUnit.idUnit IN (${Prisma.join(idUnits)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.PRoject.fetchDerivedFromSubjectsUnits', error);
+            LOG.error('DBAPI.PRoject.fetchDerivedFromSubjectsUnits', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -189,9 +189,22 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObjectXref AS SOX ON (SOProject.idSystemObject = SOX.idSystemObjectDerived)
                 JOIN SystemObject AS SOUnit ON (SOX.idSystemObjectMaster = SOUnit.idSystemObject)
                 JOIN Subject AS S ON (SOUnit.idUnit = S.idUnit)
-                WHERE S.idSubject IN (${join(idSubjects)})`, Project);
+                WHERE S.idSubject IN (${Prisma.join(idSubjects)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.PRoject.fetchDerivedFromSubjectsUnits', error);
+            LOG.error('DBAPI.PRoject.fetchDerivedFromSubjectsUnits', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchProjectList(search: string): Promise<Project[] | null> {
+        if (!search)
+            return this.fetchAll();
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(await DBC.DBConnection.prisma.project.findMany({
+                where: { Name: { contains: search }, },
+            }), Project);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Project.fetchProjectList', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -10,16 +10,15 @@ datasource mariasql {
 }
 
 model AccessAction {
-  idAccessAction             Int                          @default(autoincrement()) @id
-  Name                       String
+  idAccessAction             Int                          @id @default(autoincrement())
+  Name                       String                       @mariasql.VarChar(255)
   SortOrder                  Int
   AccessRoleAccessActionXref AccessRoleAccessActionXref[]
-
   @@index([SortOrder], name: "AccessAction_SortOrder")
 }
 
 model AccessContext {
-  idAccessContext     Int                   @default(autoincrement()) @id
+  idAccessContext     Int                   @id @default(autoincrement())
   Global              Boolean
   Authoritative       Boolean
   CaptureData         Boolean
@@ -31,68 +30,64 @@ model AccessContext {
 }
 
 model AccessContextObject {
-  idAccessContextObject Int           @default(autoincrement()) @id
+  idAccessContextObject Int           @id @default(autoincrement())
   idAccessContext       Int
   idSystemObject        Int
   AccessContext         AccessContext @relation(fields: [idAccessContext], references: [idAccessContext])
   SystemObject          SystemObject  @relation(fields: [idSystemObject], references: [idSystemObject])
-
   @@index([idAccessContext], name: "AccessContextObject_idAccessContext")
   @@index([idSystemObject], name: "AccessContextObject_idSystemObject")
 }
 
 model AccessPolicy {
-  idAccessPolicy  Int           @default(autoincrement()) @id
+  idAccessPolicy  Int           @id @default(autoincrement())
   idUser          Int
   idAccessRole    Int
   idAccessContext Int
   AccessContext   AccessContext @relation(fields: [idAccessContext], references: [idAccessContext])
   AccessRole      AccessRole    @relation(fields: [idAccessRole], references: [idAccessRole])
   User            User          @relation(fields: [idUser], references: [idUser])
-
   @@index([idAccessContext], name: "AccessPolicy_idAccessContext")
   @@index([idAccessRole], name: "AccessPolicy_idAccessRole")
   @@index([idUser], name: "AccessPolicy_idUser")
 }
 
 model AccessRole {
-  idAccessRole               Int                          @default(autoincrement()) @id
-  Name                       String
+  idAccessRole               Int                          @id @default(autoincrement())
+  Name                       String                       @mariasql.VarChar(255)
   AccessPolicy               AccessPolicy[]
   AccessRoleAccessActionXref AccessRoleAccessActionXref[]
 }
 
 model AccessRoleAccessActionXref {
-  idAccessRoleAccessActionXref Int          @default(autoincrement()) @id
+  idAccessRoleAccessActionXref Int          @id @default(autoincrement())
   idAccessRole                 Int
   idAccessAction               Int
   AccessAction                 AccessAction @relation(fields: [idAccessAction], references: [idAccessAction])
   AccessRole                   AccessRole   @relation(fields: [idAccessRole], references: [idAccessRole])
-
   @@index([idAccessAction], name: "AccessRoleAccessActionXref_idAccessAction")
   @@index([idAccessRole], name: "AccessRoleAccessActionXref_idAccessRole")
 }
 
 model Actor {
-  idActor               Int                     @default(autoincrement()) @id
-  IndividualName        String?
-  OrganizationName      String?
+  idActor               Int                     @id @default(autoincrement())
+  IndividualName        String?                 @mariasql.VarChar(255)
+  OrganizationName      String?                 @mariasql.VarChar(255)
   idUnit                Int?
   Unit                  Unit?                   @relation(fields: [idUnit], references: [idUnit])
   ModelProcessingAction ModelProcessingAction[]
   SystemObject          SystemObject?
-
   @@index([idUnit], name: "fk_actor_unit_1")
 }
 
 model Asset {
-  idAsset                                         Int                  @default(autoincrement()) @id
-  FileName                                        String
-  FilePath                                        String
+  idAsset                                         Int                  @id @default(autoincrement())
+  FileName                                        String               @mariasql.VarChar(512)
+  FilePath                                        String               @mariasql.VarChar(512)
   idAssetGroup                                    Int?
   idVAssetType                                    Int
   idSystemObject                                  Int?
-  StorageKey                                      String?              @unique
+  StorageKey                                      String?              @unique @mariasql.VarChar(512)
   AssetGroup                                      AssetGroup?          @relation(fields: [idAssetGroup], references: [idAssetGroup])
   SystemObject_Asset_idSystemObjectToSystemObject SystemObject?        @relation("Asset_idSystemObjectToSystemObject", fields: [idSystemObject], references: [idSystemObject])
   Vocabulary                                      Vocabulary           @relation(fields: [idVAssetType], references: [idVocabulary])
@@ -107,33 +102,31 @@ model Asset {
   Scene                                           Scene[]
   Subject                                         Subject[]
   SystemObject_AssetToSystemObject_idAsset        SystemObject?        @relation("AssetToSystemObject_idAsset")
-
   @@index([idAssetGroup], name: "Asset_idAssetGroup")
   @@index([idSystemObject], name: "fk_asset_systemobject1")
   @@index([idVAssetType], name: "fk_asset_vocabulary1")
 }
 
 model AssetGroup {
-  idAssetGroup Int     @default(autoincrement()) @id
+  idAssetGroup Int     @id @default(autoincrement())
   Asset        Asset[]
 }
 
 model AssetVersion {
-  idAssetVersion    Int           @default(autoincrement()) @id
+  idAssetVersion    Int           @id @default(autoincrement())
   idAsset           Int
   Version           Int
-  FileName          String
+  FileName          String        @mariasql.VarChar(512)
   idUserCreator     Int
-  DateCreated       DateTime
-  StorageHash       String
-  StorageSize       Int           @default(0)
-  StorageKeyStaging String
-  Ingested          Boolean
+  DateCreated       DateTime      @mariasql.DateTime(0)
+  StorageHash       String        @mariasql.VarChar(128)
+  StorageSize       BigInt        @default(0)
+  StorageKeyStaging String        @mariasql.VarChar(512)
+  Ingested          Boolean?
   BulkIngest        Boolean
   Asset             Asset         @relation(fields: [idAsset], references: [idAsset])
   User              User          @relation(fields: [idUserCreator], references: [idUser])
   SystemObject      SystemObject?
-
   @@index([Ingested, idUserCreator], name: "AssetVersion_Ingested_idUserCreator")
   @@index([StorageHash], name: "AssetVersion_StorageHash")
   @@index([StorageKeyStaging], name: "AssetVersion_StorageKeyStaging")
@@ -142,11 +135,11 @@ model AssetVersion {
 }
 
 model CaptureData {
-  idCaptureData                   Int                               @default(autoincrement()) @id
-  Name                            String
+  idCaptureData                   Int                               @id @default(autoincrement())
+  Name                            String                            @mariasql.VarChar(255)
   idVCaptureMethod                Int
-  DateCaptured                    DateTime
-  Description                     String
+  DateCaptured                    DateTime                          @mariasql.DateTime(0)
+  Description                     String                            @mariasql.VarChar(8000)
   idAssetThumbnail                Int?
   Asset                           Asset?                            @relation(fields: [idAssetThumbnail], references: [idAsset])
   Vocabulary                      Vocabulary                        @relation(fields: [idVCaptureMethod], references: [idVocabulary])
@@ -154,44 +147,41 @@ model CaptureData {
   CaptureDataGroupCaptureDataXref CaptureDataGroupCaptureDataXref[]
   CaptureDataPhoto                CaptureDataPhoto[]
   SystemObject                    SystemObject?
-
   @@index([idAssetThumbnail], name: "fk_capturedata_asset1")
   @@index([idVCaptureMethod], name: "fk_capturedata_vocabulary1")
 }
 
 model CaptureDataFile {
-  idCaptureDataFile       Int         @default(autoincrement()) @id
+  idCaptureDataFile       Int         @id @default(autoincrement())
   idCaptureData           Int
   idAsset                 Int
-  idVVariantType          Int
+  idVVariantType          Int?
   CompressedMultipleFiles Boolean
   Asset                   Asset       @relation(fields: [idAsset], references: [idAsset])
   CaptureData             CaptureData @relation(fields: [idCaptureData], references: [idCaptureData])
-  Vocabulary              Vocabulary  @relation(fields: [idVVariantType], references: [idVocabulary])
-
+  Vocabulary              Vocabulary? @relation(fields: [idVVariantType], references: [idVocabulary])
   @@index([idAsset], name: "CaptureDataFile_idAsset")
   @@index([idCaptureData], name: "CaptureDataFile_idCaptureData")
   @@index([idVVariantType], name: "fk_capturedatafile_vocabulary1")
 }
 
 model CaptureDataGroup {
-  idCaptureDataGroup              Int                               @default(autoincrement()) @id
+  idCaptureDataGroup              Int                               @id @default(autoincrement())
   CaptureDataGroupCaptureDataXref CaptureDataGroupCaptureDataXref[]
 }
 
 model CaptureDataGroupCaptureDataXref {
-  idCaptureDataGroupCaptureDataXref Int              @default(autoincrement()) @id
+  idCaptureDataGroupCaptureDataXref Int              @id @default(autoincrement())
   idCaptureDataGroup                Int
   idCaptureData                     Int
   CaptureData                       CaptureData      @relation(fields: [idCaptureData], references: [idCaptureData])
   CaptureDataGroup                  CaptureDataGroup @relation(fields: [idCaptureDataGroup], references: [idCaptureDataGroup])
-
   @@index([idCaptureData], name: "CaptureDataGroupCaptureDataXref_idCaptureData")
   @@index([idCaptureDataGroup], name: "CaptureDataGroupCaptureDataXref_idCaptureDataGroup")
 }
 
 model CaptureDataPhoto {
-  idCaptureDataPhoto                                                 Int         @default(autoincrement()) @id
+  idCaptureDataPhoto                                                 Int         @id @default(autoincrement())
   idCaptureData                                                      Int
   idVCaptureDatasetType                                              Int
   CaptureDatasetFieldID                                              Int?
@@ -211,7 +201,6 @@ model CaptureDataPhoto {
   Vocabulary_CaptureDataPhoto_idVFocusTypeToVocabulary               Vocabulary? @relation("CaptureDataPhoto_idVFocusTypeToVocabulary", fields: [idVFocusType], references: [idVocabulary])
   Vocabulary_CaptureDataPhoto_idVItemPositionTypeToVocabulary        Vocabulary? @relation("CaptureDataPhoto_idVItemPositionTypeToVocabulary", fields: [idVItemPositionType], references: [idVocabulary])
   Vocabulary_CaptureDataPhoto_idVLightSourceTypeToVocabulary         Vocabulary? @relation("CaptureDataPhoto_idVLightSourceTypeToVocabulary", fields: [idVLightSourceType], references: [idVocabulary])
-
   @@index([idCaptureData], name: "fk_capturedataphoto_capturedata1")
   @@index([idVCaptureDatasetType], name: "fk_capturedataphoto_vocabulary1")
   @@index([idVItemPositionType], name: "fk_capturedataphoto_vocabulary2")
@@ -222,7 +211,7 @@ model CaptureDataPhoto {
 }
 
 model GeoLocation {
-  idGeoLocation Int       @default(autoincrement()) @id
+  idGeoLocation Int       @id @default(autoincrement())
   Latitude      Float?
   Longitude     Float?
   Altitude      Float?
@@ -238,105 +227,97 @@ model GeoLocation {
 }
 
 model Identifier {
-  idIdentifier      Int           @default(autoincrement()) @id
+  idIdentifier      Int           @id @default(autoincrement())
   IdentifierValue   String
   idVIdentifierType Int
   idSystemObject    Int?
   SystemObject      SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
   Vocabulary        Vocabulary    @relation(fields: [idVIdentifierType], references: [idVocabulary])
   Subject           Subject[]
-
   @@index([IdentifierValue], name: "Identifier_IdentifierValue")
   @@index([idSystemObject, idVIdentifierType], name: "Identifier_idSystemObject_idVIdentifierType")
   @@index([idVIdentifierType, IdentifierValue], name: "Identifier_idVIdentifierType_IdentifierValue")
 }
 
 model IntermediaryFile {
-  idIntermediaryFile Int           @default(autoincrement()) @id
+  idIntermediaryFile Int           @id @default(autoincrement())
   idAsset            Int
-  DateCreated        DateTime
+  DateCreated        DateTime      @mariasql.DateTime(0)
   Asset              Asset         @relation(fields: [idAsset], references: [idAsset])
   SystemObject       SystemObject?
-
   @@index([idAsset], name: "fk_intermediaryfile_asset1")
 }
 
 model Item {
-  idItem           Int           @default(autoincrement()) @id
+  idItem           Int           @id @default(autoincrement())
   idAssetThumbnail Int?
   idGeoLocation    Int?
-  Name             String
+  Name             String        @mariasql.VarChar(255)
   EntireSubject    Boolean
   Asset            Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset])
   GeoLocation      GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation])
   SystemObject     SystemObject?
-
   @@index([idAssetThumbnail], name: "fk_item_asset1")
   @@index([idGeoLocation], name: "fk_item_geolocation1")
 }
 
 model Job {
-  idJob   Int       @default(autoincrement()) @id
-  Name    String
-  JobTask JobTask[]
+  idJob      Int        @id @default(autoincrement())
+  idVJobType Int
+  Name       String     @mariasql.VarChar(80)
+  Status     Int
+  Frequency  String?    @mariasql.VarChar(80)
+  Vocabulary Vocabulary @relation(fields: [idVJobType], references: [idVocabulary])
+  JobRun     JobRun[]
+  @@index([Name], name: "Job_Name")
+  @@index([Status], name: "Job_Status")
+  @@index([idVJobType, idJob], name: "Job_idVJobType_idJob")
 }
 
-model JobTask {
-  idJobTask   Int           @default(autoincrement()) @id
-  idJob       Int
-  idVJobType  Int
-  State       String?
-  Step        String?
-  Error       String?
-  Parameters  String?
-  Report      String?
-  Job         Job           @relation(fields: [idJob], references: [idJob])
-  Vocabulary  Vocabulary    @relation(fields: [idVJobType], references: [idVocabulary])
-  JobTaskCook JobTaskCook[]
-
-  @@index([idJob], name: "JobTask_idJob")
-  @@index([idVJobType, idJob], name: "JobTask_idVJobType_idJob")
-}
-
-model JobTaskCook {
-  idJobTaskCook Int     @default(autoincrement()) @id
-  idJobTask     Int
-  JobID         String
-  RecipeID      String
-  JobTask       JobTask @relation(fields: [idJobTask], references: [idJobTask])
-
-  @@index([JobID], name: "JobTaskCook_JobID")
-  @@index([idJobTask], name: "JobTaskCook_idJobTask")
+model JobRun {
+  idJobRun      Int            @id @default(autoincrement())
+  idJob         Int
+  Status        Int
+  Result        Boolean?
+  DateStart     DateTime?      @mariasql.DateTime(0)
+  DateEnd       DateTime?      @mariasql.DateTime(0)
+  Configuration String?        @mariasql.Text
+  Parameters    String?        @mariasql.Text
+  Output        String?        @mariasql.Text
+  Error         String?        @mariasql.Text
+  Job           Job            @relation(fields: [idJob], references: [idJob])
+  WorkflowStep  WorkflowStep[]
+  @@index([Status], name: "JobRun_Status")
+  @@index([idJob], name: "JobRun_idJob")
 }
 
 model License {
-  idLicense         Int                 @default(autoincrement()) @id
-  Name              String
-  Description       String
+  idLicense         Int                 @id @default(autoincrement())
+  Name              String              @mariasql.VarChar(255)
+  Description       String              @mariasql.VarChar(8000)
   LicenseAssignment LicenseAssignment[]
 }
 
 model LicenseAssignment {
-  idLicenseAssignment Int           @default(autoincrement()) @id
+  idLicenseAssignment Int           @id @default(autoincrement())
   idLicense           Int
   idUserCreator       Int?
-  DateStart           DateTime?
-  DateEnd             DateTime?
+  DateStart           DateTime?     @mariasql.DateTime(0)
+  DateEnd             DateTime?     @mariasql.DateTime(0)
   idSystemObject      Int?
   License             License       @relation(fields: [idLicense], references: [idLicense])
   SystemObject        SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
   User                User?         @relation(fields: [idUserCreator], references: [idUser])
-
   @@index([idSystemObject], name: "LicenseAssignment_idSystemObject")
   @@index([idLicense], name: "fk_licenseassignment_license1")
   @@index([idUserCreator], name: "fk_licenseassignment_user1")
 }
 
 model Metadata {
-  idMetadata        Int           @default(autoincrement()) @id
-  Name              String
-  ValueShort        String?
-  ValueExtended     String?
+  idMetadata        Int           @id @default(autoincrement())
+  Name              String        @mariasql.VarChar(100)
+  ValueShort        String?       @mariasql.VarChar(255)
+  ValueExtended     String?       @mariasql.Text
   idAssetValue      Int?
   idUser            Int?
   idVMetadataSource Int?
@@ -345,8 +326,7 @@ model Metadata {
   SystemObject      SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject])
   User              User?         @relation(fields: [idUser], references: [idUser])
   Vocabulary        Vocabulary?   @relation(fields: [idVMetadataSource], references: [idVocabulary])
-
-  @@index([Name, ValueShort], name: "Metadata_Name_ValueShort")
+  @@index([Name], name: "Metadata_Name")
   @@index([idAssetValue], name: "Metadata_idAssetValue")
   @@index([idSystemObject], name: "Metadata_idSystemObject")
   @@index([idUser], name: "fk_metadata_user1")
@@ -354,9 +334,9 @@ model Metadata {
 }
 
 model Model {
-  idModel                                        Int                     @default(autoincrement()) @id
-  Name                                           String
-  DateCreated                                    DateTime
+  idModel                                        Int                     @id @default(autoincrement())
+  Name                                           String                  @mariasql.VarChar(255)
+  DateCreated                                    DateTime                @mariasql.DateTime(0)
   Master                                         Boolean
   Authoritative                                  Boolean
   idVCreationMethod                              Int
@@ -365,9 +345,17 @@ model Model {
   idVPurpose                                     Int
   idVFileType                                    Int
   idAssetThumbnail                               Int?
-  idModelMetrics                                 Int?
+  CountAnimations                                Int?
+  CountCameras                                   Int?
+  CountFaces                                     Int?
+  CountLights                                    Int?
+  CountMaterials                                 Int?
+  CountMeshes                                    Int?
+  CountVertices                                  Int?
+  CountEmbeddedTextures                          Int?
+  CountLinkedTextures                            Int?
+  FileEncoding                                   String?                 @mariasql.VarChar(40)
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset])
-  ModelMetrics                                   ModelMetrics?           @relation(fields: [idModelMetrics], references: [idModelMetrics])
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary              @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary])
   Vocabulary_Model_idVFileTypeToVocabulary       Vocabulary              @relation("Model_idVFileTypeToVocabulary", fields: [idVFileType], references: [idVocabulary])
   Vocabulary_Model_idVModalityToVocabulary       Vocabulary              @relation("Model_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary])
@@ -378,9 +366,7 @@ model Model {
   ModelProcessingAction                          ModelProcessingAction[]
   ModelSceneXref                                 ModelSceneXref[]
   SystemObject                                   SystemObject?
-
   @@index([idAssetThumbnail], name: "fk_model_asset1")
-  @@index([idModelMetrics], name: "fk_model_modelmetrics1")
   @@index([idVCreationMethod], name: "fk_model_vocabulary1")
   @@index([idVModality], name: "fk_model_vocabulary2")
   @@index([idVUnits], name: "fk_model_vocabulary3")
@@ -389,114 +375,111 @@ model Model {
 }
 
 model ModelMaterial {
-  idModelMaterial      Int                    @default(autoincrement()) @id
-  idModelObject        Int
-  Name                 String?
-  ModelObject          ModelObject            @relation(fields: [idModelObject], references: [idModelObject])
-  ModelMaterialChannel ModelMaterialChannel[]
-
-  @@index([idModelObject], name: "Model_idModelObject")
+  idModelMaterial              Int                            @id @default(autoincrement())
+  Name                         String?                        @mariasql.VarChar(255)
+  ModelMaterialChannel         ModelMaterialChannel[]
+  ModelObjectModelMaterialXref ModelObjectModelMaterialXref[]
 }
 
 model ModelMaterialChannel {
-  idModelMaterialChannel Int                 @default(autoincrement()) @id
+  idModelMaterialChannel Int                 @id @default(autoincrement())
   idModelMaterial        Int
   idVMaterialType        Int?
-  MaterialTypeOther      String?
+  MaterialTypeOther      String?             @mariasql.VarChar(255)
   idModelMaterialUVMap   Int?
+  UVMapEmbedded          Boolean?
   ChannelPosition        Int?
   ChannelWidth           Int?
   Scalar1                Float?
   Scalar2                Float?
   Scalar3                Float?
   Scalar4                Float?
+  AdditionalAttributes   String?             @mariasql.Text
   ModelMaterial          ModelMaterial       @relation(fields: [idModelMaterial], references: [idModelMaterial])
   ModelMaterialUVMap     ModelMaterialUVMap? @relation(fields: [idModelMaterialUVMap], references: [idModelMaterialUVMap])
   Vocabulary             Vocabulary?         @relation(fields: [idVMaterialType], references: [idVocabulary])
-
   @@index([idModelMaterial], name: "ModelMaterialChannel_idModelMaterial")
   @@index([idModelMaterialUVMap], name: "fk_modelmaterialchannel_modelmaterialuvmap1")
   @@index([idVMaterialType], name: "fk_modelmaterialchannel_vocabulary1")
 }
 
 model ModelMaterialUVMap {
-  idModelMaterialUVMap Int                    @default(autoincrement()) @id
+  idModelMaterialUVMap Int                    @id @default(autoincrement())
   idModel              Int
   idAsset              Int
   UVMapEdgeLength      Int
   Asset                Asset                  @relation(fields: [idAsset], references: [idAsset])
   Model                Model                  @relation(fields: [idModel], references: [idModel])
   ModelMaterialChannel ModelMaterialChannel[]
-
   @@index([idAsset], name: "ModelUVMapFile_idAsset")
   @@index([idModel], name: "ModelUVMapFile_idModel")
 }
 
-model ModelMetrics {
-  idModelMetrics               Int           @default(autoincrement()) @id
-  BoundingBoxP1X               Float?
-  BoundingBoxP1Y               Float?
-  BoundingBoxP1Z               Float?
-  BoundingBoxP2X               Float?
-  BoundingBoxP2Y               Float?
-  BoundingBoxP2Z               Float?
-  CountPoint                   Int?
-  CountFace                    Int?
-  CountColorChannel            Int?
-  CountTextureCoorinateChannel Int?
-  HasBones                     Boolean?
-  HasFaceNormals               Boolean?
-  HasTangents                  Boolean?
-  HasTextureCoordinates        Boolean?
-  HasVertexNormals             Boolean?
-  HasVertexColor               Boolean?
-  IsManifold                   Boolean?
-  IsWatertight                 Boolean?
-  Model                        Model[]
-  ModelObject                  ModelObject[]
+model ModelObject {
+  idModelObject                  Int                          @id @default(autoincrement())
+  idModel                        Int
+  BoundingBoxP1X                 Float?
+  BoundingBoxP1Y                 Float?
+  BoundingBoxP1Z                 Float?
+  BoundingBoxP2X                 Float?
+  BoundingBoxP2Y                 Float?
+  BoundingBoxP2Z                 Float?
+  CountVertices                  Int?
+  CountFaces                     Int?
+  CountColorChannels             Int?
+  CountTextureCoordinateChannels Int?
+  HasBones                       Boolean?
+  HasFaceNormals                 Boolean?
+  HasTangents                    Boolean?
+  HasTextureCoordinates          Boolean?
+  HasVertexNormals               Boolean?
+  HasVertexColor                 Boolean?
+  IsTwoManifoldUnbounded         Boolean?
+  IsTwoManifoldBounded           Boolean?
+  IsWatertight                   Boolean?
+  SelfIntersecting               Boolean?
+  Model                          Model                        @relation(fields: [idModel], references: [idModel])
+  ModelObjectModelMaterialXref   ModelObjectModelMaterialXref[]
+  @@index([idModel], name: "ModelObject_idModel")
 }
 
-model ModelObject {
-  idModelObject  Int             @default(autoincrement()) @id
-  idModel        Int
-  idModelMetrics Int?
-  Model          Model           @relation(fields: [idModel], references: [idModel])
-  ModelMetrics   ModelMetrics?   @relation(fields: [idModelMetrics], references: [idModelMetrics])
-  ModelMaterial  ModelMaterial[]
-
-  @@index([idModel], name: "ModelObject_idModel")
-  @@index([idModelMetrics], name: "fk_modelobject_modelmetrics1")
+model ModelObjectModelMaterialXref {
+  idModelObjectModelMaterialXref Int           @id @default(autoincrement())
+  idModelObject                  Int
+  idModelMaterial                Int
+  ModelMaterial                  ModelMaterial @relation(fields: [idModelMaterial], references: [idModelMaterial])
+  ModelObject                    ModelObject   @relation(fields: [idModelObject], references: [idModelObject])
+  @@index([idModelMaterial], name: "ModelObjectModelMaterialXref_idModelMaterial")
+  @@index([idModelObject], name: "ModelObjectModelMaterialXref_idModelObject")
 }
 
 model ModelProcessingAction {
-  idModelProcessingAction   Int                         @default(autoincrement()) @id
+  idModelProcessingAction   Int                         @id @default(autoincrement())
   idModel                   Int
   idActor                   Int
-  DateProcessed             DateTime
-  ToolsUsed                 String
-  Description               String
+  DateProcessed             DateTime                    @mariasql.DateTime(0)
+  ToolsUsed                 String                      @mariasql.VarChar(1000)
+  Description               String                      @mariasql.Text
   Actor                     Actor                       @relation(fields: [idActor], references: [idActor])
   Model                     Model                       @relation(fields: [idModel], references: [idModel])
   ModelProcessingActionStep ModelProcessingActionStep[]
-
   @@index([idActor], name: "ModelProcessingAction_idActor")
   @@index([idModel], name: "ModelProcessingAction_idModel")
 }
 
 model ModelProcessingActionStep {
-  idModelProcessingActionStep Int                   @default(autoincrement()) @id
+  idModelProcessingActionStep Int                   @id @default(autoincrement())
   idModelProcessingAction     Int
   idVActionMethod             Int
-  Description                 String
+  Description                 String                @mariasql.Text
   ModelProcessingAction       ModelProcessingAction @relation(fields: [idModelProcessingAction], references: [idModelProcessingAction])
   Vocabulary                  Vocabulary            @relation(fields: [idVActionMethod], references: [idVocabulary])
-
   @@index([idModelProcessingAction], name: "fk_modelprocessingactionstep_modelprocessingaction1")
   @@index([idVActionMethod], name: "fk_modelprocessingactionstep_vocabulary1")
 }
 
 model ModelSceneXref {
-  idModelSceneXref Int    @default(autoincrement()) @id
+  idModelSceneXref Int    @id @default(autoincrement())
   idModel          Int
   idScene          Int
   TS0              Float?
@@ -508,68 +491,64 @@ model ModelSceneXref {
   R3               Float?
   Model            Model  @relation(fields: [idModel], references: [idModel])
   Scene            Scene  @relation(fields: [idScene], references: [idScene])
-
   @@index([idModel], name: "ModelSceneXref_idModel")
   @@index([idScene], name: "ModelSceneXref_idScene")
 }
 
 model Project {
-  idProject            Int                    @default(autoincrement()) @id
-  Name                 String
-  Description          String?
+  idProject            Int                    @id @default(autoincrement())
+  Name                 String                 @mariasql.VarChar(128)
+  Description          String?                @mariasql.VarChar(8000)
   ProjectDocumentation ProjectDocumentation[]
   SystemObject         SystemObject?
   Workflow             Workflow[]
 }
 
 model ProjectDocumentation {
-  idProjectDocumentation Int           @default(autoincrement()) @id
+  idProjectDocumentation Int           @id @default(autoincrement())
   idProject              Int
-  Name                   String
-  Description            String
+  Name                   String        @mariasql.VarChar(255)
+  Description            String        @mariasql.VarChar(8000)
   Project                Project       @relation(fields: [idProject], references: [idProject])
   SystemObject           SystemObject?
-
   @@index([idProject], name: "fk_projectdocumentation_project1")
 }
 
 model Scene {
-  idScene          Int              @default(autoincrement()) @id
-  Name             String
+  idScene          Int              @id @default(autoincrement())
+  Name             String           @mariasql.VarChar(255)
   idAssetThumbnail Int?
   IsOriented       Boolean
   HasBeenQCd       Boolean
   Asset            Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
   ModelSceneXref   ModelSceneXref[]
   SystemObject     SystemObject?
-
   @@index([idAssetThumbnail], name: "fk_scene_asset1")
 }
 
 model Stakeholder {
-  idStakeholder     Int           @default(autoincrement()) @id
-  IndividualName    String
-  OrganizationName  String
-  EmailAddress      String?
-  PhoneNumberMobile String?
-  PhoneNumberOffice String?
-  MailingAddress    String?
+  idStakeholder     Int           @id @default(autoincrement())
+  IndividualName    String        @mariasql.VarChar(255)
+  OrganizationName  String        @mariasql.VarChar(255)
+  EmailAddress      String?       @mariasql.VarChar(255)
+  PhoneNumberMobile String?       @mariasql.VarChar(32)
+  PhoneNumberOffice String?       @mariasql.VarChar(32)
+  MailingAddress    String?       @mariasql.VarChar(255)
   SystemObject      SystemObject?
 }
 
 model Subject {
-  idSubject             Int           @default(autoincrement()) @id
+  idSubject             Int           @id @default(autoincrement())
   idUnit                Int
   idAssetThumbnail      Int?
   idGeoLocation         Int?
-  Name                  String
+  Name                  String        @mariasql.VarChar(255)
   idIdentifierPreferred Int?
   Asset                 Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset])
   GeoLocation           GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation])
   Identifier            Identifier?   @relation(fields: [idIdentifierPreferred], references: [idIdentifier])
   Unit                  Unit          @relation(fields: [idUnit], references: [idUnit])
   SystemObject          SystemObject?
-
   @@index([idAssetThumbnail], name: "fk_subject_asset1")
   @@index([idGeoLocation], name: "fk_subject_geolocation1")
   @@index([idIdentifierPreferred], name: "fk_subject_identifier1")
@@ -577,7 +556,7 @@ model Subject {
 }
 
 model SystemObject {
-  idSystemObject                                                        Int                               @default(autoincrement()) @id
+  idSystemObject                                                        Int                               @id @default(autoincrement())
   idUnit                                                                Int?                              @unique
   idProject                                                             Int?                              @unique
   idSubject                                                             Int?                              @unique
@@ -615,7 +594,6 @@ model SystemObject {
   SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster  SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectMaster")
   UserPersonalizationSystemObject                                       UserPersonalizationSystemObject[]
   WorkflowStepSystemObjectXref                                          WorkflowStepSystemObjectXref[]
-
   @@index([idActor], name: "SystemObject_idActor")
   @@index([idAsset], name: "SystemObject_idAsset")
   @@index([idAssetVersion], name: "SystemObject_idAssetVersion")
@@ -632,30 +610,28 @@ model SystemObject {
 }
 
 model SystemObjectVersion {
-  idSystemObjectVersion Int          @default(autoincrement()) @id
+  idSystemObjectVersion Int          @id @default(autoincrement())
   idSystemObject        Int
   PublishedState        Int
   SystemObject          SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
-
   @@index([idSystemObject, idSystemObjectVersion], name: "ObjectVersion_idSystemObject_idObjectVersion")
 }
 
 model SystemObjectXref {
-  idSystemObjectXref                                                Int          @default(autoincrement()) @id
+  idSystemObjectXref                                                Int          @id @default(autoincrement())
   idSystemObjectMaster                                              Int
   idSystemObjectDerived                                             Int
   SystemObject_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObject @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived", fields: [idSystemObjectDerived], references: [idSystemObject])
   SystemObject_SystemObjectToSystemObjectXref_idSystemObjectMaster  SystemObject @relation("SystemObjectToSystemObjectXref_idSystemObjectMaster", fields: [idSystemObjectMaster], references: [idSystemObject])
-
   @@index([idSystemObjectDerived], name: "SystemObjectXref_idSystemObjectDerived")
   @@index([idSystemObjectMaster], name: "SystemObjectXref_idSystemObjectMaster")
 }
 
 model Unit {
-  idUnit       Int           @default(autoincrement()) @id
-  Name         String
-  Abbreviation String?
-  ARKPrefix    String?
+  idUnit       Int           @id @default(autoincrement())
+  Name         String        @mariasql.VarChar(255)
+  Abbreviation String?       @mariasql.VarChar(20)
+  ARKPrefix    String?       @mariasql.VarChar(255)
   Actor        Actor[]
   Subject      Subject[]
   SystemObject SystemObject?
@@ -663,24 +639,23 @@ model Unit {
 }
 
 model UnitEdan {
-  idUnitEdan   Int    @default(autoincrement()) @id
+  idUnitEdan   Int    @id @default(autoincrement())
   idUnit       Int?
-  Abbreviation String @unique
+  Abbreviation String @unique @mariasql.VarChar(100)
   Unit         Unit?  @relation(fields: [idUnit], references: [idUnit])
-
   @@index([Abbreviation], name: "UnitEdan_Abbreviation")
   @@index([idUnit], name: "fk_unitedan_idunit")
 }
 
 model User {
-  idUser                          Int                               @default(autoincrement()) @id
-  Name                            String
-  EmailAddress                    String
-  SecurityID                      String
+  idUser                          Int                               @id @default(autoincrement())
+  Name                            String                            @mariasql.VarChar(255)
+  EmailAddress                    String                            @mariasql.VarChar(255)
+  SecurityID                      String                            @mariasql.VarChar(255)
   Active                          Boolean
-  DateActivated                   DateTime
-  DateDisabled                    DateTime?
-  WorkflowNotificationTime        DateTime?
+  DateActivated                   DateTime                          @mariasql.DateTime(0)
+  DateDisabled                    DateTime?                         @mariasql.DateTime(0)
+  WorkflowNotificationTime        DateTime?                         @mariasql.Time(0)
   EmailSettings                   Int?
   AccessPolicy                    AccessPolicy[]
   AssetVersion                    AssetVersion[]
@@ -690,38 +665,35 @@ model User {
   UserPersonalizationUrl          UserPersonalizationUrl[]
   Workflow                        Workflow[]
   WorkflowStep                    WorkflowStep[]
-
   @@index([EmailAddress], name: "user_EmailAddress")
 }
 
 model UserPersonalizationSystemObject {
-  idUserPersonalizationSystemObject Int          @default(autoincrement()) @id
+  idUserPersonalizationSystemObject Int          @id @default(autoincrement())
   idUser                            Int
   idSystemObject                    Int
-  Personalization                   String?
+  Personalization                   String?      @mariasql.VarChar(8000)
   SystemObject                      SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
   User                              User         @relation(fields: [idUser], references: [idUser])
-
   @@index([idUser], name: "UserPersonalizationObject_idUser")
   @@index([idUser, idSystemObject], name: "UserPersonalizationObject_idUser_idSystemObject")
   @@index([idSystemObject], name: "fk_userpersonalizationsystemobject_systemobject1")
 }
 
 model UserPersonalizationUrl {
-  idUserPersonalizationUrl Int    @default(autoincrement()) @id
+  idUserPersonalizationUrl Int    @id @default(autoincrement())
   idUser                   Int
-  URL                      String
-  Personalization          String
+  URL                      String @mariasql.VarChar(255)
+  Personalization          String @mariasql.VarChar(8000)
   User                     User   @relation(fields: [idUser], references: [idUser])
-
   @@index([idUser, URL], name: "UserPersonalizationUrl_idUser_URL")
 }
 
 model Vocabulary {
-  idVocabulary                                                             Int                         @default(autoincrement()) @id
+  idVocabulary                                                             Int                         @id @default(autoincrement())
   idVocabularySet                                                          Int
   SortOrder                                                                Int
-  Term                                                                     String
+  Term                                                                     String                      @mariasql.VarChar(255)
   VocabularySet                                                            VocabularySet               @relation(fields: [idVocabularySet], references: [idVocabularySet])
   Asset                                                                    Asset[]
   CaptureData                                                              CaptureData[]
@@ -733,7 +705,7 @@ model Vocabulary {
   CaptureDataPhoto_CaptureDataPhoto_idVItemPositionTypeToVocabulary        CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVItemPositionTypeToVocabulary")
   CaptureDataPhoto_CaptureDataPhoto_idVLightSourceTypeToVocabulary         CaptureDataPhoto[]          @relation("CaptureDataPhoto_idVLightSourceTypeToVocabulary")
   Identifier                                                               Identifier[]
-  JobTask                                                                  JobTask[]
+  Job                                                                      Job[]
   Metadata                                                                 Metadata[]
   Model_Model_idVCreationMethodToVocabulary                                Model[]                     @relation("Model_idVCreationMethodToVocabulary")
   Model_Model_idVFileTypeToVocabulary                                      Model[]                     @relation("Model_idVFileTypeToVocabulary")
@@ -742,49 +714,51 @@ model Vocabulary {
   Model_Model_idVUnitsToVocabulary                                         Model[]                     @relation("Model_idVUnitsToVocabulary")
   ModelMaterialChannel                                                     ModelMaterialChannel[]
   ModelProcessingActionStep                                                ModelProcessingActionStep[]
+  Workflow                                                                 Workflow[]
   WorkflowStep                                                             WorkflowStep[]
-
   @@index([idVocabularySet, SortOrder], name: "Vocabulary_idVocabulySet_SortOrder")
 }
 
 model VocabularySet {
-  idVocabularySet  Int          @default(autoincrement()) @id
-  Name             String
+  idVocabularySet  Int          @id @default(autoincrement())
+  Name             String       @mariasql.VarChar(255)
   SystemMaintained Boolean
   Vocabulary       Vocabulary[]
 }
 
 model Workflow {
-  idWorkflow         Int              @default(autoincrement()) @id
-  idWorkflowTemplate Int
-  idProject          Int?
-  idUserInitiator    Int?
-  DateInitiated      DateTime
-  DateUpdated        DateTime
-  Project            Project?         @relation(fields: [idProject], references: [idProject])
-  User               User?            @relation(fields: [idUserInitiator], references: [idUser])
-  WorkflowTemplate   WorkflowTemplate @relation(fields: [idWorkflowTemplate], references: [idWorkflowTemplate])
-  WorkflowStep       WorkflowStep[]
-
+  idWorkflow      Int            @id @default(autoincrement())
+  idVWorkflowType Int
+  idProject       Int?
+  idUserInitiator Int?
+  DateInitiated   DateTime       @mariasql.DateTime(0)
+  DateUpdated     DateTime       @mariasql.DateTime(0)
+  Parameters      String?        @mariasql.Text
+  Project         Project?       @relation(fields: [idProject], references: [idProject])
+  User            User?          @relation(fields: [idUserInitiator], references: [idUser])
+  Vocabulary      Vocabulary     @relation(fields: [idVWorkflowType], references: [idVocabulary])
+  WorkflowStep    WorkflowStep[]
   @@index([idProject], name: "Workflow_idProject")
   @@index([idUserInitiator], name: "Workflow_idUserInitiator")
-  @@index([idWorkflowTemplate], name: "fk_workflow_workflowtemplate1")
+  @@index([idVWorkflowType], name: "fk_workflow_vocabulary1")
 }
 
 model WorkflowStep {
-  idWorkflowStep               Int                            @default(autoincrement()) @id
+  idWorkflowStep               Int                            @id @default(autoincrement())
   idWorkflow                   Int
-  idUserOwner                  Int
+  idJobRun                     Int?
+  idUserOwner                  Int?
   idVWorkflowStepType          Int
   State                        Int
-  DateCreated                  DateTime
-  DateCompleted                DateTime?
-  User                         User                           @relation(fields: [idUserOwner], references: [idUser])
+  DateCreated                  DateTime                       @mariasql.DateTime(0)
+  DateCompleted                DateTime?                      @mariasql.DateTime(0)
+  JobRun                       JobRun?                        @relation(fields: [idJobRun], references: [idJobRun])
+  User                         User?                          @relation(fields: [idUserOwner], references: [idUser])
   Vocabulary                   Vocabulary                     @relation(fields: [idVWorkflowStepType], references: [idVocabulary])
   Workflow                     Workflow                       @relation(fields: [idWorkflow], references: [idWorkflow])
   WorkflowStepSystemObjectXref WorkflowStepSystemObjectXref[]
-
   @@index([State, idWorkflow], name: "WorkflowStep_State_idWorkflow")
+  @@index([idJobRun], name: "WorkflowStep_idJobRun")
   @@index([idUserOwner], name: "WorkflowStep_idUserOwner")
   @@index([idWorkflow, DateCompleted], name: "WorkflowStep_idWorkflow_DateCompleted")
   @@index([idWorkflow, DateCreated], name: "WorkflowStep_idWorkflow_DateCreated")
@@ -792,19 +766,12 @@ model WorkflowStep {
 }
 
 model WorkflowStepSystemObjectXref {
-  idWorkflowStepSystemObjectXref Int          @default(autoincrement()) @id
+  idWorkflowStepSystemObjectXref Int          @id @default(autoincrement())
   idWorkflowStep                 Int
   idSystemObject                 Int
   Input                          Boolean
   SystemObject                   SystemObject @relation(fields: [idSystemObject], references: [idSystemObject])
   WorkflowStep                   WorkflowStep @relation(fields: [idWorkflowStep], references: [idWorkflowStep])
-
   @@index([idSystemObject, Input], name: "WorkflowStepSystemObjectXref_idSystemObject_Input")
   @@index([idWorkflowStep, Input], name: "WorkflowStepSystemObjectXref_idWorkflowStep_Input")
-}
-
-model WorkflowTemplate {
-  idWorkflowTemplate Int        @default(autoincrement()) @id
-  Name               String
-  Workflow           Workflow[]
 }

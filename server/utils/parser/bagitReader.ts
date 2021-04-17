@@ -73,15 +73,15 @@ export class BagitReader implements IZip {
             return this._dataFiles;
 
         const allFiltered: string[] = zipFilterResults(this._files, filter);
-        // LOG.logger.info(`*JF* All ${JSON.stringify(this._dataFiles)}`);
-        // LOG.logger.info(`*JF* Filtered ${JSON.stringify(allFiltered)}`);
+        // LOG.info(`*JF* All ${JSON.stringify(this._dataFiles)}`, LOG.LS.eSYS);
+        // LOG.info(`*JF* Filtered ${JSON.stringify(allFiltered)}`, LOG.LS.eSYS);
 
         const results: string[] = [];
         for (const fileName of allFiltered) {
             const { dirname, basename } = this.extractDirectoryAndBasename(fileName, true); /* istanbul ignore else */
             if (dirname && dirname.startsWith(filter)) {
                 results.push(basename);
-                // LOG.logger.info(`*JF* *** ${fileName} -> ${dirname} ... ${basename}`);
+                // LOG.info(`*JF* *** ${fileName} -> ${dirname} ... ${basename}`, LOG.LS.eSYS);
             }
         }
         return results;
@@ -115,7 +115,7 @@ export class BagitReader implements IZip {
 
             return validate ? await this.validate() : results;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('bagitReader.loadFromZipFile', error);
+            LOG.error('bagitReader.loadFromZipFile', LOG.LS.eSYS, error);
             return { success: false, error: `bagitReader.loadFromZipFile ${JSON.stringify(error)}` };
         }
     }
@@ -130,7 +130,7 @@ export class BagitReader implements IZip {
 
             return validate ? await this.validate() : results;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('bagitReader.loadFromZipStream', error);
+            LOG.error('bagitReader.loadFromZipStream', LOG.LS.eSYS, error);
             return { success: false, error: `bagitReader.loadFromZipStream ${JSON.stringify(error)}` };
         }
     }
@@ -171,13 +171,13 @@ export class BagitReader implements IZip {
 
         try {
             const fileName: string = this.prefixedFilename(file);
-            // LOG.logger.info(`getFileStream(${file}) looking in ${fileName} with prefixDir of ${this._prefixDir}`);
+            // LOG.info(`getFileStream(${file}) looking in ${fileName} with prefixDir of ${this._prefixDir}`, LOG.LS.eSYS);
 
             return (this._zip)
                 ? await this._zip.streamContent(fileName)
                 : await fs.createReadStream(fileName);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.info(`bagitReader.streamContent unable to read ${file}: ${JSON.stringify(error)}`);
+            LOG.info(`bagitReader.streamContent unable to read ${file}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
             return null;
         }
     }
@@ -190,14 +190,14 @@ export class BagitReader implements IZip {
 
         try {
             const fileName: string = this.prefixedFilename(file);
-            // LOG.logger.info(`getFileStream(${file}) looking in ${fileName} with prefixDir of ${this._prefixDir}`);
+            // LOG.info(`getFileStream(${file}) looking in ${fileName} with prefixDir of ${this._prefixDir}`, LOG.LS.eSYS);
 
             if (this._zip)
                 return await this._zip.uncompressedSize(fileName);
             const statResults: H.StatResults = await H.Helpers.stat(fileName);
             return (statResults.success && statResults.stat) ? statResults.stat.size : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.info(`bagitReader.uncompressedSize unable to read ${file}: ${JSON.stringify(error)}`);
+            LOG.info(`bagitReader.uncompressedSize unable to read ${file}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
             return null;
         }
     }
@@ -256,11 +256,11 @@ export class BagitReader implements IZip {
                 switch(regexResults[3].toLowerCase()) {
                     case BAGIT_BAG_DECLARATION:
                         foundBagDeclaration = true;
-                        // LOG.logger.info(`Found Bag Declaration ${file}`);
+                        // LOG.info(`Found Bag Declaration ${file}`, LOG.LS.eSYS);
                         break;
                     case BAGIT_BAG_METADATA:
                         foundBagMetadata = true;
-                        // LOG.logger.info(`Found Bag Metadata ${file}`);
+                        // LOG.info(`Found Bag Metadata ${file}`, LOG.LS.eSYS);
                         break;
                 }
 
@@ -284,11 +284,11 @@ export class BagitReader implements IZip {
                     if (!foundTag) {
                         foundManifest = true;
                         algorithmMapManifest.set(algorithm, file);
-                        // LOG.logger.info(`Found Manifest ${file}, Algorithm ${algorithm}`);
+                        // LOG.info(`Found Manifest ${file}, Algorithm ${algorithm}`, LOG.LS.eSYS);
                     } else {
                         foundTagManifest = true;
                         algorithmMapTagManifest.set(algorithm, file);
-                        // LOG.logger.info(`Found Tag Manifest ${file}, Algorithm ${algorithm}`);
+                        // LOG.info(`Found Tag Manifest ${file}, Algorithm ${algorithm}`, LOG.LS.eSYS);
                         recordValidated = true; // tag manifests are not themselves present in other manifests, so record them in our fileValidationMap as valid
                     }
                 }
@@ -297,7 +297,7 @@ export class BagitReader implements IZip {
                     return { success: false, error: `File ${file} does not start with prefix directory ${this._prefixDir}` };
             }
 
-            // LOG.logger.info(`FileValidation Adding ${file.toLowerCase()} -> ${recordValidated}`);
+            // LOG.info(`FileValidation Adding ${file.toLowerCase()} -> ${recordValidated}`, LOG.LS.eSYS);
             this._fileValidationMap.set(file.toLowerCase(), recordValidated);
             if (file.toLowerCase().replace(/\\/g, '/').includes(BAGIT_DATA_DIRECTORY.toLowerCase()))    // adjust path delimeter for this test
                 foundDataDirectory = true;
@@ -341,7 +341,7 @@ export class BagitReader implements IZip {
             let manifestFile: string | undefined = algorithmMapManifest.get(algorithm);
             /* istanbul ignore if */
             if (!manifestFile) {
-                LOG.logger.error(`Unexpected hash algorithm ${algorithm}`);
+                LOG.error(`Unexpected hash algorithm ${algorithm}`, LOG.LS.eSYS);
                 continue;
             }
 
@@ -353,7 +353,7 @@ export class BagitReader implements IZip {
             manifestFile = algorithmMapTagManifest.get(algorithm);
             /* istanbul ignore if */
             if (!manifestFile) {
-                LOG.logger.error(`Unexpected hash algorithm ${algorithm}`);
+                LOG.error(`Unexpected hash algorithm ${algorithm}`, LOG.LS.eSYS);
                 continue;
             }
 
@@ -364,7 +364,7 @@ export class BagitReader implements IZip {
 
         // scan this._fileMap for unvalidated files
         for (const [file, validated] of this._fileValidationMap) {
-            // LOG.logger.info(`Final validation of ${file}: ${validated}`);
+            // LOG.info(`Final validation of ${file}: ${validated}`, LOG.LS.eSYS);
             if (!validated)
                 return { success: false, error: `Invalid Bagit: file ${file} not found in manifest` };
         }
@@ -375,7 +375,7 @@ export class BagitReader implements IZip {
 
     private async validateManifest(manifestFile: string, algorithm: string, extractDataFiles: boolean): Promise<H.IOResults> {
         const manifestEntryRegex: RegExp = new RegExp(BAGIT_MANIFEST_ENTRY_REGEX);
-        // LOG.logger.info(`Validate Manifest ${manifestFile}, algorithm ${algorithm}`);
+        // LOG.info(`Validate Manifest ${manifestFile}, algorithm ${algorithm}`, LOG.LS.eSYS);
 
         // load manifest file
         const stream: NodeJS.ReadableStream | null = await this.streamContent(manifestFile); /* istanbul ignore next */
@@ -388,7 +388,7 @@ export class BagitReader implements IZip {
         let manifestData: string = '';
         try {
             manifestData = buffer.toString('utf8');
-            // LOG.logger.info(`Parsing manifest data:\n${manifestData}`);
+            // LOG.info(`Parsing manifest data:\n${manifestData}`, LOG.LS.eSYS);
         } catch (error) /* istanbul ignore next */ {
             return { success: false, error: `Invalid Bagit: invalid manifest ${manifestFile}` };
         }
@@ -399,7 +399,7 @@ export class BagitReader implements IZip {
 
         const manifestLines: string[] = manifestData.split(/[\r\n]+/);
         for (const line of manifestLines) {
-            // LOG.logger.info(`Processing manifest line ${line}`);
+            // LOG.info(`Processing manifest line ${line}`, LOG.LS.eSYS);
             if (!line)
                 continue;
             const regexResult = manifestEntryRegex.exec(line);
@@ -463,7 +463,7 @@ export class BagitReader implements IZip {
         if (!dirname || dirname == '.')
             dirname = null;
         const basename: string = path.basename(strippedFileName);
-        // if (removePrefix) LOG.logger.info(`extractDirectoryAndBasename (prefix ${this._prefixDir}, fileName: ${fileName}) -> { ${dirname}, ${basename}}`);
+        // if (removePrefix) LOG.info(`extractDirectoryAndBasename (prefix ${this._prefixDir}, fileName: ${fileName}) -> { ${dirname}, ${basename}}`, LOG.LS.eSYS);
         return { dirname, basename };
     }
 }

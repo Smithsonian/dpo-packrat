@@ -12,7 +12,16 @@ type Model {
     idVUnits: Int!
     idVFileType: Int!
     idAssetThumbnail: Int
-    idModelMetrics: Int
+    CountAnimations: Int
+    CountCameras: Int
+    CountFaces: Int
+    CountLights: Int
+    CountMaterials: Int
+    CountMeshes: Int
+    CountVertices: Int
+    CountEmbeddedTextures: Int
+    CountLinkedTextures: Int
+    FileEncoding: String
     ModelConstellation: ModelConstellation
     VCreationMethod: Vocabulary
     VModality: Vocabulary
@@ -20,18 +29,24 @@ type Model {
     VUnits: Vocabulary
     VFileType: Vocabulary
     AssetThumbnail: Asset
-    ModelMetrics: ModelMetrics
     ModelObject: [ModelObject]
     ModelProcessingAction: [ModelProcessingAction]
     ModelSceneXref: [ModelSceneXref]
     SystemObject: SystemObject
 }
 
+type ModelObjectModelMaterialXref {
+    idModelObjectModelMaterialXref: Int!
+    idModelObject: Int!
+    idModelMaterial: Int!
+    ModelObject: ModelObject
+    ModelMaterial: ModelMaterial
+}
+
 type ModelMaterial {
     idModelMaterial: Int!
-    idModelObject: Int!
     Name: String
-    ModelObject: ModelObject!
+    ModelMaterialChannel: [ModelMaterialChannel]
 }
 
 type ModelMaterialChannel {
@@ -40,15 +55,20 @@ type ModelMaterialChannel {
     idVMaterialType: Int
     MaterialTypeOther: String
     idModelMaterialUVMap: Int
+    UVMapEmbedded: Boolean
     ChannelPosition: Int
     ChannelWidth: Int
     Scalar1: Float
     Scalar2: Float
     Scalar3: Float
     Scalar4: Float
-    ModelMaterial: ModelMaterial!
+    AdditionalAttributes: String
+    ModelMaterial: ModelMaterial
     VMaterialType: Vocabulary
     ModelMaterialUVMap: ModelMaterialUVMap
+    Type: String
+    Source: String
+    Value: String
 }
 
 type ModelMaterialUVMap {
@@ -56,38 +76,34 @@ type ModelMaterialUVMap {
     idModel: Int!
     idAsset: Int!
     UVMapEdgeLength: Int!
-    Model: Model!
-    Asset: Asset!
+    Model: Model
+    Asset: Asset
 }
 
-type ModelMetrics {
-    idModelMetrics: Int!
+type ModelObject {
+    idModelObject: Int!
+    idModel: Int!
     BoundingBoxP1X: Float
     BoundingBoxP1Y: Float
     BoundingBoxP1Z: Float
     BoundingBoxP2X: Float
     BoundingBoxP2Y: Float
     BoundingBoxP2Z: Float
-    CountPoint: Int
-    CountFace: Int
-    CountColorChannel: Int
-    CountTextureCoorinateChannel: Int
+    CountVertices: Int
+    CountFaces: Int
+    CountColorChannels: Int
+    CountTextureCoordinateChannels: Int
     HasBones: Boolean
     HasFaceNormals: Boolean
     HasTangents: Boolean
     HasTextureCoordinates: Boolean
     HasVertexNormals: Boolean
     HasVertexColor: Boolean
-    IsManifold: Boolean
+    IsTwoManifoldUnbounded: Boolean
+    IsTwoManifoldBounded: Boolean
     IsWatertight: Boolean
-}
-
-type ModelObject {
-    idModelObject: Int!
-    idModel: Int!
-    idModelMetrics: Int
-    Model: Model!
-    ModelMetrics: ModelMetrics
+    SelfIntersecting: Boolean
+    Model: Model
 }
 
 type ModelProcessingAction {
@@ -126,12 +142,19 @@ type ModelSceneXref {
     Scene: Scene
 }
 
+type ModelAsset {
+    Asset: Asset!
+    AssetVersion: AssetVersion!
+    AssetName: String!
+    AssetType: String!
+}
+
 type ModelConstellation {
     Model: Model!
-    ModelObjects: [ModelObject]
-    ModelMaterials: [ModelMaterial]
-    ModelMaterialChannels: [ModelMaterialChannel]
-    ModelMaterialUVMaps: [ModelMaterialUVMap]
-    ModelMetric: ModelMetrics
-    ModelObjectMetrics: [ModelMetrics]
+    ModelObjects: [ModelObject!]
+    ModelMaterials: [ModelMaterial!]
+    ModelMaterialChannels: [ModelMaterialChannel!]
+    ModelMaterialUVMaps: [ModelMaterialUVMap!]
+    ModelObjectModelMaterialXref: [ModelObjectModelMaterialXref!]
+    ModelAssets: [ModelAsset!]
 }

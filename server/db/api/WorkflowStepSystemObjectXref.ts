@@ -29,7 +29,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.create', error);
+            LOG.error('DBAPI.WorkflowStepSystemObjectXref.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -46,7 +46,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.update', error);
+            LOG.error('DBAPI.WorkflowStepSystemObjectXref.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -56,9 +56,9 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
             return null;
         try {
             return DBC.CopyObject<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
-                await DBC.DBConnection.prisma.workflowStepSystemObjectXref.findOne({ where: { idWorkflowStepSystemObjectXref, }, }), WorkflowStepSystemObjectXref);
+                await DBC.DBConnection.prisma.workflowStepSystemObjectXref.findUnique({ where: { idWorkflowStepSystemObjectXref, }, }), WorkflowStepSystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetch', error);
+            LOG.error('DBAPI.WorkflowStepSystemObjectXref.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -70,7 +70,36 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
             return DBC.CopyArray<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
                 await DBC.DBConnection.prisma.workflowStepSystemObjectXref.findMany({ where: { idWorkflowStep } }), WorkflowStepSystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep', error);
+            LOG.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchFromWorkflow(idWorkflow: number): Promise<WorkflowStepSystemObjectXref[] | null> {
+        if (!idWorkflow)
+            return null;
+        try {
+            const resWSX: WorkflowStepSystemObjectXref[] = [];
+            const WSX: WorkflowStepSystemObjectXrefBase[] | null = // DBC.CopyArray<WorkflowStepSystemObjectXrefBase, WorkflowStepSystemObjectXref>(
+                await DBC.DBConnection.prisma.$queryRaw<WorkflowStepSystemObjectXref[]>`
+                SELECT WX.*
+                FROM WorkflowStepSystemObjectXref AS WX
+                JOIN WorkflowStep AS WS ON (WX.idWorkflowStep = WS.idWorkflowStep)
+                WHERE WS.idWorkflow = ${idWorkflow}`; //, WorkflowStepSystemObjectXref);
+            /* istanbul ignore else */
+            if (WSX) {
+                for (const xref of WSX) {
+                    resWSX.push(new WorkflowStepSystemObjectXref({
+                        idWorkflowStepSystemObjectXref: xref.idWorkflowStepSystemObjectXref,
+                        idSystemObject: xref.idSystemObject,
+                        idWorkflowStep: xref.idWorkflowStep,
+                        Input: xref.Input ? true : false
+                    }));
+                }
+            }
+            return resWSX;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow', LOG.LS.eDB, error);
             return null;
         }
     }

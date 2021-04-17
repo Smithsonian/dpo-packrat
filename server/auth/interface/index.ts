@@ -1,4 +1,4 @@
-import AuthFactory from './AuthFactory';
-import IAuth, { VerifiedUser } from './IAuth';
+import AuthFactory, { VerifiedUser } from './AuthFactory';
+import IAuth, { VerifyUserResult } from './IAuth';
 
-export { IAuth, VerifiedUser, AuthFactory };
+export { IAuth, VerifiedUser, VerifyUserResult, AuthFactory };

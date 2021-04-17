@@ -17,7 +17,7 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
             ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBC.DBConnection.prisma.captureDataGroup.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataGroup.create', error);
+            LOG.error('DBAPI.CaptureDataGroup.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -30,7 +30,7 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataGroup.update', error);
+            LOG.error('DBAPI.CaptureDataGroup.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -40,9 +40,9 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
             return null;
         try {
             return DBC.CopyObject<CaptureDataGroupBase, CaptureDataGroup>(
-                await DBC.DBConnection.prisma.captureDataGroup.findOne({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
+                await DBC.DBConnection.prisma.captureDataGroup.findUnique({ where: { idCaptureDataGroup, }, }), CaptureDataGroup);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataGroup.fetch', error);
+            LOG.error('DBAPI.CaptureDataGroup.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -60,7 +60,7 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
                     },
                 }), CaptureDataGroup);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataGroup.fetchFromXref', error);
+            LOG.error('DBAPI.CaptureDataGroup.fetchFromXref', LOG.LS.eDB, error);
             return null;
         }
     }

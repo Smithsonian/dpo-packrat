@@ -22,6 +22,8 @@ import {
     GetLicenseResult,
     GetModelInput,
     GetModelResult,
+    GetModelConstellationInput,
+    GetModelConstellationResult,
     GetSceneInput,
     GetSceneResult,
     GetUnitInput,
@@ -42,8 +44,6 @@ import {
     CreateCaptureDataResult,
     CreateCaptureDataPhotoInput,
     CreateCaptureDataPhotoResult,
-    CreateModelInput,
-    CreateModelResult,
     CreateSceneInput,
     CreateSceneResult,
     CreateUnitInput,
@@ -71,6 +71,8 @@ import {
     GetVocabularyEntriesResult,
     GetContentsForAssetVersionsInput,
     GetContentsForAssetVersionsResult,
+    GetModelConstellationForAssetVersionInput,
+    GetModelConstellationForAssetVersionResult,
     AreCameraSettingsUniformInput,
     AreCameraSettingsUniformResult,
     IngestDataInput,
@@ -103,7 +105,14 @@ import {
     GetDetailsTabDataForObjectResult,
     GetFilterViewDataResult,
     UpdateObjectDetailsInput,
-    UpdateObjectDetailsResult
+    UpdateObjectDetailsResult,
+    GetAllUsersInput,
+    GetAllUsersResult,
+    UpdateUserInput,
+    GetUnitsFromNameSearchResult,
+    GetUnitsFromNameSearchInput,
+    GetProjectListResult,
+    GetProjectListInput
 } from '../../types/graphql';
 
 // Queries
@@ -115,6 +124,7 @@ import getCaptureData from './queries/capturedata/getCaptureData';
 import getCaptureDataPhoto from './queries/capturedata/getCaptureDataPhoto';
 import getLicense from './queries/license/getLicense';
 import getModel from './queries/model/getModel';
+import getModelConstellation from './queries/model/getModelConstellation';
 import getScene from './queries/scene/getScene';
 import getUnit from './queries/unit/getUnit';
 import getProject from './queries/unit/getProject';
@@ -128,6 +138,7 @@ import getIngestionItemsForSubjects from './queries/unit/getIngestionItemsForSub
 import getIngestionProjectsForSubjects from './queries/unit/getIngestionProjectsForSubjects';
 import getVocabularyEntries from './queries/vocabulary/getVocabularyEntries';
 import getContentsForAssetVersions from './queries/asset/getContentsForAssetVersions';
+import getModelConstellationForAssetVersion from './queries/asset/getModelConstellationForAssetVersion';
 import areCameraSettingsUniform from './queries/ingestion/areCameraSettingsUniform';
 import getSubjectsForUnit from './queries/unit/getSubjectsForUnit';
 import getItemsForSubject from './queries/unit/getItemsForSubject';
@@ -142,12 +153,14 @@ import getAssetDetailsForSystemObject from './queries/systemobject/getAssetDetai
 import getVersionsForSystemObject from './queries/systemobject/getVersionsForSystemObject';
 import getDetailsTabDataForObject from './queries/systemobject/getDetailsTabDataForObject';
 import getFilterViewData from './queries/repository/getFilterViewData';
+import getAllUsers from './queries/user/getAllUsers';
+import getUnitsFromNameSearch from './queries/unit/getUnitsFromNameSearch';
+import getProjectList from './queries/systemobject/getProjectList';
 
 // Mutations
 import createUser from './mutations/user/createUser';
 import createCaptureData from './mutations/capturedata/createCaptureData';
 import createCaptureDataPhoto from './mutations/capturedata/createCaptureDataPhoto';
-import createModel from './mutations/model/createModel';
 import createScene from './mutations/scene/createScene';
 import createUnit from './mutations/unit/createUnit';
 import createProject from './mutations/unit/createProject';
@@ -159,6 +172,7 @@ import uploadAsset from './mutations/asset/uploadAsset';
 import ingestData from './mutations/ingestion/ingestData';
 import discardUploadedAssetVersions from './mutations/asset/discardUploadedAssetVersions';
 import updateObjectDetails from './mutations/systemobject/updateObjectDetails';
+import updateUser from './mutations/user/updateUser';
 
 import { Context } from '../../types/resolvers';
 
@@ -171,6 +185,7 @@ const allQueries = {
     getCaptureDataPhoto,
     getLicense,
     getModel,
+    getModelConstellation,
     getScene,
     getUnit,
     getProject,
@@ -181,7 +196,6 @@ const allQueries = {
     createUser,
     createCaptureData,
     createCaptureDataPhoto,
-    createModel,
     createScene,
     createUnit,
     createProject,
@@ -196,6 +210,7 @@ const allQueries = {
     getIngestionProjectsForSubjects,
     getVocabularyEntries,
     getContentsForAssetVersions,
+    getModelConstellationForAssetVersion,
     areCameraSettingsUniform,
     ingestData,
     getSubjectsForUnit,
@@ -212,7 +227,11 @@ const allQueries = {
     getVersionsForSystemObject,
     getDetailsTabDataForObject,
     getFilterViewData,
-    updateObjectDetails
+    updateObjectDetails,
+    getAllUsers,
+    updateUser,
+    getUnitsFromNameSearch,
+    getProjectList
 };
 
 type GraphQLRequest = {
@@ -353,8 +372,8 @@ class GraphQLApi {
         });
     }
 
-    async createModel(input: CreateModelInput, context?: Context): Promise<CreateModelResult> {
-        const operationName = 'createModel';
+    async getModelConstellation(input: GetModelConstellationInput, context?: Context): Promise<GetModelConstellationResult> {
+        const operationName = 'getModelConstellation';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
@@ -425,6 +444,16 @@ class GraphQLApi {
 
     async getContentsForAssetVersions(input: GetContentsForAssetVersionsInput, context?: Context): Promise<GetContentsForAssetVersionsResult> {
         const operationName = 'getContentsForAssetVersions';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput, context?: Context): Promise<GetModelConstellationForAssetVersionResult> {
+        const operationName = 'getModelConstellationForAssetVersion';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
@@ -715,6 +744,46 @@ class GraphQLApi {
 
     async getWorkflow(input: GetWorkflowInput, context?: Context): Promise<GetWorkflowResult> {
         const operationName = 'getWorkflow';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getAllUsers(input: GetAllUsersInput, context?: Context): Promise<GetAllUsersResult> {
+        const operationName = 'getAllUsers';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async updateUser(input: UpdateUserInput, context?: Context): Promise<GetUserResult> {
+        const operationName = 'updateUser';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput, context?: Context): Promise<GetUnitsFromNameSearchResult> {
+        const operationName = 'getUnitsFromNameSearch';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getProjectList(input: GetProjectListInput, context?: Context): Promise<GetProjectListResult> {
+        const operationName = 'getProjectList';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
