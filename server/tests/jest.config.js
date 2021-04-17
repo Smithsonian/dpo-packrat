@@ -7,6 +7,8 @@ module.exports = {
     testMatch: [
         // The complete test suite, on one line, to aid in quick commenting out
         '**/tests/auth/**', '**/tests/cache/cache.test.ts', '**/tests/collections/*.test.ts', '**/tests/db/**/*.test.ts', '**/tests/graphql/graphql.test.ts', '**/tests/job/**/*.test.ts', '**/tests/navigation/**/*.test.ts', '**/tests/storage/**/*.test.ts', '**/tests/utils/**/*.test.ts',
+        // '**/tests/job/impl/JobNS.test.ts',
+        // '**/tests/db/dbcreation.test.ts',
 
         // Larger test collections, left here to aid in quick, focused testing; these are the elements on the line above:
         // '**/tests/auth/**',
