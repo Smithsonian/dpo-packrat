@@ -1,9 +1,6 @@
 import React from 'react';
-import { Box } from '@material-ui/core';
+import { Box, MenuItem, MenuList, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import MenuItem from '@material-ui/core/MenuItem';
-import MenuList from '@material-ui/core/MenuList';
-import Typography from '@material-ui/core/Typography';
 import { toTitleCase } from '../../../constants/index';
 import { Link } from 'react-router-dom';
 import { useLocation } from 'react-router';

@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+
 /**
  * This component is a link from AdminUsersList
  * Upon mounting/rendering, it will make a GraphQL request
@@ -9,16 +11,11 @@
 import Checkbox from '@material-ui/core/Checkbox';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import React, { useState, useEffect } from 'react';
-import { Box } from '@material-ui/core';
-import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
+import { Box, TextField, Button, FormControl, Select, MenuItem } from '@material-ui/core';
 import { extractISOMonthDateYear, formatISOToHoursMinutes } from '../../../constants/index';
 import { useParams, useLocation, useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
-import { useGetUserQuery, CreateUserDocument, UpdateUserDocument } from '../../../types/graphql';
+import { useGetUserQuery, CreateUserDocument, UpdateUserDocument, GetAllUsersDocument, User_Status } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
 import { makeStyles } from '@material-ui/core/styles';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
@@ -122,6 +119,7 @@ function AdminUserForm(): React.ReactElement {
     });
 
     const request = useGetUserQuery({
+        fetchPolicy: 'no-cache',
         variables: {
             input: {
                 idUser: Number(idUser)
@@ -172,7 +170,7 @@ function AdminUserForm(): React.ReactElement {
         manipulatedTime.setHours(Number(newHours));
         manipulatedTime.setMinutes(Number(newMinutes));
 
-        const updating = await apolloClient.mutate({
+        await apolloClient.mutate({
             mutation: UpdateUserDocument,
             variables: {
                 input: {
@@ -183,11 +181,11 @@ function AdminUserForm(): React.ReactElement {
                     EmailSettings: Number(workflowNotificationType),
                     WorkflowNotificationTime: manipulatedTime
                 }
-            }
+            },
+            refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
+            awaitRefetchQueries: true
         });
         history.push('/admin/users');
-        window.location.reload();
-        return updating;
     };
 
     const createNewUser = async () => {
@@ -197,7 +195,7 @@ function AdminUserForm(): React.ReactElement {
             return;
         }
 
-        const creating = await apolloClient.mutate({
+        await apolloClient.mutate({
             mutation: CreateUserDocument,
             variables: {
                 input: {
@@ -205,12 +203,11 @@ function AdminUserForm(): React.ReactElement {
                     Name: name,
                     EmailSettings: workflowNotificationType
                 }
-            }
+            },
+            refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
+            awaitRefetchQueries: true
         });
-
         history.push('/admin/users');
-        window.location.reload();
-        return creating;
     };
 
     return (
