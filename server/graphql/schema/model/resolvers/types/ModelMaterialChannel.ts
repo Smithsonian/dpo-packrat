@@ -25,6 +25,10 @@ const ModelMaterialChannel = {
         return parent.MaterialTypeOther;
     },
     Source: async (parent: Parent): Promise<string | null> => {
+        // Look for extra data that has been stuffed in the parent by JobCookSIPackratInspect
+        // DB IDs created by that method may be transient; if "Source" is defined, use it directly
+        if (parent.Source && typeof (parent.Source) === 'string')
+            return parent.Source;
         if (parent.idModelMaterialUVMap) {
             const uvMap: DBAPI.ModelMaterialUVMap | null = await DBAPI.ModelMaterialUVMap.fetch(parent.idModelMaterialUVMap);
             if (!uvMap) {

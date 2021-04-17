@@ -4,7 +4,7 @@ import { ApolloServerExpressConfig, AuthenticationError } from 'apollo-server-ex
 import GraphQLApi from './api';
 import schema from './schema';
 
-const gqlAuthRequired: boolean = true; // set to false for debugging GraphQL using the GQL Playground ... this lets us avoid authentication
+const gqlAuthRequired: boolean = (process.env.NODE_ENV === 'production'); // set to false for debugging GraphQL using the GQL Playground ... this lets us avoid authentication
 const unauthenticatedGQLQueries: Set<string> = new Set<string>([
     'getCurrentUser',
     'getVocabularyEntries(input: $input)',
