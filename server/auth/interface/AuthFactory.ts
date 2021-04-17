@@ -53,7 +53,7 @@ class AuthFactory {
         // record user in local storage:
         const LS: LocalStore | undefined = ASL.getStore();
         if (LS)
-            LS.user = user;
+            LS.idUser = user.idUser;
 
         LOG.info(`AuthFactory.verifyUser ${email} successfully authenticated`, LOG.LS.eAUTH);
         return { user, error: null };
