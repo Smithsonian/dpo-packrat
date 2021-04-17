@@ -6,7 +6,7 @@ export const ASL: AsyncLocalStorage<LocalStore> = new AsyncLocalStorage<LocalSto
 
 export class LocalStore {
     idRequest: number;
-    user: DBAPI.User | null;
+    idUser: number | null; // DBAPI.User.idUser
 
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {
@@ -15,6 +15,6 @@ export class LocalStore {
 
     constructor(getNextID: boolean, user: any | undefined) {
         this.idRequest = (getNextID) ? LocalStore.getIDRequestNext() : 0;
-        this.user = (user instanceof DBAPI.User) ? user : null;
+        this.idUser = (user instanceof DBAPI.User) ? user.idUser : null;
     }
 }
