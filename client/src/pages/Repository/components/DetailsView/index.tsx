@@ -1,3 +1,5 @@
+/* eslint-disable prefer-const */
+
 /**
  * DetailsView
  *

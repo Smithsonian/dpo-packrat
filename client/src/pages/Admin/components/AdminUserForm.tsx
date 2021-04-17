@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+
 /**
  * This component is a link from AdminUsersList
  * Upon mounting/rendering, it will make a GraphQL request

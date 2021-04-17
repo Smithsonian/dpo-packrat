@@ -3,6 +3,17 @@
  */
 import create, { GetState, SetState } from 'zustand';
 
+interface FormFields {
+    dateCaptured?: Date | null;
+    master?: boolean | null;
+    authoritative?: boolean | null;
+    creationMethod?: number | null;
+    modality?: number | null;
+    purpose?: number | null;
+    units?: number | null;
+    fileType?: number | null;
+}
+
 type RepositoryDetailsFormStore = {
     dateCaptured: Date | null;
     master: boolean | null;
@@ -12,10 +23,10 @@ type RepositoryDetailsFormStore = {
     purpose: number | null;
     units: number | null;
     fileType: number | null;
-    getFormState: () => any;
+    getFormState: () => FormFields;
     setFormField: (name: string, value: number | string | boolean | null) => void;
     setFormDateField: (date: Date | null) => void;
-}
+};
 
 export const useRepositoryDetailsFormStore = create<RepositoryDetailsFormStore>((set: SetState<RepositoryDetailsFormStore>, get: GetState<RepositoryDetailsFormStore>) => ({
     dateCaptured: null,
@@ -47,7 +58,7 @@ export const useRepositoryDetailsFormStore = create<RepositoryDetailsFormStore>(
             purpose,
             units,
             fileType
-        }
+        };
     },
     setFormField: (name: string, value: number | string | boolean | null): void => {
         set({ [name]: value });
@@ -55,4 +66,4 @@ export const useRepositoryDetailsFormStore = create<RepositoryDetailsFormStore>(
     setFormDateField: (date: Date | null): void => {
         set({ 'dateCaptured': date });
     }
-}))
+}));
