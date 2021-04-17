@@ -7,7 +7,7 @@ import * as H from '../../../utils/helpers';
 import { BagitReader } from '../../../utils/parser/bagitReader';
 import * as LOG from '../../../utils/logger';
 import { BulkIngestReader, IngestMetadata } from '../../../utils/parser';
-import Config from '../../../config';
+import { Config } from '../../../config';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
 import { createItemAndIDsForBagitTesting } from '../../db/api/Item.util';
 
@@ -38,7 +38,7 @@ beforeAll(() => {
 
     rootRepositoryNew = path.join('var', 'test', H.Helpers.randomSlug());
     rootStagingNew = path.join('var', 'test', H.Helpers.randomSlug());
-    // LOG.logger.info(`Test Repo ${rootRepositoryNew}; staging ${rootStagingNew}`);
+    // LOG.info(`Test Repo ${rootRepositoryNew}; staging ${rootStagingNew}`, LOG.LS.eTEST);
 
     Config.storage.rootRepository = rootRepositoryNew;
     Config.storage.rootStaging = rootStagingNew;
@@ -49,8 +49,7 @@ afterAll(async done => {
     Config.storage.rootStaging = rootStagingOrig;
     await H.Helpers.removeDirectory(rootRepositoryNew, true);
     await H.Helpers.removeDirectory(rootStagingNew, true);
-    jest.setTimeout(5000);
-    await H.Helpers.sleep(2000);
+    // await H.Helpers.sleep(2000);
     done();
 });
 
@@ -138,15 +137,15 @@ async function testLoad(fileName: string | null, assetVersion: DBAPI.AssetVersio
     } else if (assetVersion)
         ioResults = await BIR.loadFromAssetVersion(assetVersion.idAssetVersion, autoClose);
 
-    LOG.logger.error(ioResults.error);
+    LOG.error(ioResults.error, LOG.LS.eTEST);
     if (!ioResults.success && expectSuccess)
-        LOG.logger.error(ioResults.error);
+        LOG.error(ioResults.error, LOG.LS.eTEST);
     expect(ioResults.success).toEqual(expectSuccess);
     if (!ioResults.success)
         return !expectSuccess;
 
     const ingestedMetadata: IngestMetadata[] = BIR.ingestedObjects;
-    // LOG.logger.info(`ingestedMetadata: ${JSON.stringify(ingestedMetadata)}`);
+    // LOG.info(`ingestedMetadata: ${JSON.stringify(ingestedMetadata)}`, LOG.LS.eTEST);
     expect(ingestedMetadata.length).toBeGreaterThan(0);
 
     // Doctor ingestedMetadata when requested
@@ -155,7 +154,7 @@ async function testLoad(fileName: string | null, assetVersion: DBAPI.AssetVersio
     const projectsExpected: boolean = (ingestedMetadata[0].idSubject != 0);
 
     const projects: DBAPI.Project[] | null = await BulkIngestReader.computeProjects(ingestedMetadata[0]);
-    // LOG.logger.info(`projects: ${JSON.stringify(projects)}`);
+    // LOG.info(`projects: ${JSON.stringify(projects)}`, LOG.LS.eTEST);
     if (projectsExpected) {
         expect(projects).toBeTruthy();
         if (projects)
@@ -181,7 +180,7 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
         TestCase = { assets: [], assetVersions: [], SOBased };
 
         TestCase.assets.push(new DBAPI.Asset({ idAsset: 0, FileName: fileNameAsset, FilePath: H.Helpers.randomSlug(), idAssetGroup: null, idVAssetType: vocabulary.idVocabulary, idSystemObject: null, StorageKey: '' }));
-        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: 0, StorageKeyStaging: '', Ingested: false, BulkIngest, Version: 1 }));
+        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, Version: 1 }));
         newAsset = true;
     } else {
         TestCase.SOBased = SOBased;
@@ -195,7 +194,7 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
         return TestCase;
 
     // Use IStorage.writeStream to write bits
-    // LOG.logger.info('AssetStorageAdaterTest IStorage.writeStream');
+    // LOG.info('AssetStorageAdaterTest IStorage.writeStream', LOG.LS.eTEST);
     const WSR: STORE.WriteStreamResult = await storage.writeStream(TestCase.assetVersions[0].FileName);
     expect(WSR.success).toBeTruthy();
     expect(WSR.writeStream).toBeTruthy();
@@ -232,16 +231,16 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
 
     let ASRC: STORE.AssetStorageResultCommit;
     if (newAsset) {
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset ${TestCase.asset.FileName}`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset ${TestCase.asset.FileName}`, LOG.LS.eTEST);
         ASRC = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
     } else {
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`, LOG.LS.eTEST);
         ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: TestCase.assetVersions[0].StorageKeyStaging, storageHash },
             TestCase.assets[0], TestCase.assetVersions[0].idUserCreator, TestCase.assetVersions[0].DateCreated);
     }
     expect(ASRC.success).toBeTruthy();
     if (!ASRC.success) {
-        LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset: ${ASRC.error}`);
+        LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset: ${ASRC.error}`, LOG.LS.eTEST);
         return TestCase;
     }
 

@@ -5,6 +5,9 @@ const createUnit = gql`
         createUnit(input: $input) {
             Unit {
                 idUnit
+                SystemObject {
+                    idSystemObject
+                }
             }
         }
     }

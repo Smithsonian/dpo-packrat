@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * RepositoryTreeView
  *
@@ -8,11 +10,20 @@ import { makeStyles } from '@material-ui/core/styles';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { Loader } from '../../../../components';
 import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore } from '../../../../store';
 import { NavigationResultEntry } from '../../../../types/graphql';
-import { getObjectInterfaceDetails, getRepositoryTreeNodeId, getTreeColorVariant, getTreeViewColumns, getTreeViewStyleHeight, getTreeViewStyleWidth, getTreeWidth, isRepositoryItemSelected } from '../../../../utils/repository';
+import {
+    getObjectInterfaceDetails,
+    getRepositoryTreeNodeId,
+    getTreeColorVariant,
+    getTreeViewColumns,
+    getTreeViewStyleHeight,
+    getTreeViewStyleWidth,
+    getTreeWidth,
+    isRepositoryItemSelected
+} from '../../../../utils/repository';
 import RepositoryTreeHeader from './RepositoryTreeHeader';
 import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
@@ -62,22 +73,21 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
     const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
 
-    const [tree, initializeTree, getChildren] = useRepositoryStore(state => [state.tree, state.initializeTree, state.getChildren]);
+    const [tree, getChildren] = useRepositoryStore(state => [state.tree, state.getChildren]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
 
-    useEffect(() => {
-        initializeTree();
-    }, [initializeTree]);
+    const onNodeToggle = useCallback(
+        async (_, nodeIds: string[]) => {
+            if (!nodeIds.length) return;
+            const [nodeId] = nodeIds.slice();
+            const alreadyLoaded = tree.has(nodeId);
 
-    const onNodeToggle = useCallback(async (_, nodeIds: string[]) => {
-        if (!nodeIds.length) return;
-        const [nodeId] = nodeIds.slice();
-        const alreadyLoaded = tree.has(nodeId);
-
-        if (!alreadyLoaded) {
-            getChildren(nodeId);
-        }
-    }, [tree, getChildren]);
+            if (!alreadyLoaded) {
+                getChildren(nodeId);
+            }
+        },
+        [tree, getChildren]
+    );
 
     const renderTree = (children: NavigationResultEntry[] | undefined) => {
         if (!children) return null;
@@ -136,13 +146,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             );
 
             return (
-                <StyledTreeItem
-                    key={idSystemObject}
-                    nodeId={nodeId}
-                    icon={icon}
-                    color={color}
-                    label={label}
-                >
+                <StyledTreeItem key={idSystemObject} nodeId={nodeId} icon={icon} color={color} label={label}>
                     {childNodesContent}
                 </StyledTreeItem>
             );
@@ -157,13 +161,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
         const children = tree.get(treeRootKey);
 
         content = (
-            <TreeView
-                className={classes.tree}
-                defaultCollapseIcon={<ExpandMoreIcon />}
-                defaultExpandIcon={<ChevronRightIcon />}
-                onNodeToggle={onNodeToggle}
-                style={{ width }}
-            >
+            <TreeView className={classes.tree} defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />} onNodeToggle={onNodeToggle} style={{ width }}>
                 <RepositoryTreeHeader fullWidth={isModal} metadataColumns={metadataColumns} />
                 {renderTree(children)}
             </TreeView>

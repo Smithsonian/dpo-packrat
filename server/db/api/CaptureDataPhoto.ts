@@ -65,7 +65,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataPhoto.create', error);
+            LOG.error('DBAPI.CaptureDataPhoto.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -95,7 +95,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataPhoto.update', error);
+            LOG.error('DBAPI.CaptureDataPhoto.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -105,9 +105,9 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
             return null;
         try {
             return DBC.CopyObject<CaptureDataPhotoBase, CaptureDataPhoto>(
-                await DBC.DBConnection.prisma.captureDataPhoto.findOne({ where: { idCaptureDataPhoto, }, }), CaptureDataPhoto);
+                await DBC.DBConnection.prisma.captureDataPhoto.findUnique({ where: { idCaptureDataPhoto, }, }), CaptureDataPhoto);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataPhoto.fetch', error);
+            LOG.error('DBAPI.CaptureDataPhoto.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -117,7 +117,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
             return DBC.CopyArray<CaptureDataPhotoBase, CaptureDataPhoto>(
                 await DBC.DBConnection.prisma.captureDataPhoto.findMany(), CaptureDataPhoto);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataPhoto.fetchAll', error);
+            LOG.error('DBAPI.CaptureDataPhoto.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -128,7 +128,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
         try {
             return DBC.CopyArray<CaptureDataPhotoBase, CaptureDataPhoto>(await DBC.DBConnection.prisma.captureDataPhoto.findMany({ where: { idCaptureData, }, }), CaptureDataPhoto);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataPhoto.fetchFromCaptureData', error);
+            LOG.error('DBAPI.CaptureDataPhoto.fetchFromCaptureData', LOG.LS.eDB, error);
             return null;
         }
     }

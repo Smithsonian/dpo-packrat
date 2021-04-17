@@ -28,7 +28,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Vocabulary.create', error);
+            LOG.error('DBAPI.Vocabulary.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -45,7 +45,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Vocabulary.update', error);
+            LOG.error('DBAPI.Vocabulary.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -55,9 +55,9 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return null;
         try {
             return DBC.CopyObject<VocabularyBase, Vocabulary>(
-                await DBC.DBConnection.prisma.vocabulary.findOne({ where: { idVocabulary, }, }), Vocabulary);
+                await DBC.DBConnection.prisma.vocabulary.findUnique({ where: { idVocabulary, }, }), Vocabulary);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Vocabulary.fetch', error);
+            LOG.error('DBAPI.Vocabulary.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -69,7 +69,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return DBC.CopyArray<VocabularyBase, Vocabulary>(
                 await DBC.DBConnection.prisma.vocabulary.findMany({ where: { idVocabularySet } }), Vocabulary);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Vocabulary.fetchFromVocabularySet', error);
+            LOG.error('DBAPI.Vocabulary.fetchFromVocabularySet', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -79,7 +79,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return DBC.CopyArray<VocabularyBase, Vocabulary>(
                 await DBC.DBConnection.prisma.vocabulary.findMany(), Vocabulary);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Vocabulary.fetchAll', error);
+            LOG.error('DBAPI.Vocabulary.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }

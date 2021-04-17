@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Unit as UnitBase, SystemObject as SystemObjectBase, join } from '@prisma/client';
+import { Unit as UnitBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
@@ -30,7 +30,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.create', error);
+            LOG.error('DBAPI.Unit.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -47,7 +47,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.update', error);
+            LOG.error('DBAPI.Unit.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -56,9 +56,9 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
         try {
             const { idUnit } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idUnit, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idUnit, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchSystemObject', error);
+            LOG.error('DBAPI.Unit.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -68,9 +68,9 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return null;
         try {
             return DBC.CopyObject<UnitBase, Unit>(
-                await DBC.DBConnection.prisma.unit.findOne({ where: { idUnit, }, }), Unit);
+                await DBC.DBConnection.prisma.unit.findUnique({ where: { idUnit, }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetch', error);
+            LOG.error('DBAPI.Unit.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -80,7 +80,20 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyArray<UnitBase, Unit>(
                 await DBC.DBConnection.prisma.unit.findMany(), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchAll', error);
+            LOG.error('DBAPI.Unit.fetchAll', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchAllWithSubjects(): Promise<Unit[] | null> {
+        try {
+            return DBC.CopyArray<UnitBase, Unit>(
+                await DBC.DBConnection.prisma.$queryRaw<Unit[]>`
+                SELECT DISTINCT U.*
+                FROM Unit AS U
+                JOIN Subject AS S ON (U.idUnit = S.idUnit)`, Unit);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Unit.fetchAllWithSubjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -102,9 +115,9 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 JOIN SystemObject AS SOU ON (U.idUnit = SOU.idUnit)
                 JOIN SystemObjectXref AS SOX ON (SOU.idSystemObject = SOX.idSystemObjectMaster)
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectDerived = SOP.idSystemObject)
-                WHERE SOP.idProject IN (${join(idProjects)})`, Unit);
+                WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchMasterFromProjects', error);
+            LOG.error('DBAPI.Unit.fetchMasterFromProjects', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -116,14 +129,14 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyArray<UnitBase, Unit>(
                 await DBC.DBConnection.prisma.unit.findMany({ where: { UnitEdan: { some: { Abbreviation }, }, }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchFromUnitEdanAbbreviation', error);
+            LOG.error('DBAPI.Unit.fetchFromUnitEdanAbbreviation', LOG.LS.eDB, error);
             return null;
         }
     }
 
     static async fetchFromNameSearch(search: string): Promise<Unit[] | null> {
         if (!search)
-            return null;
+            return this.fetchAll();
         try {
             return DBC.CopyArray<UnitBase, Unit>(
                 await DBC.DBConnection.prisma.unit.findMany({ where: { OR: [
@@ -132,7 +145,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                     { Name: { contains: search }, },
                 ] }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Unit.fetchFromNameSearch', error);
+            LOG.error('DBAPI.Unit.fetchFromNameSearch', LOG.LS.eDB, error);
             return null;
         }
     }

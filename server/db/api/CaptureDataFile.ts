@@ -8,13 +8,17 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
     CompressedMultipleFiles!: boolean;
     idAsset!: number;
     idCaptureData!: number;
-    idVVariantType!: number;
+    idVVariantType!: number | null;
+
+    private idVVariantTypeOrig!: number | null;
 
     constructor(input: CaptureDataFileBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    protected updateCachedValues(): void {
+        this.idVVariantTypeOrig = this.idVVariantType;
+    }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -25,31 +29,31 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
                     data: {
                         CaptureData:    { connect: { idCaptureData }, },
                         Asset:          { connect: { idAsset }, },
-                        Vocabulary:     { connect: { idVocabulary: idVVariantType }, },
+                        Vocabulary:     idVVariantType ? { connect: { idVocabulary: idVVariantType }, } : undefined,
                         CompressedMultipleFiles
                     },
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataFile.create', error);
+            LOG.error('DBAPI.CaptureDataFile.create', LOG.LS.eDB, error);
             return false;
         }
     }
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idCaptureDataFile, idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = this;
+            const { idCaptureDataFile, idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles, idVVariantTypeOrig } = this;
             return await DBC.DBConnection.prisma.captureDataFile.update({
                 where: { idCaptureDataFile, },
                 data: {
                     CaptureData:    { connect: { idCaptureData }, },
                     Asset:          { connect: { idAsset }, },
-                    Vocabulary:     { connect: { idVocabulary: idVVariantType }, },
+                    Vocabulary:     idVVariantType ? { connect: { idVocabulary: idVVariantType }, } : idVVariantTypeOrig ? { disconnect: true, } : undefined,
                     CompressedMultipleFiles
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataFile.update', error);
+            LOG.error('DBAPI.CaptureDataFile.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -59,9 +63,9 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             return null;
         try {
             return DBC.CopyObject<CaptureDataFileBase, CaptureDataFile>(
-                await DBC.DBConnection.prisma.captureDataFile.findOne({ where: { idCaptureDataFile, }, }), CaptureDataFile);
+                await DBC.DBConnection.prisma.captureDataFile.findUnique({ where: { idCaptureDataFile, }, }), CaptureDataFile);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataFile.fetch', error);
+            LOG.error('DBAPI.CaptureDataFile.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -73,7 +77,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             return DBC.CopyArray<CaptureDataFileBase, CaptureDataFile>(
                 await DBC.DBConnection.prisma.captureDataFile.findMany({ where: { idCaptureData } }), CaptureDataFile);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.CaptureDataFile.fetchFromCaptureData', error);
+            LOG.error('DBAPI.CaptureDataFile.fetchFromCaptureData', LOG.LS.eDB, error);
             return null;
         }
     }

@@ -26,7 +26,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessAction.create', error);
+            LOG.error('DBAPI.AccessAction.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -39,7 +39,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                 data: { Name, SortOrder, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessAction.update', error);
+            LOG.error('DBAPI.AccessAction.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -49,9 +49,9 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
             return null;
         try {
             return DBC.CopyObject<AccessActionBase, AccessAction>(
-                await DBC.DBConnection.prisma.accessAction.findOne({ where: { idAccessAction, }, }), AccessAction);
+                await DBC.DBConnection.prisma.accessAction.findUnique({ where: { idAccessAction, }, }), AccessAction);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessAction.fetch', error);
+            LOG.error('DBAPI.AccessAction.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -69,7 +69,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                     },
                 }), AccessAction);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessAction.fetchFromXref', error);
+            LOG.error('DBAPI.AccessAction.fetchFromXref', LOG.LS.eDB, error);
             return null;
         }
     }

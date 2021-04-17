@@ -23,7 +23,7 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
 
     if (!navigation) {
         const error: string = 'Cannot get navigation instance';
-        LOG.logger.error(error);
+        LOG.error('getObjectChilgren', LOG.LS.eGQL, error);
 
         return {
             success: false,

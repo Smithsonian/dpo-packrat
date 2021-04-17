@@ -3,7 +3,7 @@
 import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
 import * as COL from '../interface';
-import Config from '../../config';
+import { Config } from '../../config';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 
@@ -49,7 +49,13 @@ class EdanCollection implements COL.ICollection {
 
         const params: string                = `q=${escape(query)}${filter}&rows=${rows}&start=${start}`;
         const reqResult: GetRequestResults  = await this.sendGetRequest(path, params);
-        const jsonResult                    = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
+        let jsonResult: any | null          = null;
+        try {
+            jsonResult                      = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
+        } catch (error) {
+            LOG.error(`EdanCollection.queryCollection ${query}`, LOG.LS.eCOLL, error);
+            jsonResult                      = null;
+        }
 
         // jsonResult.rows -- array of { ..., title, id, unitCode, ..., content };
         // content.descriptiveNonRepeating.title.content = name
@@ -92,8 +98,8 @@ class EdanCollection implements COL.ICollection {
             }
         }
 
-        // LOG.logger.info(JSON.stringify(result) + '\n\n');
-        // LOG.logger.info(reqResult.output + '\n\n');
+        // LOG.info(JSON.stringify(result) + '\n\n', LOG.LS.eCOLL);
+        // LOG.info(reqResult.output + '\n\n', LOG.LS.eCOLL);
         return result;
     }
 
@@ -165,7 +171,7 @@ class EdanCollection implements COL.ICollection {
                 success: res.ok
             };
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('EdanCollection.sendGetRequest', error);
+            LOG.error('EdanCollection.sendGetRequest', LOG.LS.eCOLL, error);
             return {
                 output: JSON.stringify(error),
                 statusText: 'node-fetch error',

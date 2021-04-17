@@ -8,7 +8,6 @@ import {
     GetDetailsTabDataForObjectResult,
     QueryGetDetailsTabDataForObjectArgs,
     CaptureDataDetailFields,
-    ModelDetailFields,
     SceneDetailFields
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
@@ -80,7 +79,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
             break;
         case eSystemObjectType.eModel:
             if (systemObject?.idModel) {
-                result.Model = await getModelDetailFields(systemObject.idModel);
+                result.Model = await DBAPI.ModelConstellation.fetch(systemObject.idModel);
             }
             break;
         case eSystemObjectType.eScene:
@@ -188,66 +187,68 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
     return fields;
 }
 
-async function getModelDetailFields(idModel: number): Promise<ModelDetailFields> {
-    let fields: ModelDetailFields = {
-        uvMaps: []
-    };
+// async function getModelDetailFields(idModel: number): Promise<ModelDetailFields> {
+//     let fields: ModelDetailFields = { };
 
-    // TODO: KARAN resolve uvMaps, systemCreated?
-    const modelConstellation = await DBAPI.ModelConstellation.fetch(idModel);
-    if (!modelConstellation)
-        return fields;
+//     // TODO: KARAN resolve uvMaps, systemCreated?
+//     const modelConstellation = await DBAPI.ModelConstellation.fetch(idModel);
+//     if (!modelConstellation)
+//         return fields;
 
-    const model = modelConstellation.model;
-    fields = {
-        ...fields,
-        master: model?.Master,
-        authoritative: model?.Authoritative,
-        creationMethod: model?.idVCreationMethod,
-        modality: model?.idVModality,
-        purpose: model?.idVPurpose,
-        units: model?.idVUnits,
-        dateCaptured: model?.DateCreated.toISOString(),
-        modelFileType: model?.idVFileType,
-    };
+//     const model = modelConstellation.Model;
+//     fields = {
+//         ...fields,
+//         name: model?.Name,
+//         master: model?.Master,
+//         authoritative: model?.Authoritative,
+//         creationMethod: model?.idVCreationMethod,
+//         modality: model?.idVModality,
+//         purpose: model?.idVPurpose,
+//         units: model?.idVUnits,
+//         dateCaptured: model?.DateCreated.toISOString(),
+//         modelFileType: model?.idVFileType,
+//     };
 
-    // TODO: fetch all assets associated with Model and ModelMaterialUVMap's; add up storage size
-    if (model?.idAssetThumbnail) {
-        const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(model.idAssetThumbnail);
-        if (AssetVersion && AssetVersion[0]) {
-            const [AV] = AssetVersion;
-            fields = {
-                ...fields,
-                size: AV.StorageSize
-            };
-        }
-    }
+//     // TODO: fetch all assets associated with Model and ModelMaterialUVMap's; add up storage size
+//     if (model?.idAssetThumbnail) {
+//         const AssetVersion = await DBAPI.AssetVersion.fetchFromAsset(model.idAssetThumbnail);
+//         if (AssetVersion && AssetVersion[0]) {
+//             const [AV] = AssetVersion;
+//             fields = {
+//                 ...fields,
+//                 size: AV.StorageSize
+//             };
+//         }
+//     }
 
-    // TODO: fetch Material Channels, etc.
-    const modelMetrics = modelConstellation.modelMetric;
-    if (modelMetrics) {
-        fields = {
-            ...fields,
-            boundingBoxP1X: modelMetrics.BoundingBoxP1X,
-            boundingBoxP1Y: modelMetrics.BoundingBoxP1Y,
-            boundingBoxP1Z: modelMetrics.BoundingBoxP1Z,
-            boundingBoxP2X: modelMetrics.BoundingBoxP2X,
-            boundingBoxP2Y: modelMetrics.BoundingBoxP2Y,
-            boundingBoxP2Z: modelMetrics.BoundingBoxP2Z,
-            countPoint: modelMetrics.CountPoint,
-            countFace: modelMetrics.CountFace,
-            countColorChannel: modelMetrics.CountColorChannel,
-            countTextureCoorinateChannel: modelMetrics.CountTextureCoorinateChannel,
-            hasBones: modelMetrics.HasBones,
-            hasFaceNormals: modelMetrics.HasFaceNormals,
-            hasTangents: modelMetrics.HasTangents,
-            hasTextureCoordinates: modelMetrics.HasTextureCoordinates,
-            hasVertexNormals: modelMetrics.HasVertexNormals,
-            hasVertexColor: modelMetrics.HasVertexColor,
-            isManifold: modelMetrics.IsManifold,
-            isWatertight: modelMetrics.IsWatertight,
-        };
-    }
-
-    return fields;
-}
+//     // TODO: fetch Material Channels, etc.
+//     /*
+//     const ModelObject = (modelConstellation.ModelObjects && modelConstellation.ModelObjects.length > 0) ? modelConstellation.ModelObjects[0] : null;
+//     if (ModelObject) {
+//         fields = {
+//             ...fields,
+//             boundingBoxP1X: ModelObject.BoundingBoxP1X,
+//             boundingBoxP1Y: ModelObject.BoundingBoxP1Y,
+//             boundingBoxP1Z: ModelObject.BoundingBoxP1Z,
+//             boundingBoxP2X: ModelObject.BoundingBoxP2X,
+//             boundingBoxP2Y: ModelObject.BoundingBoxP2Y,
+//             boundingBoxP2Z: ModelObject.BoundingBoxP2Z,
+//             countPoint: ModelObject.CountVertices,
+//             countFace: ModelObject.CountFaces,
+//             countColorChannel: ModelObject.CountColorChannels,
+//             countTextureCoordinateChannel: ModelObject.CountTextureCoordinateChannels,
+//             hasBones: ModelObject.HasBones,
+//             hasFaceNormals: ModelObject.HasFaceNormals,
+//             hasTangents: ModelObject.HasTangents,
+//             hasTextureCoordinates: ModelObject.HasTextureCoordinates,
+//             hasVertexNormals: ModelObject.HasVertexNormals,
+//             hasVertexColor: ModelObject.HasVertexColor,
+//             isTwoManifoldUnbounded: ModelObject.IsTwoManifoldUnbounded,
+//             isTwoManifoldBounded: ModelObject.IsTwoManifoldBounded,
+//             isWatertight: ModelObject.IsWatertight,
+//             selfIntersecting: ModelObject.SelfIntersecting,
+//         };
+//     }
+//     */
+//     return fields;
+// }

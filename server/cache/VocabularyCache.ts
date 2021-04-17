@@ -1,6 +1,7 @@
 import * as LOG from '../utils/logger';
 import { CacheControl } from './CacheControl';
 import { Vocabulary, VocabularySet } from '../db';
+import * as path from 'path';
 
 /**
  * enum used to provide declarative, programmatic access to sorted vocabulary for system-generated vocabulary sets
@@ -28,6 +29,9 @@ export enum eVocabularySetID {
     eMetadataMetadataSource,
     eWorkflowStepWorkflowStepType,
     eAssetAssetType,
+    eJobJobType,
+    eWorkflowType,
+    eWorkflowEvent,
     eNone = -1
 }
 
@@ -51,6 +55,7 @@ export enum eVocabularyID {
     eAssetAssetTypeProjectDocumentation,
     eAssetAssetTypeIntermediaryFile,
     eAssetAssetTypeOther,
+    eMetadataMetadataSourceBulkIngestion,
     eCaptureDataCaptureMethodPhotogrammetry,
     eCaptureDataCaptureMethodCT,
     eCaptureDataCaptureMethodStructuredLight,
@@ -59,7 +64,70 @@ export enum eVocabularyID {
     eCaptureDataFileVariantTypeRaw,
     eCaptureDataFileVariantTypeProcessed,
     eCaptureDataFileVariantTypeFromCamera,
-    eMetadataMetadataSourceBulkIngestion,
+    eModelCreationMethodScanToMesh,
+    eModelCreationMethodCAD,
+    eModelModalityPointCloud,
+    eModelModalityMesh,
+    eModelUnitsMicrometer,
+    eModelUnitsMillimeter,
+    eModelUnitsCentimeter,
+    eModelUnitsMeter,
+    eModelUnitsKilometer,
+    eModelUnitsInch,
+    eModelUnitsFoot,
+    eModelUnitsYard,
+    eModelUnitsMile,
+    eModelUnitsAstronomicalUnit,
+    eModelPurposeMaster,
+    eModelPurposeWebDelivery,
+    eModelPurposePrintDelivery,
+    eModelPurposeIntermediateProcessingStep,
+    eModelFileTypeobj,
+    eModelFileTypeply,
+    eModelFileTypestl,
+    eModelFileTypeglb,
+    eModelFileTypegltf,
+    eModelFileTypeusd,
+    eModelFileTypeusdz,
+    eModelFileTypex3d,
+    eModelFileTypewrl,
+    eModelFileTypedae,
+    eModelFileTypefbx,
+    eModelFileTypema,
+    eModelFileType3ds,
+    eModelFileTypeptx,
+    eModelFileTypepts,
+    eModelMaterialChannelMaterialTypeDiffuse,
+    eModelMaterialChannelMaterialTypeSpecular,
+    eModelMaterialChannelMaterialTypeAmbient,
+    eModelMaterialChannelMaterialTypeEmissive,
+    eModelMaterialChannelMaterialTypeBump,
+    eModelMaterialChannelMaterialTypeNormal,
+    eModelMaterialChannelMaterialTypeGlossiness,
+    eModelMaterialChannelMaterialTypeOpacity,
+    eModelMaterialChannelMaterialTypeDisplacement,
+    eModelMaterialChannelMaterialTypeOcclusion,
+    eModelMaterialChannelMaterialTypeReflection,
+    eModelMaterialChannelMaterialTypeMetalness,
+    eModelMaterialChannelMaterialTypeRoughness,
+    eModelMaterialChannelMaterialTypeNone,
+    eModelMaterialChannelMaterialTypeUnknown,
+    eJobJobTypeCookBake,
+    eJobJobTypeCookDecimateUnwrap,
+    eJobJobTypeCookDecimate,
+    eJobJobTypeCookGenerateUsdz,
+    eJobJobTypeCookGenerateWebGltf,
+    eJobJobTypeCookInspectMesh,
+    eJobJobTypeCookSIArBackfillFix,
+    eJobJobTypeCookSIGenerateDownloads,
+    eJobJobTypeCookSIOrientModelToSvx,
+    eJobJobTypeCookSIPackratInspect,
+    eJobJobTypeCookSIVoyagerAsset,
+    eJobJobTypeCookSIVoyagerScene,
+    eJobJobTypeCookUnwrap,
+    eWorkflowTypeCookJob,
+    eWorkflowStepTypeStart,
+    eWorkflowEventIngestionUploadAssetVersion,
     eNone = -1
 }
 
@@ -102,7 +170,7 @@ export class VocabularyCache {
     // Cache Construction
     // **************************
     private async flushInternalWorker(): Promise<boolean> {
-        LOG.logger.info('CACHE: VocabularyCache.flushInternalWorker() start');
+        LOG.info('CACHE VocabularyCache.flushInternalWorker() start', LOG.LS.eCACHE);
         const vocabArray: Vocabulary[] | null = await Vocabulary.fetchAll();
         /* istanbul ignore if */
         if (!vocabArray)
@@ -138,6 +206,9 @@ export class VocabularyCache {
                 case 'Metadata.MetadataSource':                 eVocabSetEnum = eVocabularySetID.eMetadataMetadataSource; break;
                 case 'WorkflowStep.WorkflowStepType':           eVocabSetEnum = eVocabularySetID.eWorkflowStepWorkflowStepType; break;
                 case 'Asset.AssetType':                         eVocabSetEnum = eVocabularySetID.eAssetAssetType; break;
+                case 'Job.JobType':                             eVocabSetEnum = eVocabularySetID.eJobJobType; break;
+                case 'Workflow.Type':                           eVocabSetEnum = eVocabularySetID.eWorkflowType; break;
+                case 'Workflow.Event':                          eVocabSetEnum = eVocabularySetID.eWorkflowEvent; break;
             }
 
             /* istanbul ignore else */
@@ -212,6 +283,120 @@ export class VocabularyCache {
                         case 'Bulk Ingestion':      eVocabEnum = eVocabularyID.eMetadataMetadataSourceBulkIngestion; break;
                     }
                 } break;
+
+                case eVocabularySetID.eModelCreationMethod: {
+                    switch (vocabulary.Term) {
+                        case 'Scan To Mesh':        eVocabEnum = eVocabularyID.eModelCreationMethodScanToMesh; break;
+                        case 'CAD':                 eVocabEnum = eVocabularyID.eModelCreationMethodCAD; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eModelModality: {
+                    switch (vocabulary.Term) {
+                        case 'Point Cloud':         eVocabEnum = eVocabularyID.eModelModalityPointCloud; break;
+                        case 'Mesh':                eVocabEnum = eVocabularyID.eModelModalityMesh; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eModelUnits: {
+                    switch (vocabulary.Term) {
+                        case 'Micrometer':          eVocabEnum = eVocabularyID.eModelUnitsMicrometer; break;
+                        case 'Millimeter':          eVocabEnum = eVocabularyID.eModelUnitsMillimeter; break;
+                        case 'Centimeter':          eVocabEnum = eVocabularyID.eModelUnitsCentimeter; break;
+                        case 'Meter':               eVocabEnum = eVocabularyID.eModelUnitsMeter; break;
+                        case 'Kilometer':           eVocabEnum = eVocabularyID.eModelUnitsKilometer; break;
+                        case 'Inch':                eVocabEnum = eVocabularyID.eModelUnitsInch; break;
+                        case 'Foot':                eVocabEnum = eVocabularyID.eModelUnitsFoot; break;
+                        case 'Yard':                eVocabEnum = eVocabularyID.eModelUnitsYard; break;
+                        case 'Mile':                eVocabEnum = eVocabularyID.eModelUnitsMile; break;
+                        case 'Astronomical Unit':   eVocabEnum = eVocabularyID.eModelUnitsAstronomicalUnit; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eModelPurpose: {
+                    switch (vocabulary.Term) {
+                        case 'Master':                          eVocabEnum = eVocabularyID.eModelPurposeMaster; break;
+                        case 'Web Delivery':                    eVocabEnum = eVocabularyID.eModelPurposeWebDelivery; break;
+                        case 'Print Delivery':                  eVocabEnum = eVocabularyID.eModelPurposePrintDelivery; break;
+                        case 'Intermediate Processing Step':    eVocabEnum = eVocabularyID.eModelPurposeIntermediateProcessingStep; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eModelFileType: {
+                    switch (vocabulary.Term) {
+                        case 'obj - Alias Wavefront Object':                eVocabEnum = eVocabularyID.eModelFileTypeobj; break;
+                        case 'ply - Stanford Polygon File Format':          eVocabEnum = eVocabularyID.eModelFileTypeply; break;
+                        case 'stl - StereoLithography':                     eVocabEnum = eVocabularyID.eModelFileTypestl; break;
+                        case 'glb - GL Transmission Format Binary':         eVocabEnum = eVocabularyID.eModelFileTypeglb; break;
+                        case 'gltf - GL Transmission Format':               eVocabEnum = eVocabularyID.eModelFileTypegltf; break;
+                        case 'usd - Universal Scene Description':           eVocabEnum = eVocabularyID.eModelFileTypeusd; break;
+                        case 'usdz - Universal Scene Description (zipped)': eVocabEnum = eVocabularyID.eModelFileTypeusdz; break;
+                        case 'x3d':                                         eVocabEnum = eVocabularyID.eModelFileTypex3d; break;
+                        case 'wrl - VRML':                                  eVocabEnum = eVocabularyID.eModelFileTypewrl; break;
+                        case 'dae - COLLADA':                               eVocabEnum = eVocabularyID.eModelFileTypedae; break;
+                        case 'fbx - Filmbox':                               eVocabEnum = eVocabularyID.eModelFileTypefbx; break;
+                        case 'ma - Maya':                                   eVocabEnum = eVocabularyID.eModelFileTypema; break;
+                        case '3ds - 3D Studio':                             eVocabEnum = eVocabularyID.eModelFileType3ds; break;
+                        case 'ptx':                                         eVocabEnum = eVocabularyID.eModelFileTypeptx; break;
+                        case 'pts':                                         eVocabEnum = eVocabularyID.eModelFileTypepts; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eModelMaterialChannelMaterialType: {
+                    switch (vocabulary.Term) {
+                        case 'Diffuse':         eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+                        case 'Specular':        eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+                        case 'Ambient':         eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeAmbient; break;
+                        case 'Emissive':        eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeEmissive; break;
+                        case 'Bump':            eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeBump; break;
+                        case 'Normal':          eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeNormal; break;
+                        case 'Glossiness':      eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeGlossiness; break;
+                        case 'Opacity':         eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeOpacity; break;
+                        case 'Displacement':    eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeDisplacement; break;
+                        case 'Occlusion':       eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeOcclusion; break;
+                        case 'Reflection':      eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeReflection; break;
+                        case 'Metalness':       eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeMetalness; break;
+                        case 'Roughness':       eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeRoughness; break;
+                        case 'None':            eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeNone; break;
+                        case 'Unknown':         eVocabEnum = eVocabularyID.eModelMaterialChannelMaterialTypeUnknown; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eJobJobType: {
+                    switch (vocabulary.Term) {
+                        case 'Cook: bake':                      eVocabEnum = eVocabularyID.eJobJobTypeCookBake; break;
+                        case 'Cook: decimate-unwrap':           eVocabEnum = eVocabularyID.eJobJobTypeCookDecimateUnwrap; break;
+                        case 'Cook: decimate':                  eVocabEnum = eVocabularyID.eJobJobTypeCookDecimate; break;
+                        case 'Cook: generate-usdz':             eVocabEnum = eVocabularyID.eJobJobTypeCookGenerateUsdz; break;
+                        case 'Cook: generate-web-gltf':         eVocabEnum = eVocabularyID.eJobJobTypeCookGenerateWebGltf; break;
+                        case 'Cook: inspect-mesh':              eVocabEnum = eVocabularyID.eJobJobTypeCookInspectMesh; break;
+                        case 'Cook: si-ar-backfill-fix':        eVocabEnum = eVocabularyID.eJobJobTypeCookSIArBackfillFix; break;
+                        case 'Cook: si-generate-downloads':     eVocabEnum = eVocabularyID.eJobJobTypeCookSIGenerateDownloads; break;
+                        case 'Cook: si-orient-model-to-svx':    eVocabEnum = eVocabularyID.eJobJobTypeCookSIOrientModelToSvx; break;
+                        case 'Cook: si-packrat-inspect':        eVocabEnum = eVocabularyID.eJobJobTypeCookSIPackratInspect; break;
+                        case 'Cook: si-voyager-asset':          eVocabEnum = eVocabularyID.eJobJobTypeCookSIVoyagerAsset; break;
+                        case 'Cook: si-voyager-scene':          eVocabEnum = eVocabularyID.eJobJobTypeCookSIVoyagerScene; break;
+                        case 'Cook: unwrap':                    eVocabEnum = eVocabularyID.eJobJobTypeCookUnwrap; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eWorkflowType: {
+                    switch (vocabulary.Term) {
+                        case 'Cook Job':                        eVocabEnum = eVocabularyID.eWorkflowTypeCookJob; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eWorkflowStepWorkflowStepType: {
+                    switch (vocabulary.Term) {
+                        case 'Start':                           eVocabEnum = eVocabularyID.eWorkflowStepTypeStart; break;
+                    }
+                } break;
+
+                case eVocabularySetID.eWorkflowEvent: {
+                    switch (vocabulary.Term) {
+                        case 'Ingestion: Upload Asset Version': eVocabEnum = eVocabularyID.eWorkflowEventIngestionUploadAssetVersion; break;
+                    }
+                } break;
             }
 
             if (eVocabEnum != eVocabularyID.eNone) {
@@ -224,8 +409,8 @@ export class VocabularyCache {
             if (vocabEntryArray)
                 vocabEntryArray.push(vocabulary);
             else {
-                LOG.logger.error('VocabularyCache.flushInternalWorker() encountered invalid VocabularySet ID [' +
-                    vocabulary.idVocabularySet + '] in vocabulary object ID [' + vocabulary.idVocabularySet + ']');
+                LOG.error('VocabularyCache.flushInternalWorker() encountered invalid VocabularySet ID [' +
+                    vocabulary.idVocabularySet + '] in vocabulary object ID [' + vocabulary.idVocabularySet + ']', LOG.LS.eCACHE);
                 continue;
             }
         }
@@ -234,7 +419,7 @@ export class VocabularyCache {
         for (const vocabList of this.vocabSetEntries.values())
             vocabList.sort((vocab1, vocab2) => vocab1.SortOrder - vocab2.SortOrder);
 
-        LOG.logger.info('CACHE: VocabularyCache.flushInternalWorker() done');
+        LOG.info('CACHE VocabularyCache.flushInternalWorker() done', LOG.LS.eCACHE);
         return true;
     }
 
@@ -284,6 +469,35 @@ export class VocabularyCache {
     /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. Note that not all vocabulary are represented by eVocabularyID entries. */
     private vocabularyIdToEnumInternal(idVocabulary: number): eVocabularyID | undefined {
         return this.vocabIDEnumMap.get(idVocabulary);
+    }
+
+    private vocabularySetEnumToIdInternal(eVocabSetID: eVocabularySetID): number | undefined {
+        return this.vocabSetEnumIDMap.get(eVocabSetID);
+    }
+
+    private vocabularySetIdToEnumInternal(idVocabularySet: number): eVocabularySetID | undefined {
+        return this.vocabSetIDEnumMap.get(idVocabularySet);
+    }
+
+    private isVocabularyInSetInternal(eVocabEnum: eVocabularyID, eVocabSetEnum: eVocabularySetID): boolean {
+        const vocab: Vocabulary | undefined = this.vocabularyByEnumInternal(eVocabEnum);
+        if (!vocab) {
+            // LOG.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 1`, { eLS: LOG.eLS.eCACHE });
+            return false;
+        }
+
+        const vocabSet: VocabularySet | undefined = this.vocabularySetByEnumInternal(eVocabSetEnum);
+        if (!vocabSet) {
+            // LOG.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 2`, { eLS: LOG.eLS.eCACHE });
+            return false;
+        }
+
+        if (vocabSet.idVocabularySet === vocab.idVocabularySet) {
+            // LOG.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: true`, { eLS: LOG.eLS.eCACHE });
+            return true;
+        }
+        // LOG.info(`isVocabularyInSetInternal ${eVocabularyID[eVocabEnum]} in ${eVocabularySetID[eVocabSetEnum]}: false 3`, { eLS: LOG.eLS.eCACHE });
+        return false;
     }
 
     // **************************
@@ -354,6 +568,21 @@ export class VocabularyCache {
         return (await this.getInstance()).vocabularyIdToEnumInternal(idVocabulary);
     }
 
+    /** fetches the VocabularySet.idVocabularySet for a given vocabulary set enum. */
+    static async vocabularySetEnumToId(eVocabSetID: eVocabularySetID): Promise<number | undefined> {
+        return (await this.getInstance()).vocabularySetEnumToIdInternal(eVocabSetID);
+    }
+
+    /** fetches the VocabularySet.idVocabularySet for a given vocabulary set enum */
+    static async vocabularySetIdToEnum(idVocabularySet: number): Promise<eVocabularySetID | undefined> {
+        return (await this.getInstance()).vocabularySetIdToEnumInternal(idVocabularySet);
+    }
+
+    /** fetches the VocabularySet.idVocabularySet for a given vocabulary set enum */
+    static async isVocabularyInSet(eVocabEnum: eVocabularyID, eVocabSetEnum: eVocabularySetID): Promise<boolean> {
+        return (await this.getInstance()).isVocabularyInSetInternal(eVocabEnum, eVocabSetEnum);
+    }
+
     static async mapPhotogrammetryVariantType(variantType: string): Promise<Vocabulary | undefined> {
         let eVocabID: eVocabularyID;
         switch (variantType.toLowerCase().replace(/_/g, '')) {
@@ -365,6 +594,8 @@ export class VocabularyCache {
             case 'camdng': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
             case 'tif': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
             case 'tiff': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'bmp': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'png': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
             case 'processed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
             case 'colcor': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
             case 'zeroed': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
@@ -375,6 +606,59 @@ export class VocabularyCache {
             case 'camerajpg': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
             case 'camera': eVocabID = eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
             default: return undefined;
+        }
+        return await VocabularyCache.vocabularyByEnum(eVocabID);
+    }
+
+    static async mapModelFileByExtension(fileName: string): Promise<Vocabulary | undefined> {
+        let eVocabID: eVocabularyID;
+        const extension: string = path.extname(fileName).toLowerCase() || fileName.toLowerCase();
+
+        switch (extension) {
+            case '.obj':  eVocabID = eVocabularyID.eModelFileTypeobj; break;
+            case '.ply':  eVocabID = eVocabularyID.eModelFileTypeply; break;
+            case '.stl':  eVocabID = eVocabularyID.eModelFileTypestl; break;
+            case '.glb':  eVocabID = eVocabularyID.eModelFileTypeglb; break;
+            case '.gltf': eVocabID = eVocabularyID.eModelFileTypegltf; break;
+            case '.usda': eVocabID = eVocabularyID.eModelFileTypeusd; break;
+            case '.usdc': eVocabID = eVocabularyID.eModelFileTypeusd; break;
+            case '.usdz': eVocabID = eVocabularyID.eModelFileTypeusdz; break;
+            case '.x3d':  eVocabID = eVocabularyID.eModelFileTypex3d; break;
+            case '.wrl':  eVocabID = eVocabularyID.eModelFileTypewrl; break;
+            case '.dae':  eVocabID = eVocabularyID.eModelFileTypedae; break;
+            case '.fbx':  eVocabID = eVocabularyID.eModelFileTypefbx; break;
+            case '.ma':   eVocabID = eVocabularyID.eModelFileTypema; break;
+            case '.3ds':  eVocabID = eVocabularyID.eModelFileType3ds; break;
+            case '.ptx':  eVocabID = eVocabularyID.eModelFileTypeptx; break;
+            case '.pts':  eVocabID = eVocabularyID.eModelFileTypepts; break;
+            default:
+                // LOG.info(`VocabularyCache.mapModelFileByExtension(${fileName}) using unrecognized ext ${extension}`, { eLS: LOG.eLS.eCACHE });
+                return undefined;
+        }
+        // LOG.info(`VocabularyCache.mapModelFileByExtension(${fileName}) = ${eVocabularyID[eVocabID]} using ext ${extension}`, { eLS: LOG.eLS.eCACHE });
+        return await VocabularyCache.vocabularyByEnum(eVocabID);
+    }
+
+    static async mapModelChannelMaterialType(materialType: string): Promise<Vocabulary | undefined> {
+        let eVocabID: eVocabularyID;
+
+        switch (materialType.toLowerCase()) {
+            case 'diffuse': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse; break;
+            case 'specular': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeSpecular; break;
+            case 'ambient': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeAmbient; break;
+            case 'emissive': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeEmissive; break;
+            case 'bump': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeBump; break;
+            case 'normal': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeNormal; break;
+            case 'glossiness': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeGlossiness; break;
+            case 'opacity': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeOpacity; break;
+            case 'displacement': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeDisplacement; break;
+            case 'occlusion': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeOcclusion; break;
+            case 'reflection': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeReflection; break;
+            case 'metalness': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeMetalness; break;
+            case 'roughness': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeRoughness; break;
+            case 'none': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeNone; break;
+            case 'unknown': eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeUnknown; break;
+            default: eVocabID = eVocabularyID.eModelMaterialChannelMaterialTypeUnknown; break;
         }
         return await VocabularyCache.vocabularyByEnum(eVocabID);
     }

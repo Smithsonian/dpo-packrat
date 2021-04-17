@@ -32,7 +32,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.GeoLocation.create', error);
+            LOG.error('DBAPI.GeoLocation.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -45,7 +45,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
                 data: { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.GeoLocation.update', error);
+            LOG.error('DBAPI.GeoLocation.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -55,9 +55,9 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
             return null;
         try {
             return DBC.CopyObject<GeoLocationBase, GeoLocation>(
-                await DBC.DBConnection.prisma.geoLocation.findOne({ where: { idGeoLocation, }, }), GeoLocation);
+                await DBC.DBConnection.prisma.geoLocation.findUnique({ where: { idGeoLocation, }, }), GeoLocation);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.GeoLocation.fetch', error);
+            LOG.error('DBAPI.GeoLocation.fetch', LOG.LS.eDB, error);
             return null;
         }
     }

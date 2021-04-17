@@ -15,7 +15,6 @@ import {
     CreateItemInput,
     CreateProjectInput,
     CreateSceneInput,
-    CreateModelInput,
     CreateCaptureDataInput,
     CreateCaptureDataPhotoInput,
     VocabularyEntry,
@@ -104,19 +103,6 @@ class TestSuiteUtils {
         };
     };
 
-    createModelInput = (idVocabulary: number): CreateModelInput => {
-        return {
-            Name: 'Test Name',
-            Authoritative: true,
-            idVCreationMethod: idVocabulary,
-            idVModality: idVocabulary,
-            idVPurpose: idVocabulary,
-            idVUnits: idVocabulary,
-            idVFileType: idVocabulary,
-            Master: true
-        };
-    };
-
     createCaptureDataInput = (idVocabulary: number): CreateCaptureDataInput => {
         return {
             Name: 'Test Name',
@@ -163,7 +149,7 @@ class TestSuiteUtils {
             DateCreated: nowCleansed(),
             StorageHash: 'Asset Checksum',
             StorageKeyStaging: '',
-            StorageSize: 50,
+            StorageSize: BigInt(50),
             idAssetVersion: 0,
             Ingested: false,
             BulkIngest: false,

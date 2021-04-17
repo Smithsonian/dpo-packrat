@@ -10,13 +10,15 @@ import { IZip, zipFilterResults } from './IZip';
  */
 export class ZipStream implements IZip {
     private _inputStream: NodeJS.ReadableStream;
+    private _logErrors: boolean = true;
     private _zip: JSZip | null = null;
     private _entries: string[] = [];
     private _files: string[] = [];
     private _dirs: string[] = [];
 
-    constructor(inputStream: NodeJS.ReadableStream) {
+    constructor(inputStream: NodeJS.ReadableStream, logErrors: boolean = true) {
         this._inputStream = inputStream;
+        this._logErrors = logErrors;
     }
 
     async load(): Promise<H.IOResults> {
@@ -46,7 +48,8 @@ export class ZipStream implements IZip {
                     this._files.push(entry);
             }
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('ZipStream.load', error);
+            if (this._logErrors)
+                LOG.error('ZipStream.load', LOG.LS.eSYS, error);
             return { success: false, error: JSON.stringify(error) };
         }
         return { success: true, error: '' };
@@ -68,7 +71,7 @@ export class ZipStream implements IZip {
             const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
             return (ZO) ? ZO.nodeStream() : null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error(`ZipStream.streamContent ${entry}`, error);
+            LOG.error(`ZipStream.streamContent ${entry}`, LOG.LS.eSYS, error);
             return null;
         }
     }

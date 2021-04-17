@@ -12,7 +12,7 @@ afterAll(async done => {
 const SCRAPE_EDAN: boolean = false;
 
 describe('Collections: EdanCollection', () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(60000);
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
 
     if (!SCRAPE_EDAN) {
@@ -84,7 +84,7 @@ export async function executeScrapeQuery(ICol: COL.ICollection, fileName: string
     const unitMap: Map<string, number> = new Map<string, number>();
     const writeStream: NodeJS.WritableStream = await fs.createWriteStream(fileName, { 'flags': 'a' });
     if (!writeStream)
-        LOG.logger.info(`Unable to create writeStream for ${fileName}`);
+        LOG.info(`Unable to create writeStream for ${fileName}`, LOG.LS.eTEST);
 
     for (; rowStart < scrapeEndRecord; ) {
         // run EDAN_SIMUL requests at once:
@@ -97,15 +97,15 @@ export async function executeScrapeQuery(ICol: COL.ICollection, fileName: string
         await Promise.all(promiseArray).then(resultArray => {
             for (const results of resultArray) {
                 if (!results) {
-                    LOG.logger.info('*** Edan Scrape: query returned no results');
+                    LOG.info('*** Edan Scrape: query returned no results', LOG.LS.eTEST);
                     continue;
                 }
 
                 if (results.error)
-                    LOG.logger.info(`*** Edan Scrape: encountered error ${results.error}`);
+                    LOG.info(`*** Edan Scrape: encountered error ${results.error}`, LOG.LS.eTEST);
                 else if (scrapeEndRecord < results.rowCount) {
                     scrapeEndRecord = results.rowCount;
-                    LOG.logger.info(`*** Edan Scrape: Increasing scrape end record to ${scrapeEndRecord}`);
+                    LOG.info(`*** Edan Scrape: Increasing scrape end record to ${scrapeEndRecord}`, LOG.LS.eTEST);
                 }
 
                 for (const record of results.records) {
@@ -135,7 +135,7 @@ function logUnitMap(unitMap: Map<string, number>, queryNumber: number, resultCou
     logArray.splice(0, 0, `${new Date().toISOString()} Edan Scrape [${QN}]: ${resultCount} Results; Unit Counts:`);
     logArray.push('\n');
 
-    LOG.logger.info(logArray.join('\n'));
+    LOG.info(logArray.join('\n'), LOG.LS.eTEST);
 }
 
 function executeArkTests(ICol: COL.ICollection) {

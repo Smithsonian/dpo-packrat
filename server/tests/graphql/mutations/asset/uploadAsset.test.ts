@@ -7,7 +7,7 @@ import { Context } from '../../../../types/resolvers';
 import { CreateUserInput } from '../../../../types/graphql';
 import * as CACHE from '../../../../cache';
 import * as H from '../../../../utils/helpers';
-import Config from '../../../../config';
+import { Config } from '../../../../config';
 
 let rootRepositoryOrig: string;
 let rootRepositoryNew: string;
@@ -30,7 +30,6 @@ afterAll(async done => {
     Config.storage.rootStaging = rootStagingOrig;
     await H.Helpers.removeDirectory(rootRepositoryNew, true);
     await H.Helpers.removeDirectory(rootStagingNew, true);
-    // jest.setTimeout(3000);
     // await H.Helpers.sleep(2000);
     done();
 });

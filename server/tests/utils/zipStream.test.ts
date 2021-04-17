@@ -8,7 +8,6 @@ import { getPackratTestFileSizeMap } from './parser/bagitReader.test';
 const mockPath: string = join(__dirname, '../mock/utils/zip/');
 /*
 afterAll(async done => {
-    jest.setTimeout(5000);
     await H.Helpers.sleep(2000);
     done();
 });
@@ -61,7 +60,7 @@ describe('ZipStream', () => {
         for (const entry of await zip.getAllEntries(null)) {
             const observedSize: number | null = await zip.uncompressedSize(entry);
             const expectedSize: number | undefined = fileSizeMap.get(entry);
-            LOG.logger.info(`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`);
+            LOG.info(`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`, LOG.LS.eTEST);
             expect(observedSize).not.toBeNull();
             expect(expectedSize).not.toBeUndefined();
             expect(observedSize).toEqual(expectedSize);
@@ -98,5 +97,5 @@ describe('ZipStream', () => {
 
 export function logStringArray(array: string[], prefix: string): void {
     for (const entry of array)
-        LOG.logger.info(`${prefix}${entry}`);
+        LOG.info(`${prefix}${entry}`, LOG.LS.eTEST);
 }

@@ -126,7 +126,7 @@ export class BulkIngestReader {
         try {
             bagitCDPs = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & CaptureDataPhotoCSVFields>(fileStream, CSVTypes.captureDataPhoto);
         } catch (error) {
-            LOG.logger.info('BulkIngestReader.computeCaptureDataPhotos capture_data_photos.csv not found');
+            LOG.info('BulkIngestReader.computeCaptureDataPhotos capture_data_photos.csv not found', LOG.LS.eSYS);
             return { success: true, error: '' };
         }
 
@@ -157,12 +157,12 @@ export class BulkIngestReader {
         try {
             bagitModels = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & ModelsCSVFields>(fileStream, CSVTypes.models);
         } catch (error) {
-            LOG.logger.info('BulkIngestReader.computeModels models.csv not found');
+            LOG.info('BulkIngestReader.computeModels models.csv not found', LOG.LS.eSYS);
             return { success: true, error: '' };
         }
 
         for (const bagitModel of bagitModels) {
-            // LOG.logger.info(`Processing model ${JSON.stringify(bagitModel)}`);
+            // LOG.info(`Processing model ${JSON.stringify(bagitModel)}`, LOG.LS.eSYS);
             if (BulkIngestReader.isEmptyRow(bagitModel))
                 continue;
 
@@ -209,7 +209,7 @@ export class BulkIngestReader {
         // otherwise, we can't spot this subject in our DB; validate unit name and then gather remaining information
         const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(bagitSubject.unit_name); /* istanbul ignore next */
         if (!units || units.length == 0) {
-            LOG.logger.error(`BulkIngestReader.extractSubjectFromCSV unable to load unit from ${JSON.stringify(bagitSubject)}`);
+            LOG.error(`BulkIngestReader.extractSubjectFromCSV unable to load unit from ${JSON.stringify(bagitSubject)}`, LOG.LS.eSYS);
             return null;
         }
 
@@ -221,12 +221,12 @@ export class BulkIngestReader {
         bagitSubject: SubjectsCSVFields): Promise<DBAPI.SubjectUnitIdentifier | null> {
         /* istanbul ignore next */
         if (!subject) {
-            LOG.logger.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load subject from local_subject_id in ${JSON.stringify(bagitSubject)}`);
+            LOG.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load subject from local_subject_id in ${JSON.stringify(bagitSubject)}`, LOG.LS.eSYS);
             return null;
         }
         const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subject.idUnit); /* istanbul ignore next */
         if (!unit) {
-            LOG.logger.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load unit from local_subject_id in ${JSON.stringify(bagitSubject)}`);
+            LOG.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load unit from local_subject_id in ${JSON.stringify(bagitSubject)}`, LOG.LS.eSYS);
             return null;
         }
 
@@ -252,7 +252,7 @@ export class BulkIngestReader {
         const error: string = `Unable to find identifiers for items from ${bagitItem.item_guid}`;
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(bagitItem.item_guid);
         if (!identifiers) {
-            LOG.logger.error(error);
+            LOG.error(error, LOG.LS.eSYS);
             return null;
         }
 
@@ -263,12 +263,12 @@ export class BulkIngestReader {
             if (SOPair && SOPair.Item) {
                 return SOPair.Item;
             } else {
-                LOG.logger.error(error);
+                LOG.error(error, LOG.LS.eSYS);
                 return null;
             }
         }
 
-        LOG.logger.error(error);
+        LOG.error(error, LOG.LS.eSYS);
         return null;
     }
 
@@ -277,32 +277,32 @@ export class BulkIngestReader {
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataDatasetType, bagitCDP.capture_dataset_type);
         if (vocabResult.error)
-        { LOG.logger.error(vocabResult.error); return null; }
+        { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const datasetType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataItemPositionType, bagitCDP.item_position_type);
         if (vocabResult.error)
-        { LOG.logger.error(vocabResult.error); return null; }
+        { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const itemPositionType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataFocusType, bagitCDP.focus_type);
         if (vocabResult.error)
-        { LOG.logger.error(vocabResult.error); return null; }
+        { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const focusType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataLightSourceType, bagitCDP.light_source_type);
         if (vocabResult.error)
-        { LOG.logger.error(vocabResult.error); return null; }
+        { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const lightsourceType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, bagitCDP.background_removal_method);
         if (vocabResult.error)
-        { LOG.logger.error(vocabResult.error); return null; }
+        { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const backgroundRemovalMethod: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eCaptureDataClusterType, bagitCDP.cluster_type);
         if (vocabResult.error)
-        { LOG.logger.error(vocabResult.error); return null; }
+        { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const clusterType: number = vocabResult.idVocabulary;
 
         const folders: IngestFolder[] = [];
@@ -311,7 +311,7 @@ export class BulkIngestReader {
             for (const directory of directories) {
                 if (directory.toLowerCase().includes(bagitCDP.directory_path.toLowerCase())) {
                     const finalPathElement: string = path.basename(directory);
-                    LOG.logger.info(`BIR directory: ${directory}: ${finalPathElement}`);
+                    LOG.info(`BIR directory: ${directory}: ${finalPathElement}`, LOG.LS.eSYS);
                     const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapPhotogrammetryVariantType(finalPathElement);
                     folders.push({ name: finalPathElement, variantType: vocabulary ? vocabulary.idVocabulary : /* istanbul ignore next */ 0 });
                 }
@@ -322,6 +322,7 @@ export class BulkIngestReader {
         return {
             idAssetVersion: 0,
             systemCreated: true, // TODO: not sure what is needed here
+            name: bagitCDP.name,
             dateCaptured: bagitCDP.date_captured,
             datasetType,
             description: bagitCDP.description,
@@ -346,27 +347,27 @@ export class BulkIngestReader {
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelCreationMethod, bagitModel.creation_method);
         if (vocabResult.error)
-        { LOG.logger.error(vocabResult.error); return null; }
+        { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const creationMethod: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelModality, bagitModel.modality);
         if (vocabResult.error)
-        { LOG.logger.error(vocabResult.error); return null; }
+        { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const modality: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelPurpose, bagitModel.purpose);
         if (vocabResult.error)
-        { LOG.logger.error(vocabResult.error); return null; }
+        { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const purpose: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(CACHE.eVocabularySetID.eModelUnits, bagitModel.units);
         if (vocabResult.error)
-        { LOG.logger.error(vocabResult.error); return null; }
+        { LOG.error(vocabResult.error, LOG.LS.eSYS); return null; }
         const units: number = vocabResult.idVocabulary;
 
-        // TODO: model fields, not sure what is needed here
         return {
             idAssetVersion: 0,
+            name: bagitModel.name,
             dateCaptured: bagitModel.date_created,
             creationMethod,
             master: bagitModel.master != 0,
@@ -378,7 +379,6 @@ export class BulkIngestReader {
             systemCreated: true,
             modelFileType: 0,
             identifiers: [],
-            uvMaps: [],
             sourceObjects: []
         };
     }
@@ -387,7 +387,7 @@ export class BulkIngestReader {
         const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyBySetAndTerm(eVocabSetID, term); /* istanbul ignore next */
         if (!vocabulary) {
             const error: string = `Unable to locate ${CACHE.eVocabularySetID[eVocabSetID]} ${term}`;
-            LOG.logger.error(error);
+            LOG.error(error, LOG.LS.eSYS);
             return { idVocabulary: 0, error };
         }
         return { idVocabulary: vocabulary.idVocabulary };

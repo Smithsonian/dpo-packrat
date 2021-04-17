@@ -23,8 +23,7 @@ import { StateItem, useItemStore } from '../item';
 import { StateProject, useProjectStore } from '../project';
 import { StateSubject, useSubjectStore } from '../subject';
 import { FileId, IngestionFile, useUploadStore } from '../upload';
-import { useUserStore } from '../user';
-import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState, parseUVMapsToState } from '../utils';
+import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState } from '../utils';
 import { useVocabularyStore } from '../vocabulary';
 import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema } from './metadata.defaults';
 import {
@@ -69,7 +68,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 datasetType: false
             },
             model: {
-                dateCaptured: false,
+                dateCaptured: true,
                 creationMethod: false,
                 modality: false,
                 units: false,
@@ -89,7 +88,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         }
 
         if (assetType.model) {
-            errors.model.dateCaptured = metadata.model.dateCaptured.toString() === 'Invalid Date';
+            errors.model.dateCaptured = lodash.isNull(metadata.model.dateCaptured) || metadata.model.dateCaptured.toString() === 'Invalid Date';
             errors.model.creationMethod = lodash.isNull(metadata.model.creationMethod);
             errors.model.modality = lodash.isNull(metadata.model.modality);
             errors.model.units = lodash.isNull(metadata.model.units);
@@ -137,7 +136,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         };
     },
     updateMetadataSteps: async (): Promise<MetadataUpdate> => {
-        const { isAuthenticated } = useUserStore.getState();
         const { completed, getSelectedFiles } = useUploadStore.getState();
         const { getInitialEntry } = useVocabularyStore.getState();
         const { addSubjects } = useSubjectStore.getState();
@@ -156,14 +154,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         const idAssetVersions: number[] = lodash.map(selectedFiles, ({ id }) => parseFileId(id));
 
-        const defaultIdentifier: StateIdentifier = {
-            id: 0,
-            identifier: '',
-            identifierType: getInitialEntry(eVocabularySetID.eIdentifierIdentifierType),
-            selected: false
-        };
 
-        const defaultIdentifierField = [defaultIdentifier];
+        const defaultIdentifierField: StateIdentifier[] = [];
 
         const defaultPhotogrammetry: PhotogrammetryFields = {
             ...defaultPhotogrammetryFields,
@@ -174,11 +166,11 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         const defaultModel: ModelFields = {
             ...defaultModelFields,
             identifiers: defaultIdentifierField,
-            creationMethod: getInitialEntry(eVocabularySetID.eModelCreationMethod),
-            modality: getInitialEntry(eVocabularySetID.eModelModality),
-            units: getInitialEntry(eVocabularySetID.eModelUnits),
-            purpose: getInitialEntry(eVocabularySetID.eModelPurpose),
-            modelFileType: getInitialEntry(eVocabularySetID.eModelFileType)
+            // creationMethod: getInitialEntry(eVocabularySetID.eModelCreationMethod),
+            // modality: getInitialEntry(eVocabularySetID.eModelModality),
+            // units: getInitialEntry(eVocabularySetID.eModelUnits),
+            // purpose: getInitialEntry(eVocabularySetID.eModelPurpose),
+            // modelFileType: getInitialEntry(eVocabularySetID.eModelFileType)
         };
 
         const defaultScene: SceneFields = {
@@ -192,11 +184,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         };
 
         try {
-            if (!(await isAuthenticated())) {
-                toast.error('user is not authenticated, please login');
-                return { valid: true, selectedFiles: true, error: true };
-            }
-
             const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({
                 query: GetAssetVersionsDetailsDocument,
                 variables: {
@@ -278,7 +265,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
                         metadatas.push(metadataStep);
                     } else if (Model) {
-                        const { identifiers, uvMaps } = Model;
+                        const { identifiers } = Model;
                         const stateIdentifiers: StateIdentifier[] = parseIdentifiersToState(identifiers, defaultIdentifierField);
 
                         metadataStep = {
@@ -289,7 +276,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                                     ...Model,
                                     dateCaptured: new Date(Model.dateCaptured),
                                     identifiers: stateIdentifiers,
-                                    uvMaps: parseUVMapsToState(uvMaps)
                                 })
                             }
                         };
@@ -359,7 +345,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
             return metadata;
         });
-
         set({ metadatas: updatedMetadatas });
     },
     getInitialStateFolders: (folders: string[]): StateFolder[] => {

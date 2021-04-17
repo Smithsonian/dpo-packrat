@@ -8,7 +8,6 @@ const mockPathZip: string = join(__dirname, '../../mock/utils/zip/');
 const mockPathDir: string = join(__dirname, '../../mock/utils/bagit/');
 /*
 afterAll(async done => {
-    jest.setTimeout(5000);
     await H.Helpers.sleep(2000);
     done();
 });
@@ -54,7 +53,7 @@ describe('BagitReader', () => {
         for (const entry of await bagitZipStream.getAllEntries(null)) {
             const observedSize: number | null = await bagitZipStream.uncompressedSize(entry);
             const expectedSize: number | undefined = fileSizeMap.get(entry);
-            LOG.logger.info(`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`);
+            LOG.info(`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`, LOG.LS.eTEST);
             expect(observedSize).not.toBeNull();
             expect(expectedSize).not.toBeUndefined();
             expect(observedSize).toEqual(expectedSize);
@@ -221,7 +220,7 @@ async function testBagitLoad(options: BagitLoadOptions): Promise<BagitReader> {
     let result: H.IOResults = await bagit.load();
 
     if (!result.success) {
-        LOG.logger.error(result.error);
+        LOG.error(result.error, LOG.LS.eTEST);
         expect(expectFailure).toBeTruthy();
         return bagit;
     }
@@ -229,7 +228,7 @@ async function testBagitLoad(options: BagitLoadOptions): Promise<BagitReader> {
     if (!validate && subsequentValidate) {
         result = await bagit.validate();
         if (!result.success)
-            LOG.logger.error(result.error);
+            LOG.error(result.error, LOG.LS.eTEST);
         expect(result.success).toBeTruthy();
     }
 
@@ -283,7 +282,7 @@ export function getPackratTestFileSizeMap(includeDirs: boolean): Map<string, num
     const fileSizeMap: Map<string, number> = new Map<string, number>();
     fileSizeMap.set('PackratTest/bag-info.txt', 0);
     fileSizeMap.set('PackratTest/bagit.txt', 55);
-    fileSizeMap.set('PackratTest/capture_data_photo.csv', 1083);
+    fileSizeMap.set('PackratTest/capture_data_photo.csv', 1107);
     fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-01.jpg', 245862);
     fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-02.jpg', 245161);
     fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-01.dng', 283616);

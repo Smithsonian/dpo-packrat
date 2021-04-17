@@ -40,6 +40,7 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     systemCreated: true,
     identifiers: [],
     folders: [],
+    name: '',
     description: '',
     dateCaptured: new Date(),
     datasetType: null,
@@ -62,6 +63,7 @@ export const photogrammetryFieldsSchema = yup.object().shape({
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     folders: yup.array().of(folderSchema),
+    name: yup.string(),
     description: yup.string().required('Description cannot be empty'),
     dateCaptured: yup.date().required(),
     datasetType: yup.number().typeError('Please select a valid dataset type'),
@@ -86,44 +88,31 @@ const uvMapSchema = yup.object().shape({
 
 const sourceObjectSchema = yup.object().shape({
     idSystemObject: yup.number().required(),
-    name: yup.string().required(),
-    identifier: yup.string().required(),
+    name: yup.string().nullable(),
+    identifier: yup.string().nullable(),
     objectType: yup.number().required()
 });
 
 export const defaultModelFields: ModelFields = {
+    name: '',
     systemCreated: true,
     identifiers: [],
-    uvMaps: [],
     sourceObjects: [],
-    dateCaptured: new Date(),
+    dateCaptured: null,
     creationMethod: null,
-    master: false,
-    authoritative: false,
+    master: true,
+    authoritative: true,
     modality: null,
     units: null,
     purpose: null,
     modelFileType: null,
-    roughness: null,
-    metalness: null,
-    pointCount: null,
-    faceCount: null,
-    isWatertight: null,
-    hasNormals: null,
-    hasVertexColor: null,
-    hasUVSpace: null,
-    boundingBoxP1X: null,
-    boundingBoxP1Y: null,
-    boundingBoxP1Z: null,
-    boundingBoxP2X: null,
-    boundingBoxP2Y: null,
-    boundingBoxP2Z: null,
     directory: ''
 };
 
 export type ModelSchemaType = typeof modelFieldsSchema;
 
 export const modelFieldsSchema = yup.object().shape({
+    name: yup.string(),
     systemCreated: yup.boolean().required(),
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
     uvMaps: yup.array().of(uvMapSchema),
@@ -140,6 +129,9 @@ export const modelFieldsSchema = yup.object().shape({
     metalness: yup.number().nullable(true),
     pointCount: yup.number().nullable(true),
     faceCount: yup.number().nullable(true),
+    isTwoManifoldUnbounded: yup.boolean().nullable(true),
+    isTwoManifoldBounded: yup.boolean().nullable(true),
+    selfIntersecting: yup.boolean().nullable(true),
     isWatertight: yup.boolean().nullable(true),
     hasNormals: yup.boolean().nullable(true),
     hasVertexColor: yup.boolean().nullable(true),

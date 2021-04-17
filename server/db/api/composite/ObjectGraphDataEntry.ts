@@ -26,6 +26,7 @@ export class ObjectGraphDataEntryHierarchy {
 
     parents: number[] = [];     // array of SystemObject.idSystemObject
     children: number[] = [];    // array of SystemObject.idSystemObject
+    ancestors: number[] = [];   // array of SystemObject.idSystemObject
 
     units: SystemObjectIDType[] = [];
     projects: SystemObjectIDType[] = [];
@@ -63,12 +64,12 @@ export class ObjectGraphDataEntry {
 
     recordChild(child: SystemObjectIDType): void {
         this.childMap.set(child.idSystemObject, child);
-        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} children: ${this.childMap.size}`);
+        // LOG.info(`${JSON.stringify(this.systemObjectIDType)} children: ${this.childMap.size}`, LOG.LS.eDB);
     }
 
     recordParent(parent: SystemObjectIDType): void {
         this.parentMap.set(parent.idSystemObject, parent);
-        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} parents: ${this.parentMap.size}`);
+        // LOG.info(`${JSON.stringify(this.systemObjectIDType)} parents: ${this.parentMap.size}`, LOG.LS.eDB);
     }
 
     // Returns true if applying objectGraphState updated the state of this ObjectGraphDataEntry
@@ -140,8 +141,8 @@ export class ObjectGraphDataEntry {
         objectGraphDataEntryHierarchy.parents = [...this.parentMap.keys()];
         objectGraphDataEntryHierarchy.children = [...this.childMap.keys()];
 
-        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(this.parentMap.keys())} (${JSON.stringify(this.parentMap.size)})`);
-        // LOG.logger.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(objectGraphDataEntryHierarchy.parents)} -Children-> ${JSON.stringify(objectGraphDataEntryHierarchy.children)}`);
+        // LOG.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(this.parentMap.keys())} (${JSON.stringify(this.parentMap.size)})`, LOG.LS.eDB);
+        // LOG.info(`${JSON.stringify(this.systemObjectIDType)} -Parents-> ${JSON.stringify(objectGraphDataEntryHierarchy.parents)} -Children-> ${JSON.stringify(objectGraphDataEntryHierarchy.children)}`, LOG.LS.eDB);
 
         for (const systemObjectIDType of this.ancestorObjectMap.values()) {
             switch (systemObjectIDType.eObjectType) {
@@ -150,6 +151,9 @@ export class ObjectGraphDataEntry {
                 case eSystemObjectType.eSubject:    objectGraphDataEntryHierarchy.subjects.push(systemObjectIDType); break;
                 case eSystemObjectType.eItem:       objectGraphDataEntryHierarchy.items.push(systemObjectIDType); break;
             }
+            // Gather ancestors ... but don't add self as an ancestor!
+            if (systemObjectIDType.idSystemObject != this.systemObjectIDType.idSystemObject)
+                objectGraphDataEntryHierarchy.ancestors.push(systemObjectIDType.idSystemObject);
         }
 
         objectGraphDataEntryHierarchy.childrenObjectTypes = [...this.childrenObjectTypes.keys()];

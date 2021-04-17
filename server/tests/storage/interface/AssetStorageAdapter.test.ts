@@ -6,7 +6,7 @@ import * as CACHE from '../../../cache';
 import * as H from '../../../utils/helpers';
 import * as LOG from '../../../utils/logger';
 import { IngestMetadata } from '../../../utils/parser';
-import Config from '../../../config';
+import { Config } from '../../../config';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
 import { createItemAndIDsForBagitTesting } from '../../db/api/Item.util';
 import { AssetVersionContent } from '../../../types/graphql';
@@ -39,7 +39,7 @@ beforeAll(() => {
 
     rootRepositoryNew = path.join('var', 'test', H.Helpers.randomSlug());
     rootStagingNew = path.join('var', 'test', H.Helpers.randomSlug());
-    // LOG.logger.info(`Test Repo ${rootRepositoryNew}; staging ${rootStagingNew}`);
+    // LOG.info(`Test Repo ${rootRepositoryNew}; staging ${rootStagingNew}`, LOG.LS.eTEST);
 
     Config.storage.rootRepository = rootRepositoryNew;
     Config.storage.rootStaging = rootStagingNew;
@@ -50,7 +50,6 @@ afterAll(async done => {
     Config.storage.rootStaging = rootStagingOrig;
     await H.Helpers.removeDirectory(rootRepositoryNew, true);
     await H.Helpers.removeDirectory(rootStagingNew, true);
-    // jest.setTimeout(5000);
     // await H.Helpers.sleep(2000);
     done();
 });
@@ -98,56 +97,67 @@ describe('AssetStorageAdapter Methods', () => {
     test('AssetStorageAdapter.commitNewAsset', async() => {
         TestCase1 = await testCommitNewAsset(null, 10000, OHTS.captureData1);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.ingestAsset', async() => {
         await testIngestAsset(TestCase1, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersionByID(TestCase1, true);
     });
 
     test('AssetStorageAdapter.commitNewAsset 2', async() => {
         TestCase1 = await testCommitNewAsset(TestCase1, 12000, OHTS.model1);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.ingestAsset 2', async() => {
         await testIngestAsset(TestCase1, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersionByID(TestCase1, true);
     });
 
     test('AssetStorageAdapter.commitNewAsset 3', async() => {
         TestCase1 = await testCommitNewAsset(TestCase1, 14000, OHTS.model1); // don't change metadata this time for fuller code coverage
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.ingestAsset 3', async() => {
         await testIngestAsset(TestCase1, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersionByID(TestCase1, true);
     });
 
     test('AssetStorageAdapter.renameAsset', async() => {
         await testRenameAsset(TestCase1, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.hideAsset', async() => {
         await testHideAsset(TestCase1, true);
         await testReadAsset(TestCase1, false); // Expected failure as asset was hidden
+        await testReadAssetVersionByID(TestCase1, false); // Expected failure as asset was hidden
     });
 
     test('AssetStorageAdapter.reinstateAsset', async() => {
         await testReinstateAsset(TestCase1, -1, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.hideAsset', async() => {
         await testHideAsset(TestCase1, true);
         await testReadAsset(TestCase1, false); // Expected failure as asset was hidden
+        await testReadAssetVersionByID(TestCase1, false); // Expected failure as asset was hidden
     });
 
     test('AssetStorageAdapter.reinstateAsset', async() => {
         await testReinstateAsset(TestCase1, 4, true);
         await testReadAsset(TestCase1, true);
+        await testReadAssetVersion(TestCase1, true);
     });
 
     test('AssetStorageAdapter.discardAssetVersion', async() => {
@@ -218,7 +228,7 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         TestCase = { assets: [], assetVersions: [], SOBased };
 
         TestCase.assets.push(new DBAPI.Asset({ idAsset: 0, FileName: fileNameAsset, FilePath: H.Helpers.randomSlug(), idAssetGroup: null, idVAssetType: vocabulary.idVocabulary, idSystemObject: null, StorageKey: '' }));
-        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: 0, StorageKeyStaging: '', Ingested: false, BulkIngest, Version: 1 }));
+        TestCase.assetVersions.push(new DBAPI.AssetVersion({ idAssetVersion: 0, idAsset: 0, FileName: fileNameAsset, idUserCreator: opInfo.idUser, DateCreated: new Date(), StorageHash: '', StorageSize: BigInt(0), StorageKeyStaging: '', Ingested: false, BulkIngest, Version: 1 }));
         newAsset = true;
     } else {
         TestCase.SOBased = SOBased;
@@ -232,7 +242,7 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
         return TestCase;
 
     // Use IStorage.writeStream to write bits
-    // LOG.logger.info('AssetStorageAdaterTest IStorage.writeStream');
+    // LOG.info('AssetStorageAdaterTest IStorage.writeStream', LOG.LS.eTEST);
     const WSR: STORE.WriteStreamResult = await storage.writeStream(TestCase.assetVersions[0].FileName);
     expect(WSR.success).toBeTruthy();
     expect(WSR.writeStream).toBeTruthy();
@@ -269,16 +279,16 @@ async function testCommitNewAsset(TestCase: AssetStorageAdapterTestCase | null, 
 
     let ASRC: STORE.AssetStorageResultCommit;
     if (newAsset) {
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset ${TestCase.asset.FileName}`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset ${TestCase.asset.FileName}`, LOG.LS.eTEST);
         ASRC = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
     } else {
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAssetVersion ${TestCase.asset.FileName}`, LOG.LS.eTEST);
         ASRC = await STORE.AssetStorageAdapter.commitNewAssetVersion({ storageKey: TestCase.assetVersions[0].StorageKeyStaging, storageHash },
             TestCase.assets[0], TestCase.assetVersions[0].idUserCreator, TestCase.assetVersions[0].DateCreated);
     }
     expect(ASRC.success).toBeTruthy();
     if (!ASRC.success) {
-        LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset: ${ASRC.error}`);
+        LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset: ${ASRC.error}`, LOG.LS.eTEST);
         return TestCase;
     }
 
@@ -307,24 +317,56 @@ async function testReadAsset(TestCase: AssetStorageAdapterTestCase, expectSucces
         const asset: DBAPI.Asset = TestCase.assets[index];
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.readAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.readAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
-
-        if (!RSR.success && expectSuccess)
-            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.readAsset: ${RSR.error}`);
-        expect(RSR.success).toEqual(expectSuccess);
-        if (!RSR.success)
-            return !expectSuccess;
-
-        expect(RSR.readStream).toBeTruthy();
-        expect(RSR.storageHash).toEqual(assetVersion.StorageHash);
-        if (!RSR.readStream)
+        if (!testReadAssetResults(RSR, assetVersion, expectSuccess, 'readAsset'))
             return false;
+    }
+    return true;
+}
 
-        const hashResults: H.HashResults = await H.Helpers.computeHashFromStream(RSR.readStream, ST.OCFLDigestAlgorithm);
-        expect(hashResults.success).toBeTruthy();
-        expect(hashResults.hash).toEqual(RSR.storageHash);
-        expect(hashResults.hash).toEqual(assetVersion.StorageHash);
+async function testReadAssetResults(RSR: STORE.ReadStreamResult, assetVersion: DBAPI.AssetVersion, expectSuccess: boolean, errorContext: string): Promise<boolean> {
+    if (!RSR.success && expectSuccess)
+        LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.${errorContext}: ${RSR.error}`, LOG.LS.eTEST);
+    expect(RSR.success).toEqual(expectSuccess);
+    if (!RSR.success)
+        return !expectSuccess;
+
+    expect(RSR.readStream).toBeTruthy();
+    expect(RSR.fileName).toEqual(assetVersion.FileName);
+    expect(RSR.storageHash).toEqual(assetVersion.StorageHash);
+    if (!RSR.readStream)
+        return false;
+
+    const hashResults: H.HashResults = await H.Helpers.computeHashFromStream(RSR.readStream, ST.OCFLDigestAlgorithm);
+    expect(hashResults.success).toBeTruthy();
+    expect(hashResults.hash).toEqual(RSR.storageHash);
+    expect(hashResults.hash).toEqual(assetVersion.StorageHash);
+    return true;
+}
+
+async function testReadAssetVersion(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    for (let index = 0; index < TestCase.assets.length; index++) {
+        // const asset: DBAPI.Asset = TestCase.assets[index];
+        const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
+
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.readAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
+        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(assetVersion);
+        if (!testReadAssetResults(RSR, assetVersion, expectSuccess, 'readAssetVersion'))
+            return false;
+    }
+    return true;
+}
+
+async function testReadAssetVersionByID(TestCase: AssetStorageAdapterTestCase, expectSuccess: boolean): Promise<boolean> {
+    for (let index = 0; index < TestCase.assets.length; index++) {
+        // const asset: DBAPI.Asset = TestCase.assets[index];
+        const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
+
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.readAssetByID (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
+        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(assetVersion.idAssetVersion);
+        if (!testReadAssetResults(RSR, assetVersion, expectSuccess, 'readAssetVersionByID'))
+            return false;
     }
     return true;
 }
@@ -340,11 +382,11 @@ async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
         const asset: DBAPI.Asset = TestCase.assets[index];
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
         const ISR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(asset, assetVersion, TestCase.SOBased, opInfo);
 
         if (!ISR.success && expectSuccess)
-            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset: ${ISR.error}`);
+            LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.ingestAsset: ${ISR.error}`, LOG.LS.eTEST);
         expect(ISR.success).toEqual(expectSuccess);
         if (!ISR.success)
             return !expectSuccess;
@@ -353,13 +395,13 @@ async function testIngestAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
         if (ISR.assets)
             assets = assets.concat(ISR.assets);
 
-        // LOG.logger.info(`Ingest reports ${JSON.stringify(ISR.assetVersions)}`);
+        // LOG.info(`Ingest reports ${JSON.stringify(ISR.assetVersions)}`, LOG.LS.eTEST);
         expect(ISR.assetVersions).toBeTruthy();
         if (ISR.assetVersions)
             assetVersions = assetVersions.concat(ISR.assetVersions);
     }
 
-    // LOG.logger.info(`Accumulated ${JSON.stringify(assetVersions)}`);
+    // LOG.info(`Accumulated ${JSON.stringify(assetVersions)}`, LOG.LS.eTEST);
     for (const assetVersion of assetVersions) {
         expect(assetVersion.StorageKeyStaging).toEqual('');
         expect(assetVersion.Ingested).toBeTruthy();
@@ -380,11 +422,11 @@ async function testRenameAsset(TestCase: AssetStorageAdapterTestCase, expectSucc
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
         const fileNameNew = H.Helpers.randomSlug();
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.renameAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.renameAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.renameAsset(asset, fileNameNew, opInfo);
 
         if (!ASR.success && expectSuccess)
-            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.renameAsset: ${ASR.error}`);
+            LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.renameAsset: ${ASR.error}`, LOG.LS.eTEST);
         expect(ASR.success).toEqual(expectSuccess);
         if (!ASR.success)
             return !expectSuccess;
@@ -409,11 +451,11 @@ async function testHideAsset(TestCase: AssetStorageAdapterTestCase, expectSucces
         const asset: DBAPI.Asset = TestCase.assets[index];
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.hideAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.hideAsset (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.hideAsset(asset, opInfo);
 
         if (!ASR.success && expectSuccess)
-            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.hideAsset: ${ASR.error}`);
+            LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.hideAsset: ${ASR.error}`, LOG.LS.eTEST);
         expect(ASR.success).toEqual(expectSuccess);
         if (!ASR.success)
             return !expectSuccess;
@@ -454,11 +496,11 @@ async function testReinstateAsset(TestCase: AssetStorageAdapterTestCase, version
                 expect(assetVersionFetch).toBeTruthy();
         }
 
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.reinstateAsset version ${version} (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.reinstateAsset version ${version} (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.reinstateAsset(asset, assetVersionFetch, opInfo);
 
         if (!ASR.success && expectSuccess)
-            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.reinstateAsset: ${ASR.error}`);
+            LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.reinstateAsset: ${ASR.error}`, LOG.LS.eTEST);
         expect(ASR.success).toEqual(expectSuccess);
         if (!ASR.success)
             return !expectSuccess;
@@ -490,7 +532,7 @@ async function testCommitNewAssetFailure(TestCase: AssetStorageAdapterTestCase):
         DateCreated: TestCase.assetVersions[0].DateCreated,
     };
 
-    LOG.logger.info('AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset Failure Expected');
+    LOG.info('AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset Failure Expected', LOG.LS.eTEST);
     const ASRC: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
     expect(ASRC.success).toBeFalsy();
     return !ASRC.success;
@@ -503,7 +545,7 @@ async function testIngestAssetFailure(TestCase: AssetStorageAdapterTestCase): Pr
 
     const storageKeyStagingOld: string = TestCase.assetVersions[0].StorageKeyStaging;
     TestCase.assetVersions[0].StorageKeyStaging = H.Helpers.randomSlug();
-    LOG.logger.info('AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting Failure)');
+    LOG.info('AssetStorageAdaterTest AssetStorageAdapter.ingestAsset (Expecting Failure)', LOG.LS.eTEST);
     const ISR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(TestCase.assets[0], TestCase.assetVersions[0], TestCase.SOBased, opInfo);
     TestCase.assetVersions[0].StorageKeyStaging = storageKeyStagingOld;
 
@@ -524,9 +566,9 @@ async function testGetAssetVersionContents(TestCase: AssetStorageAdapterTestCase
     }
 
     if (observedFiles.length != expectedFiles.length)
-        LOG.logger.info(`observedFiles = ${JSON.stringify(observedFiles)} vs expectedFiles = ${JSON.stringify(expectedFiles)}`);
+        LOG.info(`observedFiles = ${JSON.stringify(observedFiles)} vs expectedFiles = ${JSON.stringify(expectedFiles)}`, LOG.LS.eTEST);
     if (observedDirs.length != expectedDirs.length)
-        LOG.logger.info(`observedDirs = ${JSON.stringify(observedDirs)} vs expectedDirs = ${JSON.stringify(expectedDirs)}`);
+        LOG.info(`observedDirs = ${JSON.stringify(observedDirs)} vs expectedDirs = ${JSON.stringify(expectedDirs)}`, LOG.LS.eTEST);
     expect(observedFiles.length).toEqual(expectedFiles.length);
     expect(observedDirs.length).toEqual(expectedDirs.length);
 
@@ -540,11 +582,11 @@ async function testDiscardAssetVersion(TestCase: AssetStorageAdapterTestCase, ex
     for (let index = 0; index < TestCase.assets.length; index++) {
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
 
         if (!ASR.success && expectSuccess)
-            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion: ${ASR.error}`);
+            LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion: ${ASR.error}`, LOG.LS.eTEST);
         expect(ASR.success).toEqual(expectSuccess);
         if (!ASR.success)
             return !expectSuccess;
@@ -562,10 +604,10 @@ async function testExtractBulkIngestMetadata(TestCase: AssetStorageAdapterTestCa
     for (let index = 0; index < TestCase.assets.length; index++) {
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
         const ingestMetadata: IngestMetadata | null = await STORE.AssetStorageAdapter.extractBulkIngestMetadata(assetVersion);
         if (!ingestMetadata && expectSuccess)
-            LOG.logger.error('AssetStorageAdaterTest AssetStorageAdapter.extracBulkIngestMetadata failed');
+            LOG.error('AssetStorageAdaterTest AssetStorageAdapter.extracBulkIngestMetadata failed', LOG.LS.eTEST);
         if (expectSuccess)
             expect(ingestMetadata).toBeTruthy();
     }
@@ -576,10 +618,10 @@ async function testCrackAsset(TestCase: AssetStorageAdapterTestCase, expectSucce
     for (let index = 0; index < TestCase.assets.length; index++) {
         const assetVersion: DBAPI.AssetVersion = TestCase.assetVersions[index];
 
-        // LOG.logger.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`);
+        // LOG.info(`AssetStorageAdaterTest AssetStorageAdapter.discardAssetVersion (Expecting ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
         const CAR: STORE.CrackAssetResult = await STORE.AssetStorageAdapter.crackAsset(assetVersion);
         if (!CAR.success && expectSuccess)
-            LOG.logger.error(`AssetStorageAdaterTest AssetStorageAdapter.crackAsset failed: ${CAR.error}`);
+            LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.crackAsset failed: ${CAR.error}`, LOG.LS.eTEST);
         if (CAR.zip)
             await CAR.zip.close();
         expect(CAR.success).toEqual(expectSuccess);

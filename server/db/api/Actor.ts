@@ -34,7 +34,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Actor.create', error);
+            LOG.error('DBAPI.Actor.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -52,7 +52,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Actor.update', error);
+            LOG.error('DBAPI.Actor.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -61,9 +61,9 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
         try {
             const { idActor } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idActor, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idActor, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Actor.fetchSystemObject', error);
+            LOG.error('DBAPI.Actor.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -73,9 +73,9 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             return null;
         try {
             return DBC.CopyObject<ActorBase, Actor>(
-                await DBC.DBConnection.prisma.actor.findOne({ where: { idActor, }, }), Actor);
+                await DBC.DBConnection.prisma.actor.findUnique({ where: { idActor, }, }), Actor);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Actor.fetch', error);
+            LOG.error('DBAPI.Actor.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -85,7 +85,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             return DBC.CopyArray<ActorBase, Actor>(
                 await DBC.DBConnection.prisma.actor.findMany(), Actor);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Actor.fetchAll', error);
+            LOG.error('DBAPI.Actor.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -97,7 +97,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             return DBC.CopyArray<ActorBase, Actor>(
                 await DBC.DBConnection.prisma.actor.findMany({ where: { idUnit } }), Actor);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Actor.fetchFromUnit', error);
+            LOG.error('DBAPI.Actor.fetchFromUnit', LOG.LS.eDB, error);
             return null;
         }
     }

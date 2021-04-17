@@ -44,7 +44,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.create', error);
+            LOG.error('DBAPI.Asset.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -65,7 +65,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.update', error);
+            LOG.error('DBAPI.Asset.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -75,9 +75,9 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
         try {
             const { idAsset } = this;
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idAsset, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAsset, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.fetchSystemObject', error);
+            LOG.error('DBAPI.Asset.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -87,9 +87,9 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return null;
         try {
             return DBC.CopyObject<AssetBase, Asset>(
-                await DBC.DBConnection.prisma.asset.findOne({ where: { idAsset, }, }), Asset);
+                await DBC.DBConnection.prisma.asset.findUnique({ where: { idAsset, }, }), Asset);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.fetch', error);
+            LOG.error('DBAPI.Asset.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -99,7 +99,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return DBC.CopyArray<AssetBase, Asset>(
                 await DBC.DBConnection.prisma.asset.findMany(), Asset);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.fetchAll', error);
+            LOG.error('DBAPI.Asset.fetchAll', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -109,9 +109,9 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return null;
         try {
             return DBC.CopyObject<AssetBase, Asset>(
-                await DBC.DBConnection.prisma.asset.findOne({ where: { StorageKey, }, }), Asset);
+                await DBC.DBConnection.prisma.asset.findUnique({ where: { StorageKey, }, }), Asset);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.fetchByStorageKey', error);
+            LOG.error('DBAPI.Asset.fetchByStorageKey', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -123,7 +123,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return DBC.CopyArray<AssetBase, Asset>(
                 await DBC.DBConnection.prisma.asset.findMany({ where: { idAssetGroup } }), Asset);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.fetchFromAssetGroup', error);
+            LOG.error('DBAPI.Asset.fetchFromAssetGroup', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -135,7 +135,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return DBC.CopyArray<AssetBase, Asset>(
                 await DBC.DBConnection.prisma.asset.findMany({ where: { SystemObject_Asset_idSystemObjectToSystemObject: { idSystemObject } } }), Asset);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.fetchFromSystemObject', error);
+            LOG.error('DBAPI.Asset.fetchFromSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -147,9 +147,9 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return null;
         try {
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
-                await DBC.DBConnection.prisma.systemObject.findOne({ where: { idSystemObject, }, }), SystemObject);
+                await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSystemObject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.Asset.fetchSourceSystemObject', error);
+            LOG.error('DBAPI.Asset.fetchSourceSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }

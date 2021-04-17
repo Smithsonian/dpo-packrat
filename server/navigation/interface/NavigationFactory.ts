@@ -1,7 +1,7 @@
 import { INavigation } from './INavigation';
 import { NavigationDB } from '../impl';
 import { NavigationSolr } from '../impl/NavigationSolr';
-import Config, { NAVIGATION_TYPE } from '../../config';
+import { Config, NAVIGATION_TYPE } from '../../config';
 // import * as LOG from '../../utils/logger';
 
 export class NavigationFactory {

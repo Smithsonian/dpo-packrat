@@ -28,7 +28,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectXref.create', error);
+            LOG.error('DBAPI.SystemObjectXref.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -44,7 +44,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectXref.update', error);
+            LOG.error('DBAPI.SystemObjectXref.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -54,9 +54,9 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
             return null;
         try {
             return DBC.CopyObject<SystemObjectXrefBase, SystemObjectXref>(
-                await DBC.DBConnection.prisma.systemObjectXref.findOne({ where: { idSystemObjectXref, }, }), SystemObjectXref);
+                await DBC.DBConnection.prisma.systemObjectXref.findUnique({ where: { idSystemObjectXref, }, }), SystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectXref.fetch', error);
+            LOG.error('DBAPI.SystemObjectXref.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -69,7 +69,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 await DBC.DBConnection.prisma.systemObjectXref.findMany({
                     where: { AND: [ { idSystemObjectMaster }, { idSystemObjectDerived }, ] }, }), SystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.SystemObjectXref.fetchXref', error);
+            LOG.error('DBAPI.SystemObjectXref.fetchXref', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -77,13 +77,13 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
     static async wireObjectsIfNeeded(master: SystemObjectBased, derived: SystemObjectBased): Promise<SystemObjectXref | null> {
         const SOMaster: SystemObject | null = await master.fetchSystemObject(); /* istanbul ignore next */
         if (!SOMaster) {
-            LOG.logger.error(`DBAPI.SystemObjectXref.wireObjectsIfNeeded Unable to compute SystemObject for ${JSON.stringify(master)}`);
+            LOG.error(`DBAPI.SystemObjectXref.wireObjectsIfNeeded Unable to compute SystemObject for ${JSON.stringify(master)}`, LOG.LS.eDB);
             return null;
         }
 
         const SODerived: SystemObject | null = await derived.fetchSystemObject(); /* istanbul ignore next */
         if (!SODerived) {
-            LOG.logger.error(`DBAPI.SystemObjectXref.wireObjectsIfNeeded Unable to compute SystemObject for ${JSON.stringify(derived)}`);
+            LOG.error(`DBAPI.SystemObjectXref.wireObjectsIfNeeded Unable to compute SystemObject for ${JSON.stringify(derived)}`, LOG.LS.eDB);
             return null;
         }
 

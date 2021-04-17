@@ -2,14 +2,26 @@ scalar DateTime
 
 type Mutation {
     createUser(input: CreateUserInput!): CreateUserResult!
+    updateUser(input: UpdateUserInput!): CreateUserResult!
 }
 
 input CreateUserInput {
     Name: String!
     EmailAddress: String!
-    SecurityID: String!
+    SecurityID: String
+    WorkflowNotificationTime: DateTime
+    EmailSettings: Int
 }
 
 type CreateUserResult {
     User: User
+}
+
+input UpdateUserInput {
+    idUser: Int!
+    Name: String!
+    EmailAddress: String!
+    Active: Boolean!
+    EmailSettings: Int!
+    WorkflowNotificationTime: DateTime!
 }

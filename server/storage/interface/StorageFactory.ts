@@ -1,7 +1,7 @@
 import { IStorage } from './IStorage';
 import { LocalStorage } from '../impl';
 import { IOResults } from '../../utils/helpers';
-import Config, { STORAGE_TYPE } from '../../config';
+import { Config, STORAGE_TYPE } from '../../config';
 import * as LOG from '../../utils/logger';
 
 export class StorageFactory {
@@ -20,7 +20,7 @@ export class StorageFactory {
                     if (IOR.success)
                         StorageFactory.instance = LS;
                     else
-                        LOG.logger.error(`Error encountered in StorageFactory.getInstance while initializing LocalStorage: ${IOR.error}`);
+                        LOG.error(`Error encountered in StorageFactory.getInstance while initializing LocalStorage: ${IOR.error}`, LOG.LS.eSTR);
                     break;
                 }
             }

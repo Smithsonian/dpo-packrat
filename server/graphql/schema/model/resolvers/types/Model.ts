@@ -26,9 +26,6 @@ const Model = {
     AssetThumbnail: async (parent: Parent): Promise<DBAPI.Asset | null> => {
         return await DBAPI.Asset.fetch(parent.idAssetThumbnail);
     },
-    ModelMetrics: async (parent: Parent): Promise<DBAPI.ModelMetrics | null> => {
-        return await DBAPI.ModelMetrics.fetch(parent.idModelMetrics);
-    },
     ModelObject: async (parent: Parent): Promise<DBAPI.ModelObject[] | null> => {
         return await DBAPI.ModelObject.fetchFromModel(parent.idModel);
     },

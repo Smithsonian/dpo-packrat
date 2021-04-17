@@ -11,7 +11,6 @@ import API, { AuthResponseType } from '../api';
 
 type UserStore = {
     user: User | null;
-    isAuthenticated: () => Promise<boolean>;
     initialize: () => Promise<void>;
     login: (email: string, password: string) => Promise<AuthResponseType>;
     logout: () => Promise<AuthResponseType>;
@@ -19,9 +18,6 @@ type UserStore = {
 
 export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: GetState<UserStore>) => ({
     user: null,
-    isAuthenticated: async (): Promise<boolean> => {
-        return !!(await getAuthenticatedUser());
-    },
     initialize: async () => {
         const { user } = get();
         if (!user) {
@@ -33,12 +29,14 @@ export const useUserStore = create<UserStore>((set: SetState<UserStore>, get: Ge
         const authResponse = await API.login(email, password);
 
         if (!authResponse.success) {
+            console.log(`Attempted login for ${email} failed`);
             return {
                 ...authResponse,
                 success: false
             };
         }
 
+        console.log(`Attempted login for ${email} retrieving authenticated user`);
         const user: User | null = await getAuthenticatedUser();
 
         if (!user) {
@@ -73,7 +71,8 @@ async function getAuthenticatedUser(): Promise<User | null> {
         const { getCurrentUser } = data;
 
         return getCurrentUser.User;
-    } catch {
+    } catch (error) {
+        console.log(`getAuthenticatedUser failure: ${JSON.stringify(error)}`);
         return null;
     }
 }

@@ -7,7 +7,7 @@ import lodash from 'lodash';
 import create, { GetState, SetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
-import { eVocabularySetID } from '../types/server';
+import { eVocabularyID, eVocabularySetID } from '../types/server';
 import { multiIncludes } from '../utils/shared';
 
 export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term'>;
@@ -22,15 +22,18 @@ type AssetType = {
 
 type VocabularyStore = {
     vocabularies: Map<eVocabularySetID, VocabularyOption[]>;
+    vocabularyMap: Map<eVocabularyID, Vocabulary>;
     updateVocabularyEntries: () => Promise<StateVocabulary>;
     getEntries: (eVocabularySetID: eVocabularySetID) => VocabularyOption[];
     getInitialEntry: (eVocabularySetID: eVocabularySetID) => number | null;
     getVocabularyTerm: (eVocabularySetID: eVocabularySetID, idVocabulary: number) => string | null;
     getAssetType: (idVocabulary: number) => AssetType;
+    getAssetTypeForExtension: (extension: string) => number | null;
 };
 
 export const useVocabularyStore = create<VocabularyStore>((set: SetState<VocabularyStore>, get: GetState<VocabularyStore>) => ({
     vocabularies: new Map<eVocabularySetID, VocabularyOption[]>(),
+    vocabularyMap: new Map<eVocabularyID, Vocabulary>(),
     updateVocabularyEntries: async (): Promise<StateVocabulary> => {
         const variables = {
             input: {
@@ -63,12 +66,16 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
         const { VocabularyEntries } = data.getVocabularyEntries;
 
         const vocabularies = new Map<eVocabularySetID, VocabularyOption[]>();
+        const vocabularyMap = new Map<eVocabularyID, Vocabulary>();
 
         VocabularyEntries.forEach(({ eVocabSetID, Vocabulary }) => {
             vocabularies.set(eVocabSetID, Vocabulary);
+            Vocabulary.forEach(vocabEntry => {
+                vocabularyMap.set(vocabEntry.eVocabID, vocabEntry);
+            });
         });
 
-        set({ vocabularies });
+        set({ vocabularies, vocabularyMap });
 
         return vocabularies;
     },
@@ -101,7 +108,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
         if (vocabularyEntry && vocabularyEntry.length) {
             for (let i = 0; i < vocabularyEntry.length; i++) {
                 const vocabulary = vocabularyEntry[i];
-                if (vocabulary.idVocabulary === idVocabulary) return vocabulary.Term;
+                if (vocabulary.idVocabulary === idVocabulary)
+                    return vocabulary.Term;
             }
         }
 
@@ -133,5 +141,51 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
         }
 
         return assetType;
+    },
+    getAssetTypeForExtension: (extension: string): number | null => {
+        const { vocabularyMap } = get();
+        let eVocabEnum: eVocabularyID | null = null;
+
+        switch (extension.toLowerCase()) {
+            case '.zip': eVocabEnum = eVocabularyID.eAssetAssetTypeBulkIngestion; break;
+
+            case '.dcm': eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetDicom; break;
+
+            case '.raw':
+            case '.cr2':
+            case '.cr3':
+            case '.dng':
+            case '.arw':
+            case '.camdng':
+            case '.tif':
+            case '.tiff':
+            case '.jpg':
+            case '.jpeg': eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataFile; break;
+
+            case '.obj':
+            case '.ply':
+            case '.stl':
+            case '.glb':
+            case '.gltf':
+            case '.usda':
+            case '.usdc':
+            case '.usdz':
+            case '.x3d':
+            case '.wrl':
+            case '.dae':
+            case '.fbx':
+            case '.ma':
+            case '.3ds':
+            case '.ptx':
+            case '.pts': eVocabEnum = eVocabularyID.eAssetAssetTypeModel; break;
+
+            case '.svx.json':
+            case '.json': eVocabEnum = eVocabularyID.eAssetAssetTypeScene; break;
+
+            default: eVocabEnum = eVocabularyID.eAssetAssetTypeOther; break;
+        }
+
+        const vocabulary = vocabularyMap.get(eVocabEnum);
+        return (vocabulary) ? vocabulary.idVocabulary : null;
     }
 }));

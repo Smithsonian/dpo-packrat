@@ -1,16 +1,19 @@
 import * as DBAPI from '../../db';
+import * as CACHE from '../../cache';
 import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
 import * as UTIL from './api';
-import { VocabularyCache, eVocabularyID } from '../../cache';
+// import * as H from '../../utils/helpers';
+import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
 
 afterAll(async done => {
+    // await H.Helpers.sleep(4000);
     await DBC.DBConnection.disconnect();
     await DBC.DBConnection.disconnect(); // second time to test disconnecting after already being disconnected!
-    LOG.getRequestLogger(); // added for full test coverage!
     done();
 });
 
+// #region Variables
 let accessAction: DBAPI.AccessAction | null;
 let accessAction2: DBAPI.AccessAction | null;
 let accessContext: DBAPI.AccessContext | null;
@@ -23,15 +26,19 @@ let actorWithUnit: DBAPI.Actor | null;
 let actorWithOutUnit: DBAPI.Actor | null;
 let assetGroup: DBAPI.AssetGroup | null;
 let assetGroup2: DBAPI.AssetGroup | null;
+let assetModel: DBAPI.Asset | null;
 let assetThumbnail: DBAPI.Asset | null;
 let assetWithoutAG: DBAPI.Asset | null;
 let assetBulkIngest: DBAPI.Asset | null;
 let assetVersion: DBAPI.AssetVersion | null;
 let assetVersion2: DBAPI.AssetVersion | null;
+let assetVersionModel: DBAPI.AssetVersion | null;
 let assetVersionNotIngested: DBAPI.AssetVersion | null;
+let assetVersionNotProcessed: DBAPI.AssetVersion | null;
 let captureData: DBAPI.CaptureData | null;
 let captureDataNulls: DBAPI.CaptureData | null;
 let captureDataFile: DBAPI.CaptureDataFile | null;
+let captureDataFileNulls: DBAPI.CaptureDataFile | null;
 let captureDataGroup: DBAPI.CaptureDataGroup | null;
 let captureDataGroupCaptureDataXref: DBAPI.CaptureDataGroupCaptureDataXref | null;
 let captureDataGroupCaptureDataXref2: DBAPI.CaptureDataGroupCaptureDataXref | null;
@@ -46,8 +53,7 @@ let intermediaryFile: DBAPI.IntermediaryFile | null;
 let item: DBAPI.Item | null;
 let itemNulls: DBAPI.Item | null;
 let job: DBAPI.Job | null;
-let jobTask: DBAPI.JobTask | null;
-let jobTaskCook: DBAPI.JobTaskCook | null;
+let jobRun: DBAPI.JobRun | null;
 let metadata: DBAPI.Metadata | null;
 let metadataNull: DBAPI.Metadata | null;
 let model: DBAPI.Model | null;
@@ -56,11 +62,11 @@ let modelMaterial: DBAPI.ModelMaterial | null;
 let modelMaterialChannel: DBAPI.ModelMaterialChannel | null;
 let modelMaterialChannelNulls: DBAPI.ModelMaterialChannel | null;
 let modelMaterialUVMap: DBAPI.ModelMaterialUVMap | null;
-let modelMetrics: DBAPI.ModelMetrics | null;
-let modelMetrics2: DBAPI.ModelMetrics | null;
 let modelObject: DBAPI.ModelObject | null;
 let modelObject2: DBAPI.ModelObject | null;
 let modelObject3: DBAPI.ModelObject | null;
+let modelObjectModelMaterialXref1: DBAPI.ModelObjectModelMaterialXref | null;
+let modelObjectModelMaterialXref2: DBAPI.ModelObjectModelMaterialXref | null;
 let modelProcessingAction: DBAPI.ModelProcessingAction | null;
 let modelProcessingActionStep: DBAPI.ModelProcessingActionStep | null;
 let modelSceneXref: DBAPI.ModelSceneXref | null;
@@ -79,6 +85,7 @@ let subjectNulls: DBAPI.Subject | null;
 let systemObjectAsset: DBAPI.SystemObject | null;
 let systemObjectItem: DBAPI.SystemObject | null;
 let systemObjectItemNulls: DBAPI.SystemObject | null;
+let systemObjectModel: DBAPI.SystemObject | null;
 let systemObjectScene: DBAPI.SystemObject | null;
 let systemObjectSubject: DBAPI.SystemObject | null;
 let systemObjectSubjectNulls: DBAPI.SystemObject | null;
@@ -113,14 +120,15 @@ let userPersonalizationSystemObject: DBAPI.UserPersonalizationSystemObject | nul
 let userPersonalizationUrl: DBAPI.UserPersonalizationUrl | null;
 let vocabulary: DBAPI.Vocabulary | null;
 let vocabulary2: DBAPI.Vocabulary | null;
+let vocabularyWorkflowType: DBAPI.Vocabulary | null;
 let vocabularySet: DBAPI.VocabularySet | null;
 let workflow: DBAPI.Workflow | null;
 let workflowNulls: DBAPI.Workflow | null;
 let workflowStep: DBAPI.WorkflowStep | null;
+let workflowStepNulls: DBAPI.WorkflowStep | null;
 let workflowStepSystemObjectXref: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowStepSystemObjectXref2: DBAPI.WorkflowStepSystemObjectXref | null;
-let workflowTemplate: DBAPI.WorkflowTemplate | null;
-
+// #endregion
 // *******************************************************************
 // DB Creation Test Suite
 // *******************************************************************
@@ -165,6 +173,29 @@ describe('DB Creation Test Suite', () => {
         if (vocabulary2) {
             expect(await vocabulary2.create()).toBeTruthy();
             expect(vocabulary2.idVocabulary).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Fetch/Creation: Vocabulary WorkflowType', async () => {
+        const idVocabularySet: number | undefined = await VocabularyCache.vocabularySetEnumToId(eVocabularySetID.eWorkflowType);
+        const vocabularyEntries: DBAPI.Vocabulary[] | undefined = idVocabularySet ? await VocabularyCache.vocabularySetEntries(idVocabularySet) : undefined;
+        let createVocab: boolean = false;
+        if (vocabularyEntries && vocabularyEntries.length > 0)
+            vocabularyWorkflowType = vocabularyEntries[0];
+        else if (idVocabularySet) {
+            vocabularyWorkflowType = new DBAPI.Vocabulary({
+                idVocabularySet,
+                SortOrder: 0,
+                Term: 'Test Vocabulary Workflow Type',
+                idVocabulary: 0
+            });
+            createVocab = true;
+        }
+        expect(vocabularyWorkflowType).toBeTruthy();
+        if (vocabularyWorkflowType) {
+            if (createVocab)
+                expect(await vocabularyWorkflowType.create()).toBeTruthy();
+            expect(vocabularyWorkflowType.idVocabulary).toBeGreaterThan(0);
         }
     });
 
@@ -353,14 +384,6 @@ describe('DB Creation Test Suite', () => {
         expect(subjectNulls).toBeTruthy();
     });
 
-    test('DB Creation: WorkflowTemplate', async () => {
-        workflowTemplate = await UTIL.createWorkflowTemplateTest({
-            Name: 'Test Workflow Template',
-            idWorkflowTemplate: 0
-        });
-        expect(workflowTemplate).toBeTruthy();
-    });
-
     test('DB Creation: Scene', async () => {
         if (assetThumbnail)
             scene = await UTIL.createSceneTest({
@@ -546,7 +569,7 @@ describe('DB Creation Test Suite', () => {
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
-                StorageSize: 50,
+                StorageSize: BigInt(50),
                 StorageKeyStaging: UTIL.randomStorageKey('/test/asset/path/'),
                 Ingested: true,
                 BulkIngest: false,
@@ -555,7 +578,7 @@ describe('DB Creation Test Suite', () => {
         expect(assetVersion).toBeTruthy();
     });
 
-    test('DB Creation: AssetVersion Not Ingested', async () => {
+    test('DB Creation: AssetVersion Uploaded, Processed', async () => {
         if (assetThumbnail && userActive)
             assetVersionNotIngested = await UTIL.createAssetVersionTest({
                 idAsset: assetThumbnail.idAsset,
@@ -563,14 +586,32 @@ describe('DB Creation Test Suite', () => {
                 FileName: assetThumbnail.FilePath,
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
-                StorageHash: 'Asset Checksum',
-                StorageSize: 50,
+                StorageHash: 'Asset Checksum Not Ingested',
+                StorageSize: BigInt(50),
                 StorageKeyStaging: '',
                 Ingested: false,
                 BulkIngest: true,
                 idAssetVersion: 0
             });
         expect(assetVersionNotIngested).toBeTruthy();
+    });
+
+    test('DB Creation: AssetVersion Uploaded, Not Processed', async () => {
+        if (assetThumbnail && userActive)
+            assetVersionNotProcessed = await UTIL.createAssetVersionTest({
+                idAsset: assetThumbnail.idAsset,
+                Version: 0,
+                FileName: assetThumbnail.FilePath,
+                idUserCreator: userActive.idUser,
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum Not Processed',
+                StorageSize: BigInt(50),
+                StorageKeyStaging: '',
+                Ingested: null,
+                BulkIngest: true,
+                idAssetVersion: 0
+            });
+        expect(assetVersionNotProcessed).toBeTruthy();
     });
 
     test('DB Creation: CaptureData', async () => {
@@ -606,12 +647,28 @@ describe('DB Creation Test Suite', () => {
                 CompressedMultipleFiles: false,
                 idAsset: assetThumbnail.idAsset,
                 idCaptureData: captureData.idCaptureData,
-                idVVariantType!: vocabulary.idVocabulary
+                idVVariantType: vocabulary.idVocabulary
             });
         expect(captureDataFile).toBeTruthy();
         if (captureDataFile) {
             expect(await captureDataFile.create()).toBeTruthy();
             expect(captureDataFile.idCaptureDataFile).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: CaptureDataFile Nulls', async () => {
+        if (captureData && assetThumbnail && vocabulary)
+            captureDataFileNulls = new DBAPI.CaptureDataFile({
+                idCaptureDataFile: 0,
+                CompressedMultipleFiles: false,
+                idAsset: assetThumbnail.idAsset,
+                idCaptureData: captureData.idCaptureData,
+                idVVariantType: null
+            });
+        expect(captureDataFileNulls).toBeTruthy();
+        if (captureDataFileNulls) {
+            expect(await captureDataFileNulls.create()).toBeTruthy();
+            expect(captureDataFileNulls.idCaptureDataFile).toBeGreaterThan(0);
         }
     });
 
@@ -768,49 +825,45 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Job', async () => {
-        job = new DBAPI.Job({
-            Name: 'Test Job',
-            idJob: 0
-        });
-        expect(job).toBeTruthy();
-        if (job) {
-            expect(await job.create()).toBeTruthy();
-            expect(job.idJob).toBeGreaterThan(0);
-        }
-    });
-
-    test('DB Creation: JobTask', async () => {
-        if (job && vocabulary)
-            jobTask = new DBAPI.JobTask({
-                idJob: job.idJob,
+        if (vocabulary)
+            job = await UTIL.createJobTest({
                 idVJobType: vocabulary.idVocabulary,
-                State: 'Test Job State',
-                Step: 'Test Job State',
-                Error: 'Test Job Error',
-                Parameters: 'Test Job Parameters',
-                Report: 'Test Job Report',
-                idJobTask: 0
+                Name: 'Test Job',
+                Status: 0,
+                Frequency: '100',
+                idJob: 0
             });
-        expect(jobTask).toBeTruthy();
-        if (jobTask) {
-            expect(await jobTask.create()).toBeTruthy();
-            expect(jobTask.idJobTask).toBeGreaterThan(0);
-        }
+        expect(job).toBeTruthy();
     });
 
-    test('DB Creation: JobTaskCook', async () => {
-        if (jobTask)
-            jobTaskCook = new DBAPI.JobTaskCook({
-                idJobTask: jobTask.idJobTask,
-                JobID: 'Test JobID',
-                RecipeID: 'Test Recipe ID',
-                idJobTaskCook: 0
+    test('DB Creation: JobRun', async () => {
+        if (job)
+            jobRun = await UTIL.createJobRunTest({
+                idJob: job.idJob,
+                Status: 0,
+                Result: false,
+                DateStart: UTIL.nowCleansed(),
+                DateEnd: null,
+                Configuration: null,
+                Parameters: null,
+                Output: null,
+                Error: null,
+                idJobRun: 0
             });
-        expect(jobTaskCook).toBeTruthy();
-        if (jobTaskCook) {
-            expect(await jobTaskCook.create()).toBeTruthy();
-            expect(jobTaskCook.idJobTaskCook).toBeGreaterThan(0);
-        }
+        expect(jobRun).toBeTruthy();
+
+        expect(DBAPI.JobRun.constructFromPrisma({
+            idJob: 0,
+            Status: 0,
+            Result: false,
+            DateStart: UTIL.nowCleansed(),
+            DateEnd: null,
+            Configuration: null,
+            Parameters: null,
+            Output: null,
+            Error: null,
+            idJobRun: 0
+        })).toBeTruthy();
     });
 
     test('DB Creation: Metadata', async () => {
@@ -850,26 +903,8 @@ describe('DB Creation Test Suite', () => {
         }
     });
 
-    test('DB Creation: ModelMetrics', async () => {
-        modelMetrics = await UTIL.createModelMetricsTest({
-            BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
-            CountPoint: 100, CountFace: 50, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: true, HasFaceNormals: false,
-            HasTangents: true, HasTextureCoordinates: false, HasVertexNormals: true, HasVertexColor: false, IsManifold: true, IsWatertight: false,
-            idModelMetrics: 0
-        });
-        expect(modelMetrics).toBeTruthy();
-
-        modelMetrics2 = await UTIL.createModelMetricsTest({
-            BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 2, BoundingBoxP2Y: 2, BoundingBoxP2Z: 2,
-            CountPoint: null, CountFace: null, CountColorChannel: 0, CountTextureCoorinateChannel: 0, HasBones: false, HasFaceNormals: false,
-            HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: false, HasVertexColor: true, IsManifold: false, IsWatertight: false,
-            idModelMetrics: 0
-        });
-        expect(modelMetrics2).toBeTruthy();
-    });
-
     test('DB Creation: Model', async () => {
-        if (vocabulary && assetThumbnail && modelMetrics)
+        if (vocabulary && assetThumbnail)
             model = await UTIL.createModelTest({
                 Name: 'Test Model',
                 Master: true,
@@ -881,14 +916,15 @@ describe('DB Creation Test Suite', () => {
                 idVPurpose: vocabulary.idVocabulary,
                 idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: assetThumbnail.idAsset,
-                idModelMetrics: modelMetrics.idModelMetrics,
+                CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY',
                 idModel: 0
             });
         expect(model).toBeTruthy();
     });
 
     test('DB Creation: Model With Nulls', async () => {
-        if (assetThumbnail && vocabulary)
+        if (vocabulary)
             modelNulls = await UTIL.createModelTest({
                 Name: 'Test Model with Nulls',
                 Master: true,
@@ -900,25 +936,70 @@ describe('DB Creation Test Suite', () => {
                 idVPurpose: vocabulary.idVocabulary,
                 idVFileType: vocabulary.idVocabulary,
                 idAssetThumbnail: null,
-                idModelMetrics: null,
+                CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
+                CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY',
                 idModel: 0
             });
         expect(modelNulls).toBeTruthy();
     });
 
+    test('DB Creation: Fetch System Object Asset', async() => {
+        systemObjectModel = model ? await model.fetchSystemObject() : null;
+        expect(systemObjectModel).toBeTruthy();
+        expect(systemObjectModel ? systemObjectModel.idModel : -1).toBe(model ? model.idModel : -2);
+    });
+
+    test('DB Creation: Asset For Model', async () => {
+        if (vocabulary&& systemObjectModel)
+            assetModel = await UTIL.createAssetTest({
+                FileName: 'Test Asset 2',
+                FilePath: '/test/asset/path2',
+                idAssetGroup: null,
+                idVAssetType: vocabulary.idVocabulary,
+                idSystemObject: systemObjectModel.idSystemObject,
+                StorageKey: UTIL.randomStorageKey('/test/asset/path/'),
+                idAsset: 0
+            });
+        expect(assetModel).toBeTruthy();
+    });
+
+    test('DB Creation: AssetVersion For Model', async () => {
+        if (assetModel && userActive)
+            assetVersionModel = await UTIL.createAssetVersionTest({
+                idAsset: assetModel.idAsset,
+                Version: 0,
+                FileName: assetModel.FilePath,
+                idUserCreator: userActive.idUser,
+                DateCreated: UTIL.nowCleansed(),
+                StorageHash: 'Asset Checksum',
+                StorageSize: BigInt(50),
+                StorageKeyStaging: UTIL.randomStorageKey('/test/asset/path/'),
+                Ingested: true,
+                BulkIngest: false,
+                idAssetVersion: 0
+            });
+        expect(assetVersionModel).toBeTruthy();
+    });
+
     test('DB Creation: ModelObject', async () => {
-        if (model && modelMetrics)
+        if (model)
             modelObject = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
-                idModelMetrics: modelMetrics.idModelMetrics,
+                BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 1, BoundingBoxP2Y: 1, BoundingBoxP2Z: 1,
+                CountVertices: 100, CountFaces: 50, CountColorChannels: 0, CountTextureCoordinateChannels: 0, HasBones: true, HasFaceNormals: false,
+                HasTangents: true, HasTextureCoordinates: false, HasVertexNormals: true, HasVertexColor: false, IsTwoManifoldUnbounded: true,
+                IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
                 idModelObject: 0
             });
         expect(modelObject).toBeTruthy();
 
-        if (model && modelMetrics2)
+        if (model)
             modelObject2 = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
-                idModelMetrics: modelMetrics2.idModelMetrics,
+                BoundingBoxP1X: 0, BoundingBoxP1Y: 0, BoundingBoxP1Z: 0, BoundingBoxP2X: 2, BoundingBoxP2Y: 2, BoundingBoxP2Z: 2,
+                CountVertices: null, CountFaces: null, CountColorChannels: 0, CountTextureCoordinateChannels: 0, HasBones: false, HasFaceNormals: false,
+                HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: false, HasVertexColor: true, IsTwoManifoldUnbounded: false,
+                IsTwoManifoldBounded: false, IsWatertight: false, SelfIntersecting: false,
                 idModelObject: 0
             });
         expect(modelObject2).toBeTruthy();
@@ -926,7 +1007,10 @@ describe('DB Creation Test Suite', () => {
         if (model)
             modelObject3 = await UTIL.createModelObjectTest({
                 idModel: model.idModel,
-                idModelMetrics: 0,
+                BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null, BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
+                CountVertices: null, CountFaces: null, CountColorChannels: null, CountTextureCoordinateChannels: null, HasBones: null, HasFaceNormals: null,
+                HasTangents: null, HasTextureCoordinates: null, HasVertexNormals: null, HasVertexColor: null, IsTwoManifoldUnbounded: null,
+                IsTwoManifoldBounded: null, IsWatertight: null, SelfIntersecting: null,
                 idModelObject: 0
             });
         expect(modelObject3).toBeTruthy();
@@ -934,13 +1018,30 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: ModelMaterial', async () => {
-        if (modelObject)
-            modelMaterial = await UTIL.createModelMaterialTest({
-                idModelObject: modelObject.idModelObject,
-                Name: 'Test ModelMaterial',
-                idModelMaterial: 0
-            });
+        modelMaterial = await UTIL.createModelMaterialTest({
+            Name: 'Test ModelMaterial',
+            idModelMaterial: 0
+        });
         expect(modelMaterial).toBeTruthy();
+    });
+
+    test('DB Creation: ModelObjectModelMaterialXref', async () => {
+        if (modelMaterial) {
+            if (modelObject)
+                modelObjectModelMaterialXref1 = await UTIL.createModelObjectModelMaterialXrefTest({
+                    idModelObject: modelObject.idModelObject,
+                    idModelMaterial: modelMaterial.idModelMaterial,
+                    idModelObjectModelMaterialXref: 0
+                });
+            if (modelObject2)
+                modelObjectModelMaterialXref2 = await UTIL.createModelObjectModelMaterialXrefTest({
+                    idModelObject: modelObject2.idModelObject,
+                    idModelMaterial: modelMaterial.idModelMaterial,
+                    idModelObjectModelMaterialXref: 0
+                });
+        }
+        expect(modelObjectModelMaterialXref1).toBeTruthy();
+        expect(modelObjectModelMaterialXref2).toBeTruthy();
     });
 
     test('DB Creation: ModelMaterialUVMap', async () => {
@@ -961,12 +1062,14 @@ describe('DB Creation Test Suite', () => {
                 idVMaterialType: vocabulary.idVocabulary,
                 MaterialTypeOther: 'Model Material Type',
                 idModelMaterialUVMap: modelMaterialUVMap.idModelMaterialUVMap,
+                UVMapEmbedded: false,
                 ChannelPosition: 0,
                 ChannelWidth: 1,
                 Scalar1: null,
                 Scalar2: null,
                 Scalar3: null,
                 Scalar4: null,
+                AdditionalAttributes: null,
                 idModelMaterialChannel: 0
             });
         expect(modelMaterialChannel).toBeTruthy();
@@ -977,15 +1080,25 @@ describe('DB Creation Test Suite', () => {
                 idVMaterialType: null,
                 MaterialTypeOther: 'Model Material Type',
                 idModelMaterialUVMap: null,
+                UVMapEmbedded: false,
                 ChannelPosition: 0,
                 ChannelWidth: 1,
                 Scalar1: null,
                 Scalar2: null,
                 Scalar3: null,
                 Scalar4: null,
+                AdditionalAttributes: null,
                 idModelMaterialChannel: 0
             });
         expect(modelMaterialChannelNulls).toBeTruthy();
+    });
+
+    test('DB Creation: ModelAsset', async () => {
+        if (assetThumbnail && assetVersion) {
+            expect(new DBAPI.ModelAsset(assetThumbnail, assetVersion, true, null)).toBeTruthy();
+            expect(new DBAPI.ModelAsset(assetThumbnail, assetVersion, false, ['diffuse', 'emmisive'])).toBeTruthy();
+            expect(new DBAPI.ModelAsset(assetThumbnail, assetVersion, false, null)).toBeTruthy();
+        }
     });
 
     test('DB Creation: ModelProcessingAction', async () => {
@@ -1285,13 +1398,14 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Workflow', async () => {
-        if (workflowTemplate && project && userActive)
+        if (vocabularyWorkflowType && project && userActive)
             workflow = await UTIL.createWorkflowTest({
-                idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
+                idVWorkflowType: vocabularyWorkflowType.idVocabulary,
                 idProject: project.idProject,
                 idUserInitiator: userActive.idUser,
                 DateInitiated: UTIL.nowCleansed(),
                 DateUpdated: UTIL.nowCleansed(),
+                Parameters: null,
                 idWorkflow: 0
             });
         expect(workflow).toBeTruthy();
@@ -1302,13 +1416,14 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Workflow With Nulls', async () => {
-        if (workflowTemplate)
+        if (vocabularyWorkflowType)
             workflowNulls = await UTIL.createWorkflowTest({
-                idWorkflowTemplate: workflowTemplate.idWorkflowTemplate,
+                idVWorkflowType: vocabularyWorkflowType.idVocabulary,
                 idProject: null,
                 idUserInitiator: null,
                 DateInitiated: UTIL.nowCleansed(),
                 DateUpdated: UTIL.nowCleansed(),
+                Parameters: null,
                 idWorkflow: 0
             });
         expect(workflowNulls).toBeTruthy();
@@ -1319,9 +1434,10 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: WorkflowStep', async () => {
-        if (workflow && userActive && vocabulary)
+        if (workflow && userActive && vocabulary && jobRun)
             workflowStep = await UTIL.createWorkflowStepTest({
                 idWorkflow: workflow.idWorkflow,
+                idJobRun: jobRun.idJobRun,
                 idUserOwner: userActive.idUser,
                 idVWorkflowStepType: vocabulary.idVocabulary,
                 State: 0,
@@ -1333,6 +1449,23 @@ describe('DB Creation Test Suite', () => {
         if (workflowStep) {
             expect(await workflowStep.create()).toBeTruthy();
             expect(workflowStep.idWorkflowStep).toBeGreaterThan(0);
+        }
+
+        if (workflow && vocabulary)
+            workflowStepNulls = await UTIL.createWorkflowStepTest({
+                idWorkflow: workflow.idWorkflow,
+                idJobRun: null,
+                idUserOwner: null,
+                idVWorkflowStepType: vocabulary.idVocabulary,
+                State: 0,
+                DateCreated: UTIL.nowCleansed(),
+                DateCompleted: UTIL.nowCleansed(),
+                idWorkflowStep: 0
+            });
+        expect(workflowStepNulls).toBeTruthy();
+        if (workflowStepNulls) {
+            expect(await workflowStepNulls.create()).toBeTruthy();
+            expect(workflowStepNulls.idWorkflowStep).toBeGreaterThan(0);
         }
     });
 
@@ -1354,7 +1487,7 @@ describe('DB Creation Test Suite', () => {
             workflowStepSystemObjectXref2 = new DBAPI.WorkflowStepSystemObjectXref({
                 idWorkflowStep: workflowStep.idWorkflowStep,
                 idSystemObject: systemObjectSubject.idSystemObject,
-                Input: false,
+                Input: true,
                 idWorkflowStepSystemObjectXref: 0
             });
         expect(workflowStepSystemObjectXref2).toBeTruthy();
@@ -1649,8 +1782,18 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersionNotIngested]));
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersionNotIngested, assetVersionNotProcessed]));
             }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchFromSystemObject', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (systemObjectSubject) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFromSystemObject(systemObjectSubject.idSystemObject);
+            if (assetVersionFetch)
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotProcessed]));
         }
         expect(assetVersionFetch).toBeTruthy();
     });
@@ -1660,7 +1803,7 @@ describe('DB Fetch By ID Test Suite', () => {
         if (assetThumbnail) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchLatestFromAsset(assetThumbnail.idAsset);
             if (assetVersionFetch) {
-                expect(assetVersionFetch).toEqual(assetVersionNotIngested);
+                expect(assetVersionFetch).toEqual(assetVersionNotProcessed);
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -1675,7 +1818,7 @@ describe('DB Fetch By ID Test Suite', () => {
                 idUserCreator: userActive.idUser,
                 DateCreated: UTIL.nowCleansed(),
                 StorageHash: 'Asset Checksum',
-                StorageSize: 50,
+                StorageSize: BigInt(50),
                 StorageKeyStaging: '',
                 Ingested: true,
                 BulkIngest: false,
@@ -1733,7 +1876,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch AssetVersion: AssetVersion.fetchFromUserByIngested Not Ingested', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
         if (userActive) {
-            assetVersionFetch = await DBAPI.AssetVersion.fetchFromUserByIngested(userActive.idUser, false);
+            assetVersionFetch = await DBAPI.AssetVersion.fetchFromUserByIngested(userActive.idUser, false, false);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
             }
@@ -1752,12 +1895,23 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(assetVersionFetch).toBeTruthy();
     });
 
-    test('DB Fetch AssetVersion: AssetVersion.fetchByIngested Not Ingested', async () => {
+    test('DB Fetch AssetVersion: AssetVersion.fetchByIngested Not Ingested, Processed', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
         if (userActive) {
             assetVersionFetch = await DBAPI.AssetVersion.fetchByIngested(false);
             if (assetVersionFetch) {
                 expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotIngested]));
+            }
+        }
+        expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch AssetVersion: AssetVersion.fetchByIngested Not Ingested, Not Processed', async () => {
+        let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
+        if (userActive) {
+            assetVersionFetch = await DBAPI.AssetVersion.fetchByIngested(null);
+            if (assetVersionFetch) {
+                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersionNotProcessed]));
             }
         }
         expect(assetVersionFetch).toBeTruthy();
@@ -1921,6 +2075,40 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(itemFetch).toBeTruthy();
     });
 
+    test('DB Fetch By ID: Job', async () => {
+        let jobFetch: DBAPI.Job | null = null;
+        if (job) {
+            jobFetch = await DBAPI.Job.fetch(job.idJob);
+            if (jobFetch) {
+                expect(jobFetch).toMatchObject(job);
+                expect(job).toMatchObject(jobFetch);
+            }
+        }
+        expect(jobFetch).toBeTruthy();
+    });
+
+    test('DB Fetch: Job.fetchByType', async () => {
+        let jobFetch: DBAPI.Job[] | null = [];
+        if (job) {
+            jobFetch = await DBAPI.Job.fetchByType(job.idVJobType);
+            if (jobFetch)
+                expect(jobFetch).toEqual(expect.arrayContaining([job]));
+        }
+        expect(jobFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: JobRun', async () => {
+        let jobRunFetch: DBAPI.JobRun | null = null;
+        if (jobRun) {
+            jobRunFetch = await DBAPI.JobRun.fetch(jobRun.idJobRun);
+            if (jobRunFetch) {
+                expect(jobRunFetch).toMatchObject(jobRun);
+                expect(jobRun).toMatchObject(jobRunFetch);
+            }
+        }
+        expect(jobRunFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: License', async () => {
         let licenseFetch: DBAPI.License | null = null;
         if (license) {
@@ -2062,18 +2250,6 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(modelMaterialUVMapFetch).toBeTruthy();
     });
 
-    test('DB Fetch By ID: ModelMetrics', async () => {
-        let modelMetricsFetch: DBAPI.ModelMetrics | null = null;
-        if (modelMetrics) {
-            modelMetricsFetch = await DBAPI.ModelMetrics.fetch(modelMetrics.idModelMetrics);
-            if (modelMetricsFetch) {
-                expect(modelMetricsFetch).toMatchObject(modelMetrics);
-                expect(modelMetrics).toMatchObject(modelMetricsFetch);
-            }
-        }
-        expect(modelMetricsFetch).toBeTruthy();
-    });
-
     test('DB Fetch By ID: ModelObject', async () => {
         let modelObjectFetch: DBAPI.ModelObject | null = null;
         if (modelObject) {
@@ -2084,6 +2260,18 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(modelObjectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: ModelObjectModelMaterialXref', async () => {
+        let modelObjectModelMaterialXrefFetch: DBAPI.ModelObjectModelMaterialXref | null = null;
+        if (modelObjectModelMaterialXref1) {
+            modelObjectModelMaterialXrefFetch = await DBAPI.ModelObjectModelMaterialXref.fetch(modelObjectModelMaterialXref1.idModelObjectModelMaterialXref);
+            if (modelObjectModelMaterialXrefFetch) {
+                expect(modelObjectModelMaterialXrefFetch).toMatchObject(modelObjectModelMaterialXref1);
+                expect(modelObjectModelMaterialXref1).toMatchObject(modelObjectModelMaterialXrefFetch);
+            }
+        }
+        expect(modelObjectModelMaterialXrefFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: ModelProcessingAction', async () => {
@@ -2504,17 +2692,27 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(workflowFetch).toBeTruthy();
     });
 
-    test('DB Fetch Workflow: Workflow.fetchFromWorkflowTemplate', async () => {
+    test('DB Fetch Workflow: Workflow.fetchFromWorkflowType', async () => {
         let workflowFetch: DBAPI.Workflow[] | null = null;
-        if (workflowTemplate) {
-            workflowFetch = await DBAPI.Workflow.fetchFromWorkflowTemplate(workflowTemplate.idWorkflowTemplate);
-            if (workflowFetch) {
-                if (workflow) {
-                    expect(workflowFetch).toEqual(expect.arrayContaining([workflow]));
+        if (vocabularyWorkflowType) {
+            LOG.info(`DB Fetch Workflow fetching from workflow vocab ${JSON.stringify(vocabularyWorkflowType)}`, LOG.LS.eTEST);
+            const eVocabEnum: eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(vocabularyWorkflowType.idVocabulary);
+            expect(eVocabEnum).toBeTruthy();
+
+            if (eVocabEnum) {
+                workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabEnum);
+                if (workflowFetch) {
+                    if (workflow && workflowNulls)
+                        expect(workflowFetch).toEqual(expect.arrayContaining([workflow, workflowNulls]));
                 }
             }
         }
         expect(workflowFetch).toBeTruthy();
+
+        workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabularyID.eAssetAssetTypeModel);
+        expect(workflowFetch).toBeFalsy();
+        workflowFetch = await DBAPI.Workflow.fetchFromWorkflowType(eVocabularyID.eNone);
+        expect(workflowFetch).toBeFalsy();
     });
 
     test('DB Fetch By ID: WorkflowStep', async () => {
@@ -2551,6 +2749,17 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(workflowStepFetch).toBeTruthy();
     });
 
+    test('DB Fetch WorkflowStep: WorkflowStep.fetchFromJobRun', async () => {
+        let workflowStepFetch: DBAPI.WorkflowStep[] | null = null;
+        if (jobRun) {
+            workflowStepFetch = await DBAPI.WorkflowStep.fetchFromJobRun(jobRun.idJobRun);
+            if (workflowStepFetch) {
+                expect(workflowStepFetch).toEqual(expect.arrayContaining([workflowStep]));
+            }
+        }
+        expect(workflowStepFetch).toBeTruthy();
+    });
+
     test('DB Fetch By ID: WorkflowStepSystemObjectXref', async () => {
         let workflowStepSystemObjectXrefFetch: DBAPI.WorkflowStepSystemObjectXref | null = null;
         if (workflowStepSystemObjectXref) {
@@ -2576,16 +2785,17 @@ describe('DB Fetch By ID Test Suite', () => {
         expect(workflowStepSystemObjectXrefFetch).toBeTruthy();
     });
 
-    test('DB Fetch By ID: WorkflowTemplate', async () => {
-        let workflowTemplateFetch: DBAPI.WorkflowTemplate | null = null;
-        if (workflowTemplate) {
-            workflowTemplateFetch = await DBAPI.WorkflowTemplate.fetch(workflowTemplate.idWorkflowTemplate);
-            if (workflowTemplateFetch) {
-                expect(workflowTemplateFetch).toMatchObject(workflowTemplate);
-                expect(workflowTemplate).toMatchObject(workflowTemplateFetch);
+    test('DB Fetch WorkflowStepSystemObjectXref: WorkflowStepSystemObjectXref.fetchFromWorkflow', async () => {
+        let workflowStepSystemObjectXrefFetch: DBAPI.WorkflowStepSystemObjectXref[] | null = null;
+        if (workflowStep) {
+            workflowStepSystemObjectXrefFetch = await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow(workflowStep.idWorkflow);
+            if (workflowStepSystemObjectXrefFetch) {
+                if (workflowStepSystemObjectXref) {
+                    expect(workflowStepSystemObjectXrefFetch).toEqual(expect.arrayContaining([workflowStepSystemObjectXref, workflowStepSystemObjectXref2]));
+                }
             }
         }
-        expect(workflowTemplateFetch).toBeTruthy();
+        expect(workflowStepSystemObjectXrefFetch).toBeTruthy();
     });
 });
 
@@ -3639,11 +3849,9 @@ describe('DB Fetch Special Test Suite', () => {
 
     test('DB Fetch Special: AssetVersion.fetchAll', async () => {
         let assetVersionFetch: DBAPI.AssetVersion[] | null = null;
-        if (assetVersion && assetVersion2 && assetVersionNotIngested) {
-            assetVersionFetch = await DBAPI.AssetVersion.fetchAll();
-            if (assetVersionFetch)
-                expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersion2, assetVersionNotIngested]));
-        }
+        assetVersionFetch = await DBAPI.AssetVersion.fetchAll();
+        if (assetVersionFetch)
+            expect(assetVersionFetch).toEqual(expect.arrayContaining([assetVersion, assetVersion2, assetVersionNotIngested, assetVersionNotProcessed]));
         expect(assetVersionFetch).toBeTruthy();
     });
 
@@ -3821,6 +4029,63 @@ describe('DB Fetch Special Test Suite', () => {
         expect(itemFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Job.convertJobStatusToEnum', async () => {
+        expect(DBAPI.Job.convertJobStatusToEnum(-1)).toEqual(DBAPI.eJobStatus.eInactive);
+        expect(DBAPI.Job.convertJobStatusToEnum(0)).toEqual(DBAPI.eJobStatus.eInactive);
+        expect(DBAPI.Job.convertJobStatusToEnum(1)).toEqual(DBAPI.eJobStatus.eActive);
+        expect(DBAPI.Job.convertJobStatusToEnum(2)).toEqual(DBAPI.eJobStatus.eTest);
+
+        expect(job).toBeTruthy();
+        if (job) {
+            expect(job.getStatus()).toEqual(DBAPI.eJobStatus.eInactive);
+            job.setStatus(DBAPI.eJobStatus.eActive);
+            expect(job.getStatus()).toEqual(DBAPI.eJobStatus.eActive);
+            expect(job.Status).toEqual(1);
+            job.setStatus(DBAPI.eJobStatus.eInactive);
+        }
+    });
+
+    test('DB Fetch Special: JobRun.convertJobRunStatusToEnum', async () => {
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(-1)).toEqual(DBAPI.eJobRunStatus.eUnitialized);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(0)).toEqual(DBAPI.eJobRunStatus.eUnitialized);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(1)).toEqual(DBAPI.eJobRunStatus.eCreated);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(2)).toEqual(DBAPI.eJobRunStatus.eRunning);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(3)).toEqual(DBAPI.eJobRunStatus.eWaiting);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(4)).toEqual(DBAPI.eJobRunStatus.eDone);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(5)).toEqual(DBAPI.eJobRunStatus.eError);
+        expect(DBAPI.JobRun.convertJobRunStatusToEnum(6)).toEqual(DBAPI.eJobRunStatus.eCancelled);
+
+        expect(jobRun).toBeTruthy();
+        if (jobRun) {
+            expect(jobRun.getStatus()).toEqual(DBAPI.eJobRunStatus.eUnitialized);
+            jobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
+            expect(jobRun.getStatus()).toEqual(DBAPI.eJobRunStatus.eCreated);
+            expect(jobRun.Status).toEqual(1);
+            jobRun.setStatus(DBAPI.eJobRunStatus.eUnitialized);
+        }
+    });
+
+    test('DB Fetch Special: JobRun.fetchMatching', async () => {
+        const jobRuns1: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eJobRunStatus.eDone, true, [0]);
+        expect(jobRuns1).toBeTruthy();
+        if (jobRuns1)
+            expect(jobRuns1.length).toBeFalsy();
+        const jobRuns2: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, -1, DBAPI.eJobRunStatus.eDone, true, null);
+        expect(jobRuns2).toBeTruthy();
+        if (jobRuns2)
+            expect(jobRuns2.length).toBeFalsy();
+
+
+        // find JobCook results
+        const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
+        expect(idVJobType).toBeTruthy();
+        if (idVJobType) {
+            // The following will return a row if the JobNS test has run and successfully completed testing of packrat-cook integration.
+            // We cannot rely on this test having been run, so for now, we don't validate the result
+            await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eJobRunStatus.eDone, true, null);
+        }
+    });
+
     test('DB Fetch Special: Model.fetchAll', async () => {
         let modelFetch: DBAPI.Model[] | null = null;
         if (model && modelNulls) {
@@ -3852,14 +4117,22 @@ describe('DB Fetch Special Test Suite', () => {
         if (model) {
             modelConstellation1 = await DBAPI.ModelConstellation.fetch(model.idModel);
             if (modelConstellation1) {
-                expect(modelConstellation1.model).toEqual(model);
-                expect(modelConstellation1.modelObjects).toEqual(expect.arrayContaining([modelObject]));
-                expect(modelConstellation1.modelMaterials).toEqual(expect.arrayContaining([modelMaterial]));
-                expect(modelConstellation1.modelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel]));
-                expect(modelConstellation1.modelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
-                if (modelMetrics)
-                    expect(modelConstellation1.modelMetric).toEqual(modelMetrics);
-                expect(modelConstellation1.modelObjectMetrics).toEqual(expect.arrayContaining([modelMetrics]));
+                expect(modelConstellation1.Model).toEqual(model);
+                expect(modelConstellation1.ModelObjects).toEqual(expect.arrayContaining([modelObject]));
+                expect(modelConstellation1.ModelMaterials).toEqual(expect.arrayContaining([modelMaterial]));
+                expect(modelConstellation1.ModelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel]));
+                expect(modelConstellation1.ModelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
+                expect(modelConstellation1.ModelObjectModelMaterialXref).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1, modelObjectModelMaterialXref2]));
+                expect(modelConstellation1.ModelAssets).toBeTruthy();
+                if (modelConstellation1.ModelAssets) {
+                    expect(modelConstellation1.ModelAssets.length).toEqual(1);
+                    if (modelConstellation1.ModelAssets.length == 1) {
+                        if (assetModel)
+                            expect(modelConstellation1.ModelAssets[0].Asset).toMatchObject(assetModel);
+                        if (assetVersionModel)
+                            expect(modelConstellation1.ModelAssets[0].AssetVersion).toMatchObject(assetVersionModel);
+                    }
+                }
             }
         }
         expect(modelConstellation1).toBeTruthy();
@@ -3867,16 +4140,32 @@ describe('DB Fetch Special Test Suite', () => {
         if (modelNulls) {
             modelConstellation2 = await DBAPI.ModelConstellation.fetch(modelNulls.idModel);
             if (modelConstellation2) {
-                expect(modelConstellation2.model).toEqual(modelNulls);
-                expect(modelConstellation2.modelObjects).toEqual([]);
-                expect(modelConstellation2.modelMaterials).toBeFalsy();
-                expect(modelConstellation2.modelMaterialChannels).toBeFalsy();
-                expect(modelConstellation2.modelMaterialUVMaps).toEqual([]);
-                expect(modelConstellation2.modelMetric).toBeFalsy();
-                expect(modelConstellation2.modelObjectMetrics).toBeFalsy();
+                expect(modelConstellation2.Model).toEqual(modelNulls);
+                expect(modelConstellation2.ModelObjects).toEqual([]);
+                expect(modelConstellation2.ModelMaterials).toBeFalsy();
+                expect(modelConstellation2.ModelMaterialChannels).toBeFalsy();
+                expect(modelConstellation2.ModelMaterialUVMaps).toEqual([]);
+                expect(modelConstellation2.ModelObjectModelMaterialXref).toBeFalsy();
+                expect(modelConstellation2.ModelAssets).toBeFalsy();
             }
         }
         expect(modelConstellation2).toBeTruthy();
+    });
+
+
+    test('DB Fetch Special: ModelAsset', async () => {
+        let modelAsset: DBAPI.ModelAsset | null = null;
+        if (assetVersion)
+            modelAsset = await DBAPI.ModelAsset.fetch(assetVersion);
+        expect(modelAsset).toBeTruthy();
+        if (modelAsset) {
+            expect(modelAsset.Asset).toBeTruthy();
+            if (assetThumbnail)
+                expect(modelAsset.Asset).toMatchObject(assetThumbnail);
+            expect(modelAsset.AssetVersion).toBeTruthy();
+            if (assetVersion)
+                expect(modelAsset.AssetVersion).toMatchObject(assetVersion);
+        }
     });
 
     test('DB Fetch Special: ModelMaterial.fetchFromModelObjects', async () => {
@@ -3903,6 +4192,18 @@ describe('DB Fetch Special Test Suite', () => {
         expect(modelMaterialChannels).toBeTruthy();
     });
 
+    test('DB Fetch Special: ModelMaterialChannel.fetchFromModelMaterialUVMap', async () => {
+        let modelMaterialChannels: DBAPI.ModelMaterialChannel[] | null = null;
+        if (modelMaterialUVMap) {
+            modelMaterialChannels = await DBAPI.ModelMaterialChannel.fetchFromModelMaterialUVMap(modelMaterialUVMap.idModelMaterialUVMap);
+            if (modelMaterialChannels) {
+                expect(modelMaterialChannels.length).toEqual(1);
+                expect(modelMaterialChannels).toEqual(expect.arrayContaining([modelMaterialChannel]));
+            }
+        }
+        expect(modelMaterialChannels).toBeTruthy();
+    });
+
     test('DB Fetch Special: ModelMaterialChannel.fetchFromModelMaterials', async () => {
         let modelMaterialChannels: DBAPI.ModelMaterialChannel[] | null = null;
         if (modelMaterial) {
@@ -3913,6 +4214,18 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(modelMaterialChannels).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelMaterialUVMap.fetchFromAsset', async () => {
+        let modelMaterialUVMaps: DBAPI.ModelMaterialUVMap[] | null = null;
+        if (assetThumbnail) {
+            modelMaterialUVMaps = await DBAPI.ModelMaterialUVMap.fetchFromAsset(assetThumbnail.idAsset);
+            if (modelMaterialUVMaps) {
+                expect(modelMaterialUVMaps.length).toEqual(1);
+                expect(modelMaterialUVMaps).toEqual(expect.arrayContaining([modelMaterialUVMap]));
+            }
+        }
+        expect(modelMaterialUVMaps).toBeTruthy();
     });
 
     test('DB Fetch Special: ModelMaterialUVMap.fetchFromModel', async () => {
@@ -3939,18 +4252,6 @@ describe('DB Fetch Special Test Suite', () => {
         expect(modelMaterialUVMaps).toBeTruthy();
     });
 
-    test('DB Fetch Special: ModelMetrics.fetchFromModelObjects', async () => {
-        let modelMetricsList: DBAPI.ModelMetrics[] | null = null;
-        if (modelObject) {
-            modelMetricsList = await DBAPI.ModelMetrics.fetchFromModelObjects([modelObject]);
-            if (modelMetricsList) {
-                expect(modelMetricsList.length).toEqual(1);
-                expect(modelMetricsList).toEqual(expect.arrayContaining([modelMetrics]));
-            }
-        }
-        expect(modelMetricsList).toBeTruthy();
-    });
-
     test('DB Fetch Special: ModelObject.fetchFromModel', async () => {
         let modelObjects: DBAPI.ModelObject[] | null = null;
         if (model) {
@@ -3961,6 +4262,54 @@ describe('DB Fetch Special Test Suite', () => {
             }
         }
         expect(modelObjects).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelObjectModelMaterialXref.fetchFromModelObject', async () => {
+        let modelObjectModelMaterialXrefs: DBAPI.ModelObjectModelMaterialXref[] | null = null;
+        if (modelObject) {
+            modelObjectModelMaterialXrefs = await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObject(modelObject.idModelObject);
+            if (modelObjectModelMaterialXrefs) {
+                expect(modelObjectModelMaterialXrefs.length).toEqual(1);
+                expect(modelObjectModelMaterialXrefs).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1]));
+            }
+        }
+        expect(modelObjectModelMaterialXrefs).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelObjectModelMaterialXref.fetchFromModelObjects', async () => {
+        let modelObjectModelMaterialXrefs: DBAPI.ModelObjectModelMaterialXref[] | null = null;
+        if (modelObject) {
+            modelObjectModelMaterialXrefs = await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObjects([modelObject]);
+            if (modelObjectModelMaterialXrefs) {
+                expect(modelObjectModelMaterialXrefs.length).toEqual(1);
+                expect(modelObjectModelMaterialXrefs).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1]));
+            }
+        }
+        expect(modelObjectModelMaterialXrefs).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelObjectModelMaterialXref.fetchFromModelMaterial', async () => {
+        let modelObjectModelMaterialXrefs: DBAPI.ModelObjectModelMaterialXref[] | null = null;
+        if (modelMaterial) {
+            modelObjectModelMaterialXrefs = await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterial(modelMaterial.idModelMaterial);
+            if (modelObjectModelMaterialXrefs) {
+                expect(modelObjectModelMaterialXrefs.length).toEqual(2);
+                expect(modelObjectModelMaterialXrefs).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1, modelObjectModelMaterialXref2]));
+            }
+        }
+        expect(modelObjectModelMaterialXrefs).toBeTruthy();
+    });
+
+    test('DB Fetch Special: ModelObjectModelMaterialXref.fetchFromModelMaterials', async () => {
+        let modelObjectModelMaterialXrefs: DBAPI.ModelObjectModelMaterialXref[] | null = null;
+        if (modelMaterial) {
+            modelObjectModelMaterialXrefs = await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterials([modelMaterial]);
+            if (modelObjectModelMaterialXrefs) {
+                expect(modelObjectModelMaterialXrefs.length).toEqual(2);
+                expect(modelObjectModelMaterialXrefs).toEqual(expect.arrayContaining([modelObjectModelMaterialXref1, modelObjectModelMaterialXref2]));
+            }
+        }
+        expect(modelObjectModelMaterialXrefs).toBeTruthy();
     });
 
     test('DB Fetch Special: Project.fetchMasterFromSubjects', async () => {
@@ -4003,11 +4352,31 @@ describe('DB Fetch Special Test Suite', () => {
         expect(projectFetch).toBeTruthy();
     });
 
-    test('DB Fetch Project: Project.fetchFromSubjectsUnits', async () => {
+    test('DB Fetch Special: Project.fetchFromSubjectsUnits', async () => {
         let projectFetch: DBAPI.Project[] | null = null;
         if (subject && subjectNulls) {
             projectFetch = await DBAPI.Project.fetchDerivedFromSubjectsUnits([subject.idSubject, subjectNulls.idSubject]);
             if (projectFetch && project && project2)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Project.fetchProjectList', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (project) {
+            projectFetch = await DBAPI.Project.fetchProjectList('Test Project');
+            if (projectFetch)
+                expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
+        }
+        expect(projectFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Project.fetchProjectList with empty string', async () => {
+        let projectFetch: DBAPI.Project[] | null = null;
+        if (project) {
+            projectFetch = await DBAPI.Project.fetchProjectList('');
+            if (projectFetch)
                 expect(projectFetch).toEqual(expect.arrayContaining([project, project2]));
         }
         expect(projectFetch).toBeTruthy();
@@ -4137,8 +4506,28 @@ describe('DB Fetch Special Test Suite', () => {
         expect(unitFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: Unit.fetchFromNameSearch with empty string', async () => {
+        let unitFetch: DBAPI.Unit[] | null = null;
+        if (unitEdan) {
+            unitFetch = await DBAPI.Unit.fetchFromNameSearch('');
+            if (unitFetch && unit)
+                expect(unitFetch).toEqual(expect.arrayContaining([unit]));
+        }
+        expect(unitFetch).toBeTruthy();
+    });
+
     test('DB Fetch Special: Unit.fetchAll', async () => {
         const unitFetch: DBAPI.Unit[] | null = await DBAPI.Unit.fetchAll();
+        expect(unitFetch).toBeTruthy();
+        if (unitFetch) {
+            expect(unitFetch.length).toBeGreaterThan(0);
+            if (unit && unit2)
+                expect(unitFetch).toEqual(expect.arrayContaining([unit, unit2]));
+        }
+    });
+
+    test('DB Fetch Special: Unit.fetchAllWithSubjects', async () => {
+        const unitFetch: DBAPI.Unit[] | null = await DBAPI.Unit.fetchAllWithSubjects();
         expect(unitFetch).toBeTruthy();
         if (unitFetch) {
             expect(unitFetch.length).toBeGreaterThan(0);
@@ -4190,6 +4579,19 @@ describe('DB Fetch Special Test Suite', () => {
             if (userFetchArray)
                 expect(userFetchArray.length).toEqual(0);
         }
+    });
+
+    test('DB Fetch Special: WorkflowConstellation', async () => {
+        let WFC: DBAPI.WorkflowConstellation | null = null;
+        if (workflow) {
+            WFC = await DBAPI.WorkflowConstellation.fetch(workflow.idWorkflow);
+            if (WFC) {
+                expect(WFC.workflow).toEqual(workflow);
+                expect(WFC.workflowStep).toEqual(expect.arrayContaining([workflowStep, workflowStepNulls]));
+                expect(WFC.workflowStepXref).toEqual(expect.arrayContaining([workflowStepSystemObjectXref, workflowStepSystemObjectXref2]));
+            }
+        }
+        expect(WFC).toBeTruthy();
     });
 });
 
@@ -4446,30 +4848,6 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
-    test('DB Creation: AssetVersion.delete', async () => {
-        let assetVersion3: DBAPI.AssetVersion | null = null;
-        if (assetThumbnail && userActive) {
-            assetVersion3 = await UTIL.createAssetVersionTest({
-                idAsset: assetThumbnail.idAsset,
-                Version: 0,
-                FileName: assetThumbnail.FileName,
-                idUserCreator: userActive.idUser,
-                DateCreated: UTIL.nowCleansed(),
-                StorageHash: 'Asset Checksum',
-                StorageSize: 50,
-                StorageKeyStaging: '',
-                Ingested: true,
-                BulkIngest: false,
-                idAssetVersion: 0
-            });
-
-            const idAssetVersion: number = assetVersion3.idAssetVersion;
-            expect(idAssetVersion).toBeTruthy();
-        }
-        expect(assetVersion3).toBeTruthy();
-    });
-
-
     test('DB Update: CaptureData.update', async () => {
         let bUpdated: boolean = false;
         if (captureData && assetWithoutAG) {
@@ -4532,6 +4910,34 @@ describe('DB Update Test Suite', () => {
             expect(captureDataFileFetch).toBeTruthy();
             if (captureDataFileFetch)
                 expect(captureDataFileFetch.idAsset).toBe(assetWithoutAG.idAsset);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: CaptureDataFile.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (captureDataFile) {
+            captureDataFile.idVVariantType = null;
+            bUpdated = await captureDataFile.update();
+
+            const captureDataFileFetch: DBAPI.CaptureDataFile | null = await DBAPI.CaptureDataFile.fetch(captureDataFile.idCaptureDataFile);
+            expect(captureDataFileFetch).toBeTruthy();
+            if (captureDataFileFetch)
+                expect(captureDataFileFetch.idVVariantType).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: CaptureDataFile.update when null', async () => {
+        let bUpdated: boolean = false;
+        if (captureDataFile) {
+            captureDataFile.CompressedMultipleFiles = true;
+            bUpdated = await captureDataFile.update();
+
+            const captureDataFileFetch: DBAPI.CaptureDataFile | null = await DBAPI.CaptureDataFile.fetch(captureDataFile.idCaptureDataFile);
+            expect(captureDataFileFetch).toBeTruthy();
+            if (captureDataFileFetch)
+                expect(captureDataFileFetch.CompressedMultipleFiles).toEqual(true);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -4801,35 +5207,17 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
-    test('DB Update: JobTask.update', async () => {
+    test('DB Update: JobRun.update', async () => {
         let bUpdated: boolean = false;
-        if (jobTask && vocabulary2) {
-            const updated: string = 'Updated Job State';
-            jobTask.State = updated;
-            jobTask.idVJobType = vocabulary2.idVocabulary;
-            bUpdated = await jobTask.update();
+        if (jobRun) {
+            const updated: string = 'Updated JobRun Error';
+            jobRun.Error = updated;
+            bUpdated = await jobRun.update();
 
-            const jobTaskFetch: DBAPI.JobTask | null = await DBAPI.JobTask.fetch(jobTask.idJobTask);
-            expect(jobTaskFetch).toBeTruthy();
-            if (jobTaskFetch) {
-                expect(jobTaskFetch.State).toBe(updated);
-                expect(jobTaskFetch.idVJobType).toBe(vocabulary2.idVocabulary);
-            }
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
-    test('DB Update: JobTaskCook.update', async () => {
-        let bUpdated: boolean = false;
-        if (jobTaskCook) {
-            const updated: string = 'Updated Job ID';
-            jobTaskCook.JobID = updated;
-            bUpdated = await jobTaskCook.update();
-
-            const jobTaskCookFetch: DBAPI.JobTaskCook | null = await DBAPI.JobTaskCook.fetch(jobTaskCook.idJobTaskCook);
-            expect(jobTaskCookFetch).toBeTruthy();
-            if (jobTaskCookFetch)
-                expect(jobTaskCookFetch.JobID).toBe(updated);
+            const jobRunFetch: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(jobRun.idJobRun);
+            expect(jobRunFetch).toBeTruthy();
+            if (jobRunFetch)
+                expect(jobRunFetch.Error).toBe(updated);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -4966,19 +5354,17 @@ describe('DB Update Test Suite', () => {
 
     test('DB Update: Model.update', async () => {
         let bUpdated: boolean = false;
-        if (modelNulls && assetThumbnail && modelMetrics) {
+        if (modelNulls && assetThumbnail) {
             const SOOld: DBAPI.SystemObject | null = await modelNulls.fetchSystemObject();
             expect(SOOld).toBeTruthy();
 
             modelNulls.idAssetThumbnail = assetThumbnail.idAsset;
-            modelNulls.idModelMetrics = modelMetrics.idModelMetrics;
             bUpdated = await modelNulls.update();
 
             const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
             expect(modelFetch).toBeTruthy();
             if (modelFetch) {
                 expect(modelFetch.idAssetThumbnail).toBe(assetThumbnail.idAsset);
-                expect(modelFetch.idModelMetrics).toBe(modelMetrics.idModelMetrics);
 
                 const SONew: DBAPI.SystemObject | null = await modelFetch.fetchSystemObject();
                 expect(SONew).toBeTruthy();
@@ -4993,14 +5379,12 @@ describe('DB Update Test Suite', () => {
         let bUpdated: boolean = false;
         if (modelNulls) {
             modelNulls.idAssetThumbnail = null;
-            modelNulls.idModelMetrics = null;
             bUpdated = await modelNulls.update();
 
             const modelFetch: DBAPI.Model | null = await DBAPI.Model.fetch(modelNulls.idModel);
             expect(modelFetch).toBeTruthy();
             if (modelFetch) {
                 expect(modelFetch.idAssetThumbnail).toBeNull();
-                expect(modelFetch.idModelMetrics).toBeNull();
             }
         }
         expect(bUpdated).toBeTruthy();
@@ -5099,59 +5483,33 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
-    test('DB Update: ModelMetrics.update', async () => {
-        let bUpdated: boolean = false;
-        if (modelMetrics) {
-            const updated: number = 369;
-            modelMetrics.CountFace = updated;
-            bUpdated = await modelMetrics.update();
-
-            const modelMetricsFetch: DBAPI.ModelMetrics | null = await DBAPI.ModelMetrics.fetch(modelMetrics.idModelMetrics);
-            expect(modelMetricsFetch).toBeTruthy();
-            if (modelMetricsFetch)
-                expect(modelMetricsFetch.CountFace).toBe(updated);
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
     test('DB Update: ModelObject.update', async () => {
         let bUpdated: boolean = false;
-        if (modelObject && modelMetrics2) {
-            modelObject.idModelMetrics = modelMetrics2.idModelMetrics;
+        if (modelObject) {
+            const updated: number = 369;
+            modelObject.CountFaces = updated;
+
             bUpdated = await modelObject.update();
 
             const modelObjectFetch: DBAPI.ModelObject | null = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
             expect(modelObjectFetch).toBeTruthy();
             if (modelObjectFetch)
-                expect(modelObjectFetch.idModelMetrics).toBe(modelMetrics2.idModelMetrics);
+                expect(modelObjectFetch.CountFaces).toEqual(updated);
         }
         expect(bUpdated).toBeTruthy();
     });
 
-    test('DB Update: ModelObject.update disconnect', async () => {
+    test('DB Update: ModelObjectModelMaterialXref.update', async () => {
         let bUpdated: boolean = false;
-        if (modelObject) {
-            modelObject.idModelMetrics = null;
-            bUpdated = await modelObject.update();
+        if (modelObjectModelMaterialXref1 && modelObject2) {
+            modelObjectModelMaterialXref1.idModelObject = modelObject2.idModelObject;
+            bUpdated = await modelObjectModelMaterialXref1.update();
 
-            const modelObjectFetch: DBAPI.ModelObject | null = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
-            expect(modelObjectFetch).toBeTruthy();
-            if (modelObjectFetch)
-                expect(modelObjectFetch.idModelMetrics).toBeNull();
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
-    test('DB Update: ModelObject.update disconnect null', async () => {
-        let bUpdated: boolean = false;
-        if (modelObject) {
-            expect(modelObject.idModelMetrics).toBeNull();
-            bUpdated = await modelObject.update();
-
-            const modelObjectFetch: DBAPI.ModelObject | null = await DBAPI.ModelObject.fetch(modelObject.idModelObject);
-            expect(modelObjectFetch).toBeTruthy();
-            if (modelObjectFetch)
-                expect(modelObjectFetch.idModelMetrics).toBeNull();
+            const modelObjectModelMaterialXrefFetch: DBAPI.ModelObjectModelMaterialXref | null =
+                await DBAPI.ModelObjectModelMaterialXref.fetch(modelObjectModelMaterialXref1.idModelObjectModelMaterialXref);
+            expect(modelObjectModelMaterialXrefFetch).toBeTruthy();
+            if (modelObjectModelMaterialXrefFetch)
+                expect(modelObjectModelMaterialXrefFetch.idModelObject).toBe(modelObject2.idModelObject);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -5723,12 +6081,62 @@ describe('DB Update Test Suite', () => {
         let bUpdated: boolean = false;
         if (workflowStep && workflowNulls) {
             workflowStep.idWorkflow = workflowNulls.idWorkflow;
+
+            workflowStep.setState(DBAPI.eWorkflowStepState.eCreated);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowStepState.eCreated);
+
+            workflowStep.setState(DBAPI.eWorkflowStepState.eStarted);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowStepState.eStarted);
+
+            workflowStep.setState(DBAPI.eWorkflowStepState.eFinished);
+            expect(workflowStep.getState()).toEqual(DBAPI.eWorkflowStepState.eFinished);
+
             bUpdated = await workflowStep.update();
 
             const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
             expect(workflowStepFetch).toBeTruthy();
             if (workflowStepFetch)
                 expect(workflowStepFetch.idWorkflow).toBe(workflowNulls.idWorkflow);
+
+            expect(DBAPI.WorkflowStep.stateValueToEnum(-1)).toEqual(DBAPI.eWorkflowStepState.eCreated);
+            expect(DBAPI.WorkflowStep.stateValueToEnum(0)).toEqual(DBAPI.eWorkflowStepState.eCreated);
+            expect(DBAPI.WorkflowStep.stateValueToEnum(1)).toEqual(DBAPI.eWorkflowStepState.eStarted);
+            expect(DBAPI.WorkflowStep.stateValueToEnum(2)).toEqual(DBAPI.eWorkflowStepState.eFinished);
+            expect(DBAPI.WorkflowStep.stateEnumToValue(DBAPI.eWorkflowStepState.eCreated)).toEqual(0);
+            expect(DBAPI.WorkflowStep.stateEnumToValue(DBAPI.eWorkflowStepState.eStarted)).toEqual(1);
+            expect(DBAPI.WorkflowStep.stateEnumToValue(DBAPI.eWorkflowStepState.eFinished)).toEqual(2);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: WorkflowStep.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (workflowStep) {
+            workflowStep.idJobRun = null;
+            workflowStep.idUserOwner = null;
+            bUpdated = await workflowStep.update();
+
+            const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
+            expect(workflowStepFetch).toBeTruthy();
+            if (workflowStepFetch) {
+                expect(workflowStepFetch.idJobRun).toBeNull();
+                expect(workflowStepFetch.idUserOwner).toBeNull();
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: WorkflowStep.update when null', async () => {
+        let bUpdated: boolean = false;
+        if (workflowStep) {
+            const dateUpdated: Date = UTIL.nowCleansed();
+            workflowStep.DateCompleted = dateUpdated;
+            bUpdated = await workflowStep.update();
+
+            const workflowStepFetch: DBAPI.WorkflowStep | null = await DBAPI.WorkflowStep.fetch(workflowStep.idWorkflowStep);
+            expect(workflowStepFetch).toBeTruthy();
+            if (workflowStepFetch)
+                expect(workflowStepFetch.DateCompleted).toEqual(dateUpdated);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -5744,21 +6152,6 @@ describe('DB Update Test Suite', () => {
             expect(workflowStepSystemObjectXrefFetch).toBeTruthy();
             if (workflowStepSystemObjectXrefFetch)
                 expect(workflowStepSystemObjectXrefFetch.Input).toBe(updatedInput);
-        }
-        expect(bUpdated).toBeTruthy();
-    });
-
-    test('DB Update: WorkflowTemplate.update', async () => {
-        let bUpdated: boolean = false;
-        if (workflowTemplate) {
-            const updatedName: string = 'Updated Test Workflow Template Name';
-            workflowTemplate.Name   = updatedName;
-            bUpdated = await workflowTemplate.update();
-
-            const workflowTemplateFetch: DBAPI.WorkflowTemplate | null = await DBAPI.WorkflowTemplate.fetch(workflowTemplate.idWorkflowTemplate);
-            expect(workflowTemplateFetch).toBeTruthy();
-            if (workflowTemplateFetch)
-                expect(workflowTemplateFetch.Name).toBe(updatedName);
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -5825,10 +6218,11 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchLatestFromAsset(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
-        expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true, true)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchByAssetAndVersion(0, 1)).toBeNull();
         expect(await DBAPI.CaptureData.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromXref(0)).toBeNull();
@@ -5859,8 +6253,9 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Item.fetchMasterFromScenes([])).toBeNull();
         expect(await DBAPI.Item.fetchMasterFromIntermediaryFiles([])).toBeNull();
         expect(await DBAPI.Job.fetch(0)).toBeNull();
-        expect(await DBAPI.JobTask.fetch(0)).toBeNull();
-        expect(await DBAPI.JobTaskCook.fetch(0)).toBeNull();
+        expect(await DBAPI.Job.fetchByType(0)).toBeNull();
+        expect(await DBAPI.JobRun.fetch(0)).toBeNull();
+        expect(await DBAPI.JobRun.fetchMatching(0, 0, 0, true, null)).toBeNull();
         expect(await DBAPI.License.fetch(0)).toBeNull();
         expect(await DBAPI.LicenseAssignment.fetch(0)).toBeNull();
         expect(await DBAPI.LicenseAssignment.fetchFromLicense(0)).toBeNull();
@@ -5872,19 +6267,24 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Model.fetch(0)).toBeNull();
         expect(await DBAPI.Model.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.Model.fetchDerivedFromItems([])).toBeNull();
+        expect(await DBAPI.ModelConstellation.fetch(0)).toBeNull();
         expect(await DBAPI.ModelMaterial.fetch(0)).toBeNull();
         expect(await DBAPI.ModelMaterial.fetchFromModelObjects([])).toBeNull();
         expect(await DBAPI.ModelMaterialChannel.fetch(0)).toBeNull();
         expect(await DBAPI.ModelMaterialChannel.fetchFromModelMaterial(0)).toBeNull();
         expect(await DBAPI.ModelMaterialChannel.fetchFromModelMaterials([])).toBeNull();
+        expect(await DBAPI.ModelMaterialChannel.fetchFromModelMaterialUVMap(0)).toBeNull();
         expect(await DBAPI.ModelMaterialUVMap.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialUVMap.fetchFromAsset(0)).toBeNull();
         expect(await DBAPI.ModelMaterialUVMap.fetchFromModel(0)).toBeNull();
         expect(await DBAPI.ModelMaterialUVMap.fetchFromModels([])).toBeNull();
-        expect(await DBAPI.ModelMetrics.fetch(0)).toBeNull();
-        expect(await DBAPI.ModelMetrics.fetchFromModelObjects([])).toBeNull();
         expect(await DBAPI.ModelObject.fetch(0)).toBeNull();
         expect(await DBAPI.ModelObject.fetchFromModel(0)).toBeNull();
-        expect(await DBAPI.ModelConstellation.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObject(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObjects([])).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterial(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterials([])).toBeNull();
         expect(await DBAPI.ModelProcessingAction.fetch(0)).toBeNull();
         expect(await DBAPI.ModelProcessingAction.fetchFromModel(0)).toBeNull();
         expect(await DBAPI.ModelProcessingActionStep.fetch(0)).toBeNull();
@@ -5929,7 +6329,6 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.SystemObject.fetchFromStakeholderID(0)).toBeNull();
         expect(await DBAPI.SystemObject.fetchFromSubjectID(0)).toBeNull();
         expect(await DBAPI.SystemObject.fetchFromUnitID(0)).toBeNull();
-
         expect(await DBAPI.SystemObjectActor.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectAsset.fetch(0)).toBeNull();
         expect(await DBAPI.SystemObjectAssetVersion.fetch(0)).toBeNull();
@@ -5968,7 +6367,6 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Unit.fetch(0)).toBeNull();
         expect(await DBAPI.Unit.fetchMasterFromProjects([])).toBeNull();
         expect(await DBAPI.Unit.fetchFromUnitEdanAbbreviation('')).toBeNull();
-        expect(await DBAPI.Unit.fetchFromNameSearch('')).toBeNull();
         expect(await DBAPI.UnitEdan.fetch(0)).toBeNull();
         expect(await DBAPI.UnitEdan.fetchFromUnit(0)).toBeNull();
         expect(await DBAPI.UnitEdan.fetchFromAbbreviation('')).toBeNull();
@@ -5984,13 +6382,16 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Workflow.fetch(0)).toBeNull();
         expect(await DBAPI.Workflow.fetchFromProject(0)).toBeNull();
         expect(await DBAPI.Workflow.fetchFromUser(0)).toBeNull();
-        expect(await DBAPI.Workflow.fetchFromWorkflowTemplate(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetchFromWorkflowType(0)).toBeNull();
+        expect(await DBAPI.WorkflowConstellation.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowStep.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowStep.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.WorkflowStep.fetchFromWorkflow(0)).toBeNull();
+        expect(await DBAPI.WorkflowStep.fetchFromJobRun(0)).toBeNull();
         expect(await DBAPI.WorkflowStepSystemObjectXref.fetch(0)).toBeNull();
         expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep(0)).toBeNull();
-        expect(await DBAPI.WorkflowTemplate.fetch(0)).toBeNull();
+        expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow(0)).toBeNull();
+        expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow(-1)).toEqual([]);
 
         const SO: DBAPI.SystemObject = new DBAPI.SystemObject({
             idActor: 0,

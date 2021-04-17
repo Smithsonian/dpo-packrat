@@ -34,30 +34,31 @@ export class NavigationSolr implements NAV.INavigation {
 
     // #region Compute Query
     private async computeSolrQuery(filter: NAV.NavigationFilter): Promise<solr.Query> {
-        let SQ: solr.Query = this._solrClient._client.query();
+        let SQ: solr.Query = this._solrClient._client.query().edismax();    // use edismax query parser instead of lucene default
 
         // search: string;                         // search string from the user -- for now, only apply to root-level queries, as well as queries of units, projects, and subjects
-        if (filter.search) {                                // if we have a search string,
-            if (!filter.idRoot)                             // apply it to root-level queries (i.e. with no specified filter root ID)
-                SQ = SQ.q(`_text_:*${filter.search}*`);
-            else {
-                const oID = await CACHE.SystemObjectCache.getObjectFromSystem(filter.idRoot);
-                if (oID &&
-                   (oID.eObjectType == eSystemObjectType.eUnit ||
-                    oID.eObjectType == eSystemObjectType.eProject ||
-                    oID.eObjectType == eSystemObjectType.eSubject))
-                    SQ = SQ.q(`_text_:*${filter.search}*`); // if we do have a root ID, apply it to the children of units, projects, and subjects
-                else
-                    SQ = SQ.q('*:*');                       // if we do have a root ID, do not apply it to the children of items, and all the rest
-            }
-        } else
+        if (filter.search && !filter.idRoot) {     // if we have a search string, apply it to root-level queries (i.e. with no specified filter root ID)
+            SQ = SQ.q(filter.search.replace(/:/g, '\\:'));      // search text, escaping :
+            if (!this.testSearchStringForArkID(filter.search))
+                SQ = SQ.qf({ CommonIdentifier: 5, _text_: 1 }); // match both common identifiers, boosted, and general text, unboosted
+            else
+                SQ = SQ.qf({ CommonIdentifier: 5 });            // match only common identifiers
+            SQ = SQ.sort({ CommonOTNumber: 'asc', score: 'desc' }); // sort by the object type enumeration, then by Solr score pseudofield
+        } else {
             SQ = SQ.q('*:*');
+            SQ = SQ.sort({ CommonOTNumber: 'asc', CommonName: 'asc', id: 'asc' }); // sort by the object type enumeration, then by name, then by id (idSystemObject)
+            SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
+        }
 
-        // idRoot: number;                         // idSystemObject of item for which we should get children; 0 means get everything
-        if (filter.idRoot) {
-            SQ = SQ.matchFilter('HierarchyParentID', filter.idRoot);
-            // objectsToDisplay: eSystemObjectType[];  // objects to display
-            SQ = await this.computeFilterParamFromSystemObjectType(SQ, filter.objectsToDisplay, 'CommonObjectType', '||');
+        // idRoot: number;                          // idSystemObject of item for which we should get children; 0 means get everything
+        if (filter.idRoot) {                        // objectsToDisplay: eSystemObjectType[];  // objects to display
+            // if we have no explicit object types to display, show the children
+            if (!filter.objectsToDisplay || filter.objectsToDisplay.length == 0)
+                SQ = SQ.matchFilter('HierarchyParentID', filter.idRoot);
+            else {  // if we have explicit object types to display, show all objects of the type specified that have idRoot as an ancestor
+                SQ = SQ.matchFilter('HierarchyAncestorID', filter.idRoot);
+                SQ = await this.computeFilterParamFromSystemObjectType(SQ, filter.objectsToDisplay, 'CommonObjectType', '||');
+            }
         } else {
             // objectTypes: eSystemObjectType[];       // empty array means give all appropriate children types
             const objectTypes: eSystemObjectType[] = filter.objectTypes;
@@ -88,24 +89,33 @@ export class NavigationSolr implements NAV.INavigation {
         SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelFileType, 'ChildrenModelFileTypes');
 
         // metadataColumns: eMetadata[];           // empty array means give no metadata
-        const filterColumns: string[] = ['idSystemObject', 'CommonObjectType', 'CommonidObject', 'CommonName']; // fetch standard fields // don't need ChildrenID
+        const filterColumns: string[] = ['id', 'CommonObjectType', 'CommonidObject', 'CommonName']; // fetch standard fields // don't need ChildrenID
         for (const metadataColumn of filter.metadataColumns) {
             const filterColumn: string = eMetadata[metadataColumn];
             if (filterColumn)
                 filterColumns.push(filterColumn.substring(1)); // strip of "e" prefix (eHierarchyUnit -> HierarchyUnit)
             else
-                LOG.logger.error(`NavigationSolr.computeSolrQuery called with unexpected metadata column ${metadataColumn}`);
+                LOG.error(`NavigationSolr.computeSolrQuery called with unexpected metadata column ${metadataColumn}`, LOG.LS.eNAV);
         }
 
         if (filterColumns.length > 0)
             SQ = SQ.fl(filterColumns);
 
-        SQ = SQ.sort({ CommonOTNumber: 'asc', CommonName: 'asc', idSystemObject: 'asc' }); // sort by the object type enumeration, then by name, then by idSystemObject
-        SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
         if (filter.rows > 0)
             SQ = SQ.rows(filter.rows);
-        LOG.logger.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}:\n${this._solrClient.solrUrl()}/select?${SQ.build()}`);
+        LOG.info(`NavigationSolr.computeSolrQuery ${JSON.stringify(filter)}:\n${this._solrClient.solrUrl()}/select?${SQ.build()}`, LOG.LS.eNAV);
         return SQ;
+    }
+
+    /** returns true if search appears to only be an ARKID (no whitespace, starts with ark:/ or starts with http://n2t.net/ark: ) */
+    private testSearchStringForArkID(search: string): boolean {
+        // http://n2t.net/ark:/65665/ye38ff23cd0-11a9-4b72-a24b-fdcc267dd296
+        const searchNormalized: string = search.toLowerCase();
+        if (!searchNormalized.startsWith('http://n2t.net/ark:/') && !searchNormalized.startsWith('ark:/'))
+            return false;
+        if (search.indexOf(' ') != -1)
+            return false;
+        return true;
     }
 
     private async computeFilterParamFromSystemObjectType(SQ: solr.Query, systemObjectTypes: eSystemObjectType[], filterSchema: string, operator: string): Promise<solr.Query> {
@@ -149,7 +159,7 @@ export class NavigationSolr implements NAV.INavigation {
         for (const systemObjectType of systemObjectTypes) {
             const filterValue = DBAPI.SystemObjectTypeToName(systemObjectType);
             if (!filterValue) {
-                LOG.logger.error(`NavigationSolr.computeSolrQuery handling invalid system object type ${systemObjectType}`);
+                LOG.error(`NavigationSolr.computeSolrQuery handling invalid system object type ${systemObjectType}`, LOG.LS.eNAV);
                 continue;
             }
             termList.push(filterValue);
@@ -163,7 +173,7 @@ export class NavigationSolr implements NAV.INavigation {
         for (const idVocabFilter of vocabFilterIDs) {
             const vocabFilter: Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabFilter);
             if (!vocabFilter) {
-                LOG.logger.error(`NavigationSolr.computeSolrQuery handling invalid vocabulary value ${idVocabFilter}`);
+                LOG.error(`NavigationSolr.computeSolrQuery handling invalid vocabulary value ${idVocabFilter}`, LOG.LS.eNAV);
                 continue;
             }
             termList.push(vocabFilter.Term);
@@ -180,29 +190,29 @@ export class NavigationSolr implements NAV.INavigation {
         const queryResult: SolrQueryResult = await this.executeSolrQueryWorker(SQ);
         if (queryResult.error) {
             error = `Solr Query Failure: ${JSON.stringify(queryResult.error)}`;
-            LOG.logger.error(`NavigationSolr.executeSolrQuery: ${error}`);
+            LOG.error(`NavigationSolr.executeSolrQuery: ${error}`, LOG.LS.eNAV);
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
         if (!queryResult.result || !queryResult.result.response || queryResult.result.response.numFound === undefined ||
             (queryResult.result.response.numFound > 0 && !queryResult.result.response.docs)) {
             error = `Solr Query Response malformed: ${JSON.stringify(queryResult.result)}`;
-            LOG.logger.error(`NavigationSolr.executeSolrQuery: ${error}`);
+            LOG.error(`NavigationSolr.executeSolrQuery: ${error}`, LOG.LS.eNAV);
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
 
-        LOG.logger.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, ` +
+        LOG.info(`NavigationSolr.executeSolrQuery: { numFound: ${queryResult.result.response.numFound}, ` +
             `start: ${queryResult.result.response.start}, docsCount: ${queryResult.result.response.docs.length}, ` +
-            `nextCursorMark: ${queryResult.result.nextCursorMark} }`);
+            `nextCursorMark: ${queryResult.result.nextCursorMark} }`, LOG.LS.eNAV);
         // let docNumber: number = 1;
         for (const doc of queryResult.result.response.docs) {
-            if (!doc.idSystemObject || !doc.CommonObjectType || !doc.CommonidObject || !doc.CommonName) {
-                LOG.logger.error(`NavigationSolr.executeSolrQuery: malformed query response document ${JSON.stringify(doc)}`);
+            if (!doc.id || !doc.CommonObjectType || !doc.CommonidObject || (doc.CommonName === null)) {
+                LOG.error(`NavigationSolr.executeSolrQuery: malformed query response document ${JSON.stringify(doc)}`, LOG.LS.eNAV);
                 continue;
             }
-            // LOG.logger.info(`NavigationSolr.executeSolrQuery [${docNumber++}]: ${JSON.stringify(doc)}`);
+            // LOG.info(`NavigationSolr.executeSolrQuery [${docNumber++}]: ${JSON.stringify(doc)}`, LOG.LS.eNAV);
 
             const entry: NAV.NavigationResultEntry = {
-                idSystemObject: parseInt(doc.idSystemObject),
+                idSystemObject: parseInt(doc.id),
                 name: doc.CommonName || '<UNKNOWN>',
                 objectType: DBAPI.SystemObjectNameToType(doc.CommonObjectType),
                 idObject: doc.CommonidObject,
@@ -215,7 +225,7 @@ export class NavigationSolr implements NAV.INavigation {
         let cursorMark: string | null = queryResult.result.nextCursorMark ? queryResult.result.nextCursorMark : null;
         if (cursorMark == filter.cursorMark)    // solr returns the same cursorMark as the initial query when there are no more results; if so, clear out cursorMark
             cursorMark = null;
-        // LOG.logger.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`);
+        // LOG.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
         return { success: true, error: '', entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
@@ -224,7 +234,7 @@ export class NavigationSolr implements NAV.INavigation {
             const request: ClientRequest = this._solrClient._client.search(SQ,
                 function (err, obj) {
                     if (err) {
-                        LOG.logger.error('NavigationSolr.executeSolrQueryWorker', err);
+                        LOG.error('NavigationSolr.executeSolrQueryWorker', LOG.LS.eNAV, err);
                         resolve({ result: null, error: err });
                     } else
                         resolve({ result: obj, error: null });

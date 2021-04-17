@@ -21,7 +21,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
             }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessRole.create', error);
+            LOG.error('DBAPI.AccessRole.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -34,7 +34,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
                 data: { Name, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessRole.update', error);
+            LOG.error('DBAPI.AccessRole.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -44,9 +44,9 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
             return null;
         try {
             return DBC.CopyObject<AccessRoleBase, AccessRole>(
-                await DBC.DBConnection.prisma.accessRole.findOne({ where: { idAccessRole, }, }), AccessRole);
+                await DBC.DBConnection.prisma.accessRole.findUnique({ where: { idAccessRole, }, }), AccessRole);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessRole.fetch', error);
+            LOG.error('DBAPI.AccessRole.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -64,7 +64,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
                     },
                 }), AccessRole);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.AccessRole.fetchFromXref', error);
+            LOG.error('DBAPI.AccessRole.fetchFromXref', LOG.LS.eDB, error);
             return null;
         }
     }

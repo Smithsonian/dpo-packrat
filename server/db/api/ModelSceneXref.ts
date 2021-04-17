@@ -35,7 +35,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelSceneXref.create', error);
+            LOG.error('DBAPI.ModelSceneXref.create', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -52,7 +52,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelSceneXref.update', error);
+            LOG.error('DBAPI.ModelSceneXref.update', LOG.LS.eDB, error);
             return false;
         }
     }
@@ -62,9 +62,9 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return null;
         try {
             return DBC.CopyObject<ModelSceneXrefBase, ModelSceneXref>(
-                await DBC.DBConnection.prisma.modelSceneXref.findOne({ where: { idModelSceneXref, }, }), ModelSceneXref);
+                await DBC.DBConnection.prisma.modelSceneXref.findUnique({ where: { idModelSceneXref, }, }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelSceneXref.fetch', error);
+            LOG.error('DBAPI.ModelSceneXref.fetch', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -76,7 +76,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idScene } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelSceneXref.fetchFromScene', error);
+            LOG.error('DBAPI.ModelSceneXref.fetchFromScene', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -88,7 +88,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.logger.error('DBAPI.ModelSceneXref.fetchFromModel', error);
+            LOG.error('DBAPI.ModelSceneXref.fetchFromModel', LOG.LS.eDB, error);
             return null;
         }
     }

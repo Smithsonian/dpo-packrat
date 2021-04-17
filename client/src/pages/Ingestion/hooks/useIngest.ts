@@ -17,7 +17,6 @@ import {
     StateIdentifier,
     StateItem,
     StateProject,
-    StateUVMap,
     useItemStore,
     useMetadataStore,
     useProjectStore,
@@ -38,7 +37,6 @@ import {
     IngestProjectInput,
     IngestSceneInput,
     IngestSubjectInput,
-    IngestUvMapInput
 } from '../../../types/graphql';
 import { nonNullValue } from '../../../utils/shared';
 
@@ -102,6 +100,7 @@ function useIngest(): UseIngest {
                         dateCaptured,
                         datasetType,
                         systemCreated,
+                        name,
                         description,
                         cameraSettingUniform,
                         datasetFieldId,
@@ -123,6 +122,7 @@ function useIngest(): UseIngest {
 
                     const photogrammetryData: IngestPhotogrammetryInput = {
                         idAssetVersion: parseFileId(file.id),
+                        name,
                         dateCaptured: dateCaptured.toISOString(),
                         datasetType: nonNullValue<number>('datasetType', datasetType),
                         systemCreated,
@@ -147,11 +147,10 @@ function useIngest(): UseIngest {
 
                 if (isModel) {
                     const {
-                        systemCreated,
                         identifiers,
-                        uvMaps,
                         sourceObjects,
-                        dateCaptured,
+                        systemCreated,
+                        name,
                         creationMethod,
                         master,
                         authoritative,
@@ -159,32 +158,26 @@ function useIngest(): UseIngest {
                         units,
                         purpose,
                         modelFileType,
-                        roughness,
-                        metalness,
-                        pointCount,
-                        faceCount,
-                        isWatertight,
-                        hasNormals,
-                        hasVertexColor,
-                        hasUVSpace,
-                        boundingBoxP1X,
-                        boundingBoxP1Y,
-                        boundingBoxP1Z,
-                        boundingBoxP2X,
-                        boundingBoxP2Y,
-                        boundingBoxP2Z,
-                        directory
+                        directory,
                     } = model;
 
+                    let {
+                        dateCaptured
+                    } = model;
+
+                    if (!dateCaptured) {
+                        dateCaptured = '';
+                    } else if (typeof dateCaptured === 'object') {
+                        dateCaptured = nonNullValue<string>('datecaptured', dateCaptured.toISOString());
+                    }
+
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
-                    const ingestUVMaps: IngestUvMapInput[] = getIngestUVMaps(uvMaps);
 
                     const modelData: IngestModelInput = {
+                        name,
                         idAssetVersion: parseFileId(file.id),
-                        dateCaptured: dateCaptured.toISOString(),
+                        dateCaptured,
                         identifiers: ingestIdentifiers,
-                        uvMaps: ingestUVMaps,
-                        systemCreated,
                         creationMethod: nonNullValue<number>('creationMethod', creationMethod),
                         master,
                         authoritative,
@@ -192,22 +185,9 @@ function useIngest(): UseIngest {
                         units: nonNullValue<number>('units', units),
                         purpose: nonNullValue<number>('purpose', purpose),
                         modelFileType: nonNullValue<number>('modelFileType', modelFileType),
+                        directory,
+                        systemCreated,
                         sourceObjects,
-                        roughness,
-                        metalness,
-                        pointCount,
-                        faceCount,
-                        isWatertight,
-                        hasNormals,
-                        hasVertexColor,
-                        hasUVSpace,
-                        boundingBoxP1X,
-                        boundingBoxP1Y,
-                        boundingBoxP1Z,
-                        boundingBoxP2X,
-                        boundingBoxP2Y,
-                        boundingBoxP2Z,
-                        directory
                     };
 
                     ingestModel.push(modelData);
@@ -326,23 +306,6 @@ function useIngest(): UseIngest {
         });
 
         return ingestFolders;
-    };
-
-    const getIngestUVMaps = (uvMaps: StateUVMap[]): IngestUvMapInput[] => {
-        const ingestUVMaps: IngestUvMapInput[] = [];
-        lodash.forEach(uvMaps, (uvMap: StateUVMap) => {
-            const { name, edgeLength, mapType } = uvMap;
-
-            const uvMapData: IngestUvMapInput = {
-                name,
-                edgeLength,
-                mapType: nonNullValue<number>('mapType', mapType)
-            };
-
-            ingestUVMaps.push(uvMapData);
-        });
-
-        return ingestUVMaps;
     };
 
     return {

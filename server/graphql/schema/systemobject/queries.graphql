@@ -6,6 +6,7 @@ type Query {
     getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
     getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
     getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
+    getProjectList(input: GetProjectListInput!): GetProjectListResult!
 }
 
 input GetDetailsTabDataForObjectInput {
@@ -68,37 +69,6 @@ type CaptureDataDetailFields {
     folders: [IngestFolder!]!
 }
 
-type ModelDetailFields {
-    size: Int
-    master: Boolean
-    authoritative: Boolean
-    creationMethod: Int
-    modality: Int
-    purpose: Int
-    units: Int
-    dateCaptured: String
-    modelFileType: Int
-    uvMaps: [IngestUVMap!]!
-    boundingBoxP1X: Float
-    boundingBoxP1Y: Float
-    boundingBoxP1Z: Float
-    boundingBoxP2X: Float
-    boundingBoxP2Y: Float
-    boundingBoxP2Z: Float
-    countPoint: Int
-    countFace: Int
-    countColorChannel: Int
-    countTextureCoorinateChannel: Int
-	hasBones: Boolean
-	hasFaceNormals: Boolean
-	hasTangents: Boolean
-	hasTextureCoordinates: Boolean
-	hasVertexNormals: Boolean
-	hasVertexColor: Boolean
-	isManifold: Boolean
-	isWatertight: Boolean
-}
-
 type SceneDetailFields {
     Links: [String!]!
     AssetType: Int
@@ -125,7 +95,7 @@ type AssetVersionDetailFields {
     DateCreated: DateTime
     Ingested: Boolean
     Version: Int
-    StorageSize: Int
+    StorageSize: BigInt
 }
 
 type ActorDetailFields {
@@ -146,7 +116,7 @@ type GetDetailsTabDataForObjectResult {
     Subject: SubjectDetailFields
     Item: ItemDetailFields
     CaptureData: CaptureDataDetailFields
-    Model: ModelDetailFields
+    Model: ModelConstellation
     Scene: SceneDetailFields
     IntermediaryFile: IntermediaryFileDetailFields
     ProjectDocumentation: ProjectDocumentationDetailFields
@@ -204,7 +174,7 @@ type AssetDetail {
     assetType: Int!
     version: Int!
     dateCreated: DateTime!
-    size: Int!
+    size: BigInt!
 }
 
 input GetAssetDetailsForSystemObjectInput {
@@ -221,7 +191,7 @@ type DetailVersion {
     name: String!
     creator: String!
     dateCreated: DateTime!
-    size: Int!
+    size: BigInt!
 }
 
 input GetVersionsForSystemObjectInput {
@@ -230,4 +200,12 @@ input GetVersionsForSystemObjectInput {
 
 type GetVersionsForSystemObjectResult {
     versions: [DetailVersion!]!
+}
+
+type GetProjectListResult {
+    projects: [Project!]!
+}
+
+input GetProjectListInput {
+    search: String!
 }

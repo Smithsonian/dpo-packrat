@@ -8,6 +8,10 @@ const getUser = gql`
                 Name
                 Active
                 DateActivated
+                DateDisabled
+                EmailSettings
+                EmailAddress
+                WorkflowNotificationTime
             }
         }
     }
