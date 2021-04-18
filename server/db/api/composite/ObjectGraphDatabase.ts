@@ -10,7 +10,7 @@ export class ObjectGraphDatabase {
 
     // used by ObjectGraph
     async recordRelationship(parent: SystemObjectIDType, child: SystemObjectIDType): Promise<void> {
-        // LOG.info(`${JSON.stringify(parent)} -> ${JSON.stringify(child)}`, LOG.LS.eDB);
+        // LOG.info(`RR ${JSON.stringify(parent)} -> ${JSON.stringify(child)}`, LOG.LS.eDB);
         let parentData: ObjectGraphDataEntry | undefined = this.objectMap.get(parent.idSystemObject);
         let childData: ObjectGraphDataEntry | undefined = this.objectMap.get(child.idSystemObject);
 
@@ -20,6 +20,7 @@ export class ObjectGraphDatabase {
                 LOG.error(`ObjectGraphDatabase.recordRelationship unable to compute idSystemObject for ${JSON.stringify(parent)}`, LOG.LS.eDB);
 
             parentData = new ObjectGraphDataEntry(parent, sID ? sID.Retired : false);
+            // LOG.info(`this.objectmap.set parent(${parent.idSystemObject}, ${JSON.stringify(parent)})`, LOG.LS.eDB);
             this.objectMap.set(parent.idSystemObject, parentData);
         }
         if (!childData) {
@@ -28,6 +29,7 @@ export class ObjectGraphDatabase {
                 LOG.error(`ObjectGraphDatabase.recordRelationship unable to compute idSystemObject for ${JSON.stringify(child)}`, LOG.LS.eDB);
 
             childData = new ObjectGraphDataEntry(child, sID ? sID.Retired : false);
+            // LOG.info(`this.objectmap.set child (${child.idSystemObject}, ${JSON.stringify(child)})`, LOG.LS.eDB);
             this.objectMap.set(child.idSystemObject, childData);
         }
 
@@ -40,8 +42,9 @@ export class ObjectGraphDatabase {
         const OBDE: ObjectGraphDataEntry | undefined = this.objectMap.get(sourceType.idSystemObject);
         let sourceFound: boolean = false;
         if (OBDE) {
-            sourceType = OBDE.systemObjectIDType;
-            sourceFound = true;
+            sourceType.idObject     = OBDE.systemObjectIDType.idObject;
+            sourceType.eObjectType  = OBDE.systemObjectIDType.eObjectType;
+            sourceFound             = true;
         }
         const relatedFound: boolean = !relatedType || this.objectMap.has(relatedType.idSystemObject);
         return sourceFound && relatedFound;
@@ -86,6 +89,7 @@ export class ObjectGraphDatabase {
 
         if (!this.objectMap.has(sID.idSystemObject)) {
             const objectIDAndType: SystemObjectIDType = { idSystemObject: sID.idSystemObject, idObject, eObjectType };
+            // LOG.info(`this.objectmap.set object(${sID.idSystemObject}, ${JSON.stringify(objectIDAndType)})`, LOG.LS.eDB);
             this.objectMap.set(sID.idSystemObject, new ObjectGraphDataEntry(objectIDAndType, sID.Retired));
         }
         return true;

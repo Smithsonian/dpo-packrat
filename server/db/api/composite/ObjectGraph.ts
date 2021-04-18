@@ -152,6 +152,13 @@ export class ObjectGraph {
     // relatedType is parent when eMode == eObjectGraphMode.eDescendents
     private async fetchWorker(idSystemObject: number, relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode, recurseDepth: number): Promise<boolean> {
         try {
+            // if (relatedType) {
+            //     if (eMode == eObjectGraphMode.eAncestors)
+            //         LOG.info(`FW ${idSystemObject} -> ${JSON.stringify(relatedType)}`, LOG.LS.eDB);
+            //     else
+            //         LOG.info(`FW ${JSON.stringify(relatedType)} -> ${idSystemObject}`, LOG.LS.eDB);
+            // }
+
             /* istanbul ignore if */
             if (eMode != eObjectGraphMode.eAncestors && eMode != eObjectGraphMode.eDescendents) {
                 LOG.error(`DBAPI.ObjectGraph.fetchWorker called with invalid mode ${eMode}`, LOG.LS.eDB);
@@ -166,8 +173,10 @@ export class ObjectGraph {
             }
 
             /* istanbul ignore if */
-            if (this.pushCount++ >= this.maxPushCount)
+            if (this.pushCount++ >= this.maxPushCount) {
+                LOG.error(`DBAPI.ObjectGraph.fetchWorker reached maxPushCount, related=${JSON.stringify(relatedType)}; ${idSystemObject}`, LOG.LS.eDB);
                 return true;
+            }
 
             const sourceType: SystemObjectIDType = {
                 idSystemObject,
@@ -179,6 +188,7 @@ export class ObjectGraph {
             if (this.objectGraphDatabase && this.objectGraphDatabase.alreadyProcessed(sourceType, relatedType)) {
                 if (sourceType.idObject)
                     await this.recordRelationship(sourceType, relatedType, eMode);
+                // LOG.info(`SC related=${JSON.stringify(relatedType)}; source=${JSON.stringify(sourceType)}`, LOG.LS.eDB);
                 return true;
             }
 
@@ -588,8 +598,10 @@ export class ObjectGraph {
         }
 
         /* istanbul ignore if */
-        if (this.systemObjectProcessed.has(sourceType.idSystemObject))
+        if (this.systemObjectProcessed.has(sourceType.idSystemObject)) {
+            // LOG.info(`ObjectGraph.pushProject already has ${JSON.stringify(sourceType)}`, LOG.LS.eDB);
             return false;
+        }
 
         /* istanbul ignore next */
         if (!this.systemObjectAdded.has(sourceType.idSystemObject)) {
