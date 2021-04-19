@@ -12,8 +12,6 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { Description, Name } = this;

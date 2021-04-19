@@ -13,8 +13,6 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idWorkflowStep, idSystemObject, Input } = this;

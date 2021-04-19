@@ -10,8 +10,6 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBC.DBConnection.prisma.captureDataGroup.create({ data: { } }));

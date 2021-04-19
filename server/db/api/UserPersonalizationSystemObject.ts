@@ -13,8 +13,6 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idUser, idSystemObject, Personalization } = this;

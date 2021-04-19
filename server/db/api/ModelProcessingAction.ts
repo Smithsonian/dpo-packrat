@@ -15,8 +15,6 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idModel, idActor, DateProcessed, ToolsUsed, Description } = this;

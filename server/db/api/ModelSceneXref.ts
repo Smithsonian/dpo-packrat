@@ -19,8 +19,6 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idModel, idScene, TS0, TS1, TS2, R0, R1, R2, R3 } = this;

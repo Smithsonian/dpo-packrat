@@ -8,14 +8,8 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
     idUnit!: number | null;
     Abbreviation!: string;
 
-    private idUnitOrig!: number | null;
-
     constructor(input: UnitEdanBase) {
         super(input);
-    }
-
-    protected updateCachedValues(): void {
-        this.idUnitOrig = this.idUnit;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -37,11 +31,11 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idUnitEdan, idUnit, Abbreviation, idUnitOrig } = this;
+            const { idUnitEdan, idUnit, Abbreviation } = this;
             return await DBC.DBConnection.prisma.unitEdan.update({
                 where: { idUnitEdan, },
                 data: {
-                    Unit:          idUnit ? { connect: { idUnit }, } : idUnitOrig ? { disconnect: true, } : undefined,
+                    Unit:          idUnit ? { connect: { idUnit }, } : { disconnect: true, },
                     Abbreviation,
                 },
             }) ? true : /* istanbul ignore next */ false;

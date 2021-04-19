@@ -10,14 +10,8 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
     idCaptureData!: number;
     idVVariantType!: number | null;
 
-    private idVVariantTypeOrig!: number | null;
-
     constructor(input: CaptureDataFileBase) {
         super(input);
-    }
-
-    protected updateCachedValues(): void {
-        this.idVVariantTypeOrig = this.idVVariantType;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -42,13 +36,13 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idCaptureDataFile, idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles, idVVariantTypeOrig } = this;
+            const { idCaptureDataFile, idCaptureData, idAsset, idVVariantType, CompressedMultipleFiles } = this;
             return await DBC.DBConnection.prisma.captureDataFile.update({
                 where: { idCaptureDataFile, },
                 data: {
                     CaptureData:    { connect: { idCaptureData }, },
                     Asset:          { connect: { idAsset }, },
-                    Vocabulary:     idVVariantType ? { connect: { idVocabulary: idVVariantType }, } : idVVariantTypeOrig ? { disconnect: true, } : undefined,
+                    Vocabulary:     idVVariantType ? { connect: { idVocabulary: idVVariantType }, } : { disconnect: true, },
                     CompressedMultipleFiles
                 },
             }) ? true : /* istanbul ignore next */ false;

@@ -12,8 +12,6 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idCaptureDataGroup } = this;

@@ -11,14 +11,8 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
     IsOriented!: boolean;
     Name!: string;
 
-    private idAssetThumbnailOrig!: number | null;
-
     constructor(input: SceneBase) {
         super(input);
-    }
-
-    protected updateCachedValues(): void {
-        this.idAssetThumbnailOrig = this.idAssetThumbnail;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -44,12 +38,12 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd, idAssetThumbnailOrig } = this;
+            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.scene.update({
                 where: { idScene, },
                 data: {
                     Name,
-                    Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
+                    Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
                     IsOriented,
                     HasBeenQCd,
                 },

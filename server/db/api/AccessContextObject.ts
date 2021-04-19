@@ -12,8 +12,6 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idAccessContext, idSystemObject } = this;

@@ -13,8 +13,6 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idModelObject, idModelMaterial } = this;

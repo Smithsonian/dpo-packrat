@@ -13,8 +13,6 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idUser, URL, Personalization } = this;

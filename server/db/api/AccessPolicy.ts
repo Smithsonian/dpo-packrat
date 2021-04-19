@@ -13,8 +13,6 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idUser, idAccessRole, idAccessContext } = this;

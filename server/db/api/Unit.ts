@@ -14,8 +14,6 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name, Abbreviation, ARKPrefix } = this;

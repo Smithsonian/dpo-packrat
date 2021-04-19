@@ -11,8 +11,6 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name } = this;

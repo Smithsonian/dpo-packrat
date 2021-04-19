@@ -14,8 +14,6 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idProject, Name, Description } = this;
