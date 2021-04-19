@@ -13,6 +13,7 @@ export * from './api/Actor';
 export * from './api/Asset';
 export * from './api/AssetGroup';
 export * from './api/AssetVersion';
+export * from './api/Audit';
 export * from './api/CaptureData';
 export * from './api/CaptureDataGroup';
 export * from './api/CaptureDataFile';
