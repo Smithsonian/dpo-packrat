@@ -61,8 +61,6 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
     getStatus(): eJobRunStatus { return JobRun.convertJobRunStatusToEnum(this.Status); }
     setStatus(eStatus: eJobRunStatus): void { this.Status = eStatus; }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idJob, Status, Result, DateStart, DateEnd, Configuration, Parameters, Output, Error } = this;

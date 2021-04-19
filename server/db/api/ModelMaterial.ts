@@ -11,8 +11,6 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name } = this;

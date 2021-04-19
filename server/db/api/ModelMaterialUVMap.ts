@@ -14,8 +14,6 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idModel, idAsset, UVMapEdgeLength } = this;

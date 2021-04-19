@@ -10,14 +10,8 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
     IndividualName!: string | null;
     OrganizationName!: string | null;
 
-    private idUnitOrig!: number | null;
-
     constructor(input: ActorBase) {
         super(input);
-    }
-
-    protected updateCachedValues(): void {
-        this.idUnitOrig = this.idUnit;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -41,13 +35,13 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idActor, idUnit, IndividualName, OrganizationName, idUnitOrig } = this;
+            const { idActor, idUnit, IndividualName, OrganizationName } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.actor.update({
                 where: { idActor, },
                 data: {
                     IndividualName,
                     OrganizationName,
-                    Unit:               idUnit ? { connect: { idUnit }, } : idUnitOrig ? { disconnect: true, } : undefined,
+                    Unit:               idUnit ? { connect: { idUnit }, } : { disconnect: true, },
                 }
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

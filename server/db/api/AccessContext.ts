@@ -16,8 +16,6 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene } = this;

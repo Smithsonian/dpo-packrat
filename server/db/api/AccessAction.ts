@@ -12,8 +12,6 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name, SortOrder } = this;

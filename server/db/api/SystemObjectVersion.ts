@@ -12,8 +12,6 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idSystemObject, PublishedState } = this;

@@ -37,8 +37,6 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         });
     }
 
-    protected updateCachedValues(): void { }
-
     // TODO: replace two-step query with a call to AssetVersionCreate stored procedure
     // We likely need to engage Prisma for a fix, as well as write directly to the Node.js connector for MariaDB
     // until Prisma has fixed this issue.  https://mariadb.com/kb/en/getting-started-with-the-nodejs-connector/

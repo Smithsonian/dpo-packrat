@@ -22,16 +22,8 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
     idSystemObject!: number | null;
     Data!: string | null;
 
-    idUserOrig!: number | null;
-    idSystemObjectOrig!: number | null;
-
     constructor(input: AuditBase) {
         super(input);
-    }
-
-    protected updateCachedValues(): void {
-        this.idUserOrig = this.idUser;
-        this.idSystemObjectOrig = this.idSystemObject;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -54,14 +46,13 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAudit, idUser, AuditDate, AuditType, DBObjectType, idDBObject, idSystemObject, Data,
-                idUserOrig, idSystemObjectOrig } = this;
+            const { idAudit, idUser, AuditDate, AuditType, DBObjectType, idDBObject, idSystemObject, Data } = this;
             return await DBC.DBConnection.prisma.audit.update({
                 where: { idAudit, },
                 data: {
-                    User:           idUser ? { connect: { idUser }, } : idUserOrig ? { disconnect: true } : undefined,
+                    User:           idUser ? { connect: { idUser }, } : { disconnect: true },
                     AuditDate, AuditType, DBObjectType, idDBObject,
-                    SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true } : undefined,
+                    SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : { disconnect: true },
                     Data
                 },
             }) ? true : /* istanbul ignore next */ false;

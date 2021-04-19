@@ -12,8 +12,6 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idAccessRole, idAccessAction } = this;

@@ -13,8 +13,6 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idAsset, DateCreated } = this;

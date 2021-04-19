@@ -12,8 +12,6 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name, SystemMaintained } = this;

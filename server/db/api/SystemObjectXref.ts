@@ -13,8 +13,6 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idSystemObjectMaster, idSystemObjectDerived } = this;

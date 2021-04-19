@@ -1,7 +1,7 @@
 export abstract class DBObject<T> {
     protected abstract createWorker(): Promise<boolean>;
     protected abstract updateWorker(): Promise<boolean>;
-    protected abstract updateCachedValues(): void;
+    protected updateCachedValues(): void { }
 
     constructor(input: T) {
         Object.assign(this, input);

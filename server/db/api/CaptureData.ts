@@ -12,14 +12,8 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
     Description!: string;
     idAssetThumbnail!: number | null;
 
-    private idAssetThumbnailOrig!: number | null;
-
     constructor(input: CaptureDataBase) {
         super(input);
-    }
-
-    protected updateCachedValues(): void {
-        this.idAssetThumbnailOrig = this.idAssetThumbnail;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -46,7 +40,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idCaptureData, Name, idVCaptureMethod, DateCaptured, Description, idAssetThumbnail, idAssetThumbnailOrig } = this;
+            const { idCaptureData, Name, idVCaptureMethod, DateCaptured, Description, idAssetThumbnail } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.captureData.update({
                 where: { idCaptureData, },
                 data: {
@@ -54,7 +48,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                     Vocabulary:     { connect: { idVocabulary: idVCaptureMethod }, },
                     DateCaptured,
                     Description,
-                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
+                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

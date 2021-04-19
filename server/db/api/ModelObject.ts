@@ -31,8 +31,6 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idModel, BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z, CountVertices,

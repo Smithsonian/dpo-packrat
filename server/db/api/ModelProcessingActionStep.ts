@@ -13,8 +13,6 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { idModelProcessingAction, idVActionMethod, Description } = this;

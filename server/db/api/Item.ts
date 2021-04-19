@@ -11,16 +11,8 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
     idGeoLocation!: number | null;
     Name!: string;
 
-    private idAssetThumbnailOrig!: number | null;
-    private idGeoLocationOrig!: number | null;
-
     constructor(input: ItemBase) {
         super(input);
-    }
-
-    protected updateCachedValues(): void {
-        this.idAssetThumbnailOrig = this.idAssetThumbnail;
-        this.idGeoLocationOrig = this.idGeoLocation;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -46,12 +38,12 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idItem, idAssetThumbnail, idGeoLocation, Name, EntireSubject, idAssetThumbnailOrig, idGeoLocationOrig } = this;
+            const { idItem, idAssetThumbnail, idGeoLocation, Name, EntireSubject } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.item.update({
                 where: { idItem, },
                 data: {
-                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
-                    GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : idGeoLocationOrig ? { disconnect: true, } : undefined,
+                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
+                    GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : { disconnect: true, },
                     Name,
                     EntireSubject,
                 },

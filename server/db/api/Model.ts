@@ -121,14 +121,8 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     CountLinkedTextures!: number | null;
     FileEncoding!: string | null;
 
-    private idAssetThumbnailOrig!: number | null;
-
     constructor(input: ModelBase) {
         super(input);
-    }
-
-    protected updateCachedValues(): void {
-        this.idAssetThumbnailOrig = this.idAssetThumbnail;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -170,7 +164,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         try {
             const { idModel, Name, DateCreated, Master, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,
                 idVFileType, idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes,
-                CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, idAssetThumbnailOrig } = this;
+                CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
                 where: { idModel, },
                 data: {
@@ -184,7 +178,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                     Vocabulary_Model_idVPurposeToVocabulary:        { connect: { idVocabulary: idVPurpose }, },
                     Vocabulary_Model_idVFileTypeToVocabulary:       { connect: { idVocabulary: idVFileType }, },
                     CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding,
-                    Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
+                    Asset:                                          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

@@ -17,8 +17,6 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { IndividualName, OrganizationName, EmailAddress, PhoneNumberMobile, PhoneNumberOffice, MailingAddress } = this;

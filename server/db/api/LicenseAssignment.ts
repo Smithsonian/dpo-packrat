@@ -11,16 +11,8 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
     idSystemObject!: number | null;
     idUserCreator!: number | null;
 
-    private idSystemObjectOrig!: number | null;
-    private idUserCreatorOrig!: number | null;
-
     constructor(input: LicenseAssignmentBase) {
         super(input);
-    }
-
-    protected updateCachedValues(): void {
-        this.idSystemObjectOrig = this.idSystemObject;
-        this.idUserCreatorOrig = this.idUserCreator;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -46,16 +38,15 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idLicenseAssignment, idLicense, idUserCreator, DateStart, DateEnd, idSystemObject,
-                idSystemObjectOrig, idUserCreatorOrig } = this;
+            const { idLicenseAssignment, idLicense, idUserCreator, DateStart, DateEnd, idSystemObject } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.licenseAssignment.update({
                 where: { idLicenseAssignment, },
                 data: {
                     License:        { connect: { idLicense }, },
-                    User:           idUserCreator ? { connect: { idUser: idUserCreator }, } : idUserCreatorOrig ? { disconnect: true, } : undefined,
+                    User:           idUserCreator ? { connect: { idUser: idUserCreator }, } : { disconnect: true, },
                     DateStart,
                     DateEnd,
-                    SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
+                    SystemObject:   idSystemObject ? { connect: { idSystemObject }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

@@ -10,8 +10,6 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             ({ idAssetGroup: this.idAssetGroup } = await DBC.DBConnection.prisma.assetGroup.create({ data: { } }));

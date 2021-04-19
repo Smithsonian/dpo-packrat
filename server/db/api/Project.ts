@@ -13,8 +13,6 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name, Description } = this;

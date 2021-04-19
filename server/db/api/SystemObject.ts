@@ -29,8 +29,6 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
         super(input);
     }
 
-    protected updateCachedValues(): void { }
-
     // NO EXPLICIT METHODS FOR CREATING OR UPDATING SYSTEMOBJECT DIRECTLY.
     // This is done via create* and update* methods of the objects linked to SystemObject
     protected async createWorker(): Promise<boolean> {
