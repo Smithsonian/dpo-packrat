@@ -109,7 +109,9 @@ type Mutation {
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
+  updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
   updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
+  updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
   updateUser(input: UpdateUserInput!): CreateUserResult!
   uploadAsset(file: Upload!, type: Int!): UploadAssetResult!
 }
@@ -976,6 +978,24 @@ input UpdateObjectDetailsDataInput {
 }
 
 type UpdateObjectDetailsResult {
+  success: Boolean!
+}
+
+input UpdateDerivedObjectsInput {
+  idSystemObject: Int!
+  Derivatives: [Int!]!
+}
+
+type UpdateDerivedObjectsResult {
+  success: Boolean!
+}
+
+input UpdateSourceObjectsInput {
+  idSystemObject: Int!
+  Sources: [Int!]!
+}
+
+type UpdateSourceObjectsResult {
   success: Boolean!
 }
 
