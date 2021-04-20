@@ -9,6 +9,8 @@ import getVersionsForSystemObject from './queries/getVersionsForSystemObject';
 import getDetailsTabDataForObject from './queries/getDetailsTabDataForObject';
 import getProjectList from './queries/getProjectList';
 import updateObjectDetails from './mutations/updateObjectDetails';
+import updateSourceObjects from './mutations/updateSourceObjects';
+import updateDerivedObjects from './mutations/updateDerivedObjects';
 
 const resolvers = {
     Query: {
@@ -20,7 +22,9 @@ const resolvers = {
         getProjectList
     },
     Mutation: {
-        updateObjectDetails
+        updateObjectDetails,
+        updateSourceObjects,
+        updateDerivedObjects
     },
     SystemObject,
     SystemObjectVersion,

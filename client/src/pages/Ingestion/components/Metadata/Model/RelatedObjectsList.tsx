@@ -1,5 +1,5 @@
 /**
- * SourceObjectsList
+ * RelatedObjectsList
  *
  * This component renders the source object list with add capability.
  */
