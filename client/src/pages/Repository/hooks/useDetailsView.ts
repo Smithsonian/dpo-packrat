@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+
 import { useQuery, FetchResult } from '@apollo/client';
 import { apolloClient } from '../../../graphql';
 import {
@@ -11,7 +13,10 @@ import {
     GetDetailsTabDataForObjectQueryResult,
     UpdateObjectDetailsDocument,
     UpdateObjectDetailsDataInput,
-    UpdateObjectDetailsMutation
+    UpdateObjectDetailsMutation,
+    UpdateSourceObjectsDocument,
+    UpdateDerivedObjectsDocument
+
 } from '../../../types/graphql';
 import { eSystemObjectType } from '../../../types/server';
 
@@ -65,6 +70,32 @@ export function updateDetailsTabData(idSystemObject: number, idObject: number, o
                 idObject,
                 objectType,
                 data
+            }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+    });
+}
+
+export function updateSourceObjects(idSystemObject: number, sources: number[]) {
+    return apolloClient.mutate({
+        mutation: UpdateSourceObjectsDocument,
+        variables: {
+            input: {
+                idSystemObject,
+                Sources: sources
+            }
+        },
+        refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
+    });
+}
+
+export function updateDerivedObjects(idSystemObject: number, derivatives: number[]) {
+    return apolloClient.mutate({
+        mutation: UpdateDerivedObjectsDocument,
+        variables: {
+            input: {
+                idSystemObject,
+                Derivatives: derivatives
             }
         },
         refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
