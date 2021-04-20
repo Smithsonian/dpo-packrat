@@ -319,7 +319,9 @@ export type Mutation = {
   createVocabularySet: CreateVocabularySetResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  updateDerivedObjects: UpdateDerivedObjectsResult;
   updateObjectDetails: UpdateObjectDetailsResult;
+  updateSourceObjects: UpdateSourceObjectsResult;
   updateUser: CreateUserResult;
   uploadAsset: UploadAssetResult;
 };
@@ -385,8 +387,18 @@ export type MutationIngestDataArgs = {
 };
 
 
+export type MutationUpdateDerivedObjectsArgs = {
+  input: UpdateDerivedObjectsInput;
+};
+
+
 export type MutationUpdateObjectDetailsArgs = {
   input: UpdateObjectDetailsInput;
+};
+
+
+export type MutationUpdateSourceObjectsArgs = {
+  input: UpdateSourceObjectsInput;
 };
 
 
@@ -1320,6 +1332,26 @@ export type UpdateObjectDetailsResult = {
   success: Scalars['Boolean'];
 };
 
+export type UpdateDerivedObjectsInput = {
+  idSystemObject: Scalars['Int'];
+  Derivatives: Array<Scalars['Int']>;
+};
+
+export type UpdateDerivedObjectsResult = {
+  __typename?: 'UpdateDerivedObjectsResult';
+  success: Scalars['Boolean'];
+};
+
+export type UpdateSourceObjectsInput = {
+  idSystemObject: Scalars['Int'];
+  Sources: Array<Scalars['Int']>;
+};
+
+export type UpdateSourceObjectsResult = {
+  __typename?: 'UpdateSourceObjectsResult';
+  success: Scalars['Boolean'];
+};
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -2197,6 +2229,19 @@ export type CreateSceneMutation = (
   ) }
 );
 
+export type UpdateDerivedObjectsMutationVariables = Exact<{
+  input: UpdateDerivedObjectsInput;
+}>;
+
+
+export type UpdateDerivedObjectsMutation = (
+  { __typename?: 'Mutation' }
+  & { updateDerivedObjects: (
+    { __typename?: 'UpdateDerivedObjectsResult' }
+    & Pick<UpdateDerivedObjectsResult, 'success'>
+  ) }
+);
+
 export type UpdateObjectDetailsMutationVariables = Exact<{
   input: UpdateObjectDetailsInput;
 }>;
@@ -2207,6 +2252,19 @@ export type UpdateObjectDetailsMutation = (
   & { updateObjectDetails: (
     { __typename?: 'UpdateObjectDetailsResult' }
     & Pick<UpdateObjectDetailsResult, 'success'>
+  ) }
+);
+
+export type UpdateSourceObjectsMutationVariables = Exact<{
+  input: UpdateSourceObjectsInput;
+}>;
+
+
+export type UpdateSourceObjectsMutation = (
+  { __typename?: 'Mutation' }
+  & { updateSourceObjects: (
+    { __typename?: 'UpdateSourceObjectsResult' }
+    & Pick<UpdateSourceObjectsResult, 'success'>
   ) }
 );
 
@@ -3416,6 +3474,39 @@ export function useCreateSceneMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateSceneMutationHookResult = ReturnType<typeof useCreateSceneMutation>;
 export type CreateSceneMutationResult = Apollo.MutationResult<CreateSceneMutation>;
 export type CreateSceneMutationOptions = Apollo.BaseMutationOptions<CreateSceneMutation, CreateSceneMutationVariables>;
+export const UpdateDerivedObjectsDocument = gql`
+    mutation updateDerivedObjects($input: UpdateDerivedObjectsInput!) {
+  updateDerivedObjects(input: $input) {
+    success
+  }
+}
+    `;
+export type UpdateDerivedObjectsMutationFn = Apollo.MutationFunction<UpdateDerivedObjectsMutation, UpdateDerivedObjectsMutationVariables>;
+
+/**
+ * __useUpdateDerivedObjectsMutation__
+ *
+ * To run a mutation, you first call `useUpdateDerivedObjectsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateDerivedObjectsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateDerivedObjectsMutation, { data, loading, error }] = useUpdateDerivedObjectsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateDerivedObjectsMutation(baseOptions?: Apollo.MutationHookOptions<UpdateDerivedObjectsMutation, UpdateDerivedObjectsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateDerivedObjectsMutation, UpdateDerivedObjectsMutationVariables>(UpdateDerivedObjectsDocument, options);
+      }
+export type UpdateDerivedObjectsMutationHookResult = ReturnType<typeof useUpdateDerivedObjectsMutation>;
+export type UpdateDerivedObjectsMutationResult = Apollo.MutationResult<UpdateDerivedObjectsMutation>;
+export type UpdateDerivedObjectsMutationOptions = Apollo.BaseMutationOptions<UpdateDerivedObjectsMutation, UpdateDerivedObjectsMutationVariables>;
 export const UpdateObjectDetailsDocument = gql`
     mutation updateObjectDetails($input: UpdateObjectDetailsInput!) {
   updateObjectDetails(input: $input) {
@@ -3449,6 +3540,39 @@ export function useUpdateObjectDetailsMutation(baseOptions?: Apollo.MutationHook
 export type UpdateObjectDetailsMutationHookResult = ReturnType<typeof useUpdateObjectDetailsMutation>;
 export type UpdateObjectDetailsMutationResult = Apollo.MutationResult<UpdateObjectDetailsMutation>;
 export type UpdateObjectDetailsMutationOptions = Apollo.BaseMutationOptions<UpdateObjectDetailsMutation, UpdateObjectDetailsMutationVariables>;
+export const UpdateSourceObjectsDocument = gql`
+    mutation updateSourceObjects($input: UpdateSourceObjectsInput!) {
+  updateSourceObjects(input: $input) {
+    success
+  }
+}
+    `;
+export type UpdateSourceObjectsMutationFn = Apollo.MutationFunction<UpdateSourceObjectsMutation, UpdateSourceObjectsMutationVariables>;
+
+/**
+ * __useUpdateSourceObjectsMutation__
+ *
+ * To run a mutation, you first call `useUpdateSourceObjectsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSourceObjectsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateSourceObjectsMutation, { data, loading, error }] = useUpdateSourceObjectsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateSourceObjectsMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSourceObjectsMutation, UpdateSourceObjectsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateSourceObjectsMutation, UpdateSourceObjectsMutationVariables>(UpdateSourceObjectsDocument, options);
+      }
+export type UpdateSourceObjectsMutationHookResult = ReturnType<typeof useUpdateSourceObjectsMutation>;
+export type UpdateSourceObjectsMutationResult = Apollo.MutationResult<UpdateSourceObjectsMutation>;
+export type UpdateSourceObjectsMutationOptions = Apollo.BaseMutationOptions<UpdateSourceObjectsMutation, UpdateSourceObjectsMutationVariables>;
 export const CreateItemDocument = gql`
     mutation createItem($input: CreateItemInput!) {
   createItem(input: $input) {
