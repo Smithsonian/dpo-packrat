@@ -13,6 +13,9 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
         super(input);
     }
 
+    public fetchTableName(): string { return 'Vocabulary'; }
+    public fetchID(): number { return this.idVocabulary; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { idVocabularySet, SortOrder, Term } = this;

@@ -13,6 +13,9 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
         super(input);
     }
 
+    public fetchTableName(): string { return 'ModelObjectModelMaterialXref'; }
+    public fetchID(): number { return this.idModelObjectModelMaterialXref; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { idModelObject, idModelMaterial } = this;

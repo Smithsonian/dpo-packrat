@@ -6,12 +6,15 @@ import * as LOG from '../../utils/logger';
 export class Identifier extends DBC.DBObject<IdentifierBase> implements IdentifierBase {
     idIdentifier!: number;
     IdentifierValue!: string;
-    idSystemObject!: number | null;
     idVIdentifierType!: number;
+    idSystemObject!: number | null;
 
     constructor(input: IdentifierBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'Identifier'; }
+    public fetchID(): number { return this.idIdentifier; }
 
     protected async createWorker(): Promise<boolean> {
         try {

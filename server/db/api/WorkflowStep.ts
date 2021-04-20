@@ -24,6 +24,9 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
         super(input);
     }
 
+    public fetchTableName(): string { return 'WorkflowStep'; }
+    public fetchID(): number { return this.idWorkflowStep; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { idJobRun, DateCompleted, DateCreated, idUserOwner, idVWorkflowStepType, idWorkflow, State } = this;

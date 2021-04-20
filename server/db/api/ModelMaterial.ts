@@ -7,6 +7,9 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
     idModelMaterial!: number;
     Name!: string | null;
 
+    public fetchTableName(): string { return 'ModelMaterial'; }
+    public fetchID(): number { return this.idModelMaterial; }
+
     constructor(input: ModelMaterialBase) {
         super(input);
     }

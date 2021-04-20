@@ -4,13 +4,16 @@ import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
 export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> implements AccessContextObjectBase {
-    idAccessContext!: number;
     idAccessContextObject!: number;
+    idAccessContext!: number;
     idSystemObject!: number;
 
     constructor(input: AccessContextObjectBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'AccessContextObject'; }
+    public fetchID(): number { return this.idAccessContextObject; }
 
     protected async createWorker(): Promise<boolean> {
         try {

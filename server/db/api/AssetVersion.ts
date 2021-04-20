@@ -21,6 +21,9 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         super(input);
     }
 
+    public fetchTableName(): string { return 'AssetVersion'; }
+    public fetchID(): number { return this.idAssetVersion; }
+
     static constructFromPrisma(assetVersion: AssetVersionBase): AssetVersion {
         return new AssetVersion({
             idAssetVersion: assetVersion.idAssetVersion,

@@ -16,6 +16,9 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
         super(input);
     }
 
+    public fetchTableName(): string { return 'CaptureData'; }
+    public fetchID(): number { return this.idCaptureData; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name, idVCaptureMethod, DateCaptured, Description, idAssetThumbnail } = this;

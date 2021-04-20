@@ -11,6 +11,9 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
         super(input);
     }
 
+    public fetchTableName(): string { return 'AccessRole'; }
+    public fetchID(): number { return this.idAccessRole; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name } = this;

@@ -5,13 +5,16 @@ import * as LOG from '../../utils/logger';
 
 export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonalizationSystemObjectBase> implements UserPersonalizationSystemObjectBase {
     idUserPersonalizationSystemObject!: number;
-    idSystemObject!: number;
     idUser!: number;
+    idSystemObject!: number;
     Personalization!: string | null;
 
     constructor(input: UserPersonalizationSystemObjectBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'UserPersonalizationSystemObject'; }
+    public fetchID(): number { return this.idUserPersonalizationSystemObject; }
 
     protected async createWorker(): Promise<boolean> {
         try {

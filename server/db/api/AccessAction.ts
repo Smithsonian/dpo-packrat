@@ -12,6 +12,9 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
         super(input);
     }
 
+    public fetchTableName(): string { return 'AccessAction'; }
+    public fetchID(): number { return this.idAccessAction; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name, SortOrder } = this;

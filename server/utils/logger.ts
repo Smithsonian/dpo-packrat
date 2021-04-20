@@ -13,6 +13,7 @@ export enum LS { // logger section
     eCOLL,  // collections
     eCONF,  // config
     eDB,    // database
+    eEVENT, // event
     eGQL,   // graphql
     eHTTP,  // http
     eJOB,   // job
@@ -39,6 +40,7 @@ function loggerSectionName(eLogSection: LS | undefined): string {
         case LS.eCOLL:  return 'COL';
         case LS.eCONF:  return 'CNF';
         case LS.eDB:    return 'DB ';
+        case LS.eEVENT: return 'EVE';
         case LS.eGQL:   return 'GQL';
         case LS.eHTTP:  return 'HTP';
         case LS.eJOB:   return 'JOB';
@@ -47,8 +49,8 @@ function loggerSectionName(eLogSection: LS | undefined): string {
         case LS.eSYS:   return 'SYS';
         case LS.eTEST:  return 'tst';
         case LS.eWF:    return 'WF ';
-        case LS.eNONE:  return '** NONE **';
-        default: return '   ';
+        case LS.eNONE:  return '***';
+        default:        return '***';
     }
 }
 

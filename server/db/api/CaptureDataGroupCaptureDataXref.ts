@@ -12,6 +12,9 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
         super(input);
     }
 
+    public fetchTableName(): string { return 'CaptureDataGroupCaptureDataXref'; }
+    public fetchID(): number { return this.idCaptureDataGroupCaptureDataXref; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idCaptureDataGroup } = this;

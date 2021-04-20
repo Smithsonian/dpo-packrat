@@ -10,6 +10,9 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
         super(input);
     }
 
+    public fetchTableName(): string { return 'AssetGroup'; }
+    public fetchID(): number { return this.idAssetGroup; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             ({ idAssetGroup: this.idAssetGroup } = await DBC.DBConnection.prisma.assetGroup.create({ data: { } }));

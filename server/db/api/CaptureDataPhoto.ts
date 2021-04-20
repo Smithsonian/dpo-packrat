@@ -22,6 +22,9 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
         super(input);
     }
 
+    public fetchTableName(): string { return 'CaptureDataPhoto'; }
+    public fetchID(): number { return this.idCaptureDataPhoto; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idVCaptureDatasetType, CaptureDatasetFieldID, idVItemPositionType,

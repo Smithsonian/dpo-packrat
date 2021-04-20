@@ -5,14 +5,17 @@ import * as LOG from '../../utils/logger';
 
 export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implements CaptureDataFileBase {
     idCaptureDataFile!: number;
-    CompressedMultipleFiles!: boolean;
-    idAsset!: number;
     idCaptureData!: number;
+    idAsset!: number;
     idVVariantType!: number | null;
+    CompressedMultipleFiles!: boolean;
 
     constructor(input: CaptureDataFileBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'CaptureDataFile'; }
+    public fetchID(): number { return this.idCaptureDataFile; }
 
     protected async createWorker(): Promise<boolean> {
         try {

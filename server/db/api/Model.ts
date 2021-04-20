@@ -125,6 +125,9 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         super(input);
     }
 
+    public fetchTableName(): string { return 'Model'; }
+    public fetchID(): number { return this.idModel; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name, DateCreated, Master, Authoritative, idVCreationMethod, idVModality, idVUnits, idVPurpose,

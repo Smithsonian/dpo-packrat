@@ -6,13 +6,16 @@ import * as LOG from '../../utils/logger';
 
 export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase> implements ProjectDocumentationBase, SystemObjectBased {
     idProjectDocumentation!: number;
-    Description!: string;
     idProject!: number;
     Name!: string;
+    Description!: string;
 
     constructor(input: ProjectDocumentationBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'ProjectDocumentation'; }
+    public fetchID(): number { return this.idProjectDocumentation; }
 
     protected async createWorker(): Promise<boolean> {
         try {

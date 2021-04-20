@@ -7,17 +7,20 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
     idModelSceneXref!: number;
     idModel!: number;
     idScene!: number;
+    TS0!: number | null;
+    TS1!: number | null;
+    TS2!: number | null;
     R0!: number | null;
     R1!: number | null;
     R2!: number | null;
     R3!: number | null;
-    TS0!: number | null;
-    TS1!: number | null;
-    TS2!: number | null;
 
     constructor(input: ModelSceneXrefBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'ModelSceneXref'; }
+    public fetchID(): number { return this.idModelSceneXref; }
 
     protected async createWorker(): Promise<boolean> {
         try {

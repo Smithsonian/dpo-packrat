@@ -10,6 +10,9 @@ export class CaptureDataGroup extends DBC.DBObject<CaptureDataGroupBase> impleme
         super(input);
     }
 
+    public fetchTableName(): string { return 'CaptureDataGroup'; }
+    public fetchID(): number { return this.idCaptureDataGroup; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             ({ idCaptureDataGroup: this.idCaptureDataGroup } = await DBC.DBConnection.prisma.captureDataGroup.create({ data: { } }));

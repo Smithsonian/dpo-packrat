@@ -30,6 +30,9 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
         super(input);
     }
 
+    public fetchTableName(): string { return 'JobRun'; }
+    public fetchID(): number { return this.idJobRun; }
+
     static constructFromPrisma(jobRunBase: JobRunBase): JobRun {
         return new JobRun({
             idJobRun: jobRunBase.idJobRun,

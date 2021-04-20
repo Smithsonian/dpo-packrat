@@ -12,6 +12,9 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
         super(input);
     }
 
+    public fetchTableName(): string { return 'VocabularySet'; }
+    public fetchID(): number { return this.idVocabularySet; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { Name, SystemMaintained } = this;

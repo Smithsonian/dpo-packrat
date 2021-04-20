@@ -5,15 +5,18 @@ import * as LOG from '../../utils/logger';
 
 export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> implements LicenseAssignmentBase {
     idLicenseAssignment!: number;
-    DateEnd!: Date | null;
-    DateStart!: Date | null;
     idLicense!: number;
-    idSystemObject!: number | null;
     idUserCreator!: number | null;
+    DateStart!: Date | null;
+    DateEnd!: Date | null;
+    idSystemObject!: number | null;
 
     constructor(input: LicenseAssignmentBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'LicenseAssignment'; }
+    public fetchID(): number { return this.idLicenseAssignment; }
 
     protected async createWorker(): Promise<boolean> {
         try {

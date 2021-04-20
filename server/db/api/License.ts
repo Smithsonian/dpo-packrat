@@ -12,6 +12,9 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
         super(input);
     }
 
+    public fetchTableName(): string { return 'License'; }
+    public fetchID(): number { return this.idLicense; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { Description, Name } = this;

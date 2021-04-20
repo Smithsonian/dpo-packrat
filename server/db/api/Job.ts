@@ -20,6 +20,9 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
         super(input);
     }
 
+    public fetchTableName(): string { return 'Job'; }
+    public fetchID(): number { return this.idJob; }
+
     static convertJobStatusToEnum(Status: number): eJobStatus {
         switch (Status) {
             default:    return eJobStatus.eInactive;
