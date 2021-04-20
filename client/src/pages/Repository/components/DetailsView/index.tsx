@@ -117,7 +117,7 @@ function DetailsView(): React.ReactElement {
         sourceObjects,
         derivedObjects
     } = data.getSystemObjectDetails;
-
+    console.log('identifiers', identifiers);
     const disabled: boolean = !allowed;
 
     const addIdentifer = () => {
@@ -241,7 +241,7 @@ function DetailsView(): React.ReactElement {
             }
 
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
-
+            console.log('data', data);
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
             } else {

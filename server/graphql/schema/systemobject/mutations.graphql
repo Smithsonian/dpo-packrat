@@ -141,6 +141,7 @@ type UpdateObjectDetailsResult {
 input UpdateDerivedObjectsInput {
     idSystemObject: Int!
     Derivatives: [Int!]!
+    PreviouslySelected: [Int!]!
 }
 
 type UpdateDerivedObjectsResult {
@@ -150,6 +151,7 @@ type UpdateDerivedObjectsResult {
 input UpdateSourceObjectsInput {
     idSystemObject: Int!
     Sources: [Int!]!
+    PreviouslySelected: [Int!]!
 }
 
 type UpdateSourceObjectsResult {

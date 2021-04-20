@@ -1335,6 +1335,7 @@ export type UpdateObjectDetailsResult = {
 export type UpdateDerivedObjectsInput = {
   idSystemObject: Scalars['Int'];
   Derivatives: Array<Scalars['Int']>;
+  PreviouslySelected: Array<Scalars['Int']>;
 };
 
 export type UpdateDerivedObjectsResult = {
@@ -1345,6 +1346,7 @@ export type UpdateDerivedObjectsResult = {
 export type UpdateSourceObjectsInput = {
   idSystemObject: Scalars['Int'];
   Sources: Array<Scalars['Int']>;
+  PreviouslySelected: Array<Scalars['Int']>;
 };
 
 export type UpdateSourceObjectsResult = {

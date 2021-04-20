@@ -76,26 +76,28 @@ export function updateDetailsTabData(idSystemObject: number, idObject: number, o
     });
 }
 
-export function updateSourceObjects(idSystemObject: number, sources: number[]) {
+export function updateSourceObjects(idSystemObject: number, sources: number[], PreviouslySelected: number[]) {
     return apolloClient.mutate({
         mutation: UpdateSourceObjectsDocument,
         variables: {
             input: {
                 idSystemObject,
-                Sources: sources
+                Sources: sources,
+                PreviouslySelected
             }
         },
         refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
     });
 }
 
-export function updateDerivedObjects(idSystemObject: number, derivatives: number[]) {
+export function updateDerivedObjects(idSystemObject: number, derivatives: number[], PreviouslySelected: number[]) {
     return apolloClient.mutate({
         mutation: UpdateDerivedObjectsDocument,
         variables: {
             input: {
                 idSystemObject,
-                Derivatives: derivatives
+                Derivatives: derivatives,
+                PreviouslySelected
             }
         },
         refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']

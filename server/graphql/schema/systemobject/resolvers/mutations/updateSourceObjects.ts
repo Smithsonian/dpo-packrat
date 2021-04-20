@@ -5,13 +5,21 @@ import * as LOG from '../../../../../utils/logger';
 
 export default async function updateSourceObjects(_: Parent, args: MutationUpdateSourceObjectsArgs): Promise<UpdateSourceObjectsResult> {
     const { input } = args;
-    const { idSystemObject, Sources } = input;
-    if (Sources && Sources.length > 0) {
+    const { idSystemObject, Sources, PreviouslySelected } = input;
+    const uniqueHash = {};
+    PreviouslySelected.forEach((previous) => uniqueHash[previous] = previous);
+    const newlySelectedArr: number[] = [];
+    Sources.forEach((source) => {
+        if (!uniqueHash.hasOwnProperty(source)) {
+            newlySelectedArr.push(source);
+        }
+    });
+    if (Sources && Sources.length > 0 && newlySelectedArr.length > 0) {
         const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
         if (SO) {
-            for (const source of Sources) {
+            for (const newlySelected of newlySelectedArr) {
                 const xref: DBAPI.SystemObjectXref = new DBAPI.SystemObjectXref({
-                    idSystemObjectMaster: source,
+                    idSystemObjectMaster: newlySelected,
                     idSystemObjectDerived: SO.idSystemObject,
                     idSystemObjectXref: 0
                 });
