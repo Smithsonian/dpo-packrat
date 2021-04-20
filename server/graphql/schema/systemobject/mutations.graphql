@@ -2,6 +2,8 @@ scalar DateTime
 
 type Mutation {
     updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
+    updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
+    updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
 }
 
 input UpdateObjectDetailsInput {
@@ -133,5 +135,23 @@ input UpdateObjectDetailsDataInput {
 }
 
 type UpdateObjectDetailsResult {
+    success: Boolean!
+}
+
+input UpdateDerivedObjectsInput {
+    idSystemObject: Int!
+    Derivatives: [Int!]!
+}
+
+type UpdateDerivedObjectsResult {
+    success: Boolean!
+}
+
+input UpdateSourceObjectsInput {
+    idSystemObject: Int!
+    Sources: [Int!]!
+}
+
+type UpdateSourceObjectsResult {
     success: Boolean!
 }

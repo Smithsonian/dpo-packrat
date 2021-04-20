@@ -12,7 +12,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { parseIdentifiersToState, useVocabularyStore, useRepositoryDetailsFormStore } from '../../../../store';
+import { parseIdentifiersToState, useVocabularyStore, useRepositoryDetailsFormStore, useRepositoryStore } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -80,6 +80,7 @@ function DetailsView(): React.ReactElement {
     const [modalOpen, setModalOpen] = useState(false);
     const [details, setDetails] = useState<DetailsFields>({});
     const [isUpdatingData, setIsUpdatingData] = useState(false);
+    const [objectRelationship, setObjectRelationship] = useState('');
 
     const idSystemObject: number = Number.parseInt(params.idSystemObject, 10);
     const { data, loading } = useObjectDetails(idSystemObject);
@@ -87,6 +88,7 @@ function DetailsView(): React.ReactElement {
 
     const getEntries = useVocabularyStore(state => state.getEntries);
     const getFormState = useRepositoryDetailsFormStore(state => state.getFormState);
+    const [resetRepositoryFilter, resetKeywordSearch, initializeTree] = useRepositoryStore(state => [state.resetRepositoryFilter, state.resetKeywordSearch, state.initializeTree]);
     const objectDetailsData = data;
 
     useEffect(() => {
@@ -136,13 +138,23 @@ function DetailsView(): React.ReactElement {
 
     const onModalClose = () => {
         setModalOpen(false);
+        setObjectRelationship('');
+        resetRepositoryFilter();
     };
 
     const onAddSourceObject = () => {
+        setObjectRelationship('Source');
+        resetKeywordSearch();
+        resetRepositoryFilter();
+        initializeTree();
         setModalOpen(true);
     };
 
     const onAddDerivedObject = () => {
+        setObjectRelationship('Derived');
+        resetKeywordSearch();
+        resetRepositoryFilter();
+        initializeTree();
         setModalOpen(true);
     };
 
@@ -305,7 +317,14 @@ function DetailsView(): React.ReactElement {
                 Update
             </LoadingButton>
 
-            <ObjectSelectModal open={modalOpen} onSelectedObjects={onSelectedObjects} onModalClose={onModalClose} selectedObjects={sourceObjects} />
+            <ObjectSelectModal
+                open={modalOpen}
+                onSelectedObjects={onSelectedObjects}
+                onModalClose={onModalClose}
+                selectedObjects={objectRelationship === 'Source' ? sourceObjects : derivedObjects}
+                idSystemObject={idSystemObject}
+                relationship={objectRelationship}
+            />
         </Box>
     );
 }
