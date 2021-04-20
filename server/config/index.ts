@@ -3,6 +3,10 @@
  *
  * Organize and export server config here by extending from .env
  */
+export enum AUDIT_TYPE {
+    LOCAL = 'local',
+}
+
 export enum AUTH_TYPE {
     LOCAL = 'local',
     LDAP = 'ldap'
@@ -43,6 +47,9 @@ export interface LDAPConfig {
 }
 
 export type ConfigType = {
+    audit: {
+        type: AUDIT_TYPE;
+    },
     auth: {
         type: AUTH_TYPE;
         session: {
@@ -86,6 +93,9 @@ export type ConfigType = {
 const oneDayInSeconds = 24 * 60 * 60; // 24hrs in seconds
 
 export const Config: ConfigType = {
+    audit: {
+        type: AUDIT_TYPE.LOCAL,
+    },
     auth: {
         type: process.env.AUTH_TYPE == 'LDAP' ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
         session: {

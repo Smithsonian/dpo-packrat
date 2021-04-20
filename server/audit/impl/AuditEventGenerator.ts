@@ -1,19 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as EVENT from '../../event/interface';
 import { eDBObjectType, ObjectIDAndType, SystemObjectInfo, eAuditType } from '../../db/api/ObjectType';
+import { Audit } from '../../db/api/Audit';
 import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import { ASL, LocalStore } from '../../utils/localStore';
 
-import { Audit } from '@prisma/client';
-
 export class AuditEventGenerator {
     private eventEngine: EVENT.IEventEngine | null = null;
     private eventProducer: EVENT.IEventProducer | null = null;
-    private static auditEventGenerator: AuditEventGenerator = new AuditEventGenerator();
+    private constructor() { }
 
-    private async auditDBObject(dbObject: any, oID: ObjectIDAndType, key: EVENT.eEventKey): Promise<boolean> {
+    public static singleton: AuditEventGenerator = new AuditEventGenerator();
+
+    public async auditDBObject(dbObject: any, oID: ObjectIDAndType, key: EVENT.eEventKey): Promise<boolean> {
         dbObject;
         if (!this.eventProducer) {
             if (!this.eventEngine)
@@ -42,7 +43,7 @@ export class AuditEventGenerator {
                 case EVENT.eEventKey.eDBDelete: AuditType = eAuditType.eDBDelete; break;
             }
 
-            const value: Audit = {
+            const value: Audit = new Audit({
                 idUser,
                 AuditDate: eventDate,
                 AuditType,
@@ -51,7 +52,7 @@ export class AuditEventGenerator {
                 idSystemObject: (SOInfo && SOInfo.idSystemObject) ? SOInfo.idSystemObject : null,
                 Data: JSON.stringify(dbObject, H.Helpers.stringifyDatabaseRow),
                 idAudit: 0
-            };
+            });
 
             const data: EVENT.IEventData<EVENT.eEventKey, Audit> = {
                 eventDate,
@@ -65,9 +66,5 @@ export class AuditEventGenerator {
             return false;
         }
 
-    }
-
-    static async auditDBObject(dbObject: any, oID: ObjectIDAndType, key: EVENT.eEventKey): Promise<boolean> {
-        return AuditEventGenerator.auditEventGenerator.auditDBObject(dbObject, oID, key);
     }
 }
