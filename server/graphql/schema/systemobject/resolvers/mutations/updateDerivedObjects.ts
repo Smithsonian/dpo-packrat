@@ -5,14 +5,22 @@ import * as LOG from '../../../../../utils/logger';
 
 export default async function updateDerivedObjects(_: Parent, args: MutationUpdateDerivedObjectsArgs): Promise<UpdateDerivedObjectsResult> {
     const { input } = args;
-    const { idSystemObject, Derivatives } = input;
-    if (Derivatives && Derivatives.length > 0) {
+    const { idSystemObject, Derivatives, PreviouslySelected } = input;
+    const uniqueHash = {};
+    PreviouslySelected.forEach((previous) => uniqueHash[previous] = previous);
+    const newlySelectedArr: number[] = [];
+    Derivatives.forEach((derivative) => {
+        if (!uniqueHash.hasOwnProperty(derivative)) {
+            newlySelectedArr.push(derivative);
+        }
+    });
+    if (Derivatives && Derivatives.length > 0 && newlySelectedArr.length > 0) {
         const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
         if (SO) {
-            for (const derivative of Derivatives) {
+            for (const newlySelected of newlySelectedArr) {
                 const xref: DBAPI.SystemObjectXref = new DBAPI.SystemObjectXref({
                     idSystemObjectMaster: SO.idSystemObject,
-                    idSystemObjectDerived: derivative,
+                    idSystemObjectDerived: newlySelected,
                     idSystemObjectXref: 0
                 });
                 if (!await xref.create()) {
