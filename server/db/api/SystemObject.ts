@@ -9,25 +9,28 @@ export interface SystemObjectBased {
 }
 
 export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.SystemObject {
-    idActor!: number | null;
-    idAsset!: number | null;
-    idAssetVersion!: number | null;
-    idCaptureData!: number | null;
-    idIntermediaryFile!: number | null;
-    idItem!: number | null;
-    idModel!: number | null;
-    idProject!: number | null;
-    idProjectDocumentation!: number | null;
-    idScene!: number | null;
-    idStakeholder!: number | null;
-    idSubject!: number | null;
     idSystemObject!: number;
     idUnit!: number | null;
+    idProject!: number | null;
+    idSubject!: number | null;
+    idItem!: number | null;
+    idCaptureData!: number | null;
+    idModel!: number | null;
+    idScene!: number | null;
+    idIntermediaryFile!: number | null;
+    idAsset!: number | null;
+    idAssetVersion!: number | null;
+    idProjectDocumentation!: number | null;
+    idActor!: number | null;
+    idStakeholder!: number | null;
     Retired!: boolean;
 
     constructor(input: P.SystemObject) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'SystemObject'; }
+    public fetchID(): number { return this.idSystemObject; }
 
     // NO EXPLICIT METHODS FOR CREATING OR UPDATING SYSTEMOBJECT DIRECTLY.
     // This is done via create* and update* methods of the objects linked to SystemObject

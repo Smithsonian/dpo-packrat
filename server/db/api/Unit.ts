@@ -6,13 +6,16 @@ import * as LOG from '../../utils/logger';
 
 export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObjectBased {
     idUnit!: number;
+    Name!: string;
     Abbreviation!: string | null;
     ARKPrefix!: string | null;
-    Name!: string;
 
     constructor(input: UnitBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'Unit'; }
+    public fetchID(): number { return this.idUnit; }
 
     protected async createWorker(): Promise<boolean> {
         try {

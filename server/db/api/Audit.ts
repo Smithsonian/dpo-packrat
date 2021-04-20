@@ -2,15 +2,7 @@
 import { Audit as AuditBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
-import { eDBObjectType /*, eSystemObjectType */ } from './SystemObjectPairs'; // importing eSystemObjectType causes as circular dependency
-
-export enum eAuditType {
-    eUnknown = 0,
-    eDBCreate = 1,
-    eDBUpdate = 2,
-    eDBDelete = 3,
-    eAuthLogin = 4,
-}
+import { eDBObjectType, eAuditType /*, eSystemObjectType */ } from './ObjectType'; // importing eSystemObjectType causes as circular dependency
 
 export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
     idAudit!: number;
@@ -25,6 +17,9 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
     constructor(input: AuditBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'Audit'; }
+    public fetchID(): number { return this.idAudit; }
 
     protected async createWorker(): Promise<boolean> {
         try {

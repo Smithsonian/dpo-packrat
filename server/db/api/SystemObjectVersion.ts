@@ -12,6 +12,9 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
         super(input);
     }
 
+    public fetchTableName(): string { return 'SystemObjectVersion'; }
+    public fetchID(): number { return this.idSystemObjectVersion; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { idSystemObject, PublishedState } = this;

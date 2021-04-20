@@ -6,12 +6,15 @@ import * as LOG from '../../utils/logger';
 
 export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> implements IntermediaryFileBase, SystemObjectBased {
     idIntermediaryFile!: number;
-    DateCreated!: Date;
     idAsset!: number;
+    DateCreated!: Date;
 
     constructor(input: IntermediaryFileBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'IntermediaryFile'; }
+    public fetchID(): number { return this.idIntermediaryFile; }
 
     protected async createWorker(): Promise<boolean> {
         try {

@@ -1,5 +1,5 @@
 import { Unit, Project, Subject, Item, SystemObjectIDType, Actor, Asset, AssetVersion, CaptureData, CaptureDataFile, IntermediaryFile,
-    Model, ProjectDocumentation, Scene, Stakeholder, eSystemObjectType } from '../..';
+    Model, ProjectDocumentation, Scene, Stakeholder, eSystemObjectType, SystemObjectInfo, ObjectIDAndType } from '../..';
 import { ObjectGraphDataEntry, eApplyGraphStateDirection, ObjectGraphState } from './ObjectGraphDataEntry';
 import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
 import * as CACHE from '../../../cache';
@@ -15,7 +15,7 @@ export class ObjectGraphDatabase {
         let childData: ObjectGraphDataEntry | undefined = this.objectMap.get(child.idSystemObject);
 
         if (!parentData) {
-            const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(parent); /* istanbul ignore if */
+            const sID: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(parent); /* istanbul ignore if */
             if (!sID)
                 LOG.error(`ObjectGraphDatabase.recordRelationship unable to compute idSystemObject for ${JSON.stringify(parent)}`, LOG.LS.eDB);
 
@@ -24,7 +24,7 @@ export class ObjectGraphDatabase {
             this.objectMap.set(parent.idSystemObject, parentData);
         }
         if (!childData) {
-            const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(child); /* istanbul ignore if */
+            const sID: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(child); /* istanbul ignore if */
             if (!sID)
                 LOG.error(`ObjectGraphDatabase.recordRelationship unable to compute idSystemObject for ${JSON.stringify(child)}`, LOG.LS.eDB);
 
@@ -73,8 +73,8 @@ export class ObjectGraphDatabase {
 
     /* #region Compute Graph Data */
     private async computeGraphDataFromObject(idObject: number, eObjectType: eSystemObjectType, functionName: string): Promise<boolean> {
-        const oID: CACHE.ObjectIDAndType = { idObject, eObjectType };
-        const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
+        const oID: ObjectIDAndType = { idObject, eObjectType };
+        const sID: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
         if (!sID) {
             LOG.error(`GraphDatabase.${functionName} unable to compute idSystemObject for ${JSON.stringify(oID)}`, LOG.LS.eDB);
             return false;

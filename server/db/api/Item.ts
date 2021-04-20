@@ -6,14 +6,17 @@ import * as LOG from '../../utils/logger';
 
 export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObjectBased {
     idItem!: number;
-    EntireSubject!: boolean;
     idAssetThumbnail!: number | null;
     idGeoLocation!: number | null;
     Name!: string;
+    EntireSubject!: boolean;
 
     constructor(input: ItemBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'Item'; }
+    public fetchID(): number { return this.idItem; }
 
     protected async createWorker(): Promise<boolean> {
         try {

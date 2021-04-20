@@ -5,17 +5,20 @@ import * as LOG from '../../utils/logger';
 
 export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase {
     idMetadata!: number;
+    Name!: string;
+    ValueShort!: string | null;
+    ValueExtended!: string | null;
     idAssetValue!: number | null;
-    idSystemObject!: number | null;
     idUser!: number | null;
     idVMetadataSource!: number | null;
-    Name!: string;
-    ValueExtended!: string | null;
-    ValueShort!: string | null;
+    idSystemObject!: number | null;
 
     constructor(input: MetadataBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'Metadata'; }
+    public fetchID(): number { return this.idMetadata; }
 
     protected async createWorker(): Promise<boolean> {
         try {

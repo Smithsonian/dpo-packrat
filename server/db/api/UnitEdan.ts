@@ -12,6 +12,9 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
         super(input);
     }
 
+    public fetchTableName(): string { return 'UnitEdan'; }
+    public fetchID(): number { return this.idUnitEdan; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { idUnit, Abbreviation } = this;

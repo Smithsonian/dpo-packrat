@@ -20,6 +20,9 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
     Scalar4!: number | null;
     AdditionalAttributes!: string | null;
 
+    public fetchTableName(): string { return 'ModelMaterialChannel'; }
+    public fetchID(): number { return this.idModelMaterialChannel; }
+
     constructor(input: ModelMaterialChannelBase) {
         super(input);
     }

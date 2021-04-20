@@ -18,6 +18,9 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
         super(input);
     }
 
+    public fetchTableName(): string { return 'Asset'; }
+    public fetchID(): number { return this.idAsset; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, StorageKey } = this;

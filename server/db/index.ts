@@ -37,6 +37,7 @@ export * from './api/ModelObjectModelMaterialXref';
 export * from './api/ModelProcessingAction';
 export * from './api/ModelProcessingActionStep';
 export * from './api/ModelSceneXref';
+export * from './api/ObjectType';
 export * from './api/Project';
 export * from './api/ProjectDocumentation';
 export * from './api/Scene';

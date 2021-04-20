@@ -222,7 +222,7 @@ export class WorkflowJob implements WF.IWorkflow {
 
         this.idAssetVersions = [];
         for (const idSystemObject of this.workflowParams.idSystemObject) {
-            const OID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+            const OID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
             if (!OID) {
                 const error: string = `WorkflowJob.start unable to compute system object type for ${idSystemObject}`;
                 LOG.error(error, LOG.LS.eWF);

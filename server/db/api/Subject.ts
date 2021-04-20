@@ -6,15 +6,18 @@ import * as LOG from '../../utils/logger';
 
 export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, SystemObjectBased {
     idSubject!: number;
+    idUnit!: number;
     idAssetThumbnail!: number | null;
     idGeoLocation!: number | null;
-    idUnit!: number;
     Name!: string;
     idIdentifierPreferred!: number | null;
 
     constructor(input: SubjectBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'Subject'; }
+    public fetchID(): number { return this.idSubject; }
 
     protected async createWorker(): Promise<boolean> {
         try {

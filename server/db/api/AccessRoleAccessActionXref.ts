@@ -4,13 +4,16 @@ import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
 export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessActionXrefBase> implements AccessRoleAccessActionXrefBase {
-    idAccessAction!: number;
-    idAccessRole!: number;
     idAccessRoleAccessActionXref!: number;
+    idAccessRole!: number;
+    idAccessAction!: number;
 
     constructor(input: AccessRoleAccessActionXrefBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'AccessRoleAccessActionXref'; }
+    public fetchID(): number { return this.idAccessRoleAccessActionXref; }
 
     protected async createWorker(): Promise<boolean> {
         try {

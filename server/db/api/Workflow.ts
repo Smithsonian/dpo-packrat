@@ -46,6 +46,9 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
         super(input);
     }
 
+    public fetchTableName(): string { return 'Workflow'; }
+    public fetchID(): number { return this.idWorkflow; }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { idVWorkflowType, idProject, idUserInitiator, DateInitiated, DateUpdated, Parameters } = this;

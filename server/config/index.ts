@@ -12,6 +12,10 @@ export enum COLLECTION_TYPE {
     EDAN = 'edan'
 }
 
+export enum EVENT_TYPE {
+    INPROCESS = 'in-process'
+}
+
 export enum JOB_TYPE {
     NODE_SCHEDULE = 'node-schedule'
 }
@@ -54,6 +58,9 @@ export type ConfigType = {
             appId: string;
             authKey: string;
         }
+    }
+    event: {
+        type: EVENT_TYPE;
     }
     job: {
         type: JOB_TYPE;
@@ -100,6 +107,9 @@ export const Config: ConfigType = {
             appId: process.env.EDAN_APPID ? process.env.EDAN_APPID : /* istanbul ignore next */ 'OCIO3D',
             authKey: process.env.EDAN_AUTH_KEY ? process.env.EDAN_AUTH_KEY : /* istanbul ignore next */  ''
         }
+    },
+    event: {
+        type: EVENT_TYPE.INPROCESS,
     },
     job: {
         type: JOB_TYPE.NODE_SCHEDULE,

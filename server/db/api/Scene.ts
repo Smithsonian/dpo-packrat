@@ -6,14 +6,17 @@ import * as LOG from '../../utils/logger';
 
 export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemObjectBased {
     idScene!: number;
-    HasBeenQCd!: boolean;
+    Name!: string;
     idAssetThumbnail!: number | null;
     IsOriented!: boolean;
-    Name!: string;
+    HasBeenQCd!: boolean;
 
     constructor(input: SceneBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'Scene'; }
+    public fetchID(): number { return this.idScene; }
 
     protected async createWorker(): Promise<boolean> {
         try {

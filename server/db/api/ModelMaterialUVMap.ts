@@ -10,6 +10,9 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
     idAsset!: number;
     UVMapEdgeLength!: number;
 
+    public fetchTableName(): string { return 'ModelMaterialUVMap'; }
+    public fetchID(): number { return this.idModelMaterialUVMap; }
+
     constructor(input: ModelMaterialUVMapBase) {
         super(input);
     }

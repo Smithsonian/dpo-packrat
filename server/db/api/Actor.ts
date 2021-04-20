@@ -6,13 +6,16 @@ import * as LOG from '../../utils/logger';
 
 export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemObjectBased {
     idActor!: number;
-    idUnit!: number | null;
     IndividualName!: string | null;
     OrganizationName!: string | null;
+    idUnit!: number | null;
 
     constructor(input: ActorBase) {
         super(input);
     }
+
+    public fetchTableName(): string { return 'Actor'; }
+    public fetchID(): number { return this.idActor; }
 
     protected async createWorker(): Promise<boolean> {
         try {
