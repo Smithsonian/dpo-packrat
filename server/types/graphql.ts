@@ -316,7 +316,9 @@ export type Mutation = {
   createVocabularySet: CreateVocabularySetResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
+  updateDerivedObjects: UpdateDerivedObjectsResult;
   updateObjectDetails: UpdateObjectDetailsResult;
+  updateSourceObjects: UpdateSourceObjectsResult;
   updateUser: CreateUserResult;
   uploadAsset: UploadAssetResult;
 };
@@ -382,8 +384,18 @@ export type MutationIngestDataArgs = {
 };
 
 
+export type MutationUpdateDerivedObjectsArgs = {
+  input: UpdateDerivedObjectsInput;
+};
+
+
 export type MutationUpdateObjectDetailsArgs = {
   input: UpdateObjectDetailsInput;
+};
+
+
+export type MutationUpdateSourceObjectsArgs = {
+  input: UpdateSourceObjectsInput;
 };
 
 
@@ -1314,6 +1326,26 @@ export type UpdateObjectDetailsDataInput = {
 
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
+  success: Scalars['Boolean'];
+};
+
+export type UpdateDerivedObjectsInput = {
+  idSystemObject: Scalars['Int'];
+  Derivatives: Array<Scalars['Int']>;
+};
+
+export type UpdateDerivedObjectsResult = {
+  __typename?: 'UpdateDerivedObjectsResult';
+  success: Scalars['Boolean'];
+};
+
+export type UpdateSourceObjectsInput = {
+  idSystemObject: Scalars['Int'];
+  Sources: Array<Scalars['Int']>;
+};
+
+export type UpdateSourceObjectsResult = {
+  __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
 };
 
