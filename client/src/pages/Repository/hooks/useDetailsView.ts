@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+
 import { useQuery, FetchResult } from '@apollo/client';
 import { apolloClient } from '../../../graphql';
 import {
