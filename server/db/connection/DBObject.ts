@@ -1,6 +1,6 @@
 import { eDBObjectType, ObjectIDAndType, DBObjectNameToType } from '../api/ObjectType';
-// import { AuditFactory } from '../../audit/interface/AuditFactory';
-// import { eEventKey } from '../../event/interface/EventEnums';
+import { AuditFactory } from '../../audit/interface/AuditFactory';
+import { eEventKey } from '../../event/interface/EventEnums';
 
 export abstract class DBObject<T> {
     public abstract fetchTableName(): string;
@@ -25,18 +25,18 @@ export abstract class DBObject<T> {
     async create(): Promise<boolean> {
         const retVal: boolean = await this.createWorker();
         this.updateCachedValues();
-        // AuditFactory.auditDBObject(this, this.computeObjectIDAndType(), eEventKey.eDBCreate);
+        AuditFactory.auditDBObject(this, this.computeObjectIDAndType(), eEventKey.eDBCreate);
         return retVal;
     }
     async update(): Promise<boolean> {
         const retVal: boolean = await this.updateWorker();
         this.updateCachedValues();
-        // AuditFactory.auditDBObject(this, this.computeObjectIDAndType(), eEventKey.eDBUpdate);
+        AuditFactory.auditDBObject(this, this.computeObjectIDAndType(), eEventKey.eDBUpdate);
         return retVal;
     }
     async delete(): Promise<boolean> {
         const retVal: boolean = await this.deleteWorker();
-        // AuditFactory.auditDBObject(this, this.computeObjectIDAndType(), eEventKey.eDBDelete);
+        AuditFactory.auditDBObject(this, this.computeObjectIDAndType(), eEventKey.eDBDelete);
         return retVal;
     }
 }
