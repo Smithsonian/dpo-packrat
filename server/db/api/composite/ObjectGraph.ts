@@ -66,7 +66,7 @@ export class ObjectGraph {
     noCycles: boolean = true;
 
     pushCount: number = 0;
-    maxPushCount: number = 500;
+    maxPushCount: number = 50000;
     depth: number = 32;
 
     systemObjectList: number[] = []; // array of idSystemObjects to be processed
@@ -244,9 +244,9 @@ export class ObjectGraph {
             const traverseType: string = (eMode == eObjectGraphMode.eAncestors) ? '^^' : 'vv';
             const prefix: string = `OA [${this.pushCount.toString().padStart(3, '0')} ${traverseType}]: `;
             if (eMode == eObjectGraphMode.eAncestors)
-                LOG.info(`${prefix}${sourceDesc} -> ${relatedDesc}${valid}$`, LOG.LS.eDB);
+                LOG.info(`${prefix}${sourceDesc} -> ${relatedDesc}${valid}`, LOG.LS.eDB);
             else
-                LOG.info(`${prefix}${relatedDesc} -> ${sourceDesc}${valid}$`, LOG.LS.eDB);
+                LOG.info(`${prefix}${relatedDesc} -> ${sourceDesc}${valid}`, LOG.LS.eDB);
             */
 
             // gather using master/derived systemobjectxref's
