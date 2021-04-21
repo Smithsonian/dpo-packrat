@@ -96,12 +96,16 @@ export function SystemObjectNameToType(objectTypeName: string | null): eSystemOb
         case 'Project':                 return eSystemObjectType.eProject;
         case 'Subject':                 return eSystemObjectType.eSubject;
         case 'Item':                    return eSystemObjectType.eItem;
+        case 'CaptureData':             return eSystemObjectType.eCaptureData;
         case 'Capture Data':            return eSystemObjectType.eCaptureData;
         case 'Model':                   return eSystemObjectType.eModel;
         case 'Scene':                   return eSystemObjectType.eScene;
+        case 'IntermediaryFile':        return eSystemObjectType.eIntermediaryFile;
         case 'Intermediary File':       return eSystemObjectType.eIntermediaryFile;
+        case 'ProjectDocumentation':    return eSystemObjectType.eProjectDocumentation;
         case 'Project Documentation':   return eSystemObjectType.eProjectDocumentation;
         case 'Asset':                   return eSystemObjectType.eAsset;
+        case 'AssetVersion':            return eSystemObjectType.eAssetVersion;
         case 'Asset Version':           return eSystemObjectType.eAssetVersion;
         case 'Actor':                   return eSystemObjectType.eActor;
         case 'Stakeholder':             return eSystemObjectType.eStakeholder;
