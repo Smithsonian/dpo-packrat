@@ -105,13 +105,13 @@ export class ObjectGraph {
      * extend the representation of subjects with their preferred identifiers.
      */
     async toPersist(): Promise<ObjectGraphToPersist> {
-        let subject: ObjectGraphSubjectIdentifier[] | undefined = undefined;
+        let subject: ObjectGraphSubjectIdentifier[] | undefined = undefined; /* istanbul ignore else */
         if (this.subject) {
             subject = [];
             for (const sub of this.subject) {
-                let identifier: string | null = null;
+                let identifier: string | null = null; /* istanbul ignore else */
                 if (sub.idIdentifierPreferred) {
-                    const identifierDB = await Identifier.fetch(sub.idIdentifierPreferred);
+                    const identifierDB = await Identifier.fetch(sub.idIdentifierPreferred); /* istanbul ignore else */
                     if (identifierDB)
                         identifier = identifierDB.IdentifierValue;
                     else
@@ -121,6 +121,7 @@ export class ObjectGraph {
             }
         }
 
+        /* istanbul ignore next */
         return {
             idSystemObject: this.idSystemObject,
             unit: this.unit || undefined,
@@ -389,7 +390,7 @@ export class ObjectGraph {
 
     private async pushAssetVersion(assetVersion: AssetVersion, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
-        sourceType.idObject = assetVersion.idAsset;
+        sourceType.idObject = assetVersion.idAssetVersion;
         sourceType.eObjectType = eSystemObjectType.eAssetVersion;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType)

@@ -1,4 +1,4 @@
-import { eDBObjectType, ObjectIDAndType, DBObjectNameToType } from '../api/ObjectType';
+import { eDBObjectType, eNonSystemObjectType, ObjectIDAndType, DBObjectNameToType } from '../api/ObjectType';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 
@@ -22,21 +22,28 @@ export abstract class DBObject<T> {
         return { idObject, eObjectType };
     }
 
+    protected async auditDBObject(key: eEventKey): Promise<boolean> {
+        const oID: ObjectIDAndType = this.computeObjectIDAndType();
+        if (oID.eObjectType != eNonSystemObjectType.eAudit)
+            return AuditFactory.auditDBObject(this, oID, key);
+        return true;
+    }
+
     async create(): Promise<boolean> {
         const retVal: boolean = await this.createWorker();
         this.updateCachedValues();
-        AuditFactory.auditDBObject(this, this.computeObjectIDAndType(), eEventKey.eDBCreate);
+        this.auditDBObject(eEventKey.eDBCreate);
         return retVal;
     }
     async update(): Promise<boolean> {
         const retVal: boolean = await this.updateWorker();
         this.updateCachedValues();
-        AuditFactory.auditDBObject(this, this.computeObjectIDAndType(), eEventKey.eDBUpdate);
+        this.auditDBObject(eEventKey.eDBUpdate);
         return retVal;
     }
     async delete(): Promise<boolean> {
         const retVal: boolean = await this.deleteWorker();
-        AuditFactory.auditDBObject(this, this.computeObjectIDAndType(), eEventKey.eDBDelete);
+        this.auditDBObject(eEventKey.eDBDelete);
         return retVal;
     }
 }

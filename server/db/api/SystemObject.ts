@@ -3,6 +3,7 @@ import * as P from '@prisma/client';
 import { WorkflowStep } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import { eEventKey } from '../../event/interface/EventEnums';
 
 export interface SystemObjectBased {
     fetchSystemObject(): Promise<SystemObject | null>;
@@ -68,6 +69,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
 
     private async updateRetired(): Promise<boolean> {
         try {
+            this.auditDBObject(eEventKey.eDBUpdate);
             const { idSystemObject, Retired } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.systemObject.update({
                 where: { idSystemObject, },

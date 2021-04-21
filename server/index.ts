@@ -13,6 +13,7 @@ import cookieParser from 'cookie-parser';
 import { passport, authCorsConfig, authSession, AuthRouter } from './auth';
 import { ApolloServerOptions, computeGQLQuery } from './graphql';
 import { IndexSolr } from './navigation/impl/NavigationSolr/IndexSolr';
+import { EventFactory } from './event/interface/EventFactory';
 import * as LOG from './utils/logger';
 import { ASL, LocalStore } from './utils/localStore';
 
@@ -90,5 +91,8 @@ app.get('/solrindexprofiled', async (_: Request, response: Response) => {
     const success: boolean = await indexer.fullIndexProfiled();
     response.send(`Solr Indexing Completed: ${success ? 'Success' : 'Failure'}`);
 });
+
+// call to initalize the EventFactory, which in turn will initialize the AuditEventGenerator, supplying the IEventEngine
+EventFactory.getInstance();
 
 export { app };

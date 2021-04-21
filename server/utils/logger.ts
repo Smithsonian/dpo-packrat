@@ -8,6 +8,7 @@ import { ASL, LocalStore } from './localStore';
 
 let logger: winston.Logger;
 export enum LS { // logger section
+    eAUDIT, // audit
     eAUTH,  // authentication
     eCACHE, // cache
     eCOLL,  // collections
@@ -35,6 +36,7 @@ export function error(message: string, eLogSection: LS, obj: any | null = null):
 
 function loggerSectionName(eLogSection: LS | undefined): string {
     switch (eLogSection) {
+        case LS.eAUDIT: return 'AUD';
         case LS.eAUTH:  return 'ATH';
         case LS.eCACHE: return 'CCH';
         case LS.eCOLL:  return 'COL';
