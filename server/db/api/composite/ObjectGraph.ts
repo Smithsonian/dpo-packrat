@@ -186,7 +186,7 @@ export class ObjectGraph {
             };
 
             // short-circuit if we're building an ObjectGraphDatabase and we've already processed this object
-            if (this.objectGraphDatabase && this.objectGraphDatabase.alreadyProcessed(sourceType, relatedType)) {
+            if (this.objectGraphDatabase && this.objectGraphDatabase.alreadyProcessed(sourceType, relatedType)) { /* istanbul ignore else */
                 if (sourceType.idObject)
                     await this.recordRelationship(sourceType, relatedType, eMode);
                 // LOG.info(`SC related=${JSON.stringify(relatedType)}; source=${JSON.stringify(sourceType)}`, LOG.LS.eDB);

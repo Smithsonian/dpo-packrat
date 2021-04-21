@@ -22,7 +22,7 @@ export abstract class DBObject<T> {
         return { idObject, eObjectType };
     }
 
-    protected async auditDBObject(key: eEventKey): Promise<boolean> {
+    public async auditDBObject(key: eEventKey): Promise<boolean> {
         const oID: ObjectIDAndType = this.computeObjectIDAndType();
         if (oID.eObjectType != eNonSystemObjectType.eAudit)
             return AuditFactory.auditDBObject(this, oID, key);
