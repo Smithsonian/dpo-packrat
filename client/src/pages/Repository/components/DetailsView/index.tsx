@@ -12,7 +12,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { parseIdentifiersToState, useVocabularyStore, useRepositoryDetailsFormStore, useRepositoryStore } from '../../../../store';
+import { /*parseIdentifiersToState,*/ useVocabularyStore, useRepositoryDetailsFormStore, useRepositoryStore, useIdentifierStore } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -88,6 +88,13 @@ function DetailsView(): React.ReactElement {
 
     const getEntries = useVocabularyStore(state => state.getEntries);
     const getFormState = useRepositoryDetailsFormStore(state => state.getFormState);
+    const [stateIdentifiers, addNewIdentifier, initializeIdentifierState, removeTargetIdentifier, updateIdentifier] = useIdentifierStore(state => [
+        state.stateIdentifiers,
+        state.addNewIdentifier,
+        state.initializeIdentifierState,
+        state.removeTargetIdentifier,
+        state.updateIdentifier
+    ]);
     const [resetRepositoryFilter, resetKeywordSearch, initializeTree] = useRepositoryStore(state => [state.resetRepositoryFilter, state.resetKeywordSearch, state.initializeTree]);
     const objectDetailsData = data;
 
@@ -95,41 +102,29 @@ function DetailsView(): React.ReactElement {
         if (data && !loading) {
             const { name, retired } = data.getSystemObjectDetails;
             setDetails({ name, retired });
+            initializeIdentifierState(data.getSystemObjectDetails.identifiers);
         }
-    }, [data, loading]);
+    }, [data, loading, initializeIdentifierState]);
 
     if (!data || !params.idSystemObject) {
         return <ObjectNotFoundView loading={loading} />;
     }
 
-    const {
-        idObject,
-        objectType,
-        identifiers,
-        allowed,
-        publishedState,
-        thumbnail,
-        unit,
-        project,
-        subject,
-        item,
-        objectAncestors,
-        sourceObjects,
-        derivedObjects
-    } = data.getSystemObjectDetails;
-    console.log('identifiers', identifiers);
+    const { idObject, objectType, allowed, publishedState, thumbnail, unit, project, subject, item, objectAncestors, sourceObjects, derivedObjects } = data.getSystemObjectDetails;
+
     const disabled: boolean = !allowed;
 
     const addIdentifer = () => {
-        alert('TODO: KARAN: add identifier');
+        addNewIdentifier();
     };
 
-    const removeIdentifier = () => {
-        alert('TODO: KARAN: remove identifier');
+    const removeIdentifier = (id: number) => {
+        removeTargetIdentifier(id);
     };
 
-    const updateIdentifierFields = () => {
+    const updateIdentifierFields = (id: number, name: string, value) => {
         alert('TODO: KARAN: update identifier');
+        updateIdentifier(id, name, value);
     };
 
     const onSelectedObjects = () => {
@@ -288,7 +283,7 @@ function DetailsView(): React.ReactElement {
                     <IdentifierList
                         viewMode
                         disabled={disabled}
-                        identifiers={parseIdentifiersToState(identifiers, [])}
+                        identifiers={stateIdentifiers || []}
                         identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
                         onAdd={addIdentifer}
                         onRemove={removeIdentifier}
