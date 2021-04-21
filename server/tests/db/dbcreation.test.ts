@@ -363,6 +363,12 @@ describe('DB Creation Test Suite', () => {
         systemObjectSubject = subject ? await subject.fetchSystemObject() : null;
         expect(systemObjectSubject).toBeTruthy();
         expect(systemObjectSubject ? systemObjectSubject.idSubject : -1).toBe(subject ? subject.idSubject : -2);
+
+        if (systemObjectSubject) {
+            expect(systemObjectSubject.fetchTableName()).toEqual('SystemObject');
+            expect(systemObjectSubject.fetchID()).toEqual(systemObjectSubject.idSystemObject);
+            expect(await systemObjectSubject.delete()).toBeFalsy();
+        }
     });
 
     test('DB Creation: Update Identifier with Subject', async() => {
@@ -3752,44 +3758,74 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.DBObjectNameToType('Stakeholder')).toEqual(DBAPI.eSystemObjectType.eStakeholder);
         expect(DBAPI.DBObjectNameToType('Unknown')).toEqual(DBAPI.eSystemObjectType.eUnknown);
 
+        expect(DBAPI.DBObjectNameToType('AccessAction')).toEqual(DBAPI.eNonSystemObjectType.eAccessAction);
         expect(DBAPI.DBObjectNameToType('Access Action')).toEqual(DBAPI.eNonSystemObjectType.eAccessAction);
+        expect(DBAPI.DBObjectNameToType('AccessContext')).toEqual(DBAPI.eNonSystemObjectType.eAccessContext);
         expect(DBAPI.DBObjectNameToType('Access Context')).toEqual(DBAPI.eNonSystemObjectType.eAccessContext);
+        expect(DBAPI.DBObjectNameToType('AccessContextObject')).toEqual(DBAPI.eNonSystemObjectType.eAccessContextObject);
         expect(DBAPI.DBObjectNameToType('Access Context Object')).toEqual(DBAPI.eNonSystemObjectType.eAccessContextObject);
+        expect(DBAPI.DBObjectNameToType('AccessPolicy')).toEqual(DBAPI.eNonSystemObjectType.eAccessPolicy);
         expect(DBAPI.DBObjectNameToType('Access Policy')).toEqual(DBAPI.eNonSystemObjectType.eAccessPolicy);
+        expect(DBAPI.DBObjectNameToType('AccessRole')).toEqual(DBAPI.eNonSystemObjectType.eAccessRole);
         expect(DBAPI.DBObjectNameToType('Access Role')).toEqual(DBAPI.eNonSystemObjectType.eAccessRole);
+        expect(DBAPI.DBObjectNameToType('AccessRoleAccessActionXref')).toEqual(DBAPI.eNonSystemObjectType.eAccessRoleAccessActionXref);
         expect(DBAPI.DBObjectNameToType('Access Role Access Action Xref')).toEqual(DBAPI.eNonSystemObjectType.eAccessRoleAccessActionXref);
+        expect(DBAPI.DBObjectNameToType('AssetGroup')).toEqual(DBAPI.eNonSystemObjectType.eAssetGroup);
         expect(DBAPI.DBObjectNameToType('Asset Group')).toEqual(DBAPI.eNonSystemObjectType.eAssetGroup);
         expect(DBAPI.DBObjectNameToType('Audit')).toEqual(DBAPI.eNonSystemObjectType.eAudit);
+        expect(DBAPI.DBObjectNameToType('CaptureDataFile')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataFile);
         expect(DBAPI.DBObjectNameToType('Capture Data File')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataFile);
+        expect(DBAPI.DBObjectNameToType('CaptureDataGroup')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataGroup);
         expect(DBAPI.DBObjectNameToType('Capture Data Group')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataGroup);
+        expect(DBAPI.DBObjectNameToType('CaptureDataGroupCaptureDataXref')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataGroupCaptureDataXref);
         expect(DBAPI.DBObjectNameToType('Capture Data Group Capture Data Xref')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataGroupCaptureDataXref);
+        expect(DBAPI.DBObjectNameToType('CaptureDataPhoto')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataPhoto);
         expect(DBAPI.DBObjectNameToType('Capture Data Photo')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataPhoto);
         expect(DBAPI.DBObjectNameToType('GeoLocation')).toEqual(DBAPI.eNonSystemObjectType.eGeoLocation);
         expect(DBAPI.DBObjectNameToType('Identifier')).toEqual(DBAPI.eNonSystemObjectType.eIdentifier);
         expect(DBAPI.DBObjectNameToType('Job')).toEqual(DBAPI.eNonSystemObjectType.eJob);
+        expect(DBAPI.DBObjectNameToType('JobRun')).toEqual(DBAPI.eNonSystemObjectType.eJobRun);
         expect(DBAPI.DBObjectNameToType('Job Run')).toEqual(DBAPI.eNonSystemObjectType.eJobRun);
         expect(DBAPI.DBObjectNameToType('License')).toEqual(DBAPI.eNonSystemObjectType.eLicense);
+        expect(DBAPI.DBObjectNameToType('LicenseAssignment')).toEqual(DBAPI.eNonSystemObjectType.eLicenseAssignment);
         expect(DBAPI.DBObjectNameToType('License Assignment')).toEqual(DBAPI.eNonSystemObjectType.eLicenseAssignment);
         expect(DBAPI.DBObjectNameToType('Metadata')).toEqual(DBAPI.eNonSystemObjectType.eMetadata);
+        expect(DBAPI.DBObjectNameToType('ModelMaterial')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterial);
         expect(DBAPI.DBObjectNameToType('Model Material')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterial);
+        expect(DBAPI.DBObjectNameToType('ModelMaterialChannel')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterialChannel);
         expect(DBAPI.DBObjectNameToType('Model Material Channel')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterialChannel);
+        expect(DBAPI.DBObjectNameToType('ModelMaterialUVMap')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterialUVMap);
         expect(DBAPI.DBObjectNameToType('Model Material UV Map')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterialUVMap);
+        expect(DBAPI.DBObjectNameToType('ModelObject')).toEqual(DBAPI.eNonSystemObjectType.eModelObject);
         expect(DBAPI.DBObjectNameToType('Model Object')).toEqual(DBAPI.eNonSystemObjectType.eModelObject);
+        expect(DBAPI.DBObjectNameToType('ModelObjectModelMaterialXref')).toEqual(DBAPI.eNonSystemObjectType.eModelObjectModelMaterialXref);
         expect(DBAPI.DBObjectNameToType('Model Object Model Material Xref')).toEqual(DBAPI.eNonSystemObjectType.eModelObjectModelMaterialXref);
+        expect(DBAPI.DBObjectNameToType('ModelProcessingAction')).toEqual(DBAPI.eNonSystemObjectType.eModelProcessingAction);
         expect(DBAPI.DBObjectNameToType('Model Processing Action')).toEqual(DBAPI.eNonSystemObjectType.eModelProcessingAction);
+        expect(DBAPI.DBObjectNameToType('ModelProessingActionStep')).toEqual(DBAPI.eNonSystemObjectType.eModelProcessingActionStep);
         expect(DBAPI.DBObjectNameToType('Model Proessing Action Step')).toEqual(DBAPI.eNonSystemObjectType.eModelProcessingActionStep);
+        expect(DBAPI.DBObjectNameToType('ModelSceneXref')).toEqual(DBAPI.eNonSystemObjectType.eModelSceneXref);
         expect(DBAPI.DBObjectNameToType('Model Scene Xref')).toEqual(DBAPI.eNonSystemObjectType.eModelSceneXref);
+        expect(DBAPI.DBObjectNameToType('SystemObject')).toEqual(DBAPI.eNonSystemObjectType.eSystemObject);
         expect(DBAPI.DBObjectNameToType('System Object')).toEqual(DBAPI.eNonSystemObjectType.eSystemObject);
+        expect(DBAPI.DBObjectNameToType('SystemObjectVersion')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersion);
         expect(DBAPI.DBObjectNameToType('System Object Version')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersion);
+        expect(DBAPI.DBObjectNameToType('SystemObjectXref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectXref);
         expect(DBAPI.DBObjectNameToType('System Object Xref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectXref);
+        expect(DBAPI.DBObjectNameToType('UnitEdan')).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
         expect(DBAPI.DBObjectNameToType('Unit Edan')).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
         expect(DBAPI.DBObjectNameToType('User')).toEqual(DBAPI.eNonSystemObjectType.eUser);
+        expect(DBAPI.DBObjectNameToType('UserPersonalizationSystemObject')).toEqual(DBAPI.eNonSystemObjectType.eUserPersonalizationSystemObject);
         expect(DBAPI.DBObjectNameToType('User Personalization System Object')).toEqual(DBAPI.eNonSystemObjectType.eUserPersonalizationSystemObject);
+        expect(DBAPI.DBObjectNameToType('UserPersonalizationUrl')).toEqual(DBAPI.eNonSystemObjectType.eUserPersonalizationUrl);
         expect(DBAPI.DBObjectNameToType('User Personalization Url')).toEqual(DBAPI.eNonSystemObjectType.eUserPersonalizationUrl);
         expect(DBAPI.DBObjectNameToType('Vocabulary')).toEqual(DBAPI.eNonSystemObjectType.eVocabulary);
+        expect(DBAPI.DBObjectNameToType('VocabularySet')).toEqual(DBAPI.eNonSystemObjectType.eVocabularySet);
         expect(DBAPI.DBObjectNameToType('Vocabulary Set')).toEqual(DBAPI.eNonSystemObjectType.eVocabularySet);
         expect(DBAPI.DBObjectNameToType('Workflow')).toEqual(DBAPI.eNonSystemObjectType.eWorkflow);
+        expect(DBAPI.DBObjectNameToType('WorkflowStep')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStep);
         expect(DBAPI.DBObjectNameToType('Workflow Step')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStep);
+        expect(DBAPI.DBObjectNameToType('WorkflowStepSystemObjectXref')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStepSystemObjectXref);
         expect(DBAPI.DBObjectNameToType('Workflow Step System Object Xref')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStepSystemObjectXref);
         expect(DBAPI.DBObjectNameToType('Unknown')).toEqual(DBAPI.eNonSystemObjectType.eUnknown);
     });

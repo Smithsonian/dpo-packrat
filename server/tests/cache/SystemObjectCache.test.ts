@@ -4,6 +4,7 @@ import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import { ObjectGraphTestSetup } from '../db/composite/ObjectGraph.setup';
 import { createItemTest } from '../db/api';
+import * as L from 'lodash';
 
 afterAll(async done => {
     await H.Helpers.sleep(4000);
@@ -60,6 +61,13 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
                 const SOExamine: DBAPI.SystemObject = systemObjectAll[lookup];
                 await testSystemObject(SOExamine);
             }
+
+            /*
+            jest.setTimeout(600000);
+            for (const SOExamine of systemObjectAll) {
+                await testSystemObject(SOExamine);
+            }
+            */
         });
 
         test('Cache: SystemObjectCache.getSystemFromObjectIDInternal ' + description, async () => {
@@ -96,8 +104,7 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
             expect(oIDFetch).toBeFalsy();
 
             const SOInfo: DBAPI.SystemObjectInfo | undefined = await SystemObjectCache.getSystemFromObjectID({ idObject: 1000000000, eObjectType: DBAPI.eSystemObjectType.eItem });
-            expect(SOInfo).toBeTruthy();
-            expect(SOInfo?.idSystemObject).toEqual(0);
+            expect(SOInfo).toBeFalsy();
 
             oIDFetch = SystemObjectCache.convertSystemObjectToObjectID(null);
             expect(oIDFetch).toBeFalsy();
@@ -153,6 +160,9 @@ async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean>
     // LOG.info(`Got here 1 ${SOExamine.idSystemObject}`, LOG.LS.eTEST);
     const oIDFetch: DBAPI.ObjectIDAndType | undefined = await SystemObjectCache.getObjectFromSystem(SOExamine.idSystemObject);
     expect(oIDFetch).toBeTruthy();
+
+    if (!L.isEqual(oIDFetch, oID))
+        LOG.error(`testSystemObject fetched ${JSON.stringify(oIDFetch)} vs ${JSON.stringify(oID)}: ${JSON.stringify(SOExamine)}`, LOG.LS.eTEST);
     expect(oIDFetch).toEqual(oID);
 
     // LOG.info(`Got here 2 ${SOExamine.idSystemObject}`, LOG.LS.eTEST);

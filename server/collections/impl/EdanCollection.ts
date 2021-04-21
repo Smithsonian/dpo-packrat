@@ -52,7 +52,7 @@ class EdanCollection implements COL.ICollection {
         let jsonResult: any | null          = null;
         try {
             jsonResult                      = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
-        } catch (error) {
+        } catch (error) /* istanbul ignore next */ {
             LOG.error(`EdanCollection.queryCollection ${query}`, LOG.LS.eCOLL, error);
             jsonResult                      = null;
         }

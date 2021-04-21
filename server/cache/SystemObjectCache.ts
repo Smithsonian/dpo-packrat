@@ -80,16 +80,17 @@ export class SystemObjectCache {
                 default: isASystemObject = false; break;
             }
 
+            const oIDCleansed: DBAPI.ObjectIDAndType = { idObject: oID.idObject, eObjectType: oID.eObjectType };
             /* istanbul ignore else */
             if (SO) {
                 sID = { idSystemObject: SO.idSystemObject, Retired: SO.Retired };
-                this.objectIDToSystemMap.set(oID, sID);
-                this.systemIDToObjectMap.set(SO.idSystemObject, oID);
-            } else if (isASystemObject) {
+                this.objectIDToSystemMap.set(oIDCleansed, sID);
+                this.systemIDToObjectMap.set(SO.idSystemObject, oIDCleansed);
+            } else if (!isASystemObject) {
                 if (idObject) {
-                    LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal storing idSystemObject 0 for ${JSON.stringify(oID)}`, LOG.LS.eCACHE);
+                    LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal storing idSystemObject 0 for ${JSON.stringify(oIDCleansed)}`, LOG.LS.eCACHE);
                     sID = { idSystemObject: 0, Retired: false };
-                    this.objectIDToSystemMap.set(oID, sID);
+                    this.objectIDToSystemMap.set(oIDCleansed, sID);
                 }
             } else
                 LOG.error(`SystemObjectCache.getSystemFromObjectIDInternal unable to lookup ${eSystemObjectType[eObjectType]}, id ${idObject}`, LOG.LS.eCACHE );
@@ -109,7 +110,7 @@ export class SystemObjectCache {
             return undefined;
         }
 
-        const oID: DBAPI.ObjectIDAndType | undefined = SystemObjectCache.convertSystemObjectToObjectID(SO);
+        const oID: DBAPI.ObjectIDAndType | undefined = SystemObjectCache.convertSystemObjectToObjectID(SO); /* istanbul ignore else */
         if (oID) {
             this.objectIDToSystemMap.set(oID, { idSystemObject, Retired: SO.Retired });
             this.systemIDToObjectMap.set(idSystemObject, oID);

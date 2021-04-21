@@ -73,6 +73,7 @@ export class IndexSolr {
 
     // TODO: test! Integrate potentially with TBD audit interface, providing a path for system object creation and updates to flow through to Solr
     async indexObject(idSystemObject: number): Promise<boolean> {
+        LOG.info(`IndexSolr.indexObject indexing ${idSystemObject}`, LOG.LS.eNAV);
         // Compute full object graph for object
         const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAll, 32, this.objectGraphDatabase);
         if (!await OG.fetch()) {

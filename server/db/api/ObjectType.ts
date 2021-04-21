@@ -179,48 +179,78 @@ export function DBObjectNameToType(objectTypeName: string | null): eDBObjectType
         return systemObjectType;
 
     switch (objectTypeName) {
+        case 'AccessAction': return eNonSystemObjectType.eAccessAction;
         case 'Access Action': return eNonSystemObjectType.eAccessAction;
+        case 'AccessContext': return eNonSystemObjectType.eAccessContext;
         case 'Access Context': return eNonSystemObjectType.eAccessContext;
+        case 'AccessContextObject': return eNonSystemObjectType.eAccessContextObject;
         case 'Access Context Object': return eNonSystemObjectType.eAccessContextObject;
+        case 'AccessPolicy': return eNonSystemObjectType.eAccessPolicy;
         case 'Access Policy': return eNonSystemObjectType.eAccessPolicy;
+        case 'AccessRole': return eNonSystemObjectType.eAccessRole;
         case 'Access Role': return eNonSystemObjectType.eAccessRole;
+        case 'AccessRoleAccessActionXref': return eNonSystemObjectType.eAccessRoleAccessActionXref;
         case 'Access Role Access Action Xref': return eNonSystemObjectType.eAccessRoleAccessActionXref;
+        case 'AssetGroup': return eNonSystemObjectType.eAssetGroup;
         case 'Asset Group': return eNonSystemObjectType.eAssetGroup;
         case 'Audit': return eNonSystemObjectType.eAudit;
+        case 'CaptureDataFile': return eNonSystemObjectType.eCaptureDataFile;
         case 'Capture Data File': return eNonSystemObjectType.eCaptureDataFile;
+        case 'CaptureDataGroup': return eNonSystemObjectType.eCaptureDataGroup;
         case 'Capture Data Group': return eNonSystemObjectType.eCaptureDataGroup;
+        case 'CaptureDataGroupCaptureDataXref': return eNonSystemObjectType.eCaptureDataGroupCaptureDataXref;
         case 'Capture Data Group Capture Data Xref': return eNonSystemObjectType.eCaptureDataGroupCaptureDataXref;
+        case 'CaptureDataPhoto': return eNonSystemObjectType.eCaptureDataPhoto;
         case 'Capture Data Photo': return eNonSystemObjectType.eCaptureDataPhoto;
         case 'GeoLocation': return eNonSystemObjectType.eGeoLocation;
         case 'Identifier': return eNonSystemObjectType.eIdentifier;
         case 'Job': return eNonSystemObjectType.eJob;
+        case 'JobRun': return eNonSystemObjectType.eJobRun;
         case 'Job Run': return eNonSystemObjectType.eJobRun;
         case 'License': return eNonSystemObjectType.eLicense;
+        case 'LicenseAssignment': return eNonSystemObjectType.eLicenseAssignment;
         case 'License Assignment': return eNonSystemObjectType.eLicenseAssignment;
         case 'Metadata': return eNonSystemObjectType.eMetadata;
+        case 'ModelMaterial': return eNonSystemObjectType.eModelMaterial;
         case 'Model Material': return eNonSystemObjectType.eModelMaterial;
+        case 'ModelMaterialChannel': return eNonSystemObjectType.eModelMaterialChannel;
         case 'Model Material Channel': return eNonSystemObjectType.eModelMaterialChannel;
+        case 'ModelMaterialUVMap': return eNonSystemObjectType.eModelMaterialUVMap;
         case 'Model Material UV Map': return eNonSystemObjectType.eModelMaterialUVMap;
+        case 'ModelObject': return eNonSystemObjectType.eModelObject;
         case 'Model Object': return eNonSystemObjectType.eModelObject;
+        case 'ModelObjectModelMaterialXref': return eNonSystemObjectType.eModelObjectModelMaterialXref;
         case 'Model Object Model Material Xref': return eNonSystemObjectType.eModelObjectModelMaterialXref;
+        case 'ModelProcessingAction': return eNonSystemObjectType.eModelProcessingAction;
         case 'Model Processing Action': return eNonSystemObjectType.eModelProcessingAction;
+        case 'ModelProessingActionStep': return eNonSystemObjectType.eModelProcessingActionStep;
         case 'Model Proessing Action Step': return eNonSystemObjectType.eModelProcessingActionStep;
+        case 'ModelSceneXref': return eNonSystemObjectType.eModelSceneXref;
         case 'Model Scene Xref': return eNonSystemObjectType.eModelSceneXref;
+        case 'SystemObject': return eNonSystemObjectType.eSystemObject;
         case 'System Object': return eNonSystemObjectType.eSystemObject;
+        case 'SystemObjectVersion': return eNonSystemObjectType.eSystemObjectVersion;
         case 'System Object Version': return eNonSystemObjectType.eSystemObjectVersion;
+        case 'SystemObjectXref': return eNonSystemObjectType.eSystemObjectXref;
         case 'System Object Xref': return eNonSystemObjectType.eSystemObjectXref;
+        case 'UnitEdan': return eNonSystemObjectType.eUnitEdan;
         case 'Unit Edan': return eNonSystemObjectType.eUnitEdan;
         case 'User': return eNonSystemObjectType.eUser;
+        case 'UserPersonalizationSystemObject': return eNonSystemObjectType.eUserPersonalizationSystemObject;
         case 'User Personalization System Object': return eNonSystemObjectType.eUserPersonalizationSystemObject;
+        case 'UserPersonalizationUrl': return eNonSystemObjectType.eUserPersonalizationUrl;
         case 'User Personalization Url': return eNonSystemObjectType.eUserPersonalizationUrl;
         case 'Vocabulary': return eNonSystemObjectType.eVocabulary;
+        case 'VocabularySet': return eNonSystemObjectType.eVocabularySet;
         case 'Vocabulary Set': return eNonSystemObjectType.eVocabularySet;
         case 'Workflow': return eNonSystemObjectType.eWorkflow;
+        case 'WorkflowStep': return eNonSystemObjectType.eWorkflowStep;
         case 'Workflow Step': return eNonSystemObjectType.eWorkflowStep;
+        case 'WorkflowStepSystemObjectXref': return eNonSystemObjectType.eWorkflowStepSystemObjectXref;
         case 'Workflow Step System Object Xref': return eNonSystemObjectType.eWorkflowStepSystemObjectXref;
 
         default:
-        case 'Unknown':                 return eNonSystemObjectType.eUnknown;
+        case 'Unknown': return eNonSystemObjectType.eUnknown;
     }
 }
 

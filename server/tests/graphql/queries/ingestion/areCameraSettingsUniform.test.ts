@@ -47,7 +47,7 @@ const areCameraSettingsUniformTest = (utils: TestSuiteUtils): void => {
                         const assetVersion = new DBAPI.AssetVersion(assetVersionInput);
                         if (await assetVersion.create()) {
                             const cameraSettingUniformInput: AreCameraSettingsUniformInput = {
-                                idAssetVersion: assetVersion.idAsset
+                                idAssetVersion: assetVersion.idAssetVersion
                             };
 
                             const result = await graphQLApi.areCameraSettingsUniform(cameraSettingUniformInput);
