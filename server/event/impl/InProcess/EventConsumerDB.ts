@@ -22,7 +22,7 @@ export class EventConsumerDB extends EventConsumer {
                 LOG.error(`EventConsumerDB.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
                 continue;
             }
-            LOG.info(`EventConsumerDB.eventWorker ${JSON.stringify(dataItem, H.Helpers.stringifyDatabaseRow)}`, LOG.LS.eEVENT);
+            // LOG.info(`EventConsumerDB.eventWorker ${JSON.stringify(dataItem, H.Helpers.stringifyDatabaseRow)}`, LOG.LS.eEVENT);
 
             switch (dataItem.key) {
                 case EVENT.eEventKey.eDBCreate:
