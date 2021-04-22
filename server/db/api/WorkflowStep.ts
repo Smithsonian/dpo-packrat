@@ -20,17 +20,12 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
     DateCreated!: Date;
     DateCompleted!: Date | null;
 
-    idJobRunOrig!: number | null;
-    idUserOwnerOrig!: number | null;
-
     constructor(input: WorkflowStepBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idJobRunOrig = this.idJobRun;
-        this.idUserOwnerOrig = this.idUserOwner;
-    }
+    public fetchTableName(): string { return 'WorkflowStep'; }
+    public fetchID(): number { return this.idWorkflowStep; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -59,13 +54,13 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflowStep, idJobRun, DateCompleted, DateCreated, idUserOwner, idVWorkflowStepType,
-                idWorkflow, State, idJobRunOrig, idUserOwnerOrig } = this;
+                idWorkflow, State } = this;
             return await DBC.DBConnection.prisma.workflowStep.update({
                 where: { idWorkflowStep, },
                 data: {
-                    JobRun:             idJobRun ? { connect: { idJobRun }, } : idJobRunOrig ? { disconnect: true, } : undefined,
+                    JobRun:             idJobRun ? { connect: { idJobRun }, } : { disconnect: true, },
                     Workflow:           { connect: { idWorkflow }, },
-                    User:               idUserOwner ? { connect: { idUser: idUserOwner }, } : idUserOwnerOrig ? { disconnect: true, } : undefined,
+                    User:               idUserOwner ? { connect: { idUser: idUserOwner }, } : { disconnect: true, },
                     Vocabulary:         { connect: { idVocabulary: idVWorkflowStepType }, },
                     State,
                     DateCreated,

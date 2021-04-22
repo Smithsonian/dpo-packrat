@@ -87,7 +87,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
                         // Workflow (2) should run asynchronously and independently
                         if (workflowEngine) {
                             // assetVersion.fetchSystemObject()
-                            const sysInfo: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
+                            const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
                             const workflowParams: WF.WorkflowParameters = {
                                 eWorkflowType: null,
                                 idSystemObject: sysInfo ? [sysInfo.idSystemObject] : null,

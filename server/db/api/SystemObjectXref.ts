@@ -6,14 +6,15 @@ import * as LOG from '../../utils/logger';
 
 export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> implements SystemObjectXrefBase {
     idSystemObjectXref!: number;
-    idSystemObjectDerived!: number;
     idSystemObjectMaster!: number;
+    idSystemObjectDerived!: number;
 
     constructor(input: SystemObjectXrefBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'SystemObjectXref'; }
+    public fetchID(): number { return this.idSystemObjectXref; }
 
     protected async createWorker(): Promise<boolean> {
         try {

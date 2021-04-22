@@ -3,8 +3,7 @@ import * as LOG from '../../utils/logger';
 import * as CACHE from '../../cache';
 import * as DBAPI from '../../db';
 // import * as H from '../../utils/helpers';
-import { eSystemObjectType } from '../../db';
-import { ObjectIDAndType } from '../../cache';
+import { eSystemObjectType, ObjectIDAndType } from '../../db';
 
 export class NavigationDB implements NAV.INavigation {
     async getObjectChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
@@ -43,7 +42,7 @@ export class NavigationDB implements NAV.INavigation {
 
     private static async getChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
         // LOG.info(`NavigationDB.getChildren(${JSON.stringify(filter)})`, LOG.LS.eNAV);
-        const oID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(filter.idRoot);
+        const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(filter.idRoot);
         if (!oID)
             return { success: false, error: `NavigationDB.getChildren unable to fetch information for filter ${JSON.stringify(filter)}`, entries: [], metadataColumns: filter.metadataColumns };
 
@@ -86,8 +85,8 @@ export class NavigationDB implements NAV.INavigation {
         }
 
         for (const unit of units) {
-            const oID: CACHE.ObjectIDAndType = { idObject: unit.idUnit, eObjectType: eSystemObjectType.eUnit };
-            const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
+            const oID: DBAPI.ObjectIDAndType = { idObject: unit.idUnit, eObjectType: eSystemObjectType.eUnit };
+            const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
             if (!sID) {
                 LOG.error(`NavigationDB.getRoot unable to compute idSystemObject for ${JSON.stringify(oID)}`, LOG.LS.eNAV);
                 continue;
@@ -105,12 +104,12 @@ export class NavigationDB implements NAV.INavigation {
         return entries;
     }
 
-    private static async computeChildrenForUnitOrProject(filter: NAV.NavigationFilter, oID: CACHE.ObjectIDAndType, OG: DBAPI.ObjectGraph, entries: NAV.NavigationResultEntry[]): Promise<void> {
+    private static async computeChildrenForUnitOrProject(filter: NAV.NavigationFilter, oID: DBAPI.ObjectIDAndType, OG: DBAPI.ObjectGraph, entries: NAV.NavigationResultEntry[]): Promise<void> {
         filter; oID; /* istanbul ignore else */
         if (OG.subject) {
             for (const subject of OG.subject) {
                 const oIDSubject: ObjectIDAndType = { idObject: subject.idSubject, eObjectType: eSystemObjectType.eSubject };
-                const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDSubject); /* istanbul ignore else */
+                const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDSubject); /* istanbul ignore else */
                 if (sID)
                     entries.push({
                         idSystemObject: sID.idSystemObject,
@@ -153,8 +152,8 @@ export class NavigationDB implements NAV.INavigation {
         }
 
         for (const project of projects) {
-            const oID: CACHE.ObjectIDAndType = { idObject: project.idProject, eObjectType: eSystemObjectType.eProject };
-            const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
+            const oID: DBAPI.ObjectIDAndType = { idObject: project.idProject, eObjectType: eSystemObjectType.eProject };
+            const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
             if (!sID) {
                 LOG.error(`NavigationDB.getRoot unable to compute idSystemObject for ${JSON.stringify(oID)}`, LOG.LS.eNAV);
                 continue;
@@ -200,7 +199,7 @@ export class NavigationDB implements NAV.INavigation {
     /* #endregion */
 
     /* #region Subjects */
-    private static async computeChildrenForSubject(filter: NAV.NavigationFilter, oID: CACHE.ObjectIDAndType, OG: DBAPI.ObjectGraph, entries: NAV.NavigationResultEntry[]): Promise<void> {
+    private static async computeChildrenForSubject(filter: NAV.NavigationFilter, oID: DBAPI.ObjectIDAndType, OG: DBAPI.ObjectGraph, entries: NAV.NavigationResultEntry[]): Promise<void> {
         filter; oID;
         const subject: DBAPI.Subject | null = (OG.subject) ? OG.subject[0] : /* istanbul ignore next */ await DBAPI.Subject.fetch(oID.idObject); /* istanbul ignore if */
         if (!subject) {
@@ -212,7 +211,7 @@ export class NavigationDB implements NAV.INavigation {
         if (OG.item) {
             for (const item of OG.item) {
                 const oIDITem: ObjectIDAndType = { idObject: item.idItem, eObjectType: eSystemObjectType.eItem };
-                const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDITem); /* istanbul ignore else */
+                const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDITem); /* istanbul ignore else */
                 if (sID)
                     entries.push({
                         idSystemObject: sID.idSystemObject,
@@ -254,7 +253,7 @@ export class NavigationDB implements NAV.INavigation {
     /* #endregion */
 
     /* #region Items */
-    private static async computeChildrenForItem(filter: NAV.NavigationFilter, oID: CACHE.ObjectIDAndType, OG: DBAPI.ObjectGraph, entries: NAV.NavigationResultEntry[]): Promise<void> {
+    private static async computeChildrenForItem(filter: NAV.NavigationFilter, oID: DBAPI.ObjectIDAndType, OG: DBAPI.ObjectGraph, entries: NAV.NavigationResultEntry[]): Promise<void> {
         filter; oID;
         const item: DBAPI.Item | null = (OG.item) ? OG.item[0] : /* istanbul ignore next */ await DBAPI.Item.fetch(oID.idObject); /* istanbul ignore if */
         if (!item) {
@@ -266,7 +265,7 @@ export class NavigationDB implements NAV.INavigation {
             for (const captureData of OG.captureData) {
                 const vCaptureMethod: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(captureData.idVCaptureMethod);
                 const oIDCD: ObjectIDAndType = { idObject: captureData.idCaptureData, eObjectType: eSystemObjectType.eCaptureData };
-                const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDCD); /* istanbul ignore else */
+                const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDCD); /* istanbul ignore else */
                 if (sID)
                     entries.push({
                         idSystemObject: sID.idSystemObject,
@@ -284,7 +283,7 @@ export class NavigationDB implements NAV.INavigation {
             for (const model of OG.model) {
                 const vPurpose: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(model.idVPurpose);
                 const oIDModel: ObjectIDAndType = { idObject: model.idModel, eObjectType: eSystemObjectType.eModel };
-                const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDModel); /* istanbul ignore else */
+                const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDModel); /* istanbul ignore else */
                 if (sID)
                     entries.push({
                         idSystemObject: sID.idSystemObject,
@@ -301,7 +300,7 @@ export class NavigationDB implements NAV.INavigation {
         if (OG.scene) {
             for (const scene of OG.scene) {
                 const oIDScene: ObjectIDAndType = { idObject: scene.idScene, eObjectType: eSystemObjectType.eScene };
-                const sID: CACHE.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDScene); /* istanbul ignore else */
+                const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oIDScene); /* istanbul ignore else */
                 if (sID)
                     entries.push({
                         idSystemObject: sID.idSystemObject,

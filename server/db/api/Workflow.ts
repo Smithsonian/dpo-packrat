@@ -42,17 +42,12 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
     DateUpdated!: Date;
     Parameters!: string | null;
 
-    private idProjectOrig!: number | null;
-    private idUserInitiatorOrig!: number | null;
-
     constructor(input: WorkflowBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idProjectOrig = this.idProject;
-        this.idUserInitiatorOrig = this.idUserInitiator;
-    }
+    public fetchTableName(): string { return 'Workflow'; }
+    public fetchID(): number { return this.idWorkflow; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -80,13 +75,13 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idWorkflow, idVWorkflowType, idProject, idUserInitiator, DateInitiated,
-                DateUpdated, Parameters, idProjectOrig, idUserInitiatorOrig } = this;
+                DateUpdated, Parameters } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.workflow.update({
                 where: { idWorkflow, },
                 data: {
                     Vocabulary:     { connect: { idVocabulary: idVWorkflowType }, },
-                    Project:        idProject ? { connect: { idProject }, } : idProjectOrig ? { disconnect: true, } : undefined,
-                    User:           idUserInitiator ? { connect: { idUser: idUserInitiator }, } : idUserInitiatorOrig ? { disconnect: true, } : undefined,
+                    Project:        idProject ? { connect: { idProject }, } : { disconnect: true, },
+                    User:           idUserInitiator ? { connect: { idUser: idUserInitiator }, } : { disconnect: true, },
                     DateInitiated,
                     DateUpdated,
                     Parameters

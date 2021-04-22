@@ -13,7 +13,8 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'Project'; }
+    public fetchID(): number { return this.idProject; }
 
     protected async createWorker(): Promise<boolean> {
         try {

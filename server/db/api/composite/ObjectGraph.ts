@@ -66,7 +66,7 @@ export class ObjectGraph {
     noCycles: boolean = true;
 
     pushCount: number = 0;
-    maxPushCount: number = 500;
+    maxPushCount: number = 50000;
     depth: number = 32;
 
     systemObjectList: number[] = []; // array of idSystemObjects to be processed
@@ -105,13 +105,13 @@ export class ObjectGraph {
      * extend the representation of subjects with their preferred identifiers.
      */
     async toPersist(): Promise<ObjectGraphToPersist> {
-        let subject: ObjectGraphSubjectIdentifier[] | undefined = undefined;
+        let subject: ObjectGraphSubjectIdentifier[] | undefined = undefined; /* istanbul ignore else */
         if (this.subject) {
             subject = [];
             for (const sub of this.subject) {
-                let identifier: string | null = null;
+                let identifier: string | null = null; /* istanbul ignore else */
                 if (sub.idIdentifierPreferred) {
-                    const identifierDB = await Identifier.fetch(sub.idIdentifierPreferred);
+                    const identifierDB = await Identifier.fetch(sub.idIdentifierPreferred); /* istanbul ignore else */
                     if (identifierDB)
                         identifier = identifierDB.IdentifierValue;
                     else
@@ -121,6 +121,7 @@ export class ObjectGraph {
             }
         }
 
+        /* istanbul ignore next */
         return {
             idSystemObject: this.idSystemObject,
             unit: this.unit || undefined,
@@ -152,6 +153,13 @@ export class ObjectGraph {
     // relatedType is parent when eMode == eObjectGraphMode.eDescendents
     private async fetchWorker(idSystemObject: number, relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode, recurseDepth: number): Promise<boolean> {
         try {
+            // if (relatedType) {
+            //     if (eMode == eObjectGraphMode.eAncestors)
+            //         LOG.info(`FW ${idSystemObject} -> ${JSON.stringify(relatedType)}`, LOG.LS.eDB);
+            //     else
+            //         LOG.info(`FW ${JSON.stringify(relatedType)} -> ${idSystemObject}`, LOG.LS.eDB);
+            // }
+
             /* istanbul ignore if */
             if (eMode != eObjectGraphMode.eAncestors && eMode != eObjectGraphMode.eDescendents) {
                 LOG.error(`DBAPI.ObjectGraph.fetchWorker called with invalid mode ${eMode}`, LOG.LS.eDB);
@@ -166,8 +174,10 @@ export class ObjectGraph {
             }
 
             /* istanbul ignore if */
-            if (this.pushCount++ >= this.maxPushCount)
+            if (this.pushCount++ >= this.maxPushCount) {
+                LOG.error(`DBAPI.ObjectGraph.fetchWorker reached maxPushCount, related=${JSON.stringify(relatedType)}; ${idSystemObject}`, LOG.LS.eDB);
                 return true;
+            }
 
             const sourceType: SystemObjectIDType = {
                 idSystemObject,
@@ -176,9 +186,10 @@ export class ObjectGraph {
             };
 
             // short-circuit if we're building an ObjectGraphDatabase and we've already processed this object
-            if (this.objectGraphDatabase && this.objectGraphDatabase.alreadyProcessed(sourceType, relatedType)) {
+            if (this.objectGraphDatabase && this.objectGraphDatabase.alreadyProcessed(sourceType, relatedType)) { /* istanbul ignore else */
                 if (sourceType.idObject)
                     await this.recordRelationship(sourceType, relatedType, eMode);
+                // LOG.info(`SC related=${JSON.stringify(relatedType)}; source=${JSON.stringify(sourceType)}`, LOG.LS.eDB);
                 return true;
             }
 
@@ -234,9 +245,9 @@ export class ObjectGraph {
             const traverseType: string = (eMode == eObjectGraphMode.eAncestors) ? '^^' : 'vv';
             const prefix: string = `OA [${this.pushCount.toString().padStart(3, '0')} ${traverseType}]: `;
             if (eMode == eObjectGraphMode.eAncestors)
-                LOG.info(`${prefix}${sourceDesc} -> ${relatedDesc}${valid}$`, LOG.LS.eDB);
+                LOG.info(`${prefix}${sourceDesc} -> ${relatedDesc}${valid}`, LOG.LS.eDB);
             else
-                LOG.info(`${prefix}${relatedDesc} -> ${sourceDesc}${valid}$`, LOG.LS.eDB);
+                LOG.info(`${prefix}${relatedDesc} -> ${sourceDesc}${valid}`, LOG.LS.eDB);
             */
 
             // gather using master/derived systemobjectxref's
@@ -379,7 +390,7 @@ export class ObjectGraph {
 
     private async pushAssetVersion(assetVersion: AssetVersion, sourceType: SystemObjectIDType,
         relatedType: SystemObjectIDType | null, eMode: eObjectGraphMode): Promise<boolean> {
-        sourceType.idObject = assetVersion.idAsset;
+        sourceType.idObject = assetVersion.idAssetVersion;
         sourceType.eObjectType = eSystemObjectType.eAssetVersion;
         if (eMode == eObjectGraphMode.eAncestors) { // allowable children
             if (relatedType)
@@ -588,8 +599,10 @@ export class ObjectGraph {
         }
 
         /* istanbul ignore if */
-        if (this.systemObjectProcessed.has(sourceType.idSystemObject))
+        if (this.systemObjectProcessed.has(sourceType.idSystemObject)) {
+            // LOG.info(`ObjectGraph.pushProject already has ${JSON.stringify(sourceType)}`, LOG.LS.eDB);
             return false;
+        }
 
         /* istanbul ignore next */
         if (!this.systemObjectAdded.has(sourceType.idSystemObject)) {

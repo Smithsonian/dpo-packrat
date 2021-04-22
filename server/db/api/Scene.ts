@@ -6,20 +6,17 @@ import * as LOG from '../../utils/logger';
 
 export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemObjectBased {
     idScene!: number;
-    HasBeenQCd!: boolean;
+    Name!: string;
     idAssetThumbnail!: number | null;
     IsOriented!: boolean;
-    Name!: string;
-
-    private idAssetThumbnailOrig!: number | null;
+    HasBeenQCd!: boolean;
 
     constructor(input: SceneBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idAssetThumbnailOrig = this.idAssetThumbnail;
-    }
+    public fetchTableName(): string { return 'Scene'; }
+    public fetchID(): number { return this.idScene; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -44,12 +41,12 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd, idAssetThumbnailOrig } = this;
+            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.scene.update({
                 where: { idScene, },
                 data: {
                     Name,
-                    Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
+                    Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
                     IsOriented,
                     HasBeenQCd,
                 },

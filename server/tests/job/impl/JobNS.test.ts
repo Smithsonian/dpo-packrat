@@ -334,9 +334,9 @@ async function validateJobOutput(dbJobRun: DBAPI.JobRun | null): Promise<boolean
 
             const inspectJSON: string | undefined = MTC.inspectJSON;
             expect(inspectJSON).toBeTruthy();
-            expect(JCOutputStr).toEqual(inspectJSON);
             if (JCOutputStr !== inspectJSON)
                 LOG.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`, LOG.LS.eTEST);
+            expect(JCOutputStr).toEqual(inspectJSON);
 
             // Test persistence of data
             const assetFileNameMap: Map<string, number> = MTC.assetFileNameMap();
