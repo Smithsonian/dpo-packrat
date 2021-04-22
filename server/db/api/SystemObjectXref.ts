@@ -54,11 +54,10 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
      * Code needing to delete a record should call this.delete(); */
     protected async deleteWorker(): Promise<boolean> {
         try {
-            //LOG.info(`SystemObjectXref.deleteWorker ${JSON.stringify(this)}`, LOG.LS.eDB);
+            // LOG.info(`SystemObjectXref.deleteWorker ${JSON.stringify(this)}`, LOG.LS.eDB);
             const { idSystemObjectXref } = this;
             return await DBC.DBConnection.prisma.systemObjectXref.delete({
                 where: { idSystemObjectXref, },
-                // select: { idSystemObjectXref: true, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SystemObjectXref.delete', LOG.LS.eDB, error);

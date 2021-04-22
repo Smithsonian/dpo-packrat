@@ -67,7 +67,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSubject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.subject.fetchSystemObject', LOG.LS.eDB, error);
+            LOG.error('DBAPI.Subject.fetchSystemObject', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -125,7 +125,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectDerived = SOI.idSystemObject)
                 WHERE SOI.idItem IN (${Prisma.join(idItems)})`, Subject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetchMasterFromItems', LOG.LS.eDB, error);
+            LOG.error('DBAPI.Subject.fetchMasterFromItems', LOG.LS.eDB, error);
             return null;
         }
     }
@@ -149,8 +149,46 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectMaster = SOP.idSystemObject)
                 WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Subject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetchDerivedFromProjects', LOG.LS.eDB, error);
+            LOG.error('DBAPI.Subject.fetchDerivedFromProjects', LOG.LS.eDB, error);
             return null;
+        }
+    }
+
+    static async clearPreferredIdentifier(idIdentifier: number): Promise<boolean> {
+        // Updates all subjects that have Subject.idIdentifierPreferred === idIdentifier; sets this field to null
+        if (!idIdentifier)
+            return false;
+        try {
+            // Initially, I wrote this as an efficient UPDATE script, but this defeats
+            // database auditing.  Instead, let's fetch matching records, and then update them
+            // one by one.
+
+            // const rows: number = await DBC.DBConnection.prisma.$executeRaw`
+            //     UPDATE Subject SET idIdentifierPreferred = NULL
+            //     WHERE idIdentifierPreferred = ${idIdentifier}`;
+            // LOG.info(`Subject.clearPreferredIdentifier ${idIdentifier} from ${rows} Subjects`, LOG.LS.eTEST);
+            // return (rows >= 0);
+
+            let retValue: boolean = true;
+            const subjects: Subject[] | null = DBC.CopyArray<SubjectBase, Subject>(
+                await DBC.DBConnection.prisma.$queryRaw<Subject[]>`
+                SELECT *
+                FROM Subject
+                WHERE idIdentifierPreferred = ${idIdentifier}`, Subject); /* istanbul ignore next */
+
+            if (!subjects) {
+                LOG.error('DBAPI.Subject.clearPreferredIdentifier failed', LOG.LS.eDB);
+                return false;
+            }
+            for (const subject of subjects) {
+                subject.idIdentifierPreferred = null;
+                retValue = await subject.update() && retValue;
+            }
+            LOG.info(`Subject.clearPreferredIdentifier ${idIdentifier} from ${subjects.length} Subjects`, LOG.LS.eTEST);
+            return retValue;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Subject.clearPreferredIdentifier', LOG.LS.eDB, error);
+            return false;
         }
     }
 }

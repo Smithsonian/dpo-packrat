@@ -84,6 +84,7 @@ let scene: DBAPI.Scene | null;
 let sceneNulls: DBAPI.Scene | null;
 let stakeholder: DBAPI.Stakeholder | null;
 let subject: DBAPI.Subject | null;
+let subjectWithPreferredID: DBAPI.Subject | null;
 let subjectNulls: DBAPI.Subject | null;
 let systemObjectAsset: DBAPI.SystemObject | null;
 let systemObjectAssetVersion: DBAPI.SystemObject | null;
@@ -358,6 +359,19 @@ describe('DB Creation Test Suite', () => {
                 idSubject: 0
             });
         expect(subject).toBeTruthy();
+    });
+
+    test('DB Creation: Subject', async () => {
+        if (unit && assetThumbnail && geoLocation && identifierSubjectHookup)
+            subjectWithPreferredID = await UTIL.createSubjectTest({
+                idUnit: unit.idUnit,
+                idAssetThumbnail: assetThumbnail.idAsset,
+                idGeoLocation: geoLocation.idGeoLocation,
+                Name: 'Test Subject With Preferred Identifier',
+                idIdentifierPreferred: identifierSubjectHookup.idIdentifier,
+                idSubject: 0
+            });
+        expect(subjectWithPreferredID).toBeTruthy();
     });
 
     test('DB Creation: Fetch System Object Subject', async() => {
@@ -6484,7 +6498,7 @@ describe('DB Update Test Suite', () => {
 
 // #region DB Deletes
 describe('DB Delete Test', () => {
-    test('DB Update: SystemObjectXref.deleteIfAllowed', async () => {
+    test('DB Delete: SystemObjectXref.delete and deleteIfAllowed', async () => {
         if (systemObjectXrefSubItem4) {
             const res: H.IOResults = await systemObjectXrefSubItem4.deleteIfAllowed();
             if (!res.success)
@@ -6492,6 +6506,10 @@ describe('DB Delete Test', () => {
             else
                 LOG.info(`DB Delete suceeded: ${JSON.stringify(systemObjectXrefSubItem4)}`, LOG.LS.eTEST);
             expect(res.success).toBeTruthy();
+
+            // try to fetch; should not be found
+            const soxFetch: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.fetch(systemObjectXrefSubItem4.idSystemObjectXref);
+            expect(soxFetch).toBeFalsy();
         }
         if (systemObjectXrefSubItem2) {
             const res: H.IOResults = await DBAPI.SystemObjectXref.deleteIfAllowed(systemObjectXrefSubItem2.idSystemObjectXref);
@@ -6501,9 +6519,30 @@ describe('DB Delete Test', () => {
                 LOG.error(`DB Delete suceeded unexpectedly: ${JSON.stringify(systemObjectXrefSubItem2)}`, LOG.LS.eTEST);
             expect(res.success).toBeFalsy();
 
+            // try to fetch; should be found
+            const soxFetch: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.fetch(systemObjectXrefSubItem2.idSystemObjectXref);
+            expect(soxFetch).toBeTruthy();
         }
 
         expect((await DBAPI.SystemObjectXref.deleteIfAllowed(1000000000)).success).toBeFalsy();
+    });
+
+    test('DB Delete: Identifier.delete', async () => {
+        if (identifierNull) {
+            expect(await identifierNull.delete()).toBeTruthy();
+
+            // try to fetch; should not be found
+            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifierNull.idIdentifier);
+            expect(idFetch).toBeFalsy();
+        }
+
+        if (identifierSubjectHookup) {
+            expect(await identifierSubjectHookup.delete()).toBeTruthy();
+
+            // try to fetch; should not be found
+            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifierSubjectHookup.idIdentifier);
+            expect(idFetch).toBeFalsy();
+        }
     });
 });
 // #endregion
@@ -6623,6 +6662,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Scene.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();
+        expect(await DBAPI.Subject.clearPreferredIdentifier(0)).toBeFalsy();
         expect(await DBAPI.Subject.fetch(0)).toBeNull();
         expect(await DBAPI.Subject.fetchFromUnit(0)).toBeNull();
         expect(await DBAPI.Subject.fetchMasterFromItems([])).toBeNull();
