@@ -171,18 +171,18 @@ export enum eMetadata {
 }
 
 export enum eSystemObjectType {
-    eUnit,
-    eProject,
-    eSubject,
-    eItem,
-    eCaptureData,
-    eModel,
-    eScene,
-    eIntermediaryFile,
-    eProjectDocumentation,
-    eAsset,
-    eAssetVersion,
-    eActor,
-    eStakeholder,
-    eUnknown
+    eUnknown = 0,
+    eUnit = 1,
+    eProject = 2,
+    eSubject = 3,
+    eItem = 4,
+    eCaptureData = 5,
+    eModel = 6,
+    eScene = 7,
+    eIntermediaryFile = 8,
+    eProjectDocumentation = 9,
+    eAsset = 10,
+    eAssetVersion = 11,
+    eActor = 12,
+    eStakeholder = 13,
 }
