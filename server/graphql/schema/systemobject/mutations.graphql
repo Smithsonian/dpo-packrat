@@ -4,6 +4,7 @@ type Mutation {
     updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
     updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
     updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
+    deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
 }
 
 input UpdateObjectDetailsInput {
@@ -166,4 +167,12 @@ input UpdateIdentifier {
     selected: Boolean!
     idSystemObject: Int!
     idIdentifier: Int!
+}
+
+type DeleteObjectConnectionResult {
+    success: Boolean!
+}
+
+input DeleteObjectConnectionInput {
+    idSystemObjectXref: Int!
 }

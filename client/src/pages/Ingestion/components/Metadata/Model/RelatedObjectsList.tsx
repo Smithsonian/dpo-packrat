@@ -18,18 +18,18 @@ import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared
 const useStyles = makeStyles(({ palette }) => ({
     container: {
         display: 'flex',
-        width: (viewMode: boolean) => viewMode ? undefined : '52vw',
+        width: (viewMode: boolean) => (viewMode ? undefined : '52vw'),
         flexDirection: 'column',
         borderRadius: 5,
         padding: 10,
-        marginTop: (viewMode: boolean) => viewMode ? 10 : 0,
-        backgroundColor: (viewMode: boolean) => viewMode ? palette.secondary.light : palette.primary.light
+        marginTop: (viewMode: boolean) => (viewMode ? 10 : 0),
+        backgroundColor: (viewMode: boolean) => (viewMode ? palette.secondary.light : palette.primary.light)
     },
     list: {
         paddingTop: 10,
-        paddingLeft: (viewMode: boolean) => viewMode ? 0: 10,
+        paddingLeft: (viewMode: boolean) => (viewMode ? 0 : 10),
         borderRadius: 5,
-        backgroundColor: palette.secondary.light,
+        backgroundColor: palette.secondary.light
     },
     header: {
         ...sharedLabelProps
@@ -65,29 +65,18 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
 
     const buttonLabel: string = viewMode ? 'Connect' : 'Add';
 
+    console.log('relatedObjects', relatedObjects);
     return (
         <Box className={classes.container}>
             <Header titles={titles} />
             {hasRelatedObjects && (
                 <Box className={classes.list}>
                     {relatedObjects.map((sourceObject: StateRelatedObject, index: number) => (
-                        <Item
-                            key={index}
-                            viewMode={viewMode}
-                            sourceObject={sourceObject}
-                            onRemove={onRemove}
-                        />
+                        <Item key={index} viewMode={viewMode} sourceObject={sourceObject} onRemove={onRemove} />
                     ))}
                 </Box>
             )}
-            <Button
-                className={classes.addButton}
-                disableElevation
-                color='primary'
-                variant='contained'
-                onClick={() => onAdd()}
-                disabled={disabled}
-            >
+            <Button className={classes.addButton} disableElevation color='primary' variant='contained' onClick={() => onAdd()} disabled={disabled}>
                 {buttonLabel}
             </Button>
         </Box>
@@ -104,13 +93,7 @@ export function Header(props: ObjectHeader): React.ReactElement {
     const [title1, title2, title3] = titles;
 
     return (
-        <Box
-            display='flex'
-            flex={1}
-            flexDirection='row'
-            marginBottom={1}
-            width='92%'
-        >
+        <Box display='flex' flex={1} flexDirection='row' marginBottom={1} width='92%'>
             <Box display='flex' flex={2}>
                 <Typography className={classes.header}>{title1}</Typography>
             </Box>
@@ -138,13 +121,7 @@ function Item(props: ItemProps): React.ReactElement {
     const remove = () => onRemove?.(idSystemObject);
 
     return (
-        <Box
-            display='flex'
-            flex={1}
-            flexDirection='row'
-            alignItems='center'
-            pb='10px'
-        >
+        <Box display='flex' flex={1} flexDirection='row' alignItems='center' pb='10px'>
             <Box display='flex' flex={2}>
                 <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>
                     <Typography className={clsx(classes.label, classes.labelUnderline)}>{name}</Typography>
@@ -156,9 +133,7 @@ function Item(props: ItemProps): React.ReactElement {
             <Box display='flex' flex={1}>
                 <Typography className={classes.label}>{getTermForSystemObjectType(objectType)}</Typography>
             </Box>
-            <Box width='50px'>
-                {!viewMode && <MdRemoveCircleOutline className={classes.removeIcon} onClick={remove} size={24} />}
-            </Box>
+            <Box width='50px'>{!viewMode && <MdRemoveCircleOutline className={classes.removeIcon} onClick={remove} size={24} />}</Box>
         </Box>
     );
 }

@@ -19,7 +19,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         justifyContent: 'center',
         height: '20vh',
         width: '52vw',
-        border: `1px dashed ${palette.primary.main}`,
+        // border: `1px dashed ${palette.primary.main}`,
         borderRadius: 10,
         padding: 10,
         backgroundColor: palette.primary.light
@@ -37,7 +37,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
         color: Colors.defaults.white
-    },
+    }
 }));
 
 function UploadFilesPicker(): React.ReactElement {
@@ -56,14 +56,7 @@ function UploadFilesPicker(): React.ReactElement {
                     <input {...getInputProps()} />
                     <Typography className={classes.title}>Drag and drop files here</Typography>
                     <Typography variant='caption'>or</Typography>
-                    <Button
-                        className={classes.button}
-                        color='primary'
-                        variant='contained'
-                        onClick={open}
-                        disabled={loading}
-                        disableElevation
-                    >
+                    <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
                         Browse files
                     </Button>
                 </div>
@@ -71,6 +64,5 @@ function UploadFilesPicker(): React.ReactElement {
         </Dropzone>
     );
 }
-
 
 export default UploadFilesPicker;

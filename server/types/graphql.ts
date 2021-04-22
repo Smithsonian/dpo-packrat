@@ -314,6 +314,7 @@ export type Mutation = {
   createUser: CreateUserResult;
   createVocabulary: CreateVocabularyResult;
   createVocabularySet: CreateVocabularySetResult;
+  deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
@@ -371,6 +372,11 @@ export type MutationCreateVocabularyArgs = {
 
 export type MutationCreateVocabularySetArgs = {
   input: CreateVocabularySetInput;
+};
+
+
+export type MutationDeleteObjectConnectionArgs = {
+  input: DeleteObjectConnectionInput;
 };
 
 
@@ -1361,6 +1367,15 @@ export type UpdateIdentifier = {
   selected: Scalars['Boolean'];
   idSystemObject: Scalars['Int'];
   idIdentifier: Scalars['Int'];
+};
+
+export type DeleteObjectConnectionResult = {
+  __typename?: 'DeleteObjectConnectionResult';
+  success: Scalars['Boolean'];
+};
+
+export type DeleteObjectConnectionInput = {
+  idSystemObjectXref: Scalars['Int'];
 };
 
 export type GetDetailsTabDataForObjectInput = {
