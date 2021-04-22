@@ -71,11 +71,12 @@
     "zustand": "3.1.3"
   },
   "devDependencies": {
+    "cross-env": "7.0.3",
     "jest": "24.9.0",
     "ts-jest": "24.3.0"
   },
   "scripts": {
-    "start": "react-app-rewired start",
+    "start": "cross-env TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling react-app-rewired start",
     "start:prod": "react-app-rewired start",
     "build:dev": "yarn env-cmd -f ../.env.dev react-app-rewired build",
     "build:prod": "yarn env-cmd -f ../.env.prod react-app-rewired build",
