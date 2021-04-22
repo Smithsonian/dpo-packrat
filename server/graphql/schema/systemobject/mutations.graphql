@@ -132,6 +132,7 @@ input UpdateObjectDetailsDataInput {
     AssetVersion: AssetVersionDetailFieldsInput
     Actor: ActorDetailFieldsInput
     Stakeholder: StakeholderDetailFieldsInput
+    Identifiers: [UpdateIdentifier!]
 }
 
 type UpdateObjectDetailsResult {
@@ -156,4 +157,13 @@ input UpdateSourceObjectsInput {
 
 type UpdateSourceObjectsResult {
     success: Boolean!
+}
+
+input UpdateIdentifier {
+    id: Int!
+    identifier: String!
+    identifierType: Int!
+    selected: Boolean!
+    idSystemObject: Int!
+    idIdentifier: Int!
 }

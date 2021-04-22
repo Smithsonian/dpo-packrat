@@ -444,6 +444,7 @@ export type IngestIdentifier = {
   __typename?: 'IngestIdentifier';
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
 };
 
 export type IngestFolder = {
@@ -760,6 +761,7 @@ export type IngestItemInput = {
 export type IngestIdentifierInput = {
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
 };
 
 export type IngestFolderInput = {
@@ -1322,6 +1324,7 @@ export type UpdateObjectDetailsDataInput = {
   AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
   Actor?: Maybe<ActorDetailFieldsInput>;
   Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+  Identifiers?: Maybe<Array<UpdateIdentifier>>;
 };
 
 export type UpdateObjectDetailsResult = {
@@ -1349,6 +1352,15 @@ export type UpdateSourceObjectsInput = {
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
+};
+
+export type UpdateIdentifier = {
+  id: Scalars['Int'];
+  identifier: Scalars['String'];
+  identifierType: Scalars['Int'];
+  selected: Scalars['Boolean'];
+  idSystemObject: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
 };
 
 export type GetDetailsTabDataForObjectInput = {

@@ -46,7 +46,8 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
             id: identifiers.length + 1,
             identifier: '',
             identifierType: getInitialEntry(eVocabularySetID.eIdentifierIdentifierType) || initialEntry,
-            selected: false
+            selected: false,
+            idIdentifier: 0
         };
 
         const updatedIdentifiers = lodash.concat(identifiers, [newIdentifier]);
@@ -93,14 +94,15 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
                         </Button>
                     )}
                 </Box>
-
-                <IdentifierList
-                    identifiers={identifiers}
-                    identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
-                    onAdd={addIdentifer}
-                    onRemove={removeIdentifier}
-                    onUpdate={updateIdentifierFields}
-                />
+                {identifiers.length && (
+                    <IdentifierList
+                        identifiers={identifiers}
+                        identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}
+                        onAdd={addIdentifer}
+                        onRemove={removeIdentifier}
+                        onUpdate={updateIdentifierFields}
+                    />
+                )}
             </FieldType>
         </Box>
     );

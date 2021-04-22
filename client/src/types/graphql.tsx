@@ -447,6 +447,7 @@ export type IngestIdentifier = {
   __typename?: 'IngestIdentifier';
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
 };
 
 export type IngestFolder = {
@@ -763,6 +764,7 @@ export type IngestItemInput = {
 export type IngestIdentifierInput = {
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
 };
 
 export type IngestFolderInput = {
@@ -1325,6 +1327,7 @@ export type UpdateObjectDetailsDataInput = {
   AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
   Actor?: Maybe<ActorDetailFieldsInput>;
   Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+  Identifiers?: Maybe<Array<UpdateIdentifier>>;
 };
 
 export type UpdateObjectDetailsResult = {
@@ -1352,6 +1355,15 @@ export type UpdateSourceObjectsInput = {
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
+};
+
+export type UpdateIdentifier = {
+  id: Scalars['Int'];
+  identifier: Scalars['String'];
+  identifierType: Scalars['Int'];
+  selected: Scalars['Boolean'];
+  idSystemObject: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
 };
 
 export type GetDetailsTabDataForObjectInput = {
@@ -2468,21 +2480,21 @@ export type GetAssetVersionsDetailsQuery = (
           & Pick<IngestFolder, 'name' | 'variantType'>
         )>, identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
-          & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+          & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
         )> }
       )>, Model?: Maybe<(
         { __typename?: 'IngestModel' }
         & Pick<IngestModel, 'idAssetVersion' | 'systemCreated' | 'name' | 'master' | 'authoritative' | 'creationMethod' | 'modality' | 'purpose' | 'units' | 'dateCaptured' | 'modelFileType' | 'directory'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
-          & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+          & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
         )> }
       )>, Scene?: Maybe<(
         { __typename?: 'IngestScene' }
         & Pick<IngestScene, 'idAssetVersion'>
         & { identifiers: Array<(
           { __typename?: 'IngestIdentifier' }
-          & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+          & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
         )> }
       )> }
     )> }
@@ -2912,7 +2924,7 @@ export type GetSystemObjectDetailsQuery = (
     & Pick<GetSystemObjectDetailsResult, 'idObject' | 'name' | 'retired' | 'objectType' | 'allowed' | 'publishedState' | 'thumbnail'>
     & { identifiers: Array<(
       { __typename?: 'IngestIdentifier' }
-      & Pick<IngestIdentifier, 'identifier' | 'identifierType'>
+      & Pick<IngestIdentifier, 'identifier' | 'identifierType' | 'idIdentifier'>
     )>, unit?: Maybe<(
       { __typename?: 'RepositoryPath' }
       & Pick<RepositoryPath, 'idSystemObject' | 'name' | 'objectType'>
@@ -3993,6 +4005,7 @@ export const GetAssetVersionsDetailsDocument = gql`
         identifiers {
           identifier
           identifierType
+          idIdentifier
         }
       }
       Model {
@@ -4011,6 +4024,7 @@ export const GetAssetVersionsDetailsDocument = gql`
         identifiers {
           identifier
           identifierType
+          idIdentifier
         }
       }
       Scene {
@@ -4018,6 +4032,7 @@ export const GetAssetVersionsDetailsDocument = gql`
         identifiers {
           identifier
           identifierType
+          idIdentifier
         }
       }
     }
@@ -5043,6 +5058,7 @@ export const GetSystemObjectDetailsDocument = gql`
     identifiers {
       identifier
       identifierType
+      idIdentifier
     }
     unit {
       idSystemObject

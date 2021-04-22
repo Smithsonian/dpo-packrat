@@ -28,6 +28,20 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         }
     }
 
+    // Pull out the identifiers from data and iterate through them
+    // This is also where DBAPI makes edits
+    // WIP
+    if (data?.Identifiers && data?.Identifiers.length) {
+        data.Identifiers.forEach(async (identifier) => {
+            if (identifier.selected && identifier.identifier && identifier.identifierType) {
+                const newIdentifier = new DBAPI.Identifier({ idIdentifier: 0, IdentifierValue: identifier.identifier, idVIdentifierType: identifier.identifierType, idSystemObject });
+                if (!await newIdentifier.create()) {
+                    throw new Error(`updateObjectDetails failed to create newIdentifier ${JSON.stringify(newIdentifier)}`);
+                }
+            }
+        })
+    }
+
     switch (objectType) {
         case eSystemObjectType.eUnit: {
             const Unit = await DBAPI.Unit.fetch(idObject);
