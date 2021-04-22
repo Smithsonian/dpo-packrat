@@ -3,6 +3,7 @@ import { SystemObjectXref as SystemObjectXrefBase } from '@prisma/client';
 import { SystemObjectBased, SystemObject } from '..';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 
 export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> implements SystemObjectXrefBase {
     idSystemObjectXref!: number;
@@ -48,6 +49,57 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
             LOG.error('DBAPI.SystemObjectXref.update', LOG.LS.eDB, error);
             return false;
         }
+    }
+    /** Don't call this directly; instead, let DBObject.delete() call this.
+     * Code needing to delete a record should call this.delete(); */
+    protected async deleteWorker(): Promise<boolean> {
+        try {
+            // LOG.info(`SystemObjectXref.deleteWorker ${JSON.stringify(this)}`, LOG.LS.eDB);
+            const { idSystemObjectXref } = this;
+            return await DBC.DBConnection.prisma.systemObjectXref.delete({
+                where: { idSystemObjectXref, },
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.SystemObjectXref.delete', LOG.LS.eDB, error);
+            return false;
+        }
+    }
+
+    async deleteIfAllowed(): Promise<H.IOResults> {
+        try {
+            // Xref records can be removed as long as this is not the final subject "master" for an item "derived"
+            // The query below counts how many xref records match this criteria for the this.idSystemObjectDerived
+            const subjectItemLinkCount: { RowCount: number }[] =
+                await DBC.DBConnection.prisma.$queryRaw<{ RowCount: number }[]>`
+                SELECT COUNT(*) AS 'RowCount'
+                FROM SystemObjectXref AS SOX
+                JOIN SystemObject AS SOMaster ON (SOX.idSystemObjectMaster = SOMaster.idSystemObject)
+                JOIN SystemObject AS SODerived ON (SOX.idSystemObjectDerived = SODerived.idSystemObject)
+                WHERE SOMaster.idSubject IS NOT NULL
+                  AND SODerived.idItem IS NOT NULL
+                  AND SOX.idSystemObjectDerived = ${this.idSystemObjectDerived};`;
+
+            // LOG.info(`SystemObjectXref.deleteIfAllowed ${JSON.stringify(this)}: ${JSON.stringify(subjectItemLinkCount)} relationships`, LOG.LS.eDB);
+            /* istanbul ignore next */
+            if (subjectItemLinkCount.length != 1)
+                return { success: false, error: `Unable to remove final subject from Item ${this.idSystemObjectDerived}` };
+
+            if (subjectItemLinkCount[0].RowCount === 1)
+                return { success: false, error: `Unable to remove final subject from Item ${this.idSystemObjectDerived}` };
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.SystemObjectXref.deleteIfAllowed', LOG.LS.eDB, error);
+            return { success: false, error: JSON.stringify(error) };
+        }
+
+        return (await this.delete())
+            ? { success: true, error: '' } /* istanbul ignore next */
+            : { success: false, error: `Database error deleting xref ${JSON.stringify(this)}` };
+    }
+
+    static async deleteIfAllowed(idSystemObjectXref: number): Promise<H.IOResults> {
+        const sox: SystemObjectXref | null = await SystemObjectXref.fetch(idSystemObjectXref);
+        return (sox) ? sox.deleteIfAllowed()
+            : { success: false, error: `Unable to load SystemObjectXref with id ${idSystemObjectXref}` };
     }
 
     static async fetch(idSystemObjectXref: number): Promise<SystemObjectXref | null> {
