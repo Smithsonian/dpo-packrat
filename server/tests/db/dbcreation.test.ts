@@ -135,8 +135,9 @@ let workflowStepSystemObjectXref: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowStepSystemObjectXref2: DBAPI.WorkflowStepSystemObjectXref | null;
 
 // #endregion
+
 // *******************************************************************
-// DB Creation Test Suite
+// #region DB Creation Test Suite
 // *******************************************************************
 describe('DB Creation Test Suite', () => {
     test('DB Creation: VocabularySet', async () => {
@@ -1614,9 +1615,10 @@ describe('DB Creation Test Suite', () => {
             expect(systemObjectXrefProjectStakeholder2.idSystemObjectXref).toBeGreaterThan(0);
     });
 });
+// #endregion
 
 // *******************************************************************
-// DB Fetch By ID Test Suite
+// #region DB Fetch By ID Test Suite
 // *******************************************************************
 describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch By ID: AccessAction', async () => {
@@ -4011,9 +4013,10 @@ describe('DB Fetch Xref Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 });
+// #endregion
 
 // *******************************************************************
-// DB Fetch Special Test Suite
+// #region DB Fetch Special Test Suite
 // *******************************************************************
 describe('DB Fetch Special Test Suite', () => {
     test('DB Fetch Special: Actor.fetchAll', async () => {
@@ -4828,9 +4831,10 @@ describe('DB Fetch Special Test Suite', () => {
         expect(WFC).toBeTruthy();
     });
 });
+// #endregion
 
 // *******************************************************************
-// DB Update Test Suite
+// #region DB Update Test Suite
 // *******************************************************************
 describe('DB Update Test Suite', () => {
     test('DB Update: AccessAction.update', async () => {
@@ -6476,8 +6480,35 @@ describe('DB Update Test Suite', () => {
     });
     */
 });
+// #endregion
 
+// #region DB Deletes
+describe('DB Delete Test', () => {
+    test('DB Update: SystemObjectXref.deleteIfAllowed', async () => {
+        if (systemObjectXrefSubItem4) {
+            const res: H.IOResults = await systemObjectXrefSubItem4.deleteIfAllowed();
+            if (!res.success)
+                LOG.error(`DB Delete failed: ${res.error}`, LOG.LS.eTEST);
+            else
+                LOG.info(`DB Delete suceeded: ${JSON.stringify(systemObjectXrefSubItem4)}`, LOG.LS.eTEST);
+            expect(res.success).toBeTruthy();
+        }
+        if (systemObjectXrefSubItem2) {
+            const res: H.IOResults = await DBAPI.SystemObjectXref.deleteIfAllowed(systemObjectXrefSubItem2.idSystemObjectXref);
+            if (!res.success)
+                LOG.info(`DB Delete failed, as expected: ${res.error}`, LOG.LS.eTEST);
+            else
+                LOG.error(`DB Delete suceeded unexpectedly: ${JSON.stringify(systemObjectXrefSubItem2)}`, LOG.LS.eTEST);
+            expect(res.success).toBeFalsy();
 
+        }
+
+        expect((await DBAPI.SystemObjectXref.deleteIfAllowed(1000000000)).success).toBeFalsy();
+    });
+});
+// #endregion
+
+// #region Null tests
 describe('DB Null/Zero ID Test', () => {
     test('DB Null/Zero ID Test', async () => {
         expect(await DBAPI.AccessAction.fetch(0)).toBeNull();
@@ -6699,3 +6730,4 @@ describe('DB Null/Zero ID Test', () => {
         await expect(SO.update()).rejects.toThrow('DBAPI.SystemObject.update() should never be called');
     });
 });
+// #endregion
