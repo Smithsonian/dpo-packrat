@@ -22,7 +22,7 @@ import {
     AssetVersionDetailFieldsInput,
     StakeholderDetailFieldsInput,
     GetDetailsTabDataForObjectQueryResult,
-    UnitDetailFieldsInput,
+    UnitDetailFieldsInput
 } from '../../../../../types/graphql';
 import { eSystemObjectType } from '../../../../../types/server';
 import RelatedObjectsList from '../../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
@@ -58,7 +58,19 @@ export interface DetailComponentProps extends GetDetailsTabDataForObjectQueryRes
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
 }
 
-export type UpdateDataFields = UnitDetailFieldsInput | ProjectDetailFieldsInput | SubjectDetailFieldsInput | ItemDetailFieldsInput | CaptureDataDetailFieldsInput | ModelDetailFieldsInput | SceneDetailFieldsInput | ProjectDocumentationDetailFieldsInput | AssetDetailFieldsInput | AssetVersionDetailFieldsInput | ActorDetailFieldsInput | StakeholderDetailFieldsInput;
+export type UpdateDataFields =
+    | UnitDetailFieldsInput
+    | ProjectDetailFieldsInput
+    | SubjectDetailFieldsInput
+    | ItemDetailFieldsInput
+    | CaptureDataDetailFieldsInput
+    | ModelDetailFieldsInput
+    | SceneDetailFieldsInput
+    | ProjectDocumentationDetailFieldsInput
+    | AssetDetailFieldsInput
+    | AssetVersionDetailFieldsInput
+    | ActorDetailFieldsInput
+    | StakeholderDetailFieldsInput;
 
 type DetailsTabParams = {
     disabled: boolean;
@@ -89,18 +101,18 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     const RelatedTab = (index: number) => (
         <TabPanel value={tab} index={index}>
             <RelatedObjectsList
-                viewMode
                 disabled={disabled}
                 type={RelatedObjectType.Source}
                 relatedObjects={sourceObjects}
                 onAdd={onAddSourceObject}
+                onRemove={id => console.log('remove source!', id)}
             />
             <RelatedObjectsList
-                viewMode
                 disabled={disabled}
                 type={RelatedObjectType.Derived}
                 relatedObjects={derivedObjects}
                 onAdd={onAddDerivedObject}
+                onRemove={id => console.log('remove derivative!', id)}
             />
         </TabPanel>
     );
@@ -291,14 +303,10 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     return (
         <Box display='flex' flex={1} flexDirection='column' mt={2}>
-            <Tabs
-                value={tab}
-                classes={{ root: classes.tab }}
-                indicatorColor='primary'
-                textColor='primary'
-                onChange={handleTabChange}
-            >
-                {tabs.map((tab: string, index: number) => <StyledTab key={index} label={tab} />)}
+            <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='primary' onChange={handleTabChange}>
+                {tabs.map((tab: string, index: number) => (
+                    <StyledTab key={index} label={tab} />
+                ))}
             </Tabs>
             {tabPanels}
         </Box>
@@ -310,14 +318,9 @@ function TabPanel(props: any): React.ReactElement {
     const classes = useStyles();
 
     return (
-        <div
-            role='tabpanel'
-            hidden={value !== index}
-            aria-labelledby={`tab-${index}`}
-            {...rest}
-        >
+        <div role='tabpanel' hidden={value !== index} aria-labelledby={`tab-${index}`} {...rest}>
             {value === index && (
-                <Box p={1} className={classes.tabpanel} minHeight='20vh' width='50vw'>
+                <Box p={1} className={classes.tabpanel} minHeight='20vh' minWidth='50vw' width='auto'>
                     {children}
                 </Box>
             )}
@@ -330,8 +333,8 @@ const StyledTab = withStyles(({ palette }) => ({
         color: palette.background.paper,
         '&:focus': {
             opacity: 1
-        },
-    },
+        }
+    }
 }))((props: TabProps) => <Tab disableRipple {...props} />);
 
 export default DetailsTab;

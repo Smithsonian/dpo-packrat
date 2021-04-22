@@ -33,6 +33,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     // WIP
     if (data?.Identifiers && data?.Identifiers.length) {
         data.Identifiers.forEach(async (identifier) => {
+            // check if selected, if idIdentifier isn't 0, and if it has identifier
+            // query to check for exisiting identifier
+            // modify that
+            // save it
+            // else if selected, ididentifier isn't 0, and has identifier
             if (identifier.selected && identifier.identifier && identifier.identifierType) {
                 const newIdentifier = new DBAPI.Identifier({ idIdentifier: 0, IdentifierValue: identifier.identifier, idVIdentifierType: identifier.identifierType, idSystemObject });
                 if (!await newIdentifier.create()) {

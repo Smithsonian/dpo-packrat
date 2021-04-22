@@ -3,7 +3,7 @@
  *
  * This component wraps content and highlights it as required field or not.
  */
-import { Box, BoxProps, PropTypes, Typography, TypographyProps } from '@material-ui/core';
+import { Box, BoxProps, PropTypes, Typography, TypographyProps, Tooltip } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import Progress from './Progress';
@@ -40,10 +40,11 @@ interface FieldTypeProps {
     error?: boolean;
     loading?: boolean;
     children?: React.ReactNode;
+    labelTooltip?: string;
 }
 
 function FieldType(props: FieldTypeProps): React.ReactElement {
-    const { label, renderLabel, children, align = 'left', direction, containerProps, labelProps, loading } = props;
+    const { label, renderLabel, children, align = 'left', direction, containerProps, labelProps, loading, labelTooltip } = props;
     const classes = useStyles(props);
 
     let content: React.ReactNode = (
@@ -51,6 +52,17 @@ function FieldType(props: FieldTypeProps): React.ReactElement {
             {label}
         </Typography>
     );
+
+    if (labelTooltip) {
+        let tooltipContent = (
+            <Tooltip title={labelTooltip}>
+                <Typography align={align} className={classes.label} variant='caption' {...labelProps}>
+                    {label}
+                </Typography>
+            </Tooltip>
+        );
+        content = tooltipContent;
+    }
 
     if (renderLabel === false) {
         content = null;
