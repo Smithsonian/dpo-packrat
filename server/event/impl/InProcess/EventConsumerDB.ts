@@ -34,8 +34,10 @@ export class EventConsumerDB extends EventConsumer {
                     if (idSystemObject === null && audit.idDBObject && audit.DBObjectType) {
                         const oID: DBAPI.ObjectIDAndType = { idObject: audit.idDBObject , eObjectType: audit.DBObjectType };
                         const SOInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
-                        if (SOInfo)
+                        if (SOInfo) {
                             idSystemObject = SOInfo.idSystemObject;
+                            audit.idSystemObject = idSystemObject;
+                        }
                     }
 
                     if (idSystemObject) {

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as LOG from '../../../utils/logger';
+// import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import { eSystemObjectType, ObjectGraphDataEntry } from '../../../db';
@@ -73,31 +74,30 @@ export class IndexSolr {
 
     // TODO: test! Integrate potentially with TBD audit interface, providing a path for system object creation and updates to flow through to Solr
     async indexObject(idSystemObject: number): Promise<boolean> {
-        LOG.info(`IndexSolr.indexObject indexing ${idSystemObject}`, LOG.LS.eNAV);
         // Compute full object graph for object
-        const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAll, 32, this.objectGraphDatabase);
-        if (!await OG.fetch()) {
-            LOG.error(`IndexSolr.indexObject failed fetching ObjectGraph for ${idSystemObject}`, LOG.LS.eNAV);
-            return false;
-        }
+        if (!await this.objectGraphDatabase.computeGraphDataFromSystemObject(idSystemObject))
+            LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed computing ObjectGraph`, LOG.LS.eNAV);
+
         const OGDE: ObjectGraphDataEntry | undefined = this.objectGraphDatabase.objectMap.get(idSystemObject);
         if (!OGDE) {
-            LOG.error('IndexSolr.indexObject failed fetching ObjectGraphDataEntry from ObjectGraphDatabase', LOG.LS.eNAV);
+            LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed fetching ObjectGraphDataEntry from ObjectGraphDatabase`, LOG.LS.eNAV);
             return false;
         }
 
         const doc: any = {};
         if (await this.handleObject(doc, OGDE)) {
+            // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(doc, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eNAV);
             const solrClient: SolrClient = new SolrClient(null, null, null);
             try {
                 solrClient._client.add([doc], undefined, function (err, obj) { if (err) LOG.error('IndexSolr.indexObject adding record', LOG.LS.eNAV, err); else obj; });
                 solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.error('IndexSolr.indexObject -> commit()', LOG.LS.eNAV, err); else obj; });
             } catch (error) {
-                LOG.error(`IndexSolr.indexObject ${idSystemObject} failed`, LOG.LS.eNAV, error);
+                LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed`, LOG.LS.eNAV, error);
                 return false;
             }
+            LOG.info(`IndexSolr.indexObject(${idSystemObject}) succeeded`, LOG.LS.eNAV);
         } else
-            LOG.error('IndexSolr.indexObject failed in handleObject', LOG.LS.eNAV);
+            LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed in handleObject`, LOG.LS.eNAV);
 
         return true;
     }

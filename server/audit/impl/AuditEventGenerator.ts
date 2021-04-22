@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as EVENT from '../../event/interface';
 
-import { eDBObjectType, ObjectIDAndType, /* SystemObjectInfo, */ eAuditType } from '../../db/api/ObjectType';
+import { eDBObjectType, ObjectIDAndType, DBObjectTypeToName, eAuditType } from '../../db/api/ObjectType';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import { ASL, LocalStore } from '../../utils/localStore';
-// import { Audit } from '../../db/api/Audit';
 import { Audit } from '@prisma/client';
 
 //** Audit.idSystemObject is not populated here, to avoid using CACHE.SystemObjectCache */
@@ -21,7 +20,7 @@ export class AuditEventGenerator {
     public static singleton: AuditEventGenerator = new AuditEventGenerator();
 
     public async auditDBObject(dbObject: any, oID: ObjectIDAndType, key: EVENT.eEventKey): Promise<boolean> {
-        LOG.info(`AuditEventGenerator.auditDBObject ${JSON.stringify(oID)} ${EVENT.eEventKey[key]}`, LOG.LS.eAUDIT);
+        LOG.info(`AuditEventGenerator.auditDBObject {${DBObjectTypeToName(oID.eObjectType)}, id: ${oID.idObject}}: ${EVENT.eEventKey[key]}`, LOG.LS.eAUDIT);
         if (!this.eventProducer) {
             if (AuditEventGenerator.eventEngine)
                 this.eventProducer = await AuditEventGenerator.eventEngine.createProducer();
