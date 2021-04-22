@@ -46,6 +46,7 @@ const getAssetVersionsDetails = gql`
                     identifiers {
                         identifier
                         identifierType
+                        idIdentifier
                     }
                 }
                 Model {
@@ -64,6 +65,7 @@ const getAssetVersionsDetails = gql`
                     identifiers {
                         identifier
                         identifierType
+                        idIdentifier
                     }
                 }
                 Scene {
@@ -71,6 +73,7 @@ const getAssetVersionsDetails = gql`
                     identifiers {
                         identifier
                         identifierType
+                        idIdentifier
                     }
                 }
             }

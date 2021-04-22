@@ -147,6 +147,7 @@ input GetAssetVersionsDetailsInput {
 type IngestIdentifier {
   identifier: String!
   identifierType: Int!
+  idIdentifier: Int!
 }
 
 type IngestFolder {
@@ -440,6 +441,7 @@ input IngestItemInput {
 input IngestIdentifierInput {
   identifier: String!
   identifierType: Int!
+  idIdentifier: Int!
 }
 
 input IngestFolderInput {
@@ -975,6 +977,7 @@ input UpdateObjectDetailsDataInput {
   AssetVersion: AssetVersionDetailFieldsInput
   Actor: ActorDetailFieldsInput
   Stakeholder: StakeholderDetailFieldsInput
+  Identifiers: [UpdateIdentifier!]
 }
 
 type UpdateObjectDetailsResult {
@@ -999,6 +1002,15 @@ input UpdateSourceObjectsInput {
 
 type UpdateSourceObjectsResult {
   success: Boolean!
+}
+
+input UpdateIdentifier {
+  id: Int!
+  identifier: String!
+  identifierType: Int!
+  selected: Boolean!
+  idSystemObject: Int!
+  idIdentifier: Int!
 }
 
 input GetDetailsTabDataForObjectInput {

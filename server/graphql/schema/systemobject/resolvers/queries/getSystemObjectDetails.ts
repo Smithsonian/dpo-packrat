@@ -116,8 +116,10 @@ async function getIngestIdentifiers(idSystemObject: number): Promise<IngestIdent
     const identifier: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(idSystemObject);
 
     if (!identifier) return [];
+    console.log(identifier);
 
-    return identifier.map(({ IdentifierValue, idVIdentifierType }) => ({
+    return identifier.map(({ idIdentifier, IdentifierValue, idVIdentifierType }) => ({
+        idIdentifier,
         identifier: IdentifierValue,
         identifierType: idVIdentifierType
     }));

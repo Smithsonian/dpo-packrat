@@ -26,6 +26,7 @@ import {
     StakeholderDetailFieldsInput,
     SubjectDetailFieldsInput,
     UnitDetailFieldsInput,
+    UpdateIdentifier,
     UpdateObjectDetailsDataInput
 } from '../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
@@ -103,6 +104,7 @@ function DetailsView(): React.ReactElement {
             const { name, retired } = data.getSystemObjectDetails;
             setDetails({ name, retired });
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
+            console.log('identifiers', data.getSystemObjectDetails.identifiers);
         }
     }, [data, loading, initializeIdentifierState]);
 
@@ -123,7 +125,6 @@ function DetailsView(): React.ReactElement {
     };
 
     const updateIdentifierFields = (id: number, name: string, value) => {
-        alert('TODO: KARAN: update identifier');
         updateIdentifier(id, name, value);
     };
 
@@ -231,12 +232,24 @@ function DetailsView(): React.ReactElement {
                         Units: units,
                         ModelFileType: fileType,
                         DateCaptured: dateCaptured
-                    }
+                    },
+                    Identifiers: []
                 };
             }
 
+            const stateIdentifiersWithIdSystemObject: UpdateIdentifier[] = stateIdentifiers.map(({ id, identifier, identifierType, selected, idIdentifier }) => {
+                return {
+                    id,
+                    identifier,
+                    identifierType,
+                    selected,
+                    idSystemObject,
+                    idIdentifier
+                };
+            });
+
+            updatedData.Identifiers = stateIdentifiersWithIdSystemObject || [];
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
-            console.log('data', data);
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
             } else {

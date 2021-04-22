@@ -13,6 +13,7 @@ const getSystemObjectDetails = gql`
             identifiers {
                 identifier
                 identifierType
+                idIdentifier
             }
             unit {
                 idSystemObject

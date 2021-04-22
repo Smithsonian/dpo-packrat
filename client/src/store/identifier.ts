@@ -2,14 +2,22 @@
  * Identifier store for managing IdentifierList
  */
 import create, { GetState, SetState } from 'zustand';
-import { StateIdentifier } from './metadata/index';
 import { eVocabularySetID } from '../types/server';
 import lodash from 'lodash';
 
 type Identifier = {
     identifier: string;
     identifierType: number;
+    idIdentifier: number;
 };
+
+type StateIdentifier = {
+    id: number;
+    identifier: string;
+    identifierType: number;
+    selected: boolean;
+    idIdentifier: number;
+}
 
 type IdentifierStore = {
     stateIdentifiers: StateIdentifier[];
@@ -32,7 +40,8 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
             id: stateIdentifiers.length + 1,
             identifier: '',
             identifierType: eVocabularySetID.eIdentifierIdentifierType[0],
-            selected: false
+            selected: false,
+            idIdentifier: 0
         };
         const updatedIdentifiers = lodash.concat(stateIdentifiers, [newIdentifier]);
         set({ stateIdentifiers: updatedIdentifiers });
@@ -43,7 +52,8 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
                 id: ind,
                 identifier: identifier.identifier,
                 identifierType: identifier.identifierType,
-                selected: true
+                selected: true,
+                idIdentifier: identifier.idIdentifier
             }
         })
         set({ stateIdentifiers: initialIdentifiers });
@@ -56,7 +66,6 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
     updateIdentifier: (id, name, value): void => {
         const { stateIdentifiers } = get();
 
-        // double check that this is working and optimized
         const updatedIdentifiers = stateIdentifiers.map(identifier => {
             if (identifier.id === id) {
                 return {
@@ -66,7 +75,6 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
             }
             return identifier;
         })
-        console.log(updatedIdentifiers);
         set({ stateIdentifiers: updatedIdentifiers });
     }
 }));
