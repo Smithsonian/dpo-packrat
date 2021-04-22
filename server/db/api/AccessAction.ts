@@ -12,7 +12,8 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'AccessAction'; }
+    public fetchID(): number { return this.idAccessAction; }
 
     protected async createWorker(): Promise<boolean> {
         try {

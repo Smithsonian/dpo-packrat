@@ -2,8 +2,8 @@ import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as DBC from '../../db/connection';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 import * as UTIL from './api';
-// import * as H from '../../utils/helpers';
 import { VocabularyCache, eVocabularyID, eVocabularySetID } from '../../cache';
 
 afterAll(async done => {
@@ -35,6 +35,8 @@ let assetVersion2: DBAPI.AssetVersion | null;
 let assetVersionModel: DBAPI.AssetVersion | null;
 let assetVersionNotIngested: DBAPI.AssetVersion | null;
 let assetVersionNotProcessed: DBAPI.AssetVersion | null;
+let audit: DBAPI.Audit | null;
+let auditNulls: DBAPI.Audit | null;
 let captureData: DBAPI.CaptureData | null;
 let captureDataNulls: DBAPI.CaptureData | null;
 let captureDataFile: DBAPI.CaptureDataFile | null;
@@ -53,6 +55,7 @@ let intermediaryFile: DBAPI.IntermediaryFile | null;
 let item: DBAPI.Item | null;
 let itemNulls: DBAPI.Item | null;
 let job: DBAPI.Job | null;
+let jobSIPackratInspect: DBAPI.Job | null = null;
 let jobRun: DBAPI.JobRun | null;
 let metadata: DBAPI.Metadata | null;
 let metadataNull: DBAPI.Metadata | null;
@@ -81,8 +84,10 @@ let scene: DBAPI.Scene | null;
 let sceneNulls: DBAPI.Scene | null;
 let stakeholder: DBAPI.Stakeholder | null;
 let subject: DBAPI.Subject | null;
+let subjectWithPreferredID: DBAPI.Subject | null;
 let subjectNulls: DBAPI.Subject | null;
 let systemObjectAsset: DBAPI.SystemObject | null;
+let systemObjectAssetVersion: DBAPI.SystemObject | null;
 let systemObjectItem: DBAPI.SystemObject | null;
 let systemObjectItemNulls: DBAPI.SystemObject | null;
 let systemObjectModel: DBAPI.SystemObject | null;
@@ -120,6 +125,7 @@ let userPersonalizationSystemObject: DBAPI.UserPersonalizationSystemObject | nul
 let userPersonalizationUrl: DBAPI.UserPersonalizationUrl | null;
 let vocabulary: DBAPI.Vocabulary | null;
 let vocabulary2: DBAPI.Vocabulary | null;
+let vocabJobSIPackratInspect: DBAPI.Vocabulary | null;
 let vocabularyWorkflowType: DBAPI.Vocabulary | null;
 let vocabularySet: DBAPI.VocabularySet | null;
 let workflow: DBAPI.Workflow | null;
@@ -128,9 +134,11 @@ let workflowStep: DBAPI.WorkflowStep | null;
 let workflowStepNulls: DBAPI.WorkflowStep | null;
 let workflowStepSystemObjectXref: DBAPI.WorkflowStepSystemObjectXref | null;
 let workflowStepSystemObjectXref2: DBAPI.WorkflowStepSystemObjectXref | null;
+
 // #endregion
+
 // *******************************************************************
-// DB Creation Test Suite
+// #region DB Creation Test Suite
 // *******************************************************************
 describe('DB Creation Test Suite', () => {
     test('DB Creation: VocabularySet', async () => {
@@ -353,10 +361,29 @@ describe('DB Creation Test Suite', () => {
         expect(subject).toBeTruthy();
     });
 
+    test('DB Creation: Subject', async () => {
+        if (unit && assetThumbnail && geoLocation && identifierSubjectHookup)
+            subjectWithPreferredID = await UTIL.createSubjectTest({
+                idUnit: unit.idUnit,
+                idAssetThumbnail: assetThumbnail.idAsset,
+                idGeoLocation: geoLocation.idGeoLocation,
+                Name: 'Test Subject With Preferred Identifier',
+                idIdentifierPreferred: identifierSubjectHookup.idIdentifier,
+                idSubject: 0
+            });
+        expect(subjectWithPreferredID).toBeTruthy();
+    });
+
     test('DB Creation: Fetch System Object Subject', async() => {
         systemObjectSubject = subject ? await subject.fetchSystemObject() : null;
         expect(systemObjectSubject).toBeTruthy();
         expect(systemObjectSubject ? systemObjectSubject.idSubject : -1).toBe(subject ? subject.idSubject : -2);
+
+        if (systemObjectSubject) {
+            expect(systemObjectSubject.fetchTableName()).toEqual('SystemObject');
+            expect(systemObjectSubject.fetchID()).toEqual(systemObjectSubject.idSystemObject);
+            expect(await systemObjectSubject.delete()).toBeFalsy();
+        }
     });
 
     test('DB Creation: Update Identifier with Subject', async() => {
@@ -578,6 +605,12 @@ describe('DB Creation Test Suite', () => {
         expect(assetVersion).toBeTruthy();
     });
 
+    test('DB Creation: Fetch System Object AssetVersion', async() => {
+        systemObjectAssetVersion = assetVersion ? await assetVersion.fetchSystemObject() : null;
+        expect(systemObjectAssetVersion).toBeTruthy();
+        expect(systemObjectAssetVersion ? systemObjectAssetVersion.idAssetVersion : -1).toBe(assetVersion ? assetVersion.idAssetVersion : -2);
+    });
+
     test('DB Creation: AssetVersion Uploaded, Processed', async () => {
         if (assetThumbnail && userActive)
             assetVersionNotIngested = await UTIL.createAssetVersionTest({
@@ -612,6 +645,36 @@ describe('DB Creation Test Suite', () => {
                 idAssetVersion: 0
             });
         expect(assetVersionNotProcessed).toBeTruthy();
+    });
+
+    test('DB Creation: Audit', async () => {
+        if (userActive && subject && systemObjectSubject)
+            audit = await UTIL.createAuditTest({
+                idUser: userActive.idUser,
+                AuditDate: UTIL.nowCleansed(),
+                AuditType: DBAPI.eAuditType.eDBUpdate,
+                DBObjectType: DBAPI.eSystemObjectType.eSubject,
+                idDBObject: subject.idSubject,
+                idSystemObject: systemObjectSubject.idSystemObject,
+                Data: JSON.stringify(subject, H.Helpers.stringifyDatabaseRow),
+                idAudit: 0
+            });
+        expect(audit).toBeTruthy();
+    });
+
+    test('DB Creation: Audit with Nulls', async () => {
+        if (userActive && subject && systemObjectSubject)
+            auditNulls = await UTIL.createAuditTest({
+                idUser: null,
+                AuditDate: UTIL.nowCleansed(),
+                AuditType: DBAPI.eAuditType.eDBUpdate,
+                DBObjectType: null,
+                idDBObject: null,
+                idSystemObject: null,
+                Data: '',
+                idAudit: 0
+            });
+        expect(auditNulls).toBeTruthy();
     });
 
     test('DB Creation: CaptureData', async () => {
@@ -836,12 +899,20 @@ describe('DB Creation Test Suite', () => {
         expect(job).toBeTruthy();
     });
 
+    test('DB Creation: Job Packrat Inspect', async () => {
+        vocabJobSIPackratInspect = await CACHE.VocabularyCache.vocabularyByEnum(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect) || null;
+        expect(vocabJobSIPackratInspect).toBeTruthy();
+        const jobSIPackratInspects: DBAPI.Job[] | null = vocabJobSIPackratInspect ? await DBAPI.Job.fetchByType(vocabJobSIPackratInspect.idVocabulary) : null;
+        jobSIPackratInspect = jobSIPackratInspects && jobSIPackratInspects.length > 0 ? jobSIPackratInspects[0] : null;
+        expect(jobSIPackratInspect).toBeTruthy();
+    });
+
     test('DB Creation: JobRun', async () => {
-        if (job)
+        if (jobSIPackratInspect)
             jobRun = await UTIL.createJobRunTest({
-                idJob: job.idJob,
-                Status: 0,
-                Result: false,
+                idJob: jobSIPackratInspect.idJob,
+                Status: DBAPI.eJobRunStatus.eDone,
+                Result: true,
                 DateStart: UTIL.nowCleansed(),
                 DateEnd: null,
                 Configuration: null,
@@ -852,18 +923,21 @@ describe('DB Creation Test Suite', () => {
             });
         expect(jobRun).toBeTruthy();
 
-        expect(DBAPI.JobRun.constructFromPrisma({
-            idJob: 0,
-            Status: 0,
-            Result: false,
-            DateStart: UTIL.nowCleansed(),
-            DateEnd: null,
-            Configuration: null,
-            Parameters: null,
-            Output: null,
-            Error: null,
-            idJobRun: 0
-        })).toBeTruthy();
+        if (jobSIPackratInspect) {
+            const jobRunTemp: DBAPI.JobRun = DBAPI.JobRun.constructFromPrisma({
+                idJob: jobSIPackratInspect.idJob,
+                Status: DBAPI.eJobRunStatus.eDone,
+                Result: true,
+                DateStart: UTIL.nowCleansed(),
+                DateEnd: null,
+                Configuration: null,
+                Parameters: null,
+                Output: null,
+                Error: null,
+                idJobRun: 0
+            });
+            expect(await UTIL.createJobRunTest(jobRunTemp)).toBeTruthy();
+        }
     });
 
     test('DB Creation: Metadata', async () => {
@@ -1470,10 +1544,10 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: WorkflowStepSystemObjectXref', async () => {
-        if (systemObjectScene && workflowStep)
+        if (systemObjectAssetVersion && workflowStep)
             workflowStepSystemObjectXref = new DBAPI.WorkflowStepSystemObjectXref({
                 idWorkflowStep: workflowStep.idWorkflowStep,
-                idSystemObject: systemObjectScene.idSystemObject,
+                idSystemObject: systemObjectAssetVersion.idSystemObject,
                 Input: false,
                 idWorkflowStepSystemObjectXref: 0
             });
@@ -1555,9 +1629,10 @@ describe('DB Creation Test Suite', () => {
             expect(systemObjectXrefProjectStakeholder2.idSystemObjectXref).toBeGreaterThan(0);
     });
 });
+// #endregion
 
 // *******************************************************************
-// DB Fetch By ID Test Suite
+// #region DB Fetch By ID Test Suite
 // *******************************************************************
 describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch By ID: AccessAction', async () => {
@@ -1927,6 +2002,36 @@ describe('DB Fetch By ID Test Suite', () => {
             }
         }
         expect(assetVersionFetch).toBeTruthy();
+    });
+
+    test('DB Fetch By ID: Audit', async () => {
+        let auditFetch: DBAPI.Audit | null = null;
+        if (audit) {
+            auditFetch = await DBAPI.Audit.fetch(audit.idAudit);
+            if (auditFetch) {
+                expect(auditFetch).toMatchObject(audit);
+                expect(audit).toMatchObject(auditFetch);
+            }
+
+            audit.setAuditType(DBAPI.eAuditType.eUnknown);
+            expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eUnknown);
+            audit.setAuditType(DBAPI.eAuditType.eAuthLogin);
+            expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eAuthLogin);
+            audit.setAuditType(DBAPI.eAuditType.eDBCreate);
+            expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eDBCreate);
+            audit.setAuditType(DBAPI.eAuditType.eDBUpdate);
+            expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eDBUpdate);
+            audit.setAuditType(DBAPI.eAuditType.eDBDelete);
+            expect(audit.getAuditType()).toEqual(DBAPI.eAuditType.eDBDelete);
+
+            audit.setDBObjectType(null);
+            expect(audit.getDBObjectType()).toEqual(DBAPI.eSystemObjectType.eUnknown);
+            audit.setDBObjectType(DBAPI.eSystemObjectType.eUnit);
+            expect(audit.getDBObjectType()).toEqual(DBAPI.eSystemObjectType.eUnit);
+            audit.setDBObjectType(DBAPI.eNonSystemObjectType.eUnitEdan);
+            expect(audit.getDBObjectType()).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
+        }
+        expect(auditFetch).toBeTruthy();
     });
 
     test('DB Fetch By ID: CaptureData', async () => {
@@ -3558,6 +3663,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     });
 
     test('DB Fetch SystemObject: SystemObjectTypeToName', async () => {
+        expect(DBAPI.SystemObjectTypeToName(null)).toEqual('Unknown');
         expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eUnit)).toEqual('Unit');
         expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eProject)).toEqual('Project');
         expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eSubject)).toEqual('Subject');
@@ -3572,10 +3678,10 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eActor)).toEqual('Actor');
         expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eStakeholder)).toEqual('Stakeholder');
         expect(DBAPI.SystemObjectTypeToName(DBAPI.eSystemObjectType.eUnknown)).toEqual('Unknown');
-        expect(DBAPI.SystemObjectTypeToName(null)).toEqual('Unknown');
     });
 
     test('DB Fetch SystemObject: SystemObjectNameToType', async () => {
+        expect(DBAPI.SystemObjectNameToType(null)).toEqual(DBAPI.eSystemObjectType.eUnknown);
         expect(DBAPI.SystemObjectNameToType('Unit')).toEqual(DBAPI.eSystemObjectType.eUnit);
         expect(DBAPI.SystemObjectNameToType('Project')).toEqual(DBAPI.eSystemObjectType.eProject);
         expect(DBAPI.SystemObjectNameToType('Subject')).toEqual(DBAPI.eSystemObjectType.eSubject);
@@ -3590,7 +3696,154 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(DBAPI.SystemObjectNameToType('Actor')).toEqual(DBAPI.eSystemObjectType.eActor);
         expect(DBAPI.SystemObjectNameToType('Stakeholder')).toEqual(DBAPI.eSystemObjectType.eStakeholder);
         expect(DBAPI.SystemObjectNameToType('Unknown')).toEqual(DBAPI.eSystemObjectType.eUnknown);
-        expect(DBAPI.SystemObjectNameToType(null)).toEqual(DBAPI.eSystemObjectType.eUnknown);
+    });
+
+    test('DB Fetch SystemObject: DBObjectTypeToName', async () => {
+        expect(DBAPI.DBObjectTypeToName(null)).toEqual('Unknown');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eUnit)).toEqual('Unit');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eProject)).toEqual('Project');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eSubject)).toEqual('Subject');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eItem)).toEqual('Item');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eCaptureData)).toEqual('Capture Data');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eModel)).toEqual('Model');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eScene)).toEqual('Scene');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eIntermediaryFile)).toEqual('Intermediary File');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eProjectDocumentation)).toEqual('Project Documentation');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eAsset)).toEqual('Asset');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eAssetVersion)).toEqual('Asset Version');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eActor)).toEqual('Actor');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eStakeholder)).toEqual('Stakeholder');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eSystemObjectType.eUnknown)).toEqual('Unknown');
+
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eAccessAction)).toEqual('AccessAction');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eAccessContext)).toEqual('AccessContext');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eAccessContextObject)).toEqual('AccessContextObject');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eAccessPolicy)).toEqual('AccessPolicy');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eAccessRole)).toEqual('AccessRole');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eAccessRoleAccessActionXref)).toEqual('AccessRoleAccessActionXref');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eAssetGroup)).toEqual('AssetGroup');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eAudit)).toEqual('Audit');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eCaptureDataFile)).toEqual('CaptureDataFile');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eCaptureDataGroup)).toEqual('CaptureDataGroup');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eCaptureDataGroupCaptureDataXref)).toEqual('CaptureDataGroupCaptureDataXref');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eCaptureDataPhoto)).toEqual('CaptureDataPhoto');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eGeoLocation)).toEqual('GeoLocation');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eIdentifier)).toEqual('Identifier');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eJob)).toEqual('Job');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eJobRun)).toEqual('JobRun');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eLicense)).toEqual('License');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eLicenseAssignment)).toEqual('LicenseAssignment');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eMetadata)).toEqual('Metadata');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelMaterial)).toEqual('ModelMaterial');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelMaterialChannel)).toEqual('ModelMaterialChannel');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelMaterialUVMap)).toEqual('ModelMaterialUVMap');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelObject)).toEqual('ModelObject');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelObjectModelMaterialXref)).toEqual('ModelObjectModelMaterialXref');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelProcessingAction)).toEqual('ModelProcessingAction');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelProcessingActionStep)).toEqual('ModelProessingActionStep');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eModelSceneXref)).toEqual('ModelSceneXref');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObject)).toEqual('SystemObject');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectVersion)).toEqual('SystemObjectVersion');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eSystemObjectXref)).toEqual('SystemObjectXref');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUnitEdan)).toEqual('UnitEdan');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUser)).toEqual('User');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUserPersonalizationSystemObject)).toEqual('UserPersonalizationSystemObject');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUserPersonalizationUrl)).toEqual('UserPersonalizationUrl');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eVocabulary)).toEqual('Vocabulary');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eVocabularySet)).toEqual('VocabularySet');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eWorkflow)).toEqual('Workflow');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eWorkflowStep)).toEqual('WorkflowStep');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eWorkflowStepSystemObjectXref)).toEqual('WorkflowStepSystemObjectXref');
+        expect(DBAPI.DBObjectTypeToName(DBAPI.eNonSystemObjectType.eUnknown)).toEqual('Unknown');
+    });
+
+    test('DB Fetch SystemObject: DBObjectNameToType', async () => {
+        expect(DBAPI.DBObjectNameToType(null)).toEqual(DBAPI.eSystemObjectType.eUnknown);
+        expect(DBAPI.DBObjectNameToType('Unit')).toEqual(DBAPI.eSystemObjectType.eUnit);
+        expect(DBAPI.DBObjectNameToType('Project')).toEqual(DBAPI.eSystemObjectType.eProject);
+        expect(DBAPI.DBObjectNameToType('Subject')).toEqual(DBAPI.eSystemObjectType.eSubject);
+        expect(DBAPI.DBObjectNameToType('Item')).toEqual(DBAPI.eSystemObjectType.eItem);
+        expect(DBAPI.DBObjectNameToType('Capture Data')).toEqual(DBAPI.eSystemObjectType.eCaptureData);
+        expect(DBAPI.DBObjectNameToType('Model')).toEqual(DBAPI.eSystemObjectType.eModel);
+        expect(DBAPI.DBObjectNameToType('Scene')).toEqual(DBAPI.eSystemObjectType.eScene);
+        expect(DBAPI.DBObjectNameToType('Intermediary File')).toEqual(DBAPI.eSystemObjectType.eIntermediaryFile);
+        expect(DBAPI.DBObjectNameToType('Project Documentation')).toEqual(DBAPI.eSystemObjectType.eProjectDocumentation);
+        expect(DBAPI.DBObjectNameToType('Asset')).toEqual(DBAPI.eSystemObjectType.eAsset);
+        expect(DBAPI.DBObjectNameToType('Asset Version')).toEqual(DBAPI.eSystemObjectType.eAssetVersion);
+        expect(DBAPI.DBObjectNameToType('Actor')).toEqual(DBAPI.eSystemObjectType.eActor);
+        expect(DBAPI.DBObjectNameToType('Stakeholder')).toEqual(DBAPI.eSystemObjectType.eStakeholder);
+        expect(DBAPI.DBObjectNameToType('Unknown')).toEqual(DBAPI.eSystemObjectType.eUnknown);
+
+        expect(DBAPI.DBObjectNameToType('AccessAction')).toEqual(DBAPI.eNonSystemObjectType.eAccessAction);
+        expect(DBAPI.DBObjectNameToType('Access Action')).toEqual(DBAPI.eNonSystemObjectType.eAccessAction);
+        expect(DBAPI.DBObjectNameToType('AccessContext')).toEqual(DBAPI.eNonSystemObjectType.eAccessContext);
+        expect(DBAPI.DBObjectNameToType('Access Context')).toEqual(DBAPI.eNonSystemObjectType.eAccessContext);
+        expect(DBAPI.DBObjectNameToType('AccessContextObject')).toEqual(DBAPI.eNonSystemObjectType.eAccessContextObject);
+        expect(DBAPI.DBObjectNameToType('Access Context Object')).toEqual(DBAPI.eNonSystemObjectType.eAccessContextObject);
+        expect(DBAPI.DBObjectNameToType('AccessPolicy')).toEqual(DBAPI.eNonSystemObjectType.eAccessPolicy);
+        expect(DBAPI.DBObjectNameToType('Access Policy')).toEqual(DBAPI.eNonSystemObjectType.eAccessPolicy);
+        expect(DBAPI.DBObjectNameToType('AccessRole')).toEqual(DBAPI.eNonSystemObjectType.eAccessRole);
+        expect(DBAPI.DBObjectNameToType('Access Role')).toEqual(DBAPI.eNonSystemObjectType.eAccessRole);
+        expect(DBAPI.DBObjectNameToType('AccessRoleAccessActionXref')).toEqual(DBAPI.eNonSystemObjectType.eAccessRoleAccessActionXref);
+        expect(DBAPI.DBObjectNameToType('Access Role Access Action Xref')).toEqual(DBAPI.eNonSystemObjectType.eAccessRoleAccessActionXref);
+        expect(DBAPI.DBObjectNameToType('AssetGroup')).toEqual(DBAPI.eNonSystemObjectType.eAssetGroup);
+        expect(DBAPI.DBObjectNameToType('Asset Group')).toEqual(DBAPI.eNonSystemObjectType.eAssetGroup);
+        expect(DBAPI.DBObjectNameToType('Audit')).toEqual(DBAPI.eNonSystemObjectType.eAudit);
+        expect(DBAPI.DBObjectNameToType('CaptureDataFile')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataFile);
+        expect(DBAPI.DBObjectNameToType('Capture Data File')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataFile);
+        expect(DBAPI.DBObjectNameToType('CaptureDataGroup')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataGroup);
+        expect(DBAPI.DBObjectNameToType('Capture Data Group')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataGroup);
+        expect(DBAPI.DBObjectNameToType('CaptureDataGroupCaptureDataXref')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataGroupCaptureDataXref);
+        expect(DBAPI.DBObjectNameToType('Capture Data Group Capture Data Xref')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataGroupCaptureDataXref);
+        expect(DBAPI.DBObjectNameToType('CaptureDataPhoto')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataPhoto);
+        expect(DBAPI.DBObjectNameToType('Capture Data Photo')).toEqual(DBAPI.eNonSystemObjectType.eCaptureDataPhoto);
+        expect(DBAPI.DBObjectNameToType('GeoLocation')).toEqual(DBAPI.eNonSystemObjectType.eGeoLocation);
+        expect(DBAPI.DBObjectNameToType('Identifier')).toEqual(DBAPI.eNonSystemObjectType.eIdentifier);
+        expect(DBAPI.DBObjectNameToType('Job')).toEqual(DBAPI.eNonSystemObjectType.eJob);
+        expect(DBAPI.DBObjectNameToType('JobRun')).toEqual(DBAPI.eNonSystemObjectType.eJobRun);
+        expect(DBAPI.DBObjectNameToType('Job Run')).toEqual(DBAPI.eNonSystemObjectType.eJobRun);
+        expect(DBAPI.DBObjectNameToType('License')).toEqual(DBAPI.eNonSystemObjectType.eLicense);
+        expect(DBAPI.DBObjectNameToType('LicenseAssignment')).toEqual(DBAPI.eNonSystemObjectType.eLicenseAssignment);
+        expect(DBAPI.DBObjectNameToType('License Assignment')).toEqual(DBAPI.eNonSystemObjectType.eLicenseAssignment);
+        expect(DBAPI.DBObjectNameToType('Metadata')).toEqual(DBAPI.eNonSystemObjectType.eMetadata);
+        expect(DBAPI.DBObjectNameToType('ModelMaterial')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterial);
+        expect(DBAPI.DBObjectNameToType('Model Material')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterial);
+        expect(DBAPI.DBObjectNameToType('ModelMaterialChannel')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterialChannel);
+        expect(DBAPI.DBObjectNameToType('Model Material Channel')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterialChannel);
+        expect(DBAPI.DBObjectNameToType('ModelMaterialUVMap')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterialUVMap);
+        expect(DBAPI.DBObjectNameToType('Model Material UV Map')).toEqual(DBAPI.eNonSystemObjectType.eModelMaterialUVMap);
+        expect(DBAPI.DBObjectNameToType('ModelObject')).toEqual(DBAPI.eNonSystemObjectType.eModelObject);
+        expect(DBAPI.DBObjectNameToType('Model Object')).toEqual(DBAPI.eNonSystemObjectType.eModelObject);
+        expect(DBAPI.DBObjectNameToType('ModelObjectModelMaterialXref')).toEqual(DBAPI.eNonSystemObjectType.eModelObjectModelMaterialXref);
+        expect(DBAPI.DBObjectNameToType('Model Object Model Material Xref')).toEqual(DBAPI.eNonSystemObjectType.eModelObjectModelMaterialXref);
+        expect(DBAPI.DBObjectNameToType('ModelProcessingAction')).toEqual(DBAPI.eNonSystemObjectType.eModelProcessingAction);
+        expect(DBAPI.DBObjectNameToType('Model Processing Action')).toEqual(DBAPI.eNonSystemObjectType.eModelProcessingAction);
+        expect(DBAPI.DBObjectNameToType('ModelProessingActionStep')).toEqual(DBAPI.eNonSystemObjectType.eModelProcessingActionStep);
+        expect(DBAPI.DBObjectNameToType('Model Proessing Action Step')).toEqual(DBAPI.eNonSystemObjectType.eModelProcessingActionStep);
+        expect(DBAPI.DBObjectNameToType('ModelSceneXref')).toEqual(DBAPI.eNonSystemObjectType.eModelSceneXref);
+        expect(DBAPI.DBObjectNameToType('Model Scene Xref')).toEqual(DBAPI.eNonSystemObjectType.eModelSceneXref);
+        expect(DBAPI.DBObjectNameToType('SystemObject')).toEqual(DBAPI.eNonSystemObjectType.eSystemObject);
+        expect(DBAPI.DBObjectNameToType('System Object')).toEqual(DBAPI.eNonSystemObjectType.eSystemObject);
+        expect(DBAPI.DBObjectNameToType('SystemObjectVersion')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersion);
+        expect(DBAPI.DBObjectNameToType('System Object Version')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectVersion);
+        expect(DBAPI.DBObjectNameToType('SystemObjectXref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectXref);
+        expect(DBAPI.DBObjectNameToType('System Object Xref')).toEqual(DBAPI.eNonSystemObjectType.eSystemObjectXref);
+        expect(DBAPI.DBObjectNameToType('UnitEdan')).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
+        expect(DBAPI.DBObjectNameToType('Unit Edan')).toEqual(DBAPI.eNonSystemObjectType.eUnitEdan);
+        expect(DBAPI.DBObjectNameToType('User')).toEqual(DBAPI.eNonSystemObjectType.eUser);
+        expect(DBAPI.DBObjectNameToType('UserPersonalizationSystemObject')).toEqual(DBAPI.eNonSystemObjectType.eUserPersonalizationSystemObject);
+        expect(DBAPI.DBObjectNameToType('User Personalization System Object')).toEqual(DBAPI.eNonSystemObjectType.eUserPersonalizationSystemObject);
+        expect(DBAPI.DBObjectNameToType('UserPersonalizationUrl')).toEqual(DBAPI.eNonSystemObjectType.eUserPersonalizationUrl);
+        expect(DBAPI.DBObjectNameToType('User Personalization Url')).toEqual(DBAPI.eNonSystemObjectType.eUserPersonalizationUrl);
+        expect(DBAPI.DBObjectNameToType('Vocabulary')).toEqual(DBAPI.eNonSystemObjectType.eVocabulary);
+        expect(DBAPI.DBObjectNameToType('VocabularySet')).toEqual(DBAPI.eNonSystemObjectType.eVocabularySet);
+        expect(DBAPI.DBObjectNameToType('Vocabulary Set')).toEqual(DBAPI.eNonSystemObjectType.eVocabularySet);
+        expect(DBAPI.DBObjectNameToType('Workflow')).toEqual(DBAPI.eNonSystemObjectType.eWorkflow);
+        expect(DBAPI.DBObjectNameToType('WorkflowStep')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStep);
+        expect(DBAPI.DBObjectNameToType('Workflow Step')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStep);
+        expect(DBAPI.DBObjectNameToType('WorkflowStepSystemObjectXref')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStepSystemObjectXref);
+        expect(DBAPI.DBObjectNameToType('Workflow Step System Object Xref')).toEqual(DBAPI.eNonSystemObjectType.eWorkflowStepSystemObjectXref);
+        expect(DBAPI.DBObjectNameToType('Unknown')).toEqual(DBAPI.eNonSystemObjectType.eUnknown);
     });
 });
 
@@ -3676,8 +3929,8 @@ describe('DB Fetch Xref Test Suite', () => {
 
     test('DB Fetch Xref: fetchWorkflowStepFromXref', async () => {
         let WFS: DBAPI.WorkflowStep[] | null = null;
-        if (systemObjectScene && workflowStep) {
-            WFS = await DBAPI.SystemObject.fetchWorkflowStepFromXref(systemObjectScene.idSystemObject);
+        if (systemObjectAssetVersion && workflowStep) {
+            WFS = await DBAPI.SystemObject.fetchWorkflowStepFromXref(systemObjectAssetVersion.idSystemObject);
             if (WFS) {
                 expect(WFS.length).toBe(1);
                 if (WFS.length == 1)
@@ -3689,12 +3942,12 @@ describe('DB Fetch Xref Test Suite', () => {
 
     test('DB Fetch Xref: WorkflowStep.fetchSystemObjectFromXref', async () => {
         let SO: DBAPI.SystemObject[] | null = null;
-        if (workflowStep && systemObjectScene && systemObjectSubject) {
+        if (workflowStep && systemObjectAssetVersion && systemObjectSubject) {
             SO = await workflowStep.fetchSystemObjectFromXref();
             if (SO) {
                 expect(SO.length).toBe(2);
                 if (SO.length == 2)
-                    expect(SO[0].idSystemObject + SO[1].idSystemObject).toBe(systemObjectScene.idSystemObject + systemObjectSubject.idSystemObject);
+                    expect(SO[0].idSystemObject + SO[1].idSystemObject).toBe(systemObjectAssetVersion.idSystemObject + systemObjectSubject.idSystemObject);
             }
         }
         expect(SO).toBeTruthy();
@@ -3774,9 +4027,10 @@ describe('DB Fetch Xref Test Suite', () => {
         expect(SO).toBeTruthy();
     });
 });
+// #endregion
 
 // *******************************************************************
-// DB Fetch Special Test Suite
+// #region DB Fetch Special Test Suite
 // *******************************************************************
 describe('DB Fetch Special Test Suite', () => {
     test('DB Fetch Special: Actor.fetchAll', async () => {
@@ -4057,7 +4311,6 @@ describe('DB Fetch Special Test Suite', () => {
 
         expect(jobRun).toBeTruthy();
         if (jobRun) {
-            expect(jobRun.getStatus()).toEqual(DBAPI.eJobRunStatus.eUnitialized);
             jobRun.setStatus(DBAPI.eJobRunStatus.eCreated);
             expect(jobRun.getStatus()).toEqual(DBAPI.eJobRunStatus.eCreated);
             expect(jobRun.Status).toEqual(1);
@@ -4075,14 +4328,12 @@ describe('DB Fetch Special Test Suite', () => {
         if (jobRuns2)
             expect(jobRuns2.length).toBeFalsy();
 
-
         // find JobCook results
-        const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(CACHE.eVocabularyID.eJobJobTypeCookSIPackratInspect);
-        expect(idVJobType).toBeTruthy();
-        if (idVJobType) {
+        expect(vocabJobSIPackratInspect).toBeTruthy();
+        if (vocabJobSIPackratInspect) {
             // The following will return a row if the JobNS test has run and successfully completed testing of packrat-cook integration.
             // We cannot rely on this test having been run, so for now, we don't validate the result
-            await DBAPI.JobRun.fetchMatching(1, idVJobType, DBAPI.eJobRunStatus.eDone, true, null);
+            await DBAPI.JobRun.fetchMatching(1, vocabJobSIPackratInspect.idVocabulary, DBAPI.eJobRunStatus.eDone, true, null);
         }
     });
 
@@ -4594,9 +4845,10 @@ describe('DB Fetch Special Test Suite', () => {
         expect(WFC).toBeTruthy();
     });
 });
+// #endregion
 
 // *******************************************************************
-// DB Update Test Suite
+// #region DB Update Test Suite
 // *******************************************************************
 describe('DB Update Test Suite', () => {
     test('DB Update: AccessAction.update', async () => {
@@ -4896,6 +5148,55 @@ describe('DB Update Test Suite', () => {
             expect(captureDataFetch).toBeTruthy();
             if (captureDataFetch)
                 expect(captureDataFetch.Description).toEqual(updated);
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Audit.update', async () => {
+        let bUpdated: boolean = false;
+        if (audit) {
+            const updated: Date = UTIL.nowCleansed();
+            audit.AuditDate = updated;
+            bUpdated = await audit.update();
+
+            const auditFetch: DBAPI.Audit | null = await DBAPI.Audit.fetch(audit.idAudit);
+            expect(auditFetch).toBeTruthy();
+            if (auditFetch) {
+                expect(auditFetch.AuditDate).toEqual(updated);
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Audit.update full disconnect', async () => {
+        let bUpdated: boolean = false;
+        if (audit) {
+            audit.idUser = null;
+            audit.idSystemObject = null;
+            bUpdated = await audit.update();
+
+            const auditFetch: DBAPI.Audit | null = await DBAPI.Audit.fetch(audit.idAudit);
+            expect(auditFetch).toBeTruthy();
+            if (auditFetch) {
+                expect(auditFetch.idUser).toBeNull();
+                expect(auditFetch.idSystemObject).toBeNull();
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: Audit.update when null', async () => {
+        let bUpdated: boolean = false;
+        if (audit) {
+            const updated: Date = UTIL.nowCleansed();
+            audit.AuditDate = updated;
+            bUpdated = await audit.update();
+
+            const auditFetch: DBAPI.Audit | null = await DBAPI.Audit.fetch(audit.idAudit);
+            expect(auditFetch).toBeTruthy();
+            if (auditFetch) {
+                expect(auditFetch.AuditDate).toEqual(updated);
+            }
         }
         expect(bUpdated).toBeTruthy();
     });
@@ -6193,8 +6494,60 @@ describe('DB Update Test Suite', () => {
     });
     */
 });
+// #endregion
 
+// #region DB Deletes
+describe('DB Delete Test', () => {
+    test('DB Delete: SystemObjectXref.delete and deleteIfAllowed', async () => {
+        if (systemObjectXrefSubItem4) {
+            const res: H.IOResults = await systemObjectXrefSubItem4.deleteIfAllowed();
+            if (!res.success)
+                LOG.error(`DB Delete failed: ${res.error}`, LOG.LS.eTEST);
+            else
+                LOG.info(`DB Delete suceeded: ${JSON.stringify(systemObjectXrefSubItem4)}`, LOG.LS.eTEST);
+            expect(res.success).toBeTruthy();
 
+            // try to fetch; should not be found
+            const soxFetch: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.fetch(systemObjectXrefSubItem4.idSystemObjectXref);
+            expect(soxFetch).toBeFalsy();
+        }
+        if (systemObjectXrefSubItem2) {
+            const res: H.IOResults = await DBAPI.SystemObjectXref.deleteIfAllowed(systemObjectXrefSubItem2.idSystemObjectXref);
+            if (!res.success)
+                LOG.info(`DB Delete failed, as expected: ${res.error}`, LOG.LS.eTEST);
+            else
+                LOG.error(`DB Delete suceeded unexpectedly: ${JSON.stringify(systemObjectXrefSubItem2)}`, LOG.LS.eTEST);
+            expect(res.success).toBeFalsy();
+
+            // try to fetch; should be found
+            const soxFetch: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.fetch(systemObjectXrefSubItem2.idSystemObjectXref);
+            expect(soxFetch).toBeTruthy();
+        }
+
+        expect((await DBAPI.SystemObjectXref.deleteIfAllowed(1000000000)).success).toBeFalsy();
+    });
+
+    test('DB Delete: Identifier.delete', async () => {
+        if (identifierNull) {
+            expect(await identifierNull.delete()).toBeTruthy();
+
+            // try to fetch; should not be found
+            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifierNull.idIdentifier);
+            expect(idFetch).toBeFalsy();
+        }
+
+        if (identifierSubjectHookup) {
+            expect(await identifierSubjectHookup.delete()).toBeTruthy();
+
+            // try to fetch; should not be found
+            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifierSubjectHookup.idIdentifier);
+            expect(idFetch).toBeFalsy();
+        }
+    });
+});
+// #endregion
+
+// #region Null tests
 describe('DB Null/Zero ID Test', () => {
     test('DB Null/Zero ID Test', async () => {
         expect(await DBAPI.AccessAction.fetch(0)).toBeNull();
@@ -6224,6 +6577,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true, true)).toBeNull();
         expect(await DBAPI.AssetVersion.fetchByAssetAndVersion(0, 1)).toBeNull();
+        expect(await DBAPI.Audit.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromXref(0)).toBeNull();
         expect(await DBAPI.CaptureData.fetchFromCaptureDataPhoto(0)).toBeNull();
@@ -6308,6 +6662,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Scene.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();
+        expect(await DBAPI.Subject.clearPreferredIdentifier(0)).toBeFalsy();
         expect(await DBAPI.Subject.fetch(0)).toBeNull();
         expect(await DBAPI.Subject.fetchFromUnit(0)).toBeNull();
         expect(await DBAPI.Subject.fetchMasterFromItems([])).toBeNull();
@@ -6415,3 +6770,4 @@ describe('DB Null/Zero ID Test', () => {
         await expect(SO.update()).rejects.toThrow('DBAPI.SystemObject.update() should never be called');
     });
 });
+// #endregion

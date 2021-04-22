@@ -1,3 +1,4 @@
+-- CREATE DATABASE IF NOT EXISTS Packrat DEFAULT CHARACTER SET 'utf8mb4';
 CREATE TABLE IF NOT EXISTS `AccessAction` (
   `idAccessAction` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
@@ -95,6 +96,21 @@ CREATE TABLE IF NOT EXISTS `AssetVersion` (
   KEY `AssetVersion_Ingested_idUserCreator` (`Ingested`,`idUserCreator`),
   KEY `AssetVersion_idUserCreator_Ingested` (`idUserCreator`,`Ingested`),
   KEY `AssetVersion_StorageKeyStaging` (`StorageKeyStaging`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `Audit` (
+  `idAudit` int(11) NOT NULL AUTO_INCREMENT,
+  `idUser` int(11) DEFAULT NULL,
+  `AuditDate` datetime NOT NULL,
+  `AuditType` int(11) NOT NULL,
+  `DBObjectType` int(11) NULL,
+  `idDBObject` int(11) NULL,
+  `idSystemObject` int(11) NULL,
+  `Data` text CHARACTER SET 'LATIN1' NULL,
+  PRIMARY KEY (`idAudit`),
+  KEY `Audit_idAsset_idUser_AuditDate` (`idUser`,`AuditDate`),
+  KEY `Audit_idAsset_idSystemObject_AuditDate` (`idSystemObject`,`AuditDate`),
+  KEY `Audit_idAsset_DBObjectType_idDBObject_AuditDate` (`DBObjectType`,`idDBObject`,`AuditDate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `CaptureData` (
@@ -657,6 +673,18 @@ ADD CONSTRAINT `fk_assetversion_asset1`
 ADD CONSTRAINT `fk_assetversion_user1`
   FOREIGN KEY (`idUserCreator`)
   REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `Audit` 
+ADD CONSTRAINT `fk_audit_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_audit_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `SystemObject` (`idSystemObject`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

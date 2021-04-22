@@ -14,17 +14,12 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
     idSystemObject!: number | null;
     StorageKey!: string | null;
 
-    private idAssetGroupOrig!: number | null;
-    private idSystemObjectOrig!: number | null;
-
     constructor(input: AssetBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idAssetGroupOrig = this.idAssetGroup;
-        this.idSystemObjectOrig = this.idSystemObject;
-    }
+    public fetchTableName(): string { return 'Asset'; }
+    public fetchID(): number { return this.idAsset; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -51,15 +46,15 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idAsset, FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, StorageKey, idAssetGroupOrig, idSystemObjectOrig } = this;
+            const { idAsset, FileName, FilePath, idAssetGroup, idVAssetType, idSystemObject, StorageKey, } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.asset.update({
                 where: { idAsset, },
                 data: {
                     FileName,
                     FilePath,
-                    AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : idAssetGroupOrig ? { disconnect: true, } : undefined,
+                    AssetGroup:     idAssetGroup ? { connect: { idAssetGroup }, } : { disconnect: true, },
                     Vocabulary:     { connect: { idVocabulary: idVAssetType }, },
-                    SystemObject_Asset_idSystemObjectToSystemObject: idSystemObject ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
+                    SystemObject_Asset_idSystemObjectToSystemObject: idSystemObject ? { connect: { idSystemObject }, } : { disconnect: true, },
                     StorageKey,
                 },
             }) ? true : /* istanbul ignore next */ false;

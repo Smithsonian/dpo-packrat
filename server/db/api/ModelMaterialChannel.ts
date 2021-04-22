@@ -20,8 +20,8 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
     Scalar4!: number | null;
     AdditionalAttributes!: string | null;
 
-    private idVMaterialTypeOrig!: number | null;
-    private idModelMaterialUVMapOrig!: number | null;
+    public fetchTableName(): string { return 'ModelMaterialChannel'; }
+    public fetchID(): number { return this.idModelMaterialChannel; }
 
     constructor(input: ModelMaterialChannelBase) {
         super(input);
@@ -43,11 +43,6 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             Scalar4: H.Helpers.safeNumber(modelMaterialChannelBase.Scalar4),
             AdditionalAttributes: modelMaterialChannelBase.AdditionalAttributes,
         });
-    }
-
-    protected updateCachedValues(): void {
-        this.idVMaterialTypeOrig = this.idVMaterialType;
-        this.idModelMaterialUVMapOrig = this.idModelMaterialUVMap;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -84,14 +79,14 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idModelMaterialChannel, idModelMaterial, idVMaterialType, MaterialTypeOther, idModelMaterialUVMap, UVMapEmbedded, ChannelPosition, ChannelWidth,
-                Scalar1, Scalar2, Scalar3, Scalar4, AdditionalAttributes, idVMaterialTypeOrig, idModelMaterialUVMapOrig } = this;
+                Scalar1, Scalar2, Scalar3, Scalar4, AdditionalAttributes } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.modelMaterialChannel.update({
                 where: { idModelMaterialChannel, },
                 data: {
                     ModelMaterial:              { connect: { idModelMaterial }, },
-                    Vocabulary:                 idVMaterialType ? { connect: { idVocabulary: idVMaterialType }, } : idVMaterialTypeOrig ? { disconnect: true, } : undefined,
+                    Vocabulary:                 idVMaterialType ? { connect: { idVocabulary: idVMaterialType }, } : { disconnect: true, },
                     MaterialTypeOther,
-                    ModelMaterialUVMap:         idModelMaterialUVMap ? { connect: { idModelMaterialUVMap }, } : idModelMaterialUVMapOrig ? { disconnect: true, } : undefined,
+                    ModelMaterialUVMap:         idModelMaterialUVMap ? { connect: { idModelMaterialUVMap }, } : { disconnect: true, },
                     UVMapEmbedded,
                     ChannelPosition,
                     ChannelWidth,

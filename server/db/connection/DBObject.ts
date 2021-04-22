@@ -1,21 +1,54 @@
+import { eDBObjectType, eNonSystemObjectType, ObjectIDAndType, DBObjectNameToType } from '../api/ObjectType';
+import { AuditFactory } from '../../audit/interface/AuditFactory';
+import { eEventKey } from '../../event/interface/EventEnums';
+
 export abstract class DBObject<T> {
+    public abstract fetchTableName(): string;
+    public abstract fetchID(): number;
+
     protected abstract createWorker(): Promise<boolean>;
     protected abstract updateWorker(): Promise<boolean>;
-    protected abstract updateCachedValues(): void;
+    protected async deleteWorker(): Promise<boolean> { return false; }
+    protected updateCachedValues(): void { }
 
     constructor(input: T) {
         Object.assign(this, input);
         this.updateCachedValues();
     }
 
+    protected computeObjectIDAndType(): ObjectIDAndType {
+        const idObject: number = this.fetchID();
+        const eObjectType: eDBObjectType = DBObjectNameToType(this.fetchTableName());
+        return { idObject, eObjectType };
+    }
+
+    public async auditDBObject(key: eEventKey): Promise<boolean> {
+        const oID: ObjectIDAndType = this.computeObjectIDAndType();
+        if (oID.eObjectType != eNonSystemObjectType.eAudit)
+            return AuditFactory.auditDBObject(this, oID, key);
+        return true;
+    }
+
     async create(): Promise<boolean> {
-        const retVal: boolean = await this.createWorker();
-        this.updateCachedValues();
+        const retVal: boolean = await this.createWorker(); /* istanbul ignore else */
+        if (retVal) {
+            this.updateCachedValues();
+            this.auditDBObject(eEventKey.eDBCreate);
+        }
         return retVal;
     }
     async update(): Promise<boolean> {
-        const retVal: boolean = await this.updateWorker();
-        this.updateCachedValues();
+        const retVal: boolean = await this.updateWorker(); /* istanbul ignore else */
+        if (retVal) {
+            this.updateCachedValues();
+            this.auditDBObject(eEventKey.eDBUpdate);
+        }
+        return retVal;
+    }
+    async delete(): Promise<boolean> {
+        const retVal: boolean = await this.deleteWorker(); /* istanbul ignore else */
+        if (retVal)
+            this.auditDBObject(eEventKey.eDBDelete);
         return retVal;
     }
 }

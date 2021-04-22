@@ -21,6 +21,9 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         super(input);
     }
 
+    public fetchTableName(): string { return 'AssetVersion'; }
+    public fetchID(): number { return this.idAssetVersion; }
+
     static constructFromPrisma(assetVersion: AssetVersionBase): AssetVersion {
         return new AssetVersion({
             idAssetVersion: assetVersion.idAssetVersion,
@@ -36,8 +39,6 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             Version: assetVersion.Version
         });
     }
-
-    protected updateCachedValues(): void { }
 
     // TODO: replace two-step query with a call to AssetVersionCreate stored procedure
     // We likely need to engage Prisma for a fix, as well as write directly to the Node.js connector for MariaDB

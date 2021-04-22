@@ -4,16 +4,17 @@ import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 
 export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements AccessPolicyBase {
-    idAccessContext!: number;
     idAccessPolicy!: number;
-    idAccessRole!: number;
     idUser!: number;
+    idAccessRole!: number;
+    idAccessContext!: number;
 
     constructor(input: AccessPolicyBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'AccessPolicy'; }
+    public fetchID(): number { return this.idAccessPolicy; }
 
     protected async createWorker(): Promise<boolean> {
         try {
