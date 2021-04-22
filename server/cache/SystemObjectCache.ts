@@ -3,21 +3,11 @@ import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
 import { SystemObject, eSystemObjectType } from '../db';
 
-export type ObjectIDAndType = {
-    idObject: number;
-    eObjectType: eSystemObjectType;
-};
-
-export type SystemObjectInfo = {
-    idSystemObject: number;
-    Retired: boolean;
-};
-
 export class SystemObjectCache {
     private static singleton: SystemObjectCache | null = null;
 
-    private objectIDToSystemMap: Map<ObjectIDAndType, SystemObjectInfo> = new Map<ObjectIDAndType, SystemObjectInfo>(); // map of { idObject, eSystemObjectType } -> { idSystemObject, Retired }
-    private systemIDToObjectMap: Map<number, ObjectIDAndType> = new Map<number, ObjectIDAndType>(); // map of idSystemObject -> { idObject, eSystemObjectType }
+    private objectIDToSystemMap: Map<DBAPI.ObjectIDAndType, DBAPI.SystemObjectInfo> = new Map<DBAPI.ObjectIDAndType, DBAPI.SystemObjectInfo>(); // map of { idObject, eDBObjectType } -> { idSystemObject, Retired }
+    private systemIDToObjectMap: Map<number, DBAPI.ObjectIDAndType> = new Map<number, DBAPI.ObjectIDAndType>(); // map of idSystemObject -> { idObject, eDBObjectType }
 
     // **************************
     // Boilerplate Implementation
@@ -53,7 +43,7 @@ export class SystemObjectCache {
         }
 
         for (const SO of SOFetch) {
-            const oID: ObjectIDAndType | undefined = SystemObjectCache.convertSystemObjectToObjectID(SO); /* istanbul ignore else */
+            const oID: DBAPI.ObjectIDAndType | undefined = SystemObjectCache.convertSystemObjectToObjectID(SO); /* istanbul ignore else */
             if (oID) {
                 this.objectIDToSystemMap.set(oID, { idSystemObject: SO.idSystemObject, Retired: SO.Retired });
                 this.systemIDToObjectMap.set(SO.idSystemObject, oID);
@@ -63,13 +53,14 @@ export class SystemObjectCache {
         return true;
     }
 
-    // **************************
-    // Private Interface
-    // **************************
-    private async getSystemFromObjectIDInternal(oID: ObjectIDAndType): Promise<SystemObjectInfo | undefined> {
-        let sID: SystemObjectInfo | undefined = this.objectIDToSystemMap.get(oID); /* istanbul ignore else */
+    // *************************
+    // #region Private Interface
+    // *************************
+    private async getSystemFromObjectIDInternal(oID: DBAPI.ObjectIDAndType): Promise<DBAPI.SystemObjectInfo | undefined> {
+        let sID: DBAPI.SystemObjectInfo | undefined = this.objectIDToSystemMap.get(oID); /* istanbul ignore else */
         if (!sID) {  // if we have a cache miss, look it up
             let SO: SystemObject | null = null;
+            let isASystemObject: boolean = true;
             const { idObject, eObjectType } = oID;
             switch (eObjectType) {
                 case eSystemObjectType.eUnit: SO = await SystemObject.fetchFromUnitID(idObject); break;
@@ -85,111 +76,131 @@ export class SystemObjectCache {
                 case eSystemObjectType.eAssetVersion: SO = await SystemObject.fetchFromAssetVersionID(idObject); break;
                 case eSystemObjectType.eActor: SO = await SystemObject.fetchFromActorID(idObject); break;
                 case eSystemObjectType.eStakeholder: SO = await SystemObject.fetchFromStakeholderID(idObject); break;
+                default: isASystemObject = false; break;
             }
 
+            const oIDCleansed: DBAPI.ObjectIDAndType = { idObject: oID.idObject, eObjectType: oID.eObjectType };
             /* istanbul ignore else */
             if (SO) {
                 sID = { idSystemObject: SO.idSystemObject, Retired: SO.Retired };
-                this.objectIDToSystemMap.set(oID, sID);
-                this.systemIDToObjectMap.set(SO.idSystemObject, oID);
+                this.objectIDToSystemMap.set(oIDCleansed, sID);
+                this.systemIDToObjectMap.set(SO.idSystemObject, oIDCleansed);
+            } else if (!isASystemObject) {
+                if (idObject) {
+                    LOG.info(`SystemObjectCache.getSystemFromObjectIDInternal storing idSystemObject 0 for ${JSON.stringify(oIDCleansed)}`, LOG.LS.eCACHE);
+                    sID = { idSystemObject: 0, Retired: false };
+                    this.objectIDToSystemMap.set(oIDCleansed, sID);
+                }
             } else
                 LOG.error(`SystemObjectCache.getSystemFromObjectIDInternal unable to lookup ${eSystemObjectType[eObjectType]}, id ${idObject}`, LOG.LS.eCACHE );
         }
         return sID;
     }
 
-    private async getObjectFromSystemInternal(idSystemObject: number): Promise<ObjectIDAndType | undefined> {
-        let oID: ObjectIDAndType | undefined = this.systemIDToObjectMap.get(idSystemObject);
-        if (!oID) {
-            const SO: SystemObject | null = await SystemObject.fetch(idSystemObject);
-            let Retired: boolean = false;
-            if (SO) {
-                oID = SystemObjectCache.convertSystemObjectToObjectID(SO);
-                Retired = SO.Retired;
-            } else
-                LOG.error(`SystemObjectCache.getObjectFromSystemInternal unable to lookup idSystemObject ${idSystemObject}`, LOG.LS.eCACHE );
+    private async getObjectFromSystemInternal(idSystemObject: number): Promise<DBAPI.ObjectIDAndType | undefined> {
+        const oID: DBAPI.ObjectIDAndType | undefined = this.systemIDToObjectMap.get(idSystemObject);
+        return oID ? oID : this.flushObjectWorker(idSystemObject);
+    }
 
-            if (oID) {
-                this.objectIDToSystemMap.set(oID, { idSystemObject, Retired });
-                this.systemIDToObjectMap.set(idSystemObject, oID);
-            }
+    private async getObjectAndSystemFromSystemInternal(idSystemObject: number): Promise<DBAPI.SystemObjectIDAndType | undefined> {
+        const oID: DBAPI.ObjectIDAndType | undefined = await this.getObjectFromSystemInternal(idSystemObject);
+        const sID: DBAPI.SystemObjectInfo | undefined = oID ? await this.getSystemFromObjectIDInternal(oID) : undefined;
+        return (oID && sID) ? { oID, sID } : undefined;
+    }
+
+    private async flushObjectWorker(idSystemObject: number): Promise<DBAPI.ObjectIDAndType | undefined> {
+        const SO: SystemObject | null = await SystemObject.fetch(idSystemObject);
+        if (!SO) {
+            LOG.error(`SystemObjectCache.getObjectFromSystemInternal unable to lookup idSystemObject ${idSystemObject}`, LOG.LS.eCACHE );
+            return undefined;
+        }
+
+        const oID: DBAPI.ObjectIDAndType | undefined = SystemObjectCache.convertSystemObjectToObjectID(SO); /* istanbul ignore else */
+        if (oID) {
+            this.objectIDToSystemMap.set(oID, { idSystemObject, Retired: SO.Retired });
+            this.systemIDToObjectMap.set(idSystemObject, oID);
         }
         return oID;
     }
+    // #endregion
 
     // **************************
-    // Public Interface
+    // #region Public Interface
     // **************************
+    /**
+     * Fetches object ID and object type for the specified SystemObject.idSystemObject
+     * @param idSystemObject SystemObject.idSystemObject to query
+     */
+    static async getObjectFromSystem(idSystemObject: number): Promise<DBAPI.ObjectIDAndType | undefined> {
+        return await (await this.getInstance()).getObjectFromSystemInternal(idSystemObject);
+    }
+
+    static async getObjectAndSystemFromSystem(idSystemObject: number): Promise<DBAPI.SystemObjectIDAndType | undefined> {
+        return await (await this.getInstance()).getObjectAndSystemFromSystemInternal(idSystemObject);
+    }
+
     /**
      * Fetch { SystemObject.idSystemObject, Retired } for the specified database object
      * @param {number} idObject - database ID, such as Subject.idSubject or Unit.idUnit
      * @param eObjectType - object type, such as eSubject or eUnit
      */
-    static async getSystemFromObjectID(oID: ObjectIDAndType): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromObjectID(oID: DBAPI.ObjectIDAndType): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal(oID);
     }
 
-    static async getSystemFromUnit(unit: DBAPI.Unit): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromUnit(unit: DBAPI.Unit): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: unit.idUnit, eObjectType: DBAPI.eSystemObjectType.eUnit });
     }
 
-    static async getSystemFromProject(project: DBAPI.Project): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromProject(project: DBAPI.Project): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: project.idProject, eObjectType: DBAPI.eSystemObjectType.eProject });
     }
 
-    static async getSystemFromSubject(subject: DBAPI.Subject): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromSubject(subject: DBAPI.Subject): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: subject.idSubject, eObjectType: DBAPI.eSystemObjectType.eSubject });
     }
 
-    static async getSystemFromItem(item: DBAPI.Item): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromItem(item: DBAPI.Item): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: item.idItem, eObjectType: DBAPI.eSystemObjectType.eItem });
     }
 
-    static async getSystemFromCaptureData(captureData: DBAPI.CaptureData): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromCaptureData(captureData: DBAPI.CaptureData): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: captureData.idCaptureData, eObjectType: DBAPI.eSystemObjectType.eCaptureData });
     }
 
-    static async getSystemFromModel(model: DBAPI.Model): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromModel(model: DBAPI.Model): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: model.idModel, eObjectType: DBAPI.eSystemObjectType.eModel });
     }
 
-    static async getSystemFromScene(scene: DBAPI.Scene): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromScene(scene: DBAPI.Scene): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: scene.idScene, eObjectType: DBAPI.eSystemObjectType.eScene });
     }
 
-    static async getSystemFromIntermediaryFile(intermediaryFile: DBAPI.IntermediaryFile): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromIntermediaryFile(intermediaryFile: DBAPI.IntermediaryFile): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: intermediaryFile.idIntermediaryFile, eObjectType: DBAPI.eSystemObjectType.eIntermediaryFile });
     }
 
-    static async getSystemFromProjectDocumentation(projectDocumentation: DBAPI.ProjectDocumentation): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromProjectDocumentation(projectDocumentation: DBAPI.ProjectDocumentation): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: projectDocumentation.idProjectDocumentation, eObjectType: DBAPI.eSystemObjectType.eProjectDocumentation });
     }
 
-    static async getSystemFromAsset(asset: DBAPI.Asset): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromAsset(asset: DBAPI.Asset): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: asset.idAsset, eObjectType: DBAPI.eSystemObjectType.eAsset });
     }
 
-    static async getSystemFromAssetVersion(assetVersion: DBAPI.AssetVersion): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromAssetVersion(assetVersion: DBAPI.AssetVersion): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: assetVersion.idAssetVersion, eObjectType: DBAPI.eSystemObjectType.eAssetVersion });
     }
 
-    static async getSystemFromActor(actor: DBAPI.Actor): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromActor(actor: DBAPI.Actor): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: actor.idActor, eObjectType: DBAPI.eSystemObjectType.eActor });
     }
 
-    static async getSystemFromStakeholder(stakeholder: DBAPI.Stakeholder): Promise<SystemObjectInfo | undefined> {
+    static async getSystemFromStakeholder(stakeholder: DBAPI.Stakeholder): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: stakeholder.idStakeholder, eObjectType: DBAPI.eSystemObjectType.eStakeholder });
     }
 
-    /**
-     * Fetches object ID and object type for the specified SystemObject.idSystemObject
-     * @param idSystemObject SystemObject.idSystemObject to query
-     */
-    static async getObjectFromSystem(idSystemObject: number): Promise<ObjectIDAndType | undefined> {
-        return await (await this.getInstance()).getObjectFromSystemInternal(idSystemObject);
-    }
-
-    public static convertSystemObjectToObjectID(SO: SystemObject | null): ObjectIDAndType | undefined {
+    static convertSystemObjectToObjectID(SO: SystemObject | null): DBAPI.ObjectIDAndType | undefined {
         if (!SO)
             return undefined;
         if (SO.idUnit) return { idObject: SO.idUnit, eObjectType: eSystemObjectType.eUnit };
@@ -218,4 +229,9 @@ export class SystemObjectCache {
     static async clear(): Promise<void> {
         SystemObjectCache.singleton = null;
     }
+
+    static async flushObject(idSystemObject: number): Promise<void> {
+        await ((await this.getInstance()).flushObjectWorker(idSystemObject));
+    }
+    // #endregion
 }

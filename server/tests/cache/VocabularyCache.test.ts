@@ -469,6 +469,8 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testMapPhotogrammetryVariantType('cam_dng', eVocabularyID.eCaptureDataFileVariantTypeRaw);
             await testMapPhotogrammetryVariantType('tif', eVocabularyID.eCaptureDataFileVariantTypeRaw);
             await testMapPhotogrammetryVariantType('tiff', eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('bmp', eVocabularyID.eCaptureDataFileVariantTypeRaw);
+            await testMapPhotogrammetryVariantType('png', eVocabularyID.eCaptureDataFileVariantTypeRaw);
             await testMapPhotogrammetryVariantType('processed', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
             await testMapPhotogrammetryVariantType('col_cor', eVocabularyID.eCaptureDataFileVariantTypeProcessed);
             await testMapPhotogrammetryVariantType('zeroed', eVocabularyID.eCaptureDataFileVariantTypeProcessed);

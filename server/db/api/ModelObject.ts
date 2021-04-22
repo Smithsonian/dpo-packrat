@@ -31,7 +31,8 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'ModelObject'; }
+    public fetchID(): number { return this.idModelObject; }
 
     protected async createWorker(): Promise<boolean> {
         try {

@@ -9,6 +9,7 @@ import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as STORE from '../../../storage/interface';
 import * as H from '../../../utils/helpers';
+import { eEventKey } from '../../../event/interface/EventEnums';
 import { ZipStream } from '../../../utils/zipStream';
 import { maybe, maybeString } from '../../../utils/types';
 
@@ -259,6 +260,9 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     return { success: false, error: 'ModelObjectModelMaterialXref.create() failed' };
             }
         }
+
+        // Send audit update for model, now that we've finished writing dependent objects, to help ensure full indexing of this model
+        await this.modelConstellation.Model.auditDBObject(eEventKey.eDBUpdate);
         return { success: true, error: '' };
     }
 

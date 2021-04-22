@@ -20,6 +20,9 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
         super(input);
     }
 
+    public fetchTableName(): string { return 'Job'; }
+    public fetchID(): number { return this.idJob; }
+
     static convertJobStatusToEnum(Status: number): eJobStatus {
         switch (Status) {
             default:    return eJobStatus.eInactive;
@@ -31,8 +34,6 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
 
     getStatus(): eJobStatus { return Job.convertJobStatusToEnum(this.Status); }
     setStatus(eStatus: eJobStatus): void { this.Status = eStatus; }
-
-    protected updateCachedValues(): void { }
 
     protected async createWorker(): Promise<boolean> {
         try {

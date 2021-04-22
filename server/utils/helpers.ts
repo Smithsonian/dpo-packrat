@@ -452,6 +452,22 @@ export class Helpers {
         return value ? true : false;
     }
 
+    static safeString(value: any): string | null {
+        if (value == null)
+            return null;
+        if (typeof(value) === 'string')
+            return value;
+        return null;
+    }
+
+    static safeDate(value: any): Date | null {
+        if (value == null)
+            return null;
+        if (value instanceof Date)
+            return value;
+        return null;
+    }
+
     /** Stringifies Maps and BigInts */
     static stringifyMapsAndBigints(key: any, value: any): any {
         key;

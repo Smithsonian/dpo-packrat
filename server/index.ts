@@ -13,6 +13,7 @@ import cookieParser from 'cookie-parser';
 import { passport, authCorsConfig, authSession, AuthRouter } from './auth';
 import { ApolloServerOptions, computeGQLQuery } from './graphql';
 import { IndexSolr } from './navigation/impl/NavigationSolr/IndexSolr';
+import { EventFactory } from './event/interface/EventFactory';
 import * as LOG from './utils/logger';
 import { ASL, LocalStore } from './utils/localStore';
 
@@ -25,7 +26,8 @@ const PORT = 4000;
 const idRequestMiddleware = (req: Request, _res, next) => { // creates a LocalStore populated with the next requestID
     if (!req.originalUrl.startsWith('/auth/') && !req.originalUrl.startsWith('/graphql')) {
         const user = req['user'];
-        ASL.run(new LocalStore(true, user), () => {
+        const idUser = user ? user['idUser'] : undefined;
+        ASL.run(new LocalStore(true, idUser), () => {
             LOG.info(req.originalUrl, LOG.LS.eHTTP);
             next();
         });
@@ -35,7 +37,8 @@ const idRequestMiddleware = (req: Request, _res, next) => { // creates a LocalSt
 
 const idRequestMiddleware2 = (req, _res, next) => { // creates a LocalStore populated with the next requestID
     const user = req['user'];
-    ASL.run(new LocalStore(true, user), () => {
+    const idUser = user ? user['idUser'] : undefined;
+    ASL.run(new LocalStore(true, idUser), () => {
         if (!req.originalUrl.startsWith('/graphql'))
             LOG.info(req.originalUrl, LOG.LS.eHTTP);
         next();
@@ -88,5 +91,8 @@ app.get('/solrindexprofiled', async (_: Request, response: Response) => {
     const success: boolean = await indexer.fullIndexProfiled();
     response.send(`Solr Indexing Completed: ${success ? 'Success' : 'Failure'}`);
 });
+
+// call to initalize the EventFactory, which in turn will initialize the AuditEventGenerator, supplying the IEventEngine
+EventFactory.getInstance();
 
 export { app };

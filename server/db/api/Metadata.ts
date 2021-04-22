@@ -5,29 +5,20 @@ import * as LOG from '../../utils/logger';
 
 export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase {
     idMetadata!: number;
+    Name!: string;
+    ValueShort!: string | null;
+    ValueExtended!: string | null;
     idAssetValue!: number | null;
-    idSystemObject!: number | null;
     idUser!: number | null;
     idVMetadataSource!: number | null;
-    Name!: string;
-    ValueExtended!: string | null;
-    ValueShort!: string | null;
-
-    private idAssetValueOrig!: number | null;
-    private idSystemObjectOrig!: number | null;
-    private idUserOrig!: number | null;
-    private idVMetadataSourceOrig!: number | null;
+    idSystemObject!: number | null;
 
     constructor(input: MetadataBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idAssetValueOrig = this.idAssetValue;
-        this.idSystemObjectOrig = this.idSystemObject;
-        this.idUserOrig = this.idUser;
-        this.idVMetadataSourceOrig = this.idVMetadataSource;
-    }
+    public fetchTableName(): string { return 'Metadata'; }
+    public fetchID(): number { return this.idMetadata; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -55,18 +46,17 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idMetadata, Name, ValueShort, ValueExtended, idAssetValue, idUser, idVMetadataSource, idSystemObject,
-                idAssetValueOrig, idUserOrig, idVMetadataSourceOrig, idSystemObjectOrig } = this;
+            const { idMetadata, Name, ValueShort, ValueExtended, idAssetValue, idUser, idVMetadataSource, idSystemObject } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.metadata.update({
                 where: { idMetadata, },
                 data: {
                     Name,
                     ValueShort:     ValueShort          ? ValueShort : undefined,
                     ValueExtended:  ValueExtended       ? ValueExtended : undefined,
-                    Asset:          idAssetValue        ? { connect: { idAsset: idAssetValue }, } : idAssetValueOrig ? { disconnect: true, } : undefined,
-                    User:           idUser              ? { connect: { idUser }, } : idUserOrig ? { disconnect: true, } : undefined,
-                    Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : idVMetadataSourceOrig ? { disconnect: true, } : undefined,
-                    SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : idSystemObjectOrig ? { disconnect: true, } : undefined,
+                    Asset:          idAssetValue        ? { connect: { idAsset: idAssetValue }, } : { disconnect: true, },
+                    User:           idUser              ? { connect: { idUser }, } : { disconnect: true, },
+                    Vocabulary:     idVMetadataSource   ? { connect: { idVocabulary: idVMetadataSource }, } : { disconnect: true, },
+                    SystemObject:   idSystemObject      ? { connect: { idSystemObject }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

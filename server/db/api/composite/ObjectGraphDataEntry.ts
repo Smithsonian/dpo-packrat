@@ -64,12 +64,12 @@ export class ObjectGraphDataEntry {
 
     recordChild(child: SystemObjectIDType): void {
         this.childMap.set(child.idSystemObject, child);
-        // LOG.info(`${JSON.stringify(this.systemObjectIDType)} children: ${this.childMap.size}`, LOG.LS.eDB);
+        // LOG.info(`RC ${JSON.stringify(this.systemObjectIDType)} -> ${JSON.stringify(child)}`, LOG.LS.eDB);
     }
 
     recordParent(parent: SystemObjectIDType): void {
         this.parentMap.set(parent.idSystemObject, parent);
-        // LOG.info(`${JSON.stringify(this.systemObjectIDType)} parents: ${this.parentMap.size}`, LOG.LS.eDB);
+        // LOG.info(`RP ${JSON.stringify(parent)} -> ${JSON.stringify(this.systemObjectIDType)}`, LOG.LS.eDB);
     }
 
     // Returns true if applying objectGraphState updated the state of this ObjectGraphDataEntry

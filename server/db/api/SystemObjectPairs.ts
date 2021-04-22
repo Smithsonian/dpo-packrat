@@ -327,64 +327,6 @@ export class SystemObjectUnit extends SystemObject implements SystemObjectUnitBa
     }
 }
 
-export enum eSystemObjectType {
-    eUnit,
-    eProject,
-    eSubject,
-    eItem,
-    eCaptureData,
-    eModel,
-    eScene,
-    eIntermediaryFile,
-    eProjectDocumentation,
-    eAsset,
-    eAssetVersion,
-    eActor,
-    eStakeholder,
-    eUnknown
-}
-
-export function SystemObjectTypeToName(eObjectType: eSystemObjectType | null): string {
-    switch (eObjectType) {
-        case eSystemObjectType.eUnit:                   return 'Unit';
-        case eSystemObjectType.eProject:                return 'Project';
-        case eSystemObjectType.eSubject:                return 'Subject';
-        case eSystemObjectType.eItem:                   return 'Item';
-        case eSystemObjectType.eCaptureData:            return 'Capture Data';
-        case eSystemObjectType.eModel:                  return 'Model';
-        case eSystemObjectType.eScene:                  return 'Scene';
-        case eSystemObjectType.eIntermediaryFile:       return 'Intermediary File';
-        case eSystemObjectType.eProjectDocumentation:   return 'Project Documentation';
-        case eSystemObjectType.eAsset:                  return 'Asset';
-        case eSystemObjectType.eAssetVersion:           return 'Asset Version';
-        case eSystemObjectType.eActor:                  return 'Actor';
-        case eSystemObjectType.eStakeholder:            return 'Stakeholder';
-        case eSystemObjectType.eUnknown:                return 'Unknown';
-        default:                                        return 'Unknown';
-    }
-}
-
-export function SystemObjectNameToType(objectTypeName: string | null): eSystemObjectType {
-    switch (objectTypeName) {
-        case 'Unit':                    return eSystemObjectType.eUnit;
-        case 'Project':                 return eSystemObjectType.eProject;
-        case 'Subject':                 return eSystemObjectType.eSubject;
-        case 'Item':                    return eSystemObjectType.eItem;
-        case 'Capture Data':            return eSystemObjectType.eCaptureData;
-        case 'Model':                   return eSystemObjectType.eModel;
-        case 'Scene':                   return eSystemObjectType.eScene;
-        case 'Intermediary File':       return eSystemObjectType.eIntermediaryFile;
-        case 'Project Documentation':   return eSystemObjectType.eProjectDocumentation;
-        case 'Asset':                   return eSystemObjectType.eAsset;
-        case 'Asset Version':           return eSystemObjectType.eAssetVersion;
-        case 'Actor':                   return eSystemObjectType.eActor;
-        case 'Stakeholder':             return eSystemObjectType.eStakeholder;
-
-        default:
-        case 'Unknown':                 return eSystemObjectType.eUnknown;
-    }
-}
-
 export class SystemObjectPairs extends SystemObject implements SystemObjectPairsBase {
     Actor: Actor | null = null;
     Asset_AssetToSystemObject_idAsset: Asset | null = null;

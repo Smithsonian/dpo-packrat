@@ -3,6 +3,10 @@
  *
  * Organize and export server config here by extending from .env
  */
+export enum AUDIT_TYPE {
+    LOCAL = 'local',
+}
+
 export enum AUTH_TYPE {
     LOCAL = 'local',
     LDAP = 'ldap'
@@ -10,6 +14,10 @@ export enum AUTH_TYPE {
 
 export enum COLLECTION_TYPE {
     EDAN = 'edan'
+}
+
+export enum EVENT_TYPE {
+    INPROCESS = 'in-process'
 }
 
 export enum JOB_TYPE {
@@ -39,6 +47,9 @@ export interface LDAPConfig {
 }
 
 export type ConfigType = {
+    audit: {
+        type: AUDIT_TYPE;
+    },
     auth: {
         type: AUTH_TYPE;
         session: {
@@ -54,6 +65,9 @@ export type ConfigType = {
             appId: string;
             authKey: string;
         }
+    }
+    event: {
+        type: EVENT_TYPE;
     }
     job: {
         type: JOB_TYPE;
@@ -79,6 +93,9 @@ export type ConfigType = {
 const oneDayInSeconds = 24 * 60 * 60; // 24hrs in seconds
 
 export const Config: ConfigType = {
+    audit: {
+        type: AUDIT_TYPE.LOCAL,
+    },
     auth: {
         type: process.env.AUTH_TYPE == 'LDAP' ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
         session: {
@@ -100,6 +117,9 @@ export const Config: ConfigType = {
             appId: process.env.EDAN_APPID ? process.env.EDAN_APPID : /* istanbul ignore next */ 'OCIO3D',
             authKey: process.env.EDAN_AUTH_KEY ? process.env.EDAN_AUTH_KEY : /* istanbul ignore next */  ''
         }
+    },
+    event: {
+        type: EVENT_TYPE.INPROCESS,
     },
     job: {
         type: JOB_TYPE.NODE_SCHEDULE,
