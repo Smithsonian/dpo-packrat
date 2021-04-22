@@ -53,7 +53,6 @@ export class SystemObjectCache {
         return true;
     }
 
-
     // *************************
     // #region Private Interface
     // *************************
@@ -103,6 +102,12 @@ export class SystemObjectCache {
         return oID ? oID : this.flushObjectWorker(idSystemObject);
     }
 
+    private async getObjectAndSystemFromSystemInternal(idSystemObject: number): Promise<DBAPI.SystemObjectIDAndType | undefined> {
+        const oID: DBAPI.ObjectIDAndType | undefined = await this.getObjectFromSystemInternal(idSystemObject);
+        const sID: DBAPI.SystemObjectInfo | undefined = oID ? await this.getSystemFromObjectIDInternal(oID) : undefined;
+        return (oID && sID) ? { oID, sID } : undefined;
+    }
+
     private async flushObjectWorker(idSystemObject: number): Promise<DBAPI.ObjectIDAndType | undefined> {
         const SO: SystemObject | null = await SystemObject.fetch(idSystemObject);
         if (!SO) {
@@ -122,6 +127,18 @@ export class SystemObjectCache {
     // **************************
     // #region Public Interface
     // **************************
+    /**
+     * Fetches object ID and object type for the specified SystemObject.idSystemObject
+     * @param idSystemObject SystemObject.idSystemObject to query
+     */
+    static async getObjectFromSystem(idSystemObject: number): Promise<DBAPI.ObjectIDAndType | undefined> {
+        return await (await this.getInstance()).getObjectFromSystemInternal(idSystemObject);
+    }
+
+    static async getObjectAndSystemFromSystem(idSystemObject: number): Promise<DBAPI.SystemObjectIDAndType | undefined> {
+        return await (await this.getInstance()).getObjectAndSystemFromSystemInternal(idSystemObject);
+    }
+
     /**
      * Fetch { SystemObject.idSystemObject, Retired } for the specified database object
      * @param {number} idObject - database ID, such as Subject.idSubject or Unit.idUnit
@@ -181,14 +198,6 @@ export class SystemObjectCache {
 
     static async getSystemFromStakeholder(stakeholder: DBAPI.Stakeholder): Promise<DBAPI.SystemObjectInfo | undefined> {
         return await (await this.getInstance()).getSystemFromObjectIDInternal({ idObject: stakeholder.idStakeholder, eObjectType: DBAPI.eSystemObjectType.eStakeholder });
-    }
-
-    /**
-     * Fetches object ID and object type for the specified SystemObject.idSystemObject
-     * @param idSystemObject SystemObject.idSystemObject to query
-     */
-    static async getObjectFromSystem(idSystemObject: number): Promise<DBAPI.ObjectIDAndType | undefined> {
-        return await (await this.getInstance()).getObjectFromSystemInternal(idSystemObject);
     }
 
     static convertSystemObjectToObjectID(SO: SystemObject | null): DBAPI.ObjectIDAndType | undefined {

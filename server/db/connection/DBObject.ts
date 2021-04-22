@@ -30,20 +30,25 @@ export abstract class DBObject<T> {
     }
 
     async create(): Promise<boolean> {
-        const retVal: boolean = await this.createWorker();
-        this.updateCachedValues();
-        this.auditDBObject(eEventKey.eDBCreate);
+        const retVal: boolean = await this.createWorker(); /* istanbul ignore else */
+        if (retVal) {
+            this.updateCachedValues();
+            this.auditDBObject(eEventKey.eDBCreate);
+        }
         return retVal;
     }
     async update(): Promise<boolean> {
-        const retVal: boolean = await this.updateWorker();
-        this.updateCachedValues();
-        this.auditDBObject(eEventKey.eDBUpdate);
+        const retVal: boolean = await this.updateWorker(); /* istanbul ignore else */
+        if (retVal) {
+            this.updateCachedValues();
+            this.auditDBObject(eEventKey.eDBUpdate);
+        }
         return retVal;
     }
     async delete(): Promise<boolean> {
-        const retVal: boolean = await this.deleteWorker();
-        this.auditDBObject(eEventKey.eDBDelete);
+        const retVal: boolean = await this.deleteWorker(); /* istanbul ignore else */
+        if (retVal)
+            this.auditDBObject(eEventKey.eDBDelete);
         return retVal;
     }
 }

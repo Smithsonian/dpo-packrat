@@ -103,6 +103,9 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
             let oIDFetch: DBAPI.ObjectIDAndType | undefined = await SystemObjectCache.getObjectFromSystem(1000000000);
             expect(oIDFetch).toBeFalsy();
 
+            const oIDsID: DBAPI.SystemObjectIDAndType | undefined = await SystemObjectCache.getObjectAndSystemFromSystem(1000000000);
+            expect(oIDsID).toBeFalsy();
+
             const SOInfo: DBAPI.SystemObjectInfo | undefined = await SystemObjectCache.getSystemFromObjectID({ idObject: 1000000000, eObjectType: DBAPI.eSystemObjectType.eItem });
             expect(SOInfo).toBeFalsy();
 
@@ -164,6 +167,14 @@ async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean>
     if (!L.isEqual(oIDFetch, oID))
         LOG.error(`testSystemObject fetched ${JSON.stringify(oIDFetch)} vs ${JSON.stringify(oID)}: ${JSON.stringify(SOExamine)}`, LOG.LS.eTEST);
     expect(oIDFetch).toEqual(oID);
+
+    const oIDsID: DBAPI.SystemObjectIDAndType | undefined = await SystemObjectCache.getObjectAndSystemFromSystem(SOExamine.idSystemObject);
+    expect(oIDsID).toBeTruthy();
+    if (oIDsID) {
+        expect(oIDsID.oID).toEqual(oID);
+        expect(oIDsID.sID.idSystemObject).toEqual(SOExamine.idSystemObject);
+        expect(oIDsID.sID.Retired).toEqual(SOExamine.Retired);
+    }
 
     // LOG.info(`Got here 2 ${SOExamine.idSystemObject}`, LOG.LS.eTEST);
     const SOInfo: DBAPI.SystemObjectInfo | undefined = await SystemObjectCache.getSystemFromObjectID(oID);
