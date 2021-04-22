@@ -1,6 +1,6 @@
 import * as CACHE from '../../../../../cache';
 import * as DBAPI from '../../../../../db';
-import { eObjectGraphMode, eSystemObjectType } from '../../../../../db';
+import { eObjectGraphMode, eSystemObjectType, eDBObjectType } from '../../../../../db';
 import {
     GetSystemObjectDetailsResult,
     IngestIdentifier,
@@ -17,7 +17,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const { input } = args;
     const { idSystemObject } = input;
 
-    const oID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+    const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
     const { unit, project, subject, item, objectAncestors } = await getObjectAncestors(idSystemObject);
 
     const systemObject: SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
@@ -91,7 +91,7 @@ async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType
 
     for (const relatedSystemObject of relatedSystemObjects) {
         const identifier: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(relatedSystemObject.idSystemObject);
-        const oID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(relatedSystemObject.idSystemObject);
+        const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(relatedSystemObject.idSystemObject);
 
         if (!oID) {
             const message: string = `No object ID found for ID: ${idSystemObject}`;
@@ -245,8 +245,9 @@ async function objectToRepositoryPath(objects: Objects, objectType: eSystemObjec
     return paths;
 }
 
-async function resolveNameForObjectType(systemObject: SystemObject | null, objectType: eSystemObjectType): Promise<string> {
-    if (!systemObject) return unknownName;
+async function resolveNameForObjectType(systemObject: SystemObject | null, objectType: eDBObjectType): Promise<string> {
+    if (!systemObject)
+        return unknownName;
 
     switch (objectType) {
         case eSystemObjectType.eUnit:

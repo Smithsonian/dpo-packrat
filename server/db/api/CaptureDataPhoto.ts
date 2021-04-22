@@ -18,23 +18,12 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
     ClusterGeometryFieldID!: number | null;
     CameraSettingsUniform!: boolean | null;
 
-    private idVBackgroundRemovalMethodOrig!: number | null;
-    private idVClusterTypeOrig!: number | null;
-    private idVFocusTypeOrig!: number | null;
-    private idVItemPositionTypeOrig!: number | null;
-    private idVLightSourceTypeOrig!: number | null;
-
     constructor(input: CaptureDataPhotoBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idVBackgroundRemovalMethodOrig = this.idVBackgroundRemovalMethod;
-        this.idVClusterTypeOrig = this.idVClusterType;
-        this.idVFocusTypeOrig = this.idVFocusType;
-        this.idVItemPositionTypeOrig = this.idVItemPositionType;
-        this.idVLightSourceTypeOrig = this.idVLightSourceType;
-    }
+    public fetchTableName(): string { return 'CaptureDataPhoto'; }
+    public fetchID(): number { return this.idCaptureDataPhoto; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -74,21 +63,20 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
         try {
             const { idCaptureData, idCaptureDataPhoto, idVCaptureDatasetType, CaptureDatasetFieldID, idVItemPositionType,
                 ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
-                ClusterGeometryFieldID, CameraSettingsUniform, idVBackgroundRemovalMethodOrig,
-                idVClusterTypeOrig, idVFocusTypeOrig, idVItemPositionTypeOrig, idVLightSourceTypeOrig } = this;
+                ClusterGeometryFieldID, CameraSettingsUniform } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.captureDataPhoto.update({
                 where: { idCaptureDataPhoto, },
                 data: {
                     CaptureData:                                                        { connect: { idCaptureData }, },
                     Vocabulary_CaptureDataPhoto_idVCaptureDatasetTypeToVocabulary:      { connect: { idVocabulary: idVCaptureDatasetType }, },
                     CaptureDatasetFieldID,
-                    Vocabulary_CaptureDataPhoto_idVItemPositionTypeToVocabulary:        idVItemPositionType ? { connect: { idVocabulary: idVItemPositionType }, } : idVItemPositionTypeOrig ? { disconnect: true, } : undefined,
+                    Vocabulary_CaptureDataPhoto_idVItemPositionTypeToVocabulary:        idVItemPositionType ? { connect: { idVocabulary: idVItemPositionType }, } : { disconnect: true, },
                     ItemPositionFieldID,
                     ItemArrangementFieldID,
-                    Vocabulary_CaptureDataPhoto_idVFocusTypeToVocabulary:               idVFocusType ? { connect: { idVocabulary: idVFocusType }, } : idVFocusTypeOrig ? { disconnect: true, } : undefined,
-                    Vocabulary_CaptureDataPhoto_idVLightSourceTypeToVocabulary:         idVLightSourceType ? { connect: { idVocabulary: idVLightSourceType }, } : idVLightSourceTypeOrig ? { disconnect: true, } : undefined,
-                    Vocabulary_CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary: idVBackgroundRemovalMethod ? { connect: { idVocabulary: idVBackgroundRemovalMethod }, } : idVBackgroundRemovalMethodOrig ? { disconnect: true, } : undefined,
-                    Vocabulary_CaptureDataPhoto_idVClusterTypeToVocabulary:             idVClusterType ? { connect: { idVocabulary: idVClusterType }, } : idVClusterTypeOrig ? { disconnect: true, } : undefined,
+                    Vocabulary_CaptureDataPhoto_idVFocusTypeToVocabulary:               idVFocusType ? { connect: { idVocabulary: idVFocusType }, } : { disconnect: true, },
+                    Vocabulary_CaptureDataPhoto_idVLightSourceTypeToVocabulary:         idVLightSourceType ? { connect: { idVocabulary: idVLightSourceType }, } : { disconnect: true, },
+                    Vocabulary_CaptureDataPhoto_idVBackgroundRemovalMethodToVocabulary: idVBackgroundRemovalMethod ? { connect: { idVocabulary: idVBackgroundRemovalMethod }, } : { disconnect: true, },
+                    Vocabulary_CaptureDataPhoto_idVClusterTypeToVocabulary:             idVClusterType ? { connect: { idVocabulary: idVClusterType }, } : { disconnect: true, },
                     ClusterGeometryFieldID,
                     CameraSettingsUniform,
                 },

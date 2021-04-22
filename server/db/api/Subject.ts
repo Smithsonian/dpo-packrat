@@ -6,25 +6,18 @@ import * as LOG from '../../utils/logger';
 
 export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, SystemObjectBased {
     idSubject!: number;
+    idUnit!: number;
     idAssetThumbnail!: number | null;
     idGeoLocation!: number | null;
-    idUnit!: number;
     Name!: string;
     idIdentifierPreferred!: number | null;
-
-    private idAssetThumbnailOrig!: number | null;
-    private idGeoLocationOrig!: number | null;
-    private idIdentifierPreferredOrig!: number | null;
 
     constructor(input: SubjectBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void {
-        this.idAssetThumbnailOrig = this.idAssetThumbnail;
-        this.idGeoLocationOrig = this.idGeoLocation;
-        this.idIdentifierPreferredOrig = this.idIdentifierPreferred;
-    }
+    public fetchTableName(): string { return 'Subject'; }
+    public fetchID(): number { return this.idSubject; }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -50,15 +43,14 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idSubject, idUnit, idAssetThumbnail, idGeoLocation, Name, idIdentifierPreferred,
-                idAssetThumbnailOrig, idGeoLocationOrig, idIdentifierPreferredOrig } = this;
+            const { idSubject, idUnit, idAssetThumbnail, idGeoLocation, Name, idIdentifierPreferred } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.subject.update({
                 where: { idSubject, },
                 data: {
                     Unit:           { connect: { idUnit }, },
-                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : idAssetThumbnailOrig ? { disconnect: true, } : undefined,
-                    GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : idGeoLocationOrig ? { disconnect: true, } : undefined,
-                    Identifier:     idIdentifierPreferred ? { connect: { idIdentifier: idIdentifierPreferred }, } : idIdentifierPreferredOrig ? { disconnect: true, } : undefined,
+                    Asset:          idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
+                    GeoLocation:    idGeoLocation ? { connect: { idGeoLocation }, } : { disconnect: true, },
+                    Identifier:     idIdentifierPreferred ? { connect: { idIdentifier: idIdentifierPreferred }, } : { disconnect: true, },
                     Name,
                 },
             }) ? true : /* istanbul ignore next */ false;

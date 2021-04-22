@@ -5,22 +5,23 @@ import * as LOG from '../../utils/logger';
 
 export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLocationBase {
     idGeoLocation!: number;
-    Altitude!: number | null;
     Latitude!: number | null;
     Longitude!: number | null;
+    Altitude!: number | null;
+    TS0!: number | null;
+    TS1!: number | null;
+    TS2!: number | null;
     R0!: number | null;
     R1!: number | null;
     R2!: number | null;
     R3!: number | null;
-    TS0!: number | null;
-    TS1!: number | null;
-    TS2!: number | null;
 
     constructor(input: GeoLocationBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'GeoLocation'; }
+    public fetchID(): number { return this.idGeoLocation; }
 
     protected async createWorker(): Promise<boolean> {
         try {

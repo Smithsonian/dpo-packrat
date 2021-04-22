@@ -95,7 +95,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         let workflow: WF.IWorkflow | null = null;
         for (const idSystemObject of workflowParams.idSystemObject) {
-            const oID: CACHE.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+            const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
             if (!oID) {
                 LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion skipping invalid idSystemObject ${idSystemObject}`, LOG.LS.eWF);
                 continue;

@@ -30,6 +30,9 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
         super(input);
     }
 
+    public fetchTableName(): string { return 'JobRun'; }
+    public fetchID(): number { return this.idJobRun; }
+
     static constructFromPrisma(jobRunBase: JobRunBase): JobRun {
         return new JobRun({
             idJobRun: jobRunBase.idJobRun,
@@ -60,8 +63,6 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
 
     getStatus(): eJobRunStatus { return JobRun.convertJobRunStatusToEnum(this.Status); }
     setStatus(eStatus: eJobRunStatus): void { this.Status = eStatus; }
-
-    protected updateCachedValues(): void { }
 
     protected async createWorker(): Promise<boolean> {
         try {

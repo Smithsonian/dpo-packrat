@@ -5,17 +5,18 @@ import * as LOG from '../../utils/logger';
 
 export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBase> implements ModelProcessingActionBase {
     idModelProcessingAction!: number;
+    idModel!: number;
+    idActor!: number;
     DateProcessed!: Date;
     Description!: string;
-    idActor!: number;
-    idModel!: number;
     ToolsUsed!: string;
 
     constructor(input: ModelProcessingActionBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'ModelProcessingAction'; }
+    public fetchID(): number { return this.idModelProcessingAction; }
 
     protected async createWorker(): Promise<boolean> {
         try {

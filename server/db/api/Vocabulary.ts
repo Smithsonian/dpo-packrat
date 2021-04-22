@@ -13,7 +13,8 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'Vocabulary'; }
+    public fetchID(): number { return this.idVocabulary; }
 
     protected async createWorker(): Promise<boolean> {
         try {

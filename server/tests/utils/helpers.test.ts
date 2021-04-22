@@ -361,6 +361,7 @@ describe('Utils: Helpers', () => {
         const numVal: number = 3.14;
         const strVal: string = 'string';
         const boolVal: boolean = false;
+        const dateVal: Date = new Date();
         const objVal = {
             foo: 'abba',
             bar: 'dabba'
@@ -369,6 +370,7 @@ describe('Utils: Helpers', () => {
         expect(H.Helpers.safeNumber(numVal)).toEqual(numVal);
         expect(H.Helpers.safeNumber(strVal)).toBeNaN();
         expect(H.Helpers.safeNumber(boolVal)).toBeNaN();
+        expect(H.Helpers.safeNumber(dateVal)).toBeNaN();
         expect(H.Helpers.safeNumber(objVal)).toBeNaN();
     });
 
@@ -377,6 +379,7 @@ describe('Utils: Helpers', () => {
         const numVal: number = 3.14;
         const strVal: string = 'string';
         const boolVal: boolean = false;
+        const dateVal: Date = new Date();
         const objVal = {
             foo: 'abba',
             bar: 'dabba'
@@ -386,7 +389,44 @@ describe('Utils: Helpers', () => {
         expect(H.Helpers.safeBoolean(strVal)).toBeTruthy();
         expect(H.Helpers.safeBoolean(boolVal)).toBeFalsy();
         expect(H.Helpers.safeBoolean(true)).toBeTruthy();
+        expect(H.Helpers.safeBoolean(dateVal)).toBeTruthy();
         expect(H.Helpers.safeBoolean(objVal)).toBeTruthy();
+    });
+
+    test('Utils: Helpers.safeString', async () => {
+        const nullVal: null = null;
+        const numVal: number = 3.14;
+        const strVal: string = 'string';
+        const boolVal: boolean = false;
+        const dateVal: Date = new Date();
+        const objVal = {
+            foo: 'abba',
+            bar: 'dabba'
+        };
+        expect(H.Helpers.safeString(nullVal)).toBeNull();
+        expect(H.Helpers.safeString(numVal)).toBeNull();
+        expect(H.Helpers.safeString(strVal)).toEqual(strVal);
+        expect(H.Helpers.safeString(boolVal)).toBeNull();
+        expect(H.Helpers.safeString(dateVal)).toBeNull();
+        expect(H.Helpers.safeString(objVal)).toBeNull();
+    });
+
+    test('Utils: Helpers.safeDate', async () => {
+        const nullVal: null = null;
+        const numVal: number = 3.14;
+        const strVal: string = 'string';
+        const boolVal: boolean = false;
+        const dateVal: Date = new Date();
+        const objVal = {
+            foo: 'abba',
+            bar: 'dabba'
+        };
+        expect(H.Helpers.safeDate(nullVal)).toBeNull();
+        expect(H.Helpers.safeDate(numVal)).toBeNull();
+        expect(H.Helpers.safeDate(strVal)).toBeNull();
+        expect(H.Helpers.safeDate(boolVal)).toBeNull();
+        expect(H.Helpers.safeDate(objVal)).toBeNull();
+        expect(H.Helpers.safeDate(dateVal)).toEqual(dateVal);
     });
 
     test('Utils: Helpers.stringify*', async () => {

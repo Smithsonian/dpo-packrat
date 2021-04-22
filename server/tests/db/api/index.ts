@@ -1,6 +1,7 @@
 export * from './Actor.util';
 export * from './Asset.util';
 export * from './AssetVersion.util';
+export * from './Audit.util';
 export * from './CaptureData.util';
 export * from './Identifier.util';
 export * from './IntermediaryFile.util';

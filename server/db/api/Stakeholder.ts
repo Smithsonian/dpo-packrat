@@ -6,18 +6,19 @@ import * as LOG from '../../utils/logger';
 
 export class Stakeholder extends DBC.DBObject<StakeholderBase> implements StakeholderBase, SystemObjectBased {
     idStakeholder!: number;
-    EmailAddress!: string | null;
     IndividualName!: string;
-    MailingAddress!: string | null;
     OrganizationName!: string;
+    EmailAddress!: string | null;
     PhoneNumberMobile!: string | null;
     PhoneNumberOffice!: string | null;
+    MailingAddress!: string | null;
 
     constructor(input: StakeholderBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'Stakeholder'; }
+    public fetchID(): number { return this.idStakeholder; }
 
     protected async createWorker(): Promise<boolean> {
         try {

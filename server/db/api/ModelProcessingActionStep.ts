@@ -5,15 +5,16 @@ import * as LOG from '../../utils/logger';
 
 export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActionStepBase> implements ModelProcessingActionStepBase {
     idModelProcessingActionStep!: number;
-    Description!: string;
     idModelProcessingAction!: number;
     idVActionMethod!: number;
+    Description!: string;
 
     constructor(input: ModelProcessingActionStepBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'ModelProcessingActionStep'; }
+    public fetchID(): number { return this.idModelProcessingActionStep; }
 
     protected async createWorker(): Promise<boolean> {
         try {

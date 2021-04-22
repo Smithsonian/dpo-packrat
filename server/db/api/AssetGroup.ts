@@ -10,7 +10,8 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'AssetGroup'; }
+    public fetchID(): number { return this.idAssetGroup; }
 
     protected async createWorker(): Promise<boolean> {
         try {

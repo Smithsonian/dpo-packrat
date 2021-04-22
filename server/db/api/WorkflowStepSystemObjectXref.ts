@@ -5,15 +5,16 @@ import * as LOG from '../../utils/logger';
 
 export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSystemObjectXrefBase> implements WorkflowStepSystemObjectXrefBase {
     idWorkflowStepSystemObjectXref!: number;
-    idSystemObject!: number;
     idWorkflowStep!: number;
+    idSystemObject!: number;
     Input!: boolean;
 
     constructor(input: WorkflowStepSystemObjectXrefBase) {
         super(input);
     }
 
-    protected updateCachedValues(): void { }
+    public fetchTableName(): string { return 'WorkflowStepSystemObjectXref'; }
+    public fetchID(): number { return this.idWorkflowStepSystemObjectXref; }
 
     protected async createWorker(): Promise<boolean> {
         try {
