@@ -62,9 +62,9 @@ export class EventConsumerDB extends EventConsumer {
         const idUser: number | null = H.Helpers.safeNumber(data.idUser);
         const AuditDate: Date = H.Helpers.safeDate(data.AuditDate) || new Date();
         const AuditType: number | null = H.Helpers.safeNumber(data.AuditType) || eAuditType.eUnknown;
-        const DBObjectType: number | null = H.Helpers.safeNumber(data.DBObjectType);
-        const idDBObject: number | null = H.Helpers.safeNumber(data.idDBObject);
-        const idSystemObject: number | null = H.Helpers.safeNumber(data.idSystemObject);
+        const DBObjectType: number | null = H.Helpers.safeNumber(data.DBObjectType) || null;
+        const idDBObject: number | null = H.Helpers.safeNumber(data.idDBObject) || null;
+        const idSystemObject: number | null = H.Helpers.safeNumber(data.idSystemObject) || null;
         const Data: string | null = H.Helpers.safeString(data.Data);
         const idAudit: number | null = H.Helpers.safeNumber(data.idAudit) || 0;
         return new DBAPI.Audit({ idUser, AuditDate, AuditType, DBObjectType, idDBObject, idSystemObject, Data, idAudit });

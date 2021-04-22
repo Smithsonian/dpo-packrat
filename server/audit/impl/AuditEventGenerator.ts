@@ -37,10 +37,12 @@ export class AuditEventGenerator {
             const idDBObject: number = oID.idObject;
 
             let AuditType: eAuditType = eAuditType.eDBUpdate;
+            let eventTopic: EVENT.eEventTopic = EVENT.eEventTopic.eDB;
             switch (key) {
                 case EVENT.eEventKey.eDBCreate: AuditType = eAuditType.eDBCreate; break;
                 case EVENT.eEventKey.eDBUpdate: AuditType = eAuditType.eDBUpdate; break;
                 case EVENT.eEventKey.eDBDelete: AuditType = eAuditType.eDBDelete; break;
+                case EVENT.eEventKey.eAuthLogin: AuditType = eAuditType.eAuthLogin; eventTopic = EVENT.eEventTopic.eAuth; break;
             }
 
             const value: Audit = {
@@ -59,7 +61,7 @@ export class AuditEventGenerator {
                 key,
                 value,
             };
-            this.eventProducer.send(EVENT.eEventTopic.eDB, [data]);
+            this.eventProducer.send(eventTopic, [data]);
             return true;
         } else {
             LOG.error('AuditEventGenerator.auditDBObject unable to fetch event producer', LOG.LS.eEVENT);

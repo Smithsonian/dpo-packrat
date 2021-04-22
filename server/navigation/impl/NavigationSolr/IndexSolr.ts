@@ -72,7 +72,6 @@ export class IndexSolr {
         return retValue;
     }
 
-    // TODO: test! Integrate potentially with TBD audit interface, providing a path for system object creation and updates to flow through to Solr
     async indexObject(idSystemObject: number): Promise<boolean> {
         // Compute full object graph for object
         if (!await this.objectGraphDatabase.computeGraphDataFromSystemObject(idSystemObject))
