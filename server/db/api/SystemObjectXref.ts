@@ -77,7 +77,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 JOIN SystemObject AS SODerived ON (SOX.idSystemObjectDerived = SODerived.idSystemObject)
                 WHERE SOMaster.idSubject IS NOT NULL
                   AND SODerived.idItem IS NOT NULL
-                  AND SOX.idSystemObjectDerived = ${this.idSystemObjectDerived};`;
+                  AND SODerived.idSystemObject = ${this.idSystemObjectDerived};`;
 
             // LOG.info(`SystemObjectXref.deleteIfAllowed ${JSON.stringify(this)}: ${JSON.stringify(subjectItemLinkCount)} relationships`, LOG.LS.eDB);
             /* istanbul ignore next */
