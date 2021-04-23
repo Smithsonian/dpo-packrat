@@ -11,6 +11,7 @@ import { useUploadStore } from '../../../../store';
 import { scrollBarProperties } from '../../../../utils/shared';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
+import UploadFilesPicker from './UploadFilesPicker';
 
 export const useUploadListStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -20,6 +21,7 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints }) => ({
         marginTop: 20,
         maxHeight: 'auto',
         width: '52vw',
+        border: `1px dashed ${palette.primary.main}`
     },
     list: {
         display: 'flex',
@@ -33,7 +35,7 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints }) => ({
         ...scrollBarProperties(true, false, palette.text.disabled),
         [breakpoints.down('lg')]: {
             minHeight: '20vh',
-            maxHeight: '20vh',
+            maxHeight: '20vh'
         }
     },
     listDetail: {
@@ -41,7 +43,7 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints }) => ({
         color: palette.grey[500],
         fontStyle: 'italic',
         marginTop: '8%'
-    },
+    }
 }));
 
 function UploadList(): React.ReactElement {
@@ -50,15 +52,19 @@ function UploadList(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <FieldType required align='center' label='Upload files'>
+            <FieldType required align='center' label='Upload Files' labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'black' } }}>
                 <UploadListHeader />
                 <Box className={classes.list}>
-                    {!pending.length && <Typography className={classes.listDetail} variant='body1'>Add files to upload</Typography>}
+                    {!pending.length && (
+                        <Typography className={classes.listDetail} variant='body1'>
+                            Add files to upload
+                        </Typography>
+                    )}
                     <FileList files={pending} />
                 </Box>
             </FieldType>
+            <UploadFilesPicker />
         </Box>
-
     );
 }
 

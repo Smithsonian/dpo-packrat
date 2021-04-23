@@ -314,6 +314,7 @@ export type Mutation = {
   createUser: CreateUserResult;
   createVocabulary: CreateVocabularyResult;
   createVocabularySet: CreateVocabularySetResult;
+  deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
   updateDerivedObjects: UpdateDerivedObjectsResult;
@@ -371,6 +372,11 @@ export type MutationCreateVocabularyArgs = {
 
 export type MutationCreateVocabularySetArgs = {
   input: CreateVocabularySetInput;
+};
+
+
+export type MutationDeleteObjectConnectionArgs = {
+  input: DeleteObjectConnectionInput;
 };
 
 
@@ -444,6 +450,7 @@ export type IngestIdentifier = {
   __typename?: 'IngestIdentifier';
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
 };
 
 export type IngestFolder = {
@@ -760,6 +767,7 @@ export type IngestItemInput = {
 export type IngestIdentifierInput = {
   identifier: Scalars['String'];
   identifierType: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
 };
 
 export type IngestFolderInput = {
@@ -1322,6 +1330,7 @@ export type UpdateObjectDetailsDataInput = {
   AssetVersion?: Maybe<AssetVersionDetailFieldsInput>;
   Actor?: Maybe<ActorDetailFieldsInput>;
   Stakeholder?: Maybe<StakeholderDetailFieldsInput>;
+  Identifiers?: Maybe<Array<UpdateIdentifier>>;
 };
 
 export type UpdateObjectDetailsResult = {
@@ -1332,6 +1341,7 @@ export type UpdateObjectDetailsResult = {
 export type UpdateDerivedObjectsInput = {
   idSystemObject: Scalars['Int'];
   Derivatives: Array<Scalars['Int']>;
+  PreviouslySelected: Array<Scalars['Int']>;
 };
 
 export type UpdateDerivedObjectsResult = {
@@ -1342,11 +1352,31 @@ export type UpdateDerivedObjectsResult = {
 export type UpdateSourceObjectsInput = {
   idSystemObject: Scalars['Int'];
   Sources: Array<Scalars['Int']>;
+  PreviouslySelected: Array<Scalars['Int']>;
 };
 
 export type UpdateSourceObjectsResult = {
   __typename?: 'UpdateSourceObjectsResult';
   success: Scalars['Boolean'];
+};
+
+export type UpdateIdentifier = {
+  id: Scalars['Int'];
+  identifier: Scalars['String'];
+  identifierType: Scalars['Int'];
+  selected: Scalars['Boolean'];
+  idSystemObject: Scalars['Int'];
+  idIdentifier: Scalars['Int'];
+};
+
+export type DeleteObjectConnectionResult = {
+  __typename?: 'DeleteObjectConnectionResult';
+  success: Scalars['Boolean'];
+};
+
+export type DeleteObjectConnectionInput = {
+  idSystemObjectMaster: Scalars['Int'];
+  idSystemObjectDerived: Scalars['Int'];
 };
 
 export type GetDetailsTabDataForObjectInput = {

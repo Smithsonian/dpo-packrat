@@ -77,7 +77,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
     const hasIdentifiers: boolean = !!identifiers.length;
 
     return (
-        <Box overflow='hidden' display={identifiers.length ? 'block' : 'none'}>
+        <Box overflow='hidden'>
             <FieldType required={false} renderLabel={false} width='auto'>
                 {hasIdentifiers && <Header />}
                 {!hasIdentifiers && viewMode && (
@@ -86,6 +86,7 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                     </Box>
                 )}
                 {identifiers.map(({ id, selected, identifier, identifierType }, index) => {
+                    // TODO make sure to handle remove to remove from database first and then update the UI
                     const remove = () => onRemove(id);
                     const updateCheckbox = ({ target }) => onUpdate(id, target.name, target.checked);
                     const update = ({ target }) => onUpdate(id, target.name, target.value);

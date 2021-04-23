@@ -4,6 +4,7 @@ type Mutation {
     updateObjectDetails(input: UpdateObjectDetailsInput!): UpdateObjectDetailsResult!
     updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
     updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
+    deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
 }
 
 input UpdateObjectDetailsInput {
@@ -132,6 +133,7 @@ input UpdateObjectDetailsDataInput {
     AssetVersion: AssetVersionDetailFieldsInput
     Actor: ActorDetailFieldsInput
     Stakeholder: StakeholderDetailFieldsInput
+    Identifiers: [UpdateIdentifier!]
 }
 
 type UpdateObjectDetailsResult {
@@ -141,6 +143,7 @@ type UpdateObjectDetailsResult {
 input UpdateDerivedObjectsInput {
     idSystemObject: Int!
     Derivatives: [Int!]!
+    PreviouslySelected: [Int!]!
 }
 
 type UpdateDerivedObjectsResult {
@@ -150,8 +153,27 @@ type UpdateDerivedObjectsResult {
 input UpdateSourceObjectsInput {
     idSystemObject: Int!
     Sources: [Int!]!
+    PreviouslySelected: [Int!]!
 }
 
 type UpdateSourceObjectsResult {
     success: Boolean!
+}
+
+input UpdateIdentifier {
+    id: Int!
+    identifier: String!
+    identifierType: Int!
+    selected: Boolean!
+    idSystemObject: Int!
+    idIdentifier: Int!
+}
+
+type DeleteObjectConnectionResult {
+    success: Boolean!
+}
+
+input DeleteObjectConnectionInput {
+    idSystemObjectMaster: Int!
+    idSystemObjectDerived: Int!
 }

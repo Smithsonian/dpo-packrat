@@ -23,6 +23,7 @@ input IngestItemInput {
 input IngestIdentifierInput {
     identifier: String!
     identifierType: Int!
+    idIdentifier: Int!
 }
 
 input IngestFolderInput {

@@ -16,7 +16,7 @@ import { useMetadataStore, useUploadStore } from '../../../../store';
 import { Colors } from '../../../../theme';
 import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
 import UploadCompleteList from './UploadCompleteList';
-import UploadFilesPicker from './UploadFilesPicker';
+// import UploadFilesPicker from './UploadFilesPicker';
 import UploadList from './UploadList';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
@@ -32,7 +32,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         flex: 1,
         flexDirection: 'column',
         padding: 20,
-        paddingBottom: 0,
+        paddingBottom: 0
     },
     fileDrop: {
         display: 'flex',
@@ -58,7 +58,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => ({
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
         color: Colors.defaults.white
-    },
+    }
 }));
 
 function Uploads(): React.ReactElement {
@@ -127,7 +127,12 @@ function Uploads(): React.ReactElement {
 }
 
 function AliveUploadComponents(): React.ReactElement {
-    const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [state.onProgressEvent, state.onSetCancelledEvent, state.onFailedEvent, state.onCompleteEvent]);
+    const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [
+        state.onProgressEvent,
+        state.onSetCancelledEvent,
+        state.onFailedEvent,
+        state.onCompleteEvent
+    ]);
 
     useEffect(() => {
         const onProgress = data => {
@@ -165,9 +170,9 @@ function AliveUploadComponents(): React.ReactElement {
 
     return (
         <React.Fragment>
-            <UploadFilesPicker />
-            <UploadCompleteList />
             <UploadList />
+            <UploadCompleteList />
+            {/* <UploadFilesPicker /> */}
         </React.Fragment>
     );
 }
