@@ -42,6 +42,7 @@ import SceneDetails from './SceneDetails';
 import StakeholderDetails from './StakeholderDetails';
 import SubjectDetails from './SubjectDetails';
 import UnitDetails from './UnitDetails';
+import { deleteObjectConnection } from '../../../hooks/useDetailsView';
 
 const useStyles = makeStyles(({ palette }) => ({
     tab: {
@@ -97,7 +98,6 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     let tabs: string[] = [];
 
     let tabPanels: React.ReactNode = null;
-
     const RelatedTab = (index: number) => (
         <TabPanel value={tab} index={index}>
             <RelatedObjectsList
@@ -105,14 +105,18 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                 type={RelatedObjectType.Source}
                 relatedObjects={sourceObjects}
                 onAdd={onAddSourceObject}
-                onRemove={id => console.log('remove source!', id)}
+                currentObject={idSystemObject}
+                onRemoveConnection={deleteObjectConnection}
+                objectType={objectType}
             />
             <RelatedObjectsList
                 disabled={disabled}
                 type={RelatedObjectType.Derived}
                 relatedObjects={derivedObjects}
                 onAdd={onAddDerivedObject}
-                onRemove={id => console.log('remove derivative!', id)}
+                currentObject={idSystemObject}
+                onRemoveConnection={deleteObjectConnection}
+                objectType={objectType}
             />
         </TabPanel>
     );

@@ -15,8 +15,8 @@ import {
     UpdateObjectDetailsDataInput,
     UpdateObjectDetailsMutation,
     UpdateSourceObjectsDocument,
-    UpdateDerivedObjectsDocument
-
+    UpdateDerivedObjectsDocument,
+    DeleteObjectConnectionDocument
 } from '../../../types/graphql';
 import { eSystemObjectType } from '../../../types/server';
 
@@ -102,4 +102,33 @@ export function updateDerivedObjects(idSystemObject: number, derivatives: number
         },
         refetchQueries: ['getSystemObjectDetails', 'getDetailsTabDataForObject']
     });
+}
+
+export function deleteObjectConnection(idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) {
+    return apolloClient.mutate({
+        mutation: DeleteObjectConnectionDocument,
+        variables: {
+            input: {
+                idSystemObjectMaster,
+                idSystemObjectDerived
+            }
+        },
+        refetchQueries: [{
+            query: GetSystemObjectDetailsDocument,
+            variables: {
+                input: {
+                    idSystemObject: type === 'Source' ? idSystemObjectDerived : idSystemObjectMaster
+                }
+            }
+        }, {
+            query: GetDetailsTabDataForObjectDocument,
+            variables: {
+                input: {
+                    idSystemObject: type === 'Source' ? idSystemObjectDerived : idSystemObjectMaster,
+                    objectType: systemObjectType
+                }
+            }
+        }],
+        awaitRefetchQueries: true
+    })
 }
