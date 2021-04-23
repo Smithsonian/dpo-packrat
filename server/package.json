@@ -25,7 +25,7 @@
   "main": "build/index.js",
   "typings": "build/index.d.ts",
   "scripts": {
-    "start": "nodemon --ignore var/ --exec yarn ts-node index.ts -e ts,js,json,graphql",
+    "start": "nodemon --ignore var/ --ignore build/ --ignore coverage/ --ignore node_modules/ --ignore tests/ --exec yarn ts-node index.ts -e ts,js,json,graphql",
     "start:prod": "node build/index.js",
     "build:dev": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
     "build:prod": "tsc --build && copyfiles db/**/*.* graphql/**/**.graphql build/",
