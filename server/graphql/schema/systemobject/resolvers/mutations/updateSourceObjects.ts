@@ -10,7 +10,7 @@ export default async function updateSourceObjects(_: Parent, args: MutationUpdat
     PreviouslySelected.forEach((previous) => uniqueHash[previous] = previous);
     const newlySelectedArr: number[] = [];
     Sources.forEach((source) => {
-        if (!uniqueHash.hasOwnProperty(source)) {
+        if (!uniqueHash[source]) {
             newlySelectedArr.push(source);
         }
     });

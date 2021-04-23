@@ -17,7 +17,7 @@ type StateIdentifier = {
     identifierType: number;
     selected: boolean;
     idIdentifier: number;
-}
+};
 
 type IdentifierStore = {
     stateIdentifiers: StateIdentifier[];
@@ -54,8 +54,8 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
                 identifierType: identifier.identifierType,
                 selected: true,
                 idIdentifier: identifier.idIdentifier
-            }
-        })
+            };
+        });
         set({ stateIdentifiers: initialIdentifiers });
     },
     removeTargetIdentifier: (id: number) => {
@@ -71,10 +71,10 @@ export const useIdentifierStore = create<IdentifierStore>((set: SetState<Identif
                 return {
                     ...identifier,
                     [name]: value,
-                }
+                };
             }
             return identifier;
-        })
+        });
         set({ stateIdentifiers: updatedIdentifiers });
     }
 }));

@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * DetailsTab
  *
