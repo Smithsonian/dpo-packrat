@@ -255,9 +255,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eUnit:
             if (systemObject.idUnit) {
                 const Unit = await DBAPI.Unit.fetch(systemObject.idUnit);
-                if (Unit) {
+                if (Unit)
                     return Unit.Name;
-                }
             }
 
             return unknownName;
@@ -265,9 +264,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eProject:
             if (systemObject.idProject) {
                 const Project = await DBAPI.Project.fetch(systemObject.idProject);
-                if (Project) {
+                if (Project)
                     return Project.Name;
-                }
             }
 
             return unknownName;
@@ -275,9 +273,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eSubject:
             if (systemObject.idSubject) {
                 const Subject = await DBAPI.Subject.fetch(systemObject.idSubject);
-                if (Subject) {
+                if (Subject)
                     return Subject.Name;
-                }
             }
 
             return unknownName;
@@ -285,9 +282,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eItem:
             if (systemObject.idItem) {
                 const Item = await DBAPI.Item.fetch(systemObject.idItem);
-                if (Item) {
+                if (Item)
                     return Item.Name;
-                }
             }
 
             return unknownName;
@@ -295,12 +291,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eCaptureData:
             if (systemObject.idCaptureData) {
                 const CaptureData = await DBAPI.CaptureData.fetch(systemObject.idCaptureData);
-                if (CaptureData) {
-                    const Vocabulary = await DBAPI.Vocabulary.fetch(CaptureData.idVCaptureMethod);
-                    if (Vocabulary) {
-                        return Vocabulary.Term;
-                    }
-                }
+                if (CaptureData)
+                    return CaptureData.Name;
             }
 
             return unknownName;
@@ -317,9 +309,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eScene:
             if (systemObject.idScene) {
                 const Scene = await DBAPI.Scene.fetch(systemObject.idScene);
-                if (Scene) {
+                if (Scene)
                     return Scene.Name;
-                }
             }
 
             return unknownName;
@@ -329,9 +320,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
                 const IntermediaryFile = await DBAPI.IntermediaryFile.fetch(systemObject.idIntermediaryFile);
                 if (IntermediaryFile) {
                     const Asset = await DBAPI.Asset.fetch(IntermediaryFile.idAsset);
-                    if (Asset) {
+                    if (Asset)
                         return Asset.FileName;
-                    }
                 }
             }
 
@@ -340,9 +330,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eProjectDocumentation:
             if (systemObject.idProjectDocumentation) {
                 const ProjectDocumentation = await DBAPI.ProjectDocumentation.fetch(systemObject.idProjectDocumentation);
-                if (ProjectDocumentation) {
+                if (ProjectDocumentation)
                     return ProjectDocumentation.Name;
-                }
             }
 
             return unknownName;
@@ -350,9 +339,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eAsset:
             if (systemObject.idAsset) {
                 const Asset = await DBAPI.Asset.fetch(systemObject.idAsset);
-                if (Asset) {
+                if (Asset)
                     return Asset.FileName;
-                }
             }
 
             return unknownName;
@@ -360,9 +348,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eAssetVersion:
             if (systemObject.idAssetVersion) {
                 const AssetVersion = await DBAPI.AssetVersion.fetch(systemObject.idAssetVersion);
-                if (AssetVersion) {
+                if (AssetVersion)
                     return AssetVersion.FileName;
-                }
             }
 
             return unknownName;
@@ -370,9 +357,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eActor:
             if (systemObject.idActor) {
                 const Actor = await DBAPI.Actor.fetch(systemObject.idActor);
-                if (Actor) {
+                if (Actor)
                     return Actor?.IndividualName ?? unknownName;
-                }
             }
 
             return unknownName;
@@ -380,9 +366,8 @@ async function resolveNameForObjectType(systemObject: SystemObject | null, objec
         case eSystemObjectType.eStakeholder:
             if (systemObject.idStakeholder) {
                 const Stakeholder = await DBAPI.Stakeholder.fetch(systemObject.idStakeholder);
-                if (Stakeholder) {
+                if (Stakeholder)
                     return Stakeholder.IndividualName;
-                }
             }
 
             return unknownName;

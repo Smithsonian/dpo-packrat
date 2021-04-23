@@ -49,6 +49,7 @@ let captureDataPhotoNulls: DBAPI.CaptureDataPhoto | null;
 let geoLocation: DBAPI.GeoLocation | null;
 const identifierValue: string = 'Test Identifier ' + UTIL.randomStorageKey('');
 let identifier: DBAPI.Identifier | null;
+let identifier2: DBAPI.Identifier | null;
 let identifierNull: DBAPI.Identifier | null;
 let identifierSubjectHookup: DBAPI.Identifier | null;
 let intermediaryFile: DBAPI.IntermediaryFile | null;
@@ -841,6 +842,18 @@ describe('DB Creation Test Suite', () => {
             });
         expect(identifierNull).toBeTruthy();
     });
+
+    test('DB Creation: Identifier2', async () => {
+        if (vocabulary)
+            identifier2 = await UTIL.createIdentifierTest({
+                IdentifierValue: 'Test Identifier Null 2',
+                idVIdentifierType: vocabulary.idVocabulary,
+                idSystemObject: null,
+                idIdentifier: 0
+            });
+        expect(identifier2).toBeTruthy();
+    });
+
 
     test('DB Creation: IntermediaryFile', async () => {
         if (assetThumbnail)
@@ -6541,6 +6554,14 @@ describe('DB Delete Test', () => {
 
             // try to fetch; should not be found
             const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifierSubjectHookup.idIdentifier);
+            expect(idFetch).toBeFalsy();
+        }
+
+        if (identifier2) {
+            expect(await identifier2.delete()).toBeTruthy();
+
+            // try to fetch; should not be found
+            const idFetch: DBAPI.Identifier | null = await DBAPI.Identifier.fetch(identifier2.idIdentifier);
             expect(idFetch).toBeFalsy();
         }
     });

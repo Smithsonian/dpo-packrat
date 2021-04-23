@@ -4,7 +4,7 @@
  * This component renders object details for the Repository Details UI.
  */
 import { Box, Checkbox, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { withStyles, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { NewTabLink } from '../../../../components';
 import { GetSystemObjectDetailsResult, RepositoryPath } from '../../../../types/graphql';
@@ -26,6 +26,13 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         textDecoration: ({ clickable = true, value }: DetailProps) => (clickable && value ? 'underline' : undefined)
     }
 }));
+
+const CheckboxNoPadding = withStyles({
+    root: {
+        border: '0px',
+        padding: '0px'
+    }
+})(Checkbox);
 
 interface ObjectDetailsProps {
     unit?: RepositoryPath | null;
@@ -56,7 +63,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                 <Detail
                     label='Retired'
                     valueComponent={
-                        <Checkbox
+                        <CheckboxNoPadding
                             name='retired'
                             disabled={disabled}
                             checked={withDefaultValueBoolean(retired, false)}
