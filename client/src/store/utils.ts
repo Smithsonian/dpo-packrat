@@ -72,11 +72,12 @@ export function parseAssetVersionToState(assetVersion: AssetVersion, vocabulary:
 
 export function parseIdentifiersToState(identifiers: IngestIdentifier[], defaultIdentifierField: StateIdentifier[]): StateIdentifier[] {
     const parsedIdentifiers = identifiers.map(
-        ({ identifier, identifierType }: IngestIdentifier, index: number): StateIdentifier => ({
+        ({ identifier, identifierType, idIdentifier }: IngestIdentifier, index: number): StateIdentifier => ({
             id: index,
             identifier,
             identifierType,
-            selected: true
+            selected: true,
+            idIdentifier
         })
     );
 

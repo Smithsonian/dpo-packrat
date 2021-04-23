@@ -279,10 +279,11 @@ function useIngest(): UseIngest {
 
         if (selectedIdentifiers) {
             lodash.forEach(selectedIdentifiers, (data: StateIdentifier) => {
-                const { identifier, identifierType } = data;
+                const { identifier, identifierType, idIdentifier } = data;
 
                 const identifierData: IngestIdentifierInput = {
                     identifier,
+                    idIdentifier,
                     identifierType: nonNullValue<number>('identifierType', identifierType)
                 };
                 ingestIdentifiers.push(identifierData);

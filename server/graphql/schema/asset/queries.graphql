@@ -13,6 +13,7 @@ input GetAssetVersionsDetailsInput {
 type IngestIdentifier {
     identifier: String!
     identifierType: Int!
+    idIdentifier: Int!
 }
 
 type IngestFolder {

@@ -55,6 +55,7 @@ export type StateIdentifier = {
     identifier: string;
     identifierType: number | null;
     selected: boolean;
+    idIdentifier: number;
 };
 
 export type StateFolder = {

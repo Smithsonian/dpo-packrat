@@ -48,12 +48,20 @@ function UploadListComplete(): React.ReactElement {
         }
     }, [data, loading, error]);
 
-    let content: React.ReactNode = <Typography className={classes.listDetail} variant='body1'>Fetching available files...</Typography>;
+    let content: React.ReactNode = (
+        <Typography className={classes.listDetail} variant='body1'>
+            Fetching available files...
+        </Typography>
+    );
 
     if (!loading) {
         content = (
             <React.Fragment>
-                {!completed.length && <Typography className={classes.listDetail} variant='body1'>No files available</Typography>}
+                {!completed.length && (
+                    <Typography className={classes.listDetail} variant='body1'>
+                        No files available
+                    </Typography>
+                )}
                 <FileList files={completed} />
             </React.Fragment>
         );
@@ -61,14 +69,17 @@ function UploadListComplete(): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <FieldType required align='center' label='Uploaded Files: Select assets to ingest which belong to the same Subject &amp; Item'>
+            <FieldType
+                required
+                align='center'
+                label='Uploaded Files'
+                labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'black' } }}
+            >
                 <UploadListHeader />
-                <Box className={classes.list}>
-                    {content}
-                </Box>
+                <Box className={classes.list}>{content}</Box>
             </FieldType>
         </Box>
-
     );
 }
 

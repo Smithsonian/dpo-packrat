@@ -62,10 +62,15 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
     const classes = useStyles();
     const [selected, setSelected] = useState<StateRelatedObject[]>([]);
     const [isSaving, setIsSaving] = useState<boolean>(false);
+    const [previouslySelectedObjects, setPreviouslySelectedObjects] = useState<number[]>([]);
 
     useEffect(() => {
-        setSelected(selectedObjects);
-    }, [selectedObjects, props]);
+        const selected = selectedObjects.map(obj => obj.idSystemObject);
+        // console.log('selected', selected);
+        setPreviouslySelectedObjects(selected);
+    }, [selectedObjects]);
+
+    // console.log('alreadySelectedObjects', alreadySelectedObjects);
 
     const onSaveClick = async (): Promise<void> => {
         try {
@@ -73,14 +78,14 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
             setIsSaving(true);
             const idSystemObjects: number[] = selected.map(({ idSystemObject }) => idSystemObject);
             if (props.relationship === 'Source' && idSystemObject) {
-                const { data } = await updateSourceObjects(idSystemObject, idSystemObjects);
+                const { data } = await updateSourceObjects(idSystemObject, idSystemObjects, previouslySelectedObjects);
                 if (data.updateSourceObjects.success) {
                     toast.success('Source object(s) successfully added');
                 } else {
                     toast.error('Source object(s) could not be added. Please try again later');
                 }
             } else if (props.relationship === 'Derived' && idSystemObject) {
-                const { data } = await updateDerivedObjects(idSystemObject, idSystemObjects);
+                const { data } = await updateDerivedObjects(idSystemObject, idSystemObjects, previouslySelectedObjects);
                 if (data.updateDerivedObjects.success) {
                     toast.success('Derived object(s) successfully added');
                 } else {
