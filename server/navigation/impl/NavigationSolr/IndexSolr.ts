@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as LOG from '../../../utils/logger';
-// import * as H from '../../../utils/helpers';
+import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import { eSystemObjectType, ObjectGraphDataEntry } from '../../../db';
@@ -88,8 +88,11 @@ export class IndexSolr {
             // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(doc, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eNAV);
             const solrClient: SolrClient = new SolrClient(null, null, null);
             try {
-                solrClient._client.add([doc], undefined, function (err, obj) { if (err) LOG.error('IndexSolr.indexObject adding record', LOG.LS.eNAV, err); else obj; });
-                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.error('IndexSolr.indexObject -> commit()', LOG.LS.eNAV, err); else obj; });
+                let res: H.IOResults = await solrClient.add([doc]);
+                if (res.success)
+                    res = await solrClient.commit();
+                if (!res.success)
+                    LOG.error(`IndexSolr.indexObject failed: ${res.error}`, LOG.LS.eNAV);
             } catch (error) {
                 LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed`, LOG.LS.eNAV, error);
                 return false;
@@ -117,8 +120,11 @@ export class IndexSolr {
 
                 if (docs.length >= 1000) {
                     try {
-                        solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex adding cached records', LOG.LS.eNAV, err); else obj; });
-                        solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex -> commit()', LOG.LS.eNAV, err); else obj; });
+                        let res: H.IOResults = await solrClient.add(docs);
+                        if (res.success)
+                            res = await solrClient.commit();
+                        if (!res.success)
+                            LOG.error(`IndexSolr.fullIndexWorker failed: ${res.error}`, LOG.LS.eNAV);
                     } catch (error) {
                         LOG.error('IndexSolr.fullIndexWorker failed', LOG.LS.eNAV, error);
                         return false;
@@ -133,8 +139,11 @@ export class IndexSolr {
 
         if (docs.length > 0) {
             try {
-                solrClient._client.add(docs, undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex adding cached records', LOG.LS.eNAV, err); else obj; });
-                solrClient._client.commit(undefined, function (err, obj) { if (err) LOG.error('IndexSolr.fullIndex -> commit()', LOG.LS.eNAV, err); else obj; });
+                let res: H.IOResults = await solrClient.add(docs);
+                if (res.success)
+                    res = await solrClient.commit();
+                if (!res.success)
+                    LOG.error(`IndexSolr.fullIndexWorker failed: ${res.error}`, LOG.LS.eNAV);
             } catch (error) {
                 LOG.error('IndexSolr.fullIndexWorker failed', LOG.LS.eNAV, error);
                 return false;
