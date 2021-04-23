@@ -1019,7 +1019,8 @@ type DeleteObjectConnectionResult {
 }
 
 input DeleteObjectConnectionInput {
-  idSystemObjectXref: Int!
+  idSystemObjectMaster: Int!
+  idSystemObjectDerived: Int!
 }
 
 input GetDetailsTabDataForObjectInput {

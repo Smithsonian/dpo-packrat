@@ -1378,7 +1378,8 @@ export type DeleteObjectConnectionResult = {
 };
 
 export type DeleteObjectConnectionInput = {
-  idSystemObjectXref: Scalars['Int'];
+  idSystemObjectMaster: Scalars['Int'];
+  idSystemObjectDerived: Scalars['Int'];
 };
 
 export type GetDetailsTabDataForObjectInput = {

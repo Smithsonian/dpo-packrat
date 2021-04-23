@@ -14,6 +14,7 @@ import { RelatedObjectType } from '../../../../../types/graphql';
 import { ViewableProps } from '../../../../../types/repository';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
 import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -54,10 +55,13 @@ interface RelatedObjectsListProps extends ViewableProps {
     type: RelatedObjectType;
     onAdd: () => void;
     onRemove?: (id: number) => void;
+    currentObject?: number;
+    onRemoveConnection?: (idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) => void;
+    objectType?: number;
 }
 
 function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement {
-    const { relatedObjects, type, onAdd, onRemove, viewMode = false, disabled = false } = props;
+    const { relatedObjects, type, onAdd, onRemove, viewMode = false, disabled = false, currentObject, onRemoveConnection, objectType } = props;
     const classes = useStyles(viewMode);
 
     const titles = [`${type.toString()} Object(s)`, 'Identifier', 'Object Type'];
@@ -65,14 +69,22 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
 
     const buttonLabel: string = viewMode ? 'Connect' : 'Add';
 
-    console.log('relatedObjects', relatedObjects);
     return (
         <Box className={classes.container}>
             <Header titles={titles} />
             {hasRelatedObjects && (
                 <Box className={classes.list}>
                     {relatedObjects.map((sourceObject: StateRelatedObject, index: number) => (
-                        <Item key={index} viewMode={viewMode} sourceObject={sourceObject} onRemove={onRemove} />
+                        <Item
+                            type={type}
+                            key={index}
+                            viewMode={viewMode}
+                            sourceObject={sourceObject}
+                            currentObject={currentObject}
+                            onRemove={onRemove}
+                            onRemoveConnection={onRemoveConnection}
+                            systemObjectType={objectType}
+                        />
                     ))}
                 </Box>
             )}
@@ -111,14 +123,33 @@ interface ItemProps {
     sourceObject: StateRelatedObject;
     onRemove?: (id: number) => void;
     viewMode?: boolean;
+    currentObject?: number;
+    onRemoveConnection?: (idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) => void;
+    type?: RelatedObjectType;
+    systemObjectType?: number;
 }
 
 function Item(props: ItemProps): React.ReactElement {
-    const { sourceObject, onRemove, viewMode = false } = props;
+    const { sourceObject, onRemove, viewMode = false, currentObject, onRemoveConnection, type, systemObjectType } = props;
     const { idSystemObject, name, identifier, objectType } = sourceObject;
     const classes = useStyles(viewMode);
-
-    const remove = () => onRemove?.(idSystemObject);
+    let remove;
+    if (currentObject && onRemoveConnection && type && systemObjectType) {
+        if (type.toString() === 'Source') {
+            remove = () => {
+                toast.success('Removing Connection');
+                onRemoveConnection(idSystemObject, currentObject, type.toString(), systemObjectType);
+            };
+        }
+        if (type.toString() === 'Derived') {
+            remove = () => {
+                toast.success('Removing Connection');
+                onRemoveConnection(currentObject, idSystemObject, type.toString(), systemObjectType);
+            };
+        }
+    } else if (onRemove) {
+        remove = () => onRemove?.(idSystemObject);
+    }
 
     return (
         <Box display='flex' flex={1} flexDirection='row' alignItems='center' pb='10px'>

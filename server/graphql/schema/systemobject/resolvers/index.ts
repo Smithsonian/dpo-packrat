@@ -11,6 +11,7 @@ import getProjectList from './queries/getProjectList';
 import updateObjectDetails from './mutations/updateObjectDetails';
 import updateSourceObjects from './mutations/updateSourceObjects';
 import updateDerivedObjects from './mutations/updateDerivedObjects';
+import deleteObjectConnection from './mutations/deleteObjectConnection';
 
 const resolvers = {
     Query: {
@@ -24,7 +25,8 @@ const resolvers = {
     Mutation: {
         updateObjectDetails,
         updateSourceObjects,
-        updateDerivedObjects
+        updateDerivedObjects,
+        deleteObjectConnection
     },
     SystemObject,
     SystemObjectVersion,
