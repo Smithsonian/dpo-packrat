@@ -55,7 +55,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     keyword: '',
     tree: new Map<string, NavigationResultEntry[]>([[treeRootKey, []]]),
     loading: true,
-    repositoryRootType: [eSystemObjectType.eUnit],
+    repositoryRootType: [],
     objectsToDisplay: [],
     metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
     units: [],
@@ -174,7 +174,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     resetRepositoryFilter: (modifyCookie = true): void => {
         const { setCookieToState } = get();
         const stateValues = {
-            repositoryRootType: [eSystemObjectType.eUnit],
+            repositoryRootType: [],
             objectsToDisplay: [],
             metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
             units: [],
