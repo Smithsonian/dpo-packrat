@@ -112,7 +112,7 @@ function TreeViewPage(): React.ReactElement {
 
     const setDefaultFilterSelectionsCookie = () => {
         document.cookie = `filterSelections=${JSON.stringify({
-            repositoryRootType: [eSystemObjectType.eUnit],
+            repositoryRootType: [],
             objectsToDisplay: [],
             metadataToDisplay: [eMetadata.eHierarchyUnit, eMetadata.eHierarchySubject, eMetadata.eHierarchyItem],
             units: [],
