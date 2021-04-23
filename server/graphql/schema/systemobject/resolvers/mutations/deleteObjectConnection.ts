@@ -6,26 +6,27 @@ import * as LOG from '../../../../../utils/logger';
 export default async function deleteObjectConnection(_: Parent, args: MutationDeleteObjectConnectionArgs): Promise<DeleteObjectConnectionResult> {
     const { input: { idSystemObjectMaster, idSystemObjectDerived } } = args;
     const idSystemObjectXrefs = await DBAPI.SystemObjectXref.fetchXref(idSystemObjectMaster, idSystemObjectDerived);
+    let result;
+
     if (idSystemObjectXrefs) {
-        console.log('xrefs', idSystemObjectXrefs);
         idSystemObjectXrefs.forEach(async (xref) => {
-            try {
-                const result = await DBAPI.SystemObjectXref.deleteIfAllowed(xref.idSystemObjectXref);
+            const { success, error } = await DBAPI.SystemObjectXref.deleteIfAllowed(xref.idSystemObjectXref);
+            if (success) {
                 LOG.info(`deleted SystemObjectXref ${xref.idSystemObjectXref}`, LOG.LS.eGQL);
-                console.log(result);
-                return;
-
-            } catch (error) {
+            } else {
                 LOG.error(`unable to delete SystemObjectXref ${xref.idSystemObjectXref} ${error}`, LOG.LS.eGQL);
-                return;
+                result = { success: false };
             }
-        })
-        return { success: true };
-
+            return;
+        });
     } else {
         LOG.error(`deleteObjectConnection failed to fetch idSystemObjectXref for ${idSystemObjectMaster} and ${idSystemObjectDerived}`, LOG.LS.eGQL);
         return { success: false };
     }
 
+    if (!result) {
+        result = { success: true };
+    }
 
+    return result;
 }

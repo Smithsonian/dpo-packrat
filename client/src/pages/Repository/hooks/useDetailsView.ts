@@ -104,8 +104,8 @@ export function updateDerivedObjects(idSystemObject: number, derivatives: number
     });
 }
 
-export function deleteObjectConnection(idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) {
-    return apolloClient.mutate({
+export async function deleteObjectConnection(idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) {
+    return await apolloClient.mutate({
         mutation: DeleteObjectConnectionDocument,
         variables: {
             input: {
@@ -130,5 +130,5 @@ export function deleteObjectConnection(idSystemObjectMaster: number, idSystemObj
             }
         }],
         awaitRefetchQueries: true
-    })
+    });
 }
