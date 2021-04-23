@@ -94,7 +94,7 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
                         </Button>
                     )}
                 </Box>
-                {identifiers.length && (
+                {identifiers.length > 0 && (
                     <IdentifierList
                         identifiers={identifiers}
                         identifierTypes={getEntries(eVocabularySetID.eIdentifierIdentifierType)}

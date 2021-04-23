@@ -137,13 +137,13 @@ function Item(props: ItemProps): React.ReactElement {
     if (currentObject && onRemoveConnection && type && systemObjectType) {
         if (type.toString() === 'Source') {
             remove = () => {
-                toast.success('Removing Connection');
+                toast.success('Removing Connection...');
                 onRemoveConnection(idSystemObject, currentObject, type.toString(), systemObjectType);
             };
         }
         if (type.toString() === 'Derived') {
             remove = () => {
-                toast.success('Removing Connection');
+                toast.success('Removing Connection...');
                 onRemoveConnection(currentObject, idSystemObject, type.toString(), systemObjectType);
             };
         }
