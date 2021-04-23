@@ -44,7 +44,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     throw new Error(`updateObjectDetails failed to create newIdentifier ${JSON.stringify(newIdentifier)}`);
                 }
             }
-        })
+        });
     }
 
     switch (objectType) {

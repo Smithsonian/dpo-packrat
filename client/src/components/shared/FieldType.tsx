@@ -54,7 +54,7 @@ function FieldType(props: FieldTypeProps): React.ReactElement {
     );
 
     if (labelTooltip) {
-        let tooltipContent = (
+        const tooltipContent = (
             <Tooltip title={labelTooltip}>
                 <Typography align={align} className={classes.label} variant='caption' {...labelProps}>
                     {label}

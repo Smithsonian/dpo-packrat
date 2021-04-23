@@ -10,7 +10,7 @@ export default async function updateDerivedObjects(_: Parent, args: MutationUpda
     PreviouslySelected.forEach((previous) => uniqueHash[previous] = previous);
     const newlySelectedArr: number[] = [];
     Derivatives.forEach((derivative) => {
-        if (!uniqueHash.hasOwnProperty(derivative)) {
+        if (!uniqueHash[derivative]) {
             newlySelectedArr.push(derivative);
         }
     });

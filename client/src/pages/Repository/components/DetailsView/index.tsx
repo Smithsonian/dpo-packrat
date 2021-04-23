@@ -104,7 +104,6 @@ function DetailsView(): React.ReactElement {
             const { name, retired } = data.getSystemObjectDetails;
             setDetails({ name, retired });
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
-            console.log('identifiers', data.getSystemObjectDetails.identifiers);
         }
     }, [data, loading, initializeIdentifierState]);
 
