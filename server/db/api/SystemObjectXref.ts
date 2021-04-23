@@ -78,14 +78,18 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 WHERE SOMaster.idSubject IS NOT NULL
                   AND SODerived.idItem IS NOT NULL
                   AND SODerived.idSystemObject = ${this.idSystemObjectDerived};`;
-
             // LOG.info(`SystemObjectXref.deleteIfAllowed ${JSON.stringify(this)}: ${JSON.stringify(subjectItemLinkCount)} relationships`, LOG.LS.eDB);
+
             /* istanbul ignore next */
-            if (subjectItemLinkCount.length != 1)
+            if (subjectItemLinkCount.length != 1) // array of wrong length returned, error ... should never happen
                 return { success: false, error: `Unable to remove final subject from Item ${this.idSystemObjectDerived}` };
 
-            if (subjectItemLinkCount[0].RowCount === 1)
-                return { success: false, error: `Unable to remove final subject from Item ${this.idSystemObjectDerived}` };
+            if (subjectItemLinkCount[0].RowCount === 1) {
+                // determine if this.idSystemObjectMaster points to a subject (if so, it's the only one linked!)
+                const SO: SystemObject | null = await SystemObject.fetch(this.idSystemObjectMaster);
+                if (SO && SO.idSubject)
+                    return { success: false, error: `Unable to remove final subject from Item ${this.idSystemObjectDerived}` };
+            }
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SystemObjectXref.deleteIfAllowed', LOG.LS.eDB, error);
             return { success: false, error: JSON.stringify(error) };
