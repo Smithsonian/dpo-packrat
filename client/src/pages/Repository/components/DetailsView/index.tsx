@@ -32,7 +32,7 @@ import {
 import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
 import { withDefaultValueBoolean } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
-import { updateDetailsTabData, useObjectDetails } from '../../hooks/useDetailsView';
+import { updateDetailsTabData, useObjectDetails, deleteIdentifier } from '../../hooks/useDetailsView';
 import DetailsHeader from './DetailsHeader';
 import DetailsTab, { UpdateDataFields } from './DetailsTab';
 import DetailsThumbnail from './DetailsThumbnail';
@@ -89,12 +89,13 @@ function DetailsView(): React.ReactElement {
 
     const getEntries = useVocabularyStore(state => state.getEntries);
     const getFormState = useRepositoryDetailsFormStore(state => state.getFormState);
-    const [stateIdentifiers, addNewIdentifier, initializeIdentifierState, removeTargetIdentifier, updateIdentifier] = useIdentifierStore(state => [
+    const [stateIdentifiers, addNewIdentifier, initializeIdentifierState, removeTargetIdentifier, updateIdentifier, checkIdentifiersBeforeUpdate] = useIdentifierStore(state => [
         state.stateIdentifiers,
         state.addNewIdentifier,
         state.initializeIdentifierState,
         state.removeTargetIdentifier,
-        state.updateIdentifier
+        state.updateIdentifier,
+        state.checkIdentifiersBeforeUpdate
     ]);
     const [resetRepositoryFilter, resetKeywordSearch, initializeTree] = useRepositoryStore(state => [state.resetRepositoryFilter, state.resetKeywordSearch, state.initializeTree]);
     const objectDetailsData = data;
@@ -119,8 +120,21 @@ function DetailsView(): React.ReactElement {
         addNewIdentifier();
     };
 
-    const removeIdentifier = (id: number) => {
-        removeTargetIdentifier(id);
+    const removeIdentifier = (idIdentifier: number, id: number) => {
+        // handles deleting exisiting identifiers and newly added ones
+        if (idIdentifier) {
+            const confirm = window.confirm('Are you sure you wish to remove this?');
+            if (!confirm) return;
+            const deleteIdentifierSuccess = deleteIdentifier(idIdentifier);
+            if (deleteIdentifierSuccess) {
+                removeTargetIdentifier(idIdentifier);
+                toast.success('Identifier removed');
+            } else {
+                toast.error('Error when removing identifier');
+            }
+        } else {
+            removeTargetIdentifier(0, id);
+        }
     };
 
     const updateIdentifierFields = (id: number, name: string, value) => {
@@ -215,6 +229,12 @@ function DetailsView(): React.ReactElement {
 
     const updateData = async (): Promise<void> => {
         setIsUpdatingData(true);
+        const identifierCheck = checkIdentifiersBeforeUpdate();
+        if (identifierCheck.length) {
+            identifierCheck.forEach(error => toast.error(error));
+            setIsUpdatingData(false);
+            return;
+        }
         try {
             if (objectType === eSystemObjectType.eModel) {
                 const { dateCaptured, master, authoritative, creationMethod, modality, purpose, units, fileType } = getFormState();

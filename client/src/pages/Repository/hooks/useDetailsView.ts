@@ -16,7 +16,8 @@ import {
     UpdateObjectDetailsMutation,
     UpdateSourceObjectsDocument,
     UpdateDerivedObjectsDocument,
-    DeleteObjectConnectionDocument
+    DeleteObjectConnectionDocument,
+    DeleteIdentifierDocument
 } from '../../../types/graphql';
 import { eSystemObjectType } from '../../../types/server';
 
@@ -130,5 +131,16 @@ export async function deleteObjectConnection(idSystemObjectMaster: number, idSys
             }
         }],
         awaitRefetchQueries: true
+    });
+}
+
+export async function deleteIdentifier(idIdentifier: number) {
+    return await apolloClient.mutate({
+        mutation: DeleteIdentifierDocument,
+        variables: {
+            input: {
+                idIdentifier
+            }
+        }
     });
 }

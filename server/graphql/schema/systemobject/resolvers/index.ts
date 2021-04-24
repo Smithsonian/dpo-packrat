@@ -12,6 +12,7 @@ import updateObjectDetails from './mutations/updateObjectDetails';
 import updateSourceObjects from './mutations/updateSourceObjects';
 import updateDerivedObjects from './mutations/updateDerivedObjects';
 import deleteObjectConnection from './mutations/deleteObjectConnection';
+import deleteIdentifier from './mutations/deleteIdentifier';
 
 const resolvers = {
     Query: {
@@ -26,7 +27,8 @@ const resolvers = {
         updateObjectDetails,
         updateSourceObjects,
         updateDerivedObjects,
-        deleteObjectConnection
+        deleteObjectConnection,
+        deleteIdentifier
     },
     SystemObject,
     SystemObjectVersion,

@@ -66,11 +66,8 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
 
     useEffect(() => {
         const selected = selectedObjects.map(obj => obj.idSystemObject);
-        // console.log('selected', selected);
         setPreviouslySelectedObjects(selected);
     }, [selectedObjects]);
-
-    // console.log('alreadySelectedObjects', alreadySelectedObjects);
 
     const onSaveClick = async (): Promise<void> => {
         try {
