@@ -5,6 +5,7 @@ type Mutation {
     updateDerivedObjects(input: UpdateDerivedObjectsInput!): UpdateDerivedObjectsResult!
     updateSourceObjects(input: UpdateSourceObjectsInput!): UpdateSourceObjectsResult!
     deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
+    deleteIdentifier(input: DeleteIdentifierInput!): DeleteIdentifierResult!
 }
 
 input UpdateObjectDetailsInput {
@@ -176,4 +177,12 @@ type DeleteObjectConnectionResult {
 input DeleteObjectConnectionInput {
     idSystemObjectMaster: Int!
     idSystemObjectDerived: Int!
+}
+
+type DeleteIdentifierResult {
+    success: Boolean!
+}
+
+input DeleteIdentifierInput {
+    idIdentifier: Int!
 }

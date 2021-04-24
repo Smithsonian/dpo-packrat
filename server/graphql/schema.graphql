@@ -107,6 +107,7 @@ type Mutation {
   createUser(input: CreateUserInput!): CreateUserResult!
   createVocabulary(input: CreateVocabularyInput!): CreateVocabularyResult!
   createVocabularySet(input: CreateVocabularySetInput!): CreateVocabularySetResult!
+  deleteIdentifier(input: DeleteIdentifierInput!): DeleteIdentifierResult!
   deleteObjectConnection(input: DeleteObjectConnectionInput!): DeleteObjectConnectionResult!
   discardUploadedAssetVersions(input: DiscardUploadedAssetVersionsInput!): DiscardUploadedAssetVersionsResult!
   ingestData(input: IngestDataInput!): IngestDataResult!
@@ -1021,6 +1022,14 @@ type DeleteObjectConnectionResult {
 input DeleteObjectConnectionInput {
   idSystemObjectMaster: Int!
   idSystemObjectDerived: Int!
+}
+
+type DeleteIdentifierResult {
+  success: Boolean!
+}
+
+input DeleteIdentifierInput {
+  idIdentifier: Int!
 }
 
 input GetDetailsTabDataForObjectInput {

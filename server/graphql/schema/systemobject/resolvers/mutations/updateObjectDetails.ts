@@ -1,7 +1,7 @@
 import { eSystemObjectType } from '../../../../../db';
 import { UpdateObjectDetailsResult, MutationUpdateObjectDetailsArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
-// import * as LOG from '../../../../../utils';
+import * as LOG from '../../../../../utils';
 import * as DBAPI from '../../../../../db';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
@@ -28,20 +28,32 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         }
     }
 
-    // Pull out the identifiers from data and iterate through them
-    // This is also where DBAPI makes edits
-    // WIP
     if (data?.Identifiers && data?.Identifiers.length) {
-        data.Identifiers.forEach(async (identifier) => {
-            // check if selected, if idIdentifier isn't 0, and if it has identifier
-            // query to check for exisiting identifier
-            // modify that
-            // save it
-            // else if selected, ididentifier isn't 0, and has identifier
-            if (identifier.selected && identifier.identifier && identifier.identifierType) {
-                const newIdentifier = new DBAPI.Identifier({ idIdentifier: 0, IdentifierValue: identifier.identifier, idVIdentifierType: identifier.identifierType, idSystemObject });
-                if (!await newIdentifier.create()) {
-                    throw new Error(`updateObjectDetails failed to create newIdentifier ${JSON.stringify(newIdentifier)}`);
+
+        data.Identifiers.forEach(async ({ idIdentifier, selected, identifier, identifierType }) => {
+            // update exisiting identifier
+            if (idIdentifier && selected && identifier && identifierType) {
+                const existingIdentifier = await DBAPI.Identifier.fetch(idIdentifier);
+                if (existingIdentifier) {
+                    existingIdentifier.IdentifierValue = identifier;
+                    existingIdentifier.idVIdentifierType = Number(identifierType);
+                    const updateSuccess = await existingIdentifier.update();
+                    if (updateSuccess) {
+                        return LOG.info(`updated identifier ${idIdentifier}`, LOG.LS.eDB);
+                    } else {
+                        return LOG.error(`failed to updated identifier ${idIdentifier}`, LOG.LS.eDB);
+                    }
+                } else {
+                    return LOG.error(`failed to find identifier ${idIdentifier}`, LOG.LS.eDB);
+                }
+            }
+
+            // create new identifier
+            if (idIdentifier === 0 && selected && identifier && identifierType) {
+                const newIdentifier = new DBAPI.Identifier({ idIdentifier: 0, IdentifierValue: identifier, idVIdentifierType: identifierType, idSystemObject });
+                const createNewIdentifier = await newIdentifier.create();
+                if (!createNewIdentifier) {
+                    return LOG.error(`updateObjectDetails failed to create newIdentifier ${JSON.stringify(newIdentifier)}`, LOG.LS.eDB);
                 }
             }
         });
