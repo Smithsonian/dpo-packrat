@@ -66,7 +66,7 @@ interface IdentifierListProps extends ViewableProps {
     identifiers: StateIdentifier[];
     onAdd: (initialEntry: number | null) => void;
     onUpdate: (id: number, fieldName: string, fieldValue: number | string | boolean) => void;
-    onRemove: (id: number) => void;
+    onRemove: (idIdentifier: number, id: number) => void;
     identifierTypes: VocabularyOption[];
 }
 
@@ -75,7 +75,6 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
     const classes = useStyles();
 
     const hasIdentifiers: boolean = !!identifiers.length;
-
     return (
         <Box overflow='hidden'>
             <FieldType required={false} renderLabel={false} width='auto'>
@@ -85,9 +84,8 @@ function IdentifierList(props: IdentifierListProps): React.ReactElement {
                         <Typography className={classes.empty}>No Identifiers</Typography>
                     </Box>
                 )}
-                {identifiers.map(({ id, selected, identifier, identifierType }, index) => {
-                    // TODO make sure to handle remove to remove from database first and then update the UI
-                    const remove = () => onRemove(id);
+                {identifiers.map(({ id, selected, identifier, identifierType, idIdentifier }, index) => {
+                    const remove = () => onRemove(idIdentifier, id);
                     const updateCheckbox = ({ target }) => onUpdate(id, target.name, target.checked);
                     const update = ({ target }) => onUpdate(id, target.name, target.value);
 

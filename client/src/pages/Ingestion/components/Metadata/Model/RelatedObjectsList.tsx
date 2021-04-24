@@ -139,13 +139,17 @@ function Item(props: ItemProps): React.ReactElement {
     if (currentObject && onRemoveConnection && type && systemObjectType) {
         if (type.toString() === 'Source') {
             remove = () => {
-                toast.success('Removing Connection...');
+                const result = window.confirm('Are you sure you wish to remove this relationship?');
+                if (!result) return;
+                toast.success('Removing Relationship...');
                 onRemoveConnection(idSystemObject, currentObject, type.toString(), systemObjectType);
             };
         }
         if (type.toString() === 'Derived') {
             remove = () => {
-                toast.success('Removing Connection...');
+                const result = window.confirm('Are you sure you wish to remove this relationship?');
+                if (!result) return;
+                toast.success('Removing Relationship...');
                 onRemoveConnection(currentObject, idSystemObject, type.toString(), systemObjectType);
             };
         }
