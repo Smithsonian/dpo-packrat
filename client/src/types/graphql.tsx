@@ -317,6 +317,7 @@ export type Mutation = {
   createUser: CreateUserResult;
   createVocabulary: CreateVocabularyResult;
   createVocabularySet: CreateVocabularySetResult;
+  deleteIdentifier: DeleteIdentifierResult;
   deleteObjectConnection: DeleteObjectConnectionResult;
   discardUploadedAssetVersions: DiscardUploadedAssetVersionsResult;
   ingestData: IngestDataResult;
@@ -375,6 +376,11 @@ export type MutationCreateVocabularyArgs = {
 
 export type MutationCreateVocabularySetArgs = {
   input: CreateVocabularySetInput;
+};
+
+
+export type MutationDeleteIdentifierArgs = {
+  input: DeleteIdentifierInput;
 };
 
 
@@ -1382,6 +1388,15 @@ export type DeleteObjectConnectionInput = {
   idSystemObjectDerived: Scalars['Int'];
 };
 
+export type DeleteIdentifierResult = {
+  __typename?: 'DeleteIdentifierResult';
+  success: Scalars['Boolean'];
+};
+
+export type DeleteIdentifierInput = {
+  idIdentifier: Scalars['Int'];
+};
+
 export type GetDetailsTabDataForObjectInput = {
   idSystemObject: Scalars['Int'];
   objectType: Scalars['Int'];
@@ -2256,6 +2271,19 @@ export type CreateSceneMutation = (
       { __typename?: 'Scene' }
       & Pick<Scene, 'idScene'>
     )> }
+  ) }
+);
+
+export type DeleteIdentifierMutationVariables = Exact<{
+  input: DeleteIdentifierInput;
+}>;
+
+
+export type DeleteIdentifierMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteIdentifier: (
+    { __typename?: 'DeleteIdentifierResult' }
+    & Pick<DeleteIdentifierResult, 'success'>
   ) }
 );
 
@@ -3517,6 +3545,39 @@ export function useCreateSceneMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateSceneMutationHookResult = ReturnType<typeof useCreateSceneMutation>;
 export type CreateSceneMutationResult = Apollo.MutationResult<CreateSceneMutation>;
 export type CreateSceneMutationOptions = Apollo.BaseMutationOptions<CreateSceneMutation, CreateSceneMutationVariables>;
+export const DeleteIdentifierDocument = gql`
+    mutation deleteIdentifier($input: DeleteIdentifierInput!) {
+  deleteIdentifier(input: $input) {
+    success
+  }
+}
+    `;
+export type DeleteIdentifierMutationFn = Apollo.MutationFunction<DeleteIdentifierMutation, DeleteIdentifierMutationVariables>;
+
+/**
+ * __useDeleteIdentifierMutation__
+ *
+ * To run a mutation, you first call `useDeleteIdentifierMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteIdentifierMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteIdentifierMutation, { data, loading, error }] = useDeleteIdentifierMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteIdentifierMutation(baseOptions?: Apollo.MutationHookOptions<DeleteIdentifierMutation, DeleteIdentifierMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteIdentifierMutation, DeleteIdentifierMutationVariables>(DeleteIdentifierDocument, options);
+      }
+export type DeleteIdentifierMutationHookResult = ReturnType<typeof useDeleteIdentifierMutation>;
+export type DeleteIdentifierMutationResult = Apollo.MutationResult<DeleteIdentifierMutation>;
+export type DeleteIdentifierMutationOptions = Apollo.BaseMutationOptions<DeleteIdentifierMutation, DeleteIdentifierMutationVariables>;
 export const DeleteObjectConnectionDocument = gql`
     mutation deleteObjectConnection($input: DeleteObjectConnectionInput!) {
   deleteObjectConnection(input: $input) {
