@@ -58,6 +58,7 @@
     "ldapjs": "2.2.4",
     "lodash": "4.17.21",
     "memorystore": "1.6.5",
+    "mime-types": "2.1.30",
     "node-fetch": "2.6.1",
     "node-schedule": "2.0.0",
     "node-stream-zip": "1.13.2",
