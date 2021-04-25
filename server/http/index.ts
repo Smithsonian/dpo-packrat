@@ -1,15 +1,19 @@
-import express, { Request, Response } from 'express';
+import { passport, authCorsConfig, authSession, AuthRouter } from '../auth';
+import { ApolloServerOptions, computeGQLQuery } from '../graphql';
+import { EventFactory } from '../event/interface/EventFactory';
+import { ASL, LocalStore } from '../utils/localStore';
+import { Config } from '../config';
+import * as LOG from '../utils/logger';
+
+import { logtest } from './routes/logtest';
+import { solrindex, solrindexprofiled } from './routes/solrindex';
+import { download } from './routes/download';
+
+import express, { Request } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
-
-import { passport, authCorsConfig, authSession, AuthRouter } from '../auth';
-import { ApolloServerOptions, computeGQLQuery } from '../graphql';
-import { IndexSolr } from '../navigation/impl/NavigationSolr/IndexSolr';
-import { EventFactory } from '../event/interface/EventFactory';
-import * as LOG from '../utils/logger';
-import { ASL, LocalStore } from '../utils/localStore';
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
@@ -18,7 +22,6 @@ import { ASL, LocalStore } from '../utils/localStore';
 export class HttpServer {
     public app = express();
     private static _singleton: HttpServer | null = null;
-    private static PORT: number = 4000;
 
     static async getInstance(): Promise<HttpServer | null> {
         if (!HttpServer._singleton) {
@@ -56,28 +59,16 @@ export class HttpServer {
         const server = new ApolloServer(ApolloServerOptions);
         server.applyMiddleware({ app: this.app, cors: false });
 
+        this.app.get('/logtest', logtest);
+        this.app.get('/solrindex', solrindex);
+        this.app.get('/solrindexprofiled', solrindexprofiled);
+        this.app.get('/download', download);
+
         if (process.env.NODE_ENV !== 'test') {
-            this.app.listen(HttpServer.PORT, () => {
-                LOG.info('Server is running', LOG.LS.eSYS);
+            this.app.listen(Config.http.port, () => {
+                LOG.info(`Server is running on port ${Config.http.port}`, LOG.LS.eSYS);
             });
         }
-
-        this.app.get('/logtest', (_: Request, response: Response) => {
-            LOG.info('Logger Info Test', LOG.LS.eSYS);
-            response.send('Got Here');
-        });
-
-        this.app.get('/solrindex', async (_: Request, response: Response) => {
-            const indexer: IndexSolr = new IndexSolr();
-            const success: boolean = await indexer.fullIndex();
-            response.send(`Solr Indexing Completed: ${success ? 'Success' : 'Failure'}`);
-        });
-
-        this.app.get('/solrindexprofiled', async (_: Request, response: Response) => {
-            const indexer: IndexSolr = new IndexSolr();
-            const success: boolean = await indexer.fullIndexProfiled();
-            response.send(`Solr Indexing Completed: ${success ? 'Success' : 'Failure'}`);
-        });
         return true;
     }
 
