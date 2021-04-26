@@ -22,13 +22,13 @@ class E2ETestUtils {
         this.context = await this.browser.newContext();
         this.page = await this.context.newPage();
 
-        const { CLIENT_ENDPOINT } = process.env;
+        const { PACKRAT_CLIENT_ENDPOINT } = process.env;
 
-        if (!CLIENT_ENDPOINT) {
-            throw new Error('E2E tests: CLIENT_ENDPOINT was not provided');
+        if (!PACKRAT_CLIENT_ENDPOINT) {
+            throw new Error('E2E tests: PACKRAT_CLIENT_ENDPOINT was not provided');
         }
 
-        await this.page.goto(CLIENT_ENDPOINT);
+        await this.page.goto(PACKRAT_CLIENT_ENDPOINT);
     }
 
     private async afterEach(): Promise<void> {
