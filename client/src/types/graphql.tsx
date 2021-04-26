@@ -54,7 +54,7 @@ export type Query = {
   getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
-  getVersionsForSystemObject: GetVersionsForSystemObjectResult;
+  getVersionsForAsset: GetVersionsForAssetResult;
   getVocabulary: GetVocabularyResult;
   getVocabularyEntries: GetVocabularyEntriesResult;
   getWorkflow: GetWorkflowResult;
@@ -222,8 +222,8 @@ export type QueryGetUserArgs = {
 };
 
 
-export type QueryGetVersionsForSystemObjectArgs = {
-  input: GetVersionsForSystemObjectInput;
+export type QueryGetVersionsForAssetArgs = {
+  input: GetVersionsForAssetInput;
 };
 
 
@@ -1576,6 +1576,7 @@ export type GetSourceObjectIdentiferResult = {
 export type AssetDetail = {
   __typename?: 'AssetDetail';
   idSystemObject: Scalars['Int'];
+  idAsset: Scalars['Int'];
   name: Scalars['String'];
   path: Scalars['String'];
   assetType: Scalars['Int'];
@@ -1596,6 +1597,7 @@ export type GetAssetDetailsForSystemObjectResult = {
 export type DetailVersion = {
   __typename?: 'DetailVersion';
   idSystemObject: Scalars['Int'];
+  idAssetVersion: Scalars['Int'];
   version: Scalars['Int'];
   name: Scalars['String'];
   creator: Scalars['String'];
@@ -1603,12 +1605,12 @@ export type DetailVersion = {
   size: Scalars['BigInt'];
 };
 
-export type GetVersionsForSystemObjectInput = {
+export type GetVersionsForAssetInput = {
   idSystemObject: Scalars['Int'];
 };
 
-export type GetVersionsForSystemObjectResult = {
-  __typename?: 'GetVersionsForSystemObjectResult';
+export type GetVersionsForAssetResult = {
+  __typename?: 'GetVersionsForAssetResult';
   versions: Array<DetailVersion>;
 };
 
@@ -2854,7 +2856,7 @@ export type GetAssetDetailsForSystemObjectQuery = (
     { __typename?: 'GetAssetDetailsForSystemObjectResult' }
     & { assetDetails: Array<(
       { __typename?: 'AssetDetail' }
-      & Pick<AssetDetail, 'idSystemObject' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
+      & Pick<AssetDetail, 'idSystemObject' | 'idAsset' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
     )> }
   ) }
 );
@@ -3007,18 +3009,18 @@ export type GetSystemObjectDetailsQuery = (
   ) }
 );
 
-export type GetVersionsForSystemObjectQueryVariables = Exact<{
-  input: GetVersionsForSystemObjectInput;
+export type GetVersionsForAssetQueryVariables = Exact<{
+  input: GetVersionsForAssetInput;
 }>;
 
 
-export type GetVersionsForSystemObjectQuery = (
+export type GetVersionsForAssetQuery = (
   { __typename?: 'Query' }
-  & { getVersionsForSystemObject: (
-    { __typename?: 'GetVersionsForSystemObjectResult' }
+  & { getVersionsForAsset: (
+    { __typename?: 'GetVersionsForAssetResult' }
     & { versions: Array<(
       { __typename?: 'DetailVersion' }
-      & Pick<DetailVersion, 'idSystemObject' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size'>
+      & Pick<DetailVersion, 'idSystemObject' | 'idAssetVersion' | 'version' | 'name' | 'creator' | 'dateCreated' | 'size'>
     )> }
   ) }
 );
@@ -4861,6 +4863,7 @@ export const GetAssetDetailsForSystemObjectDocument = gql`
   getAssetDetailsForSystemObject(input: $input) {
     assetDetails {
       idSystemObject
+      idAsset
       name
       path
       assetType
@@ -5251,11 +5254,12 @@ export function useGetSystemObjectDetailsLazyQuery(baseOptions?: Apollo.LazyQuer
 export type GetSystemObjectDetailsQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsQuery>;
 export type GetSystemObjectDetailsLazyQueryHookResult = ReturnType<typeof useGetSystemObjectDetailsLazyQuery>;
 export type GetSystemObjectDetailsQueryResult = Apollo.QueryResult<GetSystemObjectDetailsQuery, GetSystemObjectDetailsQueryVariables>;
-export const GetVersionsForSystemObjectDocument = gql`
-    query getVersionsForSystemObject($input: GetVersionsForSystemObjectInput!) {
-  getVersionsForSystemObject(input: $input) {
+export const GetVersionsForAssetDocument = gql`
+    query getVersionsForAsset($input: GetVersionsForAssetInput!) {
+  getVersionsForAsset(input: $input) {
     versions {
       idSystemObject
+      idAssetVersion
       version
       name
       creator
@@ -5267,32 +5271,32 @@ export const GetVersionsForSystemObjectDocument = gql`
     `;
 
 /**
- * __useGetVersionsForSystemObjectQuery__
+ * __useGetVersionsForAssetQuery__
  *
- * To run a query within a React component, call `useGetVersionsForSystemObjectQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetVersionsForSystemObjectQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useGetVersionsForAssetQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetVersionsForAssetQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetVersionsForSystemObjectQuery({
+ * const { data, loading, error } = useGetVersionsForAssetQuery({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useGetVersionsForSystemObjectQuery(baseOptions: Apollo.QueryHookOptions<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>) {
+export function useGetVersionsForAssetQuery(baseOptions: Apollo.QueryHookOptions<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>(GetVersionsForSystemObjectDocument, options);
+        return Apollo.useQuery<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>(GetVersionsForAssetDocument, options);
       }
-export function useGetVersionsForSystemObjectLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>) {
+export function useGetVersionsForAssetLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>(GetVersionsForSystemObjectDocument, options);
+          return Apollo.useLazyQuery<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>(GetVersionsForAssetDocument, options);
         }
-export type GetVersionsForSystemObjectQueryHookResult = ReturnType<typeof useGetVersionsForSystemObjectQuery>;
-export type GetVersionsForSystemObjectLazyQueryHookResult = ReturnType<typeof useGetVersionsForSystemObjectLazyQuery>;
-export type GetVersionsForSystemObjectQueryResult = Apollo.QueryResult<GetVersionsForSystemObjectQuery, GetVersionsForSystemObjectQueryVariables>;
+export type GetVersionsForAssetQueryHookResult = ReturnType<typeof useGetVersionsForAssetQuery>;
+export type GetVersionsForAssetLazyQueryHookResult = ReturnType<typeof useGetVersionsForAssetLazyQuery>;
+export type GetVersionsForAssetQueryResult = Apollo.QueryResult<GetVersionsForAssetQuery, GetVersionsForAssetQueryVariables>;
 export const GetIngestionItemsForSubjectsDocument = gql`
     query getIngestionItemsForSubjects($input: GetIngestionItemsForSubjectsInput!) {
   getIngestionItemsForSubjects(input: $input) {
