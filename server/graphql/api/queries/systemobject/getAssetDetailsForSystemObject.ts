@@ -5,6 +5,7 @@ const getAssetDetailsForSystemObject = gql`
         getAssetDetailsForSystemObject(input: $input) {
           assetDetails {
                 idSystemObject
+                idAsset
                 name
                 path
                 assetType

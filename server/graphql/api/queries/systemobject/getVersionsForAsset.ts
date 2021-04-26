@@ -1,10 +1,11 @@
 import { gql } from 'apollo-server-express';
 
-const getVersionsForSystemObject = gql`
-    query getVersionsForSystemObject($input: GetVersionsForSystemObjectInput!) {
-        getVersionsForSystemObject(input: $input) {
+const getVersionsForAsset = gql`
+    query getVersionsForAsset($input: GetVersionsForAssetInput!) {
+        getVersionsForAsset(input: $input) {
           versions {
                 idSystemObject
+                idAssetVersion
                 version
                 name
                 creator
@@ -15,4 +16,4 @@ const getVersionsForSystemObject = gql`
     }
 `;
 
-export default getVersionsForSystemObject;
+export default getVersionsForAsset;

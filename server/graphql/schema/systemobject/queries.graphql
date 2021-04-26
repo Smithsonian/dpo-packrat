@@ -4,7 +4,7 @@ type Query {
     getSystemObjectDetails(input: GetSystemObjectDetailsInput!): GetSystemObjectDetailsResult!
     getSourceObjectIdentifer(input: GetSourceObjectIdentiferInput!): GetSourceObjectIdentiferResult!
     getAssetDetailsForSystemObject(input: GetAssetDetailsForSystemObjectInput!): GetAssetDetailsForSystemObjectResult!
-    getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
+    getVersionsForAsset(input: GetVersionsForAssetInput!): GetVersionsForAssetResult!
     getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!
     getProjectList(input: GetProjectListInput!): GetProjectListResult!
 }
@@ -169,6 +169,7 @@ type GetSourceObjectIdentiferResult {
 
 type AssetDetail {
     idSystemObject: Int!
+    idAsset: Int!
     name: String!
     path: String!
     assetType: Int!
@@ -187,6 +188,7 @@ type GetAssetDetailsForSystemObjectResult {
 
 type DetailVersion {
     idSystemObject: Int!
+    idAssetVersion: Int!
     version: Int!
     name: String!
     creator: String!
@@ -194,11 +196,11 @@ type DetailVersion {
     size: BigInt!
 }
 
-input GetVersionsForSystemObjectInput {
+input GetVersionsForAssetInput {
     idSystemObject: Int!
 }
 
-type GetVersionsForSystemObjectResult {
+type GetVersionsForAssetResult {
     versions: [DetailVersion!]!
 }
 
