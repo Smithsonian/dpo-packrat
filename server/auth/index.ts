@@ -4,19 +4,19 @@ import session from 'express-session';
 import MemoryStore from 'memorystore';
 import { Config } from '../config';
 
-const { CLIENT_ENDPOINT, SESSION_SECRET } = process.env;
+const { PACKRAT_CLIENT_ENDPOINT, PACKRAT_SESSION_SECRET } = process.env;
 
-if (!CLIENT_ENDPOINT) {
-    throw new Error('CLIENT_ENDPOINT was not provided to cors config');
+if (!PACKRAT_CLIENT_ENDPOINT) {
+    throw new Error('PACKRAT_CLIENT_ENDPOINT was not provided to cors config');
 }
 
 const authCorsConfig = {
-    origin: CLIENT_ENDPOINT,
+    origin: PACKRAT_CLIENT_ENDPOINT,
     credentials: true
 };
 
-if (!SESSION_SECRET) {
-    throw new Error('SESSION_SECRET was not provided to sessions config');
+if (!PACKRAT_SESSION_SECRET) {
+    throw new Error('PACKRAT_SESSION_SECRET was not provided to sessions config');
 }
 
 /**
@@ -33,7 +33,7 @@ const sessionConfig = {
     cookie: {
         maxAge
     },
-    secret: SESSION_SECRET,
+    secret: PACKRAT_SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
     store: new Store({ checkPeriod })
