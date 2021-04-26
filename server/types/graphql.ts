@@ -1573,6 +1573,7 @@ export type GetSourceObjectIdentiferResult = {
 export type AssetDetail = {
   __typename?: 'AssetDetail';
   idSystemObject: Scalars['Int'];
+  idAsset: Scalars['Int'];
   name: Scalars['String'];
   path: Scalars['String'];
   assetType: Scalars['Int'];

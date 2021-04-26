@@ -1576,6 +1576,7 @@ export type GetSourceObjectIdentiferResult = {
 export type AssetDetail = {
   __typename?: 'AssetDetail';
   idSystemObject: Scalars['Int'];
+  idAsset: Scalars['Int'];
   name: Scalars['String'];
   path: Scalars['String'];
   assetType: Scalars['Int'];
@@ -2855,7 +2856,7 @@ export type GetAssetDetailsForSystemObjectQuery = (
     { __typename?: 'GetAssetDetailsForSystemObjectResult' }
     & { assetDetails: Array<(
       { __typename?: 'AssetDetail' }
-      & Pick<AssetDetail, 'idSystemObject' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
+      & Pick<AssetDetail, 'idSystemObject' | 'idAsset' | 'name' | 'path' | 'assetType' | 'version' | 'dateCreated' | 'size'>
     )> }
   ) }
 );
@@ -4862,6 +4863,7 @@ export const GetAssetDetailsForSystemObjectDocument = gql`
   getAssetDetailsForSystemObject(input: $input) {
     assetDetails {
       idSystemObject
+      idAsset
       name
       path
       assetType
