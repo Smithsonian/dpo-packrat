@@ -31,10 +31,10 @@ export default class API {
     }
 
     static async request(route: string, options: RequestInit = {}): Promise<any> {
-        const { REACT_APP_SERVER_ENDPOINT } = process.env;
+        const { PACKRAT_REACT_APP_SERVER_ENDPOINT } = process.env;
 
-        if (!REACT_APP_SERVER_ENDPOINT) {
-            throw new Error('REACT_APP_SERVER_ENDPOINT was not provided to rest api client');
+        if (!PACKRAT_REACT_APP_SERVER_ENDPOINT) {
+            throw new Error('PACKRAT_REACT_APP_SERVER_ENDPOINT was not provided to rest api client');
         }
 
         const defaultOptions: RequestInit = {
@@ -45,6 +45,6 @@ export default class API {
             ...options
         };
 
-        return fetch(`${REACT_APP_SERVER_ENDPOINT}/${route}`, defaultOptions).then(response => response.json());
+        return fetch(`${PACKRAT_REACT_APP_SERVER_ENDPOINT}/${route}`, defaultOptions).then(response => response.json());
     }
 }
