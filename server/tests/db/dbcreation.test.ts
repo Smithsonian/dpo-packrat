@@ -102,6 +102,7 @@ let systemObjectXrefSubItem1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefSubItem2: DBAPI.SystemObjectXref | null;
 let systemObjectXrefSubItem3: DBAPI.SystemObjectXref | null;
 let systemObjectXrefSubItem4: DBAPI.SystemObjectXref | null;
+let systemObjectXrefProjectItem1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefProjectSubject1: DBAPI.SystemObjectXref | null;
 let systemObjectXrefProjectSubject2: DBAPI.SystemObjectXref | null;
 let systemObjectXrefUnitProject1: DBAPI.SystemObjectXref | null;
@@ -1338,9 +1339,10 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: SystemObjectXref Subject-Item 2/4', async () => {
-        if (subject && subjectNulls && itemNulls) {
+        if (subject && subjectNulls && itemNulls && project) {
             systemObjectXrefSubItem2 = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(subject, itemNulls);
             systemObjectXrefSubItem4 = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(subjectNulls, itemNulls);
+            systemObjectXrefProjectItem1 = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(project, itemNulls);
         }
         expect(systemObjectXrefSubItem2).toBeTruthy();
         if (systemObjectXrefSubItem2)
@@ -1349,6 +1351,10 @@ describe('DB Creation Test Suite', () => {
         expect(systemObjectXrefSubItem4).toBeTruthy();
         if (systemObjectXrefSubItem4)
             expect(systemObjectXrefSubItem4.idSystemObjectXref).toBeGreaterThan(0);
+
+        expect(systemObjectXrefProjectItem1).toBeTruthy();
+        if (systemObjectXrefProjectItem1)
+            expect(systemObjectXrefProjectItem1.idSystemObjectXref).toBeGreaterThan(0);
     });
 
     test('DB Creation: SystemObjectXref Project-Subject & Unit-Project', async () => {
@@ -6537,6 +6543,19 @@ describe('DB Delete Test', () => {
             expect(soxFetch).toBeTruthy();
         }
 
+        // delete link between project and itemNulls, which has just one subject attached
+        if (systemObjectXrefProjectItem1) {
+            const res: H.IOResults = await DBAPI.SystemObjectXref.deleteIfAllowed(systemObjectXrefProjectItem1.idSystemObjectXref);
+            if (!res.success)
+                LOG.error(`DB Delete failed: ${res.error}`, LOG.LS.eTEST);
+            else
+                LOG.info(`DB Delete suceeded: ${JSON.stringify(systemObjectXrefSubItem4)}`, LOG.LS.eTEST);
+            expect(res.success).toBeTruthy();
+
+            // try to fetch; should not be found
+            const soxFetch: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.fetch(systemObjectXrefProjectItem1.idSystemObjectXref);
+            expect(soxFetch).toBeFalsy();
+        }
         expect((await DBAPI.SystemObjectXref.deleteIfAllowed(1000000000)).success).toBeFalsy();
     });
 

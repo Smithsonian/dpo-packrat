@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { join } from 'path';
 import { ZipFile } from '../../utils/zipFile';
 import * as H from '../../utils/helpers';
@@ -66,6 +67,14 @@ describe('ZipFile', () => {
 
         const uncompressedSizeRandomName: number | null = await zip.uncompressedSize(H.Helpers.randomSlug());
         expect(uncompressedSizeRandomName).toBeNull();
+    });
+
+    test('ZipFile.add expected failure', async () => {
+        // expected failure from not-yet implemented 'add'
+        const path = join(mockPath, 'PackratTest.zip');
+        const zipStream = fs.createReadStream(path);
+        const res: H.IOResults = await zip.add('fakey', zipStream);
+        expect(res.success).toBeFalsy();
     });
 
     test('ZipFile.close', async () => {

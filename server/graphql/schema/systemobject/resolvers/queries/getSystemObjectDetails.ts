@@ -216,22 +216,30 @@ async function objectToRepositoryPath(objects: Objects, objectType: eSystemObjec
     for (const object of objects) {
         let SystemObject: SystemObject | null = null;
 
-        if (object instanceof DBAPI.Unit && objectType === eSystemObjectType.eUnit) SystemObject = await DBAPI.SystemObject.fetchFromUnitID(object.idUnit);
-        if (object instanceof DBAPI.Project && objectType === eSystemObjectType.eProject) SystemObject = await DBAPI.SystemObject.fetchFromProjectID(object.idProject);
-        if (object instanceof DBAPI.Subject && objectType === eSystemObjectType.eSubject) SystemObject = await DBAPI.SystemObject.fetchFromSubjectID(object.idSubject);
-        if (object instanceof DBAPI.Item && objectType === eSystemObjectType.eItem) SystemObject = await DBAPI.SystemObject.fetchFromItemID(object.idItem);
+        if (object instanceof DBAPI.Unit && objectType === eSystemObjectType.eUnit)
+            SystemObject = await DBAPI.SystemObject.fetchFromUnitID(object.idUnit);
+        if (object instanceof DBAPI.Project && objectType === eSystemObjectType.eProject)
+            SystemObject = await DBAPI.SystemObject.fetchFromProjectID(object.idProject);
+        if (object instanceof DBAPI.Subject && objectType === eSystemObjectType.eSubject)
+            SystemObject = await DBAPI.SystemObject.fetchFromSubjectID(object.idSubject);
+        if (object instanceof DBAPI.Item && objectType === eSystemObjectType.eItem)
+            SystemObject = await DBAPI.SystemObject.fetchFromItemID(object.idItem);
         if (object instanceof DBAPI.CaptureData && objectType === eSystemObjectType.eCaptureData)
             SystemObject = await DBAPI.SystemObject.fetchFromCaptureDataID(object.idCaptureData);
-        if (object instanceof DBAPI.Model && objectType === eSystemObjectType.eModel) SystemObject = await DBAPI.SystemObject.fetchFromModelID(object.idModel);
-        if (object instanceof DBAPI.Scene && objectType === eSystemObjectType.eScene) SystemObject = await DBAPI.SystemObject.fetchFromSceneID(object.idScene);
+        if (object instanceof DBAPI.Model && objectType === eSystemObjectType.eModel)
+            SystemObject = await DBAPI.SystemObject.fetchFromModelID(object.idModel);
+        if (object instanceof DBAPI.Scene && objectType === eSystemObjectType.eScene)
+            SystemObject = await DBAPI.SystemObject.fetchFromSceneID(object.idScene);
         if (object instanceof DBAPI.IntermediaryFile && objectType === eSystemObjectType.eIntermediaryFile)
             SystemObject = await DBAPI.SystemObject.fetchFromIntermediaryFileID(object.idIntermediaryFile);
         if (object instanceof DBAPI.ProjectDocumentation && objectType === eSystemObjectType.eProjectDocumentation)
             SystemObject = await DBAPI.SystemObject.fetchFromProjectDocumentationID(object.idProjectDocumentation);
-        if (object instanceof DBAPI.Asset && objectType === eSystemObjectType.eAsset) SystemObject = await DBAPI.SystemObject.fetchFromAssetID(object.idAsset);
+        if (object instanceof DBAPI.Asset && objectType === eSystemObjectType.eAsset)
+            SystemObject = await DBAPI.SystemObject.fetchFromAssetID(object.idAsset);
         if (object instanceof DBAPI.AssetVersion && objectType === eSystemObjectType.eAssetVersion)
             SystemObject = await DBAPI.SystemObject.fetchFromAssetVersionID(object.idAssetVersion);
-        if (object instanceof DBAPI.Actor && objectType === eSystemObjectType.eActor) SystemObject = await DBAPI.SystemObject.fetchFromActorID(object.idActor);
+        if (object instanceof DBAPI.Actor && objectType === eSystemObjectType.eActor)
+            SystemObject = await DBAPI.SystemObject.fetchFromActorID(object.idActor);
         if (object instanceof DBAPI.Stakeholder && objectType === eSystemObjectType.eStakeholder)
             SystemObject = await DBAPI.SystemObject.fetchFromStakeholderID(object.idStakeholder);
 
@@ -246,132 +254,9 @@ async function objectToRepositoryPath(objects: Objects, objectType: eSystemObjec
     return paths;
 }
 
-async function resolveNameForObjectType(systemObject: SystemObject | null, objectType: eDBObjectType): Promise<string> {
+async function resolveNameForObjectType(systemObject: SystemObject | null, _objectType: eDBObjectType): Promise<string> {
     if (!systemObject)
         return unknownName;
-
-    switch (objectType) {
-        case eSystemObjectType.eUnit:
-            if (systemObject.idUnit) {
-                const Unit = await DBAPI.Unit.fetch(systemObject.idUnit);
-                if (Unit)
-                    return Unit.Name;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eProject:
-            if (systemObject.idProject) {
-                const Project = await DBAPI.Project.fetch(systemObject.idProject);
-                if (Project)
-                    return Project.Name;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eSubject:
-            if (systemObject.idSubject) {
-                const Subject = await DBAPI.Subject.fetch(systemObject.idSubject);
-                if (Subject)
-                    return Subject.Name;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eItem:
-            if (systemObject.idItem) {
-                const Item = await DBAPI.Item.fetch(systemObject.idItem);
-                if (Item)
-                    return Item.Name;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eCaptureData:
-            if (systemObject.idCaptureData) {
-                const CaptureData = await DBAPI.CaptureData.fetch(systemObject.idCaptureData);
-                if (CaptureData)
-                    return CaptureData.Name;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eModel:
-            if (systemObject.idModel) {
-                const Model = await DBAPI.Model.fetch(systemObject.idModel);
-                if (Model)
-                    return Model.Name;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eScene:
-            if (systemObject.idScene) {
-                const Scene = await DBAPI.Scene.fetch(systemObject.idScene);
-                if (Scene)
-                    return Scene.Name;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eIntermediaryFile:
-            if (systemObject.idIntermediaryFile) {
-                const IntermediaryFile = await DBAPI.IntermediaryFile.fetch(systemObject.idIntermediaryFile);
-                if (IntermediaryFile) {
-                    const Asset = await DBAPI.Asset.fetch(IntermediaryFile.idAsset);
-                    if (Asset)
-                        return Asset.FileName;
-                }
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eProjectDocumentation:
-            if (systemObject.idProjectDocumentation) {
-                const ProjectDocumentation = await DBAPI.ProjectDocumentation.fetch(systemObject.idProjectDocumentation);
-                if (ProjectDocumentation)
-                    return ProjectDocumentation.Name;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eAsset:
-            if (systemObject.idAsset) {
-                const Asset = await DBAPI.Asset.fetch(systemObject.idAsset);
-                if (Asset)
-                    return Asset.FileName;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eAssetVersion:
-            if (systemObject.idAssetVersion) {
-                const AssetVersion = await DBAPI.AssetVersion.fetch(systemObject.idAssetVersion);
-                if (AssetVersion)
-                    return AssetVersion.FileName;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eActor:
-            if (systemObject.idActor) {
-                const Actor = await DBAPI.Actor.fetch(systemObject.idActor);
-                if (Actor)
-                    return Actor?.IndividualName ?? unknownName;
-            }
-
-            return unknownName;
-
-        case eSystemObjectType.eStakeholder:
-            if (systemObject.idStakeholder) {
-                const Stakeholder = await DBAPI.Stakeholder.fetch(systemObject.idStakeholder);
-                if (Stakeholder)
-                    return Stakeholder.IndividualName;
-            }
-
-            return unknownName;
-
-        default:
-            return unknownName;
-    }
+    const name: string | undefined = await CACHE.SystemObjectCache.getObjectNameByID(systemObject.idSystemObject);
+    return name || unknownName;
 }

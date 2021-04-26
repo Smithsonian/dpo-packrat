@@ -1,7 +1,9 @@
+import * as fs from 'fs-extra';
+import StreamZip from 'node-stream-zip';
+
 import * as LOG from './logger';
 import * as H from './helpers';
 import { IZip, zipFilterResults } from './IZip';
-import StreamZip from 'node-stream-zip';
 
 /**
  * Zip contents are stored at the end of the zip file.  In order to decompress a zip file,
@@ -37,7 +39,7 @@ export class ZipFile implements IZip {
                             this.clearState();
                             for (const entry of Object.values(this._zip.entries())) { /* istanbul ignore next */
                                 if (entry.name.toUpperCase().startsWith('__MACOSX')) // ignore wacky MAC OSX resource folder stuffed into zips created on that platform
-                                    continue;
+                                    continue; /* istanbul ignore next */
                                 if (entry.name.toUpperCase().endsWith('/.DS_STORE')) // ignore wacky MAC OSX resource file stuffed into zips created on that platform
                                     continue;
                                 this._entries.push(entry.name);
@@ -58,6 +60,10 @@ export class ZipFile implements IZip {
                 LOG.error('ZipFile.load', LOG.LS.eSYS, error);
             return { success: false, error: JSON.stringify(error) };
         }
+    }
+
+    async add(_fileNameAndPath: string, _inputStream: NodeJS.ReadableStream): Promise<H.IOResults> {
+        return { success: false, error: 'Not Implemented' };
     }
 
     async close(): Promise<H.IOResults> {
@@ -85,20 +91,24 @@ export class ZipFile implements IZip {
     async getJustFiles(filter: string | null): Promise<string[]> { return zipFilterResults(this._files, filter); }
     async getJustDirectories(filter: string | null): Promise<string[]> { return zipFilterResults(this._dirs, filter); }
 
-    async streamContent(entry: string): Promise<NodeJS.ReadableStream | null> {
+    async streamContent(entry: string | null): Promise<NodeJS.ReadableStream | null> {
         return new Promise<NodeJS.ReadableStream | null>((resolve) => {
             if (!this._zip)
                 resolve(null);
             else {
                 try {
-                    this._zip.stream(entry, (error, stream) => {
-                        if (!error && stream)
-                            resolve(stream);
-                        else {
-                            LOG.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
-                            resolve(null);
-                        }
-                    });
+                    if (!entry)
+                        resolve(fs.createReadStream(this._fileName));
+                    else {
+                        this._zip.stream(entry, (error, stream) => {
+                            if (!error && stream)
+                                resolve(stream);
+                            else {
+                                LOG.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
+                                resolve(null);
+                            }
+                        });
+                    }
                 } catch (error) /* istanbul ignore next */ {
                     LOG.info(`ZipFile.streamContent ${entry}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
                     resolve(null);
