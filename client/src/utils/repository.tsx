@@ -211,16 +211,16 @@ export function getDetailsUrlForObject(idSystemObject: number): string {
     return `/repository/details/${idSystemObject}`;
 }
 
-export function getDownloadAssetUrlForObject(idAsset: number): string {
-    return `/download?idAsset=${idAsset}`;
+export function getDownloadAssetUrlForObject(serverEndPoint: string | undefined, idAsset: number): string {
+    return `${serverEndPoint}/download?idAsset=${idAsset}`;
 }
 
-export function getDownloadAllAssetsUrlForObject(idSystemObject: number): string {
-    return `/download?idSystemObject=${idSystemObject}`;
+export function getDownloadAllAssetsUrlForObject(serverEndPoint: string | undefined, idSystemObject: number): string {
+    return `${serverEndPoint}/download?idSystemObject=${idSystemObject}`;
 }
 
-export function getDownloadAssetVersionUrlForObject(idAssetVersion: number): string {
-    return `/download?idAssetVersion=${idAssetVersion}`;
+export function getDownloadAssetVersionUrlForObject(serverEndPoint: string | undefined, idAssetVersion: number): string {
+    return `${serverEndPoint}/download?idAssetVersion=${idAssetVersion}`;
 }
 
 // prettier-ignore

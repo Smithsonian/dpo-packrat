@@ -8,11 +8,11 @@ import clsx from 'clsx';
 import React from 'react';
 import { EmptyTable, NewTabLink } from '../../../../../components';
 import { StateDetailVersion } from '../../../../../store';
-import { getDetailsUrlForObject } from '../../../../../utils/repository';
+import { getDetailsUrlForObject, getDownloadAssetVersionUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectVersions } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetDetailsTable';
-import AttachmentIcon from '@material-ui/icons/Attachment';
+import GetAppIcon from '@material-ui/icons/GetApp';
 
 interface AssetVersionsTableProps {
     idSystemObject: number;
@@ -21,6 +21,7 @@ interface AssetVersionsTableProps {
 function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement {
     const classes = useStyles();
     const { idSystemObject } = props;
+    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
     const { data, loading } = useObjectVersions(idSystemObject);
 
     const headers: string[] = ['Link', 'Version', 'Name', 'Creator', 'Date Created', 'Size'];
@@ -41,14 +42,22 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                         </th>
                     ))}
                 </tr>
+                <tr>
+                    <td colSpan={headers.length}>
+                        <hr />
+                    </td>
+                </tr>
             </thead>
 
             <tbody>
                 {versions.map((version: StateDetailVersion, index: number) => (
                     <tr key={index}>
                         <td>
-                            <a href='/admin'>
-                                <AttachmentIcon />
+                            <a
+                                href={getDownloadAssetVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, version.idAssetVersion)}
+                                style={{ textDecoration: 'none', color: 'black' }}
+                            >
+                                <GetAppIcon />
                             </a>
                         </td>
                         <td>
