@@ -5,7 +5,7 @@ import Metadata from './types/Metadata';
 import getSystemObjectDetails from './queries/getSystemObjectDetails';
 import getSourceObjectIdentifer from './queries/getSourceObjectIdentifer';
 import getAssetDetailsForSystemObject from './queries/getAssetDetailsForSystemObject';
-import getVersionsForSystemObject from './queries/getVersionsForSystemObject';
+import getVersionsForAsset from './queries/getVersionsForAsset';
 import getDetailsTabDataForObject from './queries/getDetailsTabDataForObject';
 import getProjectList from './queries/getProjectList';
 import updateObjectDetails from './mutations/updateObjectDetails';
@@ -19,7 +19,7 @@ const resolvers = {
         getSystemObjectDetails,
         getSourceObjectIdentifer,
         getAssetDetailsForSystemObject,
-        getVersionsForSystemObject,
+        getVersionsForAsset,
         getDetailsTabDataForObject,
         getProjectList
     },

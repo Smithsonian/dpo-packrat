@@ -5,6 +5,7 @@ import * as DBC from '../../db/connection';
 
 import cacheControlTest from './CacheControl.test';
 import vocabularyCacheTest from './VocabularyCache.test';
+import userCacheTest from './UserCacheTest.test';
 import systemObjectCacheTest from './SystemObjectCache.test';
 import { EventFactory } from '../../event/interface/EventFactory';
 
@@ -19,6 +20,7 @@ afterAll(async done => {
 
 describe('Cache Test Suite', () => {
     systemObjectCacheTest();
+    userCacheTest();
     vocabularyCacheTest();
     cacheControlTest();
 });

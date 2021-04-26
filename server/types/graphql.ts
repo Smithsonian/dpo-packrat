@@ -51,7 +51,7 @@ export type Query = {
   getUnitsFromNameSearch: GetUnitsFromNameSearchResult;
   getUploadedAssetVersion: GetUploadedAssetVersionResult;
   getUser: GetUserResult;
-  getVersionsForSystemObject: GetVersionsForSystemObjectResult;
+  getVersionsForAsset: GetVersionsForAssetResult;
   getVocabulary: GetVocabularyResult;
   getVocabularyEntries: GetVocabularyEntriesResult;
   getWorkflow: GetWorkflowResult;
@@ -219,8 +219,8 @@ export type QueryGetUserArgs = {
 };
 
 
-export type QueryGetVersionsForSystemObjectArgs = {
-  input: GetVersionsForSystemObjectInput;
+export type QueryGetVersionsForAssetArgs = {
+  input: GetVersionsForAssetInput;
 };
 
 
@@ -1593,6 +1593,7 @@ export type GetAssetDetailsForSystemObjectResult = {
 export type DetailVersion = {
   __typename?: 'DetailVersion';
   idSystemObject: Scalars['Int'];
+  idAssetVersion: Scalars['Int'];
   version: Scalars['Int'];
   name: Scalars['String'];
   creator: Scalars['String'];
@@ -1600,12 +1601,12 @@ export type DetailVersion = {
   size: Scalars['BigInt'];
 };
 
-export type GetVersionsForSystemObjectInput = {
+export type GetVersionsForAssetInput = {
   idSystemObject: Scalars['Int'];
 };
 
-export type GetVersionsForSystemObjectResult = {
-  __typename?: 'GetVersionsForSystemObjectResult';
+export type GetVersionsForAssetResult = {
+  __typename?: 'GetVersionsForAssetResult';
   versions: Array<DetailVersion>;
 };
 

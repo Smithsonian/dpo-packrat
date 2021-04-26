@@ -7,8 +7,8 @@ import {
     GetAssetDetailsForSystemObjectQueryResult,
     GetSystemObjectDetailsDocument,
     GetSystemObjectDetailsQueryResult,
-    GetVersionsForSystemObjectDocument,
-    GetVersionsForSystemObjectQueryResult,
+    GetVersionsForAssetDocument,
+    GetVersionsForAssetQueryResult,
     GetDetailsTabDataForObjectDocument,
     GetDetailsTabDataForObjectQueryResult,
     UpdateObjectDetailsDocument,
@@ -41,8 +41,8 @@ export function useObjectAssets(idSystemObject: number): GetAssetDetailsForSyste
     });
 }
 
-export function useObjectVersions(idSystemObject: number): GetVersionsForSystemObjectQueryResult {
-    return useQuery(GetVersionsForSystemObjectDocument, {
+export function useObjectVersions(idSystemObject: number): GetVersionsForAssetQueryResult {
+    return useQuery(GetVersionsForAssetDocument, {
         variables: {
             input: {
                 idSystemObject

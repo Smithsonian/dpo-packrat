@@ -34,7 +34,7 @@ type Query {
   getUnitsFromNameSearch(input: GetUnitsFromNameSearchInput!): GetUnitsFromNameSearchResult!
   getUploadedAssetVersion: GetUploadedAssetVersionResult!
   getUser(input: GetUserInput!): GetUserResult!
-  getVersionsForSystemObject(input: GetVersionsForSystemObjectInput!): GetVersionsForSystemObjectResult!
+  getVersionsForAsset(input: GetVersionsForAssetInput!): GetVersionsForAssetResult!
   getVocabulary(input: GetVocabularyInput!): GetVocabularyResult!
   getVocabularyEntries(input: GetVocabularyEntriesInput!): GetVocabularyEntriesResult!
   getWorkflow(input: GetWorkflowInput!): GetWorkflowResult!
@@ -1211,6 +1211,7 @@ type GetAssetDetailsForSystemObjectResult {
 
 type DetailVersion {
   idSystemObject: Int!
+  idAssetVersion: Int!
   version: Int!
   name: String!
   creator: String!
@@ -1218,11 +1219,11 @@ type DetailVersion {
   size: BigInt!
 }
 
-input GetVersionsForSystemObjectInput {
+input GetVersionsForAssetInput {
   idSystemObject: Int!
 }
 
-type GetVersionsForSystemObjectResult {
+type GetVersionsForAssetResult {
   versions: [DetailVersion!]!
 }
 
