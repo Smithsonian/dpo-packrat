@@ -99,8 +99,8 @@ import {
     GetSystemObjectDetailsResult,
     GetAssetDetailsForSystemObjectInput,
     GetAssetDetailsForSystemObjectResult,
-    GetVersionsForSystemObjectInput,
-    GetVersionsForSystemObjectResult,
+    GetVersionsForAssetInput,
+    GetVersionsForAssetResult,
     GetDetailsTabDataForObjectInput,
     GetDetailsTabDataForObjectResult,
     GetFilterViewDataResult,
@@ -150,7 +150,7 @@ import getObjectChildren from './queries/repository/getObjectChildren';
 import getSourceObjectIdentifer from './queries/systemobject/getSourceObjectIdentifer';
 import getSystemObjectDetails from './queries/systemobject/getSystemObjectDetails';
 import getAssetDetailsForSystemObject from './queries/systemobject/getAssetDetailsForSystemObject';
-import getVersionsForSystemObject from './queries/systemobject/getVersionsForSystemObject';
+import getVersionsForAsset from './queries/systemobject/getVersionsForAsset';
 import getDetailsTabDataForObject from './queries/systemobject/getDetailsTabDataForObject';
 import getFilterViewData from './queries/repository/getFilterViewData';
 import getAllUsers from './queries/user/getAllUsers';
@@ -224,7 +224,7 @@ const allQueries = {
     getSourceObjectIdentifer,
     getSystemObjectDetails,
     getAssetDetailsForSystemObject,
-    getVersionsForSystemObject,
+    getVersionsForAsset,
     getDetailsTabDataForObject,
     getFilterViewData,
     updateObjectDetails,
@@ -602,8 +602,8 @@ class GraphQLApi {
         });
     }
 
-    async getVersionsForSystemObject(input: GetVersionsForSystemObjectInput, context?: Context): Promise<GetVersionsForSystemObjectResult> {
-        const operationName = 'getVersionsForSystemObject';
+    async getVersionsForAsset(input: GetVersionsForAssetInput, context?: Context): Promise<GetVersionsForAssetResult> {
+        const operationName = 'getVersionsForAsset';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

@@ -34,7 +34,7 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
         return <EmptyTable />;
     }
 
-    const { versions } = data.getVersionsForSystemObject;
+    const { versions } = data.getVersionsForAsset;
 
     return (
         <table className={classes.container}>
