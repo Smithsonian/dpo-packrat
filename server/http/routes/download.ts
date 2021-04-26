@@ -1,13 +1,14 @@
 import * as DBAPI from '../../db';
+import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import * as ZIP from '../../utils/zipStream';
 import * as STORE from '../../storage/interface';
 import { isAuthenticated } from '../auth';
 
 import { Request, Response } from 'express';
-
-const mime = require('mime-types');
-
+import mime from 'mime'; // const mime = require('mime-types'); // can't seem to make this work using "import * as mime from 'mime'"; subsequent calls to mime.lookup freeze!
+import path from 'path';
 
 /** Used to provide download access to assets. Access with one of the following URL query parameters set:
  * ?idAssetVersion=ID:  Downloads the specified version of the specified asset
@@ -74,8 +75,18 @@ class Downloader {
             }
 
             case eDownloadMode.eSystemObject: {
-                this.response.send(`Download idSystemObject=${this.idSystemObject}`);
-            } break;
+                const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSystemObject(this.idSystemObject!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                if (!assetVersions) {
+                    LOG.error(`/download?idSystemObject=${this.idSystemObject} unable to fetch asset versions`, LOG.LS.eHTTP);
+                    this.response.sendStatus(404);
+                    return false;
+                }
+                if (assetVersions.length == 0) {
+                    this.response.send(`No Assets are connected to idSystemObject ${this.idSystemObject}`);
+                    return true;
+                }
+                return await this.emitDownloadZip(assetVersions);
+            }
         }
         this.response.sendStatus(404);
         return false;
@@ -137,6 +148,45 @@ class Downloader {
         const fileName: string = assetVersion.FileName;
         const mimeType: string = mime.lookup(fileName) || 'application/octet-stream';
         return this.emitDownloadFromStream(res.readStream, fileName, mimeType);
+    }
+
+    private async emitDownloadZip(assetVersions: DBAPI.AssetVersion[]): Promise<boolean> {
+        const zip: ZIP.ZipStream = new ZIP.ZipStream();
+        for (const assetVersion of assetVersions) {
+            const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
+            if (!asset) {
+                LOG.error(`/download?idSystemObject=${this.idSystemObject} failed to identify asset by id ${assetVersion.idAsset}`, LOG.LS.eHTTP);
+                this.response.sendStatus(500);
+                return false;
+            }
+
+            const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
+            if (!RSR.success || !RSR.readStream) {
+                LOG.error(`/download?idSystemObject=${this.idSystemObject} failed to extract stream for asset version ${assetVersion.idAssetVersion}`, LOG.LS.eHTTP);
+                this.response.sendStatus(500);
+                return false;
+            }
+
+            const fileNameAndPath: string = path.join(asset.FilePath, assetVersion.FileName);
+            const res: H.IOResults = await zip.add(fileNameAndPath, RSR.readStream);
+            if (!res.success) {
+                LOG.error(`/download?idSystemObject=${this.idSystemObject} failed to add asset version ${assetVersion.idAssetVersion} to zip: ${res.error}`, LOG.LS.eHTTP);
+                this.response.sendStatus(500);
+                return false;
+            }
+        }
+
+        const zipStream: NodeJS.ReadableStream | null = await zip.streamContent(null);
+        if (!zipStream) {
+            LOG.error(`/download?idSystemObject=${this.idSystemObject} failed to extract stream from zip`, LOG.LS.eHTTP);
+            this.response.sendStatus(500);
+            return false;
+        }
+
+        const fileName: string = (await CACHE.SystemObjectCache.getObjectNameByID(this.idSystemObject!) || // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            `SystemObject${this.idSystemObject}`) + '.zip';
+        const mimeType: string = mime.lookup(fileName) || 'application/zip';
+        return this.emitDownloadFromStream(zipStream, fileName, mimeType);
     }
 
     private async emitDownloadFromStream(readStream: NodeJS.ReadableStream, fileName: string, mimeType: string | undefined): Promise<boolean> {

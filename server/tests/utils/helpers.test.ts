@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import * as T from '../../utils/types';
 
 const n1: number = 3;
 const n2: number = 5;
@@ -218,6 +219,10 @@ describe('Utils: Helpers', () => {
         const stream3: NodeJS.ReadableStream = fs.createReadStream(filePathRandom);
         const buffer3: Buffer | null = await H.Helpers.readFileFromStream(stream3);
         expect(buffer3).toBeTruthy();
+
+        const stream4: NodeJS.ReadableStream = fs.createReadStream(filePath);
+        const buffer4: Buffer | null = await H.Helpers.readFileFromStreamThrowErrors(stream4);
+        expect(buffer4).toBeTruthy();
     });
 
     test('Utils: Helpers.writeFileToStream', async () => {
@@ -455,6 +460,20 @@ describe('Utils: Helpers', () => {
         const output2: string = JSON.stringify(testData, H.Helpers.stringifyDatabaseRow);
         LOG.info(`output: ${output2}`, LOG.LS.eTEST);
         expect(output2).toEqual('{"map":[],"bigint":"999999999999999","string":"string","number":50,"boolean":false}');
+    });
+
+    test('Utils: types', async () => {
+        expect(T.maybe('ABBA')).toEqual('ABBA');
+        expect(T.maybe('')).toEqual('');
+        expect(T.maybe(3)).toEqual(3);
+        expect(T.maybe(null)).toEqual(null);
+        expect(T.maybe(undefined)).toEqual(null);
+
+        expect(T.maybeString('ABBA')).toEqual('ABBA');
+        expect(T.maybeString('')).toEqual('');
+        expect(T.maybeString(3)).toEqual(null);
+        expect(T.maybeString(null)).toEqual(null);
+        expect(T.maybeString(undefined)).toEqual(null);
     });
 });
 

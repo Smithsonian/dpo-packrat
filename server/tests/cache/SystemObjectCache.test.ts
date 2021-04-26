@@ -179,12 +179,18 @@ async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean>
     // LOG.info(`Got here 2 ${SOExamine.idSystemObject}`, LOG.LS.eTEST);
     const SOInfo: DBAPI.SystemObjectInfo | undefined = await SystemObjectCache.getSystemFromObjectID(oID);
     expect(SOInfo).toBeTruthy();
-    if (SOInfo) {
-        expect(SOInfo.idSystemObject).toEqual(SOExamine.idSystemObject);
-        expect(SOInfo.Retired).toEqual(SOExamine.Retired);
-        return true;
-    }
-    return false;
+    if (!SOInfo)
+        return false;
+
+    expect(SOInfo.idSystemObject).toEqual(SOExamine.idSystemObject);
+    expect(SOInfo.Retired).toEqual(SOExamine.Retired);
+
+    const name1: string | undefined = await SystemObjectCache.getObjectName(SOExamine);
+    const name2: string | undefined = await SystemObjectCache.getObjectNameByID(SOExamine.idSystemObject);
+    expect(name1).not.toBeUndefined();
+    expect(name2).not.toBeUndefined();
+    expect(name1).toEqual(name2);
+    return true;
 }
 
 async function testObjectAndID(oID: DBAPI.ObjectIDAndType): Promise<boolean> {

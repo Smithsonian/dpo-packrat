@@ -60,6 +60,10 @@ export class BagitReader implements IZip {
             return { success: false, error: 'Invalid BagitReader constructor params' };
     }
 
+    async add(_fileNameAndPath: string, _inputStream: NodeJS.ReadableStream): Promise<H.IOResults> {
+        return { success: false, error: 'Not Implemented' };
+    }
+
     async getAllEntries(filter: string | null): Promise<string[]> {
         if (!this._validated)
             await this.validate();
@@ -163,19 +167,19 @@ export class BagitReader implements IZip {
         return file;
     }
 
-    async streamContent(file: string): Promise<NodeJS.ReadableStream | null> {
+    async streamContent(file: string | null): Promise<NodeJS.ReadableStream | null> {
         if (!this._validated) { /* istanbul ignore if */
             if (!(await this.validate()).success)
                 return null;
         }
 
         try {
-            const fileName: string = this.prefixedFilename(file);
+            const fileName: string | null = file ? this.prefixedFilename(file) : null;
             // LOG.info(`getFileStream(${file}) looking in ${fileName} with prefixDir of ${this._prefixDir}`, LOG.LS.eSYS);
 
             return (this._zip)
-                ? await this._zip.streamContent(fileName)
-                : await fs.createReadStream(fileName);
+                ? this._zip.streamContent(fileName)
+                : fileName ? fs.createReadStream(fileName) : null;
         } catch (error) /* istanbul ignore next */ {
             LOG.info(`bagitReader.streamContent unable to read ${file}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
             return null;

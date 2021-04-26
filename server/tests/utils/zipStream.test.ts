@@ -1,11 +1,11 @@
 import fs from 'fs';
-import { join } from 'path';
+import * as path from 'path';
 import { ZipStream } from '../../utils/zipStream';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import { getPackratTestFileSizeMap } from './parser/bagitReader.test';
 
-const mockPath: string = join(__dirname, '../mock/utils/zip/');
+const mockPath: string = path.join(__dirname, '../mock/utils/zip/');
 /*
 afterAll(async done => {
     await H.Helpers.sleep(2000);
@@ -13,11 +13,12 @@ afterAll(async done => {
 });
 */
 let zip: ZipStream;
+let zipAdd: ZipStream;
 
 describe('ZipStream', () => {
     test('ZipStream load', async () => {
-        const path = join(mockPath, 'PackratTest.zip');
-        const fileStream = fs.createReadStream(path);
+        const filePath: string = path.join(mockPath, 'PackratTest.zip');
+        const fileStream = fs.createReadStream(filePath);
         zip = new ZipStream(fileStream);
         const result: H.IOResults = await zip.load();
         expect(result.success).toBeTruthy();
@@ -82,8 +83,8 @@ describe('ZipStream', () => {
     });
 
     test('ZipStream errors', async () => {
-        const path = join(mockPath, 'PackratTest.zip');
-        const fileStream = fs.createReadStream(path);
+        const filePath: string = path.join(mockPath, 'PackratTest.zip');
+        const fileStream = fs.createReadStream(filePath);
         const zipUnloaded = new ZipStream(fileStream);
         expect((await zipUnloaded.getJustDirectories(null)).length).toEqual(0);
 
@@ -92,6 +93,48 @@ describe('ZipStream', () => {
 
         const result: H.IOResults = await zipUnloaded.close();
         expect(result.success).toBeTruthy();
+    });
+
+    test('ZipStream.add', async () => {
+        zipAdd = new ZipStream();
+        expect((await zipAdd.load()).success).toBeFalsy();  // expected failure loading a zip that hasn't been opened from a stream
+
+        const directoryPath: string = path.join('var', 'test', H.Helpers.randomSlug());
+        let res: H.IOResults = await H.Helpers.createDirectory(directoryPath);
+        expect(res.success).toBeTruthy();
+
+        const filePathRandom: string = path.join(directoryPath, 'randomSource.txt');
+        LOG.info(`zipStream.test creating zip to ${filePathRandom}`, LOG.LS.eTEST);
+
+        const WS: NodeJS.WritableStream = fs.createWriteStream(filePathRandom);
+        expect(WS).toBeTruthy();
+        const hash: string = await H.Helpers.createRandomFile(WS, 10000);
+        expect(hash).toBeTruthy();
+
+        res = await zipAdd.add('random1.txt', fs.createReadStream(filePathRandom));
+        expect(res.success).toBeTruthy();
+        res = await zipAdd.add('random2.txt', fs.createReadStream(filePathRandom));
+        expect(res.success).toBeTruthy();
+        res = await zipAdd.add('randomPath/random3.txt', fs.createReadStream(filePathRandom));
+        expect(res.success).toBeTruthy();
+
+        expect(await zipAdd.getJustFiles(null)).toEqual(expect.arrayContaining(['random1.txt', 'random2.txt', 'randomPath/random3.txt']));
+        expect(await zipAdd.getJustDirectories(null)).toEqual(expect.arrayContaining(['randomPath/']));
+
+        const filePathRandomOutput: string = H.Helpers.randomFilename(directoryPath, '') + '.zip';
+        LOG.info(`zipStream.test writing zip to ${filePathRandomOutput}`, LOG.LS.eTEST);
+        const WSOutput: NodeJS.WritableStream = fs.createWriteStream(filePathRandomOutput);
+        expect(WSOutput).toBeTruthy();
+
+        const RS: NodeJS.ReadableStream | null = await zipAdd.streamContent(null);
+        expect(RS).toBeTruthy();
+        if (RS) {
+            res = await H.Helpers.writeStreamToStream(RS, WSOutput);
+            expect(res.success).toBeTruthy();
+        }
+
+        res = await H.Helpers.removeDirectory(directoryPath, true);
+        expect(res.success).toBeTruthy();
     });
 });
 
