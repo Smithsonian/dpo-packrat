@@ -65,10 +65,13 @@ export type ConfigType = {
             appId: string;
             authKey: string;
         }
-    }
+    },
     event: {
         type: EVENT_TYPE;
-    }
+    },
+    http: {
+        port: number;
+    },
     job: {
         type: JOB_TYPE;
         cookServerUrl: string;
@@ -120,6 +123,9 @@ export const Config: ConfigType = {
     },
     event: {
         type: EVENT_TYPE.INPROCESS,
+    },
+    http: {
+        port: process.env.PACKRAT_SERVER_PORT ? parseInt(process.env.PACKRAT_SERVER_PORT) : 4000,
     },
     job: {
         type: JOB_TYPE.NODE_SCHEDULE,

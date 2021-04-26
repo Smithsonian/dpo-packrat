@@ -108,6 +108,72 @@ export class SystemObjectCache {
         return (oID && sID) ? { oID, sID } : undefined;
     }
 
+    private async getObjectNameInternal(SO: DBAPI.SystemObject): Promise<string | undefined> {
+        const oID: DBAPI.ObjectIDAndType | undefined = await this.getObjectFromSystemInternal(SO.idSystemObject);
+        if (!oID) /* istanbul ignore next */
+            return undefined;
+
+        switch (oID.eObjectType) {
+            case eSystemObjectType.eUnit: {
+                const Unit = SO.idUnit ? await DBAPI.Unit.fetch(SO.idUnit) : /* istanbul ignore next */ null;
+                return Unit ? Unit.Name : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eProject: {
+                const Project = SO.idProject ? await DBAPI.Project.fetch(SO.idProject) : /* istanbul ignore next */ null;
+                return Project ? Project.Name : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eSubject: {
+                const Subject = SO.idSubject ? await DBAPI.Subject.fetch(SO.idSubject) : /* istanbul ignore next */ null;
+                return Subject ? Subject.Name : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eItem: {
+                const Item = SO.idItem ? await DBAPI.Item.fetch(SO.idItem) : /* istanbul ignore next */ null;
+                return Item ? Item.Name : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eCaptureData: {
+                const CaptureData = SO.idCaptureData ? await DBAPI.CaptureData.fetch(SO.idCaptureData) : /* istanbul ignore next */ null;
+                return CaptureData ? CaptureData.Name : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eModel: {
+                const Model = SO.idModel ? await DBAPI.Model.fetch(SO.idModel) : /* istanbul ignore next */ null;
+                return Model ? Model.Name : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eScene: {
+                const Scene = SO.idScene ? await DBAPI.Scene.fetch(SO.idScene) : /* istanbul ignore next */ null;
+                return Scene ? Scene.Name : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eIntermediaryFile: {
+                const IntermediaryFile = SO.idIntermediaryFile ? await DBAPI.IntermediaryFile.fetch(SO.idIntermediaryFile) : /* istanbul ignore next */ null; /* istanbul ignore else */
+                if (IntermediaryFile) {
+                    const Asset = await DBAPI.Asset.fetch(IntermediaryFile.idAsset);
+                    return Asset ? Asset.FileName : /* istanbul ignore next */ undefined;
+                }
+                return /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eProjectDocumentation: {
+                const ProjectDocumentation = SO.idProjectDocumentation ? await DBAPI.ProjectDocumentation.fetch(SO.idProjectDocumentation) : /* istanbul ignore next */ null;
+                return ProjectDocumentation ? ProjectDocumentation.Name : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eAsset: {
+                const Asset = SO.idAsset ? await DBAPI.Asset.fetch(SO.idAsset) : /* istanbul ignore next */ null;
+                return Asset ? Asset.FileName : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eAssetVersion: {
+                const AssetVersion = SO.idAssetVersion ? await DBAPI.AssetVersion.fetch(SO.idAssetVersion) : /* istanbul ignore next */ null;
+                return AssetVersion ? AssetVersion.FileName : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eActor: {
+                const Actor = SO.idActor ? await DBAPI.Actor.fetch(SO.idActor) : /* istanbul ignore next */ null;
+                return Actor ? (Actor.IndividualName ?? undefined) : /* istanbul ignore next */ undefined;
+            }
+            case eSystemObjectType.eStakeholder: {
+                const Stakeholder = SO.idStakeholder ? await DBAPI.Stakeholder.fetch(SO.idStakeholder) : /* istanbul ignore next */ null;
+                return Stakeholder ? Stakeholder.IndividualName : /* istanbul ignore next */ undefined;
+            }
+            default: /* istanbul ignore next */ return undefined;
+        }
+    }
+
     private async flushObjectWorker(idSystemObject: number): Promise<DBAPI.ObjectIDAndType | undefined> {
         const SO: SystemObject | null = await SystemObject.fetch(idSystemObject);
         if (!SO) {
@@ -137,6 +203,19 @@ export class SystemObjectCache {
 
     static async getObjectAndSystemFromSystem(idSystemObject: number): Promise<DBAPI.SystemObjectIDAndType | undefined> {
         return await (await this.getInstance()).getObjectAndSystemFromSystemInternal(idSystemObject);
+    }
+
+    static async getObjectName(SO: DBAPI.SystemObject): Promise<string | undefined> {
+        return await (await this.getInstance()).getObjectNameInternal(SO);
+    }
+
+    static async getObjectNameByID(idSystemObject: number): Promise<string | undefined> {
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+        if (!SO) {
+            LOG.error(`SystemObjectCache.getObjectNameByID unable to lookup SystemObject for id ${idSystemObject}`, LOG.LS.eCACHE);
+            return undefined;
+        }
+        return SystemObjectCache.getObjectName(SO);
     }
 
     /**
