@@ -95,7 +95,7 @@ jobs:
       PACKRAT_SERVER_PORT: 4000
       PACKRAT_DB_PORT: 3306
       MYSQL_ROOT_PASSWORD: packrat
-      PACKRAT_REACT_APP_SERVER_ENDPOINT: http://packrat-server
+      REACT_APP_PACKRAT_SERVER_ENDPOINT: http://packrat-server
       PACKRAT_SOLR_PORT: 8983
       PACKRAT_SOLR_HOST: packrat-solr
 

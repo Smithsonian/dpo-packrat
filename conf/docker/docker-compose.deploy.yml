@@ -13,7 +13,7 @@ services:
             - $PACKRAT_CLIENT_PORT:3000
         environment:
             - NODE_ENV=$NODE_ENV
-            - PACKRAT_REACT_APP_SERVER_ENDPOINT=$PACKRAT_REACT_APP_SERVER_ENDPOINT
+            - REACT_APP_PACKRAT_SERVER_ENDPOINT=$REACT_APP_PACKRAT_SERVER_ENDPOINT
 
     packrat-client-prod:
       container_name: packrat-client-prod
@@ -27,7 +27,7 @@ services:
           - $PACKRAT_CLIENT_PORT:3000
       environment:
           - NODE_ENV=$NODE_ENV
-          - PACKRAT_REACT_APP_SERVER_ENDPOINT=$PACKRAT_REACT_APP_SERVER_ENDPOINT
+          - REACT_APP_PACKRAT_SERVER_ENDPOINT=$REACT_APP_PACKRAT_SERVER_ENDPOINT
 
     packrat-server-dev:
         container_name: packrat-server-dev
