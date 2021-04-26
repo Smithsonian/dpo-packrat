@@ -360,6 +360,20 @@ export class Helpers {
         }
     }
 
+    static async readFileFromStreamThrowErrors(stream: NodeJS.ReadableStream): Promise<Buffer> {
+        try {
+            const bufArray: Buffer[] = [];
+            return new Promise<Buffer>((resolve, reject) => {
+                stream.on('data', (chunk: Buffer) => { bufArray.push(chunk); });
+                stream.on('end', () => { resolve(Buffer.concat(bufArray)); }); /* istanbul ignore next */
+                stream.on('error', () => { reject(); });
+            });
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('Helpers.readFileFromStreamThrowErrors', LOG.LS.eSYS, error);
+            throw error;
+        }
+    }
+
     static async computeSizeOfStream(stream: NodeJS.ReadableStream): Promise<number | null> {
         try {
             let size: number = 0;
