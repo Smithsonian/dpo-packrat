@@ -100,25 +100,25 @@ export const Config: ConfigType = {
         type: AUDIT_TYPE.LOCAL,
     },
     auth: {
-        type: process.env.AUTH_TYPE == 'LDAP' ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
+        type: process.env.PACKRAT_AUTH_TYPE == 'LDAP' ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
         session: {
             maxAge: oneDayInSeconds * 1000, // expiration time = 24 hours, in milliseconds
             checkPeriod: oneDayInSeconds    // prune expired entries every 24 hours
         },
         ldap: {
-            server: process.env.LDAP_SERVER ? process.env.LDAP_SERVER : 'ldap://160.111.103.197:389',
-            password: process.env.LDAP_PASSWORD ? process.env.LDAP_PASSWORD : '',
-            CN: process.env.LDAP_CN ? process.env.LDAP_CN : 'CN=PackratAuthUser',
-            OU: process.env.LDAP_OU ? process.env.LDAP_OU : 'OU=Service Accounts,OU=Enterprise',
-            DC: process.env.LDAP_DC ? process.env.LDAP_DC : 'DC=US,DC=SINET,DC=SI,DC=EDU',
+            server: process.env.PACKRAT_LDAP_SERVER ? process.env.PACKRAT_LDAP_SERVER : 'ldap://160.111.103.197:389',
+            password: process.env.PACKRAT_LDAP_PASSWORD ? process.env.PACKRAT_LDAP_PASSWORD : '',
+            CN: process.env.PACKRAT_LDAP_CN ? process.env.PACKRAT_LDAP_CN : 'CN=PackratAuthUser',
+            OU: process.env.PACKRAT_LDAP_OU ? process.env.PACKRAT_LDAP_OU : 'OU=Service Accounts,OU=Enterprise',
+            DC: process.env.PACKRAT_LDAP_DC ? process.env.PACKRAT_LDAP_DC : 'DC=US,DC=SINET,DC=SI,DC=EDU',
         },
     },
     collection: {
         type: COLLECTION_TYPE.EDAN,
         edan: {
-            server: process.env.EDAN_SERVER ? process.env.EDAN_SERVER : /* istanbul ignore next */ 'http://edan.si.edu/',
-            appId: process.env.EDAN_APPID ? process.env.EDAN_APPID : /* istanbul ignore next */ 'OCIO3D',
-            authKey: process.env.EDAN_AUTH_KEY ? process.env.EDAN_AUTH_KEY : /* istanbul ignore next */  ''
+            server: process.env.PACKRAT_EDAN_SERVER ? process.env.PACKRAT_EDAN_SERVER : /* istanbul ignore next */ 'http://edan.si.edu/',
+            appId: process.env.PACKRAT_EDAN_APPID ? process.env.PACKRAT_EDAN_APPID : /* istanbul ignore next */ 'OCIO3D',
+            authKey: process.env.PACKRAT_EDAN_AUTH_KEY ? process.env.PACKRAT_EDAN_AUTH_KEY : /* istanbul ignore next */  ''
         }
     },
     event: {
@@ -129,7 +129,7 @@ export const Config: ConfigType = {
     },
     job: {
         type: JOB_TYPE.NODE_SCHEDULE,
-        cookServerUrl: process.env.COOK_SERVER_URL ? process.env.COOK_SERVER_URL : /* istanbul ignore next */ 'http://si-3ddigip01.si.edu:8000/',
+        cookServerUrl: process.env.PACKRAT_COOK_SERVER_URL ? process.env.PACKRAT_COOK_SERVER_URL : /* istanbul ignore next */ 'http://si-3ddigip01.si.edu:8000/',
         cookClientId: '5b258c8e-108c-4990-a088-17ffd6e22852', // Concierge's client ID; taken from C:\Tools\CookDev\server\clients.json on Cook server
     },
     log: {
@@ -140,8 +140,8 @@ export const Config: ConfigType = {
     },
     storage: {
         type: STORAGE_TYPE.LOCAL,
-        rootRepository: process.env.OCFL_STORAGE_ROOT ? process.env.OCFL_STORAGE_ROOT : /* istanbul ignore next */ './var/Storage/Repository',
-        rootStaging: process.env.OCFL_STAGING_ROOT ? process.env.OCFL_STAGING_ROOT : /* istanbul ignore next */ './var/Storage/Staging'
+        rootRepository: process.env.PACKRAT_OCFL_STORAGE_ROOT ? process.env.PACKRAT_OCFL_STORAGE_ROOT : /* istanbul ignore next */ './var/Storage/Repository',
+        rootStaging: process.env.PACKRAT_OCFL_STAGING_ROOT ? process.env.PACKRAT_OCFL_STAGING_ROOT : /* istanbul ignore next */ './var/Storage/Staging'
     },
     workflow: {
         type: WORKFLOW_TYPE.PACKRAT,

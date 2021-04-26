@@ -1,6 +1,6 @@
 import { IAuth, VerifyUserResult } from './IAuth';
 import { LocalAuth, LDAPAuth } from '../impl';
-import { Config, AUTH_TYPE } from '../../config';
+import { Config, PACKRAT_AUTH_TYPE } from '../../config';
 import { ASL, LocalStore } from '../../utils/localStore';
 import * as DBAPI from '../../db';
 import * as LOG from '../../utils/logger';
@@ -17,9 +17,9 @@ class AuthFactory {
 
     static getInstance(): LocalAuth | LDAPAuth {
         if (!AuthFactory.instance) {
-            if (Config.auth.type === AUTH_TYPE.LOCAL) {
+            if (Config.auth.type === PACKRAT_AUTH_TYPE.LOCAL) {
                 AuthFactory.instance = new LocalAuth();
-            } else if (Config.auth.type === AUTH_TYPE.LDAP) {
+            } else if (Config.auth.type === PACKRAT_AUTH_TYPE.LDAP) {
                 AuthFactory.instance = new LDAPAuth();
             }
         }

@@ -10,13 +10,13 @@ import { apolloFetch } from './utils';
 import { DocumentNode } from 'graphql';
 
 function configureApolloClient(): ApolloClient<NormalizedCacheObject> {
-    const { REACT_APP_SERVER_ENDPOINT } = process.env;
+    const { PACKRAT_REACT_APP_SERVER_ENDPOINT } = process.env;
 
-    if (!REACT_APP_SERVER_ENDPOINT) {
-        throw new Error('REACT_APP_SERVER_ENDPOINT was not provided to apollo client');
+    if (!PACKRAT_REACT_APP_SERVER_ENDPOINT) {
+        throw new Error('PACKRAT_REACT_APP_SERVER_ENDPOINT was not provided to apollo client');
     }
 
-    const uri: string = `${REACT_APP_SERVER_ENDPOINT}/graphql`;
+    const uri: string = `${PACKRAT_REACT_APP_SERVER_ENDPOINT}/graphql`;
 
     const link = createUploadLink({
         uri,

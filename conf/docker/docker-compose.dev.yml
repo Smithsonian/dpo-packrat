@@ -29,7 +29,7 @@ services:
             - $PACKRAT_CLIENT_PORT:3000
         environment:
             - NODE_ENV=$NODE_ENV
-            - REACT_APP_SERVER_ENDPOINT=$REACT_APP_SERVER_ENDPOINT
+            - PACKRAT_REACT_APP_SERVER_ENDPOINT=$PACKRAT_REACT_APP_SERVER_ENDPOINT
         volumes:
             - ../../node_modules:/app/node_modules
             - ../../package.json:/app/package.json
@@ -47,22 +47,22 @@ services:
             - $PACKRAT_SERVER_PORT:4000
         environment:
             - NODE_ENV=$NODE_ENV
-            - CLIENT_ENDPOINT=$CLIENT_ENDPOINT
-            - DATABASE_URL=$DATABASE_URL
-            - SESSION_SECRET=$SESSION_SECRET
-            - EDAN_AUTH_KEY=$EDAN_AUTH_KEY
-            - EDAN_SERVER=$EDAN_SERVER
-            - EDAN_APPID=$EDAN_APPID
-            - OCFL_STORAGE_ROOT=$OCFL_STORAGE_ROOT
-            - OCFL_STAGING_ROOT=$OCFL_STAGING_ROOT
+            - PACKRAT_CLIENT_ENDPOINT=$PACKRAT_CLIENT_ENDPOINT
+            - PACKRAT_DATABASE_URL=$PACKRAT_DATABASE_URL
+            - PACKRAT_SESSION_SECRET=$PACKRAT_SESSION_SECRET
+            - PACKRAT_EDAN_AUTH_KEY=$PACKRAT_EDAN_AUTH_KEY
+            - PACKRAT_EDAN_SERVER=$PACKRAT_EDAN_SERVER
+            - PACKRAT_EDAN_APPID=$PACKRAT_EDAN_APPID
+            - PACKRAT_OCFL_STORAGE_ROOT=$PACKRAT_OCFL_STORAGE_ROOT
+            - PACKRAT_OCFL_STAGING_ROOT=$PACKRAT_OCFL_STAGING_ROOT
             - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
-            - COOK_SERVER_URL=$COOK_SERVER_URL
-            - AUTH_TYPE=$AUTH_TYPE
-            - LDAP_SERVER=$LDAP_SERVER
-            - LDAP_PASSWORD=$LDAP_PASSWORD
-            - LDAP_CN=$LDAP_CN
-            - LDAP_OU=$LDAP_OU
-            - LDAP_DC=$LDAP_DC
+            - PACKRAT_COOK_SERVER_URL=$PACKRAT_COOK_SERVER_URL
+            - PACKRAT_AUTH_TYPE=$PACKRAT_AUTH_TYPE
+            - PACKRAT_LDAP_SERVER=$PACKRAT_LDAP_SERVER
+            - PACKRAT_LDAP_PASSWORD=$PACKRAT_LDAP_PASSWORD
+            - PACKRAT_LDAP_CN=$PACKRAT_LDAP_CN
+            - PACKRAT_LDAP_OU=$PACKRAT_LDAP_OU
+            - PACKRAT_LDAP_DC=$PACKRAT_LDAP_DC
 
         volumes:
             - ../../node_modules:/app/node_modules
