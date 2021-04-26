@@ -169,6 +169,7 @@ type GetSourceObjectIdentiferResult {
 
 type AssetDetail {
     idSystemObject: Int!
+    idAsset: Int!
     name: String!
     path: String!
     assetType: Int!
