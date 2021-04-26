@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * AssetDetailsTable
  *
@@ -10,11 +12,11 @@ import React from 'react';
 import { EmptyTable, NewTabLink } from '../../../../../components';
 import { StateAssetDetail, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
-import { getDetailsUrlForObject, getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
+import { getDetailsUrlForObject, getDownloadAllAssetsUrlForObject, getDownloadAssetUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectAssets } from '../../../hooks/useDetailsView';
-import AttachmentIcon from '@material-ui/icons/Attachment';
-const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
+import GetAppIcon from '@material-ui/icons/GetApp';
+import { sharedButtonProps } from '../../../../../utils/shared';
 
 export const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -43,7 +45,8 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     link: {
         textDecoration: 'underline'
-    }
+    },
+    btn: sharedButtonProps
 }));
 
 interface AssetDetailsTableProps {
@@ -53,6 +56,7 @@ interface AssetDetailsTableProps {
 function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
     const classes = useStyles();
     const { idSystemObject } = props;
+    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
     const { data, loading } = useObjectAssets(idSystemObject);
     const getVocabularyTerm = useVocabularyStore(state => state.getVocabularyTerm);
 
@@ -74,16 +78,20 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                         </th>
                     ))}
                 </tr>
+                <tr>
+                    <td colSpan={headers.length}>
+                        <hr />
+                    </td>
+                </tr>
             </thead>
 
             <tbody>
-                <tr style={{ borderBottom: '100px solid black' }}>
-                    <td colSpan={100}></td>
-                </tr>
                 {assetDetails.map((assetDetail: StateAssetDetail, index: number) => (
                     <tr key={index}>
                         <td>
-                            <AttachmentIcon />
+                            <a href={getDownloadAssetUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, assetDetail.idAsset)} style={{ textDecoration: 'none', color: 'black' }}>
+                                <GetAppIcon />
+                            </a>
                         </td>
                         <td>
                             <NewTabLink to={getDetailsUrlForObject(assetDetail.idSystemObject)}>
@@ -110,14 +118,16 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                 {assetDetails.length && (
                     <tr>
                         <td>
-                            <NewTabLink to={}>
-                                <Button>Download All</Button>
-                            </NewTabLink>
+                            <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
+                                <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ fontSize: '0.4em' }}>
+                                    Download All
+                                </Button>
+                            </a>
                         </td>
                     </tr>
                 )}
                 <tr>
-                    <td colSpan={6}>
+                    <td colSpan={headers.length}>
                         {!assetDetails.length && (
                             <Box my={2}>
                                 <Typography align='center' className={classes.value}>
