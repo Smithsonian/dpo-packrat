@@ -3,16 +3,18 @@
  *
  * This component renders asset details table tab for the DetailsTab component.
  */
-import { Box, Typography } from '@material-ui/core';
+import { Box, Typography, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
 import { EmptyTable, NewTabLink } from '../../../../../components';
 import { StateAssetDetail, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID } from '../../../../../types/server';
-import { getDetailsUrlForObject } from '../../../../../utils/repository';
+import { getDetailsUrlForObject, getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectAssets } from '../../../hooks/useDetailsView';
+import AttachmentIcon from '@material-ui/icons/Attachment';
+const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
 
 export const useStyles = makeStyles(({ palette }) => ({
     container: {
@@ -23,7 +25,8 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     header: {
         fontSize: '0.9em',
-        color: palette.primary.dark
+        color: palette.primary.dark,
+        fontWeight: 'bold'
     },
     value: {
         fontSize: '0.8em',
@@ -53,14 +56,7 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
     const { data, loading } = useObjectAssets(idSystemObject);
     const getVocabularyTerm = useVocabularyStore(state => state.getVocabularyTerm);
 
-    const headers: string[] = [
-        'Name',
-        'Path',
-        'Asset Type',
-        'Version',
-        'Date Created',
-        'Size',
-    ];
+    const headers: string[] = ['Link', 'Name', 'Path', 'Asset Type', 'Version', 'Date Created', 'Size'];
 
     if (!data || loading) {
         return <EmptyTable />;
@@ -81,8 +77,14 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
             </thead>
 
             <tbody>
+                <tr style={{ borderBottom: '100px solid black' }}>
+                    <td colSpan={100}></td>
+                </tr>
                 {assetDetails.map((assetDetail: StateAssetDetail, index: number) => (
                     <tr key={index}>
+                        <td>
+                            <AttachmentIcon />
+                        </td>
                         <td>
                             <NewTabLink to={getDetailsUrlForObject(assetDetail.idSystemObject)}>
                                 <Typography className={clsx(classes.value, classes.link)}>{assetDetail.name}</Typography>
@@ -105,11 +107,22 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                         </td>
                     </tr>
                 ))}
+                {assetDetails.length && (
+                    <tr>
+                        <td>
+                            <NewTabLink to={}>
+                                <Button>Download All</Button>
+                            </NewTabLink>
+                        </td>
+                    </tr>
+                )}
                 <tr>
                     <td colSpan={6}>
                         {!assetDetails.length && (
                             <Box my={2}>
-                                <Typography align='center' className={classes.value}>No assets found</Typography>
+                                <Typography align='center' className={classes.value}>
+                                    No assets found
+                                </Typography>
                             </Box>
                         )}
                     </td>

@@ -12,6 +12,7 @@ import { getDetailsUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectVersions } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetDetailsTable';
+import AttachmentIcon from '@material-ui/icons/Attachment';
 
 interface AssetVersionsTableProps {
     idSystemObject: number;
@@ -22,13 +23,7 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
     const { idSystemObject } = props;
     const { data, loading } = useObjectVersions(idSystemObject);
 
-    const headers: string[] = [
-        'Version',
-        'Name',
-        'Creator',
-        'Date Created',
-        'Size',
-    ];
+    const headers: string[] = ['Link', 'Version', 'Name', 'Creator', 'Date Created', 'Size'];
 
     if (!data || loading) {
         return <EmptyTable />;
@@ -46,12 +41,16 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                         </th>
                     ))}
                 </tr>
-
             </thead>
 
             <tbody>
                 {versions.map((version: StateDetailVersion, index: number) => (
                     <tr key={index}>
+                        <td>
+                            <a href='/admin'>
+                                <AttachmentIcon />
+                            </a>
+                        </td>
                         <td>
                             <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
                                 <Typography className={clsx(classes.value, classes.link)}>{version.version}</Typography>
@@ -79,12 +78,13 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                 <td colSpan={5}>
                     {!versions.length && (
                         <Box my={2}>
-                            <Typography align='center' className={classes.value}>No versions found</Typography>
+                            <Typography align='center' className={classes.value}>
+                                No versions found
+                            </Typography>
                         </Box>
                     )}
                 </td>
             </tfoot>
-
         </table>
     );
 }
