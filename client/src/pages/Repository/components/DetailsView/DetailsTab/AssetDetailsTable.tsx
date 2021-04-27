@@ -130,7 +130,7 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
                     </tr>
                 </tbody>
             </table>
-            {assetDetails.length && (
+            {assetDetails.length > 0 && (
                 <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
                     <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ width: 'fit-content', whiteSpace: 'nowrap' }}>
                         Download All

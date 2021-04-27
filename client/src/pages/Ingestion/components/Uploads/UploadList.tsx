@@ -3,23 +3,25 @@
  *
  * This component renders upload list for pending files only.
  */
-import { Box, Typography } from '@material-ui/core';
+import { Box, Typography, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
-import { FieldType } from '../../../../components';
+import Dropzone from 'react-dropzone';
+import { BsCloudUpload } from 'react-icons/bs';
 import { useUploadStore } from '../../../../store';
+import { Colors } from '../../../../theme';
+import { FieldType } from '../../../../components';
 import { scrollBarProperties } from '../../../../utils/shared';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
-import UploadFilesPicker from './UploadFilesPicker';
 
-export const useUploadListStyles = makeStyles(({ palette, breakpoints }) => ({
+export const useUploadListStyles = makeStyles(({ palette, breakpoints, typography, spacing }) => ({
     container: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
         marginTop: 20,
-        maxHeight: 'auto',
+        // maxHeight: 'auto',
         width: '52vw',
         border: `1px dashed ${palette.primary.main}`
     },
@@ -43,10 +45,53 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints }) => ({
         color: palette.grey[500],
         fontStyle: 'italic',
         marginTop: '8%'
+    },
+    icon: {
+        color: palette.primary.main
+    },
+    button: {
+        width: 120,
+        fontSize: typography.caption.fontSize,
+        marginTop: spacing(1),
+        color: Colors.defaults.white
+    },
+    title: {
+        margin: '1% 0px',
+        fontSize: '1em',
+        fontWeight: typography.fontWeightMedium
     }
 }));
 
-function UploadList(): React.ReactElement {
+const useStyles = makeStyles(({ palette, typography, spacing }) => ({
+    container: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '20vh',
+        width: '52vw',
+        border: `1px dashed ${palette.primary.main}`,
+        borderRadius: 10,
+        padding: 10,
+        backgroundColor: palette.primary.light
+    },
+    icon: {
+        color: palette.primary.main
+    },
+    title: {
+        margin: '1% 0px',
+        fontSize: '1em',
+        fontWeight: typography.fontWeightMedium
+    },
+    button: {
+        width: 120,
+        fontSize: typography.caption.fontSize,
+        marginTop: spacing(1),
+        color: Colors.defaults.white
+    }
+}));
+
+function UploadList({ loading, open }): React.ReactElement {
     const classes = useUploadListStyles();
     const { pending } = useUploadStore();
 
@@ -55,17 +100,36 @@ function UploadList(): React.ReactElement {
             <FieldType required align='center' label='Upload Files' labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'black' } }}>
                 <UploadListHeader />
                 <Box className={classes.list}>
-                    {!pending.length && (
-                        <Typography className={classes.listDetail} variant='body1'>
-                            Add files to upload
-                        </Typography>
-                    )}
                     <FileList files={pending} />
+                    <Typography className={classes.title}>Drag and drop files here or click the button</Typography>
+                    <BsCloudUpload className={classes.icon} size='50px' />
+                    <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
+                        Browse files
+                    </Button>
                 </Box>
             </FieldType>
-            <UploadFilesPicker />
         </Box>
     );
 }
 
-export default UploadList;
+function UploadFilesPicker(): React.ReactElement {
+    const classes = useStyles();
+    const { loading, loadPending } = useUploadStore();
+
+    const onDrop = (acceptedFiles: File[]) => {
+        loadPending(acceptedFiles);
+    };
+
+    return (
+        <Dropzone noClick noDrag={loading} onDrop={onDrop}>
+            {({ getRootProps, getInputProps, open }) => (
+                <div className={classes.container} {...getRootProps()}>
+                    <UploadList loading={loading} open={open} />
+                    <input {...getInputProps()} />
+                </div>
+            )}
+        </Dropzone>
+    );
+}
+
+export default UploadFilesPicker;
