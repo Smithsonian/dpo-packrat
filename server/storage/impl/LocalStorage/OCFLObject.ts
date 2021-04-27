@@ -19,7 +19,15 @@ export type OCFLPathAndHash = {
     hash: string;
 };
 
+enum eMoveFileType {
+    eUnknown,
+    eMove,
+    eCopyThenDelete,
+}
+
 export class OCFLObject {
+    private static _eMoveFileType: eMoveFileType = eMoveFileType.eUnknown;
+
     private _storageKey: string = '';
     private _createIfMissing: boolean = false;
 
@@ -115,8 +123,8 @@ export class OCFLObject {
                 if (!hashResults.success)
                     return hashResults;     // if we fail to compute the hash, don't move the file below!
 
-                // Move file to new version folder
-                results = await H.Helpers.moveFile(pathOnDisk, destName);
+                // Move file to new version folder.
+                results = await this.safeMoveFile(pathOnDisk, destName);
             } else if (inputStream) {
                 // We need to both compute the hash and stream bytes to the right location
                 const hashResultsPromise = H.Helpers.computeHashFromStream(inputStream, ST.OCFLDigestAlgorithm);
@@ -159,6 +167,34 @@ export class OCFLObject {
         if (!results.success)
             return results;
 
+        return results;
+    }
+
+    private async safeMoveFile(pathOnDisk: string, destName: string): Promise<H.IOResults> {
+        let results: H.IOResults;
+        if (OCFLObject._eMoveFileType == eMoveFileType.eUnknown ||
+            OCFLObject._eMoveFileType == eMoveFileType.eMove) {
+            results = await H.Helpers.moveFile(pathOnDisk, destName);
+            if (results.success) {
+                OCFLObject._eMoveFileType = eMoveFileType.eMove;
+                return results;
+            } else
+                OCFLObject._eMoveFileType = eMoveFileType.eCopyThenDelete; // then continue below
+        }
+
+        // eMoveFileType.eCopyThenDelete:
+        // Avoid using "H.Helpers.moveFile" because this does not work across volumes.
+        results = await H.Helpers.copyFile(pathOnDisk, destName);
+        if (!results.success) {
+            LOG.error(`OCFLObject.safeMoveFile copy not copy ${pathOnDisk} to ${destName}: ${results.error}`, LOG.LS.eSTR);
+            return results;
+        }
+
+        results = await H.Helpers.removeFile(pathOnDisk);
+        if (!results.success) {
+            LOG.error(`OCFLObject.safeMoveFile unable to delete ${pathOnDisk}: ${results.error}`, LOG.LS.eSTR);
+            return results;
+        }
         return results;
     }
 
