@@ -23,7 +23,8 @@ export const useStyles = makeStyles(({ palette }) => ({
         width: '100%',
         background: palette.secondary.light,
         padding: 5,
-        borderRadius: 5
+        borderRadius: 5,
+        marginBottom: 7
     },
     header: {
         fontSize: '0.9em',
@@ -69,76 +70,74 @@ function AssetDetailsTable(props: AssetDetailsTableProps): React.ReactElement {
     const { assetDetails } = data.getAssetDetailsForSystemObject;
 
     return (
-        <table className={classes.container}>
-            <thead>
-                <tr>
-                    {headers.map((header, index: number) => (
-                        <th key={index} align='left'>
-                            <Typography className={classes.header}>{header}</Typography>
-                        </th>
-                    ))}
-                </tr>
-                <tr>
-                    <td colSpan={headers.length}>
-                        <hr />
-                    </td>
-                </tr>
-            </thead>
-
-            <tbody>
-                {assetDetails.map((assetDetail: StateAssetDetail, index: number) => (
-                    <tr key={index}>
-                        <td>
-                            <a href={getDownloadAssetUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, assetDetail.idAsset)} style={{ textDecoration: 'none', color: 'black' }}>
-                                <GetAppIcon />
-                            </a>
-                        </td>
-                        <td>
-                            <NewTabLink to={getDetailsUrlForObject(assetDetail.idSystemObject)}>
-                                <Typography className={clsx(classes.value, classes.link)}>{assetDetail.name}</Typography>
-                            </NewTabLink>
-                        </td>
-                        <td>
-                            <Typography className={classes.value}>{assetDetail.path}</Typography>
-                        </td>
-                        <td>
-                            <Typography className={classes.value}>{getVocabularyTerm(eVocabularySetID.eAssetAssetType, assetDetail.assetType)}</Typography>
-                        </td>
-                        <td align='left'>
-                            <Typography className={classes.value}>{assetDetail.version}</Typography>
-                        </td>
-                        <td>
-                            <Typography className={classes.value}>{assetDetail.dateCreated}</Typography>
-                        </td>
-                        <td>
-                            <Typography className={classes.value}>{formatBytes(assetDetail.size)}</Typography>
-                        </td>
-                    </tr>
-                ))}
-                {assetDetails.length && (
+        <React.Fragment>
+            <table className={classes.container}>
+                <thead>
                     <tr>
-                        <td>
-                            <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
-                                <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ fontSize: '0.4em' }}>
-                                    Download All
-                                </Button>
-                            </a>
+                        {headers.map((header, index: number) => (
+                            <th key={index} align='left'>
+                                <Typography className={classes.header}>{header}</Typography>
+                            </th>
+                        ))}
+                    </tr>
+                    <tr>
+                        <td colSpan={headers.length}>
+                            <hr />
                         </td>
                     </tr>
-                )}
-                <tr>
-                    <td colSpan={headers.length}>
-                        {!assetDetails.length && (
-                            <Box my={2}>
-                                <Typography align='center' className={classes.value}>
-                                    No assets found
-                                </Typography>
-                            </Box>
-                        )}
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                    {assetDetails.map((assetDetail: StateAssetDetail, index: number) => (
+                        <tr key={index}>
+                            <td>
+                                <a href={getDownloadAssetUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, assetDetail.idAsset)} style={{ textDecoration: 'none', color: 'black' }}>
+                                    <GetAppIcon />
+                                </a>
+                            </td>
+                            <td>
+                                <NewTabLink to={getDetailsUrlForObject(assetDetail.idSystemObject)}>
+                                    <Typography className={clsx(classes.value, classes.link)}>{assetDetail.name}</Typography>
+                                </NewTabLink>
+                            </td>
+                            <td>
+                                <Typography className={classes.value}>{assetDetail.path}</Typography>
+                            </td>
+                            <td>
+                                <Typography className={classes.value}>{getVocabularyTerm(eVocabularySetID.eAssetAssetType, assetDetail.assetType)}</Typography>
+                            </td>
+                            <td align='left'>
+                                <Typography className={classes.value}>{assetDetail.version}</Typography>
+                            </td>
+                            <td>
+                                <Typography className={classes.value}>{assetDetail.dateCreated}</Typography>
+                            </td>
+                            <td>
+                                <Typography className={classes.value}>{formatBytes(assetDetail.size)}</Typography>
+                            </td>
+                        </tr>
+                    ))}
+                    <tr>
+                        <td colSpan={headers.length}>
+                            {!assetDetails.length && (
+                                <Box my={2}>
+                                    <Typography align='center' className={classes.value}>
+                                        No assets found
+                                    </Typography>
+                                </Box>
+                            )}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            {assetDetails.length && (
+                <a href={getDownloadAllAssetsUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, idSystemObject)} style={{ textDecoration: 'none' }}>
+                    <Button disableElevation color='primary' variant='contained' className={classes.btn} style={{ width: 'fit-content', whiteSpace: 'nowrap' }}>
+                        Download All
+                    </Button>
+                </a>
+            )}
+        </React.Fragment>
     );
 }
 
