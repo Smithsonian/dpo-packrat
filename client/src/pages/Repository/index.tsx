@@ -50,6 +50,8 @@ export type RepositoryFilter = {
     variantType: number[];
     modelPurpose: number[];
     modelFileType: number[];
+    dateCreatedFrom: Date | null;
+    dateCreatedTo: Date | null;
 };
 
 function Repository(): React.ReactElement {
@@ -86,6 +88,8 @@ function TreeViewPage(): React.ReactElement {
         variantType,
         modelPurpose,
         modelFileType,
+        dateCreatedFrom,
+        dateCreatedTo,
         updateRepositoryFilter
     } = useRepositoryStore();
 
@@ -105,9 +109,11 @@ function TreeViewPage(): React.ReactElement {
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            dateCreatedFrom,
+            dateCreatedTo,
         }),
-        [search, keyword, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType]
+        [search, keyword, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType, dateCreatedFrom, dateCreatedTo]
     );
 
     const setDefaultFilterSelectionsCookie = () => {
@@ -122,7 +128,9 @@ function TreeViewPage(): React.ReactElement {
             captureMethod: [],
             variantType: [],
             modelPurpose: [],
-            modelFileType: []
+            modelFileType: [],
+            dateCreatedFrom: null,
+            dateCreatedTo: null
         })}`;
     };
 
@@ -160,7 +168,9 @@ function TreeViewPage(): React.ReactElement {
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            dateCreatedFrom,
+            dateCreatedTo,
         };
 
         const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);

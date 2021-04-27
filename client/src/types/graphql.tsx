@@ -1126,6 +1126,8 @@ export type GetObjectChildrenInput = {
   variantType: Array<Scalars['Int']>;
   modelPurpose: Array<Scalars['Int']>;
   modelFileType: Array<Scalars['Int']>;
+  dateCreatedFrom?: Maybe<Scalars['DateTime']>;
+  dateCreatedTo?: Maybe<Scalars['DateTime']>;
 };
 
 export type NavigationResultEntry = {

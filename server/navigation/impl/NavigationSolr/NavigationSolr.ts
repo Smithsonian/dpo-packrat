@@ -88,6 +88,22 @@ export class NavigationSolr implements NAV.INavigation {
         SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelPurpose, 'ChildrenModelPurposes');
         SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelFileType, 'ChildrenModelFileTypes');
 
+        // dateCreatedFrom: Date | null;           // Date Created filter
+        // dateCreatedTo: Date | null;             // Date Created filter
+        if (filter.dateCreatedFrom || filter.dateCreatedTo) {
+            let fromDate: Date | null = filter.dateCreatedFrom;
+            let toDate: Date | null = filter.dateCreatedTo;
+            if (fromDate && toDate && fromDate > toDate) { // swap dates if they are provided out of order
+                const oldFromDate: Date = fromDate;
+                fromDate = toDate;
+                toDate = oldFromDate;
+            }
+            const fromFilter: string = fromDate ? fromDate.toISOString() : '*';
+            const toFilter: string = toDate ? toDate.toISOString() : '*';
+            const dateFilter: string = `[${toFilter} TO ${fromFilter}]`;
+            SQ = SQ.matchFilter('ChildrenDateCreated', dateFilter);
+        }
+
         // metadataColumns: eMetadata[];           // empty array means give no metadata
         const filterColumns: string[] = ['id', 'CommonObjectType', 'CommonidObject', 'CommonName']; // fetch standard fields // don't need ChildrenID
         for (const metadataColumn of filter.metadataColumns) {

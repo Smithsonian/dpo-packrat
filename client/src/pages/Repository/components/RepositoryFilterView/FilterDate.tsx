@@ -44,7 +44,7 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
     const { label, name } = props;
     const classes = useStyles();
 
-    const [fromDate, toDate, updateFilterValue] = useRepositoryStore(state => [state.fromDate, state.toDate, state.updateFilterValue]);
+    const [dateCreatedFrom, dateCreatedTo, updateFilterValue] = useRepositoryStore(state => [state.dateCreatedFrom, state.dateCreatedTo, state.updateFilterValue]);
 
     const onDate = (name: string, date: string | null | undefined) => {
         if (date) {
@@ -82,8 +82,8 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
                 <KeyboardDatePicker
                     {...datePickerProps}
                     style={fromDateStyle}
-                    value={fromDate}
-                    onChange={(_, value) => onDate('fromDate', value)}
+                    value={dateCreatedFrom}
+                    onChange={(_, value) => onDate('dateCreatedFrom', value)}
                     variant='inline'
                     margin='normal'
 
@@ -91,8 +91,8 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
                 <Typography className={classes.toText}>to</Typography>
                 <KeyboardDatePicker
                     {...datePickerProps}
-                    value={toDate}
-                    onChange={(_, value) => onDate('toDate', value)}
+                    value={dateCreatedTo}
+                    onChange={(_, value) => onDate('dateCreatedTo', value)}
                     variant='inline'
                     margin='normal'
                 />

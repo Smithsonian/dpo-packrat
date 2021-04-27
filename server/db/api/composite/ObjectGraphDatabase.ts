@@ -297,10 +297,12 @@ export class ObjectGraphDatabase {
             const objectGraphState = await this.extractState(objectGraphDataEntry.systemObjectIDType);
             retValue = this.applyGraphState(objectGraphDataEntry, objectGraphState) && retValue;
         }
+        LOG.info('ObjectGraphDatabase.applyGraphData finished', LOG.LS.eDB);
         return retValue;
     }
 
     private async applyGraphState(objectGraphDataEntry: ObjectGraphDataEntry, objectGraphState: ObjectGraphState): Promise<boolean> {
+        LOG.info(`ObjectGraphDatabase.applyGraphState     ---> [0] ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eDB);
         // Apply extracted state to the current object.
         objectGraphDataEntry.applyGraphState(objectGraphState, eApplyGraphStateDirection.eSelf);
         let retValue: boolean = true;
@@ -316,6 +318,7 @@ export class ObjectGraphDatabase {
         if (depth <= 0)
             return false;
 
+        LOG.info(`ObjectGraphDatabase.applyGraphStateRecursive [${33 - depth}] ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)} [${eApplyGraphStateDirection[eDirection]}]`, LOG.LS.eDB);
         const relationMap: Map<number, SystemObjectIDType> | undefined =
             eDirection == eApplyGraphStateDirection.eChild ? objectGraphDataEntry.childMap : objectGraphDataEntry.parentMap;
         if (!relationMap)
@@ -348,6 +351,7 @@ export class ObjectGraphDatabase {
                 const captureData: CaptureData | null = await CaptureData.fetch(systemObjectIDType.idObject);
                 if (captureData) {
                     objectGraphState.captureMethod = captureData.idVCaptureMethod;
+                    objectGraphState.commonDateCreated = captureData.DateCaptured;
                     const captureDataFiles: CaptureDataFile[] | null = await CaptureDataFile.fetchFromCaptureData(captureData.idCaptureData);
                     if (captureDataFiles) {
                         objectGraphState.variantTypes = new Map<number, boolean>();
@@ -364,8 +368,15 @@ export class ObjectGraphDatabase {
                 if (model) {
                     objectGraphState.modelPurpose = model.idVPurpose;
                     objectGraphState.modelFileType = model.idVFileType;
+                    objectGraphState.commonDateCreated = model.DateCreated;
                 } else
                     LOG.error(`ObjectGraphDatabase.applyGraphData() Unable to load Model from ${systemObjectIDType}`, LOG.LS.eDB);
+            } break;
+
+            case eSystemObjectType.eIntermediaryFile: {
+                const intermediaryFile: IntermediaryFile | null = await IntermediaryFile.fetch(systemObjectIDType.idObject);
+                if (intermediaryFile)
+                    objectGraphState.commonDateCreated = intermediaryFile.DateCreated;
             } break;
         }
 

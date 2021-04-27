@@ -147,6 +147,7 @@
     <field name="ChildrenVariantTypes" type="strings" indexed="true" stored="true" />
     <field name="ChildrenModelPurposes" type="strings" indexed="true" stored="true" />
     <field name="ChildrenModelFileTypes" type="strings" indexed="true" stored="true" />
+    <field name="ChildrenDateCreated" type="pdates" indexed="true" stored="true" />
 
     <!-- "Plumbling" fields: needed by the system -->
     <!-- docValues are enabled by default for long type so we don't need to index the version field  -->

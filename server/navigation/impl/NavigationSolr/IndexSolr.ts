@@ -318,6 +318,8 @@ export class IndexSolr {
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenModelFileTypes);
         doc.ChildrenModelFileTypes = VocabList;
         VocabList = [];
+
+        doc.ChildrenDateCreated = OGDEH.childrenDateCreated;
     }
 
     private async computeVocabulary(idVocabulary: number): Promise<string | undefined> {
