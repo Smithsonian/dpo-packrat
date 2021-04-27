@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /**
  * Shared utilities
  *
@@ -64,4 +66,15 @@ export const sharedLabelProps: CSSProperties = {
 export function getHeaderTitle(title?: string): string {
     if (title) return `${title} - Packrat`;
     return 'Packrat';
+}
+
+export function safeDate(value: any): Date | null {
+    if (value == null)
+        return null;
+    if (!isNaN(value) && value instanceof Date)
+        return value;
+    if (typeof(value) !== 'string')
+        return null;
+    const timestamp: number = Date.parse(value);
+    return isNaN(timestamp) ? null : new Date(timestamp);
 }
