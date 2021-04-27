@@ -326,7 +326,7 @@ function TabPanel(props: any): React.ReactElement {
     return (
         <div role='tabpanel' hidden={value !== index} aria-labelledby={`tab-${index}`} {...rest}>
             {value === index && (
-                <Box p={1} className={classes.tabpanel} minHeight='20vh' minWidth='50vw' width='auto'>
+                <Box p={1} className={classes.tabpanel} minHeight='fit-content' minWidth='50vw' width='auto'>
                     {children}
                 </Box>
             )}
