@@ -16,8 +16,7 @@ import { useMetadataStore, useUploadStore } from '../../../../store';
 import { Colors } from '../../../../theme';
 import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
 import UploadCompleteList from './UploadCompleteList';
-// import UploadFilesPicker from './UploadFilesPicker';
-import UploadList from './UploadList';
+import UploadFilesPicker from './UploadList';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -170,9 +169,8 @@ function AliveUploadComponents(): React.ReactElement {
 
     return (
         <React.Fragment>
-            <UploadList />
+            <UploadFilesPicker />
             <UploadCompleteList />
-            {/* <UploadFilesPicker /> */}
         </React.Fragment>
     );
 }
