@@ -7,7 +7,7 @@ import * as NAV from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
-// import * as H from '../../../utils/helpers';
+import * as H from '../../../utils/helpers';
 import { eSystemObjectType } from '../../../db';
 import { SolrClient } from './SolrClient';
 import { Vocabulary } from '../../../types/graphql';
@@ -98,10 +98,12 @@ export class NavigationSolr implements NAV.INavigation {
                 fromDate = toDate;
                 toDate = oldFromDate;
             }
-            const fromFilter: string = fromDate ? fromDate.toISOString() : '*';
-            const toFilter: string = toDate ? toDate.toISOString() : '*';
-            const dateFilter: string = `[${toFilter} TO ${fromFilter}]`;
-            SQ = SQ.matchFilter('ChildrenDateCreated', dateFilter);
+            const fromFilter: string = H.Helpers.safeDate(fromDate) ? fromDate!.toISOString() : '*'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            const toFilter: string = H.Helpers.safeDate(toDate) ? toDate!.toISOString() : '*'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            if (fromFilter != '*' || toFilter != '*') {
+                const dateFilter: string = `[${fromFilter} TO ${toFilter}]`;
+                SQ = SQ.matchFilter('ChildrenDateCreated', dateFilter);
+            }
         }
 
         // metadataColumns: eMetadata[];           // empty array means give no metadata

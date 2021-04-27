@@ -21,6 +21,7 @@ import { palette } from '../theme';
 import Colors, { RepositoryColorVariant } from '../theme/colors';
 import { NavigationResultEntry } from '../types/graphql';
 import { eMetadata, eSystemObjectType } from '../types/server';
+import { safeDate } from './shared';
 
 export function getSystemObjectTypesForFilter(filter: RepositoryFilter): eSystemObjectType[] {
     const objectTypes: eSystemObjectType[] = [];
@@ -90,18 +91,54 @@ export function trimmedMetadataField(value: string, start: number, end: number):
 }
 
 export function parseRepositoryUrl(search: string): any {
-    return qs.parse(search, {
+    const filter: any = qs.parse(search, {
         parseBooleans: true,
         parseNumbers: true,
         arrayFormat: 'comma'
     });
+
+    // special handling for dates -- we want to convert these back from ISO strings
+    const dateCreatedFromS: RegExpMatchArray | null = search.match(/dateCreatedFrom=(.*)([&]|$)/);
+    if (dateCreatedFromS && dateCreatedFromS.length >= 2) {
+        const dateCreatedFrom: Date = new Date(dateCreatedFromS[1]);
+        filter.dateCreatedFrom = safeDate(dateCreatedFrom);
+    }
+
+    const dateCreatedToS: RegExpMatchArray | null = search.match(/dateCreatedTo=(.*)([&]|$)/);
+    if (dateCreatedToS && dateCreatedToS.length >= 2) {
+        const dateCreatedTo: Date = new Date(dateCreatedToS[1]);
+        filter.dateCreatedTo = safeDate(dateCreatedTo);
+    }
+    console.log(`parseRepositoryUrl ${search}: ${JSON.stringify(filter)}`);
+    return filter;
 }
 
 export function generateRepositoryUrl(filter: RepositoryFilter): string {
-    return `?${qs.stringify(filter, {
+    const params: string[] = [];
+    let filterCopy: RepositoryFilter = filter;
+
+    // special handling for dates -- we want to render these as ISO strings
+    if (filterCopy.dateCreatedFrom || filterCopy.dateCreatedTo) {
+        filterCopy = lodash.clone(filter);
+        const dateCreatedFrom: Date | null = safeDate(filterCopy.dateCreatedFrom);
+        if (dateCreatedFrom)
+            params.push(`dateCreatedFrom=${dateCreatedFrom.toISOString()}`);
+        delete filterCopy.dateCreatedFrom;
+
+        const dateCreatedTo: Date | null = safeDate(filterCopy.dateCreatedTo);
+        if (dateCreatedTo)
+            params.push(`dateCreatedTo=${dateCreatedTo.toISOString()}`);
+        delete filterCopy.dateCreatedTo;
+    }
+
+    params.unshift(qs.stringify(filterCopy, {
         arrayFormat: 'comma',
         skipEmptyString: true
-    })}`;
+    }));
+
+    const ret: string = '?' + params.join('&');
+    console.log(`generateRepositoryUrl ${ret}: ${JSON.stringify(filter)}`);
+    return ret;
 }
 
 export function getTreeWidth(columnSize: number, sideBarExpanded: boolean, fullWidth: boolean): string {

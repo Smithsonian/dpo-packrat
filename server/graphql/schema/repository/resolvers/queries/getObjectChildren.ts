@@ -2,6 +2,7 @@ import { GetObjectChildrenResult, QueryGetObjectChildrenArgs } from '../../../..
 import { Parent } from '../../../../../types/resolvers';
 import { NavigationFactory, INavigation, NavigationFilter, NavigationResult } from '../../../../../navigation/interface';
 import * as LOG from '../../../../../utils/logger';
+import * as H from '../../../../../utils/helpers';
 
 export default async function getObjectChildren(_: Parent, args: QueryGetObjectChildrenArgs): Promise<GetObjectChildrenResult> {
     const {
@@ -49,9 +50,9 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         variantType,
         modelPurpose,
         modelFileType,
-        dateCreatedFrom,
-        dateCreatedTo,
-        rows: 1000,
+        dateCreatedFrom: H.Helpers.safeDate(dateCreatedFrom),   // convert ISO representation to Date
+        dateCreatedTo: H.Helpers.safeDate(dateCreatedTo),       // convert ISO representation to Date
+        rows: 300,
         cursorMark: ''
     };
 

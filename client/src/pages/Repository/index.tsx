@@ -50,8 +50,8 @@ export type RepositoryFilter = {
     variantType: number[];
     modelPurpose: number[];
     modelFileType: number[];
-    dateCreatedFrom: Date | null;
-    dateCreatedTo: Date | null;
+    dateCreatedFrom?: Date | null;
+    dateCreatedTo?: Date | null;
 };
 
 function Repository(): React.ReactElement {

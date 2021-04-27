@@ -48,7 +48,10 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
 
     const onDate = (name: string, date: string | null | undefined) => {
         if (date) {
-            updateFilterValue(name, new Date(date));
+            const timestamp = Date.parse(date);
+            if (!isNaN(timestamp)) {
+                updateFilterValue(name, new Date(timestamp));
+            }
         }
     };
 

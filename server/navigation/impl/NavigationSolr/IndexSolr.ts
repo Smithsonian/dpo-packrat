@@ -66,6 +66,8 @@ export class IndexSolr {
         try {
             IndexSolr.fullIndexUnderway = true;
             retValue = await this.fullIndexWorker();
+        } catch (error) {
+            LOG.error('IndexSolr.fullIndex', LOG.LS.eNAV, error);
         } finally {
             IndexSolr.fullIndexUnderway = false;
         }
