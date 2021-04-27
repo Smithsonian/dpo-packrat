@@ -52,7 +52,7 @@ export const useStyles = makeStyles(theme => ({
         borderRadius: 5,
         padding: 10,
         backgroundColor: theme.palette.primary.light,
-        width: 'calc(100% - 40px)',
+        width: 'calc(100% - 20px)',
         display: 'flex',
         flexDirection: 'column'
     },
@@ -77,7 +77,7 @@ export const useStyles = makeStyles(theme => ({
         justifyContent: 'center',
         width: '100%',
         '& > *': {
-            width: 'calc(100% - 40px)'
+            width: 'calc(100% - 20px)'
         }
     },
     detailsContainer: {

@@ -8,10 +8,11 @@ import clsx from 'clsx';
 import React from 'react';
 import { EmptyTable, NewTabLink } from '../../../../../components';
 import { StateDetailVersion } from '../../../../../store';
-import { getDetailsUrlForObject } from '../../../../../utils/repository';
+import { getDetailsUrlForObject, getDownloadAssetVersionUrlForObject } from '../../../../../utils/repository';
 import { formatBytes } from '../../../../../utils/upload';
 import { useObjectVersions } from '../../../hooks/useDetailsView';
 import { useStyles } from './AssetDetailsTable';
+import GetAppIcon from '@material-ui/icons/GetApp';
 
 interface AssetVersionsTableProps {
     idSystemObject: number;
@@ -20,15 +21,10 @@ interface AssetVersionsTableProps {
 function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement {
     const classes = useStyles();
     const { idSystemObject } = props;
+    const { REACT_APP_PACKRAT_SERVER_ENDPOINT } = process.env;
     const { data, loading } = useObjectVersions(idSystemObject);
 
-    const headers: string[] = [
-        'Version',
-        'Name',
-        'Creator',
-        'Date Created',
-        'Size',
-    ];
+    const headers: string[] = ['Link', 'Version', 'Name', 'Creator', 'Date Created', 'Size'];
 
     if (!data || loading) {
         return <EmptyTable />;
@@ -46,12 +42,24 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
                         </th>
                     ))}
                 </tr>
-
+                <tr>
+                    <td colSpan={headers.length}>
+                        <hr />
+                    </td>
+                </tr>
             </thead>
 
             <tbody>
                 {versions.map((version: StateDetailVersion, index: number) => (
                     <tr key={index}>
+                        <td>
+                            <a
+                                href={getDownloadAssetVersionUrlForObject(REACT_APP_PACKRAT_SERVER_ENDPOINT, version.idAssetVersion)}
+                                style={{ textDecoration: 'none', color: 'black' }}
+                            >
+                                <GetAppIcon />
+                            </a>
+                        </td>
                         <td>
                             <NewTabLink to={getDetailsUrlForObject(version.idSystemObject)}>
                                 <Typography className={clsx(classes.value, classes.link)}>{version.version}</Typography>
@@ -76,15 +84,16 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
             </tbody>
 
             <tfoot>
-                <td colSpan={5}>
+                <td colSpan={headers.length}>
                     {!versions.length && (
                         <Box my={2}>
-                            <Typography align='center' className={classes.value}>No versions found</Typography>
+                            <Typography align='center' className={classes.value}>
+                                No versions found
+                            </Typography>
                         </Box>
                     )}
                 </td>
             </tfoot>
-
         </table>
     );
 }

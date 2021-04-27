@@ -211,6 +211,18 @@ export function getDetailsUrlForObject(idSystemObject: number): string {
     return `/repository/details/${idSystemObject}`;
 }
 
+export function getDownloadAssetUrlForObject(serverEndPoint: string | undefined, idAsset: number): string {
+    return `${serverEndPoint}/download?idAsset=${idAsset}`;
+}
+
+export function getDownloadAllAssetsUrlForObject(serverEndPoint: string | undefined, idSystemObject: number): string {
+    return `${serverEndPoint}/download?idSystemObject=${idSystemObject}`;
+}
+
+export function getDownloadAssetVersionUrlForObject(serverEndPoint: string | undefined, idAssetVersion: number): string {
+    return `${serverEndPoint}/download?idAssetVersion=${idAssetVersion}`;
+}
+
 // prettier-ignore
 export function getTreeViewStyleHeight(isExpanded: boolean, isModal: boolean, breakpoint: Breakpoint): string {
     const isSmallScreen: boolean = breakpoint === 'lg';
