@@ -84,7 +84,7 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
             </tbody>
 
             <tfoot>
-                <td colSpan={5}>
+                <td colSpan={headers.length}>
                     {!versions.length && (
                         <Box my={2}>
                             <Typography align='center' className={classes.value}>
