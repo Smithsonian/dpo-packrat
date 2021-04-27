@@ -27,6 +27,8 @@ function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0):
                 variantType: filter.variantType,
                 modelPurpose: filter.modelPurpose,
                 modelFileType: filter.modelFileType,
+                dateCreatedFrom: filter.dateCreatedFrom,
+                dateCreatedTo: filter.dateCreatedTo,
             }
         }
     });
@@ -51,6 +53,8 @@ function getObjectChildren(idRoot: number, filter: RepositoryFilter): Promise<Ap
                 variantType: filter.variantType,
                 modelPurpose: filter.modelPurpose,
                 modelFileType: filter.modelFileType,
+                dateCreatedFrom: filter.dateCreatedFrom,
+                dateCreatedTo: filter.dateCreatedTo,
             }
         }
     });

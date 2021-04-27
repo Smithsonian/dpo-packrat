@@ -18,6 +18,8 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         variantType,
         modelPurpose,
         modelFileType,
+        dateCreatedFrom,
+        dateCreatedTo,
     } = args.input;
     const navigation: INavigation | null = await NavigationFactory.getInstance();
 
@@ -47,7 +49,9 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         variantType,
         modelPurpose,
         modelFileType,
-        rows: 100,
+        dateCreatedFrom,
+        dateCreatedTo,
+        rows: 1000,
         cursorMark: ''
     };
 
