@@ -57,6 +57,8 @@ services:
             - PACKRAT_LDAP_CN=$PACKRAT_LDAP_CN
             - PACKRAT_LDAP_OU=$PACKRAT_LDAP_OU
             - PACKRAT_LDAP_DC=$PACKRAT_LDAP_DC
+        volumes:
+            - $PACKRAT_OCFL_STORAGE_ROOT:$PACKRAT_OCFL_STORAGE_ROOT
 
     packrat-server-prod:
         container_name: packrat-server-prod
