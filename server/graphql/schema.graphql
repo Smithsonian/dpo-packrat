@@ -775,6 +775,8 @@ input GetObjectChildrenInput {
   variantType: [Int!]!
   modelPurpose: [Int!]!
   modelFileType: [Int!]!
+  dateCreatedFrom: DateTime
+  dateCreatedTo: DateTime
 }
 
 type NavigationResultEntry {

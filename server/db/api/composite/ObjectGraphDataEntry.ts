@@ -16,6 +16,7 @@ export class ObjectGraphState {
     variantTypes: Map<number, boolean> | null = null;
     modelPurpose: number | null = null;
     modelFileType: number | null = null;
+    commonDateCreated: Date | null = null;
 }
 
 export class ObjectGraphDataEntryHierarchy {
@@ -38,6 +39,23 @@ export class ObjectGraphDataEntryHierarchy {
     childrenVariantTypes: number[] = [];
     childrenModelPurposes: number[] = [];
     childrenModelFileTypes: number[] = [];
+    childrenDateCreated: string[] = [];
+
+    childrenInfoEmpty(): boolean {
+        if (this.childrenObjectTypes.length > 0)
+            return false;
+        if (this.childrenCaptureMethods.length > 0)
+            return false;
+        if (this.childrenVariantTypes.length > 0)
+            return false;
+        if (this.childrenModelPurposes.length > 0)
+            return false;
+        if (this.childrenModelFileTypes.length > 0)
+            return false;
+        if (this.childrenDateCreated.length > 0)
+            return false;
+        return true;
+    }
 }
 
 export class ObjectGraphDataEntry {
@@ -51,11 +69,12 @@ export class ObjectGraphDataEntry {
     ancestorObjectMap: Map<number, SystemObjectIDType> = new Map<number, SystemObjectIDType>(); // map of ancestor objects of significance (unit, project, subject, item), idSystemObject -> object info
 
     // Child data types
-    childrenObjectTypes: Map<eSystemObjectType, boolean> = new Map<eSystemObjectType, boolean>();
-    childrenCaptureMethods: Map<number, boolean> = new Map<number, boolean>(); // map of idVocabulary of Capture Methods associated with this object
-    childrenVariantTypes: Map<number, boolean> = new Map<number, boolean>(); // map of idVocabulary of Capture Variant Types associated with this object
-    childrenModelPurposes: Map<number, boolean> = new Map<number, boolean>(); // map of idVocabulary of Model Purposes associated with this object
-    childrenModelFileTypes: Map<number, boolean> = new Map<number, boolean>(); // map of idVocabulary of Model File Types associated with this object
+    childrenObjectTypes: Set<eSystemObjectType> = new Set<eSystemObjectType>();
+    childrenCaptureMethods: Set<number> = new Set<number>(); // set of idVocabulary of Capture Methods associated with this object
+    childrenVariantTypes: Set<number> = new Set<number>(); // set of idVocabulary of Capture Variant Types associated with this object
+    childrenModelPurposes: Set<number> = new Set<number>(); // set of idVocabulary of Model Purposes associated with this object
+    childrenModelFileTypes: Set<number> = new Set<number>(); // set of idVocabulary of Model File Types associated with this object
+    childrenDateCreated: Set<string> = new Set<string>(); // set of creation dates in ISO format associated with this object
 
     constructor(sID: SystemObjectIDType, retired: boolean) {
         this.systemObjectIDType = sID;
@@ -89,7 +108,7 @@ export class ObjectGraphDataEntry {
         if (eDirection == eApplyGraphStateDirection.eParent) {
             if (objectGraphState.eType) {
                 if (!this.childrenObjectTypes.has(objectGraphState.eType)) {
-                    this.childrenObjectTypes.set(objectGraphState.eType, true);
+                    this.childrenObjectTypes.add(objectGraphState.eType);
                     retValue = true;
                 }
             }
@@ -99,7 +118,7 @@ export class ObjectGraphDataEntry {
             eDirection == eApplyGraphStateDirection.eParent) {
             if (objectGraphState.captureMethod) {
                 if (!this.childrenCaptureMethods.has(objectGraphState.captureMethod)) {
-                    this.childrenCaptureMethods.set(objectGraphState.captureMethod, true);
+                    this.childrenCaptureMethods.add(objectGraphState.captureMethod);
                     retValue = true;
                 }
             }
@@ -107,7 +126,7 @@ export class ObjectGraphDataEntry {
             if (objectGraphState.variantTypes) {
                 for (const variantType of objectGraphState.variantTypes.keys()) {
                     if (!this.childrenVariantTypes.has(variantType)) {
-                        this.childrenVariantTypes.set(variantType, true);
+                        this.childrenVariantTypes.add(variantType);
                         retValue = true;
                     }
                 }
@@ -115,14 +134,22 @@ export class ObjectGraphDataEntry {
 
             if (objectGraphState.modelPurpose) {
                 if (!this.childrenModelPurposes.has(objectGraphState.modelPurpose)) {
-                    this.childrenModelPurposes.set(objectGraphState.modelPurpose, true);
+                    this.childrenModelPurposes.add(objectGraphState.modelPurpose);
                     retValue = true;
                 }
             }
 
             if (objectGraphState.modelFileType) {
                 if (!this.childrenModelFileTypes.has(objectGraphState.modelFileType)) {
-                    this.childrenModelFileTypes.set(objectGraphState.modelFileType, true);
+                    this.childrenModelFileTypes.add(objectGraphState.modelFileType);
+                    retValue = true;
+                }
+            }
+
+            if (objectGraphState.commonDateCreated) {
+                const dateCreatedISO = objectGraphState.commonDateCreated.toISOString();
+                if (!this.childrenDateCreated.has(dateCreatedISO)) {
+                    this.childrenDateCreated.add(dateCreatedISO);
                     retValue = true;
                 }
             }
@@ -156,12 +183,18 @@ export class ObjectGraphDataEntry {
                 objectGraphDataEntryHierarchy.ancestors.push(systemObjectIDType.idSystemObject);
         }
 
+        return this.extractChildrenHierarchy(objectGraphDataEntryHierarchy);
+    }
+
+    extractChildrenHierarchy(objectGraphDataEntryHierarchy: ObjectGraphDataEntryHierarchy | null): ObjectGraphDataEntryHierarchy {
+        if (!objectGraphDataEntryHierarchy)
+            objectGraphDataEntryHierarchy = new ObjectGraphDataEntryHierarchy();
         objectGraphDataEntryHierarchy.childrenObjectTypes = [...this.childrenObjectTypes.keys()];
         objectGraphDataEntryHierarchy.childrenCaptureMethods = [...this.childrenCaptureMethods.keys()];
         objectGraphDataEntryHierarchy.childrenVariantTypes = [...this.childrenVariantTypes.keys()];
         objectGraphDataEntryHierarchy.childrenModelPurposes = [...this.childrenModelPurposes.keys()];
         objectGraphDataEntryHierarchy.childrenModelFileTypes = [...this.childrenModelFileTypes.keys()];
-
+        objectGraphDataEntryHierarchy.childrenDateCreated = [...this.childrenDateCreated.keys()];
         return objectGraphDataEntryHierarchy;
     }
 }

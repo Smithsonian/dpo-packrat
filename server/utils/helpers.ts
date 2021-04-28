@@ -477,9 +477,12 @@ export class Helpers {
     static safeDate(value: any): Date | null {
         if (value == null)
             return null;
-        if (value instanceof Date)
+        if (!isNaN(value) && value instanceof Date)
             return value;
-        return null;
+        if (typeof(value) !== 'string')
+            return null;
+        const timestamp: number = Date.parse(value);
+        return isNaN(timestamp) ? null : new Date(timestamp);
     }
 
     /** Stringifies Maps and BigInts */

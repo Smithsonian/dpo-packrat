@@ -29,12 +29,12 @@ type RepositoryStore = {
     variantType: number[];
     modelPurpose: number[];
     modelFileType: number[];
-    fromDate: Date | null;
-    toDate: Date | null;
+    dateCreatedFrom: Date | string | null;
+    dateCreatedTo: Date | string | null;
     repositoryBrowserRoot: number | null;
     getFilterState: () => RepositoryFilter;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
-    updateFilterValue: (name: string, value: number | number[] | Date) => void;
+    updateFilterValue: (name: string, value: number | number[] | Date | null) => void;
     resetRepositoryFilter: (modifyCookie?: boolean) => void;
     resetKeywordSearch: () => void;
     initializeTree: () => Promise<void>;
@@ -66,14 +66,14 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     variantType: [],
     modelPurpose: [],
     modelFileType: [],
-    fromDate: null,
-    toDate: null,
+    dateCreatedFrom: null,
+    dateCreatedTo: null,
     repositoryBrowserRoot: null,
-    updateFilterValue: (name: string, value: number | number[] | Date): void => {
-        const { initializeTree, setCookieToState, keyword } = get();
+    updateFilterValue: (name: string, value: number | number[] | Date | null): void => {
+        const { /* initializeTree, setCookieToState, */ keyword } = get();
         set({ [name]: value, loading: true, search: keyword });
-        setCookieToState();
-        initializeTree();
+        // setCookieToState();
+        // initializeTree();
     },
     updateSearch: (value: string): void => {
         //changed search to keyword
@@ -148,6 +148,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             variantType,
             modelPurpose,
             modelFileType,
+            // dateCreatedFrom,
+            // dateCreatedTo,
             initializeTree,
             setCookieToState
         } = get();
@@ -165,6 +167,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             variantType: validateArray<number>(filter.variantType, variantType),
             modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
             modelFileType: validateArray<number>(filter.modelFileType, modelFileType),
+            // dateCreatedFrom: filter.dateCreatedFrom,
+            // dateCreatedTo: filter.dateCreatedTo,
         };
 
         set(stateValues);
@@ -185,6 +189,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             variantType: [],
             modelPurpose: [],
             modelFileType: [],
+            dateCreatedFrom: null,
+            dateCreatedTo: null,
         };
         set(stateValues);
         if (modifyCookie) {
@@ -208,7 +214,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            dateCreatedFrom,
+            dateCreatedTo,
         } = get();
 
         return {
@@ -224,7 +232,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            dateCreatedFrom,
+            dateCreatedTo,
         };
     },
     setCookieToState: (): void => {
@@ -240,7 +250,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            dateCreatedFrom,
+            dateCreatedTo,
         } = getFilterState();
         const currentFilterState = {
             repositoryRootType,
@@ -253,7 +265,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             captureMethod,
             variantType,
             modelPurpose,
-            modelFileType
+            modelFileType,
+            dateCreatedFrom,
+            dateCreatedTo,
         };
         // 20 years
         document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};max-age=630700000`;
