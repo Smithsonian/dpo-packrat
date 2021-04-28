@@ -34,7 +34,7 @@ type RepositoryStore = {
     repositoryBrowserRoot: number | null;
     getFilterState: () => RepositoryFilter;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
-    updateFilterValue: (name: string, value: number | number[] | Date) => void;
+    updateFilterValue: (name: string, value: number | number[] | Date | null) => void;
     resetRepositoryFilter: (modifyCookie?: boolean) => void;
     resetKeywordSearch: () => void;
     initializeTree: () => Promise<void>;
@@ -69,7 +69,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     dateCreatedFrom: null,
     dateCreatedTo: null,
     repositoryBrowserRoot: null,
-    updateFilterValue: (name: string, value: number | number[] | Date): void => {
+    updateFilterValue: (name: string, value: number | number[] | Date | null): void => {
         const { /* initializeTree, setCookieToState, */ keyword } = get();
         set({ [name]: value, loading: true, search: keyword });
         // setCookieToState();
