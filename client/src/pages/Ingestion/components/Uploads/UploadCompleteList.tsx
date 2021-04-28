@@ -11,12 +11,43 @@ import { FieldType } from '../../../../components';
 import { parseAssetVersionToState, useUploadStore } from '../../../../store';
 import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
 import FileList from './FileList';
-import { useUploadListStyles } from './UploadList';
+import { makeStyles } from '@material-ui/core/styles';
+import { scrollBarProperties } from '../../../../utils/shared';
 import UploadListHeader from './UploadListHeader';
 import lodash from 'lodash';
 
+const useStyles = makeStyles(({ palette, breakpoints }) => ({
+    container: {
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'column',
+        width: '52vw'
+    },
+    list: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        minHeight: '16vh',
+        maxHeight: '16vh',
+        'overflow-y': 'auto',
+        'overflow-x': 'hidden',
+        width: '100%',
+        ...scrollBarProperties(true, false, palette.text.disabled),
+        [breakpoints.down('lg')]: {
+            minHeight: '20vh',
+            maxHeight: '20vh'
+        }
+    },
+    listDetail: {
+        textAlign: 'center',
+        color: palette.grey[500],
+        fontStyle: 'italic',
+        marginTop: '8%'
+    }
+}));
+
 function UploadListComplete(): React.ReactElement {
-    const classes = useUploadListStyles();
+    const classes = useStyles();
 
     const { completed, loadCompleted } = useUploadStore();
     const { data, loading, error } = useQuery(GetUploadedAssetVersionDocument);
@@ -75,6 +106,7 @@ function UploadListComplete(): React.ReactElement {
                 label='Uploaded Files'
                 labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
                 labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'black' } }}
+                width={'calc(100% - 20px)'}
             >
                 <UploadListHeader />
                 <Box className={classes.list}>{content}</Box>

@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * SidebarBottomNavigator
  *
@@ -17,17 +19,16 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
-        width: '53vw',
-        padding: '20px 0px',
-        marginLeft: 20,
-        background: palette.background.paper,
+        width: '52vw',
+        padding: '10px 0px',
+        background: palette.background.paper
     },
     navButton: {
         minHeight: 35,
         minWidth: 100,
         color: Colors.defaults.white,
         [breakpoints.down('lg')]: {
-            height: 30,
+            height: 30
         }
     },
     link: {
@@ -51,25 +52,13 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
     const classes = useStyles();
 
     let leftButton = (
-        <LoadingButton
-            className={classes.navButton}
-            disableElevation
-            loaderSize={15}
-            loading={leftLoading || false}
-            onClick={onClickLeft}
-        >
+        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={leftLoading || false} onClick={onClickLeft}>
             {leftLabel}
         </LoadingButton>
     );
 
     let rightButton = (
-        <LoadingButton
-            className={classes.navButton}
-            disableElevation
-            loaderSize={15}
-            loading={rightLoading || false}
-            onClick={onClickRight}
-        >
+        <LoadingButton className={classes.navButton} disableElevation loaderSize={15} loading={rightLoading || false} onClick={onClickRight}>
             {rightLabel}
         </LoadingButton>
     );
@@ -79,17 +68,14 @@ function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.React
             <Link className={classes.link} to={leftRoute}>
                 {leftButton}
             </Link>
-
         );
     }
-
 
     if (rightRoute) {
         rightButton = (
             <Link className={classes.link} to={rightRoute}>
                 {rightButton}
             </Link>
-
         );
     }
 
