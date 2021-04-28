@@ -111,7 +111,6 @@ export function parseRepositoryUrl(search: string): any {
         const dateCreatedTo: Date = convertLocalDateToUTC(new Date(dateString));
         filter.dateCreatedTo = safeDate(dateCreatedTo);
     }
-    console.log(`parseRepositoryUrl ${search}: ${JSON.stringify(filter)}`);
     return filter;
 }
 
@@ -137,7 +136,6 @@ export function generateRepositoryUrl(filter: RepositoryFilter): string {
         skipEmptyString: true,
         skipNull: true,
     });
-    console.log(`generateRepositoryUrl ${ret}: ${JSON.stringify(filter)}`);
     return ret;
 }
 
