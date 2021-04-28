@@ -43,6 +43,8 @@ const mockFilter: NavigationFilter = {
     variantType: [],
     modelPurpose: [],
     modelFileType: [],
+    dateCreatedFrom: null,
+    dateCreatedTo: null,
     rows: 100,
     cursorMark: ''
 };

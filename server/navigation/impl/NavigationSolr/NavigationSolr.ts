@@ -7,7 +7,7 @@ import * as NAV from '../../interface';
 import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
-// import * as H from '../../../utils/helpers';
+import * as H from '../../../utils/helpers';
 import { eSystemObjectType } from '../../../db';
 import { SolrClient } from './SolrClient';
 import { Vocabulary } from '../../../types/graphql';
@@ -87,6 +87,22 @@ export class NavigationSolr implements NAV.INavigation {
         SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.variantType, 'ChildrenVariantTypes');
         SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelPurpose, 'ChildrenModelPurposes');
         SQ = await this.computeFilterParamFromVocabIDArray(SQ, filter.modelFileType, 'ChildrenModelFileTypes');
+
+        // dateCreatedFrom: Date | null;           // Date Created filter
+        // dateCreatedTo: Date | null;             // Date Created filter
+        if (filter.dateCreatedFrom || filter.dateCreatedTo) {
+            let fromDate: Date | null = filter.dateCreatedFrom;
+            let toDate: Date | null = filter.dateCreatedTo;
+            if (fromDate && toDate && fromDate > toDate) { // swap dates if they are provided out of order
+                const oldFromDate: Date = fromDate;
+                fromDate = toDate;
+                toDate = oldFromDate;
+            }
+            const fromFilter: string = H.Helpers.safeDate(fromDate) ? fromDate!.toISOString().substring(0, 10) : '*'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            const toFilter: string = H.Helpers.safeDate(toDate) ? toDate!.toISOString().substring(0, 10) : '*'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            if (fromFilter != '*' || toFilter != '*')
+                SQ = SQ.rangeFilter([{ field: 'ChildrenDateCreated', start: fromFilter, end: toFilter }]);
+        }
 
         // metadataColumns: eMetadata[];           // empty array means give no metadata
         const filterColumns: string[] = ['id', 'CommonObjectType', 'CommonidObject', 'CommonName']; // fetch standard fields // don't need ChildrenID
