@@ -36,6 +36,9 @@ export class NavigationSolr implements NAV.INavigation {
     private async computeSolrQuery(filter: NAV.NavigationFilter): Promise<solr.Query> {
         let SQ: solr.Query = this._solrClient._client.query().edismax();    // use edismax query parser instead of lucene default
 
+        // For now, do not show retired assets to anyone:
+        SQ = SQ.matchFilter('CommonRetired', 0);
+
         // search: string;                         // search string from the user -- for now, only apply to root-level queries, as well as queries of units, projects, and subjects
         if (filter.search && !filter.idRoot) {     // if we have a search string, apply it to root-level queries (i.e. with no specified filter root ID)
             SQ = SQ.q(filter.search.replace(/:/g, '\\:'));      // search text, escaping :
