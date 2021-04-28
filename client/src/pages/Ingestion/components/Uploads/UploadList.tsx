@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * UploadList
  *
@@ -21,6 +23,7 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints, typograph
         flex: 1,
         flexDirection: 'column',
         marginTop: 20,
+        marginBottom: 40,
         width: '52vw',
         border: `1px dashed ${palette.primary.main}`
     },
@@ -61,38 +64,15 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints, typograph
     }
 }));
 
-export const useStyles = makeStyles(({ palette, typography, spacing }) => ({
-    container: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '20vh',
-        width: '52vw',
-        border: `1px dashed ${palette.primary.main}`,
-        borderRadius: 10,
-        padding: 10,
-        backgroundColor: palette.primary.light
-    },
-    icon: {
-        color: palette.primary.main
-    },
-    title: {
-        margin: '1% 0px',
-        fontSize: '1em',
-        fontWeight: typography.fontWeightMedium
-    },
-    button: {
-        width: 120,
-        fontSize: typography.caption.fontSize,
-        marginTop: spacing(1),
-        color: Colors.defaults.white
-    }
-}));
+type UploadListProps = {
+    loading: boolean;
+    open: () => void;
+};
 
-function UploadList({ loading, open }): React.ReactElement {
+function UploadList(props: UploadListProps): React.ReactElement {
     const classes = useUploadListStyles();
     const { pending } = useUploadStore();
+    const { loading, open } = props;
 
     return (
         <Box className={classes.container}>
