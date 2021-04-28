@@ -72,13 +72,18 @@ export class ObjectGraphDatabase {
     }
 
     /* #region Compute Graph Data */
-    public async computeGraphDataFromSystemObject(idSystemObject: number): Promise<boolean> {
+    public async fetchFromSystemObject(idSystemObject: number): Promise<boolean> {
+        LOG.info(`ObjectGraphDatabase.fetchFromSystemObject ${idSystemObject}`, LOG.LS.eDB);
         const oIDsID: SystemObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectAndSystemFromSystem(idSystemObject);
         if (!oIDsID) {
-            LOG.error(`computeGraphDataFromSystemObject unable to compute ObjectUDAndType / SystemObjectInfo for ${idSystemObject}`, LOG.LS.eDB);
+            LOG.error(`ObjectGraphDatabase.fetchFromSystemObject unable to compute ObjectUDAndType / SystemObjectInfo for ${idSystemObject}`, LOG.LS.eDB);
             return false;
         }
-        return this.computeGraphDataFromObjectWorker(oIDsID, 'computeGraphDataFromSystemObject');
+        if (!await this.computeGraphDataFromObjectWorker(oIDsID, 'computeGraphDataFromSystemObject', eObjectGraphMode.eAll)) {
+            LOG.error(`ObjectGraphDatabase.fetchFromSystemObject unable to compute graph for ${idSystemObject}`, LOG.LS.eDB);
+            return false;
+        }
+        return await this.applyGraphData();
     }
 
     private async computeGraphDataFromObject(idObject: number, eObjectType: eSystemObjectType, functionName: string): Promise<boolean> {
@@ -89,11 +94,11 @@ export class ObjectGraphDatabase {
             return false;
         }
         // LOG.info(`ObjectGraphDatabase.computeGraphDataFromObject ${JSON.stringify(oID)} -> ${JSON.stringify(sID)}`, LOG.LS.eDB);
-        return this.computeGraphDataFromObjectWorker({ oID, sID }, functionName);
+        return this.computeGraphDataFromObjectWorker({ oID, sID }, functionName, eObjectGraphMode.eDescendents);
     }
 
-    private async computeGraphDataFromObjectWorker(oIDsID: { oID: ObjectIDAndType, sID: SystemObjectInfo }, functionName: string): Promise<boolean> {
-        const OG: ObjectGraph = new ObjectGraph(oIDsID.sID.idSystemObject, eObjectGraphMode.eDescendents, 32, this); // this -> gather relationships for all objects!
+    private async computeGraphDataFromObjectWorker(oIDsID: SystemObjectIDAndType, functionName: string, eOGMode: eObjectGraphMode): Promise<boolean> {
+        const OG: ObjectGraph = new ObjectGraph(oIDsID.sID.idSystemObject, eOGMode, 32, this); // this -> gather relationships for all objects!
         if (!await OG.fetch()) {
             LOG.error(`ObjectGraphDatabase.${functionName} unable to compute ObjectGraph for ${JSON.stringify(oIDsID)}`, LOG.LS.eDB);
             return false;

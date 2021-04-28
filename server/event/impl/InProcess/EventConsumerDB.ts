@@ -40,11 +40,19 @@ export class EventConsumerDB extends EventConsumer {
                         }
                     }
 
+                    // index modified system objects
+                    // in the event that the audit event is for a SystemObjectXref record, we reindex the "derived" object
                     if (idSystemObject) {
                         CACHE.SystemObjectCache.flushObject(idSystemObject);    // don't use await so this happens asynchronously
 
                         const indexer: IndexSolr = new IndexSolr();
                         indexer.indexObject(idSystemObject);                    // don't use await so this happens asynchronously
+                    } else if (audit.idDBObject && audit.getDBObjectType() === DBAPI.eNonSystemObjectType.eSystemObjectXref) {
+                        const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.fetch(audit.idDBObject);
+                        if (xref) {
+                            const indexer: IndexSolr = new IndexSolr();
+                            indexer.indexObject(xref.idSystemObjectDerived);    // don't use await so this happens asynchronously
+                        }
                     }
 
                     if (audit.idAudit === 0)

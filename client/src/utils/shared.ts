@@ -78,3 +78,9 @@ export function safeDate(value: any): Date | null {
     const timestamp: number = Date.parse(value);
     return isNaN(timestamp) ? null : new Date(timestamp);
 }
+
+export function convertLocalDateToUTC(date: Date): Date {
+    // const UTC: number = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+    // return new Date(UTC);
+    return new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+}

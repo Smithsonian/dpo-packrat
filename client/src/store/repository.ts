@@ -29,8 +29,8 @@ type RepositoryStore = {
     variantType: number[];
     modelPurpose: number[];
     modelFileType: number[];
-    dateCreatedFrom: Date | null;
-    dateCreatedTo: Date | null;
+    dateCreatedFrom: Date | string | null;
+    dateCreatedTo: Date | string | null;
     repositoryBrowserRoot: number | null;
     getFilterState: () => RepositoryFilter;
     removeUnitsOrProjects: (id: number, type: eSystemObjectType) => void;
@@ -167,8 +167,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             variantType: validateArray<number>(filter.variantType, variantType),
             modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
             modelFileType: validateArray<number>(filter.modelFileType, modelFileType),
-            // dateCreatedFrom,
-            // dateCreatedTo,
+            // dateCreatedFrom: filter.dateCreatedFrom,
+            // dateCreatedTo: filter.dateCreatedTo,
         };
 
         set(stateValues);

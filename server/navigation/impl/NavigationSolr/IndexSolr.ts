@@ -76,7 +76,7 @@ export class IndexSolr {
 
     async indexObject(idSystemObject: number): Promise<boolean> {
         // Compute full object graph for object
-        if (!await this.objectGraphDatabase.computeGraphDataFromSystemObject(idSystemObject))
+        if (!await this.objectGraphDatabase.fetchFromSystemObject(idSystemObject))
             LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed computing ObjectGraph`, LOG.LS.eNAV);
 
         const OGDE: ObjectGraphDataEntry | undefined = this.objectGraphDatabase.objectMap.get(idSystemObject);
@@ -85,12 +85,18 @@ export class IndexSolr {
             return false;
         }
 
+        const docs: any[] = [];
         const doc: any = {};
         if (await this.handleObject(doc, OGDE)) {
+            docs.push(doc);
+
+            if (!await this.handleAncestors(docs, OGDE)) // updates docs, if there are ancestors and if OGDE has children data
+                return false;
+
             // LOG.info(`IndexSolr.indexObject(${idSystemObject}) produced ${JSON.stringify(doc, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eNAV);
             const solrClient: SolrClient = new SolrClient(null, null, null);
             try {
-                let res: H.IOResults = await solrClient.add([doc]);
+                let res: H.IOResults = await solrClient.add(docs);
                 if (res.success)
                     res = await solrClient.commit();
                 if (!res.success)
@@ -99,10 +105,26 @@ export class IndexSolr {
                 LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed`, LOG.LS.eNAV, error);
                 return false;
             }
-            LOG.info(`IndexSolr.indexObject(${idSystemObject}) succeeded`, LOG.LS.eNAV);
+
+            LOG.info(`IndexSolr.indexObject(${idSystemObject}) succeeded, updating ${docs.length} documents`, LOG.LS.eNAV);
         } else
             LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed in handleObject`, LOG.LS.eNAV);
 
+        return true;
+    }
+
+    private async handleAncestors(docs: any[], OGDE: ObjectGraphDataEntry): Promise<boolean> {
+        const OGDEHChildrenInfo: DBAPI.ObjectGraphDataEntryHierarchy = OGDE.extractChildrenHierarchy(null);
+        if (OGDEHChildrenInfo.childrenInfoEmpty())
+            return true;
+
+        for (const idSystemObject of OGDE.ancestorObjectMap.keys()) {
+            const doc: any = {};
+            doc.id = idSystemObject;
+            await this.extractCommonChildrenFields(doc, OGDEHChildrenInfo, false); // false means we're updating
+            docs.push(doc);
+            // LOG.info(`IndexSolr.handleAncestors prepping to update ${JSON.stringify(doc)}`, LOG.LS.eNAV);
+        }
         return true;
     }
 
@@ -299,29 +321,43 @@ export class IndexSolr {
             idArray = [];
         }
 
+        await this.extractCommonChildrenFields(doc, OGDEH, true);
+    }
+
+    private async extractCommonChildrenFields(doc: any, OGDEH: DBAPI.ObjectGraphDataEntryHierarchy, create: boolean): Promise<void> {
         const ChildrenObjectTypes: string[] = [];
         for (const childrenObjectType of OGDEH.childrenObjectTypes)
             ChildrenObjectTypes.push(DBAPI.SystemObjectTypeToName(childrenObjectType));
-        doc.ChildrenObjectTypes = ChildrenObjectTypes;
+        if (ChildrenObjectTypes.length > 0)
+            doc.ChildrenObjectTypes = create ? ChildrenObjectTypes : { 'add': ChildrenObjectTypes };
 
         let VocabList: string[] = [];
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenCaptureMethods);
-        doc.ChildrenCaptureMethods = VocabList;
-        VocabList = [];
+        if (VocabList.length > 0) {
+            doc.ChildrenCaptureMethods = create ?  VocabList : { 'add': VocabList };
+            VocabList = [];
+        }
 
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenVariantTypes);
-        doc.ChildrenVariantTypes = VocabList;
-        VocabList = [];
+        if (VocabList.length > 0) {
+            doc.ChildrenVariantTypes = create ?  VocabList : { 'add': VocabList };
+            VocabList = [];
+        }
 
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenModelPurposes);
-        doc.ChildrenModelPurposes = VocabList;
-        VocabList = [];
+        if (VocabList.length > 0) {
+            doc.ChildrenModelPurposes = create ?  VocabList : { 'add': VocabList };
+            VocabList = [];
+        }
 
         VocabList = await this.computeVocabularyTerms(OGDEH.childrenModelFileTypes);
-        doc.ChildrenModelFileTypes = VocabList;
-        VocabList = [];
+        if (VocabList.length > 0) {
+            doc.ChildrenModelFileTypes = create ?  VocabList : { 'add': VocabList };
+            VocabList = [];
+        }
 
-        doc.ChildrenDateCreated = OGDEH.childrenDateCreated;
+        if (OGDEH.childrenDateCreated.length > 0)
+            doc.ChildrenDateCreated = create ? OGDEH.childrenDateCreated : { 'add': OGDEH.childrenDateCreated };
     }
 
     private async computeVocabulary(idVocabulary: number): Promise<string | undefined> {
@@ -404,6 +440,7 @@ export class IndexSolr {
         doc.CommonName = captureData.Name;
         doc.CommonDescription = captureData.Description;
         doc.CommonDateCreated = captureData.DateCaptured;
+        doc.ChildrenDateCreated = [captureData.DateCaptured];
         doc.CDCaptureMethod = await this.lookupVocabulary(captureData.idVCaptureMethod);
         if (captureDataPhoto) {
             doc.CDCaptureDatasetType = await this.lookupVocabulary(captureDataPhoto.idVCaptureDatasetType);
@@ -444,6 +481,7 @@ export class IndexSolr {
 
         doc.CommonName = model.Name;
         doc.CommonDateCreated = model.DateCreated;
+        doc.ChildrenDateCreated = [model.DateCreated];
 
         doc.ModelCreationMethod = await this.computeVocabulary(model.idVCreationMethod);
         doc.ModelMaster = model.Master;
@@ -610,6 +648,7 @@ export class IndexSolr {
         }
         doc.CommonName = `Intermediary File created ${intermediaryFile.DateCreated.toISOString()}`;
         doc.CommonDateCreated = intermediaryFile.DateCreated;
+        doc.ChildrenDateCreated = [intermediaryFile.DateCreated];
         this.countIntermediaryFile++;
         return true;
     }
