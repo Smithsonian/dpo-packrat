@@ -39,7 +39,23 @@ export class ObjectGraphDataEntryHierarchy {
     childrenVariantTypes: number[] = [];
     childrenModelPurposes: number[] = [];
     childrenModelFileTypes: number[] = [];
-    childrenDateCreated: Date[] = [];
+    childrenDateCreated: string[] = [];
+
+    childrenInfoEmpty(): boolean {
+        if (this.childrenObjectTypes.length > 0)
+            return false;
+        if (this.childrenCaptureMethods.length > 0)
+            return false;
+        if (this.childrenVariantTypes.length > 0)
+            return false;
+        if (this.childrenModelPurposes.length > 0)
+            return false;
+        if (this.childrenModelFileTypes.length > 0)
+            return false;
+        if (this.childrenDateCreated.length > 0)
+            return false;
+        return true;
+    }
 }
 
 export class ObjectGraphDataEntry {
@@ -58,7 +74,7 @@ export class ObjectGraphDataEntry {
     childrenVariantTypes: Set<number> = new Set<number>(); // set of idVocabulary of Capture Variant Types associated with this object
     childrenModelPurposes: Set<number> = new Set<number>(); // set of idVocabulary of Model Purposes associated with this object
     childrenModelFileTypes: Set<number> = new Set<number>(); // set of idVocabulary of Model File Types associated with this object
-    childrenDateCreated: Set<Date> = new Set<Date>(); // set of creation dates associated with this ojbect
+    childrenDateCreated: Set<string> = new Set<string>(); // set of creation dates in ISO format associated with this object
 
     constructor(sID: SystemObjectIDType, retired: boolean) {
         this.systemObjectIDType = sID;
@@ -131,8 +147,9 @@ export class ObjectGraphDataEntry {
             }
 
             if (objectGraphState.commonDateCreated) {
-                if (!this.childrenDateCreated.has(objectGraphState.commonDateCreated)) {
-                    this.childrenDateCreated.add(objectGraphState.commonDateCreated);
+                const dateCreatedISO = objectGraphState.commonDateCreated.toISOString();
+                if (!this.childrenDateCreated.has(dateCreatedISO)) {
+                    this.childrenDateCreated.add(dateCreatedISO);
                     retValue = true;
                 }
             }
@@ -166,12 +183,18 @@ export class ObjectGraphDataEntry {
                 objectGraphDataEntryHierarchy.ancestors.push(systemObjectIDType.idSystemObject);
         }
 
+        return this.extractChildrenHierarchy(objectGraphDataEntryHierarchy);
+    }
+
+    extractChildrenHierarchy(objectGraphDataEntryHierarchy: ObjectGraphDataEntryHierarchy | null): ObjectGraphDataEntryHierarchy {
+        if (!objectGraphDataEntryHierarchy)
+            objectGraphDataEntryHierarchy = new ObjectGraphDataEntryHierarchy();
         objectGraphDataEntryHierarchy.childrenObjectTypes = [...this.childrenObjectTypes.keys()];
         objectGraphDataEntryHierarchy.childrenCaptureMethods = [...this.childrenCaptureMethods.keys()];
         objectGraphDataEntryHierarchy.childrenVariantTypes = [...this.childrenVariantTypes.keys()];
         objectGraphDataEntryHierarchy.childrenModelPurposes = [...this.childrenModelPurposes.keys()];
         objectGraphDataEntryHierarchy.childrenModelFileTypes = [...this.childrenModelFileTypes.keys()];
-        objectGraphDataEntryHierarchy.childrenDateCreated = [...this.childrenDateCreated.values()];
+        objectGraphDataEntryHierarchy.childrenDateCreated = [...this.childrenDateCreated.keys()];
         return objectGraphDataEntryHierarchy;
     }
 }

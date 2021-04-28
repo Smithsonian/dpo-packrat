@@ -98,6 +98,8 @@ export class NavigationSolr implements NAV.INavigation {
                 fromDate = toDate;
                 toDate = oldFromDate;
             }
+            if (toDate)
+                toDate.setDate(toDate.getDate() + 1);
             const fromFilter: string = H.Helpers.safeDate(fromDate) ? fromDate!.toISOString() : '*'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
             const toFilter: string = H.Helpers.safeDate(toDate) ? toDate!.toISOString() : '*'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (fromFilter != '*' || toFilter != '*') {
