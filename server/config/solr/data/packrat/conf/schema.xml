@@ -147,7 +147,7 @@
     <field name="ChildrenVariantTypes" type="strings" indexed="true" stored="true" />
     <field name="ChildrenModelPurposes" type="strings" indexed="true" stored="true" />
     <field name="ChildrenModelFileTypes" type="strings" indexed="true" stored="true" />
-    <field name="ChildrenDateCreated" type="pdates" indexed="true" stored="true" />
+    <field name="ChildrenDateCreated" type="pdaters" indexed="true" stored="true" />
 
     <!-- "Plumbling" fields: needed by the system -->
     <!-- docValues are enabled by default for long type so we don't need to index the version field  -->
@@ -216,6 +216,9 @@
     <!-- KD-tree versions of date fields -->
     <fieldType name="pdate" class="solr.DatePointField" docValues="true"/>
     <fieldType name="pdates" class="solr.DatePointField" docValues="true" multiValued="true"/>
+
+    <fieldType name="pdater" class="solr.DateRangeField" indexed="true"/>
+    <fieldType name="pdaters" class="solr.DateRangeField" indexed="true" multiValued="true"/>
     
     <!--Binary data type. The data should be sent/retrieved in as Base64 encoded Strings -->
     <fieldType name="binary" class="solr.BinaryField"/>
