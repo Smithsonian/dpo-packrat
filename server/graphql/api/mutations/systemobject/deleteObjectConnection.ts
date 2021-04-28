@@ -4,6 +4,7 @@ const deleteObjectConnection = gql`
     mutation deleteObjectConnection($input: DeleteObjectConnectionInput!) {
         deleteObjectConnection(input: $input) {
             success
+            details
         }
     }
 `;
