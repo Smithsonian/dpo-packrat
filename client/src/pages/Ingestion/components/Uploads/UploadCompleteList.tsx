@@ -21,9 +21,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        marginTop: 20,
         width: '52vw'
-        // border: `1px dashed ${palette.primary.main}`
     },
     list: {
         display: 'flex',

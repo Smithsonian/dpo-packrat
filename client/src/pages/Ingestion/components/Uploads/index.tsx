@@ -110,22 +110,22 @@ function Uploads(): React.ReactElement {
         <Box className={classes.container}>
             <Box className={classes.content}>
                 <KeepAlive>
-                    <AliveUploadComponents />
+                    <AliveUploadComponents onDiscard={onDiscard} onIngest={onIngest} discardingFiles={discardingFiles} gettingAssetDetails={gettingAssetDetails} />
                 </KeepAlive>
             </Box>
-            <SidebarBottomNavigator
-                leftLabel='Discard'
-                rightLabel='Ingest'
-                leftLoading={discardingFiles}
-                rightLoading={gettingAssetDetails}
-                onClickLeft={onDiscard}
-                onClickRight={onIngest}
-            />
         </Box>
     );
 }
 
-function AliveUploadComponents(): React.ReactElement {
+type AliveUploadComponentsProps = {
+    discardingFiles: boolean;
+    gettingAssetDetails: boolean;
+    onDiscard: () => Promise<void>;
+    onIngest: () => Promise<void>;
+};
+
+function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactElement {
+    const { discardingFiles, gettingAssetDetails, onDiscard, onIngest } = props;
     const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [
         state.onProgressEvent,
         state.onSetCancelledEvent,
@@ -170,6 +170,14 @@ function AliveUploadComponents(): React.ReactElement {
     return (
         <React.Fragment>
             <UploadFilesPicker />
+            <SidebarBottomNavigator
+                leftLabel='Discard'
+                rightLabel='Ingest'
+                leftLoading={discardingFiles}
+                rightLoading={gettingAssetDetails}
+                onClickLeft={onDiscard}
+                onClickRight={onIngest}
+            />
             <UploadCompleteList />
         </React.Fragment>
     );
