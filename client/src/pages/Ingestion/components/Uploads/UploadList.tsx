@@ -21,7 +21,6 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints, typograph
         flex: 1,
         flexDirection: 'column',
         marginTop: 20,
-        // maxHeight: 'auto',
         width: '52vw',
         border: `1px dashed ${palette.primary.main}`
     },
@@ -62,7 +61,7 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints, typograph
     }
 }));
 
-const useStyles = makeStyles(({ palette, typography, spacing }) => ({
+export const useStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
@@ -97,7 +96,13 @@ function UploadList({ loading, open }): React.ReactElement {
 
     return (
         <Box className={classes.container}>
-            <FieldType required align='center' label='Upload Files' labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'black' } }}>
+            <FieldType
+                required
+                align='center'
+                label='Upload Files'
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: 'black' } }}
+                width={'calc(100% - 20px)'}
+            >
                 <UploadListHeader />
                 <Box className={classes.list}>
                     <FileList files={pending} />
@@ -113,7 +118,6 @@ function UploadList({ loading, open }): React.ReactElement {
 }
 
 function UploadFilesPicker(): React.ReactElement {
-    const classes = useStyles();
     const { loading, loadPending } = useUploadStore();
 
     const onDrop = (acceptedFiles: File[]) => {
@@ -123,7 +127,7 @@ function UploadFilesPicker(): React.ReactElement {
     return (
         <Dropzone noClick noDrag={loading} onDrop={onDrop}>
             {({ getRootProps, getInputProps, open }) => (
-                <div className={classes.container} {...getRootProps()}>
+                <div {...getRootProps()}>
                     <UploadList loading={loading} open={open} />
                     <input {...getInputProps()} />
                 </div>
