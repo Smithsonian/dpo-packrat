@@ -1019,6 +1019,7 @@ input UpdateIdentifier {
 
 type DeleteObjectConnectionResult {
   success: Boolean!
+  details: String!
 }
 
 input DeleteObjectConnectionInput {

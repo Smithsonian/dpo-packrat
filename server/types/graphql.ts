@@ -1380,6 +1380,7 @@ export type UpdateIdentifier = {
 export type DeleteObjectConnectionResult = {
   __typename?: 'DeleteObjectConnectionResult';
   success: Scalars['Boolean'];
+  details: Scalars['String'];
 };
 
 export type DeleteObjectConnectionInput = {

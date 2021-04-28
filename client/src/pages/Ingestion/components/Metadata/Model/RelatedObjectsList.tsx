@@ -1,4 +1,5 @@
 /* eslint-disable react/jsx-max-props-per-line */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * RelatedObjectsList
@@ -58,7 +59,7 @@ interface RelatedObjectsListProps extends ViewableProps {
     onAdd: () => void;
     onRemove?: (id: number) => void;
     currentObject?: number;
-    onRemoveConnection?: (idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) => void;
+    onRemoveConnection?: (idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) => any;
     objectType?: number;
 }
 
@@ -126,7 +127,7 @@ interface ItemProps {
     onRemove?: (id: number) => void;
     viewMode?: boolean;
     currentObject?: number;
-    onRemoveConnection?: (idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) => void;
+    onRemoveConnection?: (idSystemObjectMaster: number, idSystemObjectDerived: number, type: string, systemObjectType: number) => any;
     type?: RelatedObjectType;
     systemObjectType?: number;
 }
@@ -137,22 +138,23 @@ function Item(props: ItemProps): React.ReactElement {
     const classes = useStyles(viewMode);
     let remove;
     if (currentObject && onRemoveConnection && type && systemObjectType) {
-        if (type.toString() === 'Source') {
-            remove = () => {
-                const result = window.confirm('Are you sure you wish to remove this relationship?');
-                if (!result) return;
-                toast.success('Removing Relationship...');
-                onRemoveConnection(idSystemObject, currentObject, type.toString(), systemObjectType);
-            };
-        }
-        if (type.toString() === 'Derived') {
-            remove = () => {
-                const result = window.confirm('Are you sure you wish to remove this relationship?');
-                if (!result) return;
-                toast.success('Removing Relationship...');
-                onRemoveConnection(currentObject, idSystemObject, type.toString(), systemObjectType);
-            };
-        }
+        remove = async () => {
+            const result = window.confirm('Are you sure you wish to remove this relationship?');
+            if (!result) return;
+            const {
+                data: {
+                    deleteObjectConnection: { details, success }
+                }
+            } =
+                type.toString() === 'Source'
+                    ? await onRemoveConnection(idSystemObject, currentObject, type.toString(), systemObjectType)
+                    : await onRemoveConnection(currentObject, idSystemObject, type.toString(), systemObjectType);
+            if (success) {
+                toast.success(details);
+            } else {
+                toast.error(details);
+            }
+        };
     } else if (onRemove) {
         remove = () => onRemove?.(idSystemObject);
     }
