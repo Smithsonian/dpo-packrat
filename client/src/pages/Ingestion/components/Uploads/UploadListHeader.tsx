@@ -16,7 +16,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         borderRadius: 5,
         background: palette.background.paper,
         [breakpoints.down('lg')]: {
-            height: 35,
+            height: 35
         }
     },
     fileDetails: {
@@ -26,7 +26,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     size: {
         display: 'flex',
-        flex: 1,
+        flex: 1
     },
     assetType: {
         display: 'flex',
@@ -42,7 +42,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     label: {
         color: palette.primary.contrastText,
         fontWeight: typography.fontWeightRegular
-    },
+    }
 }));
 
 function UploadListHeader(): React.ReactElement {
@@ -51,13 +51,19 @@ function UploadListHeader(): React.ReactElement {
     return (
         <Box className={classes.header}>
             <Box className={classes.fileDetails}>
-                <Typography className={classes.label} variant='caption'>Filename</Typography>
+                <Typography className={classes.label} variant='caption'>
+                    Filename
+                </Typography>
             </Box>
             <Box className={classes.size}>
-                <Typography className={classes.label} variant='caption'>Size</Typography>
+                <Typography className={classes.label} variant='caption'>
+                    Size
+                </Typography>
             </Box>
             <Box className={classes.assetType}>
-                <Typography className={classes.label} variant='caption'>Asset Type</Typography>
+                <Typography className={classes.label} variant='caption'>
+                    Asset Type
+                </Typography>
             </Box>
         </Box>
     );

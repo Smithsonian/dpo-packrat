@@ -1383,6 +1383,7 @@ export type UpdateIdentifier = {
 export type DeleteObjectConnectionResult = {
   __typename?: 'DeleteObjectConnectionResult';
   success: Scalars['Boolean'];
+  details: Scalars['String'];
 };
 
 export type DeleteObjectConnectionInput = {
@@ -2300,7 +2301,7 @@ export type DeleteObjectConnectionMutation = (
   { __typename?: 'Mutation' }
   & { deleteObjectConnection: (
     { __typename?: 'DeleteObjectConnectionResult' }
-    & Pick<DeleteObjectConnectionResult, 'success'>
+    & Pick<DeleteObjectConnectionResult, 'success' | 'details'>
   ) }
 );
 
@@ -3586,6 +3587,7 @@ export const DeleteObjectConnectionDocument = gql`
     mutation deleteObjectConnection($input: DeleteObjectConnectionInput!) {
   deleteObjectConnection(input: $input) {
     success
+    details
   }
 }
     `;
