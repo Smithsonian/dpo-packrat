@@ -89,6 +89,7 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
                     onChange={(_, value) => onDate('dateCreatedFrom', value)}
                     variant='inline'
                     margin='normal'
+                    invalidDateMessage=''
 
                 />
                 <Typography className={classes.toText}>to</Typography>
@@ -98,6 +99,7 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
                     onChange={(_, value) => onDate('dateCreatedTo', value)}
                     variant='inline'
                     margin='normal'
+                    invalidDateMessage=''
                 />
             </MuiPickersUtilsProvider>
         </Box>
