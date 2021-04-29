@@ -3,5 +3,5 @@ import { ObjectIDAndType } from '../../db/api/ObjectType';
 import { eEventKey } from '../../event/interface/EventEnums';
 
 export interface IAuditEngine {
-    auditDBObject(dbObject: any, oID: ObjectIDAndType, key: eEventKey): Promise<boolean>;
+    audit(obj: any, oID: ObjectIDAndType, key: eEventKey): Promise<boolean>;
 }

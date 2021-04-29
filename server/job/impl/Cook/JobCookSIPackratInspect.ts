@@ -262,7 +262,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         }
 
         // Send audit update for model, now that we've finished writing dependent objects, to help ensure full indexing of this model
-        await this.modelConstellation.Model.auditDBObject(eEventKey.eDBUpdate);
+        await this.modelConstellation.Model.audit(eEventKey.eDBUpdate);
         return { success: true, error: '' };
     }
 
