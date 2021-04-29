@@ -7,7 +7,7 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
-import { Redirect, useRouteMatch } from 'react-router';
+import { Redirect } from 'react-router';
 import { Header, PrivateRoute } from '../../components';
 import { HOME_ROUTE, HOME_ROUTES, resolveRoute } from '../../constants';
 import { useControlStore } from '../../store';
@@ -31,13 +31,12 @@ const useStyles = makeStyles(() => ({
 function Home(): React.ReactElement {
     const classes = useStyles();
     const [sideBarExpanded, toggleSidebar] = useControlStore(state => [state.sideBarExpanded, state.toggleSidebar]);
-    const { path } = useRouteMatch();
 
     const onToggle = (): void => toggleSidebar(!sideBarExpanded);
 
     return (
         <Box className={classes.container}>
-            <PrivateRoute exact path={path}>
+            <PrivateRoute exact path='/'>
                 <Redirect to={resolveRoute(HOME_ROUTES.REPOSITORY)} />
             </PrivateRoute>
             <PrivateRoute path={HOME_ROUTE.TYPE}>
