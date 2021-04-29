@@ -1,0 +1,16 @@
+{
+	"asset": {
+		"type": "invalid type",
+		"version": "1.0",
+		"generator": "Voyager",
+		"copyright": "(c) Smithsonian Institution. All rights reserved."
+	},
+	"scene": 0,
+	"scenes": [],
+	"nodes": [],
+	"cameras": [],
+	"lights": [],
+	"models": [],
+	"metas": [],
+	"setups": []
+}
