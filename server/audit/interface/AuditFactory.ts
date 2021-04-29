@@ -25,8 +25,8 @@ export class AuditFactory {
         return AuditFactory.instance;
     }
 
-    static async auditDBObject(dbObject: any, oID: ObjectIDAndType, key: eEventKey): Promise<boolean> {
+    static async audit(obj: any, oID: ObjectIDAndType, key: eEventKey): Promise<boolean> {
         const engine: IAuditEngine | null = await this.getInstance();
-        return (engine) ? engine.auditDBObject(dbObject, oID, key) : false;
+        return (engine) ? engine.audit(obj, oID, key) : false;
     }
 }

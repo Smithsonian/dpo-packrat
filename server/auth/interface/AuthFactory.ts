@@ -58,7 +58,7 @@ class AuthFactory {
             LS.idUser = user.idUser;
 
         LOG.info(`AuthFactory.verifyUser ${email} successfully authenticated`, LOG.LS.eAUTH);
-        AuditFactory.auditDBObject({ email }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthLogin);
+        AuditFactory.audit({ email }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthLogin);
 
         return { user, error: null };
     }

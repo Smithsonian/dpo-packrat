@@ -69,7 +69,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
 
     private async updateRetired(): Promise<boolean> {
         try {
-            this.auditDBObject(eEventKey.eDBUpdate);
+            this.audit(eEventKey.eDBUpdate);
             const { idSystemObject, Retired } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.systemObject.update({
                 where: { idSystemObject, },

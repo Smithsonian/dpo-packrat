@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as EVENT from '../../event/interface';
 
-import { eDBObjectType, ObjectIDAndType, DBObjectTypeToName, eAuditType } from '../../db/api/ObjectType';
+import { eDBObjectType, eSystemObjectType, ObjectIDAndType, DBObjectTypeToName, eAuditType } from '../../db/api/ObjectType';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import { ASL, LocalStore } from '../../utils/localStore';
@@ -19,13 +19,15 @@ export class AuditEventGenerator {
 
     public static singleton: AuditEventGenerator = new AuditEventGenerator();
 
-    public async auditDBObject(dbObject: any, oID: ObjectIDAndType, key: EVENT.eEventKey): Promise<boolean> {
-        LOG.info(`AuditEventGenerator.auditDBObject {${DBObjectTypeToName(oID.eObjectType)}, id: ${oID.idObject}}: ${EVENT.eEventKey[key]}`, LOG.LS.eAUDIT);
+    public async audit(obj: any, oID: ObjectIDAndType, key: EVENT.eEventKey): Promise<boolean> {
+        const oIDRep: string = ((oID.eObjectType !== eSystemObjectType.eUnknown) || (oID.idObject !== 0))
+            ? ` {${DBObjectTypeToName(oID.eObjectType)}, id: ${oID.idObject}}` : '';
+        LOG.info(`AuditEventGenerator.audit${oIDRep}: ${EVENT.eEventKey[key]}`, LOG.LS.eAUDIT);
         if (!this.eventProducer) {
             if (AuditEventGenerator.eventEngine)
                 this.eventProducer = await AuditEventGenerator.eventEngine.createProducer();
             else
-                return true; // LOG.error(`AuditEventGenerator.auditDBObject unable to fetch event engine instance: ${JSON.stringify(oID)}-${EVENT.eEventKey[key]}\n${JSON.stringify(dbObject, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eEVENT);
+                return true; // LOG.error(`AuditEventGenerator.audit unable to fetch event engine instance: ${JSON.stringify(oID)}-${EVENT.eEventKey[key]}\n${JSON.stringify(dbObject, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eEVENT);
         }
 
         if (this.eventProducer) {
@@ -52,7 +54,7 @@ export class AuditEventGenerator {
                 DBObjectType,
                 idDBObject,
                 idSystemObject: null, // avoid computing with (await CACHE.SystemObjectCache.getSystemFromObjectID(oID))?.idSystemObject ?? null,
-                Data: JSON.stringify(dbObject, H.Helpers.stringifyDatabaseRow),
+                Data: JSON.stringify(obj, H.Helpers.stringifyDatabaseRow),
                 idAudit: 0
             };
 
@@ -64,7 +66,7 @@ export class AuditEventGenerator {
             this.eventProducer.send(eventTopic, [data]);
             return true;
         } else {
-            LOG.error('AuditEventGenerator.auditDBObject unable to fetch event producer', LOG.LS.eEVENT);
+            LOG.error('AuditEventGenerator.audit unable to fetch event producer', LOG.LS.eEVENT);
             return false;
         }
 

@@ -22,10 +22,10 @@ export abstract class DBObject<T> {
         return { idObject, eObjectType };
     }
 
-    public async auditDBObject(key: eEventKey): Promise<boolean> {
+    public async audit(key: eEventKey): Promise<boolean> {
         const oID: ObjectIDAndType = this.computeObjectIDAndType();
         if (oID.eObjectType != eNonSystemObjectType.eAudit)
-            return AuditFactory.auditDBObject(this, oID, key);
+            return AuditFactory.audit(this, oID, key);
         return true;
     }
 
@@ -33,7 +33,7 @@ export abstract class DBObject<T> {
         const retVal: boolean = await this.createWorker(); /* istanbul ignore else */
         if (retVal) {
             this.updateCachedValues();
-            this.auditDBObject(eEventKey.eDBCreate);
+            this.audit(eEventKey.eDBCreate);
         }
         return retVal;
     }
@@ -41,14 +41,14 @@ export abstract class DBObject<T> {
         const retVal: boolean = await this.updateWorker(); /* istanbul ignore else */
         if (retVal) {
             this.updateCachedValues();
-            this.auditDBObject(eEventKey.eDBUpdate);
+            this.audit(eEventKey.eDBUpdate);
         }
         return retVal;
     }
     async delete(): Promise<boolean> {
         const retVal: boolean = await this.deleteWorker(); /* istanbul ignore else */
         if (retVal)
-            this.auditDBObject(eEventKey.eDBDelete);
+            this.audit(eEventKey.eDBDelete);
         return retVal;
     }
 }
