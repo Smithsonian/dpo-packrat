@@ -1075,6 +1075,8 @@ export type ModelSceneXref = {
   idModelSceneXref: Scalars['Int'];
   idModel: Scalars['Int'];
   idScene: Scalars['Int'];
+  Usage?: Maybe<Scalars['String']>;
+  Quality?: Maybe<Scalars['String']>;
   R0?: Maybe<Scalars['Float']>;
   R1?: Maybe<Scalars['Float']>;
   R2?: Maybe<Scalars['Float']>;

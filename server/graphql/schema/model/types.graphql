@@ -131,6 +131,8 @@ type ModelSceneXref {
     idModelSceneXref: Int!
     idModel: Int!
     idScene: Int!
+    Usage: String
+    Quality: String
     R0: Float
     R1: Float
     R2: Float
