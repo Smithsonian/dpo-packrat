@@ -32,7 +32,7 @@ describe('SvxReader', () => {
             if (svxReader.SvxExtraction.modelDetails) {
                 expect(svxReader.SvxExtraction.modelDetails.length).toEqual(4);
                 for (const modelDetail of svxReader.SvxExtraction.modelDetails) {
-                    expect(modelDetail.usage).toEqual('Web3D');
+                    expect(modelDetail.xref.Usage).toEqual('Web3D');
                     expect(modelDetail.asset.type).toEqual('Model');
                 }
             }
