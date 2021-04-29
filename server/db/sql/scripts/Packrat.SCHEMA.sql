@@ -387,6 +387,8 @@ CREATE TABLE IF NOT EXISTS `ModelSceneXref` (
   `idModelSceneXref` int(11) NOT NULL AUTO_INCREMENT,
   `idModel` int(11) NOT NULL,
   `idScene` int(11) NOT NULL,
+  `Usage` varchar(100) DEFAULT NULL,
+  `Quality` varchar(100) DEFAULT NULL,
   `TS0` double DEFAULT NULL,
   `TS1` double DEFAULT NULL,
   `TS2` double DEFAULT NULL,

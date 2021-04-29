@@ -1226,6 +1226,7 @@ describe('DB Creation Test Suite', () => {
             modelSceneXref = new DBAPI.ModelSceneXref({
                 idModel: model.idModel,
                 idScene: scene.idScene,
+                Usage: 'Web3D', Quality: 'High',
                 TS0: 0, TS1: 0, TS2: 0, R0: 0, R1: 0, R2: 0, R3: 0,
                 idModelSceneXref: 0
             });
@@ -1241,6 +1242,7 @@ describe('DB Creation Test Suite', () => {
             modelSceneXrefNull = new DBAPI.ModelSceneXref({
                 idModel: model.idModel,
                 idScene: sceneNulls.idScene,
+                Usage: 'Web3D', Quality: 'High',
                 TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null,
                 idModelSceneXref: 0
             });

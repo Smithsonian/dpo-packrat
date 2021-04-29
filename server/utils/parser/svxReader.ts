@@ -5,8 +5,6 @@ import * as H from '../helpers';
 import * as SVX from '../../types/voyager';
 
 export type SvxModelAsset = {
-    usage: SVX.TDerivativeUsage;
-    quality: SVX.TDerivativeQuality;
     asset: SVX.IAsset;
     xref: DBAPI.ModelSceneXref;
 };
@@ -61,14 +59,14 @@ export class SvxExtraction {
                 R2 = model.rotation[2];
                 R3 = model.rotation[3];
             }
-            const xref: DBAPI.ModelSceneXref = new DBAPI.ModelSceneXref({
-                idModelSceneXref: 0, idModel: 0, idScene: 0, TS0, TS1, TS2, R0, R1, R2, R3
-            });
             for (const derivative of model.derivatives) {
                 for (const asset of derivative.assets) {
+                    const xref: DBAPI.ModelSceneXref = new DBAPI.ModelSceneXref({
+                        idModelSceneXref: 0, idModel: 0, idScene: 0, Usage: derivative.usage, Quality: derivative.quality,
+                        TS0, TS1, TS2, R0, R1, R2, R3
+                    });
+
                     this.modelDetails.push({
-                        usage: derivative.usage,
-                        quality: derivative.quality,
                         asset,
                         xref
                     });
