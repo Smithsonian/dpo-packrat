@@ -33,6 +33,8 @@ import { eSystemObjectType, eVocabularySetID } from '../../../../types/server';
 import { withDefaultValueBoolean } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
 import { updateDetailsTabData, useObjectDetails, deleteIdentifier } from '../../hooks/useDetailsView';
+import { apolloClient } from '../../../../graphql/index';
+import { GetDetailsTabDataForObjectDocument } from '../../../../types/graphql';
 import DetailsHeader from './DetailsHeader';
 import DetailsTab, { UpdateDataFields } from './DetailsTab';
 import DetailsThumbnail from './DetailsThumbnail';
@@ -88,7 +90,7 @@ function DetailsView(): React.ReactElement {
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
 
     const getEntries = useVocabularyStore(state => state.getEntries);
-    const getFormState = useRepositoryDetailsFormStore(state => state.getFormState);
+    const getModelFormState = useRepositoryDetailsFormStore(state => state.getModelFormState);
     const [stateIdentifiers, addNewIdentifier, initializeIdentifierState, removeTargetIdentifier, updateIdentifier, checkIdentifiersBeforeUpdate] = useIdentifierStore(state => [
         state.stateIdentifiers,
         state.addNewIdentifier,
@@ -237,22 +239,131 @@ function DetailsView(): React.ReactElement {
         }
         try {
             if (objectType === eSystemObjectType.eModel) {
-                const { dateCaptured, master, authoritative, creationMethod, modality, purpose, units, fileType } = getFormState();
-                updatedData = {
-                    Retired: updatedData?.Retired || details?.retired,
-                    Name: updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name,
-                    Model: {
-                        Name: updatedData?.Name,
-                        Master: master,
-                        Authoritative: authoritative,
-                        CreationMethod: creationMethod,
-                        Modality: modality,
-                        Purpose: purpose,
-                        Units: units,
-                        ModelFileType: fileType,
-                        DateCaptured: dateCaptured
-                    },
-                    Identifiers: []
+                const { dateCaptured, master, authoritative, creationMethod, modality, purpose, units, fileType } = getModelFormState();
+                updatedData.Model = {
+                    Name: updatedData?.Name,
+                    Master: master,
+                    Authoritative: authoritative,
+                    CreationMethod: creationMethod,
+                    Modality: modality,
+                    Purpose: purpose,
+                    Units: units,
+                    ModelFileType: fileType,
+                    DateCaptured: dateCaptured
+                };
+            }
+
+            if (objectType === eSystemObjectType.eSubject && !updatedData.Subject) {
+                const {
+                    data: {
+                        getDetailsTabDataForObject: {
+                            Subject: { Altitude, Longitude, Latitude, R0, R1, R2, R3, TS0, TS1, TS2 }
+                        }
+                    }
+                } = await apolloClient.query({
+                    query: GetDetailsTabDataForObjectDocument,
+                    variables: {
+                        input: {
+                            idSystemObject,
+                            objectType
+                        }
+                    }
+                });
+                updatedData.Subject = {
+                    Latitude,
+                    Longitude,
+                    Altitude,
+                    R0,
+                    R1,
+                    R2,
+                    R3,
+                    TS0,
+                    TS1,
+                    TS2
+                };
+            }
+
+            if (objectType === eSystemObjectType.eItem && !updatedData.Item) {
+                const {
+                    data: {
+                        getDetailsTabDataForObject: {
+                            Item: { Altitude, Longitude, Latitude, R0, R1, R2, R3, TS0, TS1, TS2, EntireSubject }
+                        }
+                    }
+                } = await apolloClient.query({
+                    query: GetDetailsTabDataForObjectDocument,
+                    variables: {
+                        input: {
+                            idSystemObject,
+                            objectType
+                        }
+                    }
+                });
+                updatedData.Item = {
+                    Latitude,
+                    Longitude,
+                    Altitude,
+                    R0,
+                    R1,
+                    R2,
+                    R3,
+                    TS0,
+                    TS1,
+                    TS2,
+                    EntireSubject
+                };
+            }
+
+            if (objectType === eSystemObjectType.eCaptureData && !updatedData.CaptureData) {
+                const {
+                    data: {
+                        getDetailsTabDataForObject: {
+                            CaptureData: {
+                                captureMethod,
+                                dateCaptured,
+                                datasetType,
+                                systemCreated,
+                                description,
+                                cameraSettingUniform,
+                                datasetFieldId,
+                                itemPositionType,
+                                itemPositionFieldId,
+                                itemArrangementFieldId,
+                                focusType,
+                                lightsourceType,
+                                backgroundRemovalMethod,
+                                clusterType,
+                                clusterGeometryFieldId,
+                                folders
+                            }
+                        }
+                    }
+                } = await apolloClient.query({
+                    query: GetDetailsTabDataForObjectDocument,
+                    variables: {
+                        input: {
+                            idSystemObject,
+                            objectType
+                        }
+                    }
+                });
+                updatedData.CaptureData = {
+                    captureMethod,
+                    dateCaptured,
+                    datasetType,
+                    systemCreated,
+                    description,
+                    cameraSettingUniform,
+                    datasetFieldId,
+                    itemPositionType,
+                    itemPositionFieldId,
+                    itemArrangementFieldId,
+                    focusType,
+                    lightsourceType,
+                    backgroundRemovalMethod,
+                    clusterType,
+                    clusterGeometryFieldId,
+                    folders
                 };
             }
 
@@ -267,7 +378,10 @@ function DetailsView(): React.ReactElement {
                 };
             });
 
+            updatedData.Retired = updatedData?.Retired || details?.retired;
+            updatedData.Name = updatedData?.Name || objectDetailsData?.getSystemObjectDetails.name;
             updatedData.Identifiers = stateIdentifiersWithIdSystemObject || [];
+            console.log('updatedData', updatedData);
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');

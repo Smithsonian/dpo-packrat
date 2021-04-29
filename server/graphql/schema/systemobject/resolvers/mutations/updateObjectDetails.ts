@@ -198,6 +198,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 const CaptureData = await DBAPI.CaptureData.fetch(idObject);
 
                 if (CaptureData) {
+                    CaptureData.Name = data.Name;
                     const {
                         description,
                         captureMethod,
@@ -220,7 +221,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (captureMethod) CaptureData.idVCaptureMethod = captureMethod;
 
                     const CaptureDataPhoto = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(CaptureData.idCaptureData);
-
                     if (CaptureDataPhoto && CaptureDataPhoto[0]) {
                         const [CD] = CaptureDataPhoto;
 
@@ -301,9 +301,9 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (Scene) {
                 Scene.Name = data.Name;
                 if (data.Scene) {
-                    // Update values here
+                    if (typeof data.Scene.IsOriented === 'boolean') Scene.IsOriented = data.Scene.IsOriented;
+                    if (typeof data.Scene.HasBeenQCd === 'boolean') Scene.HasBeenQCd = data.Scene.HasBeenQCd;
                 }
-
                 await Scene.update();
             }
             break;
