@@ -79,6 +79,7 @@
   },
   "scripts": {
     "start": "cross-env TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling react-app-rewired start",
+    "start:watchcontainer": "cross-env TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling CHOKIDAR_USEPOLLING=1 react-app-rewired start",
     "start:prod": "react-app-rewired start",
     "build:dev": "yarn env-cmd -f ../.env.dev react-app-rewired build",
     "build:prod": "yarn env-cmd -f ../.env.prod react-app-rewired build",
