@@ -11,6 +11,7 @@ export type SvxModelAsset = {
     xref: DBAPI.ModelSceneXref;
 };
 
+/** Create instances using the static SvxExtraction.extract() */
 export class SvxExtraction {
     document: SVX.IDocument;
     modelDetails: SvxModelAsset[] | null = null;
@@ -23,7 +24,7 @@ export class SvxExtraction {
     setupCount: number = 0;
     tourCount: number = 0;
 
-    constructor(document: SVX.IDocument) {
+    private constructor(document: SVX.IDocument) {
         this.document = document;
     }
 
