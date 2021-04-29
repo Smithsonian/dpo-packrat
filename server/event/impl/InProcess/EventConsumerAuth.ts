@@ -4,7 +4,6 @@ import { EventConsumerDB } from './EventConsumerDB';
 import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
 import * as LOG from '../../../utils/logger';
-import * as H from '../../../utils/helpers';
 
 export class EventConsumerAuth extends EventConsumer {
     constructor(engine: EventEngine) {
@@ -18,13 +17,13 @@ export class EventConsumerAuth extends EventConsumer {
                 LOG.error(`EventConsumerAuth.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
                 continue;
             }
-            LOG.info(`EventConsumerAuth.eventWorker ${JSON.stringify(data, H.Helpers.stringifyDatabaseRow)}`, LOG.LS.eEVENT);
 
             switch (dataItem.key) {
                 case EVENT.eEventKey.eAuthLogin: {
                     const audit: DBAPI.Audit = EventConsumerDB.convertDataToAudit(dataItem.value);
                     if (audit.idAudit === 0)
                         audit.create(); // don't use await so this happens asynchronously
+                    LOG.info(`EventConsumerAuth.eventWorker Login idUser ${audit.idUser}`, LOG.LS.eEVENT);
                 } break;
 
                 default:

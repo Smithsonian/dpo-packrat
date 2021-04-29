@@ -77,9 +77,15 @@ function configureLogger(logPath: string | null): void {
                 const LS: LocalStore | undefined = ASL.getStore();
                 const idRequest: number | undefined = LS?.idRequest;
                 const reqID: string = idRequest ? ('00000' + (idRequest % 100000)).slice(-5) : ' --- ';
+
+                const idUser: number | undefined | null = LS?.idUser;
+                let userID: string = '---';
+                if (idUser)
+                    userID = (idUser < 1000) ? ('000' + (idUser % 1000)).slice(-3) : idUser.toString();
+
                 const logSection: string = loggerSectionName(info.eLS);
                 const stack: string = info.stack ? ` ${info.stack}` : '';
-                return `${info.timestamp} [${reqID}] ${logSection} ${info.level}: ${info.message}${stack}`;
+                return `${info.timestamp} [${reqID}] ${logSection} U${userID} ${info.level}: ${info.message}${stack}`;
             })
         ),
         transports: [
