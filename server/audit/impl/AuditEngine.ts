@@ -5,7 +5,7 @@ import { eEventKey } from '../../event/interface/EventEnums';
 import { AuditEventGenerator } from './AuditEventGenerator';
 
 export class AuditEngine implements IAuditEngine {
-    async auditDBObject(dbObject: any, oID: ObjectIDAndType, key: eEventKey): Promise<boolean> {
-        return AuditEventGenerator.singleton.auditDBObject(dbObject, oID, key);
+    async audit(obj: any, oID: ObjectIDAndType, key: eEventKey): Promise<boolean> {
+        return AuditEventGenerator.singleton.audit(obj, oID, key);
     }
 }
