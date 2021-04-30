@@ -9,6 +9,7 @@ import getModelConstellationForAssetVersion from './queries/getModelConstellatio
 import getAssetVersionsDetails from './queries/getAssetVersionsDetails';
 import discardUploadedAssetVersions from './mutations/discardUploadedAssetVersions';
 import { BigIntResolver } from 'graphql-scalars';
+import { GraphQLUpload } from 'graphql-upload';
 
 const resolvers = {
     Query: {
@@ -25,7 +26,8 @@ const resolvers = {
     Asset,
     AssetGroup,
     AssetVersion,
-    BigInt: BigIntResolver
+    BigInt: BigIntResolver,
+    Upload: GraphQLUpload,
 };
 
 export default resolvers;
