@@ -1344,6 +1344,7 @@ export type UpdateObjectDetailsDataInput = {
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
 };
 
 export type UpdateDerivedObjectsInput = {
