@@ -1,3 +1,3 @@
-import assetResolvers from './resolvers';
+import assetResolvers, { assetResolversForTest } from './resolvers';
 
-export { assetResolvers };
+export { assetResolvers, assetResolversForTest };
