@@ -163,7 +163,6 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
     };
 
     const CaptureDataPhoto = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(idCaptureData);
-
     if (CaptureDataPhoto && CaptureDataPhoto[0]) {
         const [CD] = CaptureDataPhoto;
 
@@ -180,6 +179,12 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
             backgroundRemovalMethod: CD.idVBackgroundRemovalMethod,
             clusterType: CD.idVClusterType,
             clusterGeometryFieldId: CD.ClusterGeometryFieldID,
+            isValidData: true
+        };
+    } else {
+        fields = {
+            ...fields,
+            isValidData: false
         };
     }
 

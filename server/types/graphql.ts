@@ -1460,6 +1460,7 @@ export type CaptureDataDetailFields = {
   clusterType?: Maybe<Scalars['Int']>;
   clusterGeometryFieldId?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolder>;
+  isValidData?: Maybe<Scalars['Boolean']>;
 };
 
 export type SceneDetailFields = {
