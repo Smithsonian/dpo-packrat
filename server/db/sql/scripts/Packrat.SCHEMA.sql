@@ -422,6 +422,14 @@ CREATE TABLE IF NOT EXISTS `Scene` (
   `idAssetThumbnail` int(11) DEFAULT NULL,
   `IsOriented` boolean NOT NULL,
   `HasBeenQCd` boolean NOT NULL,
+  `CountScene` int(11) DEFAULT NULL,
+  `CountNode` int(11) DEFAULT NULL,
+  `CountCamera` int(11) DEFAULT NULL,
+  `CountLight` int(11) DEFAULT NULL,
+  `CountModel` int(11) DEFAULT NULL,
+  `CountMeta` int(11) DEFAULT NULL,
+  `CountSetup` int(11) DEFAULT NULL,
+  `CountTour` int(11) DEFAULT NULL,
   PRIMARY KEY (`idScene`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

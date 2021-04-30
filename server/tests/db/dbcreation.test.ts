@@ -420,6 +420,14 @@ describe('DB Creation Test Suite', () => {
                 idAssetThumbnail: assetThumbnail.idAsset,
                 IsOriented: true,
                 HasBeenQCd: true,
+                CountScene: 0,
+                CountNode: 0,
+                CountCamera: 0,
+                CountLight: 0,
+                CountModel: 0,
+                CountMeta: 0,
+                CountSetup: 0,
+                CountTour: 0,
                 idScene: 0
             });
         expect(scene).toBeTruthy();
@@ -431,6 +439,14 @@ describe('DB Creation Test Suite', () => {
             idAssetThumbnail: null,
             IsOriented: true,
             HasBeenQCd: true,
+            CountScene: 0,
+            CountNode: 0,
+            CountCamera: 0,
+            CountLight: 0,
+            CountModel: 0,
+            CountMeta: 0,
+            CountSetup: 0,
+            CountTour: 0,
             idScene: 0
         });
         expect(sceneNulls).toBeTruthy();

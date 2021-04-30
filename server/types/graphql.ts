@@ -1157,6 +1157,14 @@ export type CreateSceneInput = {
   HasBeenQCd: Scalars['Boolean'];
   IsOriented: Scalars['Boolean'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
+  CountScene?: Maybe<Scalars['Int']>;
+  CountNode?: Maybe<Scalars['Int']>;
+  CountCamera?: Maybe<Scalars['Int']>;
+  CountLight?: Maybe<Scalars['Int']>;
+  CountModel?: Maybe<Scalars['Int']>;
+  CountMeta?: Maybe<Scalars['Int']>;
+  CountSetup?: Maybe<Scalars['Int']>;
+  CountTour?: Maybe<Scalars['Int']>;
 };
 
 export type CreateSceneResult = {
@@ -1189,6 +1197,14 @@ export type Scene = {
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   IsOriented: Scalars['Boolean'];
   Name: Scalars['String'];
+  CountScene?: Maybe<Scalars['Int']>;
+  CountNode?: Maybe<Scalars['Int']>;
+  CountCamera?: Maybe<Scalars['Int']>;
+  CountLight?: Maybe<Scalars['Int']>;
+  CountModel?: Maybe<Scalars['Int']>;
+  CountMeta?: Maybe<Scalars['Int']>;
+  CountSetup?: Maybe<Scalars['Int']>;
+  CountTour?: Maybe<Scalars['Int']>;
   AssetThumbnail?: Maybe<Asset>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
   SystemObject?: Maybe<SystemObject>;
@@ -1472,6 +1488,14 @@ export type SceneDetailFields = {
   Annotation?: Maybe<Scalars['Int']>;
   HasBeenQCd?: Maybe<Scalars['Boolean']>;
   IsOriented?: Maybe<Scalars['Boolean']>;
+  CountScene?: Maybe<Scalars['Int']>;
+  CountNode?: Maybe<Scalars['Int']>;
+  CountCamera?: Maybe<Scalars['Int']>;
+  CountLight?: Maybe<Scalars['Int']>;
+  CountModel?: Maybe<Scalars['Int']>;
+  CountMeta?: Maybe<Scalars['Int']>;
+  CountSetup?: Maybe<Scalars['Int']>;
+  CountTour?: Maybe<Scalars['Int']>;
 };
 
 export type IntermediaryFileDetailFields = {

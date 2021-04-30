@@ -549,6 +549,14 @@ model Scene {
   idAssetThumbnail Int?
   IsOriented       Boolean
   HasBeenQCd       Boolean
+  CountScene       Int?
+  CountNode        Int?
+  CountCamera      Int?
+  CountLight       Int?
+  CountModel       Int?
+  CountMeta        Int?
+  CountSetup       Int?
+  CountTour        Int?
   Asset            Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
   ModelSceneXref   ModelSceneXref[]
   SystemObject     SystemObject?

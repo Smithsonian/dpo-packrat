@@ -149,7 +149,7 @@ export class ObjectGraphTestSetup {
         this.assetVersion8a = await UTIL.createAssetVersionTest({ idAsset: this.asset8.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test', StorageKeyStaging: '', Version: 0 });
         this.assetVersion8b = await UTIL.createAssetVersionTest({ idAsset: this.asset8.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test', StorageKeyStaging: '', Version: 0 });
         this.assetVersion8c = await UTIL.createAssetVersionTest({ idAsset: this.asset8.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test', StorageKeyStaging: '', Version: 0 });
-        this.scene1 = await UTIL.createSceneTest({ Name: 'OA Test', idAssetThumbnail: this.assetT5.idAsset, IsOriented: true, HasBeenQCd: true, idScene: 0 });
+        this.scene1 = await UTIL.createSceneTest({ Name: 'OA Test', idAssetThumbnail: this.assetT5.idAsset, IsOriented: true, HasBeenQCd: true, CountScene: 0, CountNode: 0, CountCamera: 0, CountLight: 0, CountModel: 0, CountMeta: 0, CountSetup: 0, CountTour: 0, idScene: 0 });
         assigned = await this.asset8.assignOwner(this.scene1); expect(assigned).toBeTruthy();
         assigned = await this.assetT5.assignOwner(this.scene1); expect(assigned).toBeTruthy();
 
