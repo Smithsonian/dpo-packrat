@@ -15,10 +15,15 @@ interface PrivateRouteProps extends RouteProps {
 
 function PrivateRoute({ component: Component, children, ...rest }: PrivateRouteProps): React.ReactElement {
     const user = useUserStore(state => state.user);
+    const originalURL: string = encodeURI(window.location.pathname + window.location.search);
 
     const render = props => {
         if (!user) {
-            return <Redirect to={ROUTES.LOGIN} />;
+            console.log(`*** window.location=${window.location}, ou=${originalURL}`);
+            if (originalURL !== '/')
+                return <Redirect to={`${ROUTES.LOGIN}?ou=${originalURL}`} />;
+            else
+                return <Redirect to={ROUTES.LOGIN} />;
         } else {
             if (Component) {
                 return <Component {...props} />;
