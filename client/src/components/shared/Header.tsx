@@ -128,6 +128,7 @@ function Header(): React.ReactElement {
         const updatedFilterState = getFilterState();
         const repositoryURL = generateRepositoryUrl(updatedFilterState);
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
+        console.log(`*** src/components/shared/Header.tsx Header updateRepositorySearch history.push(${route + repositoryURL}`);
         history.push(route + repositoryURL);
         initializeTree();
     };
@@ -139,6 +140,7 @@ function Header(): React.ReactElement {
         const filterState = getFilterState();
         filterState.search = filterState.keyword;
         updateRepositoryFilter(filterState);
+        console.log(`*** src/components/shared/Header.tsx Header onSearch history.push(${route}`);
         history.push(route);
     };
 
