@@ -31,14 +31,14 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         overflow: 'hidden',
         [breakpoints.down('lg')]: {
             minHeight: 50,
-            marginTop: 5,
+            marginTop: 5
         }
     },
     item: {
         display: 'flex',
         width: '100%',
         zIndex: 'inherit',
-        cursor: ({ complete }: FileListItemProps) => complete ? 'pointer' : 'default'
+        cursor: ({ complete }: FileListItemProps) => (complete ? 'pointer' : 'default')
     },
     details: {
         display: 'flex',
@@ -46,11 +46,15 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         zIndex: 'inherit',
         paddingRight: 10,
         marginLeft: 15,
-        flex: 2
+        flex: 5,
+        [breakpoints.down('md')]: {
+            flex: 4
+        }
     },
     name: {
         fontWeight: typography.fontWeightMedium,
-        zIndex: 'inherit'
+        zIndex: 'inherit',
+        wordBreak: 'break-all'
     },
     status: {
         display: 'flex',
@@ -66,7 +70,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '0px 10px',
+        padding: '0px 10px'
     },
     sizeText: {
         fontWeight: typography.fontWeightRegular,
@@ -76,7 +80,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     type: {
         display: 'flex',
         padding: '0px 10px',
-        flex: 1,
+        flex: 1.5,
         alignItems: 'center',
         justifyContent: 'center'
     },
@@ -88,9 +92,9 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontSize: '0.8rem',
         border: `1px solid ${fade(palette.primary.main, 0.3)}`,
         [breakpoints.down('lg')]: {
-            maxWidth: 180,
-            minWidth: 180,
-            fontSize: '0.6rem',
+            maxWidth: 130,
+            minWidth: 130,
+            fontSize: '0.6rem'
         }
     },
     options: {
@@ -100,18 +104,19 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         justifyContent: 'flex-end',
         zIndex: 'inherit',
         [breakpoints.down('lg')]: {
-            flex: 1,
+            flex: 1
         }
     },
     option: {
         cursor: 'pointer',
-        marginRight: 15,
+        marginRight: 15
     },
     progress: {
         position: 'absolute',
         height: '100%',
         width: ({ progress }: FileListItemProps) => `${progress}%`,
-        backgroundColor: ({ complete, failed }: FileListItemProps) => failed ? fade(palette.error.light, 0.3) : complete ? fade(Colors.upload.success, 0.4) : palette.secondary.light,
+        backgroundColor: ({ complete, failed }: FileListItemProps) =>
+            failed ? fade(palette.error.light, 0.3) : complete ? fade(Colors.upload.success, 0.4) : palette.secondary.light,
         zIndex: 5,
         top: 0,
         left: 0,
@@ -147,9 +152,9 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     const classes = useStyles(props);
 
     const upload = () => onUpload(id);
-    const remove = () => uploading ? onCancel(id) : onRemove(id);
+    const remove = () => (uploading ? onCancel(id) : onRemove(id));
     const retry = () => onRetry(id);
-    const select = () => complete ? onSelect(id, !selected) : null;
+    const select = () => (complete ? onSelect(id, !selected) : null);
 
     let options: React.ReactNode = null;
 
@@ -176,36 +181,38 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     const uploadStatus = status.charAt(0) + status.slice(1).toLowerCase();
 
     const variants = {
-        visible: { opacity: 1, },
-        hidden: { opacity: 0.5 },
+        visible: { opacity: 1 },
+        hidden: { opacity: 0.5 }
     };
 
     return (
-        <motion.div
-            className={classes.container}
-            variants={variants}
-            initial='hidden'
-            animate='visible'
-            whileTap={{ scale: complete ? 0.98 : 1 }}
-        >
+        <motion.div className={classes.container} variants={variants} initial='hidden' animate='visible' whileTap={{ scale: complete ? 0.98 : 1 }}>
             <Box className={classes.item} onClick={select}>
                 <Box className={classes.details}>
                     <Box>
-                        <Typography className={classes.name} variant='caption'>{name}</Typography>
+                        <Typography className={classes.name} variant='caption'>
+                            {name}
+                        </Typography>
                     </Box>
                     <Box display='flex'>
                         <Box className={classes.status}>
-                            <Typography className={classes.caption} variant='caption'>{uploadStatus}</Typography>
+                            <Typography className={classes.caption} variant='caption'>
+                                {uploadStatus}
+                            </Typography>
                         </Box>
                         {(uploading || failed) && (
                             <Box className={classes.status}>
-                                <Typography className={classes.caption} variant='caption'>{progress}%</Typography>
+                                <Typography className={classes.caption} variant='caption'>
+                                    {progress}%
+                                </Typography>
                             </Box>
                         )}
                     </Box>
                 </Box>
                 <Box className={classes.size}>
-                    <Typography className={classes.sizeText} variant='caption'>{formatBytes(size)}</Typography>
+                    <Typography className={classes.sizeText} variant='caption'>
+                        {formatBytes(size)}
+                    </Typography>
                 </Box>
                 <Box className={classes.type}>
                     <Select
@@ -215,12 +222,14 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                         onChange={({ target: { value } }) => onChangeType(id, value as number)}
                         disableUnderline
                     >
-                        {typeOptions.map((option: VocabularyOption, index) => <MenuItem key={index} value={option.idVocabulary}>{option.Term}</MenuItem>)}
+                        {typeOptions.map((option: VocabularyOption, index) => (
+                            <MenuItem key={index} value={option.idVocabulary}>
+                                {option.Term}
+                            </MenuItem>
+                        ))}
                     </Select>
                 </Box>
-                <Box className={classes.options}>
-                    {options}
-                </Box>
+                <Box className={classes.options}>{options}</Box>
             </Box>
             <Box className={classes.progress} />
         </motion.div>

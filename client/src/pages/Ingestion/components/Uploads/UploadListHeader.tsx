@@ -21,8 +21,11 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     fileDetails: {
         display: 'flex',
-        flex: 2,
-        paddingLeft: 20
+        flex: 4,
+        paddingLeft: 20,
+        [breakpoints.down('md')]: {
+            flex: 2.5
+        }
     },
     size: {
         display: 'flex',
@@ -30,7 +33,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     },
     assetType: {
         display: 'flex',
-        flex: 2
+        flex: 1.5
     },
     title: {
         textAlign: 'center',
@@ -52,7 +55,7 @@ function UploadListHeader(): React.ReactElement {
         <Box className={classes.header}>
             <Box className={classes.fileDetails}>
                 <Typography className={classes.label} variant='caption'>
-                    Filename
+                    File Name
                 </Typography>
             </Box>
             <Box className={classes.size}>
