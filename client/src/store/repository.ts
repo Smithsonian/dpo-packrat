@@ -70,10 +70,10 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     dateCreatedTo: null,
     repositoryBrowserRoot: null,
     updateFilterValue: (name: string, value: number | number[] | Date | null): void => {
-        const { /* initializeTree, setCookieToState, */ keyword } = get();
+        const { initializeTree, setCookieToState, keyword } = get();
         set({ [name]: value, loading: true, search: keyword });
-        // setCookieToState();
-        // initializeTree();
+        setCookieToState();
+        initializeTree();
     },
     updateSearch: (value: string): void => {
         //changed search to keyword

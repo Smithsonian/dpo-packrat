@@ -10,6 +10,7 @@ import { TextField } from 'formik-material-ui';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { toast } from 'react-toastify';
+
 import LoginBackground from '../../assets/images/login-background.png';
 import { LoadingButton } from '../../components';
 import Config, { Selectors } from '../../config';
@@ -26,7 +27,7 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
         justifyContent: 'center',
         flexDirection: 'column',
         background: palette.primary.light,
-        zIndex: 10,
+        zIndex: 10
     },
     content: {
         display: 'flex',
@@ -43,10 +44,10 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
         marginBottom: 20,
         boxShadow: `0px 1px 4px ${fade(palette.primary.dark, 0.2)}`,
         [breakpoints.down('md')]: {
-            width: '30vw',
+            width: '30vw'
         },
         [breakpoints.down('sm')]: {
-            width: '45vw',
+            width: '45vw'
         }
     },
     title: {
@@ -58,7 +59,7 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
     subtitle: {
         color: palette.primary.contrastText,
         fontWeight: typography.fontWeightRegular,
-        textAlign: 'center',
+        textAlign: 'center'
     },
     loginForm: {
         display: 'flex',
@@ -67,7 +68,7 @@ const useStyles = makeStyles(({ palette, typography, spacing, breakpoints }) => 
     textFields: {
         marginTop: spacing(3),
         '&:nth-of-type(1)': {
-            marginTop: spacing(4),
+            marginTop: spacing(4)
         }
     },
     loginButton: {
@@ -112,12 +113,13 @@ function Login(): React.ReactElement {
         const { setSubmitting } = actions;
 
         try {
-            const { success, message } = await login(email, password);
+            const { success, message, originalUrl } = await login(email, password);
             setSubmitting(false);
 
             if (success) {
                 toast.success('Welcome to Packrat');
-                history.push(ROUTES.HOME);
+                console.log(`*** src/pages/Login/index.tsx Login.onLogin history.push(${originalUrl ?? ROUTES.HOME})`);
+                history.push(originalUrl ?? ROUTES.HOME);
             } else {
                 toast.error(message);
             }
@@ -135,14 +137,16 @@ function Login(): React.ReactElement {
         <Box className={classes.container}>
             <Box className={classes.content}>
                 <Container className={classes.loginFormContainer}>
-                    <Typography className={classes.title} variant='h4'>Packrat</Typography>
-                    <Typography className={classes.subtitle} variant='body1'>3D DAMS/CMS</Typography>
-                    <Typography className={classes.subtitle} variant='body1'>for the Smithsonian Institution</Typography>
-                    <Formik
-                        initialValues={initialValues}
-                        validationSchema={loginValidationSchema}
-                        onSubmit={onLogin}
-                    >
+                    <Typography className={classes.title} variant='h4'>
+                        Packrat
+                    </Typography>
+                    <Typography className={classes.subtitle} variant='body1'>
+                        3D DAMS/CMS
+                    </Typography>
+                    <Typography className={classes.subtitle} variant='body1'>
+                        for the Smithsonian Institution
+                    </Typography>
+                    <Formik initialValues={initialValues} validationSchema={loginValidationSchema} onSubmit={onLogin}>
                         {({ handleSubmit, handleChange, values, isSubmitting, submitForm }) => (
                             <form className={classes.loginForm} onSubmit={handleSubmit}>
                                 <Field
@@ -185,16 +189,9 @@ function Login(): React.ReactElement {
                         )}
                     </Formik>
                 </Container>
-                <Typography
-                    className={classes.subtitle}
-                    variant='caption'
-                >Want to know more?
-                    <Typography
-                        className={classes.contactUs}
-                        color='primary'
-                        variant='caption'
-                        onClick={onContactUs}
-                    >
+                <Typography className={classes.subtitle} variant='caption'>
+                    Want to know more?
+                    <Typography className={classes.contactUs} color='primary' variant='caption' onClick={onContactUs}>
                         Contact us
                     </Typography>
                 </Typography>
