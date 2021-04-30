@@ -45,9 +45,9 @@ import createUserTest from './mutations/user/createUser.test';
 import updateUserTest from './mutations/user/updateUser.test';
 import createVocabularyTest from './mutations/vocabulary/createVocabulary.test';
 import createVocabularySetTest from './mutations/vocabulary/createVocabularySet.test';
-import uploadAssetTest from './mutations/asset/uploadAsset.test';
 import ingestDataTest from './mutations/ingestion/ingestData.test';
-import discardUploadedAssetVersionsTest from './mutations/asset/discardUploadedAssetVersions.test';
+// import uploadAssetTest from './mutations/asset/uploadAsset.test';
+// import discardUploadedAssetVersionsTest from './mutations/asset/discardUploadedAssetVersions.test';
 
 const utils = new TestSuiteUtils();
 utils.setupJest();
@@ -96,7 +96,7 @@ describe('GraphQL Test Suite', () => {
     updateUserTest(utils);
     createVocabularyTest(utils);
     createVocabularySetTest(utils);
-    uploadAssetTest(utils);
     ingestDataTest(utils);
-    discardUploadedAssetVersionsTest(utils);
+    // uploadAssetTest(utils);
+    // discardUploadedAssetVersionsTest(utils);
 });
