@@ -636,6 +636,14 @@ export class IndexSolr {
         doc.CommonName = scene.Name;
         doc.SceneIsOriented = scene.IsOriented;
         doc.SceneHasBeenQCd = scene.HasBeenQCd;
+        doc.SceneCountScene = scene.CountScene;
+        doc.SceneCountNode = scene.CountNode;
+        doc.SceneCountCamera = scene.CountCamera;
+        doc.SceneCountLight = scene.CountLight;
+        doc.SceneCountModel = scene.CountModel;
+        doc.SceneCountMeta = scene.CountMeta;
+        doc.SceneCountSetup = scene.CountSetup;
+        doc.SceneCountTour = scene.CountTour;
         this.countScene++;
         return true;
     }

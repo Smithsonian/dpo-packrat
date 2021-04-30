@@ -103,6 +103,14 @@
     <!-- Scene fields -->
     <field name="SceneIsOriented" type="boolean" indexed="true" stored="true" multiValued="false" />
     <field name="SceneHasBeenQCd" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountScene" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountNode" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountCamera" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountLight" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountModel" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountMeta" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountSetup" type="pint" indexed="true" stored="true" multiValued="false" />
+    <field name="SceneCountTour" type="pint" indexed="true" stored="true" multiValued="false" />
 
     <!-- Asset fields -->
     <field name="AssetFileName" type="strings" indexed="true" stored="true" />
