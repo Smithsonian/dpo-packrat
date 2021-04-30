@@ -118,7 +118,7 @@ function Login(): React.ReactElement {
 
             if (success) {
                 toast.success('Welcome to Packrat');
-                console.log(`*** onLogin originalUrl = ${originalUrl}`);
+                console.log(`*** src/pages/Login/index.tsx Login.onLogin history.push(${originalUrl ?? ROUTES.HOME})`);
                 history.push(originalUrl ?? ROUTES.HOME);
             } else {
                 toast.error(message);
