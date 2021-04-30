@@ -1347,6 +1347,7 @@ export type UpdateObjectDetailsDataInput = {
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
 };
 
 export type UpdateDerivedObjectsInput = {
@@ -2328,7 +2329,7 @@ export type UpdateObjectDetailsMutation = (
   { __typename?: 'Mutation' }
   & { updateObjectDetails: (
     { __typename?: 'UpdateObjectDetailsResult' }
-    & Pick<UpdateObjectDetailsResult, 'success'>
+    & Pick<UpdateObjectDetailsResult, 'success' | 'message'>
   ) }
 );
 
@@ -3655,6 +3656,7 @@ export const UpdateObjectDetailsDocument = gql`
     mutation updateObjectDetails($input: UpdateObjectDetailsInput!) {
   updateObjectDetails(input: $input) {
     success
+    message
   }
 }
     `;

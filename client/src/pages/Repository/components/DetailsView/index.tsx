@@ -386,10 +386,10 @@ function DetailsView(): React.ReactElement {
             if (data?.updateObjectDetails?.success) {
                 toast.success('Data saved successfully');
             } else {
-                throw new Error('Update request returned success: false');
+                throw new Error(data?.updateObjectDetails?.message);
             }
         } catch (error) {
-            toast.error('Failed to save updated data');
+            toast.error(error || 'Failed to save updated data');
         } finally {
             setIsUpdatingData(false);
         }
