@@ -95,7 +95,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return {
                     success: false,
                     message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                }
+                };
             }
             break;
         }
@@ -114,7 +114,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return {
                     success: false,
                     message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                }
+                };
             }
             break;
         }
@@ -169,7 +169,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     return {
                         success: false,
                         message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                    }
+                    };
                 }
             }
             break;
@@ -226,7 +226,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     return {
                         success: false,
                         message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                    }
+                    };
                 }
             }
             break;
@@ -279,14 +279,14 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         return {
                             success: false,
                             message: `Unable to fetch CaptureDataPhoto with id ${idObject}; update failed`
-                        }
+                        };
                     }
                     await CaptureData.update();
                 } else {
                     return {
                         success: false,
                         message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                    }
+                    };
                 }
             }
             break;
@@ -346,7 +346,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     return {
                         success: false,
                         message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                    }
+                    };
                 }
             }
             break;
@@ -363,7 +363,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return {
                     success: false,
                     message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                }
+                };
             }
             break;
         } case eSystemObjectType.eIntermediaryFile: {
@@ -378,7 +378,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return {
                     success: false,
                     message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                }
+                };
             }
             break;
         } case eSystemObjectType.eProjectDocumentation: {
@@ -397,7 +397,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return {
                     success: false,
                     message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                }
+                };
             }
             break;
         }
@@ -418,7 +418,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return {
                     success: false,
                     message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                }
+                };
             }
             break;
         }
@@ -439,7 +439,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return {
                     success: false,
                     message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                }
+                };
             }
             break;
         }
@@ -457,7 +457,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return {
                     success: false,
                     message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                }
+                };
             }
             break;
         }
@@ -479,7 +479,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 return {
                     success: false,
                     message: `Unable to fetch ${getTermForSystemObjectType(objectType)} with id ${idObject}; update failed`
-                }
+                };
             }
             break;
         }
