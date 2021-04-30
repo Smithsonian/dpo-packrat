@@ -10,7 +10,7 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
-import { Redirect, useHistory, useLocation } from 'react-router';
+import { Redirect, useLocation } from 'react-router';
 import { PrivateRoute } from '../../components';
 import { HOME_ROUTES, REPOSITORY_ROUTE, resolveRoute, resolveSubRoute } from '../../constants';
 import { useControlStore, useRepositoryStore } from '../../store';
@@ -72,11 +72,9 @@ function Repository(): React.ReactElement {
 }
 
 function TreeViewPage(): React.ReactElement {
-    const history = useHistory();
     const location = useLocation();
     const {
         search,
-        keyword,
         repositoryRootType,
         objectsToDisplay,
         metadataToDisplay,
@@ -92,29 +90,7 @@ function TreeViewPage(): React.ReactElement {
         dateCreatedTo,
         updateRepositoryFilter
     } = useRepositoryStore();
-
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
-
-    const filterState: RepositoryFilter = React.useMemo(
-        () => ({
-            search,
-            keyword,
-            repositoryRootType,
-            objectsToDisplay,
-            metadataToDisplay,
-            units,
-            projects,
-            has,
-            missing,
-            captureMethod,
-            variantType,
-            modelPurpose,
-            modelFileType,
-            dateCreatedFrom,
-            dateCreatedTo,
-        }),
-        [search, keyword, repositoryRootType, objectsToDisplay, metadataToDisplay, units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType, dateCreatedFrom, dateCreatedTo]
-    );
 
     const setDefaultFilterSelectionsCookie = () => {
         document.cookie = `filterSelections=${JSON.stringify({
@@ -152,30 +128,33 @@ function TreeViewPage(): React.ReactElement {
     const initialFilterState = Object.keys(queries).length ? queries : cookieFilterSelections;
 
     useEffect(() => {
+        const newUrl = generateRepositoryUrl(initialFilterState);
+        console.log(`*** src/pages/Repository/index.tsx TreeViewPage useEffect window.history.pushState(path: ${route}, '', ${newUrl})`);
+        window.history.pushState({ path: route }, '', newUrl);
         updateRepositoryFilter(initialFilterState);
     }, [updateRepositoryFilter, location.search]);
 
-    useEffect(() => {
-        const newRepositoryFilterState: any = {
-            search,
-            repositoryRootType,
-            objectsToDisplay,
-            metadataToDisplay,
-            units,
-            projects,
-            has,
-            missing,
-            captureMethod,
-            variantType,
-            modelPurpose,
-            modelFileType,
-            dateCreatedFrom,
-            dateCreatedTo,
-        };
-
-        const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
-        history.push(route);
-    }, [history, filterState]);
+    const newRepositoryFilterState: any = {
+        search,
+        repositoryRootType,
+        objectsToDisplay,
+        metadataToDisplay,
+        units,
+        projects,
+        has,
+        missing,
+        captureMethod,
+        variantType,
+        modelPurpose,
+        modelFileType,
+        dateCreatedFrom,
+        dateCreatedTo
+    };
+    const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
+    if (route !== location.search) {
+        console.log(`*** src/pages/Repository/index.tsx TreeViewPage window.history.pushState(path: ${route}, '', ${route})`);
+        window.history.pushState({ path: route }, '', route);
+    }
 
     return (
         <React.Fragment>
