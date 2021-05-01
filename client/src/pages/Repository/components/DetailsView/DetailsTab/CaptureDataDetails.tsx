@@ -1,4 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react/jsx-max-props-per-line */
+
 /**
  * CaptureDataDetails
  *
@@ -15,6 +17,8 @@ import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from '../../../../Ingestion/components/Metadata/Photogrammetry/AssetContents';
 import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
 import { DetailComponentProps } from './index';
+import ReadOnlyRow from '../../../../../components/controls/ReadOnlyRow';
+import { toast } from 'react-toastify';
 
 function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
@@ -47,9 +51,10 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                 backgroundRemovalMethod: CaptureData?.backgroundRemovalMethod,
                 clusterType: CaptureData?.clusterType,
                 clusterGeometryFieldId: CaptureData?.clusterGeometryFieldId,
-                cameraSettingUniform: CaptureData?.cameraSettingUniform,
+                cameraSettingUniform: CaptureData?.cameraSettingUniform
             });
         }
+        if (!data?.getDetailsTabDataForObject.CaptureData?.isValidData) toast.error('Invalid data detected', { autoClose: false });
     }, [data, loading]);
 
     if (!data || loading) {
@@ -83,7 +88,6 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         setDetails(details => ({ ...details, [name]: idFieldValue }));
     };
 
-
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
         setDetails(details => ({ ...details, [name]: checked }));
@@ -91,37 +95,18 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
     const captureDataData = data.getDetailsTabDataForObject?.CaptureData;
+    const cdMethods = getEntries(eVocabularySetID.eCaptureDataCaptureMethod);
+    const captureMethodidVocabulary = withDefaultValueNumber(details?.captureMethod, getInitialEntry(eVocabularySetID.eCaptureDataCaptureMethod));
+    const captureMethod = cdMethods.find(method => method.idVocabulary === captureMethodidVocabulary);
 
     return (
         <Box>
-            <SelectField
-                required
-                viewMode
-                updated={isFieldUpdated(details, captureDataData, 'captureMethod')}
-                disabled={disabled}
-                label='Capture Method'
-                value={withDefaultValueNumber(details?.captureMethod, getInitialEntry(eVocabularySetID.eCaptureDataCaptureMethod))}
-                name='captureMethod'
-                onChange={setIdField}
-                options={getEntries(eVocabularySetID.eCaptureDataCaptureMethod)}
-            />
-            <Description
-                viewMode
-                value={details.description ?? ''}
-                onChange={onSetField}
-                updated={isFieldUpdated(details, captureDataData, 'description')}
-                disabled={disabled}
-            />
+            <ReadOnlyRow label='Capture Method' value={captureMethod?.Term || 'Unknown'} />
+            <Description viewMode value={details.description ?? ''} onChange={onSetField} updated={isFieldUpdated(details, captureDataData, 'description')} disabled={disabled} />
             <Box display='flex' mt={1}>
                 <Box display='flex' flex={1} flexDirection='column'>
                     <Box display='flex' flexDirection='column'>
-                        <FieldType
-                            required
-                            label='Date Captured'
-                            direction='row'
-                            containerProps={rowFieldProps}
-                            width='auto'
-                        >
+                        <FieldType required label='Date Captured' direction='row' containerProps={rowFieldProps} width='auto'>
                             <DateInputField
                                 updated={isFieldUpdated(details, captureDataData, 'dateCaptured')}
                                 value={new Date(details?.dateCaptured ?? Date.now())}

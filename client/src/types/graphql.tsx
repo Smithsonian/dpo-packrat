@@ -1347,6 +1347,7 @@ export type UpdateObjectDetailsDataInput = {
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
 };
 
 export type UpdateDerivedObjectsInput = {
@@ -1463,6 +1464,7 @@ export type CaptureDataDetailFields = {
   clusterType?: Maybe<Scalars['Int']>;
   clusterGeometryFieldId?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolder>;
+  isValidData?: Maybe<Scalars['Boolean']>;
 };
 
 export type SceneDetailFields = {
@@ -2327,7 +2329,7 @@ export type UpdateObjectDetailsMutation = (
   { __typename?: 'Mutation' }
   & { updateObjectDetails: (
     { __typename?: 'UpdateObjectDetailsResult' }
-    & Pick<UpdateObjectDetailsResult, 'success'>
+    & Pick<UpdateObjectDetailsResult, 'success' | 'message'>
   ) }
 );
 
@@ -2887,7 +2889,7 @@ export type GetDetailsTabDataForObjectQuery = (
       & Pick<ItemDetailFields, 'EntireSubject' | 'Altitude' | 'Latitude' | 'Longitude' | 'R0' | 'R1' | 'R2' | 'R3' | 'TS0' | 'TS1' | 'TS2'>
     )>, CaptureData?: Maybe<(
       { __typename?: 'CaptureDataDetailFields' }
-      & Pick<CaptureDataDetailFields, 'captureMethod' | 'dateCaptured' | 'datasetType' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId'>
+      & Pick<CaptureDataDetailFields, 'captureMethod' | 'dateCaptured' | 'datasetType' | 'description' | 'cameraSettingUniform' | 'datasetFieldId' | 'itemPositionType' | 'itemPositionFieldId' | 'itemArrangementFieldId' | 'focusType' | 'lightsourceType' | 'backgroundRemovalMethod' | 'clusterType' | 'clusterGeometryFieldId' | 'isValidData'>
       & { folders: Array<(
         { __typename?: 'IngestFolder' }
         & Pick<IngestFolder, 'name' | 'variantType'>
@@ -3654,6 +3656,7 @@ export const UpdateObjectDetailsDocument = gql`
     mutation updateObjectDetails($input: UpdateObjectDetailsInput!) {
   updateObjectDetails(input: $input) {
     success
+    message
   }
 }
     `;
@@ -4960,6 +4963,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
         name
         variantType
       }
+      isValidData
     }
     Model {
       Model {

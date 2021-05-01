@@ -139,6 +139,7 @@ input UpdateObjectDetailsDataInput {
 
 type UpdateObjectDetailsResult {
     success: Boolean!
+    message: String!
 }
 
 input UpdateDerivedObjectsInput {
