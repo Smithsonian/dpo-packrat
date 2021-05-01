@@ -163,7 +163,7 @@ describe('AssetStorageAdapter Methods', () => {
     test('AssetStorageAdapter.discardAssetVersion', async() => {
         const TestCase2 = await testCommitNewAsset(null, 15000, OHTS.captureData1);
         await testDiscardAssetVersion(TestCase2, true);  // first time should succeed
-        await testDiscardAssetVersion(TestCase2, false); // second time should fail
+        await testDiscardAssetVersion(TestCase2, true);  // second time should succeed ... we allow discards to be done again
 
         await testDiscardAssetVersion(TestCase1, false); // discard of ingested asset should fail
     });

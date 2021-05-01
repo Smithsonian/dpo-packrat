@@ -175,7 +175,15 @@ export class LocalStorage implements STORE.IStorage {
         if (DiscardWriteStreamInput.storageKey.includes('..') || DiscardWriteStreamInput.storageKey.includes(':'))
             return { success: false, error: 'Invalid storagekey' };
         const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), DiscardWriteStreamInput.storageKey);
-        return H.Helpers.removeFile(filePath);
+        const resRemove: H.IOResults = await H.Helpers.removeFile(filePath);
+        if (!resRemove.success) { // perhaps the file has already been removed?  If so, log this but treat it as success
+            const resExists: H.IOResults = await H.Helpers.fileOrDirExists(filePath);
+            if (!resExists.success) {
+                LOG.info(`LocalStorage.discardWriteStream ${DiscardWriteStreamInput.storageKey} was already deleted`, LOG.LS.eSTR);
+                return { success: true, error: '' };
+            }
+        }
+        return resRemove;
     }
 
     async promoteStagedAsset(promoteStagedAssetInput: STORE.PromoteStagedAssetInput): Promise<STORE.PromoteStagedAssetResult> {

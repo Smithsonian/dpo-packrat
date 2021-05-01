@@ -171,7 +171,7 @@ describe('LocalStorage Discard', () => {
     test('LocalStorage.discardWriteStream invalid storage key', async() => {
         const LSTCDiscard2: LocalStorageTestCase = await testWriteStream(15000);
         LSTCDiscard2.storageKeyStaging = H.Helpers.randomSlug();
-        await testDiscardWriteStream(LSTCDiscard2, false);
+        await testDiscardWriteStream(LSTCDiscard2, true);
 
         const LSTCDiscard3: LocalStorageTestCase = await testWriteStream(15000);
         LSTCDiscard3.storageKeyStaging = path.join('..', LSTCDiscard3.storageKeyStaging);
