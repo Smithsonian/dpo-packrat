@@ -31,10 +31,8 @@ describe('SvxReader', () => {
 
             if (svxReader.SvxExtraction.modelDetails) {
                 expect(svxReader.SvxExtraction.modelDetails.length).toEqual(4);
-                for (const modelDetail of svxReader.SvxExtraction.modelDetails) {
-                    expect(modelDetail.xref.Usage).toEqual('Web3D');
-                    expect(modelDetail.asset.type).toEqual('Model');
-                }
+                for (const modelDetail of svxReader.SvxExtraction.modelDetails)
+                    expect(modelDetail.Usage).toEqual('Web3D');
             }
         }
     });

@@ -726,15 +726,24 @@ type ModelSceneXref {
   idModelSceneXref: Int!
   idModel: Int!
   idScene: Int!
+  Name: String
   Usage: String
   Quality: String
+  FileSize: Int
+  UVResolution: Int
+  BoundingBoxP1X: Float
+  BoundingBoxP1Y: Float
+  BoundingBoxP1Z: Float
+  BoundingBoxP2X: Float
+  BoundingBoxP2Y: Float
+  BoundingBoxP2Z: Float
+  TS0: Float
+  TS1: Float
+  TS2: Float
   R0: Float
   R1: Float
   R2: Float
   R3: Float
-  TS0: Float
-  TS1: Float
-  TS2: Float
   Model: Model
   Scene: Scene
 }
