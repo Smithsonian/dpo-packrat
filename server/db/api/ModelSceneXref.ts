@@ -7,6 +7,8 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
     idModelSceneXref!: number;
     idModel!: number;
     idScene!: number;
+    Usage!: string | null;
+    Quality!: string | null;
     TS0!: number | null;
     TS1!: number | null;
     TS2!: number | null;
@@ -24,13 +26,15 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idModel, idScene, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
-            ({ idModelSceneXref: this.idModelSceneXref, idModel: this.idModel, idScene: this.idScene, TS0: this.TS0,
+            const { idModel, idScene, Usage, Quality, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
+            ({ idModelSceneXref: this.idModelSceneXref, idModel: this.idModel, idScene: this.idScene,
+                Usage: this.Usage, Quality: this.Quality, TS0: this.TS0,
                 TS1: this.TS1, TS2: this.TS2, R0: this.R0, R1: this.R1, R2: this.R2, R3: this.R3 } =
                 await DBC.DBConnection.prisma.modelSceneXref.create({
                     data: {
                         Model:  { connect: { idModel }, },
                         Scene:  { connect: { idScene }, },
+                        Usage, Quality,
                         TS0, TS1, TS2, R0, R1, R2, R3,
                     },
                 }));
@@ -43,12 +47,13 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idModelSceneXref, idModel, idScene, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
+            const { idModelSceneXref, idModel, idScene, Usage, Quality, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             return await DBC.DBConnection.prisma.modelSceneXref.update({
                 where: { idModelSceneXref, },
                 data: {
                     Model:  { connect: { idModel }, },
                     Scene:  { connect: { idScene }, },
+                    Usage, Quality,
                     TS0, TS1, TS2, R0, R1, R2, R3,
                 },
             }) ? true : /* istanbul ignore next */ false;

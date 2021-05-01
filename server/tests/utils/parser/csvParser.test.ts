@@ -20,7 +20,7 @@ describe('CSVParser', () => {
             const result = await CSVParser.parse<ModelsCSVFields>(fileStream, CSVTypes.models);
             expect(result).toBeTruthy();
         } catch {
-            expect('Excpetion not expected!').toBeFalsy();
+            expect('Exception not expected!').toBeFalsy();
         }
     });
 
@@ -32,7 +32,7 @@ describe('CSVParser', () => {
             const result = await CSVParser.parse<CaptureDataPhotoCSVFields>(fileStream, CSVTypes.captureDataPhoto);
             expect(result).toBeTruthy();
         } catch {
-            expect('Excpetion not expected!').toBeFalsy();
+            expect('Exception not expected!').toBeFalsy();
         }
     });
 
@@ -42,7 +42,7 @@ describe('CSVParser', () => {
             const fileStream = fs.createReadStream(mockPathJunk);
             await CSVParser.parse<ModelsCSVFields>(fileStream, CSVTypes.models);
         } catch {
-            expect('Excpetion expected').toBeTruthy();
+            expect('Exception expected').toBeTruthy();
         }
     });
 
@@ -52,7 +52,7 @@ describe('CSVParser', () => {
             const fileStream = fs.createReadStream(H.Helpers.randomSlug());
             await CSVParser.parse<ModelsCSVFields>(fileStream, CSVTypes.models);
         } catch (error) {
-            expect('Excpetion expected').toBeTruthy();
+            expect('Exception expected').toBeTruthy();
         }
     });
 });

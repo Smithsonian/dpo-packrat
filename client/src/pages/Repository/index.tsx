@@ -107,7 +107,7 @@ function TreeViewPage(): React.ReactElement {
             modelFileType: [],
             dateCreatedFrom: null,
             dateCreatedTo: null
-        })}`;
+        })};path=/`;
     };
 
     /*
@@ -122,7 +122,8 @@ function TreeViewPage(): React.ReactElement {
         }
         cookieFilterSelections = document.cookie.split(';');
         cookieFilterSelections = cookieFilterSelections.find(entry => entry.trim().startsWith('filterSelections'));
-        cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
+        if (cookieFilterSelections)
+            cookieFilterSelections = JSON.parse(cookieFilterSelections.split('=')[1]);
     })();
 
     const initialFilterState = Object.keys(queries).length ? queries : cookieFilterSelections;

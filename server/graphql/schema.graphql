@@ -726,6 +726,8 @@ type ModelSceneXref {
   idModelSceneXref: Int!
   idModel: Int!
   idScene: Int!
+  Usage: String
+  Quality: String
   R0: Float
   R1: Float
   R2: Float
@@ -804,6 +806,14 @@ input CreateSceneInput {
   HasBeenQCd: Boolean!
   IsOriented: Boolean!
   idAssetThumbnail: Int
+  CountScene: Int
+  CountNode: Int
+  CountCamera: Int
+  CountLight: Int
+  CountModel: Int
+  CountMeta: Int
+  CountSetup: Int
+  CountTour: Int
 }
 
 type CreateSceneResult {
@@ -832,6 +842,14 @@ type Scene {
   idAssetThumbnail: Int
   IsOriented: Boolean!
   Name: String!
+  CountScene: Int
+  CountNode: Int
+  CountCamera: Int
+  CountLight: Int
+  CountModel: Int
+  CountMeta: Int
+  CountSetup: Int
+  CountTour: Int
   AssetThumbnail: Asset
   ModelSceneXref: [ModelSceneXref]
   SystemObject: SystemObject
@@ -1104,6 +1122,14 @@ type SceneDetailFields {
   Annotation: Int
   HasBeenQCd: Boolean
   IsOriented: Boolean
+  CountScene: Int
+  CountNode: Int
+  CountCamera: Int
+  CountLight: Int
+  CountModel: Int
+  CountMeta: Int
+  CountSetup: Int
+  CountTour: Int
 }
 
 type IntermediaryFileDetailFields {

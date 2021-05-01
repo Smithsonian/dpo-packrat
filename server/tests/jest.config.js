@@ -38,6 +38,7 @@ module.exports = {
         // '**/tests/utils/parser/bagitReader.test.ts',
         // '**/tests/utils/parser/bulkIngestReader.test.ts',
         // '**/tests/utils/parser/csvParser.test.ts',
+        // '**/tests/utils/parser/svxReader.test.ts',
         // '**/tests/utils/helpers.test.ts',
         // '**/tests/utils/zipFile.test.ts',
         // '**/tests/utils/zipStream.test.ts',

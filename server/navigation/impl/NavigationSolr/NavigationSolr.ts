@@ -318,6 +318,14 @@ export class NavigationSolr implements NAV.INavigation {
                 case NAV.eMetadata.eModelUVMapType:                     metadata.push(this.computeMetadataFromStringArray(doc.ModelUVMapType)); break;
                 case NAV.eMetadata.eSceneIsOriented:                    metadata.push(this.computeMetadataFromBoolean(doc.SceneIsOriented)); break;
                 case NAV.eMetadata.eSceneHasBeenQCd:                    metadata.push(this.computeMetadataFromBoolean(doc.SceneHasBeenQCd)); break;
+                case NAV.eMetadata.eSceneCountScene:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountScene)); break;
+                case NAV.eMetadata.eSceneCountNode:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountNode)); break;
+                case NAV.eMetadata.eSceneCountCamera:                   metadata.push(this.computeMetadataFromNumber(doc.SceneCountCamera)); break;
+                case NAV.eMetadata.eSceneCountLight:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountLight)); break;
+                case NAV.eMetadata.eSceneCountModel:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountModel)); break;
+                case NAV.eMetadata.eSceneCountMeta:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountMeta)); break;
+                case NAV.eMetadata.eSceneCountSetup:                    metadata.push(this.computeMetadataFromNumber(doc.SceneCountSetup)); break;
+                case NAV.eMetadata.eSceneCountTour:                     metadata.push(this.computeMetadataFromNumber(doc.SceneCountTour)); break;
                 case NAV.eMetadata.eAssetFileName:                      metadata.push(this.computeMetadataFromStringArray(doc.AssetFileName)); break;
                 case NAV.eMetadata.eAssetFilePath:                      metadata.push(this.computeMetadataFromString(doc.AssetFilePath)); break;
                 case NAV.eMetadata.eAssetType:                          metadata.push(this.computeMetadataFromString(doc.AssetType)); break;
