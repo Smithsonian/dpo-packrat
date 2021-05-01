@@ -4,6 +4,7 @@
  * for testing graphql api
  */
 import GraphQLApi from '../../../graphql';
+
 import * as DBC from '../../../db/connection';
 // import * as H from '../../../utils/helpers';
 import {
@@ -33,7 +34,7 @@ class TestSuiteUtils {
     };
 
     private beforeAll = (): void => {
-        this.graphQLApi = new GraphQLApi();
+        this.graphQLApi = new GraphQLApi(true); // true -> use special flavor of GraphQL resolvers, which avoid explicit use of graphql-upload's GraphQLUpload resolver for "Upload" scalar; instead, use default Apollo resolver
     };
 
     private afterAll = async (done: () => void): Promise<void> => {

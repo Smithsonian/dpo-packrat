@@ -54,6 +54,7 @@
     "graphql": "15.5.0",
     "graphql-scalars": "1.9.0",
     "graphql-tools": "7.0.4",
+    "graphql-upload": "11.0.0",
     "jszip": "3.6.0",
     "ldapjs": "2.2.4",
     "lodash": "4.17.21",

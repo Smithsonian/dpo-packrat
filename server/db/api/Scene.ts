@@ -10,6 +10,14 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
     idAssetThumbnail!: number | null;
     IsOriented!: boolean;
     HasBeenQCd!: boolean;
+    CountScene!: number | null;
+    CountNode!: number | null;
+    CountCamera!: number | null;
+    CountLight!: number | null;
+    CountModel!: number | null;
+    CountMeta!: number | null;
+    CountSetup!: number | null;
+    CountTour!: number | null;
 
     constructor(input: SceneBase) {
         super(input);
@@ -20,9 +28,13 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
+            const { Name, idAssetThumbnail, IsOriented, HasBeenQCd, CountScene, CountNode, CountCamera,
+                CountLight, CountModel, CountMeta, CountSetup, CountTour } = this;
             ({ idScene: this.idScene, Name: this.Name, idAssetThumbnail: this.idAssetThumbnail,
-                IsOriented: this.IsOriented, HasBeenQCd: this.HasBeenQCd } =
+                IsOriented: this.IsOriented, HasBeenQCd: this.HasBeenQCd, CountScene: this.CountScene,
+                CountNode: this.CountNode, CountCamera: this.CountCamera, CountLight: this.CountLight,
+                CountModel: this.CountModel, CountMeta: this.CountMeta, CountSetup: this.CountSetup,
+                CountTour: this.CountTour } =
                 await DBC.DBConnection.prisma.scene.create({
                     data: {
                         Name,
@@ -30,6 +42,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                         IsOriented,
                         HasBeenQCd,
                         SystemObject:       { create: { Retired: false }, },
+                        CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour
                     },
                 }));
             return true;
@@ -41,7 +54,8 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd } = this;
+            const { idScene, Name, idAssetThumbnail, IsOriented, HasBeenQCd,
+                CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.scene.update({
                 where: { idScene, },
                 data: {
@@ -49,6 +63,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                     Asset:              idAssetThumbnail ? { connect: { idAsset: idAssetThumbnail }, } : { disconnect: true, },
                     IsOriented,
                     HasBeenQCd,
+                    CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

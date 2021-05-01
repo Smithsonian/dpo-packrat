@@ -1,4 +1,4 @@
-import { ReadStream } from 'fs';
+import { ReadStream } from 'fs-extra';
 import { MutationUploadAssetArgs, UploadAssetResult, UploadStatus /*, AssetType */ } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as STORE from '../../../../../storage/interface';
@@ -127,6 +127,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
             });
 
             stream.on('error', async () => {
+                LOG.error('uploadAsset, Upload failed', LOG.LS.eGQL);
                 await storage.discardWriteStream({ storageKey });
                 resolve({ status: UploadStatus.Failed, error: 'Upload failed' });
             });
@@ -134,7 +135,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
             // stream.on('close', async () => { });
         });
     } catch (error) {
-        LOG.error('uploadAsset', error, LOG.LS.eGQL);
+        LOG.error('uploadAsset', LOG.LS.eGQL, error);
         return { status: UploadStatus.Failed, error: 'Upload failed' };
     }
 }

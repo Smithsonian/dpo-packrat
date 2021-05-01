@@ -154,24 +154,26 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             setCookieToState
         } = get();
 
-        const stateValues: RepositoryFilter = {
-            ...filter,
-            repositoryRootType: validateArray<eSystemObjectType>(filter.repositoryRootType, repositoryRootType),
-            objectsToDisplay: validateArray<eSystemObjectType>(filter.objectsToDisplay, objectsToDisplay),
-            metadataToDisplay: validateArray<eMetadata>(filter.metadataToDisplay, metadataToDisplay),
-            units: validateArray<number>(filter.units, units),
-            projects: validateArray<number>(filter.projects, projects),
-            has: validateArray<eSystemObjectType>(filter.has, has),
-            missing: validateArray<eSystemObjectType>(filter.missing, missing),
-            captureMethod: validateArray<number>(filter.captureMethod, captureMethod),
-            variantType: validateArray<number>(filter.variantType, variantType),
-            modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
-            modelFileType: validateArray<number>(filter.modelFileType, modelFileType),
-            // dateCreatedFrom: filter.dateCreatedFrom,
-            // dateCreatedTo: filter.dateCreatedTo,
-        };
+        if (filter) {
+            const stateValues: RepositoryFilter = {
+                ...filter,
+                repositoryRootType: validateArray<eSystemObjectType>(filter.repositoryRootType, repositoryRootType),
+                objectsToDisplay: validateArray<eSystemObjectType>(filter.objectsToDisplay, objectsToDisplay),
+                metadataToDisplay: validateArray<eMetadata>(filter.metadataToDisplay, metadataToDisplay),
+                units: validateArray<number>(filter.units, units),
+                projects: validateArray<number>(filter.projects, projects),
+                has: validateArray<eSystemObjectType>(filter.has, has),
+                missing: validateArray<eSystemObjectType>(filter.missing, missing),
+                captureMethod: validateArray<number>(filter.captureMethod, captureMethod),
+                variantType: validateArray<number>(filter.variantType, variantType),
+                modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
+                modelFileType: validateArray<number>(filter.modelFileType, modelFileType),
+                // dateCreatedFrom: filter.dateCreatedFrom,
+                // dateCreatedTo: filter.dateCreatedTo,
+            };
 
-        set(stateValues);
+            set(stateValues);
+        }
         setCookieToState();
         initializeTree();
     },
@@ -270,7 +272,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             dateCreatedTo,
         };
         // 20 years
-        document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};max-age=630700000`;
+        document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};path=/;max-age=630700000`;
     },
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined): void => {
         const { resetKeywordSearch, resetRepositoryFilter, getChildrenForIngestion } = get();

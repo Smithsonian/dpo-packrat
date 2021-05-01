@@ -31,7 +31,7 @@ export function info(message: string, eLogSection: LS): void {
 }
 
 export function error(message: string, eLogSection: LS, obj: any | null = null): void {
-    logger.error(message, { ...obj, eLS: eLogSection });
+    logger.error(message, obj, { eLS: eLogSection });
 }
 
 function loggerSectionName(eLogSection: LS | undefined): string {
@@ -84,7 +84,7 @@ function configureLogger(logPath: string | null): void {
                     userID = (idUser < 1000) ? ('000' + (idUser % 1000)).slice(-3) : idUser.toString();
 
                 const logSection: string = loggerSectionName(info.eLS);
-                const stack: string = info.stack ? ` ${info.stack}` : '';
+                const stack: string = info.stack ? `\n${info.stack}` : '';
                 return `${info.timestamp} [${reqID}] ${logSection} U${userID} ${info.level}: ${info.message}${stack}`;
             })
         ),

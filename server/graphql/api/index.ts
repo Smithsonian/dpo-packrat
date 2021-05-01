@@ -5,7 +5,7 @@
  * us to use it in a non-graphql context such as custom REST
  * routes and testing environment
  */
-import schema from '../schema';
+import schema, { schemaForTest } from '../schema';
 import { graphql, print, DocumentNode } from 'graphql';
 import {
     GetUserInput,
@@ -242,6 +242,11 @@ type GraphQLRequest = {
 };
 
 class GraphQLApi {
+    private test: boolean = false;
+    constructor(test: boolean = false) {
+        this.test = test;
+    }
+
     async getUser(input: GetUserInput, context?: Context): Promise<GetUserResult> {
         const operationName = 'getUser';
         const variables = { input };
@@ -798,7 +803,7 @@ class GraphQLApi {
         const source: string = query || queryNodeString;
 
         const contextValue = { ...context };
-        const { data, errors } = await graphql({ schema, source, variableValues: variables, contextValue });
+        const { data, errors } = await graphql({ schema: (!this.test) ? schema : schemaForTest, source, variableValues: variables, contextValue });
 
         if (errors && errors.length) {
             throw errors[0];

@@ -92,7 +92,15 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 fields = {
                     ...fields,
                     HasBeenQCd: Scene?.HasBeenQCd,
-                    IsOriented: Scene?.IsOriented
+                    IsOriented: Scene?.IsOriented,
+                    CountScene: Scene?.CountScene,
+                    CountNode: Scene?.CountNode,
+                    CountCamera: Scene?.CountCamera,
+                    CountLight: Scene?.CountLight,
+                    CountModel: Scene?.CountModel,
+                    CountMeta: Scene?.CountMeta,
+                    CountSetup: Scene?.CountSetup,
+                    CountTour: Scene?.CountTour,
                 };
                 result.Scene = fields;
             }

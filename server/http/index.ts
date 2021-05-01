@@ -14,6 +14,7 @@ import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
+import { graphqlUploadExpress } from 'graphql-upload';
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
@@ -57,6 +58,7 @@ export class HttpServer {
         this.app.use('/graphql', HttpServer.graphqlLoggingMiddleware);
 
         const server = new ApolloServer(ApolloServerOptions);
+        this.app.use(graphqlUploadExpress());
         server.applyMiddleware({ app: this.app, cors: false });
 
         this.app.get('/logtest', logtest);

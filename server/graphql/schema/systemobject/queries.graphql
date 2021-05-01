@@ -77,6 +77,14 @@ type SceneDetailFields {
     Annotation: Int
     HasBeenQCd: Boolean
     IsOriented: Boolean
+    CountScene: Int
+    CountNode: Int
+    CountCamera: Int
+    CountLight: Int
+    CountModel: Int
+    CountMeta: Int
+    CountSetup: Int
+    CountTour: Int
 }
 
 type IntermediaryFileDetailFields {

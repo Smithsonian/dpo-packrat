@@ -504,9 +504,11 @@ model ModelProcessingActionStep {
 }
 
 model ModelSceneXref {
-  idModelSceneXref Int    @id @default(autoincrement())
+  idModelSceneXref Int     @id @default(autoincrement())
   idModel          Int
   idScene          Int
+  Usage            String? @mariasql.VarChar(100)
+  Quality          String? @mariasql.VarChar(100)
   TS0              Float?
   TS1              Float?
   TS2              Float?
@@ -514,8 +516,8 @@ model ModelSceneXref {
   R1               Float?
   R2               Float?
   R3               Float?
-  Model            Model  @relation(fields: [idModel], references: [idModel])
-  Scene            Scene  @relation(fields: [idScene], references: [idScene])
+  Model            Model   @relation(fields: [idModel], references: [idModel])
+  Scene            Scene   @relation(fields: [idScene], references: [idScene])
 
   @@index([idModel], name: "ModelSceneXref_idModel")
   @@index([idScene], name: "ModelSceneXref_idScene")
@@ -547,6 +549,14 @@ model Scene {
   idAssetThumbnail Int?
   IsOriented       Boolean
   HasBeenQCd       Boolean
+  CountScene       Int?
+  CountNode        Int?
+  CountCamera      Int?
+  CountLight       Int?
+  CountModel       Int?
+  CountMeta        Int?
+  CountSetup       Int?
+  CountTour        Int?
   Asset            Asset?           @relation(fields: [idAssetThumbnail], references: [idAsset])
   ModelSceneXref   ModelSceneXref[]
   SystemObject     SystemObject?
