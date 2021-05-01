@@ -19,7 +19,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
-        width: '52vw',
+        // width: '52vw',
         padding: '10px 0px',
         background: palette.background.paper
     },
