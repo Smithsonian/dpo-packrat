@@ -7,8 +7,17 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
     idModelSceneXref!: number;
     idModel!: number;
     idScene!: number;
+    Name!: string | null;
     Usage!: string | null;
     Quality!: string | null;
+    FileSize!: bigint | null;
+    UVResolution!: number | null;
+    BoundingBoxP1X!: number | null;
+    BoundingBoxP1Y!: number | null;
+    BoundingBoxP1Z!: number | null;
+    BoundingBoxP2X!: number | null;
+    BoundingBoxP2Y!: number | null;
+    BoundingBoxP2Z!: number | null;
     TS0!: number | null;
     TS1!: number | null;
     TS2!: number | null;
@@ -26,15 +35,20 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idModel, idScene, Usage, Quality, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
-            ({ idModelSceneXref: this.idModelSceneXref, idModel: this.idModel, idScene: this.idScene,
-                Usage: this.Usage, Quality: this.Quality, TS0: this.TS0,
-                TS1: this.TS1, TS2: this.TS2, R0: this.R0, R1: this.R1, R2: this.R2, R3: this.R3 } =
+            const { idModel, idScene, Name, Usage, Quality, FileSize, UVResolution,
+                BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
+                TS0, TS1, TS2, R0, R1, R2, R3 } = this;
+            ({ idModelSceneXref: this.idModelSceneXref, idModel: this.idModel, idScene: this.idScene, Name: this.Name,
+                Usage: this.Usage, Quality: this.Quality, FileSize: this.FileSize, UVResolution: this.UVResolution,
+                BoundingBoxP1X: this.BoundingBoxP1X, BoundingBoxP1Y: this.BoundingBoxP1Y, BoundingBoxP1Z: this.BoundingBoxP1Z,
+                BoundingBoxP2X: this.BoundingBoxP2X, BoundingBoxP2Y: this.BoundingBoxP2Y, BoundingBoxP2Z: this.BoundingBoxP2Z,
+                TS0: this.TS0, TS1: this.TS1, TS2: this.TS2, R0: this.R0, R1: this.R1, R2: this.R2, R3: this.R3 } =
                 await DBC.DBConnection.prisma.modelSceneXref.create({
                     data: {
                         Model:  { connect: { idModel }, },
                         Scene:  { connect: { idScene }, },
-                        Usage, Quality,
+                        Name, Usage, Quality, FileSize, UVResolution,
+                        BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
                         TS0, TS1, TS2, R0, R1, R2, R3,
                     },
                 }));
@@ -47,13 +61,16 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idModelSceneXref, idModel, idScene, Usage, Quality, TS0, TS1, TS2, R0, R1, R2, R3 } = this;
+            const { idModelSceneXref, idModel, idScene, Name, Usage, Quality, FileSize, UVResolution,
+                BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
+                TS0, TS1, TS2, R0, R1, R2, R3 } = this;
             return await DBC.DBConnection.prisma.modelSceneXref.update({
                 where: { idModelSceneXref, },
                 data: {
                     Model:  { connect: { idModel }, },
                     Scene:  { connect: { idScene }, },
-                    Usage, Quality,
+                    Name, Usage, Quality, FileSize, UVResolution,
+                    BoundingBoxP1X, BoundingBoxP1Y, BoundingBoxP1Z, BoundingBoxP2X, BoundingBoxP2Y, BoundingBoxP2Z,
                     TS0, TS1, TS2, R0, R1, R2, R3,
                 },
             }) ? true : /* istanbul ignore next */ false;
