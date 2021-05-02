@@ -36,6 +36,7 @@
     "devbox:start": "docker exec -it packrat-devbox bash",
     "devbox:down": "docker container rm packrat-devbox --force",
     "dev": "docker-compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d",
+    "dev:solr": "docker-compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d packrat-solr",
     "prod": "docker-compose --env-file .env.prod -p dpo-packrat -f ./conf/docker/docker-compose.prod.yml up -d",
     "deploy:dev": "sh ./scripts/deploy.sh dev",
     "deploy:prod": "sh ./scripts/deploy.sh prod",

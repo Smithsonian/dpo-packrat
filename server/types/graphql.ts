@@ -43,6 +43,7 @@ export type Query = {
   getProjectDocumentation: GetProjectDocumentationResult;
   getProjectList: GetProjectListResult;
   getScene: GetSceneResult;
+  getSceneForAssetVersion: GetSceneForAssetVersionResult;
   getSourceObjectIdentifer: GetSourceObjectIdentiferResult;
   getSubject: GetSubjectResult;
   getSubjectsForUnit: GetSubjectsForUnitResult;
@@ -181,6 +182,11 @@ export type QueryGetProjectListArgs = {
 
 export type QueryGetSceneArgs = {
   input: GetSceneInput;
+};
+
+
+export type QueryGetSceneForAssetVersionArgs = {
+  input: GetSceneForAssetVersionInput;
 };
 
 
@@ -602,6 +608,16 @@ export type GetModelConstellationForAssetVersionResult = {
   __typename?: 'GetModelConstellationForAssetVersionResult';
   idAssetVersion: Scalars['Int'];
   ModelConstellation?: Maybe<ModelConstellation>;
+};
+
+export type GetSceneForAssetVersionInput = {
+  idAssetVersion: Scalars['Int'];
+};
+
+export type GetSceneForAssetVersionResult = {
+  __typename?: 'GetSceneForAssetVersionResult';
+  idAssetVersion: Scalars['Int'];
+  SceneConstellation?: Maybe<SceneConstellation>;
 };
 
 
@@ -1075,7 +1091,7 @@ export type ModelSceneXref = {
   Name?: Maybe<Scalars['String']>;
   Usage?: Maybe<Scalars['String']>;
   Quality?: Maybe<Scalars['String']>;
-  FileSize?: Maybe<Scalars['Int']>;
+  FileSize?: Maybe<Scalars['BigInt']>;
   UVResolution?: Maybe<Scalars['Int']>;
   BoundingBoxP1X?: Maybe<Scalars['Float']>;
   BoundingBoxP1Y?: Maybe<Scalars['Float']>;
@@ -1236,6 +1252,12 @@ export type IntermediaryFile = {
   idAsset: Scalars['Int'];
   Asset?: Maybe<Asset>;
   SystemObject?: Maybe<SystemObject>;
+};
+
+export type SceneConstellation = {
+  __typename?: 'SceneConstellation';
+  Scene?: Maybe<Scene>;
+  ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
 };
 
 export type UpdateObjectDetailsInput = {
