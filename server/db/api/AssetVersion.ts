@@ -302,4 +302,29 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return null;
         }
     }
+
+    static async countStorageKeyStaging(StorageKeyStaging: string, Ingested: boolean | null = false, Retired: boolean = false): Promise<number | null> {
+        try {
+            const storageKeyStagingCount: { RowCount: number }[] =
+                await DBC.DBConnection.prisma.$queryRaw<{ RowCount: number }[]>`
+                SELECT COUNT(*) AS 'RowCount'
+                FROM AssetVersion AS AV
+                JOIN SystemObject AS SO ON (AV.idAssetVersion = SO.idAssetVersion)
+                WHERE SO.Retired = ${Retired}
+                  AND AV.Ingested = ${Ingested}
+                  AND AV.StorageKeyStaging = ${StorageKeyStaging};`;
+            // LOG.info(`AssetVersion.countStorageKeyStaging ${JSON.stringify(this)}: ${JSON.stringify(subjectItemLinkCount)} relationships`, LOG.LS.eDB);
+
+            /* istanbul ignore next */
+            if (storageKeyStagingCount.length != 1) { // array of wrong length returned, error ... should never happen
+                LOG.error(`AssetVersion.countStorageKeyStaging received invalid query response ${JSON.stringify(storageKeyStagingCount)}`, LOG.LS.eDB);
+                return null;
+            }
+
+            return storageKeyStagingCount[0].RowCount;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.AssetVersion.countStorageKeyStaging', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }
