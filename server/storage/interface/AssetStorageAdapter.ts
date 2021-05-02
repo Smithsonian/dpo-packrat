@@ -823,9 +823,20 @@ export class AssetStorageAdapter {
             return { asset: null, assetVersion, success: false, error: 'AssetStorageAdapter.discardAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()' };
 
         // discard staged asset
-        const DWSR: STORE.DiscardWriteStreamResult = await storage.discardWriteStream({ storageKey: assetVersion.StorageKeyStaging });
-        if (!DWSR.success)
-            return { asset: null, assetVersion, success: false, error: `AssetStorageAdapter.discardAssetVersion: ${DWSR.error}` };
+        // Bulk Ingest and Zip files may be referenced by multiple asset versions. To avoid removing the file referenced by these,
+        // we only perform the discard if this is the final non-retired reference
+        const storageKeyStagingCount: number | null = await DBAPI.AssetVersion.countStorageKeyStaging(assetVersion.StorageKeyStaging, false, false);
+        if (storageKeyStagingCount === null) {
+            const error: string = `AssetStorageAdapter.discardAssetVersion call to AssetVersion.countStorageKeyStaging(${assetVersion.StorageKeyStaging}, false, false) failed`;
+            LOG.error(error, LOG.LS.eSTR);
+            return { asset: null, assetVersion, success: false, error };
+        }
+        if (storageKeyStagingCount === 1) {
+            const DWSR: STORE.DiscardWriteStreamResult = await storage.discardWriteStream({ storageKey: assetVersion.StorageKeyStaging });
+            if (!DWSR.success)
+                return { asset: null, assetVersion, success: false, error: `AssetStorageAdapter.discardAssetVersion: ${DWSR.error}` };
+        } else
+            LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion} skipped IStorage.discardWriteStream as asset reference count is ${storageKeyStagingCount} > 1`, LOG.LS.eSTR);
 
         // retire assetVersion
         return (await DBAPI.SystemObject.retireSystemObject(assetVersion))
