@@ -4,6 +4,7 @@ type Query {
     getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
     getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
     getModelConstellationForAssetVersion(input: GetModelConstellationForAssetVersionInput!): GetModelConstellationForAssetVersionResult!
+    getSceneForAssetVersion(input: GetSceneForAssetVersionInput!): GetSceneForAssetVersionResult!
 }
 
 input GetAssetVersionsDetailsInput {
@@ -146,4 +147,13 @@ input GetModelConstellationForAssetVersionInput {
 type GetModelConstellationForAssetVersionResult {
     idAssetVersion: Int!
     ModelConstellation: ModelConstellation
+}
+
+input GetSceneForAssetVersionInput {
+    idAssetVersion: Int!
+}
+
+type GetSceneForAssetVersionResult {
+    idAssetVersion: Int!
+    SceneConstellation: SceneConstellation
 }

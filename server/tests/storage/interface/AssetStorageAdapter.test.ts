@@ -625,6 +625,13 @@ async function testCrackAsset(TestCase: AssetStorageAdapterTestCase, expectSucce
         if (CAR.zip)
             await CAR.zip.close();
         expect(CAR.success).toEqual(expectSuccess);
+
+        const CAR2: STORE.CrackAssetResult = await STORE.AssetStorageAdapter.crackAssetByAssetVersionID(assetVersion.idAssetVersion);
+        if (!CAR2.success && expectSuccess)
+            LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.crackAssetByAssetVersionID failed: ${CAR2.error}`, LOG.LS.eTEST);
+        if (CAR2.zip)
+            await CAR2.zip.close();
+        expect(CAR2.success).toEqual(expectSuccess);
     }
     return true;
 }
