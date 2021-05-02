@@ -849,25 +849,13 @@ export type IngestModelInput = {
   sourceObjects: Array<RelatedObjectInput>;
 };
 
-export type ReferenceModelInput = {
-  idSystemObject: Scalars['Int'];
-  name: Scalars['String'];
-  fileSize: Scalars['BigInt'];
-  resolution?: Maybe<Scalars['Int']>;
-  boundingBoxP1X?: Maybe<Scalars['Float']>;
-  boundingBoxP1Y?: Maybe<Scalars['Float']>;
-  boundingBoxP1Z?: Maybe<Scalars['Float']>;
-  boundingBoxP2X?: Maybe<Scalars['Float']>;
-  boundingBoxP2Y?: Maybe<Scalars['Float']>;
-  boundingBoxP2Z?: Maybe<Scalars['Float']>;
-  action: ReferenceModelAction;
-};
-
 export type IngestSceneInput = {
   idAssetVersion: Scalars['Int'];
   systemCreated: Scalars['Boolean'];
+  name: Scalars['String'];
+  hasBeenQCd: Scalars['Boolean'];
+  isOriented: Scalars['Boolean'];
   identifiers: Array<IngestIdentifierInput>;
-  referenceModels: Array<ReferenceModelInput>;
 };
 
 export type IngestOtherInput = {
