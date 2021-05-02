@@ -651,6 +651,16 @@ export class AssetStorageAdapter {
         return ASR;
     }
 
+    static async crackAssetByAssetVersionID(idAssetVersion: number): Promise<CrackAssetResult> {
+        const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
+        if (!assetVersion) {
+            const error: string = `AssetStorageAdapter.crackAssetByAssetVersionID unable to compute AssetVersion for idAssetVersion ${idAssetVersion}`;
+            LOG.error(error, LOG.LS.eSTR);
+            return { success: false, error, zip: null, asset: null, isBagit: false };
+        }
+        return this.crackAsset(assetVersion);
+    }
+
     /** Cracks open the file associated with assetVersion in an efficient manner.
      * Caller must call 'await CrackAssetResult.zip.close()' if the returned zip is not null. */
     static async crackAsset(assetVersion: DBAPI.AssetVersion): Promise<CrackAssetResult> {
