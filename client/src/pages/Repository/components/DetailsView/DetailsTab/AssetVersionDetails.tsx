@@ -21,7 +21,8 @@ export const useStyles = makeStyles(({ palette }) => ({
 
 function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
-    const { data, loading, onUpdateDetail, objectType, disabled } = props;
+    const { data, loading, onUpdateDetail, objectType } = props;
+    let { disabled } = props;
 
     const [details, setDetails] = useState<AssetVersionDetailFields>({});
 
@@ -54,7 +55,7 @@ function AssetVersionDetails(props: DetailComponentProps): React.ReactElement {
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
 
     const assetVersionData = data.getDetailsTabDataForObject?.AssetVersion;
-
+    disabled = true;
     return (
         <Box>
             <FieldType
