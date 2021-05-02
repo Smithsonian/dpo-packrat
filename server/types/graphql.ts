@@ -528,6 +528,8 @@ export type ReferenceModel = {
   __typename?: 'ReferenceModel';
   idSystemObject: Scalars['Int'];
   name: Scalars['String'];
+  usage: Scalars['String'];
+  quality: Scalars['String'];
   fileSize: Scalars['BigInt'];
   resolution?: Maybe<Scalars['Int']>;
   boundingBoxP1X?: Maybe<Scalars['Float']>;

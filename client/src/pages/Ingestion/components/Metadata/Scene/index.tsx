@@ -10,16 +10,30 @@ import { AssetIdentifiers } from '../../../../../components';
 import { StateIdentifier, useMetadataStore } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import ReferenceModels from './ReferenceModels';
+import SceneDataGrid from './SceneDataGrid';
 
 const useStyles = makeStyles(() => ({
     container: {
         marginTop: 20
-    },
+    }
 }));
 
 interface SceneProps {
     readonly metadataIndex: number;
 }
+
+const sampleSceneData = {
+    hasBeenQCd: false,
+    isOriented: false,
+    sceneCount: 10,
+    nodeCount: 11,
+    cameraCount: 12,
+    lightCount: 13,
+    modelCount: 15,
+    metaCount: 16,
+    setupCount: 17,
+    tourCount: 18
+};
 
 function Scene(props: SceneProps): React.ReactElement {
     const { metadataIndex } = props;
@@ -48,6 +62,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 onRemoveIdentifer={onIdentifersChange}
             />
             <ReferenceModels />
+            <SceneDataGrid sceneData={sampleSceneData} />
         </Box>
     );
 }
