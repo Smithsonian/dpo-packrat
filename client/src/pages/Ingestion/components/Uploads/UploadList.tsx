@@ -17,14 +17,13 @@ import { scrollBarProperties } from '../../../../utils/shared';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 
-export const useUploadListStyles = makeStyles(({ palette, breakpoints, typography, spacing }) => ({
+export const useUploadListStyles = makeStyles(({ palette, typography, spacing /*, breakpoints*/ }) => ({
     container: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
         marginTop: 20,
         marginBottom: 40,
-        width: '52vw',
         border: `1px dashed ${palette.primary.main}`
     },
     list: {
@@ -32,15 +31,15 @@ export const useUploadListStyles = makeStyles(({ palette, breakpoints, typograph
         flexDirection: 'column',
         alignItems: 'center',
         minHeight: '16vh',
-        maxHeight: '16vh',
+        height: '30vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
         width: '100%',
-        ...scrollBarProperties(true, false, palette.text.disabled),
-        [breakpoints.down('lg')]: {
-            minHeight: '20vh',
-            maxHeight: '20vh'
-        }
+        ...scrollBarProperties(true, false, palette.text.disabled)
+        // [breakpoints.down('lg')]: {
+        //     minHeight: '20vh',
+        //     maxHeight: '20vh'
+        // }
     },
     listDetail: {
         textAlign: 'center',

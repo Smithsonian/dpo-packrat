@@ -54,6 +54,7 @@ const getDetailsTabDataForObject = gql`
                     name
                     variantType
                 }
+                isValidData
             }
             Model {
                 Model {

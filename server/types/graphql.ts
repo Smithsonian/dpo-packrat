@@ -1371,6 +1371,7 @@ export type UpdateObjectDetailsDataInput = {
 export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   success: Scalars['Boolean'];
+  message: Scalars['String'];
 };
 
 export type UpdateDerivedObjectsInput = {
@@ -1487,6 +1488,7 @@ export type CaptureDataDetailFields = {
   clusterType?: Maybe<Scalars['Int']>;
   clusterGeometryFieldId?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolder>;
+  isValidData?: Maybe<Scalars['Boolean']>;
 };
 
 export type SceneDetailFields = {
