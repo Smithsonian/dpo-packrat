@@ -4,7 +4,7 @@ import * as CACHE from '../../cache';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ST from '../impl/LocalStorage/SharedTypes';
-import { ZipStream, IOResults, IZip } from '../../utils';
+import { ZipFile, ZipStream, IOResults, IZip } from '../../utils';
 import { BagitReader, BAGIT_DATA_DIRECTORY, BulkIngestReader, IngestMetadata } from '../../utils/parser';
 import { StorageFactory } from './StorageFactory';
 import { IStorage } from './IStorage';
@@ -720,24 +720,31 @@ export class AssetStorageAdapter {
         try {
             LOG.info(`AssetStorageAdapter.crackAssetWorker fileName ${assetVersion.FileName} storageKey ${storageKey} ingested ${ingested} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`, LOG.LS.eSTR);
 
-            // ingested content lives on remote storage; we'll need to stream it back to the server for processing;
-            // non-ingested content is staged locally, but we still need a stream, as our ZipFile class cannot handle DEFLATE64 compressed zips (compression level 9)
-            const readStreamInput: STORE.ReadStreamInput = {
-                storageKey,
-                fileName: asset.FileName,
-                version: assetVersion.Version,
-                staging: !assetVersion.Ingested
-            };
+            if (ingested) {
+                // ingested content lives on remote storage; we'll need to stream it back to the server for processing
+                const readStreamInput: STORE.ReadStreamInput = {
+                    storageKey,
+                    fileName: asset.FileName,
+                    version: assetVersion.Version,
+                    staging: !assetVersion.Ingested
+                };
 
-            const RSR: STORE.ReadStreamResult = await storage.readStream(readStreamInput); /* istanbul ignore next */
-            if (!RSR.success|| !RSR.readStream) {
-                LOG.error(RSR.error, LOG.LS.eSTR);
-                return { success: false, error: RSR.error, zip: null, asset: null, isBagit: false };
+                const RSR: STORE.ReadStreamResult = await storage.readStream(readStreamInput); /* istanbul ignore next */
+                if (!RSR.success|| !RSR.readStream) {
+                    LOG.error(RSR.error, LOG.LS.eSTR);
+                    return { success: false, error: RSR.error, zip: null, asset: null, isBagit: false };
+                }
+
+                reader = (isBulkIngest) /* istanbul ignore next */ // We don't ingest bulk ingest files as is -- they end up getting cracked apart, so we're unlikely to hit this branch of code
+                    ? new BagitReader({ zipFileName: null, zipStream: RSR.readStream, directory: null, validate: true, validateContent: false })
+                    : new ZipStream(RSR.readStream, isZipFilename); // use isZipFilename to determine if errors should be logged
+            } else {
+                // non-ingested content is staged locally
+                const stagingFileName: string = await storage.stagingFileName(storageKey);
+                reader = (isBulkIngest)
+                    ? new BagitReader({ zipFileName: stagingFileName, zipStream: null, directory: null, validate: true, validateContent: false })
+                    : new ZipFile(stagingFileName, isZipFilename); // use isZipFilename to determine if errors should be logged
             }
-
-            reader = (isBulkIngest) /* istanbul ignore next */ // We don't ingest bulk ingest files as is -- they end up getting cracked apart, so we're unlikely to hit this branch of code
-                ? new BagitReader({ zipFileName: null, zipStream: RSR.readStream, directory: null, validate: true, validateContent: false })
-                : new ZipStream(RSR.readStream, isZipFilename); // use isZipFilename to determine if errors should be logged
 
             const ioResults: IOResults = await reader.load(); /* istanbul ignore next */
             if (!ioResults.success) {
